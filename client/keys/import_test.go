@@ -53,6 +53,12 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 	// Now enter password
-	mockIn.Reset("123456789\n")
+
+	if runningOnServer {
+		mockIn.Reset("123456789\n12345678\n12345678\n")
+
+	} else {
+		mockIn.Reset("123456789\n")
+	}
 	assert.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
 }

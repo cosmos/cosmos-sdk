@@ -27,6 +27,8 @@ func importKeyCommand() *cobra.Command {
 func runImportCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 
+	buf := bufio.NewReader(cmd.InOrStdin())
+
 	if viper.GetBool(flags.FlagSecretStore) {
 		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 		var err error
@@ -35,7 +37,7 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		kb = NewKeyringKeybase(cmd.InOrStdin())
+		kb = NewKeyringKeybase(buf)
 
 	}
 
@@ -44,7 +46,6 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

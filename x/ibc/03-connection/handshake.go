@@ -99,6 +99,7 @@ func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, 
 	return obj, nil
 }
 
+/*
 func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, err error) {
 	cobj, err := man.man.query(ctx, id, HandshakeKind)
 	if err != nil {
@@ -108,6 +109,7 @@ func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, er
 	obj.counterparty = man.counterparty.object(obj.Connection(ctx).Counterparty)
 	return
 }
+*/
 
 func (obj HandshakeObject) State(ctx sdk.Context) byte {
 	return obj.state.Get(ctx)

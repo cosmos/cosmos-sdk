@@ -34,6 +34,7 @@ const (
 	FlagFrom2 = "from2"
 )
 
+/*
 func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIHandshakeObject {
 	prefix := []byte("v" + strconv.FormatInt(version, 10))
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
@@ -43,6 +44,7 @@ func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, versio
 	man := channel.NewHandshaker(channel.NewManager(base, connman))
 	return man.CLIQuery(ctx, path, connid, chanid)
 }
+*/
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
 	node, err := ctx.GetNode()
@@ -335,6 +337,9 @@ func relayLoop(cdc *codec.Codec,
 			return err
 		}
 		err = relay(cdc, ctx2, ctx1, obj2, obj1, conn1id, chan1id)
+		if err != nil {
+			return err
+		}
 		time.Sleep(1 * time.Second)
 	}
 }

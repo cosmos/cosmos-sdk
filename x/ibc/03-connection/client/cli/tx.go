@@ -35,6 +35,7 @@ const (
 	FlagFrom2 = "from2"
 )
 
+/*
 func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.CLIHandshakeObject {
 	prefix := []byte("v" + strconv.FormatInt(version, 10))
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
@@ -43,6 +44,7 @@ func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, versio
 	man := connection.NewHandshaker(connection.NewManager(base, climan))
 	return man.CLIQuery(ctx, path, id)
 }
+*/
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
 	node, err := ctx.GetNode()

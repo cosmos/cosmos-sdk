@@ -175,6 +175,7 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 
 }
 
+/*
 // query() is used internally by the connection creators
 // checks connection kind, doesn't check avilability
 func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, err error) {
@@ -193,6 +194,7 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, e
 	}
 	return
 }
+*/
 
 func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
 	obj = man.object(id)

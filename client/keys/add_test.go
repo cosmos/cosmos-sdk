@@ -35,7 +35,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\ntestpass1\ny\n")
+		mockIn.Reset("testpass1\n")
 
 	} else {
 		mockIn.Reset("y\n")
@@ -51,10 +51,10 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\nn\n")
+		mockIn.Reset("testpass1\nN\n")
 
 	} else {
-		mockIn.Reset("n\n")
+		mockIn.Reset("N\n")
 	}
 	err = runAddCmd(cmd, []string{"keyname1"})
 	assert.Error(t, err)
@@ -62,7 +62,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\n")
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
 
 	} else {
 		mockIn.Reset("y\n")
@@ -73,7 +73,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\n")
+		mockIn.Reset("testpass1\n")
 
 	} else {
 		mockIn.Reset("y\n")

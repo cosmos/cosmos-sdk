@@ -2,7 +2,7 @@ package cli
 
 import (
 	"io/ioutil"
-	"strconv"
+	//	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -10,16 +10,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	//	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	//	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	//	clientcli "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 	//	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 

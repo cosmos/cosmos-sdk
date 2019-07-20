@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/99designs/keyring"
@@ -57,6 +58,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		mockIn.Reset("N\n")
 	}
 	err = runAddCmd(cmd, []string{"keyname1"})
+	fmt.Println(err)
 	assert.Error(t, err)
 
 	viper.Set(cli.OutputFlag, OutputFormatText)

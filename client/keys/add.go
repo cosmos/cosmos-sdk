@@ -167,6 +167,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			encryptPassword = DefaultKeyPass
 		}
 	}
 

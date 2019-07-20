@@ -2,20 +2,20 @@
 
 ## Prerequisites
 
-* [Anatomy of an SDK App](./app-anatomy.md)
+* [Query Lifecycle](./query-lifecycle.md)
 
 ## Synopsis
 
 This document describes how to create a commmand-line interface for an SDK application. A separate document for creating module interfaces can be found [here](#./module-interfaces.md).
 
-1. [Application CLI](#Application-cli)
+1. [Application CLI](#application-cli)
 2. [Commands](#commands)
 3. [Flags](#flags)
 4. [Initialization and Configurations](#initialization-and-configurations)
 
 ## Application CLI
 
-One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `app/cmd/cli` folder.
+One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `app/cmd/cli` folder. The CLI for an application will typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`.
 
 ### Cobra
 
@@ -135,10 +135,14 @@ Queries also have flags.
 * `--ledger` (optional) lets the user perform the action using a Ledger Nano S.
 
 
-## Initialization and Configurations
+## Configurations
 
-TODO
+The last function to define is, `initConfig`, which should do exactly what it sounds like - initial configurations. To call this function, set it as a `PersistentPreRunE` function for the root command, so that it always executes before the main execution of the root command and any of its subcommands. `initConfig` should do the  following:
+
+1. Read in the `config.toml` file. This same file is edited through `config` commands.
+2. Use the [Viper](https://github.com/spf13/viper) to read in configurations from the file and set them.
+3. Set any persistent flags defined by the user: `--chain-id`, `--encoding`, `--output`, etc.
 
 ## Next
 
-Read about how to build a CLI for your module [here](./module-interfaces#cli)
+Read about how to build a module CLI [here](./module-interfaces#cli)

@@ -93,6 +93,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	}
 
 	viper.Set(flagYes, true)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
 	if runningOnServer {

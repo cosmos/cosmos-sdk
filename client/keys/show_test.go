@@ -68,6 +68,10 @@ func Test_runShowCmd(t *testing.T) {
 		kb.Delete("runShowCmd_Key2", "", false)
 
 	}()
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
 
@@ -78,22 +82,34 @@ func Test_runShowCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Now try single key
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1})
 	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1})
 	assert.NoError(t, err)
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
 
@@ -101,14 +117,23 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagBechPrefix, "acc")
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
 

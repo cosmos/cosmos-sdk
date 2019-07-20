@@ -67,7 +67,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	// User confirmation missing
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\ntestpass1\n")
+		mockIn.Reset("testpass1\n")
 	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)

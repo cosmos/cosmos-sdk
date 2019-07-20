@@ -110,7 +110,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			kb = NewKeyringKeybase(cmd.InOrStdin())
+			kb = NewKeyringKeybase(inBuf)
 		}
 		_, err = kb.Get(name)
 		if err == nil {

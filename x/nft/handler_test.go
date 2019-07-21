@@ -76,10 +76,6 @@ func TestTransferNFTMsg(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, nftAfterwards.GetOwner().Equals(address2))
 
-	// handle should fail when nft exists and is transferred by not owner
-	res = h(ctx, transferNftMsg)
-	require.False(t, res.IsOK(), "%v", res)
-
 }
 
 func TestEditNFTMetadataMsg(t *testing.T) {
@@ -113,20 +109,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	)
 
 	res := h(ctx, failingEditNFTMetadata)
-	require.False(t, res.IsOK(), "%v", res)
-
-	// Define MsgTransferNft
-	failingEditNFTMetadata = types.NewMsgEditNFTMetadata(
-		address2,
-		id,
-		denom,
-		name2,
-		description2,
-		image2,
-		tokenURI2,
-	)
-
-	res = h(ctx, failingEditNFTMetadata)
 	require.False(t, res.IsOK(), "%v", res)
 
 	// Define MsgTransferNft
@@ -260,22 +242,13 @@ func TestBurnNFTMsg(t *testing.T) {
 	exists := k.IsNFT(ctx, denom, id)
 	require.True(t, exists)
 
-	// burning an NFT without being the address should fail
-	failBurnNFT := types.NewMsgBurnNFT(
-		address2,
-		id,
-		denom,
-	)
-	res := h(ctx, failBurnNFT)
-	require.False(t, res.IsOK(), "%s", res.Log)
-
 	// burning a non-existant NFT should fail
-	failBurnNFT = types.NewMsgBurnNFT(
+	failBurnNFT := types.NewMsgBurnNFT(
 		address,
 		id2,
 		denom,
 	)
-	res = h(ctx, failBurnNFT)
+	res := h(ctx, failBurnNFT)
 	require.False(t, res.IsOK(), "%s", res.Log)
 
 	// NFT should still exist

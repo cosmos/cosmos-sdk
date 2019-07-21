@@ -3,6 +3,7 @@ package keys
 import (
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
@@ -21,13 +22,26 @@ func Test_runUpdateCmd(t *testing.T) {
 	fakeKeyName2 := "runUpdateCmd_Key2"
 
 	cmd := updateKeyCommand()
+	backends := keyring.AvailableBackends()
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
+	viper.Set(flags.FlagSecretStore, true)
 
 	// fails because it requests a password
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")
 
 	// try again
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
-	mockIn.Reset("pass1234\n")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
+
+	} else {
+		mockIn.Reset("pass1234\n")
+	}
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "Key runUpdateCmd_Key1 not found")
 
 	// Prepare a key base
@@ -36,18 +50,32 @@ func Test_runUpdateCmd(t *testing.T) {
 	defer cleanUp1()
 	viper.Set(flags.FlagHome, kbHome)
 
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb := NewKeyringKeybase(mockIn)
+
+	defer func() {
+		kb.Delete("runUpdateCmd_Key1", "", false)
+		kb.Delete("runUpdateCmd_Key2", "", false)
+	}()
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
 	// Try again now that we have keys
 	// Incorrect key type
-	mockIn.Reset("pass1234\nNew1234\nNew1234")
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	} else {
+		mockIn.Reset("pass1234\nNew1234\nNew1234")
+	}
 	err = runUpdateCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
+	assert.EqualError(t, err, "Key runUpdateCmd_Key1 not found")
 
 	// TODO: Check for other type types?
 }

@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -35,9 +36,9 @@ type RestServer struct {
 }
 
 // NewRestServer creates a new rest server instance
-func NewRestServer(cdc *codec.Codec) *RestServer {
+func NewRestServer(cdc *codec.Codec, input io.Reader) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc)
+	cliCtx := context.NewCLIContext(input).WithCodec(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{
@@ -82,7 +83,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			rs := NewRestServer(cdc)
+			rs := NewRestServer(cdc, cmd.InOrStdin())
 
 			registerRoutesFn(rs)
 			rs.registerSwaggerUI()

@@ -72,6 +72,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 	return cmd
 }
 
@@ -101,16 +102,23 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
-		if err != nil {
-			return err
+		// c.Flags().Bool(FlagSecretSore, false, "Use legacy secret store")
+		if viper.GetBool(flags.FlagSecretStore) {
+			fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+			kb, err = NewKeyBaseFromHomeFlag()
+			if err != nil {
+				return err
+			}
+		} else {
+			kb = NewKeyringKeybase(inBuf)
 		}
-
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
+
 			if err2 != nil {
+				fmt.Println("testing error")
 				return err2
 			}
 			if !response {
@@ -152,13 +160,15 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
+		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) && viper.GetBool(flags.FlagSecretStore) {
 			encryptPassword, err = input.GetCheckPassword(
 				"Enter a passphrase to encrypt your key to disk:",
 				"Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}
+		} else {
+			encryptPassword = DefaultKeyPass
 		}
 	}
 

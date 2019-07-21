@@ -3,6 +3,7 @@ package keys
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -26,14 +28,15 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// GetKeyInfo returns key info for a given name. An error is returned if the
+// GetKeyInfoLegacy returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, err
-	}
+func GetKeyInfoLegacy(name string) (keys.Info, error) {
+	keybase, _ := NewKeyBaseFromHomeFlag()
+	return keybase.Get(name)
+}
 
+func GetKeyInfo(name string, input io.Reader) (keys.Info, error) {
+	keybase := NewKeyringKeybase(input)
 	return keybase.Get(name)
 }
 
@@ -44,7 +47,7 @@ func GetKeyInfo(name string) (keys.Info, error) {
 func GetPassphrase(name string) (string, error) {
 	var passphrase string
 
-	keyInfo, err := GetKeyInfo(name)
+	keyInfo, err := GetKeyInfoLegacy(name)
 	if err != nil {
 		return passphrase, err
 	}
@@ -79,6 +82,12 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	rootDir := viper.GetString(flags.FlagHome)
 	return NewKeyBaseFromDir(rootDir)
+}
+
+func NewKeyringKeybase(input io.Reader) keys.Keybase {
+	rootDir := viper.GetString(flags.FlagHome)
+
+	return keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, input, false)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.

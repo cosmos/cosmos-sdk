@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 
@@ -157,7 +158,7 @@ func TestProcessPostResponse(t *testing.T) {
 	}
 
 	// setup
-	ctx := context.NewCLIContext()
+	ctx := context.NewCLIContext(os.Stdin)
 	height := int64(194423)
 
 	privKey := secp256k1.GenPrivKey()

@@ -26,7 +26,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 
 	txBldr := types.NewTxBuilder(
 		GetTxEncoder(cliCtx.Codec), br.AccountNumber, br.Sequence, gas, gasAdj,
-		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
+		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices, cliCtx.Input,
 	)
 
 	if br.Simulate || simAndExec {

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,36 +24,68 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
+	backends := keyring.AvailableBackends()
 
+	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
+
+	runningOnServer := false
+
+	if len(backends) == 2 && backends[1] == keyring.BackendType("file") {
+		runningOnServer = true
+	}
+
+	if !runningOnServer {
+		kb := NewKeyringKeybase(mockIn)
+		defer func() {
+			kb.Delete("runDeleteCmd_Key1", "", false)
+			kb.Delete("runDeleteCmd_Key2", "", false)
+
+		}()
+	}
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb := NewKeyringKeybase(mockIn)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
-	require.Equal(t, "Key blah not found", err.Error())
+	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
 	{
+		if runningOnServer {
+			mockIn.Reset("testpass1\n")
+		}
 		_, err = kb.Get(fakeKeyName1)
 		require.NoError(t, err)
 
 		// Now there is a confirmation
-		mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
-		mockIn.Reset("y\n")
+		if runningOnServer {
+			mockIn.Reset("testpass1\ny\ntestpass1\n")
+		} else {
+			mockIn.Reset("y\n")
+		}
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
@@ -60,8 +93,14 @@ func Test_runDeleteCmd(t *testing.T) {
 	}
 
 	viper.Set(flagYes, true)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
 	_, err = kb.Get(fakeKeyName2)

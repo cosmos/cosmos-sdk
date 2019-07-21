@@ -48,7 +48,7 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query account balance",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 			accGetter := types.NewAccountRetriever(cliCtx)
 
 			key, err := sdk.AccAddressFromBech32(args[0])
@@ -115,7 +115,7 @@ $ <appcli> query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 3
 			page := viper.GetInt(flagPage)
 			limit := viper.GetInt(flagLimit)
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 			txs, err := utils.QueryTxsByEvents(cliCtx, tmTags, page, limit)
 			if err != nil {
 				return err
@@ -157,7 +157,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Query for a transaction by hash in a committed block",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			output, err := utils.QueryTx(cliCtx, args[0])
 			if err != nil {

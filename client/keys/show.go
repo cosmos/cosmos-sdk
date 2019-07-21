@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 
@@ -49,6 +50,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
 
 	return cmd
 }
@@ -56,15 +58,17 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+
 	if len(args) == 1 {
-		info, err = GetKeyInfo(args[0])
+		info, err = GetKeyInfo(args[0], inBuf)
 		if err != nil {
 			return err
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
-			info, err := GetKeyInfo(keyName)
+			info, err := GetKeyInfo(keyName, inBuf)
 			if err != nil {
 				return err
 			}

@@ -18,10 +18,11 @@ import (
 var _ Keybase = lazyKeybaseKeyring{}
 
 type lazyKeybaseKeyring struct {
-	name      string
-	dir       string
-	test      bool
-	userInput io.Reader
+	name           string
+	dir            string
+	test           bool
+	userInput      io.Reader
+	cachedPassword string
 }
 
 // NewKeybaseKeyring creates a new instance of a lazy keybase.
@@ -38,7 +39,7 @@ func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) 
 	return lazyKeybaseKeyring{name: name, dir: dir, userInput: userInput, test: test}
 }
 
-func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
+func (lkb *lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 	if lkb.test {
 		return keyring.Config{
 			AllowedBackends: []keyring.BackendType{"file"},
@@ -63,6 +64,10 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 			keyhashStored = false
 		} else {
 			return "", err
+		}
+
+		if lkb.cachedPassword != "" {
+			return lkb.cachedPassword, nil
 		}
 
 		failureCounter := 0
@@ -102,6 +107,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 				if err != nil {
 					return "", err
 				}
+				lkb.cachedPassword = pass
 				return pass, nil
 
 			} else {
@@ -110,6 +116,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 					fmt.Println("incorrect password")
 					continue
 				}
+				lkb.cachedPassword = pass
 				return pass, nil
 			}
 		}

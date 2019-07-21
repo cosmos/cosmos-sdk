@@ -7,32 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// IDCollection of non fungible tokens
+// IDCollection defines a set of nft ids that belong to a specific
+// collection
 type IDCollection struct {
-	Denom string   `json:"denom"`
-	IDs   []string `json:"IDs"`
+	Denom string   `json:"denom" yaml:"denom"`
+	IDs   []string `json:"ids" yaml:"ids"`
 }
 
-// StringArray is an array of strings whose sole purpose is to help with find
-type StringArray []string
-
-func (stringArray StringArray) find(el string) (idx int) {
-	if len(stringArray) == 0 {
-		return -1
-	}
-	midIdx := len(stringArray) / 2
-	stringArrayEl := stringArray[midIdx]
-
-	if strings.Compare(el, stringArrayEl) == -1 {
-		return stringArray[:midIdx].find(el)
-	} else if stringArrayEl == el {
-		return midIdx
-	} else {
-		return stringArray[midIdx+1:].find(el)
-	}
-}
-
-// NewIDCollection creates a new NFT NFTIDs
+// NewIDCollection creates a new IDCollection instance
 func NewIDCollection(denom string, ids []string) IDCollection {
 	return IDCollection{
 		Denom: strings.TrimSpace(denom),
@@ -40,13 +22,9 @@ func NewIDCollection(denom string, ids []string) IDCollection {
 	}
 }
 
-// EmptyIDCollection returns an empty balance
-func EmptyIDCollection() IDCollection {
-	return NewIDCollection("", []string{})
-}
-
 // Exists determines whether an ID is in the IDCollection
 func (idCollection IDCollection) Exists(id string) (exists bool) {
+	// TODO: improve performance
 	for _, _id := range idCollection.IDs {
 		if _id == id {
 			return true
@@ -63,7 +41,7 @@ func (idCollection IDCollection) AddID(id string) IDCollection {
 
 // DeleteID deletes an ID from an ID Collection
 func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
-	index := StringArray(idCollection.IDs).find(id)
+	index := stringArray(idCollection.IDs).find(id)
 	if index == -1 {
 		return idCollection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
@@ -151,7 +129,7 @@ func (owner Owner) Supply() int {
 func (owner Owner) GetIDCollection(denom string) (IDCollection, bool) {
 	index := owner.IDCollections.find(denom)
 	if index == -1 {
-		return EmptyIDCollection(), false
+		return IDCollection{}, false
 	}
 	return owner.IDCollections[index], true
 }
@@ -270,3 +248,22 @@ func (owner Owner) String() string {
 // 	sort.Sort(balances)
 // 	return balances
 // }
+
+// stringArray is an array of strings whose sole purpose is to help with find
+type stringArray []string
+
+func (sa stringArray) find(el string) (idx int) {
+	if len(sa) == 0 {
+		return -1
+	}
+	midIdx := len(sa) / 2
+	stringArrayEl := sa[midIdx]
+
+	if strings.Compare(el, stringArrayEl) == -1 {
+		return sa[:midIdx].find(el)
+	} else if stringArrayEl == el {
+		return midIdx
+	} else {
+		return sa[midIdx+1:].find(el)
+	}
+}

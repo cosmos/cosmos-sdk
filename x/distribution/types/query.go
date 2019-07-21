@@ -10,8 +10,8 @@ import (
 // QueryDelegatorTotalRewardsResponse defines the properties of
 // QueryDelegatorTotalRewards query's response.
 type QueryDelegatorTotalRewardsResponse struct {
-	Rewards []DelegationDelegatorReward `json:"rewards"`
-	Total   sdk.DecCoins                `json:"total"`
+	Rewards []DelegationDelegatorReward `json:"rewards" yaml:"rewards"`
+	Total   sdk.DecCoins                `json:"total" yaml:"total"`
 }
 
 // NewQueryDelegatorTotalRewardsResponse constructs a QueryDelegatorTotalRewardsResponse
@@ -35,8 +35,8 @@ func (res QueryDelegatorTotalRewardsResponse) String() string {
 // DelegationDelegatorReward defines the properties
 // of a delegator's delegation reward.
 type DelegationDelegatorReward struct {
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Reward           sdk.DecCoins   `json:"reward"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	Reward           sdk.DecCoins   `json:"reward" yaml:"reward"`
 }
 
 // NewDelegationDelegatorReward constructs a DelegationDelegatorReward.

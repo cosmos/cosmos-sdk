@@ -8,7 +8,7 @@ import (
 
 // GenesisState - crisis genesis state
 type GenesisState struct {
-	ConstantFee sdk.Coin `json:"constant_fee"`
+	ConstantFee sdk.Coin `json:"constant_fee" yaml:"constant_fee"`
 }
 
 // NewGenesisState creates a new GenesisState object

@@ -3,9 +3,9 @@ package auth
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -25,21 +25,29 @@ type testInput struct {
 // moduleAccount defines an account for modules that holds coins on a pool
 type moduleAccount struct {
 	*types.BaseAccount
-	Name       string `json:"name"`       // name of the module
-	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
+	name        string   `json:"name" yaml:"name"`              // name of the module
+	permissions []string `json:"permissions" yaml"permissions"` // permissions of module account
 }
 
+// HasPermission returns whether or not the module account has permission.
+func (ma moduleAccount) HasPermission(permission string) bool {
+	for _, perm := range ma.permissions {
+		if perm == permission {
+			return true
+		}
+	}
+	return false
+}
 
 // GetName returns the the name of the holder's module
 func (ma moduleAccount) GetName() string {
-	return ma.Name
+	return ma.name
 }
 
-// GetPermission returns permission granted to the module account (holder/minter/burner)
-func (ma moduleAccount) GetPermission() string {
-	return ma.Permission
+// GetPermissions returns permissions granted to the module account
+func (ma moduleAccount) GetPermissions() []string {
+	return ma.permissions
 }
-
 
 func setupTestInput() testInput {
 	db := dbm.NewMemDB()
@@ -127,8 +135,8 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	// create a new module account
 	macc := &moduleAccount{
 		BaseAccount: &baseAcc,
-		Name:        moduleName,
-		Permission:  "basic",
+		name:        moduleName,
+		permissions: []string{"basic"},
 	}
 
 	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)

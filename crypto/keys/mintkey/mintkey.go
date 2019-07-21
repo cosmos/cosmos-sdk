@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/tendermint/crypto/bcrypt"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"

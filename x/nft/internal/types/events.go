@@ -1,3 +1,4 @@
+// DONTCOVER
 package types
 
 // NFT module event types
@@ -9,14 +10,9 @@ var (
 
 	AttributeValueCategory = ModuleName
 
-	AttributeKeySender         = "sender"
-	AttributeKeyRecipient      = "recipient"
-	AttributeKeyOwner          = "owner"
-	AttributeKeyNFTID          = "nft-id"
-	AttributeKeyNFTName        = "nft-name"
-	AttributeKeyNFTDescription = "nft-description"
-	AttributeKeyNFTImage       = "nft-image"
-	/* #nosec */
-	AttributeKeyNFTTokenURI = "nft-tokenURI"
-	AttributeKeyDenom       = "denom"
+	AttributeKeySender    = "sender"
+	AttributeKeyRecipient = "recipient"
+	AttributeKeyOwner     = "owner"
+	AttributeKeyNFTID     = "nft-id"
+	AttributeKeyDenom     = "denom"
 )

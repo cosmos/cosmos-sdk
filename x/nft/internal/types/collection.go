@@ -11,8 +11,8 @@ import (
 
 // Collection of non fungible tokens
 type Collection struct {
-	Denom string `json:"denom,omitempty"` // name of the collection; not exported to clients
-	NFTs  NFTs   `json:"nfts"`            // NFTs that belong to a collection
+	Denom string `json:"denom,omitempty" yaml:"denom"` // name of the collection; not exported to clients
+	NFTs  NFTs   `json:"nfts" yaml:"nfts"`             // NFTs that belong to a collection
 }
 
 // NewCollection creates a new NFT Collection

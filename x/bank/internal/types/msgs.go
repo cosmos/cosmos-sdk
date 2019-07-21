@@ -9,9 +9,9 @@ const RouterKey = ModuleName
 
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
-	FromAddress sdk.AccAddress `json:"from_address"`
-	ToAddress   sdk.AccAddress `json:"to_address"`
-	Amount      sdk.Coins      `json:"amount"`
+	FromAddress sdk.AccAddress `json:"from_address" yaml:"from_address"`
+	ToAddress   sdk.AccAddress `json:"to_address" yaml:"to_address"`
+	Amount      sdk.Coins      `json:"amount" yaml:"amount"`
 }
 
 var _ sdk.Msg = MsgSend{}
@@ -56,8 +56,8 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 
 // MsgMultiSend - high level transaction of the coin module
 type MsgMultiSend struct {
-	Inputs  []Input  `json:"inputs"`
-	Outputs []Output `json:"outputs"`
+	Inputs  []Input  `json:"inputs" yaml:"inputs"`
+	Outputs []Output `json:"outputs" yaml:"outputs"`
 }
 
 var _ sdk.Msg = MsgMultiSend{}
@@ -103,8 +103,8 @@ func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 
 // Input models transaction input
 type Input struct {
-	Address sdk.AccAddress `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Address sdk.AccAddress `json:"address" yaml:"address"`
+	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
 }
 
 // ValidateBasic - validate transaction input
@@ -131,8 +131,8 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // Output models transaction outputs
 type Output struct {
-	Address sdk.AccAddress `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Address sdk.AccAddress `json:"address" yaml:"address"`
+	Coins   sdk.Coins      `json:"coins" yaml:"coins"`
 }
 
 // ValidateBasic - validate transaction output

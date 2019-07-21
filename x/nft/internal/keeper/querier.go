@@ -44,7 +44,12 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 func queryDenoms(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	denoms := k.GetDenoms(ctx)
-	bz := types.ModuleCdc.MustMarshalJSON(denoms)
+
+	bz, err := types.ModuleCdc.MarshalJSON(denoms)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
 	return bz, nil
 }
 
@@ -67,6 +72,7 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 }
 
 func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+
 	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
@@ -80,18 +86,28 @@ func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k 
 	owner.Address = params.Owner
 	owner.IDCollections = append(idCollections, idCollection)
 
-	bz := types.ModuleCdc.MustMarshalJSON(owner)
+	bz, err := types.ModuleCdc.MarshalJSON(owner)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
 	return bz, nil
 }
 
 func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+
 	var params types.QueryBalanceParams
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
+
 	owner := k.GetOwner(ctx, params.Owner)
-	bz := types.ModuleCdc.MustMarshalJSON(owner)
+	bz, err := types.ModuleCdc.MarshalJSON(owner)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
 	return bz, nil
 }
 
@@ -108,19 +124,12 @@ func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Ke
 		return nil, types.ErrUnknownCollection(types.DefaultCodespace, fmt.Sprintf("unknown denom %s", params.Denom))
 	}
 
-	// TODO: use the custom collection MarshalJSON
-
-	// collections := types.NewCollections(collection)
-
-	bz := types.ModuleCdc.MustMarshalJSON(collection)
-	// bz, err := collections.MarshalJSON()
-	// if err != nil {
-	// 	return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	// }
-
-	// var collectionBack types.Collection
-	// types.ModuleCdc.MustUnmarshalJSON(bz, &collectionBack)
-	// fmt.Println("collectionBack", collectionBack)
+	// use Collections custom JSON to make the denom the key of the object
+	collections := types.NewCollections(collection)
+	bz, err := types.ModuleCdc.MarshalJSON(collections)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
 
 	return bz, nil
 }
@@ -138,6 +147,10 @@ func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) (
 		return nil, types.ErrUnknownNFT(types.DefaultCodespace, fmt.Sprintf("invalid NFT #%s from collection %s", params.TokenID, params.Denom))
 	}
 
-	bz := types.ModuleCdc.MustMarshalJSON(nft)
+	bz, err := types.ModuleCdc.MarshalJSON(nft)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+	}
+
 	return bz, nil
 }

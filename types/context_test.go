@@ -44,18 +44,6 @@ func (l MockLogger) With(kvs ...interface{}) log.Logger {
 	panic("not implemented")
 }
 
-func TestContextGetOpShouldNeverPanic(t *testing.T) {
-	var ms types.MultiStore
-	ctx := types.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	indices := []int64{
-		-10, 1, 0, 10, 20,
-	}
-
-	for _, index := range indices {
-		_, _ = ctx.GetOp(index)
-	}
-}
-
 func defaultContext(key types.StoreKey) types.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
@@ -109,54 +97,10 @@ func (d dummy) Clone() interface{} {
 	return d
 }
 
-// Testing saving/loading primitive values to/from the context
-func TestContextWithPrimitive(t *testing.T) {
-	ctx := types.NewContext(nil, abci.Header{}, false, log.NewNopLogger())
-
-	clonerkey := "cloner"
-	stringkey := "string"
-	int32key := "int32"
-	uint32key := "uint32"
-	uint64key := "uint64"
-
-	keys := []string{clonerkey, stringkey, int32key, uint32key, uint64key}
-
-	for _, key := range keys {
-		require.Nil(t, ctx.Value(key))
-	}
-
-	clonerval := dummy(1)
-	stringval := "string"
-	int32val := int32(1)
-	uint32val := uint32(2)
-	uint64val := uint64(3)
-
-	ctx = ctx.
-		WithCloner(clonerkey, clonerval).
-		WithString(stringkey, stringval).
-		WithInt32(int32key, int32val).
-		WithUint32(uint32key, uint32val).
-		WithUint64(uint64key, uint64val)
-
-	require.Equal(t, clonerval, ctx.Value(clonerkey))
-	require.Equal(t, stringval, ctx.Value(stringkey))
-	require.Equal(t, int32val, ctx.Value(int32key))
-	require.Equal(t, uint32val, ctx.Value(uint32key))
-	require.Equal(t, uint64val, ctx.Value(uint64key))
-}
-
 // Testing saving/loading sdk type values to/from the context
 func TestContextWithCustom(t *testing.T) {
 	var ctx types.Context
 	require.True(t, ctx.IsZero())
-
-	require.Panics(t, func() { ctx.BlockHeader() })
-	require.Panics(t, func() { ctx.BlockHeight() })
-	require.Panics(t, func() { ctx.ChainID() })
-	require.Panics(t, func() { ctx.TxBytes() })
-	require.Panics(t, func() { ctx.Logger() })
-	require.Panics(t, func() { ctx.VoteInfos() })
-	require.Panics(t, func() { ctx.GasMeter() })
 
 	header := abci.Header{}
 	height := int64(1)
@@ -192,9 +136,6 @@ func TestContextWithCustom(t *testing.T) {
 func TestContextHeader(t *testing.T) {
 	var ctx types.Context
 
-	require.Panics(t, func() { ctx.BlockHeader() })
-	require.Panics(t, func() { ctx.BlockHeight() })
-
 	height := int64(5)
 	time := time.Now()
 	addr := secp256k1.GenPrivKey().PubKey().Address()
@@ -208,6 +149,61 @@ func TestContextHeader(t *testing.T) {
 		WithProposer(proposer)
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, height, ctx.BlockHeader().Height)
-	require.Equal(t, time, ctx.BlockHeader().Time)
+	require.Equal(t, time.UTC(), ctx.BlockHeader().Time)
 	require.Equal(t, proposer.Bytes(), ctx.BlockHeader().ProposerAddress)
+}
+
+func TestContextHeaderClone(t *testing.T) {
+	cases := map[string]struct {
+		h abci.Header
+	}{
+		"empty": {
+			h: abci.Header{},
+		},
+		"height": {
+			h: abci.Header{
+				Height: 77,
+			},
+		},
+		"time": {
+			h: abci.Header{
+				Time: time.Unix(12345677, 12345),
+			},
+		},
+		"zero time": {
+			h: abci.Header{
+				Time: time.Unix(0, 0),
+			},
+		},
+		"many items": {
+			h: abci.Header{
+				Height:  823,
+				Time:    time.Unix(9999999999, 0),
+				ChainID: "silly-demo",
+			},
+		},
+		"many items with hash": {
+			h: abci.Header{
+				Height:        823,
+				Time:          time.Unix(9999999999, 0),
+				ChainID:       "silly-demo",
+				AppHash:       []byte{5, 34, 11, 3, 23},
+				ConsensusHash: []byte{11, 3, 23, 87, 3, 1},
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := types.NewContext(nil, tc.h, false, nil)
+			require.Equal(t, tc.h.Height, ctx.BlockHeight())
+			require.Equal(t, tc.h.Time.UTC(), ctx.BlockTime())
+
+			// update only changes one field
+			var newHeight int64 = 17
+			ctx = ctx.WithBlockHeight(newHeight)
+			require.Equal(t, newHeight, ctx.BlockHeight())
+			require.Equal(t, tc.h.Time.UTC(), ctx.BlockTime())
+		})
+	}
 }

@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 
@@ -57,15 +58,17 @@ consisting of all the keys provided by name and multisig threshold.`,
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+
 	if len(args) == 1 {
-		info, err = GetKeyInfo(args[0], cmd.InOrStdin())
+		info, err = GetKeyInfo(args[0], inBuf)
 		if err != nil {
 			return err
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
-			info, err := GetKeyInfo(keyName, cmd.InOrStdin())
+			info, err := GetKeyInfo(keyName, inBuf)
 			if err != nil {
 				return err
 			}

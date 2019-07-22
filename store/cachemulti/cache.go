@@ -8,10 +8,6 @@ import (
 	"github.com/hashicorp/golang-lru"
 )
 
-const (
-	defaultCacheSize = 10000
-)
-
 var (
 	_ types.KVStore   = (*StoreCache)(nil)
 	_ types.CacheWrap = (*StoreCache)(nil)
@@ -20,6 +16,10 @@ var (
 	// KVStore. Each underlying KVStore itself may be cache-wrapped, but the
 	// cache here is persistent through block production.
 	interBlockCache = NewStoreCacheManager()
+
+	// PersistentStoreCacheSize defines the persistent ARC cache size for each
+	// KVStore.
+	PersistentStoreCacheSize = 1000
 )
 
 type (
@@ -43,7 +43,7 @@ type (
 )
 
 func newStoreCache(store types.KVStore) *StoreCache {
-	cache, err := lru.NewARC(defaultCacheSize)
+	cache, err := lru.NewARC(PersistentStoreCacheSize)
 	if err != nil {
 		panic(fmt.Errorf("failed to create cache: %s", err))
 	}

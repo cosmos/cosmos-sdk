@@ -1,4 +1,4 @@
-package auth
+package keeper
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -25,7 +25,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 }
 
 func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),
 		sdk.NewCoin("BTC", sdk.NewInt(1000)),
@@ -52,7 +52,7 @@ func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 
 	b.ResetTimer()
 
@@ -66,7 +66,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),
 		sdk.NewCoin("BTC", sdk.NewInt(1000)),

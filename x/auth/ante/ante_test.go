@@ -1,4 +1,4 @@
-package auth
+package ante
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // run the tx through the anteHandler and ensure its valid
@@ -47,7 +48,7 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	ctx := input.ctx
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 
@@ -96,7 +97,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 // Test logic around account number checking with one signer and many signers.
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -153,7 +154,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 // Test logic around account number checking with many signers when BlockHeight is 0.
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(0)
 
@@ -209,7 +210,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -286,7 +287,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 // Test logic around fee deduction.
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	ctx := input.ctx
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 
@@ -326,7 +327,7 @@ func TestAnteHandlerFees(t *testing.T) {
 // Test logic around memo gas consumption.
 func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -366,7 +367,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -416,7 +417,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -493,7 +494,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 
 func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -544,7 +545,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 }
 
 func TestProcessPubKey(t *testing.T) {
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	ctx := input.ctx
 
 	// keys
@@ -689,7 +690,7 @@ func TestCountSubkeys(t *testing.T) {
 
 func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	anteHandler := NewAnteHandler(input.ak, input.sk, DefaultSigVerificationGasConsumer)
 	ctx := input.ctx.WithBlockHeight(1)
 
@@ -726,7 +727,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 
 func TestEnsureSufficientMempoolFees(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	ctx := input.ctx.WithMinGasPrices(
 		sdk.DecCoins{
 			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
@@ -778,7 +779,7 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 // Test custom SignatureVerificationGasConsumer
 func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup
-	input := setupTestInput()
+	input := keeper.SetupTestInput()
 	// setup an ante handler that only accepts PubKeyEd25519
 	anteHandler := NewAnteHandler(input.ak, input.sk, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) sdk.Result {
 		switch pubkey := pubkey.(type) {

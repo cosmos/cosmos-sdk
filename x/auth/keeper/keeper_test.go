@@ -1,4 +1,4 @@
-package auth
+package keeper
 
 import (
 	"testing"
@@ -6,10 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	addr := sdk.AccAddress([]byte("some-address"))
 
 	// no account before its created
@@ -38,7 +39,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
@@ -69,19 +70,19 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 }
 
 func TestSetParams(t *testing.T) {
-	input := setupTestInput()
-	params := DefaultParams()
+	input := SetupTestInput()
+	params := types.DefaultParams()
 
 	input.ak.SetParams(input.ctx, params)
 
-	newParams := Params{}
-	input.ak.paramSubspace.Get(input.ctx, KeyTxSigLimit, &newParams.TxSigLimit)
-	require.Equal(t, newParams.TxSigLimit, DefaultTxSigLimit)
+	newParams := types.Params{}
+	input.ak.paramSubspace.Get(input.ctx, types.KeyTxSigLimit, &newParams.TxSigLimit)
+	require.Equal(t, newParams.TxSigLimit, types.DefaultTxSigLimit)
 }
 
 func TestGetParams(t *testing.T) {
-	input := setupTestInput()
-	params := DefaultParams()
+	input := SetupTestInput()
+	params := types.DefaultParams()
 
 	input.ak.SetParams(input.ctx, params)
 

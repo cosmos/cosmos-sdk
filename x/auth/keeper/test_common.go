@@ -1,5 +1,6 @@
 // nolint
-package auth
+// DONTCOVER
+package keeper
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -49,7 +50,7 @@ func (ma moduleAccount) GetPermissions() []string {
 	return ma.permissions
 }
 
-func setupTestInput() testInput {
+func SetupTestInput() testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()

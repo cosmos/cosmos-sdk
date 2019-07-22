@@ -1,4 +1,4 @@
-package auth
+package keeper
 
 import (
 	"fmt"
@@ -12,9 +12,9 @@ import (
 )
 
 func Test_queryAccount(t *testing.T) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	req := abci.RequestQuery{
-		Path: fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount),
+		Path: fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount),
 		Data: []byte{},
 	}
 

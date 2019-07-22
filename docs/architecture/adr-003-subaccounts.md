@@ -76,7 +76,7 @@ Bank Keepers `SetCoins()` function will be updated to return an error instead of
 
 ## Status
 
-Proposed
+Accepted
 
 ## Consequences
 

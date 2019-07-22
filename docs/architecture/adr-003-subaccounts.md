@@ -18,6 +18,7 @@ There is no limit on the number of `ModuleAccount`s that a `ModuleMultiAccount` 
 A `ModuleMultiAccount` has no permissions since it cannot hold any coins.
 Its constructor returns a `ModuleMultiAccount` with no `ModuleAccount`s.
 A sub-account cannot be removed from a `MultiModuleAccount`.
+The account number assigned to sub-accounts will begin at 0 and be monotonically auto incrementing.
 
 ### Implementation Changes
 

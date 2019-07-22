@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -71,7 +71,7 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 }
 
 // NewGenesisAccount creates a GenesisAccount instance from a BaseAccount.
-func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
+func NewGenesisAccount(acc *authtypes.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.Address,
 		Coins:         acc.Coins,
@@ -109,21 +109,21 @@ func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 }
 
 // ToAccount converts a GenesisAccount to an Account interface
-func (ga *GenesisAccount) ToAccount() auth.Account {
-	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(), nil, ga.AccountNumber, ga.Sequence)
+func (ga *GenesisAccount) ToAccount() authexported.Account {
+	bacc := authtypes.NewBaseAccount(ga.Address, ga.Coins.Sort(), nil, ga.AccountNumber, ga.Sequence)
 
 	// vesting accounts
 	if !ga.OriginalVesting.IsZero() {
-		baseVestingAcc := auth.NewBaseVestingAccount(
+		baseVestingAcc := authtypes.NewBaseVestingAccount(
 			bacc, ga.OriginalVesting, ga.DelegatedFree,
 			ga.DelegatedVesting, ga.EndTime,
 		)
 
 		switch {
 		case ga.StartTime != 0 && ga.EndTime != 0:
-			return auth.NewContinuousVestingAccountRaw(baseVestingAcc, ga.StartTime)
+			return authtypes.NewContinuousVestingAccountRaw(baseVestingAcc, ga.StartTime)
 		case ga.EndTime != 0:
-			return auth.NewDelayedVestingAccountRaw(baseVestingAcc)
+			return authtypes.NewDelayedVestingAccountRaw(baseVestingAcc)
 		default:
 			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}
@@ -137,10 +137,10 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 	return bacc
 }
 
-//___________________________________
+// GenesisAccounts defines a set of genesis account
 type GenesisAccounts []GenesisAccount
 
-// genesis accounts contain an address
+// Contains checks if a set of genesis accounts contain an address
 func (gaccs GenesisAccounts) Contains(acc sdk.AccAddress) bool {
 	for _, gacc := range gaccs {
 		if gacc.Address.Equals(acc) {

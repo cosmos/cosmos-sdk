@@ -1,14 +1,16 @@
 package v0_36
 
 import (
+	"testing"
+
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	"github.com/cosmos/cosmos-sdk/types"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v034accounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )

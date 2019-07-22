@@ -82,8 +82,8 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	bk := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:     nil,
-		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
-		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace, maccPerms)
 

@@ -83,10 +83,15 @@ func (sc *StoreCache) Write() {
 func (sc *StoreCache) Get(key []byte) []byte {
 	val, ok := sc.cache.Get(string(key))
 	if ok {
+		// cache hit
 		return val.([]byte)
 	}
 
-	return sc.KVStore.Get(key)
+	// cache miss; add to cache
+	bz := sc.KVStore.Get(key)
+	sc.cache.Add(string(key), bz)
+
+	return bz
 }
 
 // Set inserts a key/value pair into both the write-through cache and the

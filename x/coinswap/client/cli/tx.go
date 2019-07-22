@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -123,6 +124,58 @@ $ %s tx coinswap remove-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388ku
 			senderAddr := cliCtx.GetFromAddress()
 
 			msg := types.NewMsgRemoveLiquidity(withdraw, withdrawAmount, minNative, deadline, senderAddr)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+}
+
+// GetCmdSwapOrder implements the swap order command handler
+func GetCmdSwapOrder(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "swap-order [input] [output] [deadline] [recipient] [is-buy-order]",
+		Args:  cobra.ExactArgs(5),
+		Short: "Swap order",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Swap order for a trading pair.
+			
+Example:
+$ %s tx coinswap swap-order 5atom 2eth cosmosvaloper1l2dsbkp388kuv9k8qzq6lrm9tbccae7fpx59wm false --from mykey
+`,
+				version.ClientName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			input, err := sdk.ParseCoin(args[0])
+			if err != nil {
+				return err
+			}
+
+			output, err := sdk.ParseCoin(args[1])
+			if err != nil {
+				return err
+			}
+
+			deadline, err := time.Parse(time.RFC3339, args[2])
+			if err != nil {
+				return err
+			}
+
+			senderAddr := cliCtx.GetFromAddress()
+
+			recipientAddr, err := sdk.AccAddressFromBech32(args[3])
+			if err != nil {
+				return err
+			}
+
+			isBuyOder, err := strconv.ParseBool(args[4])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSwapOrder(input, output, deadline, senderAddr, recipientAddr, isBuyOder)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

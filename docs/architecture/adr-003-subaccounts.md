@@ -36,7 +36,7 @@ type ModuleMultiAccount struct {
     Coins sdk.Coins // passively track all sub account balances
 
     CreateSubAccount(address sdk.AccAddress) int // returns account number of sub-account
-    GetSubAccount(subAccNumber int64) SubAccount
+    GetSubAccount(subAccNumber int64) ModuleAccount
 }
 ```
 

@@ -42,7 +42,7 @@ var (
 	valOpAddr1  = sdk.ValAddress(valOpPk1.Address())
 	valOpAddr2  = sdk.ValAddress(valOpPk2.Address())
 	valOpAddr3  = sdk.ValAddress(valOpPk3.Address())
-	valAccAddr1 = sdk.AccAddress(valOpPk1.Address()) // generate acc addresses for these validator keys too
+	valAccAddr1 = sdk.AccAddress(valOpPk1.Address())
 	valAccAddr2 = sdk.AccAddress(valOpPk2.Address())
 	valAccAddr3 = sdk.AccAddress(valOpPk3.Address())
 
@@ -110,10 +110,10 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	cdc := makeTestCodec()
 
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:     []string{supply.Basic},
-		types.ModuleName:          []string{supply.Basic},
-		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
-		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
+		auth.FeeCollectorName:     nil,
+		types.ModuleName:          nil,
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
@@ -144,18 +144,17 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	}
 
 	// create module accounts
-	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	govAcc := supply.NewEmptyModuleAccount(types.ModuleName, supply.Burner)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
 
 	keeper.supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 	keeper.supplyKeeper.SetModuleAccount(ctx, govAcc)
+	keeper.supplyKeeper.SetModuleAccount(ctx, bondPool)
+	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	return ctx, accountKeeper, keeper, sk, supplyKeeper
-}
-
-// TODO: remove dependency with staking
-func StakingHandler(sk staking.Keeper) sdk.Handler {
-	return staking.NewHandler(sk)
 }
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)
@@ -182,4 +181,6 @@ func createValidators(ctx sdk.Context, sk staking.Keeper, powers []int64) {
 	_, _ = sk.Delegate(ctx, valAccAddr1, sdk.TokensFromConsensusPower(powers[0]), sdk.Unbonded, val1, true)
 	_, _ = sk.Delegate(ctx, valAccAddr2, sdk.TokensFromConsensusPower(powers[1]), sdk.Unbonded, val2, true)
 	_, _ = sk.Delegate(ctx, valAccAddr3, sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val3, true)
+
+	_ = staking.EndBlocker(ctx, sk)
 }

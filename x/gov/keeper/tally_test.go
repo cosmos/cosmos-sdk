@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
@@ -52,7 +53,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	ctx, _, keeper, sk, _ := createTestInput(t, false, 100)
-	createValidators(ctx, sk, []int64{5, 5, 0})
+	createValidators(ctx, sk, []int64{5, 5, 5})
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -61,10 +62,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -86,10 +86,8 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -110,12 +108,8 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -137,12 +131,9 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNoWithVeto)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNoWithVeto))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -165,12 +156,9 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionAbstain))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -192,12 +180,9 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionAbstain))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -219,10 +204,8 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -244,6 +227,8 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
 	require.NoError(t, err)
 
+	_ = staking.EndBlocker(ctx, sk)
+
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
@@ -251,14 +236,10 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[3], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -274,11 +255,13 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	createValidators(ctx, sk, []int64{5, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(30)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
+	val3, found := sk.GetValidator(ctx, valOpAddr3)
 	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
+	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
+
+	_ = staking.EndBlocker(ctx, sk)
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -287,12 +270,9 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -318,6 +298,8 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
 
+	_ = staking.EndBlocker(ctx, sk)
+
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
@@ -325,14 +307,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[3], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -348,15 +326,17 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	createValidators(ctx, sk, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
-	require.True(t, found)
 	val2, found := sk.GetValidator(ctx, valOpAddr2)
 	require.True(t, found)
+	val3, found := sk.GetValidator(ctx, valOpAddr3)
+	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
+	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
+
+	_ = staking.EndBlocker(ctx, sk)
 
 	tp := TestProposal
 	proposal, err := keeper.SubmitProposal(ctx, tp)
@@ -365,12 +345,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -386,15 +363,17 @@ func TestTallyJailedValidator(t *testing.T) {
 	createValidators(ctx, sk, []int64{25, 6, 7})
 
 	delTokens := sdk.TokensFromConsensusPower(10)
-	val1, found := sk.GetValidator(ctx, valOpAddr1)
-	require.True(t, found)
 	val2, found := sk.GetValidator(ctx, valOpAddr2)
 	require.True(t, found)
+	val3, found := sk.GetValidator(ctx, valOpAddr3)
+	require.True(t, found)
 
-	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val1, true)
+	_, err := sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
 	require.NoError(t, err)
-	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val2, true)
+	_, err = sk.Delegate(ctx, TestAddrs[0], delTokens, sdk.Unbonded, val3, true)
 	require.NoError(t, err)
+
+	_ = staking.EndBlocker(ctx, sk)
 
 	sk.Jail(ctx, sdk.ConsAddress(val2.ConsPubKey.Address()))
 
@@ -405,12 +384,9 @@ func TestTallyJailedValidator(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNo)
-	require.Nil(t, err)
-	err = keeper.AddVote(ctx, proposalID, TestAddrs[2], types.OptionNo)
-	require.Nil(t, err)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, keeper.AddVote(ctx, proposalID, valAccAddr3, types.OptionNo))
 
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)

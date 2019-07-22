@@ -244,7 +244,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
-	stakingHandler := keep.StakingHandler(input.sk)
+	stakingHandler := stakingHandler(input.sk)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -294,7 +294,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
-	stakingHandler := keep.StakingHandler(input.sk)
+	stakingHandler := stakingHandler(input.sk)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})

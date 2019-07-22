@@ -137,7 +137,6 @@ func (ga *GenesisAccount) ToAccount() authexported.Account {
 	return bacc
 }
 
-
 // GenesisAccounts defines a set of genesis account
 type GenesisAccounts []GenesisAccount
 

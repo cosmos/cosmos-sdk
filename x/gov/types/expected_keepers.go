@@ -7,7 +7,7 @@ import (
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-// ParamSubspace defines the expected Subspace interface for parameters
+// ParamSubspace defines the expected Subspace interface for parameters (noalias)
 type ParamSubspace interface {
 	WithKeyTable(table subspace.KeyTable) subspace.Subspace
 	Get(ctx sdk.Context, key []byte, ptr interface{})

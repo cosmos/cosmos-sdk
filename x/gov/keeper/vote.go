@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// AddVote Adds a vote on a specific proposal
+// AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) sdk.Error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {

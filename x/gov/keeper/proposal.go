@@ -47,7 +47,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	return proposal, nil
 }
 
-// GetProposal get types.Proposal from store by ProposalID
+// GetProposal get proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal types.Proposal, ok bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalKey(proposalID))

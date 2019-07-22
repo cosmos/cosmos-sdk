@@ -134,11 +134,6 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 	}
 }
 
-// TODO: remove dependency with staking
-func stakingHandler(sk staking.Keeper) sdk.Handler {
-	return staking.NewHandler(sk)
-}
-
 // SortAddresses - Sorts Addresses
 func SortAddresses(addrs []sdk.AccAddress) {
 	var byteAddrs [][]byte

@@ -163,3 +163,23 @@ func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
 	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
 		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
 }
+
+func createValidators(ctx sdk.Context, sk staking.Keeper, powers []int64) {
+	val1 := staking.NewValidator(valOpAddr1, valOpPk1, staking.Description{})
+	val2 := staking.NewValidator(valOpAddr2, valOpPk2, staking.Description{})
+	val3 := staking.NewValidator(valOpAddr3, valOpPk3, staking.Description{})
+
+	sk.SetValidator(ctx, val1)
+	sk.SetValidator(ctx, val2)
+	sk.SetValidator(ctx, val3)
+	sk.SetValidatorByConsAddr(ctx, val1)
+	sk.SetValidatorByConsAddr(ctx, val2)
+	sk.SetValidatorByConsAddr(ctx, val3)
+	sk.SetNewValidatorByPowerIndex(ctx, val1)
+	sk.SetNewValidatorByPowerIndex(ctx, val2)
+	sk.SetNewValidatorByPowerIndex(ctx, val3)
+
+	_, _ = sk.Delegate(ctx, valAccAddr1, sdk.TokensFromConsensusPower(powers[0]), sdk.Unbonded, val1, true)
+	_, _ = sk.Delegate(ctx, valAccAddr2, sdk.TokensFromConsensusPower(powers[1]), sdk.Unbonded, val2, true)
+	_, _ = sk.Delegate(ctx, valAccAddr3, sdk.TokensFromConsensusPower(powers[2]), sdk.Unbonded, val3, true)
+}

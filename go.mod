@@ -9,9 +9,9 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
-	github.com/golang/protobuf v1.3.0
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.1
 	github.com/mattn/go-isatty v0.0.6
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1

@@ -10,9 +10,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // ValidateAccountInGenesis checks that the provided key has sufficient
@@ -24,18 +25,18 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	accountIsInGenesis := false
 
 	// TODO: refactor out bond denom to common state area
-	stakingDataBz := appGenesisState[staking.ModuleName]
-	var stakingData staking.GenesisState
+	stakingDataBz := appGenesisState[stakingtypes.ModuleName]
+	var stakingData stakingtypes.GenesisState
 	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
 	bondDenom := stakingData.Params.BondDenom
 
-	genUtilDataBz := appGenesisState[staking.ModuleName]
+	genUtilDataBz := appGenesisState[stakingtypes.ModuleName]
 	var genesisState GenesisState
 	cdc.MustUnmarshalJSON(genUtilDataBz, &genesisState)
 
 	var err error
 	genAccIterator.IterateGenesisAccounts(cdc, appGenesisState,
-		func(acc auth.Account) (stop bool) {
+		func(acc authexported.Account) (stop bool) {
 			accAddress := acc.GetAddress()
 			accCoins := acc.GetCoins()
 
@@ -74,7 +75,7 @@ func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
-		var tx auth.StdTx
+		var tx authtypes.StdTx
 		cdc.MustUnmarshalJSON(genTx, &tx)
 		bz := cdc.MustMarshalBinaryLengthPrefixed(tx)
 		res := deliverTx(abci.RequestDeliverTx{Tx: bz})

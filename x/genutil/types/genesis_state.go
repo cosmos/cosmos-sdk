@@ -9,8 +9,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenesisState defines the raw genesis transaction in JSON
@@ -27,14 +27,12 @@ func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 
 // NewGenesisStateFromStdTx creates a new GenesisState object
 // from auth transactions
-func NewGenesisStateFromStdTx(genTxs []auth.StdTx) GenesisState {
+func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {
 	genTxsBz := make([]json.RawMessage, len(genTxs))
 	for i, genTx := range genTxs {
 		genTxsBz[i] = ModuleCdc.MustMarshalJSON(genTx)
 	}
-	return GenesisState{
-		GenTxs: genTxsBz,
-	}
+	return NewGenesisState(genTxsBz)
 }
 
 // GetGenesisStateFromAppState gets the genutil genesis state from the expected app state
@@ -91,7 +89,7 @@ func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
 // ValidateGenesis validates GenTx transactions
 func ValidateGenesis(genesisState GenesisState) error {
 	for i, genTx := range genesisState.GenTxs {
-		var tx auth.StdTx
+		var tx authtypes.StdTx
 		if err := ModuleCdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return err
 		}
@@ -103,7 +101,7 @@ func ValidateGenesis(genesisState GenesisState) error {
 		}
 
 		// TODO: abstract back to staking
-		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
+		if _, ok := msgs[0].(stakingtypes.MsgCreateValidator); !ok {
 			return fmt.Errorf(
 				"genesis transaction %v does not contain a MsgCreateValidator", i)
 		}

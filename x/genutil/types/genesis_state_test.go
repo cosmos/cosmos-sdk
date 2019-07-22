@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -17,29 +17,29 @@ var (
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
 
-	desc := staking.NewDescription("testname", "", "", "")
-	comm := staking.CommissionRates{}
+	desc := stakingtypes.NewDescription("testname", "", "", "")
+	comm := stakingtypes.CommissionRates{}
 
-	msg1 := staking.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
+	msg1 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	msg2 := staking.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
+	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	genTxs := auth.NewStdTx([]sdk.Msg{msg1, msg2}, auth.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]auth.StdTx{genTxs})
+	genTxs := stakingtypes.NewStdTx([]sdk.Msg{msg1, msg2}, authtypes.StdFee{}, nil, "")
+	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
 
 	err := ValidateGenesis(genesisState)
 	require.Error(t, err)
 }
 
 func TestValidateGenesisBadMessage(t *testing.T) {
-	desc := staking.NewDescription("testname", "", "", "")
+	desc := stakingtypes.NewDescription("testname", "", "", "")
 
-	msg1 := staking.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	genTxs := auth.NewStdTx([]sdk.Msg{msg1}, auth.StdFee{}, nil, "")
-	genesisState := NewGenesisStateFromStdTx([]auth.StdTx{genTxs})
+	genTxs := stakingtypes.NewStdTx([]sdk.Msg{msg1}, authtypes.StdFee{}, nil, "")
+	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
 
 	err := ValidateGenesis(genesisState)
 	require.Error(t, err)

@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func newStoreCache(store types.KVStore) *StoreCache {
+func NewStoreCache(store types.KVStore) *StoreCache {
 	cache, err := lru.NewARC(PersistentStoreCacheSize)
 	if err != nil {
 		panic(fmt.Errorf("failed to create cache: %s", err))
@@ -65,7 +65,7 @@ func NewStoreCacheManager() *StoreCacheManager {
 // store contains a persistent cache through the StoreCache.
 func (cmgr *StoreCacheManager) GetOrSetStoreCache(key types.StoreKey, store types.CacheWrap) types.CacheWrap {
 	if cmgr.caches[key] == nil {
-		cmgr.caches[key] = newStoreCache(store.(types.KVStore))
+		cmgr.caches[key] = NewStoreCache(store.(types.KVStore))
 	}
 
 	return cmgr.caches[key]

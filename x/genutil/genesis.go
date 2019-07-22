@@ -5,10 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// initialize accounts and deliver genesis transactions
-func InitGenesis(ctx sdk.Context, cdc *codec.Codec, stakingKeeper StakingKeeper,
+// InitGenesis - initialize accounts and deliver genesis transactions
+func InitGenesis(ctx sdk.Context, cdc *codec.Codec, stakingKeeper types.StakingKeeper,
 	deliverTx deliverTxfn, genesisState GenesisState) []abci.ValidatorUpdate {
 
 	var validators []abci.ValidatorUpdate

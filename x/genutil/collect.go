@@ -13,39 +13,19 @@ import (
 	"strings"
 
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-// common config options for init
-type InitConfig struct {
-	ChainID   string
-	GenTxsDir string
-	Name      string
-	NodeID    string
-	ValPubKey crypto.PubKey
-}
-
-// NewInitConfig creates a new InitConfig object
-func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) InitConfig {
-	return InitConfig{
-		ChainID:   chainID,
-		GenTxsDir: genTxsDir,
-		Name:      name,
-		NodeID:    nodeID,
-		ValPubKey: valPubKey,
-	}
-}
-
-// get the genesis app state from the config
+// GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	initCfg InitConfig, genDoc tmtypes.GenesisDoc,
-	genAccIterator GenesisAccountsIterator,
+	genAccIterator types.GenesisAccountsIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
@@ -83,7 +63,7 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	return appState, err
 }
 
-// Set the genesis transactions int the app genesis state
+// SetGenTxsInAppGenesisState - sets the genesis transactions int the app genesis state
 func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]json.RawMessage,
 	genTxs []auth.StdTx) (map[string]json.RawMessage, error) {
 
@@ -105,7 +85,7 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]jso
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
-	genDoc tmtypes.GenesisDoc, genAccIterator GenesisAccountsIterator,
+	genDoc tmtypes.GenesisDoc, genAccIterator types.GenesisAccountsIterator,
 ) (appGenTxs []auth.StdTx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo

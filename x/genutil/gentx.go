@@ -11,18 +11,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
-	genAccIterator GenesisAccountsIterator,
+	genAccIterator types.GenesisAccountsIterator,
 	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
 
 	accountIsInGenesis := false
 
-	// TODO refactor out bond denom to common state area
+	// TODO: refactor out bond denom to common state area
 	stakingDataBz := appGenesisState[staking.ModuleName]
 	var stakingData staking.GenesisState
 	cdc.MustUnmarshalJSON(stakingDataBz, &stakingData)
@@ -68,9 +69,9 @@ func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 
 type deliverTxfn func(abci.RequestDeliverTx) abci.ResponseDeliverTx
 
-// deliver a genesis transaction
+// DeliverGenTxs - deliver a genesis transaction
 func DeliverGenTxs(ctx sdk.Context, cdc *codec.Codec, genTxs []json.RawMessage,
-	stakingKeeper StakingKeeper, deliverTx deliverTxfn) []abci.ValidatorUpdate {
+	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) []abci.ValidatorUpdate {
 
 	for _, genTx := range genTxs {
 		var tx auth.StdTx

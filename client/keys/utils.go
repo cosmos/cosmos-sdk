@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"

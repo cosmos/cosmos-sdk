@@ -77,18 +77,13 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
-	depositsIterator := keeper.GetDepositsIterator(ctx, proposalID)
-	require.True(t, depositsIterator.Valid())
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, TestAddrs[0], deposit.Depositor)
-	require.Equal(t, fourStake.Add(fiveStake), deposit.Amount)
-	depositsIterator.Next()
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, TestAddrs[1], deposit.Depositor)
-	require.Equal(t, fourStake, deposit.Amount)
-	depositsIterator.Next()
-	require.False(t, depositsIterator.Valid())
-	depositsIterator.Close()
+	// FIXME: non determinism on the order of the deposits
+	deposits := keeper.GetAllDeposits(ctx)
+	require.Len(t, deposits, 2)
+	require.Equal(t, TestAddrs[0], deposits[0].Depositor)
+	require.Equal(t, fourStake.Add(fiveStake), deposits[0].Amount)
+	require.Equal(t, TestAddrs[1], deposits[1].Depositor)
+	require.Equal(t, fourStake, deposits[1].Amount)
 
 	// Test Refund Deposits
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])

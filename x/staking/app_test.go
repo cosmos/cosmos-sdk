@@ -27,7 +27,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:   []string{supply.Basic},
+		auth.FeeCollectorName:   nil,
 		types.NotBondedPoolName: []string{supply.Burner, supply.Staking},
 		types.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
@@ -60,7 +60,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKe
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
-		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
 		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 

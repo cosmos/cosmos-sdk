@@ -1,17 +1,18 @@
 # Contributing
 
-* [Pull Requests](#pull-requests)
-  * [Process for reviewing PRs](#process-for-reviewing-prs)
-  * [Updating Documentation](#updating-documentation)
-* [Forking](#forking)
-* [Dependencies](#dependencies)
-* [Testing](#testing)
-* [Branching Model and Release](#branching-model-and-release)
-  * [PR Targeting](#pr-targeting)
-  * [Development Procedure](#development-procedure)
-  * [Pull Merge Procedure](#pull-merge-procedure)
-  * [Release Procedure](#release-procedure)
-  * [Point Release Procedure](#point-release-procedure)
+- [ADR](#adr)
+- [Pull Requests](#pull-requests)
+  - [Process for reviewing PRs](#process-for-reviewing-prs)
+  - [Updating Documentation](#updating-documentation)
+- [Forking](#forking)
+- [Dependencies](#dependencies)
+- [Testing](#testing)
+- [Branching Model and Release](#branching-model-and-release)
+  - [PR Targeting](#pr-targeting)
+  - [Development Procedure](#development-procedure)
+  - [Pull Merge Procedure](#pull-merge-procedure)
+  - [Release Procedure](#release-procedure)
+  - [Point Release Procedure](#point-release-procedure)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -20,25 +21,24 @@ Contributing to this repo can mean many things such as participated in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-  1. either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
-     [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with,
-  2. participate in thoughtful discussion on that issue,
-  3. if you would then like to contribute code:
-     1. if a the issue is a proposal, ensure that the proposal has been accepted,
-     2. ensure that nobody else has already begun working on this issue, if they have
-       make sure to contact them to collaborate,
-     3. if nobody has been assigned the issue and you would like to work on it
-       make a comment on the issue to inform the community of your intentions
-       to begin work,
-     4. follow standard github best practices: fork the repo, branch from the
-       top of `master`, make some commits, and submit a PR to `master`,
-         - for core developers working within the cosmos-sdk repo, 
-	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.  
-     5. include `WIP:` in the PR-title to and submit your PR early, even if it's
-       incomplete, this indicates to the community you're working on something and
-       allows them to provide comments early in the development process. When the code
-       is complete it can be marked as ready-for-review by replacing `WIP:` with
-       `R4R:` in the PR-title.
+1. either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
+   [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with,
+2. participate in thoughtful discussion on that issue,
+3. if you would then like to contribute code:
+   1. if a the issue is a proposal, ensure that the proposal has been accepted,
+   2. ensure that nobody else has already begun working on this issue, if they have
+      make sure to contact them to collaborate,
+   3. if nobody has been assigned the issue and you would like to work on it
+      make a comment on the issue to inform the community of your intentions
+      to begin work,
+   4. follow standard github best practices: fork the repo, branch from the
+      top of `master`, make some commits, and submit a PR to `master`, - for core developers working within the cosmos-sdk repo,
+      to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.
+   5. include `WIP:` in the PR-title to and submit your PR early, even if it's
+      incomplete, this indicates to the community you're working on something and
+      allows them to provide comments early in the development process. When the code
+      is complete it can be marked as ready-for-review by replacing `WIP:` with
+      `R4R:` in the PR-title.
 
 Note that for very small or blatantly obvious problems (such as typos) it is
 not required to an open issue to submit a PR, but be aware that for more complex
@@ -46,15 +46,22 @@ problems/features, if a PR is opened before an adequate design discussion has
 taken place in a github issue, that PR runs a high likelihood of being rejected.
 
 Take a peek at our [coding repo](https://github.com/tendermint/coding) for
-overall information on repository workflow and standards. Note, we use `make
-tools` for installing the linting tools.
+overall information on repository workflow and standards. Note, we use `make tools` for installing the linting tools.
 
 Other notes:
-  - Looking for a good place to start contributing? How about checking out some
-    [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-  - Please make sure to use `gofmt` before every commit - the easiest way to do
-    this is have your editor run it for you upon saving a file. Additionally
-    please ensure that your code is lint compliant by running `make lint`
+
+- Looking for a good place to start contributing? How about checking out some
+  [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+- Please make sure to use `gofmt` before every commit - the easiest way to do
+  this is have your editor run it for you upon saving a file. Additionally
+  please ensure that your code is lint compliant by running `make lint`
+
+## Architecture Decision Records (ADR)
+
+When proposing an architecture decision for the SDK, please create an [ADR](./docs/architecture/README.md)
+so further discussions can be made. We are following this process so all involved parties are in
+agreement before any party begins coding the proposed implementation. If you would like to see some examples
+of how these are written refer to [Tendermint ADRs](https://github.com/tendermint/tendermint/tree/master/docs/architecture)
 
 ## Pull Requests
 
@@ -81,25 +88,25 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
 
-* If your change relates to the core SDK (baseapp, store, ...), please update the docs/cosmos-hub folder and possibly the docs/spec folder.
-* If your changes relate specifically to the gaia application (not including modules), please modify the docs/cosmos-hub folder.
-* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/cosmos-hub.
-* If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
+- If your change relates to the core SDK (baseapp, store, ...), please update the docs/cosmos-hub folder and possibly the docs/spec folder.
+- If your changes relate specifically to the gaia application (not including modules), please modify the docs/cosmos-hub folder.
+- If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/cosmos-hub.
+- If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
 
 ## Forking
 
 Please note that Go requires code to live under absolute paths, which complicates forking.
 While my fork lives at `https://github.com/rigeyrigerige/cosmos-sdk`,
-the code should never exist at  `$GOPATH/src/github.com/rigeyrigerige/cosmos-sdk`.
+the code should never exist at `$GOPATH/src/github.com/rigeyrigerige/cosmos-sdk`.
 Instead, we use `git remote` to add the fork as a new remote for the original repo,
-`$GOPATH/src/github.com/cosmos/cosmos-sdk `, and do all the work there.
+`$GOPATH/src/github.com/cosmos/cosmos-sdk`, and do all the work there.
 
 For instance, to create a fork and work on a branch of it, I would:
 
-  - Create the fork on github, using the fork button.
-  - Go to the original repo checked out locally (i.e. `$GOPATH/src/github.com/cosmos/cosmos-sdk`)
-  - `git remote rename origin upstream`
-  - `git remote add origin git@github.com:rigeyrigerige/cosmos-sdk.git`
+- Create the fork on github, using the fork button.
+- Go to the original repo checked out locally (i.e. `$GOPATH/src/github.com/cosmos/cosmos-sdk`)
+- `git remote rename origin upstream`
+- `git remote add origin git@github.com:rigeyrigerige/cosmos-sdk.git`
 
 Now `origin` refers to my fork and `upstream` refers to the Cosmos-SDK version.
 So I can `git push -u origin master` to update my fork, and make pull requests to Cosmos-SDK from there.
@@ -107,8 +114,8 @@ Of course, replace `rigeyrigerige` with your git handle.
 
 To pull in updates from the origin repo, run
 
-  - `git fetch upstream`
-  - `git rebase upstream/master` (or whatever branch you want)
+- `git fetch upstream`
+- `git rebase upstream/master` (or whatever branch you want)
 
 Please don't make Pull Requests to `master`.
 
@@ -173,41 +180,47 @@ should be targeted against the release candidate branch. Release candidate branc
 only pull requests targeted directly against master.
 
 ### Development Procedure
-  - the latest state of development is on `master`
-  - `master` must never fail `make test` or `make test_cli`
-  - `master` should not fail `make lint`
-  - no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
-  - create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
-  - before submitting a pull request, begin `git rebase` on top of `master`
+
+- the latest state of development is on `master`
+- `master` must never fail `make test` or `make test_cli`
+- `master` should not fail `make lint`
+- no `--force` onto `master` (except when reverting a broken commit, which should seldom happen)
+- create a development branch either on github.com/cosmos/cosmos-sdk, or your fork (using `git remote add origin`)
+- before submitting a pull request, begin `git rebase` on top of `master`
 
 ### Pull Merge Procedure
-  - ensure pull branch is rebased on `master`
-  - run `make test` and `make test_cli` to ensure that all tests pass
-  - merge pull request
+
+- ensure pull branch is rebased on `master`
+- run `make test` and `make test_cli` to ensure that all tests pass
+- merge pull request
 
 ### Release Procedure
-  - start on `master`
-  - create the release candidate branch `rc/v*` (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
-  - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
-  - if errors are found during the simulation testing, commit the fixes to `master` and create a new `RC` branch (making sure to increment the `rcN`)
-  - after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch
-  - merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
-  - delete the `RC` branches
- 
+
+- start on `master`
+- create the release candidate branch `rc/v*` (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+- on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
+- if errors are found during the simulation testing or if any last minute changes
+need to be introduced, create a new `RC` branch (making sure to increment the `rcN`)
+based off of the current `RC` branch and commit any fixes or changes
+  - the above requires that any commits introduced must also be merged back into `master` 
+- after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch
+- merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
+- delete the `RC` branches
+
 ### Point Release Procedure
 
 At the moment, only a single major release will be supported, so all point
 releases will be based off of that release.
 
-  - start on `vX.XX.X`
-  - checkout a new branch `pre-rc/vX.X.X`
-  - cherry pick the desired changes from `master`
-    - these changes should be small and NON-BREAKING (both API and state machine)
-  - add entries to CHANGELOG.md and remove corresponding pending log entries
-  - checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
-  - create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
-  - run tests and simulations (noted in [Release Procedure](#release-procedure))
-  - after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
-  - delete the `pre-rc/vX.X.X` and `RC` branches
-  - create a PR into `master` containing ONLY the CHANGELOG.md updates
-  - tag and release `release/vX.XX.X`
+- start on `vX.XX.X`
+- checkout a new branch `pre-rc/vX.X.X`
+- cherry pick the desired changes from `master`
+  - these changes should be small and NON-BREAKING (both API and state machine)
+- add entries to CHANGELOG.md and remove corresponding pending log entries
+- checkout a new branch `rc/vX.X.X` based off of `vX.XX.X`
+- create a PR merging `pre-rc/vX.X.X` into `rc/vX.X.X`
+- run tests and simulations (noted in [Release Procedure](#release-procedure))
+- after tests and simulation have successfully completed, create the release branch `release/vX.XX.X` from the `RC` branch
+- delete the `pre-rc/vX.X.X` and `RC` branches
+- create a PR into `master` containing ONLY the CHANGELOG.md updates
+- tag and release `release/vX.XX.X`

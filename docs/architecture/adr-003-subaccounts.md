@@ -35,16 +35,16 @@ type ModuleMultiAccount struct {
     SubAccounts []ModuleAccount
     Coins sdk.Coins // passively track all sub account balances
 
-    CreateSubAccount(address sdk.AccAddress) int // returns account number of sub-account
+    CreateSubAccount(name string, permissions ...string) int // returns account number of sub-account
     GetSubAccount(subAccNumber int64) ModuleAccount
 }
 ```
 
 The `ModuleAccount` implementation will remain unchanged, but we will add the following constructor function:
 ```go
-// NewEmptyModuleSubAccount creates an sub-account ModuleAccount which has an address created from
+// NewEmptyModuleSubAccount creates a sub-account ModuleAccount which has an address created from
 // the hash of the module's name with the sub-account number appended.
-func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...string) sdk.AccAddress {
+func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...string) ModuleAccount {
     bz := make([]byte, 8)
     binary.LittleEndian.PutUint64(bz, subAccNumber)
     moduleAddress := append(NewModuleAddress(name), bz...)

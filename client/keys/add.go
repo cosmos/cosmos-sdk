@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -104,7 +105,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	} else {
 		// c.Flags().Bool(FlagSecretSore, false, "Use legacy secret store")
 		if viper.GetBool(flags.FlagSecretStore) {
-			fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+			os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {
 				return err

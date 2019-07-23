@@ -47,12 +47,6 @@ type (
 		UpdateTime    time.Time `json:"update_time"`
 	}
 
-	CommissionMsg struct {
-		Rate          sdk.Dec `json:"rate"`
-		MaxRate       sdk.Dec `json:"max_rate"`
-		MaxChangeRate sdk.Dec `json:"max_change_rate"`
-	}
-
 	bechValidator struct {
 		OperatorAddress         sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
 		ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator

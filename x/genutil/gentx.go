@@ -16,6 +16,25 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// SetGenTxsInAppGenesisState - sets the genesis transactions int the app genesis state
+func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]json.RawMessage,
+	genTxs []authtypes.StdTx) (map[string]json.RawMessage, error) {
+
+	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
+	// convert all the GenTxs to JSON
+	var genTxsBz []json.RawMessage
+	for _, genTx := range genTxs {
+		txBz, err := cdc.MarshalJSON(genTx)
+		if err != nil {
+			return appGenesisState, err
+		}
+		genTxsBz = append(genTxsBz, txBz)
+	}
+
+	genesisState.GenTxs = genTxsBz
+	return SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
+}
+
 // ValidateAccountInGenesis checks that the provided key has sufficient
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,

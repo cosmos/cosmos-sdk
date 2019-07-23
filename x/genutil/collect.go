@@ -17,8 +17,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -62,25 +62,6 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	genDoc.AppState = appState
 	err = ExportGenesisFile(&genDoc, config.GenesisFile())
 	return appState, err
-}
-
-// SetGenTxsInAppGenesisState - sets the genesis transactions int the app genesis state
-func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]json.RawMessage,
-	genTxs []authtypes.StdTx) (map[string]json.RawMessage, error) {
-
-	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
-	// convert all the GenTxs to JSON
-	var genTxsBz []json.RawMessage
-	for _, genTx := range genTxs {
-		txBz, err := cdc.MarshalJSON(genTx)
-		if err != nil {
-			return appGenesisState, err
-		}
-		genTxsBz = append(genTxsBz, txBz)
-	}
-
-	genesisState.GenTxs = genTxsBz
-	return SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
 }
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns

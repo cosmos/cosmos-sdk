@@ -26,7 +26,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 	msg2 := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, sdk.OneInt())
 
-	genTxs := stakingtypes.NewStdTx([]sdk.Msg{msg1, msg2}, authtypes.StdFee{}, nil, "")
+	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1, msg2}, authtypes.StdFee{}, nil, "")
 	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
 
 	err := ValidateGenesis(genesisState)
@@ -38,7 +38,7 @@ func TestValidateGenesisBadMessage(t *testing.T) {
 
 	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
 
-	genTxs := stakingtypes.NewStdTx([]sdk.Msg{msg1}, authtypes.StdFee{}, nil, "")
+	genTxs := authtypes.NewStdTx([]sdk.Msg{msg1}, authtypes.StdFee{}, nil, "")
 	genesisState := NewGenesisStateFromStdTx([]authtypes.StdTx{genTxs})
 
 	err := ValidateGenesis(genesisState)

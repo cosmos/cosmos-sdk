@@ -80,6 +80,67 @@ func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
 	}
 }
 
+// SimulateMsgMintNFT simulates a mint of an NFT
+func SimulateMsgMintNFT(k Keeper) simulation.Operation {
+	handler := GenericHandler(k)
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+
+		msg := NewMsgMintNFT(
+			simulation.RandomAcc(r, accs).Address, // sender
+			simulation.RandomAcc(r, accs).Address, // recipient
+			simulation.RandStringOfLength(r, 25), // nft ID
+			simulation.RandStringOfLength(r, 10), // denom
+			simulation.RandStringOfLength(r, 15), // name
+			simulation.RandStringOfLength(r, 50), // description
+			simulation.RandStringOfLength(r, 30), // image
+			simulation.RandStringOfLength(r, 45), // tokenURI
+		)
+
+		if msg.ValidateBasic() != nil {
+			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		}
+
+		ctx, write := ctx.CacheContext()
+		ok := handler(ctx, msg).IsOK()
+		if ok {
+			write()
+		}
+
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		return opMsg, nil, nil
+	}
+}
+
+
+// SimulateMsgBurnNFT simulates a burn of an existing NFT
+func SimulateMsgBurnNFT(k Keeper) simulation.Operation {
+	handler := GenericHandler(k)
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+
+		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
+		if ownerAddr.Empty() {
+			return simulation.NoOpMsg(), nil, nil
+		}
+
+		msg := NewMsgBurnNFT(ownerAddr, nftID, denom)
+
+		if msg.ValidateBasic() != nil {
+			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		}
+
+		ctx, write := ctx.CacheContext()
+		ok := handler(ctx, msg).IsOK()
+		if ok {
+			write()
+		}
+
+		opMsg = simulation.NewOperationMsg(msg, ok, "")
+		return opMsg, nil, nil
+	}
+}
+
 func getRandomNFTFromOwner(ctx sdk.Context, k Keeper, r *rand.Rand) (address sdk.AccAddress, denom, nftID string) {
 	owners := k.GetOwners(ctx)
 	if len(owners) == 0 {

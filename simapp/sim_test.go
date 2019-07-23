@@ -352,18 +352,40 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			nft.SimulateMsgEditNFTMetadata(app.nftKeeper),
+			nft.SimulateMsgTransferNFT(app.nftKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgTransferNFT, &v, nil,
+				ap.GetOrGenerate(cdc, OpWeightMsgEditNFTMetadata, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			nft.SimulateMsgTransferNFT(app.nftKeeper),
+			nft.SimulateMsgEditNFTMetadata(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgMintNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgMintNFT(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgBurnNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgBurnNFT(app.nftKeeper),
 		},
 	}
 }

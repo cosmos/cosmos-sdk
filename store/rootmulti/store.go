@@ -38,6 +38,7 @@ type Store struct {
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
+	cacheManager *cachemulti.StoreCacheManager
 }
 
 var _ types.CommitMultiStore = (*Store)(nil)
@@ -50,6 +51,7 @@ func NewStore(db dbm.DB) *Store {
 		storesParams: make(map[types.StoreKey]storeParams),
 		stores:       make(map[types.StoreKey]types.CommitStore),
 		keysByName:   make(map[string]types.StoreKey),
+		cacheManager: cachemulti.NewStoreCacheManager(),
 	}
 }
 
@@ -231,20 +233,23 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 //----------------------------------------
 // +MultiStore
 
-// Implements MultiStore.
+// CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
+// It implements the MultiStore interface. Note, the multi-store has a persistent
+// inter-block cache that will be used by all subsequent KVStores.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
 
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.cacheManager)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
-// iterating at past heights.
+// iterating at past heights. Note, the multi-store has a persistent inter-block
+// cache that will be used by all subsequent KVStores.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {
@@ -264,7 +269,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		}
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.cacheManager), nil
 }
 
 // Implements MultiStore.

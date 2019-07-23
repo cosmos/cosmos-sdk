@@ -36,7 +36,7 @@ func TotalSupply(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(types.ModuleName, "total supply",
 			fmt.Sprintf(
 				"\tsum of accounts coins: %v\n"+
-					"\tsupply.Total:          %v",
+					"\tsupply.Total:          %v\n",
 				expectedTotal, supply.Total), broken)
 	}
 }

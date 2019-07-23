@@ -34,6 +34,7 @@ type Store struct {
 	storesParams map[types.StoreKey]storeParams
 	stores       map[types.StoreKey]types.CommitStore
 	keysByName   map[string]types.StoreKey
+	lazyLoading  bool
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -58,6 +59,11 @@ func (rs *Store) SetPruning(pruningOpts types.PruningOptions) {
 	for _, substore := range rs.stores {
 		substore.SetPruning(pruningOpts)
 	}
+}
+
+// SetLazyLoading sets if the iavl store should be loaded lazily or not
+func (rs *Store) SetLazyLoading(lazyLoading bool) {
+	rs.lazyLoading = lazyLoading
 }
 
 // Implements Store.
@@ -389,7 +395,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		return iavl.LoadStore(db, id, rs.pruningOpts)
+		return iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading)
 
 	case types.StoreTypeDB:
 		return commitDBStoreAdapter{dbadapter.Store{db}}, nil

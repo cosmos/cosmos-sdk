@@ -8,21 +8,20 @@ import (
 
 func TestHasPermission(t *testing.T) {
 	emptyPermAddr := NewPermissionsForAddress("empty", []string{})
-	has := emptyPermAddr.HasPermission(Basic)
+	has := emptyPermAddr.HasPermission(Minter)
 	require.False(t, has)
 
 	cases := []struct {
 		permission string
 		expectHas  bool
 	}{
-		{Basic, true},
 		{Minter, true},
 		{Burner, true},
 		{Staking, true},
 		{"random", false},
 		{"", false},
 	}
-	permAddr := NewPermissionsForAddress("test", []string{Basic, Minter, Burner, Staking})
+	permAddr := NewPermissionsForAddress("test", []string{Minter, Burner, Staking})
 	for i, tc := range cases {
 		has = permAddr.HasPermission(tc.permission)
 		require.Equal(t, tc.expectHas, has, "test case #%d", i)
@@ -37,9 +36,9 @@ func TestValidatePermissions(t *testing.T) {
 		expectPass  bool
 	}{
 		{"no permissions", []string{}, true},
-		{"valid permission", []string{Basic}, true},
+		{"valid permission", []string{Minter}, true},
 		{"invalid permission", []string{""}, false},
-		{"invalid and valid permission", []string{Basic, ""}, false},
+		{"invalid and valid permission", []string{Staking, ""}, false},
 	}
 
 	for i, tc := range cases {

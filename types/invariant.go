@@ -3,8 +3,8 @@ package types
 import "fmt"
 
 // An Invariant is a function which tests a particular invariant.
-// If the invariant has been broken, it should return an error
-// containing a descriptive message about what happened.
+// The invariant returns a descriptive message about what happened
+// and a boolean indicating whether the invariant has been broken.
 // The simulator will then halt and print the logs.
 type Invariant func(ctx Context) (string, bool)
 
@@ -17,8 +17,8 @@ type InvariantRegistry interface {
 }
 
 // FormatInvariant returns a standardized invariant message along with
-// broken boolean.
+// a boolean indicating whether the invariant has been broken.
 func FormatInvariant(module, name, msg string, broken bool) (string, bool) {
-	return fmt.Sprintf("%s: %s invariant\n%s\nInvariant Broken: %v\n",
+	return fmt.Sprintf("%s: %s invariant\n%sinvariant broken: %v\n",
 		module, name, msg, broken), broken
 }

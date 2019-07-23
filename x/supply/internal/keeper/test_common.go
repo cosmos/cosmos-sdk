@@ -81,10 +81,10 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 
 	maccPerms := map[string][]string{
 		holder:       nil,
-		types.Minter: []string{types.Minter},
-		types.Burner: []string{types.Burner},
-		multiPerm:    []string{types.Minter, types.Burner, types.Staking},
-		randomPerm:   []string{"random"},
+		types.Minter: {types.Minter},
+		types.Burner: {types.Burner},
+		multiPerm:    {types.Minter, types.Burner, types.Staking},
+		randomPerm:   {"random"},
 	}
 	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, maccPerms)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))

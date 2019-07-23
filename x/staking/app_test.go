@@ -28,8 +28,8 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:   nil,
-		types.NotBondedPoolName: []string{supply.Burner, supply.Staking},
-		types.BondedPoolName:    []string{supply.Burner, supply.Staking},
+		types.NotBondedPoolName: {supply.Burner, supply.Staking},
+		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)

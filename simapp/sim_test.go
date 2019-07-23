@@ -23,11 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 

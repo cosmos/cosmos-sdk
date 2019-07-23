@@ -5,10 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestInvalidMsg(t *testing.T) {
@@ -53,7 +54,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	res = h(ctx, transferNftMsg)
 	require.True(t, res.IsOK(), "%v", res)
 
-	// event events should be emmitted correctly
+	// event events should be emitted correctly
 	for _, event := range res.Events {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
@@ -128,7 +129,7 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	res = h(ctx, editNFTMetadata)
 	require.True(t, res.IsOK(), "%v", res)
 
-	// event events should be emmitted correctly
+	// event events should be emitted correctly
 	for _, event := range res.Events {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
@@ -177,7 +178,7 @@ func TestMintNFTMsg(t *testing.T) {
 	res := h(ctx, mintNFT)
 	require.True(t, res.IsOK(), "%v", res)
 
-	// event events should be emmitted correctly
+	// event events should be emitted correctly
 	for _, event := range res.Events {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)
@@ -233,7 +234,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	exists := k.IsNFT(ctx, denom, id)
 	require.True(t, exists)
 
-	// burning a non-existant NFT should fail
+	// burning a non-existent NFT should fail
 	failBurnNFT := types.NewMsgBurnNFT(
 		address,
 		id2,
@@ -256,7 +257,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	res = h(ctx, burnNFT)
 	require.True(t, res.IsOK(), "%v", res)
 
-	// event events should be emmitted correctly
+	// event events should be emitted correctly
 	for _, event := range res.Events {
 		for _, attribute := range event.Attributes {
 			value := string(attribute.Value)

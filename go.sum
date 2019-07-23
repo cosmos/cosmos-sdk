@@ -33,8 +33,6 @@ github.com/cosmos/ledger-cosmos-go v0.10.3 h1:Qhi5yTR5Pg1CaTpd00pxlGwNl4sFRdtK1J
 github.com/cosmos/ledger-cosmos-go v0.10.3/go.mod h1:J8//BsAGTo3OC/vDLjMRFLW6q0WAaXvHnVc7ZmE8iUY=
 github.com/cosmos/ledger-go v0.9.2 h1:Nnao/dLwaVTk1Q5U9THldpUMMXU94BOTWPddSmVB6pI=
 github.com/cosmos/ledger-go v0.9.2/go.mod h1:oZJ2hHAZROdlHiwTg4t7kP+GKIIkBT+o6c9QWFanOyI=
-github.com/cosmos/tools/cmd/clog v0.0.0-20190722180430-ea942c183cba h1:YhVnGzBkE2TvfBW5fAYBdNVK/3bwTPYVbMaOIGRHFRY=
-github.com/cosmos/tools/cmd/clog v0.0.0-20190722180430-ea942c183cba/go.mod h1:TdPuAVaU2rc6K24ejr/AnGznt9Fd2qjtMoRrTO4uFrI=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/davecgh/go-spew v0.0.0-20171005155431-ecdeabc65495/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

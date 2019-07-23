@@ -22,4 +22,6 @@ const (
 	OpWeightMsgUnjail                                  = "op_weight_msg_unjail"
 	OpWeightMsgTransferNFT                             = "op_weight_msg_transfer_nft"
 	OpWeightMsgEditNFTMetadata                         = "op_weight_msg_edit_nft_metadata"
+	OpWeightMsgMintNFT                                 = "op_weight_msg_mint_nft"
+	OpWeightMsgBurnNFT                                 = "op_weight_msg_burn_nft"
 )

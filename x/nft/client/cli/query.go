@@ -6,12 +6,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
-	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module

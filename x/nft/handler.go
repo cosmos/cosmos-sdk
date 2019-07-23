@@ -3,10 +3,11 @@ package nft
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GenericHandler routes the messages to the handlers

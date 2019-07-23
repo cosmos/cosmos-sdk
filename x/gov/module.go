@@ -1,5 +1,6 @@
-// DONTCOVER
 package gov
+
+// DONTCOVER
 
 import (
 	"encoding/json"

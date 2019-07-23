@@ -118,7 +118,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
 
 			if err2 != nil {
-				fmt.Println("testing error")
+				// fmt.Println("testing error")
 				return err2
 			}
 			if !response {

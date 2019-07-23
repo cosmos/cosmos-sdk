@@ -1,157 +1,117 @@
-version: 2
+version: 2.1
 
-defaults: &linux_defaults
-  working_directory: /go/src/github.com/cosmos/cosmos-sdk
-  docker:
-    - image: circleci/golang:1.12.5
+executors:
+  golang:
+    docker:
+      - image: circleci/golang:1.12.7
+  docs:
+    docker:
+      - image: tendermintdev/docker-website-deployment
+    environment:
+      AWS_REGION: us-east-1
 
-############
-#
-# Configure docs deployment
-
-docs_update: &docs_deploy
-  working_directory: ~/repo
-  docker:
-    - image: tendermintdev/jq_curl
-  environment:
-    AWS_REGION: us-east-1
-
-jobs:
-  setup_dependencies:
-    <<: *linux_defaults
+commands:
+  make:
+    parameters:
+      description:
+        type: string
+      target:
+        type: string
     steps:
-      - run: mkdir -p /tmp/workspace/bin
-      - run: mkdir -p /tmp/workspace/profiles
-      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - restore_cache:
           keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-src-v1-{{ .Revision }}
+      - checkout
+      - restore_cache:
+            keys:
+              - go-mod-v1-{{ checksum "go.sum" }}
       - run:
-          name: tools
+          name: << parameters.description >>
           command: |
-            make runsim tools TOOLS_DESTDIR=/tmp/workspace/bin
-            cp $GOPATH/bin/runsim /tmp/workspace/bin
-            cp $GOPATH/bin/statik /tmp/workspace/bin
+            cp /tmp/workspace/bin/* /go/bin/
+            make << parameters.target >>
+
+jobs:
+  get_tools:
+    executor: golang
+    steps:
       - run:
-          name: cache go modules
+          name: Get runsim and statik
           command: |
-            make go-mod-cache
-      - save_cache:
-          key: go-mod-v1-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
-      - run:
-          name: build
-          command: |
-            make build
+            mkdir -p /tmp/workspace/bin
+            go get github.com/cosmos/tools/cmd/runsim github.com/rakyll/statik
+            cp ${GOPATH}/bin/* /tmp/workspace/bin/
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
             - bin
-            - profiles
+  setup_dependencies:
+    executor: golang
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: Cache go modules
+          command: make go-mod-cache
+      - run:
+          name: Build
+          command: make build
+      - run:
+          name: Git garbage collection
+          command: git gc
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - save_cache:
+          key: go-src-v1-{{ .Revision }}
+          paths:
+            - ".git"
 
   test_sim_app_nondeterminism:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test individual module simulations
-          command: |
-            make test_sim_app_nondeterminism
+      - make:
+          target: test_sim_app_nondeterminism
+          description: "Test individual module simulations"
 
   test_sim_app_fast:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test full application simulation
-          command: |
-            make test_sim_app_fast
+     - make:
+          target: test_sim_app_fast
+          description: "Test full application simulation"
 
   test_sim_app_import_export:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test application import/export simulation
-          command: |
-            export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppImportExport
-
-  test_sim_app_simulation_after_import:
-    <<: *linux_defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test application import/export simulation
-          command: |
-            export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 5 TestAppSimulationAfterImport
+      - make:
+          target: test_sim_app_import_export
+          description: "Test application import/export simulation"
 
   test_sim_app_multi_seed_long:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test multi-seed application simulation long
-          command: |
-            export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 500 50 TestFullAppSimulation
+      - make:
+          target: test_sim_app_multi_seed
+          description: "Test multi-seed application simulation long"
 
   test_sim_app_multi_seed:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: Test multi-seed application simulation short
-          command: |
-            export GO111MODULE=on
-            /tmp/workspace/bin/runsim -j 4 github.com/cosmos/cosmos-sdk/simapp 50 10 TestFullAppSimulation
+      - make:
+          target: test_sim_app_multi_seed_short
+          description: "Test multi-seed application simulation short"
 
   test_cover:
-    <<: *linux_defaults
+    executor: golang
     parallelism: 4
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
       - checkout
-      - run: mkdir -p /tmp/logs
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -160,7 +120,8 @@ jobs:
           command: |
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             export GO111MODULE=on
-            for pkg in $(go list ./... | grep -v '/simulation' | circleci tests split --split-by=timings); do
+            mkdir -p /tmp/logs /tmp/workspace/profiles
+            for pkg in $(go list ./... | grep -v '/simulation' | circleci tests split); do
               id=$(echo "$pkg" | sed 's|[/.]|_|g')
               go test -mod=readonly -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic -tags='ledger test_ledger_mock' "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
             done
@@ -172,8 +133,7 @@ jobs:
           path: /tmp/logs
 
   upload_coverage:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -181,8 +141,6 @@ jobs:
       - run:
           name: gather
           command: |
-            set -ex
-
             echo "--> Concatenating profiles:"
             ls /tmp/workspace/profiles/
             echo "mode: atomic" > coverage.txt
@@ -201,67 +159,22 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
-  deploy_docs:
-    <<: *docs_deploy
-    steps:
-      - checkout
-      - run:
-          name: Trigger website build
-          command: |
-            curl --silent \
-                 --show-error \
-                 -X POST \
-                 --header "Content-Type: application/json" \
-                 -d "{\"branch\": \"$CIRCLE_BRANCH\"}" \
-                 "https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$WEBSITE_REPO_NAME/build?circle-token=$TENDERBOT_API_TOKEN" > response.json
-
-            RESULT=`jq -r '.status' response.json`
-            MESSAGE=`jq -r '.message' response.json`
-
-            if [[ ${RESULT} == "null" ]] || [[ ${RESULT} -ne "200" ]]; then
-                echo "CircleCI API call failed: $MESSAGE"
-                exit 1
-            else
-                echo "Website build started"
-            fi
-
   check_statik:
-    <<: *linux_defaults
-    parallelism: 1
+    executor: golang
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - restore_cache:
-          keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
-      - run:
-          name: check if statik.go is up-to-date
-          command: |
-            set -ex
-            export PATH=/tmp/workspace/bin:$PATH
-
-            make update-swagger-docs
-            if [ -n "$(git status --porcelain)" ]; then
-              echo "swagger docs out of sync";
-              exit 1
-            else
-              echo "swagger docs are in sync";
-            fi
+      - make:
+          target: update-swagger-docs
+          description: check if statik.go is up-to-date
 
 workflows:
   version: 2
   test-suite:
     jobs:
+      - get_tools
       - check_statik:
           requires:
             - setup_dependencies
-      - deploy_docs:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
+            - get_tools
       - setup_dependencies:
           # filters here are needed to enable this job also for tags
           filters:
@@ -271,29 +184,27 @@ workflows:
       - test_sim_app_nondeterminism:
           requires:
             - setup_dependencies
+            - get_tools
       - test_sim_app_fast:
           requires:
             - setup_dependencies
+            - get_tools
       - test_sim_app_import_export:
           requires:
             - setup_dependencies
-      - test_sim_app_simulation_after_import:
-          requires:
-            - setup_dependencies
+            - get_tools
       - test_sim_app_multi_seed:
           requires:
             - setup_dependencies
+            - get_tools
       - test_sim_app_multi_seed_long:
           requires:
             - setup_dependencies
-          filters:
-            branches:
-              only:
-                - master
-                - develop
+            - get_tools
       - test_cover:
           requires:
             - setup_dependencies
+            - get_tools
       - upload_coverage:
           requires:
             - test_cover

@@ -6,20 +6,17 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
-SIMAPP = github.com/cosmos/cosmos-sdk/simapp
+SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
-all: tools build lint test
-
-# The below include contains the tools target.
-include contrib/devtools/Makefile
+all: build lint test
 
 ########################################
 ### CI
 
-ci: tools build test_cover lint test
+ci: build test_cover lint test
 
 ########################################
 ### Build
@@ -28,11 +25,15 @@ build: go.sum
 	@go build -mod=readonly ./...
 
 update-swagger-docs:
-	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	@$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	if [ -n "$(git status --porcelain)" ]; then \
+		echo "swagger docs out of sync";\
+        exit 1;\
+    else \
+    	echo "swagger docs are in sync";\
+    fi
 
-dist:
-	@bash publish/dist.sh
-	@bash publish/publish.sh
+.PHONY: update-swagger-docs
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
@@ -52,10 +53,7 @@ go.sum: go.mod
 	@go mod verify
 	@go mod tidy
 
-clean:
-	rm -rf snapcraft-local.yaml build/
-
-distclean: clean
+distclean:
 	rm -rf \
     gitian-build-darwin/ \
     gitian-build-linux/ \
@@ -103,7 +101,7 @@ test_sim_app_fast:
 
 test_sim_app_import_export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppImportExport
+	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 5 TestAppImportExport
 
 test_sim_app_simulation_after_import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
@@ -116,7 +114,11 @@ test_sim_app_custom_genesis_multi_seed: runsim
 
 test_sim_app_multi_seed: runsim
 	@echo "Running multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim $(SIMAPP) 400 5 TestFullAppSimulation
+	$(BINDIR)/runsim -j 4 $(SIMAPP) 500 50 TestFullAppSimulation
+
+test_sim_app_multi_seed_short: runsim
+	@echo "Running multi-seed application simulation. This may take awhile!"
+	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 10 TestFullAppSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -124,7 +126,6 @@ test_sim_benchmark_invariants:
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Commit=true -Seed=57 -v -timeout 24h
 
-# Don't move it into tools - this will be gone once gaia has moved into the new repo
 runsim: $(BINDIR)/runsim
 $(BINDIR)/runsim:
 	go get github.com/cosmos/tools/cmd/runsim/
@@ -147,12 +148,15 @@ test_sim_app_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
-lint: golangci-lint
+test_cover_circle:
+	@export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
+
+lint:
 	golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
 
-format: tools
+format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
@@ -185,12 +189,6 @@ devdoc_update:
 	docker pull tendermint/devdoc
 
 
-########################################
-### Packaging
-
-snapcraft-local.yaml: snapcraft-local.yaml.in
-	sed "s/@VERSION@/${VERSION}/g" < $< > $@
-
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
@@ -198,5 +196,5 @@ snapcraft-local.yaml: snapcraft-local.yaml.in
 benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
 format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
 test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \
-test_sim_app_multi_seed test_sim_app_import_export test_sim_benchmark_invariants \
-go-mod-cache
+test_sim_app_multi_seed_short test_sim_app_multi_seed test_sim_app_import_export \
+test_sim_benchmark_invariants go-mod-cache

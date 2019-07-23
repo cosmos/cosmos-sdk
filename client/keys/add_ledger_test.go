@@ -34,14 +34,11 @@ const (
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config := sdk.GetConfig()
 
-	if config.GetBech32AccountAddrPrefix() != bech32PrefixAccAddr {
-		config.SetCoinType(330)
-		config.SetFullFundraiserPath("44'/330'/0'/0/0")
-		config.SetBech32PrefixForAccount(bech32PrefixAccAddr, bech32PrefixAccPub)
-		config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
-		config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
-		config.Seal()
-	}
+	config.SetCoinType(330)
+	config.SetFullFundraiserPath("44'/330'/0'/0/0")
+	config.SetBech32PrefixForAccount(bech32PrefixAccAddr, bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
@@ -73,6 +70,12 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	assert.Equal(t,
 		"terrapub1addwnpepqvpg7r26nl2pvqqern00m6s9uaax3hauu2rzg8qpjzq9hy6xve7sw0d84m6",
 		sdk.MustBech32ifyAccPub(key1.GetPubKey()))
+
+	config.SetCoinType(118)
+	config.SetFullFundraiserPath("44'/118'/0'/0/0")
+	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 }
 
 func Test_runAddCmdLedger(t *testing.T) {

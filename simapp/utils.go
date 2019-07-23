@@ -500,6 +500,7 @@ func GenStakingGenesisState(
 	return stakingGenesis
 }
 
+// GenNFTGenesisState generates a random GenesisState for nft
 func GenNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 	const (
 		Kitties = "crypto-kitties"
@@ -521,11 +522,18 @@ func GenNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Accoun
 			)
 
 			var idCollection nft.IDCollection
+			var err error
 			if r.Intn(100) < 50 {
-				collections[0].AddNFT(&baseNFT)
+				collections[0], err = collections[0].AddNFT(&baseNFT)
+				if err != nil {
+					panic(err)
+				}
 				idCollection = nft.NewIDCollection(Kitties, []string{baseNFT.ID})
 			} else {
-				collections[1].AddNFT(&baseNFT)
+				collections[1], err = collections[1].AddNFT(&baseNFT)
+				if err != nil {
+					panic(err)
+				}
 				idCollection = nft.NewIDCollection(Doggos, []string{baseNFT.ID})
 			}
 			ownership := nft.NewOwner(acc.Address, idCollection)

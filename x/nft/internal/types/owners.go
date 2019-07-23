@@ -104,8 +104,8 @@ func (idCollections IDCollections) find(el string) int {
 
 // Owner of non fungible tokens
 type Owner struct {
-	Address       sdk.AccAddress `json:"address"`
-	IDCollections IDCollections  `json:"IDCollections"`
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	IDCollections IDCollections  `json:"idCollections" yaml:"idCollections"`
 }
 
 // NewOwner creates a new Owner

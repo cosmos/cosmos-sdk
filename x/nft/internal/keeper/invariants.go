@@ -27,8 +27,8 @@ func AllInvariants(k Keeper) sdk.Invariant {
 // SupplyInvariant checks that the total amount of nfts on collections matches the total amount owned by addresses
 func SupplyInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var collectionsSupply map[string]int
-		var ownersCollectionsSupply map[string]int
+		collectionsSupply := make(map[string]int)
+		ownersCollectionsSupply := make(map[string]int)
 		var msg string
 		count := 0
 
@@ -49,7 +49,7 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 				count++
 				msg += fmt.Sprintf("total %s NFTs supply invariance:\n"+
 					"\ttotal %s NFTs supply: %d\n"+
-					"\tsum of %s NFTs by owner: %d", denom, denom, supply, denom, ownersCollectionsSupply[denom])
+					"\tsum of %s NFTs by owner: %d\n", denom, denom, supply, denom, ownersCollectionsSupply[denom])
 			}
 		}
 		broken := count != 0

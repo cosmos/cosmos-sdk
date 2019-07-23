@@ -12,11 +12,6 @@ var (
 	_ types.KVStore   = (*StoreCache)(nil)
 	_ types.CacheWrap = (*StoreCache)(nil)
 
-	// The interBlockCache contains an inter-block write-through cache for each
-	// KVStore. Each underlying KVStore itself may be cache-wrapped, but the
-	// cache here is persistent through block production.
-	interBlockCache = NewStoreCacheManager()
-
 	// PersistentStoreCacheSize defines the persistent ARC cache size for each
 	// KVStore.
 	PersistentStoreCacheSize = 1000

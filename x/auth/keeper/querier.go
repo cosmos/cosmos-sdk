@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// creates a querier for auth REST endpoints
+// NewQuerier creates a querier for auth REST endpoints
 func NewQuerier(keeper AccountKeeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
 		switch path[0] {

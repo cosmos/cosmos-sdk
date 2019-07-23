@@ -48,89 +48,6 @@ func (ak AccountKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// NewAccountWithAddress implements sdk.AccountKeeper.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) exported.Account {
-	acc := ak.proto()
-	err := acc.SetAddress(addr)
-	if err != nil {
-		// Handle w/ #870
-		panic(err)
-	}
-	err = acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
-	if err != nil {
-		// Handle w/ #870
-		panic(err)
-	}
-	return acc
-}
-
-// NewAccount creates a new account
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc exported.Account) exported.Account {
-	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
-		panic(err)
-	}
-	return acc
-}
-
-// GetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) exported.Account {
-	store := ctx.KVStore(ak.key)
-	bz := store.Get(types.AddressStoreKey(addr))
-	if bz == nil {
-		return nil
-	}
-	acc := ak.decodeAccount(bz)
-	return acc
-}
-
-// GetAllAccounts returns all accounts in the accountKeeper.
-func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) []exported.Account {
-	accounts := []exported.Account{}
-	appendAccount := func(acc exported.Account) (stop bool) {
-		accounts = append(accounts, acc)
-		return false
-	}
-	ak.IterateAccounts(ctx, appendAccount)
-	return accounts
-}
-
-// SetAccount implements sdk.AccountKeeper.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc exported.Account) {
-	addr := acc.GetAddress()
-	store := ctx.KVStore(ak.key)
-	bz, err := ak.cdc.MarshalBinaryBare(acc)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(types.AddressStoreKey(addr), bz)
-}
-
-// RemoveAccount removes an account for the account mapper store.
-// NOTE: this will cause supply invariant violation if called
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc exported.Account) {
-	addr := acc.GetAddress()
-	store := ctx.KVStore(ak.key)
-	store.Delete(types.AddressStoreKey(addr))
-}
-
-// IterateAccounts implements sdk.AccountKeeper.
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(exported.Account) (stop bool)) {
-	store := ctx.KVStore(ak.key)
-	iter := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
-	defer iter.Close()
-	for {
-		if !iter.Valid() {
-			return
-		}
-		val := iter.Value()
-		acc := ak.decodeAccount(val)
-		if process(acc) {
-			return
-		}
-		iter.Next()
-	}
-}
-
 // GetPubKey Returns the PubKey of the account at address
 func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
@@ -149,12 +66,14 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 	return acc.GetSequence(), nil
 }
 
-// GetNextAccountNumber Returns and increments the global account number counter
+// GetNextAccountNumber returns and increments the global account number counter.
+// If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.GlobalAccountNumberKey)
 	if bz == nil {
+		// initialize the account numbers
 		accNumber = 0
 	} else {
 		err := ak.cdc.UnmarshalBinaryLengthPrefixed(bz, &accNumber)
@@ -167,20 +86,6 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	store.Set(types.GlobalAccountNumberKey, bz)
 
 	return accNumber
-}
-
-// -----------------------------------------------------------------------------
-// Params
-
-// SetParams sets the auth module's parameters.
-func (ak AccountKeeper) SetParams(ctx sdk.Context, params types.Params) {
-	ak.paramSubspace.SetParamSet(ctx, &params)
-}
-
-// GetParams gets the auth module's parameters.
-func (ak AccountKeeper) GetParams(ctx sdk.Context) (params types.Params) {
-	ak.paramSubspace.GetParamSet(ctx, &params)
-	return
 }
 
 // -----------------------------------------------------------------------------

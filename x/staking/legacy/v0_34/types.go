@@ -41,14 +41,10 @@ type (
 	}
 
 	Commission struct {
-		CommissionRates CommissionRates `json:"commission_rates"`
-		UpdateTime      time.Time       `json:"update_time"`
-	}
-
-	CommissionRates struct {
-		Rate          sdk.Dec `json:"rate"`
-		MaxRate       sdk.Dec `json:"max_rate"`
-		MaxChangeRate sdk.Dec `json:"max_change_rate"`
+		Rate          sdk.Dec   `json:"rate"`
+		MaxRate       sdk.Dec   `json:"max_rate"`
+		MaxChangeRate sdk.Dec   `json:"max_change_rate"`
+		UpdateTime    time.Time `json:"update_time"`
 	}
 
 	bechValidator struct {

@@ -8,3 +8,15 @@ const (
 	ParamFee         = "fee"
 	ParamNativeDenom = "nativeDenom"
 )
+
+// defines the params for the following queries:
+// - 'custom/coinswap/liquidity'
+type QueryLiquidityParams struct {
+	NonNativeDenom string
+}
+
+func NewQueryLiquidityParams(nonNativeDenom string) QueryLiquidityParams {
+	return QueryLiquidityParams{
+		NonNativeDenom: nonNativeDenom,
+	}
+}

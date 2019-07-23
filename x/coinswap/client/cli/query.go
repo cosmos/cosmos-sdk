@@ -44,18 +44,23 @@ $ %s query coinswap liquidity
 				version.ClientName,
 			),
 		),
-		Args: cobra.NoArgs,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryLiquidity)
-			bz, _, err := cliCtx.QueryWithData(route, nil)
+			bz, err := cdc.MarshalJSON(types.NewQueryLiquidityParams(args[0]))
 			if err != nil {
 				return err
 			}
 
-			var liquidity sdk.Coin
-			cdc.MustUnmarshalJSON(bz, &liquidity)
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryLiquidity)
+			res, _, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
+			}
+
+			var liquidity sdk.Coins
+			cdc.MustUnmarshalJSON(res, &liquidity)
 			return cliCtx.PrintOutput(liquidity)
 		},
 	}

@@ -1,4 +1,4 @@
-package genaccounts
+package types
 
 import (
 	"errors"

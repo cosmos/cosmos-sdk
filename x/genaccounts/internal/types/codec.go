@@ -1,4 +1,4 @@
-package genaccounts
+package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

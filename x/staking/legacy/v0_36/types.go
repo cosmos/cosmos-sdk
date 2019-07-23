@@ -17,8 +17,8 @@ const (
 
 type (
 	Commission struct {
-		CommissionRates
-		UpdateTime time.Time `json:"update_time" yaml:"update_time"`
+		CommissionRates `json:"commission_rates" yaml:"update_time"`
+		UpdateTime      time.Time `json:"update_time" yaml:"update_time"`
 	}
 
 	CommissionRates struct {

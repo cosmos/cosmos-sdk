@@ -16,11 +16,18 @@ func TestVotes(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
+	var invalidOption types.VoteOption
+	invalidOption = 0x10
+
+	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes))
+	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], types.OptionYes))
+	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], invalidOption))
+
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
 
 	// Test first vote
-	keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain))
 	vote, found := keeper.GetVote(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
 	require.Equal(t, TestAddrs[0], vote.Voter)
@@ -28,7 +35,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, types.OptionAbstain, vote.Option)
 
 	// Test change of vote
-	keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes))
 	vote, found = keeper.GetVote(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
 	require.Equal(t, TestAddrs[0], vote.Voter)
@@ -36,7 +43,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, types.OptionYes, vote.Option)
 
 	// Test second vote
-	keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNoWithVeto)
+	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[1], types.OptionNoWithVeto))
 	vote, found = keeper.GetVote(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
 	require.Equal(t, TestAddrs[1], vote.Voter)
@@ -47,6 +54,7 @@ func TestVotes(t *testing.T) {
 	// FIXME: non determinism on the order of the votes
 	votes := keeper.GetAllVotes(ctx)
 	require.Len(t, votes, 2)
+	require.Equal(t, votes, keeper.GetVotes(ctx, proposalID))
 	require.Equal(t, TestAddrs[0], votes[0].Voter)
 	require.Equal(t, proposalID, votes[0].ProposalID)
 	require.Equal(t, types.OptionYes, votes[0].Option)

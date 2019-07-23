@@ -72,12 +72,6 @@ func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	store.Set(types.VoteKey(vote.ProposalID, vote.Voter), bz)
 }
 
-// GetVotesIterator gets all the votes on a specific proposal as an sdk.Iterator
-func (keeper Keeper) GetVotesIterator(ctx sdk.Context, proposalID uint64) sdk.Iterator {
-	store := ctx.KVStore(keeper.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
-}
-
 // IterateAllVotes iterates over the all the stored votes and performs a callback function
 func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
@@ -96,7 +90,8 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (
 
 // IterateVotes iterates over the all the proposals votes and performs a callback function
 func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote types.Vote) (stop bool)) {
-	iterator := keeper.GetVotesIterator(ctx, proposalID)
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

@@ -34,7 +34,7 @@ func TestDeposits(t *testing.T) {
 
 	// Check first deposit
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
@@ -47,7 +47,7 @@ func TestDeposits(t *testing.T) {
 
 	// Check a second deposit from same address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
 	require.True(t, found)
@@ -60,7 +60,7 @@ func TestDeposits(t *testing.T) {
 
 	// Check third deposit from a new address
 	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[1], fourStake)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
@@ -80,6 +80,7 @@ func TestDeposits(t *testing.T) {
 	// FIXME: non determinism on the order of the deposits
 	deposits := keeper.GetAllDeposits(ctx)
 	require.Len(t, deposits, 2)
+	require.Equal(t, deposits, keeper.GetDeposits(ctx, proposalID))
 	require.Equal(t, TestAddrs[0], deposits[0].Depositor)
 	require.Equal(t, fourStake.Add(fiveStake), deposits[0].Amount)
 	require.Equal(t, TestAddrs[1], deposits[1].Depositor)

@@ -32,7 +32,7 @@ This query command is defined by the module developer and added to the list of s
 
 ### REST
 
-Another interface through which users can make queries is through HTTP Requests to a REST server. The REST server contains, among other things, a [`CLIContext`](#clicontext) and [mux](./rest.md)(#gorilla-mux) router. The request looks like this:
+Another interface through which users can make queries is through HTTP Requests to a REST server. The REST server contains, among other things, a [`CLIContext`](#clicontext) and [mux](./rest.md#gorilla-mux) router. The request looks like this:
 
 ```bash
 http://localhost:{PORT}/staking/delegators/{delegatorAddr}/delegations
@@ -46,7 +46,7 @@ To read about how the router is used, click [here](./rest.md).
 
 ## Request and Command Handling
 
-The user interactions are somewhat similar, but the underlying functions are almost identical. This section describes how the CLI command or HTTP request is processed, up until the ABCI request is sent. This step of processing heavily involves a `CLIContext`.
+The interactions from the users' perspective are a bit different, but the underlying functions are almost identical. This section describes how the CLI command or HTTP request is processed, up until the ABCI request is sent. This step of processing heavily involves a `CLIContext`.
 
 ### CLIContext
 
@@ -65,7 +65,7 @@ For full specification of the `CLIContext` type, click [here](https://github.com
 
 The next step is to parse the command or request, extract the arguments, create a `queryRoute`, and encode everything.
 
-In this case, `query` contains a `delegatorAddress` as its only argument. Since requests can only contain `[]byte`s, the `CLIContext` `codec` is used to marshal the address as the type `QueryDelegatorParams`. All query arguments (e.g. the `staking` module also has `QueryValidatorParams` and `QueryBondsParams`) have their own types that the application `codec` understands how to encode and decode. All of this logic is specified in the module [`querier`](.//building-modules/querier.md).
+In this case, `query` contains a `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine node that has no inherent knowledge of the application types. Thus, the `CLIContext` `codec` is used to marshal the address as the type `QueryDelegatorParams`. All query arguments (e.g. the `staking` module also has `QueryValidatorParams` and `QueryBondsParams`) have their own types that the application `codec` understands how to encode and decode. The module [`querier`](.//building-modules/querier.md) declares these types and the application registers the `codec`s.
 
 A `route` is also created for `query` so that the application will understand which module to route the query to. Baseapp will understand this query to be a `custom` query in the module `staking` with the type `QueryDelegatorDelegations`. Thus, the route will be `"custom/staking/delegatorDelegations"`.
 
@@ -83,7 +83,7 @@ Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation 
 
 [Baseapp](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The `queryRoute` is parsed such that the first string must be one of the four options, then the rest of the path is parsed within the subroutines handling each type of query. The first three types are application-level and thus directly handled by Baseapp or the stores, but the `custom` query type requires Baseapp to route the query to a module's [querier](../building-modules/querier.md).
 
-Since `query` is a custom query type, Baseapp first parses the path to retrieve the name of the path. retrieves the querier using its `QueryRouter`.
+Since `query` is a custom query type, Baseapp first parses the path, then uses the `QueryRouter` to retrieve the corresponding querier.
 
 ## Response
 
@@ -95,7 +95,7 @@ The application `codec` is used to unmarshal the response to a JSON and the `CLI
 
 ### REST Response
 
-The REST server uses the `CLIContext` to format the response properly, then uses the HTTP package to write the appropriate response or error. 
+The REST server uses the `CLIContext` to format the response properly, then uses the HTTP package to write the appropriate response or error.
 
 ## Next
 

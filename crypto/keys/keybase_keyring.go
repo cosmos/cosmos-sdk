@@ -187,6 +187,9 @@ func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 		return nil, fmt.Errorf("key with address %s not found", address)
 	}
 	bs, err := kb.db.Get(string(ik.Data))
+	if err != nil {
+		return nil, err
+	}
 	return readInfo(bs.Data)
 }
 
@@ -299,6 +302,9 @@ func (kb keyringKeybase) Export(name string) (armor string, err error) {
 // a portable format.
 func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 	bz, err := kb.Get(name)
+	if err != nil {
+		return "", err
+	}
 
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
@@ -410,8 +416,14 @@ func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
 		return err
 	}
 
-	kb.db.Remove(string(addrKey(info.GetAddress())))
-	kb.db.Remove(string(infoKey(name)))
+	err = kb.db.Remove(string(addrKey(info.GetAddress())))
+	if err != nil {
+		return err
+	}
+	err = kb.db.Remove(string(infoKey(name)))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

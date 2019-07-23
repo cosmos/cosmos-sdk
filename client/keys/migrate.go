@@ -71,8 +71,14 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			}
 
 			privData, err := legacykb.ExportPrivKey(key.GetName(), decryptPassword, "abc")
+			if err != nil {
+				return err
+			}
 
-			keyringkb.ImportPrivKey(key.GetName(), privData, "abc")
+			err = keyringkb.ImportPrivKey(key.GetName(), privData, "abc")
+			if err != nil {
+				return err
+			}
 
 		case keys.TypeOffline, keys.TypeMulti, keys.TypeLedger:
 			continue

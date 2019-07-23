@@ -58,6 +58,9 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 
 		if _, err := os.Stat(lkb.dir + "/keyhash"); err == nil {
 			keyhash, err = ioutil.ReadFile(lkb.dir + "/keyhash")
+			if err != nil {
+				return "", err
+			}
 			keyhashStored = true
 		} else if os.IsNotExist(err) {
 			keyhashStored = false

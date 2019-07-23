@@ -1,15 +1,20 @@
 package subspace
 
-// Used for associating paramsubspace key and field of param structs
+// ParamSetPair is used for associating paramsubspace key and field of param structs
 type ParamSetPair struct {
 	Key   []byte
 	Value interface{}
 }
 
-// Slice of KeyFieldPair
+// NewParamSetPair creates a new ParamSetPair instance
+func NewParamSetPair(key []byte, value interface{}) ParamSetPair {
+	return ParamSetPair{key, value}
+}
+
+// ParamSetPairs Slice of KeyFieldPair
 type ParamSetPairs []ParamSetPair
 
-// Interface for structs containing parameters for a module
+// ParamSet defines an interface for structs containing parameters for a module
 type ParamSet interface {
 	ParamSetPairs() ParamSetPairs
 }

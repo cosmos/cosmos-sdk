@@ -7,15 +7,15 @@ The `NFT` Interface inherits the BaseNFT struct and includes getter functions fo
 ```go
 // NFT non fungible token interface
 type NFT interface {
-  GetID() string
-  GetOwner() sdk.AccAddress
-  SetOwner(address sdk.AccAddress)
-  GetName() string
-  GetDescription() string
-  GetImage() string
-  GetTokenURI() string
-  EditMetadata(name, description, image, tokenURI string)
-  String() string
+  GetID() string                    // unique identifier of the NFT
+  GetOwner() sdk.AccAddress         // gets owner account of the NFT
+  SetOwner(address sdk.AccAddress)  // gets owner account of the NFT
+  GetName() string                  // metadata field: name of the NFT
+  GetDescription() string           // metadata field: description of the NFT
+  GetImage() string                 // metadata field: image of the NFT
+  GetTokenURI() string              // metadata field: URI to retrieve the of chain metadata of the NFT
+  EditMetadata(name, description, image, tokenURI string) // edit metadata of the NFT
+  String() string                   // string representation of the NFT object
 }
 ```
 
@@ -27,7 +27,7 @@ A Collection is used to organized sets of NFTs. It contains the denomination of 
 // Collection of non fungible tokens
 type Collection struct {
   Denom string `json:"denom,omitempty"` // name of the collection; not exported to clients
-  NFTs  NFTs   `json:"nfts"`            // NFTs that belong to a collection
+  NFTs  []NFT   `json:"nfts"`            // NFTs that belongs to a collection
 }
 ```
 
@@ -43,70 +43,11 @@ type Owner struct {
 }
 ```
 
-## Custom App-Specific Handlers
-
-Each Message type comes with a default handler that can be used by default but will most likely be too limited for each use case. We recommend that custom handlers are created to add in custom logic and restrictions over when the Message types can be executed. Below is a recomended method for initializing the module within the module manager so that a custom handler can be added. This can be seen in the example [NFT app](https://github.com/okwme/cosmos-nft).
+An `IDCollection` is similar to a `Collection` except instead of containing NFTs it only contains an array of `NFT` IDs. This saves storage by avoiding redundancy.
 
 ```go
-// custom-handler.go
-
-// OverrideNFTModule overrides the NFT module for custom handlers
-type OverrideNFTModule struct {
-  nft.AppModule
-  k nft.Keeper
+// IDCollection of non fungible tokens
+type IDCollection struct {
+  Denom string   `json:"denom"`
+  IDs   []string `json:"IDs"`
 }
-
-// NewHandler module handler for the OerrideNFTModule
-func (am OverrideNFTModule) NewHandler() sdk.Handler {
-  return CustomNFTHandler(am.k)
-}
-
-// NewOverrideNFTModule generates a new NFT Module
-func NewOverrideNFTModule(appModule nft.AppModule, keeper nft.Keeper) OverrideNFTModule {
-  return OverrideNFTModule{
-    AppModule: appModule,
-    k:         keeper,
-  }
-}
-```
-
-You can see here that `OverrideNFTModule` is the same as `nft.AppModule` except for the `NewHandler()` method. This method now returns a new Handler called `CustomNFTHandler`. This custom handler can be seen below:
-
-```go
-// CustomNFTHandler routes the messages to the handlers
-func CustomNFTHandler(k keeper.Keeper) sdk.Handler {
-  return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-    switch msg := msg.(type) {
-      case types.MsgTransferNFT:
-        return nft.HandleMsgTransferNFT(ctx, msg, k)
-      case types.MsgEditNFTMetadata:
-        return nft.HandleMsgEditNFTMetadata(ctx, msg, k)
-     case types.MsgMintNFT:
-        return HandleMsgMintNFTCustom(ctx, msg, k)
-      case types.MsgBurnNFT:
-        return nft.HandleMsgBurnNFT(ctx, msg, k)
-      default:
-        errMsg := fmt.Sprintf("unrecognized nft message type: %T", msg)
-        return sdk.ErrUnknownRequest(errMsg).Result()
-    }
-  }
-}
-
-// HandleMsgMintNFTCustom handles MsgMintNFT
-func HandleMsgMintNFTCustom(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
-) sdk.Result {
-
-  isTwilight := checkTwilight(ctx)
-
-  if isTwilight {
-    return nft.HandleMsgMintNFT(ctx, msg, k)
-  }
-
-  errMsg := fmt.Sprintf("Can't mint astral bodies outside of twilight!")
-  return sdk.ErrUnknownRequest(errMsg).Result()
-  }
-```
-
-The default handlers are imported here with the NFT module and used for `MsgTransferNFT`, `MsgEditNFTMetadata` and `MsgBurnNFT`. The `MsgMintNFT` however is handled with a custom function called `HandleMsgMintNFTCustom`. This custom function also utilizes the imported NFT module handler `HandleMsgBurnNFT`, but only after certain conditions are checked. In this case it checks a function called `checkTwilight` which returns a boolean. Only if `isTwilight` is true will the Message succeed.
-
-This pattern of inheriting and utlizing the module handlers wrapped in custom logic should allow each application specific blockchain to use the NFT while customizing it to their specific requirements.

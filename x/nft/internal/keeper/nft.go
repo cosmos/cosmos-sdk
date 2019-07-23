@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/exported"
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
 // IsNFT returns whether an NFT exists

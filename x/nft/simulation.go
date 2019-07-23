@@ -89,12 +89,12 @@ func SimulateMsgMintNFT(k Keeper) simulation.Operation {
 		msg := NewMsgMintNFT(
 			simulation.RandomAcc(r, accs).Address, // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
-			simulation.RandStringOfLength(r, 25), // nft ID
-			simulation.RandStringOfLength(r, 10), // denom
-			simulation.RandStringOfLength(r, 15), // name
-			simulation.RandStringOfLength(r, 50), // description
-			simulation.RandStringOfLength(r, 30), // image
-			simulation.RandStringOfLength(r, 45), // tokenURI
+			simulation.RandStringOfLength(r, 25),  // nft ID
+			simulation.RandStringOfLength(r, 10),  // denom
+			simulation.RandStringOfLength(r, 15),  // name
+			simulation.RandStringOfLength(r, 50),  // description
+			simulation.RandStringOfLength(r, 30),  // image
+			simulation.RandStringOfLength(r, 45),  // tokenURI
 		)
 
 		if msg.ValidateBasic() != nil {
@@ -111,7 +111,6 @@ func SimulateMsgMintNFT(k Keeper) simulation.Operation {
 		return opMsg, nil, nil
 	}
 }
-
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
 func SimulateMsgBurnNFT(k Keeper) simulation.Operation {

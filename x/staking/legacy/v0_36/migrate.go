@@ -14,10 +14,39 @@ func Migrate(oldGenState v034staking.GenesisState) GenesisState {
 		oldGenState.Params,
 		oldGenState.LastTotalPower,
 		oldGenState.LastValidatorPowers,
-		oldGenState.Validators,
+		migrateValidators(oldGenState.Validators),
 		oldGenState.Delegations,
 		oldGenState.UnbondingDelegations,
 		oldGenState.Redelegations,
 		oldGenState.Exported,
 	)
+}
+
+func migrateValidators(oldValidators v034staking.Validators) Validators {
+	validators := make(Validators, len(oldValidators))
+
+	for i, val := range oldValidators {
+		validators[i] = Validator{
+			OperatorAddress:         val.OperatorAddress,
+			ConsPubKey:              val.ConsPubKey,
+			Jailed:                  val.Jailed,
+			Status:                  val.Status,
+			Tokens:                  val.Tokens,
+			DelegatorShares:         val.DelegatorShares,
+			Description:             val.Description,
+			UnbondingHeight:         val.UnbondingHeight,
+			UnbondingCompletionTime: val.UnbondingCompletionTime,
+			Commission: Commission{
+				CommissionRates: CommissionRates{
+					Rate:          val.Commission.Rate,
+					MaxRate:       val.Commission.MaxRate,
+					MaxChangeRate: val.Commission.MaxChangeRate,
+				},
+				UpdateTime: val.Commission.UpdateTime,
+			},
+			MinSelfDelegation: val.MinSelfDelegation,
+		}
+	}
+
+	return validators
 }

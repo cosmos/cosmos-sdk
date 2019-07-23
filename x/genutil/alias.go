@@ -16,7 +16,7 @@ var (
 	// functions aliases
 	NewGenesisState             = types.NewGenesisState
 	NewGenesisStateFromStdTx    = types.NewGenesisStateFromStdTx
-	NewInitConfig 							= types.NewInitConfig
+	NewInitConfig               = types.NewInitConfig
 	GetGenesisStateFromAppState = types.GetGenesisStateFromAppState
 	SetGenesisStateInAppState   = types.SetGenesisStateInAppState
 	GenesisStateFromGenDoc      = types.GenesisStateFromGenDoc
@@ -32,5 +32,5 @@ type (
 	AppMap            = types.AppMap
 	MigrationCallback = types.MigrationCallback
 	MigrationMap      = types.MigrationMap
-	InitConfig 				= types.InitConfig
+	InitConfig        = types.InitConfig
 )

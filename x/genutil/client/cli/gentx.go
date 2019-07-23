@@ -29,10 +29,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	types "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// helpers for message building gen-tx command
+// StakingMsgBuildingHelpers helpers for message building gen-tx command
 type StakingMsgBuildingHelpers interface {
 	CreateValidatorMsgHelpers(ipDefault string) (fs *flag.FlagSet, nodeIDFlag, pubkeyFlag, amountFlag, defaultsDesc string)
 	PrepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, chainID string, valPubKey crypto.PubKey)

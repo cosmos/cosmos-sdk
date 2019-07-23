@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/bech32"
 )

@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// State to Unmarshal
+// GenesisState is a wrapper for GenAccounts
 type GenesisState GenesisAccounts
 
-// get the genesis state from the expected app state
+// GetGenesisStateFromAppState gets the genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
@@ -22,7 +22,7 @@ func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawM
 	return genesisState
 }
 
-// set the genesis state within the expected app state
+// SetGenesisStateInAppState sets the genesis state within the expected app state
 func SetGenesisStateInAppState(cdc *codec.Codec,
 	appState map[string]json.RawMessage, genesisState GenesisState) map[string]json.RawMessage {
 

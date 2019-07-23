@@ -35,7 +35,7 @@ func TestIDCollectionDeleteIDMethod(t *testing.T) {
 	ids := []string{id, id2}
 	idCollection := NewIDCollection(denom, ids)
 	newIDCollection, err := idCollection.DeleteID(id3)
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Equal(t, idCollection.String(), newIDCollection.String())
 
 	idCollection, err = idCollection.DeleteID(id2)
@@ -141,12 +141,12 @@ func TestOwnerUpdateIDCollectionMethod(t *testing.T) {
 	idCollection2 := NewIDCollection(denom2, ids2)
 
 	returnedOwner, err := owner.UpdateIDCollection(idCollection2)
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Equal(t, owner.String(), returnedOwner.String())
 
 	idCollection2 = NewIDCollection(denom, ids2)
 	returnedOwner, err = owner.UpdateIDCollection(idCollection2)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	returnedCollection, _ := owner.GetIDCollection(denom)
 	require.Equal(t, len(returnedCollection.IDs), 3)
@@ -158,15 +158,15 @@ func TestOwnerDeleteIDMethod(t *testing.T) {
 	owner := NewOwner(address, idCollection)
 
 	returnedOwner, err := owner.DeleteID(denom2, id)
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Equal(t, owner.String(), returnedOwner.String())
 
 	returnedOwner, err = owner.DeleteID(denom, id3)
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Equal(t, owner.String(), returnedOwner.String())
 
 	owner, err = owner.DeleteID(denom, id)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	returnedCollection, _ := owner.GetIDCollection(denom)
 	require.Equal(t, len(returnedCollection.IDs), 1)

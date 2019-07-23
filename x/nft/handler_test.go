@@ -48,7 +48,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	require.False(t, res.IsOK(), "%v", res)
 
 	// Create token (collection and owner)
-	k.MintNFT(ctx, denom, nft)
+	k.MintNFT(ctx, denom, &nft)
 
 	// handle should succeed when nft exists and is transferred by owner
 	res = h(ctx, transferNftMsg)
@@ -77,7 +77,7 @@ func TestTransferNFTMsg(t *testing.T) {
 
 	// nft should have been transferred as a result of the message
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.True(t, nftAfterwards.GetOwner().Equals(address2))
 
 }
@@ -99,7 +99,7 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	)
 
 	// Create token (collection and address)
-	k.MintNFT(ctx, denom, nft)
+	k.MintNFT(ctx, denom, &nft)
 
 	// Define MsgTransferNft
 	failingEditNFTMetadata := types.NewMsgEditNFTMetadata(
@@ -149,7 +149,7 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	}
 
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, name2, nftAfterwards.GetName())
 	require.Equal(t, description2, nftAfterwards.GetDescription())
 	require.Equal(t, image2, nftAfterwards.GetImage())
@@ -201,7 +201,7 @@ func TestMintNFTMsg(t *testing.T) {
 
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 
-	require.Nil(t, err)
+	require.NoError(t, err)
 	require.Equal(t, name, nftAfterwards.GetName())
 	require.Equal(t, description, nftAfterwards.GetDescription())
 	require.Equal(t, image, nftAfterwards.GetImage())
@@ -229,7 +229,7 @@ func TestBurnNFTMsg(t *testing.T) {
 	)
 
 	// Create token (collection and address)
-	k.MintNFT(ctx, denom, nft)
+	k.MintNFT(ctx, denom, &nft)
 
 	exists := k.IsNFT(ctx, denom, id)
 	require.True(t, exists)

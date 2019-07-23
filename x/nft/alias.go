@@ -93,7 +93,6 @@ type (
 	MsgEditNFTMetadata    = types.MsgEditNFTMetadata
 	MsgMintNFT            = types.MsgMintNFT
 	MsgBurnNFT            = types.MsgBurnNFT
-	NFT                   = types.NFT
 	BaseNFT               = types.BaseNFT
 	NFTs                  = types.NFTs
 	NFTJSON               = types.NFTJSON

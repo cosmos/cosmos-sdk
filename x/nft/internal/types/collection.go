@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/exported"
 )
 
 // Collection of non fungible tokens
@@ -19,7 +20,7 @@ type Collection struct {
 func NewCollection(denom string, nfts NFTs) Collection {
 	return Collection{
 		Denom: strings.TrimSpace(denom),
-		NFTs:  NewNFTs([]NFT(nfts)...),
+		NFTs:  nfts,
 	}
 }
 
@@ -29,7 +30,7 @@ func EmptyCollection() Collection {
 }
 
 // GetNFT gets a NFT from the collection
-func (collection Collection) GetNFT(id string) (nft NFT, err sdk.Error) {
+func (collection Collection) GetNFT(id string) (nft exported.NFT, err sdk.Error) {
 	for _, nft := range collection.NFTs {
 		if nft.GetID() == id {
 			return nft, nil
@@ -47,7 +48,7 @@ func (collection Collection) ContainsNFT(id string) bool {
 }
 
 // AddNFT adds an NFT to the collection
-func (collection Collection) AddNFT(nft NFT) (Collection, sdk.Error) {
+func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
 	id := nft.GetID()
 	exists := collection.ContainsNFT(id)
 	if exists {
@@ -60,7 +61,7 @@ func (collection Collection) AddNFT(nft NFT) (Collection, sdk.Error) {
 }
 
 // UpdateNFT updates an NFT from a collection
-func (collection Collection) UpdateNFT(nft NFT) (Collection, sdk.Error) {
+func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
 	if !ok {
 		return collection, ErrUnknownNFT(DefaultCodespace,
@@ -72,7 +73,7 @@ func (collection Collection) UpdateNFT(nft NFT) (Collection, sdk.Error) {
 }
 
 // DeleteNFT deletes an NFT from a collection
-func (collection Collection) DeleteNFT(nft NFT) (Collection, sdk.Error) {
+func (collection Collection) DeleteNFT(nft exported.NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Remove(nft.GetID())
 	if !ok {
 		return collection, ErrUnknownNFT(DefaultCodespace,

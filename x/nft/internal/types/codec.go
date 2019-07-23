@@ -3,11 +3,12 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/nft/exported"
 )
 
 // RegisterCodec concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*NFT)(nil), nil)
+	cdc.RegisterInterface((*exported.NFT)(nil), nil)
 	cdc.RegisterConcrete(&BaseNFT{}, "cosmos-sdk/BaseNFT", nil)
 	cdc.RegisterConcrete(NFTs{}, "cosmos-sdk/NFTs", nil)
 	cdc.RegisterConcrete(&IDCollections{}, "cosmos-sdk/IDCollections", nil)

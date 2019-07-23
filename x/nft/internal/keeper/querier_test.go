@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/x/nft/exported"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
@@ -18,7 +19,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 	_, err := querier(ctx, []string{"foo", "bar"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestQuerySupply(t *testing.T) {
@@ -27,7 +28,7 @@ func TestQuerySupply(t *testing.T) {
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	querier := NewQuerier(keeper)
 
@@ -40,14 +41,14 @@ func TestQuerySupply(t *testing.T) {
 	query.Data = []byte("?")
 
 	res, err := querier(ctx, []string{"supply"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	queryCollectionParams := types.NewQueryCollectionParams(denom2)
 	bz, errRes := cdc.MarshalJSON(queryCollectionParams)
 	require.Nil(t, errRes)
 	query.Data = bz
 	res, err = querier(ctx, []string{"supply"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	queryCollectionParams = types.NewQueryCollectionParams(denom)
 	bz, errRes = cdc.MarshalJSON(queryCollectionParams)
@@ -65,7 +66,7 @@ func TestQueryCollection(t *testing.T) {
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	querier := NewQuerier(keeper)
 
@@ -78,7 +79,7 @@ func TestQueryCollection(t *testing.T) {
 
 	query.Data = []byte("?")
 	res, err := querier(ctx, []string{"collection"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	queryCollectionParams := types.NewQueryCollectionParams(denom2)
 	bz, errRes := cdc.MarshalJSON(queryCollectionParams)
@@ -86,7 +87,7 @@ func TestQueryCollection(t *testing.T) {
 
 	query.Data = bz
 	res, err = querier(ctx, []string{"collection"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	queryCollectionParams = types.NewQueryCollectionParams(denom)
 	bz, errRes = cdc.MarshalJSON(queryCollectionParams)
@@ -107,11 +108,11 @@ func TestQueryOwner(t *testing.T) {
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	denom2 := "test_denom2"
 	err = keeper.MintNFT(ctx, denom2, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	querier := NewQuerier(keeper)
 
@@ -123,7 +124,7 @@ func TestQueryOwner(t *testing.T) {
 
 	query.Data = []byte("?")
 	_, err = querier(ctx, []string{"ownerByDenom"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// query the balance using the first denom
 	params := types.NewQueryBalanceParams(address, denom)
@@ -133,7 +134,7 @@ func TestQueryOwner(t *testing.T) {
 
 	var res []byte
 	res, err = querier(ctx, []string{"ownerByDenom"}, query)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	var out types.Owner
 	cdc.MustUnmarshalJSON(res, &out)
 
@@ -151,12 +152,12 @@ func TestQueryOwner(t *testing.T) {
 	query.Path = "/custom/nft/owner"
 	query.Data = []byte("?")
 	_, err = querier(ctx, []string{"owner"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	query.Data = bz
 	res, err = querier(ctx, []string{"owner"}, query)
 
-	require.Nil(t, err)
+	require.NoError(t, err)
 	cdc.MustUnmarshalJSON(res, &out)
 
 	// build the owner using both denoms TODO: add sorting to ensure the objects are the same
@@ -172,7 +173,7 @@ func TestQueryNFT(t *testing.T) {
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	querier := NewQuerier(keeper)
 
@@ -185,7 +186,7 @@ func TestQueryNFT(t *testing.T) {
 
 	query.Data = []byte("?")
 	res, err = querier(ctx, []string{"nft"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	params := types.NewQueryNFTParams(denom2, id2)
 	bz, err2 := cdc.MarshalJSON(params)
@@ -193,7 +194,7 @@ func TestQueryNFT(t *testing.T) {
 
 	query.Data = bz
 	res, err = querier(ctx, []string{"nft"}, query)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	params = types.NewQueryNFTParams(denom, id)
 	bz, err2 = cdc.MarshalJSON(params)
@@ -202,7 +203,7 @@ func TestQueryNFT(t *testing.T) {
 	query.Data = bz
 	res, err = querier(ctx, []string{"nft"}, query)
 
-	var out types.NFT
+	var out exported.NFT
 	cdc.MustUnmarshalJSON(res, &out)
 
 	require.Equal(t, out.String(), nft.String())
@@ -214,10 +215,10 @@ func TestQueryDenoms(t *testing.T) {
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	err = keeper.MintNFT(ctx, denom2, &nft)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
 	querier := NewQuerier(keeper)
 

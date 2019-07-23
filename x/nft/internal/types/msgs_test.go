@@ -23,23 +23,23 @@ func TestMsgTransferNFTValidateBasicMethod(t *testing.T) {
 
 	newMsgTransferNFT := NewMsgTransferNFT(address, address2, "", id)
 	err := newMsgTransferNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgTransferNFT = NewMsgTransferNFT(address, address2, denom, "")
 	err = newMsgTransferNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgTransferNFT = NewMsgTransferNFT(nil, address2, denom, "")
 	err = newMsgTransferNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgTransferNFT = NewMsgTransferNFT(address, nil, denom, "")
 	err = newMsgTransferNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgTransferNFT = NewMsgTransferNFT(address, address2, denom, id)
 	err = newMsgTransferNFT.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestMsgTransferNFTGetSignBytesMethod(t *testing.T) {
@@ -80,19 +80,19 @@ func TestMsgEditNFTMetadataValidateBasicMethod(t *testing.T) {
 	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(nil, id, denom, name, description, image, tokenURI)
 
 	err := newMsgEditNFTMetadata.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, "", denom, name, description, image, tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, "", name, description, image, tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, denom, name, description, image, tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestMsgEditNFTMetadataGetSignBytesMethod(t *testing.T) {
@@ -133,23 +133,23 @@ func TestMsgMsgMintNFTValidateBasicMethod(t *testing.T) {
 
 	newMsgMintNFT := NewMsgMintNFT(nil, address2, id, denom, name, description, image, tokenURI)
 	err := newMsgMintNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgMintNFT = NewMsgMintNFT(address, nil, id, denom, name, description, image, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgMintNFT = NewMsgMintNFT(address, address2, "", denom, name, description, image, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgMintNFT = NewMsgMintNFT(address, address2, id, "", name, description, image, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgMintNFT = NewMsgMintNFT(address, address2, id, denom, name, description, image, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestMsgMintNFTGetSignBytesMethod(t *testing.T) {
@@ -181,19 +181,19 @@ func TestMsgMsgBurnNFTValidateBasicMethod(t *testing.T) {
 
 	newMsgBurnNFT := NewMsgBurnNFT(nil, id, denom)
 	err := newMsgBurnNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgBurnNFT = NewMsgBurnNFT(address, "", denom)
 	err = newMsgBurnNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgBurnNFT = NewMsgBurnNFT(address, id, "")
 	err = newMsgBurnNFT.ValidateBasic()
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	newMsgBurnNFT = NewMsgBurnNFT(address, id, denom)
 	err = newMsgBurnNFT.ValidateBasic()
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestMsgBurnNFTGetSignBytesMethod(t *testing.T) {

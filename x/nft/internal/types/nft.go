@@ -7,22 +7,10 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/exported"
 )
 
-// NFT non fungible token interface
-type NFT interface {
-	GetID() string
-	GetOwner() sdk.AccAddress
-	SetOwner(address sdk.AccAddress) BaseNFT
-	GetName() string
-	GetDescription() string
-	GetImage() string
-	GetTokenURI() string
-	EditMetadata(name, description, image, tokenURI string) BaseNFT
-	String() string
-}
-
-var _ NFT = (*BaseNFT)(nil)
+var _ exported.NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
@@ -54,9 +42,8 @@ func (bnft BaseNFT) GetID() string { return bnft.ID }
 func (bnft BaseNFT) GetOwner() sdk.AccAddress { return bnft.Owner }
 
 // SetOwner updates the owner address of the NFT
-func (bnft BaseNFT) SetOwner(address sdk.AccAddress) BaseNFT {
+func (bnft *BaseNFT) SetOwner(address sdk.AccAddress) {
 	bnft.Owner = address
-	return bnft
 }
 
 // GetName returns the name of the token
@@ -72,12 +59,11 @@ func (bnft BaseNFT) GetImage() string { return bnft.Image }
 func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
 
 // EditMetadata edits metadata of an nft
-func (bnft BaseNFT) EditMetadata(name, description, image, tokenURI string) BaseNFT {
+func (bnft *BaseNFT) EditMetadata(name, description, image, tokenURI string) {
 	bnft.Name = name
 	bnft.Description = description
 	bnft.Image = image
 	bnft.TokenURI = tokenURI
-	return bnft
 }
 
 func (bnft BaseNFT) String() string {
@@ -100,10 +86,10 @@ TokenURI:		%s`,
 // NFT
 
 // NFTs define a list of NFT
-type NFTs []NFT
+type NFTs []exported.NFT
 
 // NewNFTs creates a new set of NFTs
-func NewNFTs(nfts ...NFT) NFTs {
+func NewNFTs(nfts ...exported.NFT) NFTs {
 	if len(nfts) == 0 {
 		return NFTs{}
 	}
@@ -116,7 +102,7 @@ func (nfts NFTs) Add(nftsB NFTs) NFTs {
 }
 
 // Find returns the searched collection from the set
-func (nfts NFTs) Find(id string) (nft NFT, found bool) {
+func (nfts NFTs) Find(id string) (nft exported.NFT, found bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nft, false
@@ -125,7 +111,7 @@ func (nfts NFTs) Find(id string) (nft NFT, found bool) {
 }
 
 // Update removes and replaces an NFT from the set
-func (nfts NFTs) Update(id string, nft NFT) (NFTs, bool) {
+func (nfts NFTs) Update(id string, nft exported.NFT) (NFTs, bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nfts, false

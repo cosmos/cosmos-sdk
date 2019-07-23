@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/nft/exported"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
@@ -62,7 +63,7 @@ $ %s query %s supply cripto-kitties
 				return err
 			}
 
-			var out types.NFT
+			var out exported.NFT
 			cdc.MustUnmarshalJSON(res, &out)
 			return cliCtx.PrintOutput(out)
 		},
@@ -194,7 +195,7 @@ $ %s query %s token cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f
 				return err
 			}
 
-			var out types.NFT
+			var out exported.NFT
 			err = cdc.UnmarshalJSON(res, &out)
 			if err != nil {
 				return err

@@ -3,7 +3,7 @@ package types
 // GenesisState is the state that must be provided at genesis.
 type GenesisState struct {
 	Owners []Owner `json:"owners"`
-	Collections
+	Collections Collections `json:"collections"`
 }
 
 // NewGenesisState creates a new genesis state.

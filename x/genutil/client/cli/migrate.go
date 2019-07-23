@@ -9,9 +9,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
+	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
 )
 
 var migrationMap = extypes.MigrationMap{
@@ -74,9 +75,8 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return err
 			}
 
-			fmt.Println(string(out))
+			fmt.Println(string(sdk.MustSortJSON(out)))
 			return nil
-
 		},
 	}
 

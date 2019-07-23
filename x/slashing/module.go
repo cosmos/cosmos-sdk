@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 var (

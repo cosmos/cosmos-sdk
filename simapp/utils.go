@@ -37,18 +37,22 @@ import (
 )
 
 var (
-	genesisFile   string
-	paramsFile    string
-	seed          int64
-	numBlocks     int
-	blockSize     int
-	enabled       bool
-	verbose       bool
-	lean          bool
-	commit        bool
-	period        int
-	onOperation   bool // TODO Remove in favor of binary search for invariant violation
-	allInvariants bool
+	genesisFile        string
+	paramsFile         string
+	exportParamsPath   string
+	exportParamsHeight int
+	exportStatePath    string
+	seed               int64
+	numBlocks          int
+	blockSize          int
+	enabled            bool
+	verbose            bool
+	lean               bool
+	commit             bool
+	period             int
+	onOperation        bool // TODO Remove in favor of binary search for invariant violation
+	allInvariants      bool
+	genesisTime        int64
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.
@@ -496,31 +500,38 @@ func GenStakingGenesisState(
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) (log string) {
-	log = fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+func GetSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvs []cmn.KVPair) (log string) {
+	var kvA, kvB cmn.KVPair
+	for i := 0; i < len(kvs); i += 2 {
+		kvA = kvs[i]
+		kvB = kvs[i+1]
 
-	if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
-		return
+		if len(kvA.Value) == 0 && len(kvB.Value) == 0 {
+			// skip if the value doesn't have any bytes
+			continue
+		}
+
+		switch storeName {
+		case auth.StoreKey:
+			log += DecodeAccountStore(cdcA, cdcB, kvA, kvB)
+		case mint.StoreKey:
+			log += DecodeMintStore(cdcA, cdcB, kvA, kvB)
+		case staking.StoreKey:
+			log += DecodeStakingStore(cdcA, cdcB, kvA, kvB)
+		case slashing.StoreKey:
+			log += DecodeSlashingStore(cdcA, cdcB, kvA, kvB)
+		case gov.StoreKey:
+			log += DecodeGovStore(cdcA, cdcB, kvA, kvB)
+		case distribution.StoreKey:
+			log += DecodeDistributionStore(cdcA, cdcB, kvA, kvB)
+		case supply.StoreKey:
+			log += DecodeSupplyStore(cdcA, cdcB, kvA, kvB)
+		default:
+			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+		}
 	}
 
-	switch storeName {
-	case auth.StoreKey:
-		return DecodeAccountStore(cdcA, cdcB, kvA, kvB)
-	case mint.StoreKey:
-		return DecodeMintStore(cdcA, cdcB, kvA, kvB)
-	case staking.StoreKey:
-		return DecodeStakingStore(cdcA, cdcB, kvA, kvB)
-	case slashing.StoreKey:
-		return DecodeSlashingStore(cdcA, cdcB, kvA, kvB)
-	case gov.StoreKey:
-		return DecodeGovStore(cdcA, cdcB, kvA, kvB)
-	case distribution.StoreKey:
-		return DecodeDistributionStore(cdcA, cdcB, kvA, kvB)
-	case supply.StoreKey:
-		return DecodeSupplyStore(cdcA, cdcB, kvA, kvB)
-	default:
-		return
-	}
+	return
 }
 
 // DecodeAccountStore unmarshals the KVPair's Value to the corresponding auth type

@@ -15,7 +15,6 @@ const (
 	StoreKey     = types.StoreKey
 	RouterKey    = types.RouterKey
 	QuerierRoute = types.QuerierRoute
-	Basic        = types.Basic
 	Minter       = types.Minter
 	Burner       = types.Burner
 	Staking      = types.Staking

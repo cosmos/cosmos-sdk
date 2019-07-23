@@ -13,7 +13,7 @@ import (
 
 func TestModuleAccountMarshalYAML(t *testing.T) {
 	name := "test"
-	moduleAcc := NewEmptyModuleAccount(name, Basic, Minter, Burner)
+	moduleAcc := NewEmptyModuleAccount(name, Minter, Burner, Staking)
 	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)
@@ -29,7 +29,7 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
   - %s
   - %s
   - %s
-`, moduleAddress, name, Basic, Minter, Burner)
+`, moduleAddress, name, Minter, Burner, Staking)
 
 	require.Equal(t, want, string(bs))
 	require.Equal(t, want, moduleAcc.String())
@@ -40,29 +40,29 @@ func TestRemovePermissions(t *testing.T) {
 	macc := NewEmptyModuleAccount(name)
 	require.Empty(t, macc.GetPermissions())
 
-	macc.AddPermissions(Basic, Minter, Burner)
-	require.Equal(t, []string{Basic, Minter, Burner}, macc.GetPermissions(), "did not add permissions")
+	macc.AddPermissions(Minter, Burner, Staking)
+	require.Equal(t, []string{Minter, Burner, Staking}, macc.GetPermissions(), "did not add permissions")
 
 	err := macc.RemovePermission("random")
 	require.Error(t, err, "did not error on removing nonexistent permission")
 
 	err = macc.RemovePermission(Burner)
 	require.NoError(t, err, "failed to remove permission")
-	require.Equal(t, []string{Basic, Minter}, macc.GetPermissions(), "does not have correct permissions")
+	require.Equal(t, []string{Minter, Staking}, macc.GetPermissions(), "does not have correct permissions")
 
-	err = macc.RemovePermission(Basic)
+	err = macc.RemovePermission(Staking)
 	require.NoError(t, err, "failed to remove permission")
 	require.Equal(t, []string{Minter}, macc.GetPermissions(), "does not have correct permissions")
 }
 
 func TestHasPermissions(t *testing.T) {
 	name := "test"
-	macc := NewEmptyModuleAccount(name, Basic, Minter, Burner)
+	macc := NewEmptyModuleAccount(name, Staking, Minter, Burner)
 	cases := []struct {
 		permission string
 		expectHas  bool
 	}{
-		{Basic, true},
+		{Staking, true},
 		{Minter, true},
 		{Burner, true},
 		{"other", false},

@@ -50,39 +50,67 @@ To execute a completely pseudo-random simulation:
 
  $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
 	-run=TestFullAppSimulation \
-	-SimulationEnabled=true \
-	-SimulationNumBlocks=100 \
-	-SimulationBlockSize=200 \
-	-SimulationCommit=true \
-	-SimulationSeed=99 \
-	-SimulationPeriod=5 \
+	-Enabled=true \
+	-NumBlocks=100 \
+	-BlockSize=200 \
+	-Commit=true \
+	-Seed=99 \
+	-Period=5 \
 	-v -timeout 24h
 
 To execute simulation from a genesis file:
 
  $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
  	-run=TestFullAppSimulation \
- 	-SimulationEnabled=true \
- 	-SimulationNumBlocks=100 \
- 	-SimulationBlockSize=200 \
- 	-SimulationCommit=true \
- 	-SimulationSeed=99 \
- 	-SimulationPeriod=5 \
- 	-SimulationGenesis=/path/to/genesis.json \
+ 	-Enabled=true \
+ 	-NumBlocks=100 \
+ 	-BlockSize=200 \
+ 	-Commit=true \
+ 	-Seed=99 \
+ 	-Period=5 \
+	-Genesis=/path/to/genesis.json \
  	-v -timeout 24h
 
-To execute simulation from a params file:
+To execute simulation from a simulation params file:
 
  $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
 	-run=TestFullAppSimulation \
-	-SimulationEnabled=true \
-	-SimulationNumBlocks=100 \
-	-SimulationBlockSize=200 \
-	-SimulationCommit=true \
-	-SimulationSeed=99 \
-	-SimulationPeriod=5 \
-	-SimulationParams=/path/to/params.json \
+	-Enabled=true \
+	-NumBlocks=100 \
+	-BlockSize=200 \
+	-Commit=true \
+	-Seed=99 \
+	-Period=5 \
+	-Params=/path/to/params.json \
 	-v -timeout 24h
+
+To export the simulation params to a file at a given block height:
+
+ $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ 	-run=TestFullAppSimulation \
+ 	-Enabled=true \
+ 	-NumBlocks=100 \
+ 	-BlockSize=200 \
+ 	-Commit=true \
+ 	-Seed=99 \
+ 	-Period=5 \
+	-ExportParamsPath=/path/to/params.json \
+	-ExportParamsHeight=50 \
+	 -v -timeout 24h
+
+
+To export the simulation app state (i.e genesis) to a file:
+
+ $ go test -mod=readonly github.com/cosmos/cosmos-sdk/simapp \
+ 	-run=TestFullAppSimulation \
+ 	-Enabled=true \
+ 	-NumBlocks=100 \
+ 	-BlockSize=200 \
+ 	-Commit=true \
+ 	-Seed=99 \
+ 	-Period=5 \
+	-ExportStatePath=/path/to/genesis.json \
+	 v -timeout 24h
 
 Params
 

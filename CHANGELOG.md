@@ -188,6 +188,7 @@
 * [\#4654](https://github.com/cosmos/cosmos-sdk/issues/4654) validator slash event stored by period and height
 * [\#4681](https://github.com/cosmos/cosmos-sdk/issues/4681) panic on invalid amount on `MintCoins` and `BurnCoins`
   - skip minting if inflation is set to zero
+* Sort state JSON during export and initialization  
 
 ## 0.35.0
 

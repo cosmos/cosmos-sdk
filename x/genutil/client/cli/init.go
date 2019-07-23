@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -51,8 +52,8 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "%s\n", string(out)) // nolint: errcheck
-	return nil
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", string(sdk.MustSortJSON(out)))
+	return err
 }
 
 // InitCmd returns a command that initializes all files needed for Tendermint

@@ -16,23 +16,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	// bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	bech32PrefixAccAddr = "terra"
-	// bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	bech32PrefixAccPub = "terrapub"
-	// bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	bech32PrefixValAddr = "terravaloper"
-	// bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	bech32PrefixValPub = "terravaloperpub"
-	// bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	bech32PrefixConsAddr = "terravalcons"
-	// bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	bech32PrefixConsPub = "terravalconspub"
-)
-
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config := sdk.GetConfig()
+
+	bech32PrefixAccAddr := "terra"
+	bech32PrefixAccPub := "terrapub"
+	bech32PrefixValAddr := "terravaloper"
+	bech32PrefixValPub := "terravaloperpub"
+	bech32PrefixConsAddr := "terravalcons"
+	bech32PrefixConsPub := "terravalconspub"
 
 	config.SetCoinType(330)
 	config.SetFullFundraiserPath("44'/330'/0'/0/0")

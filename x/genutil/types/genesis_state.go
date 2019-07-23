@@ -1,4 +1,4 @@
-package genutil
+package types
 
 import (
 	"encoding/json"

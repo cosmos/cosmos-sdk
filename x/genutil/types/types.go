@@ -1,9 +1,11 @@
-package genutil
+package types
 
 import (
 	"encoding/json"
 	"github.com/tendermint/tendermint/crypto"
 )
+
+// DONTCOVER
 
 type (
 	// AppMap map modules names with their json raw representation

@@ -3,16 +3,17 @@ package genaccounts
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestSanitize(t *testing.T) {
 
 	addr1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc1 := auth.NewBaseAccountWithAddress(addr1)
+	authAcc1 := authtypes.NewBaseAccountWithAddress(addr1)
 	authAcc1.SetCoins(sdk.Coins{
 		sdk.NewInt64Coin("bcoin", 150),
 		sdk.NewInt64Coin("acoin", 150),
@@ -21,7 +22,7 @@ func TestSanitize(t *testing.T) {
 	genAcc1 := NewGenesisAccount(&authAcc1)
 
 	addr2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-	authAcc2 := auth.NewBaseAccountWithAddress(addr2)
+	authAcc2 := authtypes.NewBaseAccountWithAddress(addr2)
 	authAcc2.SetCoins(sdk.Coins{
 		sdk.NewInt64Coin("acoin", 150),
 		sdk.NewInt64Coin("bcoin", 150),
@@ -50,7 +51,7 @@ var (
 
 // require duplicate accounts fails validation
 func TestValidateGenesisDuplicateAccounts(t *testing.T) {
-	acc1 := auth.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
 	genAccs := make([]GenesisAccount, 2)
@@ -64,9 +65,9 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 
 // require invalid vesting account fails validation (invalid end time)
 func TestValidateGenesisInvalidAccounts(t *testing.T) {
-	acc1 := auth.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
-	acc2 := auth.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
+	acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
 	genAccs := make([]GenesisAccount, 2)

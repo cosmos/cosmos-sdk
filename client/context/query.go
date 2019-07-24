@@ -6,7 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -85,11 +84,14 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 	// When a client did not provide a query height, manually query for it so it can
 	// be injected downstream into responses.
 	if ctx.Height == 0 {
-		height, err := rpc.GetChainHeight(ctx)
+		status, err := node.Status()
 		if err != nil {
 			return res, height, err
 		}
-		ctx = ctx.WithHeight(height)
+		if status.SyncInfo.CatchingUp {
+			return res, height, errors.New("node catching up")
+		}
+		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
 	}
 
 	opts := rpcclient.ABCIQueryOptions{

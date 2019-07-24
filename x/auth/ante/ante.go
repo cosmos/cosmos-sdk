@@ -152,7 +152,6 @@ func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, si
 			ak.SetAccount(newCtx, signerAccs[i])
 		}
 
-		// TODO: tx tags (?)
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}
 }
@@ -219,7 +218,7 @@ func processSig(
 	if simulate {
 		// Simulated txs should not contain a signature and are not required to
 		// contain a pubkey, so we must account for tx size of including a
-		// types.StdSignature (Amino encoding) and simulate gas consumption
+		// StdSignature (Amino encoding) and simulate gas consumption
 		// (assuming a SECP256k1 simulation key).
 		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
@@ -258,7 +257,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig types.Std
 }
 
 // ProcessPubKey verifies that the given account address matches that of the
-// types.StdSignature. In addition, it will set the public key of the account if it
+// StdSignature. In addition, it will set the public key of the account if it
 // has not been set.
 func ProcessPubKey(acc exported.Account, sig types.StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account, set it from the types.StdSignature.
@@ -333,7 +332,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 
 // DeductFees deducts fees from the given account.
 //
-// NOTE: We could use the CoinKeeper (in addition to the exported.AccountKeeper, because
+// NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
 func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc exported.Account, fees sdk.Coins) sdk.Result {
 	blockTime := ctx.BlockHeader().Time

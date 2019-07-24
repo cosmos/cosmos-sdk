@@ -13,14 +13,10 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 	if err != nil {
 		panic(err)
 	}
-	err = acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
-	if err != nil {
-		panic(err)
-	}
-	return acc
+	return ak.NewAccount(ctx, acc)
 }
 
-// NewAccount creates a new account
+// NewAccount sets the next account number to a given account interface
 func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc exported.Account) exported.Account {
 	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
 		panic(err)

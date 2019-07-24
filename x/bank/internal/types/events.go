@@ -6,6 +6,7 @@ var (
 
 	AttributeKeyRecipient = "recipient"
 	AttributeKeySender    = "sender"
+	AttributeKeyAmount    = "amount"
 
 	AttributeValueCategory = ModuleName
 )

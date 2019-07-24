@@ -39,7 +39,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 			sdk.NewAttribute(types.AttributeKeyBondedRatio, bondedRatio.String()),
 			sdk.NewAttribute(types.AttributeKeyInflation, minter.Inflation.String()),
 			sdk.NewAttribute(types.AttributeKeyAnnualProvisions, minter.AnnualProvisions.String()),
-			sdk.NewAttribute(types.AttributeKeyAmount, mintedCoin.Amount.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
 		),
 	)
 }

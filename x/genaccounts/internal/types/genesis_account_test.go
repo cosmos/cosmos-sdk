@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -70,22 +70,22 @@ func TestToAccount(t *testing.T) {
 	addr := sdk.AccAddress(priv.PubKey().Address())
 
 	// base account
-	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc := authtypes.NewBaseAccountWithAddress(addr)
 	authAcc.SetCoins(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150)))
 	genAcc := NewGenesisAccount(&authAcc)
 	acc := genAcc.ToAccount()
-	require.IsType(t, &auth.BaseAccount{}, acc)
-	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
+	require.IsType(t, &authtypes.BaseAccount{}, acc)
+	require.Equal(t, &authAcc, acc.(*authtypes.BaseAccount))
 
 	// vesting account
-	vacc := auth.NewContinuousVestingAccount(
+	vacc := authtypes.NewContinuousVestingAccount(
 		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
 	)
 	genAcc, err := NewGenesisAccountI(vacc)
 	require.NoError(t, err)
 	acc = genAcc.ToAccount()
-	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
-	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
+	require.IsType(t, &authtypes.ContinuousVestingAccount{}, acc)
+	require.Equal(t, vacc, acc.(*authtypes.ContinuousVestingAccount))
 
 	// module account
 	macc := supply.NewEmptyModuleAccount("mint", supply.Minter)

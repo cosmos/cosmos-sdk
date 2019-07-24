@@ -9,9 +9,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
@@ -52,37 +53,37 @@ func TestGetSimulationLog(t *testing.T) {
 		kvPairs []cmn.KVPair
 	}{
 		{auth.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
-			cmn.KVPair{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
+			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
+			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
 		}},
 		{mint.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
-			cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
+			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
+			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
 		}},
 		{staking.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
 		}},
 		{gov.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
-			cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
+			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
+			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
 		}},
 		{distribution.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
-			cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
+			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
+			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
 		}},
 		{slashing.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
-			cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
+			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
+			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
 		}},
 		{supply.StoreKey, []cmn.KVPair{
-			cmn.KVPair{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
-			cmn.KVPair{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
+			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
+			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
 		}},
-		{"Empty", []cmn.KVPair{cmn.KVPair{}, cmn.KVPair{}}},
+		{"Empty", []cmn.KVPair{{}, {}}},
 		{"OtherStore", []cmn.KVPair{
-			cmn.KVPair{Key: []byte("key"), Value: []byte("value")},
-			cmn.KVPair{Key: []byte("key"), Value: []byte("other_value")},
+			{Key: []byte("key"), Value: []byte("value")},
+			{Key: []byte("key"), Value: []byte("other_value")},
 		}},
 	}
 

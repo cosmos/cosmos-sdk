@@ -224,7 +224,7 @@ func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress,
 		sdk.NewEvent(
 			types.EventTypeTransfer,
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyAmount, amt.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

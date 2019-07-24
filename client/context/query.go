@@ -88,9 +88,6 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 		if err != nil {
 			return res, height, err
 		}
-		if status.SyncInfo.CatchingUp {
-			return res, height, errors.New("node catching up")
-		}
 		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // QueryGenesisTxs implements a REST handler that returns genesis transactions.
@@ -20,14 +20,14 @@ func QueryGenesisTxs(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		var appState map[string]json.RawMessage
-		if err := cliCtx.Codec.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
+		appState, err := types.GenesisStateFromGenDoc(cliCtx.Codec, genDoc)
+		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError,
 				sdk.AppendMsgToErr("could not decode genesis doc", err.Error()))
 			return
 		}
 
-		err := cliCtx.Codec.UnmarshalJSON(appState)
+		genState, err := types.GetGenesisStateFromAppState(cliCtx.Codec, appState)
 		genTxs := make([]sdk.Tx, len(genState.GenTxs))
 		for i, tx := range genState.GenTxs {
 			err := cliCtx.Codec.UnmarshalJSON(tx, &genTxs[i])
@@ -37,6 +37,7 @@ func QueryGenesisTxs(cliCtx context.CLIContext) http.HandlerFunc {
 				return
 			}
 		}
+
 		rest.PostProcessResponse(w, cliCtx, genTxs)
 	}
 }

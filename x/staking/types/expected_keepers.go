@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -16,7 +16,7 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(auth.Account) (stop bool))
+	IterateAccounts(ctx sdk.Context, process func(exported.Account) (stop bool))
 }
 
 // SupplyKeeper defines the expected supply Keeper (noalias)

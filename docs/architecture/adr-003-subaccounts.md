@@ -35,8 +35,8 @@ type ModuleMultiAccount struct {
     SubAccounts []ModuleAccount
     Coins sdk.Coins // passively track all sub account balances
 
-    CreateSubAccount(name string, permissions ...string) int // returns account number of sub-account
-    GetSubAccount(subAccNumber int64) ModuleAccount
+    CreateSubAccount(name string, permissions ...string) (int, error) // returns account number of sub-account
+    GetSubAccount(subAccNumber int64) (ma ModuleAccount, found bool)
 }
 ```
 
@@ -64,7 +64,7 @@ func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...s
 
 **Permissions**:
 
-A `ModuleMultiAccount` has no permissions.
+A `ModuleMultiAccount` has no permissions since it does not have any coins.
 
 Since `ModuleAccount`s that are sub-accounts have the same name as its parent `ModuleMultiAccount`, a sub-account should only be granted a subset of the permissions registered with the Supply Keeper under its name.
 
@@ -88,7 +88,7 @@ Accepted
 
 ### Negative
 
-* sub-accounts cannot be removed from `ModuleMultiAccount`
+* Sub-accounts cannot be removed from `ModuleMultiAccount`
 
 ### Neutral
 

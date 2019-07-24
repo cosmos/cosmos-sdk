@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Base is a state accessor base layer, consists of Codec, KVStore getter function, and key prefix.
+//
 type Base struct {
 	cdc     *codec.Codec
 	storefn func(Context) KVStore

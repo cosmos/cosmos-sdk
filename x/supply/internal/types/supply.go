@@ -3,13 +3,14 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Supply represents a struct that passively keeps track of the total supply amounts in the network
 type Supply struct {
-	Total sdk.Coins `json:"total_supply" yaml:"total_supply"` // total supply of tokens registered on the chain
+	Total sdk.Coins `json:"total" yaml:"total"` // total supply of tokens registered on the chain
 }
 
 // NewSupply creates a new Supply instance

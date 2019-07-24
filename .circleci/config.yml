@@ -21,37 +21,26 @@ commands:
       - attach_workspace:
           at: /tmp/workspace
       - restore_cache:
+          name: "Restore source code cache"
           keys:
             - go-src-v1-{{ .Revision }}
       - checkout
       - restore_cache:
+            name: "Restore go modules cache"
             keys:
               - go-mod-v1-{{ checksum "go.sum" }}
       - run:
           name: << parameters.description >>
           command: |
-            cp /tmp/workspace/bin/* /go/bin/
             make << parameters.target >>
 
 jobs:
-  get_tools:
-    executor: golang
-    steps:
-      - run:
-          name: Get runsim and statik
-          command: |
-            mkdir -p /tmp/workspace/bin
-            go get github.com/cosmos/tools/cmd/runsim github.com/rakyll/statik
-            cp ${GOPATH}/bin/* /tmp/workspace/bin/
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - bin
   setup_dependencies:
     executor: golang
     steps:
       - checkout
       - restore_cache:
+          name: "Restore go modules cache"
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
       - run:
@@ -64,48 +53,50 @@ jobs:
           name: Git garbage collection
           command: git gc
       - save_cache:
+          name: "Save go modules cache"
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - save_cache:
+          name: "Save source code cache"
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
 
-  test_sim_app_nondeterminism:
+  test_sim_nondeterminism:
     executor: golang
     steps:
       - make:
-          target: test_sim_app_nondeterminism
+          target: test_sim_nondeterminism
           description: "Test individual module simulations"
 
-  test_sim_app_fast:
-    executor: golang
-    steps:
-     - make:
-          target: test_sim_app_fast
-          description: "Test full application simulation"
-
-  test_sim_app_import_export:
+  test_sim_import_export:
     executor: golang
     steps:
       - make:
-          target: test_sim_app_import_export
+          target: test_sim_import_export
           description: "Test application import/export simulation"
 
-  test_sim_app_multi_seed_long:
+  test_sim_after_import:
     executor: golang
     steps:
       - make:
-          target: test_sim_app_multi_seed
-          description: "Test multi-seed application simulation long"
+          target: test_sim_after_import
+          description: "Test simulation after import"
 
-  test_sim_app_multi_seed:
+  test_sim_multi_seed_long:
     executor: golang
     steps:
       - make:
-          target: test_sim_app_multi_seed_short
-          description: "Test multi-seed application simulation short"
+          target: test_sim_multi_seed_long
+          description: "Test multi-seed simulation (long)"
+
+  test_sim_multi_seed_short:
+    executor: golang
+    steps:
+      - make:
+          target: test_sim_multi_seed_short
+          description: "Test multi-seed simulation (short)"
 
   test_cover:
     executor: golang
@@ -164,47 +155,46 @@ jobs:
     steps:
       - make:
           target: update-swagger-docs
-          description: check if statik.go is up-to-date
+          description: "Check if statik.go is up-to-date"
 
 workflows:
   version: 2
   test-suite:
     jobs:
-      - get_tools
       - check_statik:
           requires:
             - setup_dependencies
-            - get_tools
       - setup_dependencies:
-          # filters here are needed to enable this job also for tags
+          # This filter enables the job for tags
           filters:
             tags:
               only:
                 - /^v.*/
-      - test_sim_app_nondeterminism:
+      - test_sim_nondeterminism:
           requires:
             - setup_dependencies
-            - get_tools
-      - test_sim_app_fast:
+      - test_sim_import_export:
           requires:
             - setup_dependencies
-            - get_tools
-      - test_sim_app_import_export:
+      - test_sim_after_import:
           requires:
             - setup_dependencies
-            - get_tools
-      - test_sim_app_multi_seed:
+      - test_sim_multi_seed_short:
           requires:
             - setup_dependencies
-            - get_tools
-      - test_sim_app_multi_seed_long:
+      - test_sim_multi_seed_long:
           requires:
             - setup_dependencies
-            - get_tools
+          # These filters ensure that the long sim only runs during release
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only:
+                - /^v.*/
       - test_cover:
           requires:
             - setup_dependencies
-            - get_tools
       - upload_coverage:
           requires:
             - test_cover

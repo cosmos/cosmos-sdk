@@ -8,17 +8,17 @@ import (
 	params "github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
-	// Default period for deposits & voting
+// Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = 86400 * 2 * time.Second // 2 days
+	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
 )
 
 // Default governance params
 var (
 	DefaultMinDepositTokens = sdk.TokensFromConsensusPower(10)
-	DefaultQuorum = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold = sdk.NewDecWithPrec(5, 1)
-	DefaultVeto = sdk.NewDecWithPrec(334, 3)
+	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
+	DefaultVeto             = sdk.NewDecWithPrec(334, 3)
 )
 
 // Parameter store key

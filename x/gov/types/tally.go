@@ -48,22 +48,17 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 
 // NewTallyResultFromMap creates a new TallyResult instance from a Option -> Dec map
 func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
-	return TallyResult{
-		Yes:        results[OptionYes].TruncateInt(),
-		Abstain:    results[OptionAbstain].TruncateInt(),
-		No:         results[OptionNo].TruncateInt(),
-		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
-	}
+	return NewTallyResult(
+		results[OptionYes].TruncateInt(),
+		results[OptionAbstain].TruncateInt(),
+		results[OptionNo].TruncateInt(),
+		results[OptionNoWithVeto].TruncateInt(),
+	)
 }
 
 // EmptyTallyResult returns an empty TallyResult.
 func EmptyTallyResult() TallyResult {
-	return TallyResult{
-		Yes:        sdk.ZeroInt(),
-		Abstain:    sdk.ZeroInt(),
-		No:         sdk.ZeroInt(),
-		NoWithVeto: sdk.ZeroInt(),
-	}
+	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
 }
 
 // Equals returns if two proposals are equal.

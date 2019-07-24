@@ -1,8 +1,8 @@
 package types
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -12,7 +12,7 @@ type GenesisState struct {
 	StartingProposalID uint64        `json:"starting_proposal_id" yaml:"starting_proposal_id"`
 	Deposits           Deposits      `json:"deposits" yaml:"deposits"`
 	Votes              Votes         `json:"votes" yaml:"votes"`
-	Proposals          []Proposal    `json:"proposals" yaml:"proposals"`
+	Proposals          Proposals     `json:"proposals" yaml:"proposals"`
 	DepositParams      DepositParams `json:"deposit_params" yaml:"deposit_params"`
 	VotingParams       VotingParams  `json:"voting_params" yaml:"voting_params"`
 	TallyParams        TallyParams   `json:"tally_params" yaml:"tally_params"`
@@ -71,4 +71,3 @@ func ValidateGenesis(data GenesisState) error {
 
 	return nil
 }
-

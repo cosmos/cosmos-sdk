@@ -35,6 +35,17 @@ commands:
             make << parameters.target >>
 
 jobs:
+  build_docs:
+    executor: docs
+    steps:
+      - checkout
+      - make:
+          description: "Build docs"
+          target: make build_docs
+      - make:
+          description: "Deploy docs"
+          target: make sync_docs
+
   setup_dependencies:
     executor: golang
     steps:
@@ -198,3 +209,5 @@ workflows:
       - upload_coverage:
           requires:
             - test_cover
+      - build_docs:
+          context: docs-deployment-master

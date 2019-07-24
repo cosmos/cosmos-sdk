@@ -10,7 +10,7 @@ now-bonded validator, which `StartHeight` of the current block.
 ```
 onValidatorBonded(address sdk.ValAddress)
 
-  signingInfo, found = GetValidatorSigningInfo(address)
+  signingInfo, found = getValidatorSigningInfo(address)
   if !found {
     signingInfo = ValidatorSigningInfo {
       StartHeight         : CurrentHeight,

@@ -1,3 +1,7 @@
+---
+order: 4
+---
+
 # Node Client (Daemon)
 
 ## Pre-Requisite Reading

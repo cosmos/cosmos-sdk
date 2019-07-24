@@ -30,10 +30,9 @@ The `ModuleAccount` interface is defined as follows:
 
 ```go
 type ModuleAccount interface {
-  auth.Account               // same methods as the Account interface
-  GetName() string           // name of the module; used to obtain the address
-  GetPermissions() []string  // permissions of module account 
-  HasPermission(string) bool 
+  auth.Account            // same methods as the Account interface
+  GetName() string        // name of the module; used to obtain the address
+  GetPermission() string  // permission of module account (minter/burner/holder)
 }
 ```
 
@@ -52,10 +51,10 @@ Each `ModuleAccount` has a different set of permissions that provide different
 object capabilities to perform certain actions. Permissions need to be
 registered upon the creation of the supply `Keeper` so that every time a
 `ModuleAccount` calls the allowed functions, the `Keeper` can lookup the
-permissions to that specific account and perform or not the action.
+permission to that specific account and perform or not the action.
 
 The available permissions are:
 
-- `Minter`: allows for a module to mint a specific amount of coins.
-- `Burner`: allows for a module to burn a specific amount of coins.
-- `Staking`: allows for a module to delegate and undelegate a specific amount of coins.
+- `Basic`: is allowed to only transfer its coins to other accounts.
+- `Minter`: allows for a module to mint a specific amount of coins as well as perform the `Basic` permissioned actions.
+- `Burner`: allows for a module to burn a specific amount of coins as well as perform the `Basic` permissioned actions.

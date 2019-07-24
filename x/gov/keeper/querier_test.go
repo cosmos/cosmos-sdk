@@ -233,7 +233,7 @@ func TestQueries(t *testing.T) {
 	// check deposits on proposal2 match individual deposits
 	deposits = getQueriedDeposits(t, ctx, keeper.cdc, querier, proposal2.ProposalID)
 	require.Len(t, deposits, 2)
-	// FIXME: non determinism on the order of the deposits
+	// NOTE order of deposits is determined by the addresses
 	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
 

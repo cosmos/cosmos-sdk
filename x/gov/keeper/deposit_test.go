@@ -77,7 +77,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(ctx.BlockHeader().Time))
 
 	// Test deposit iterator
-	// FIXME: non determinism on the order of the deposits
+	// NOTE order of deposits is determined by the addresses
 	deposits := keeper.GetAllDeposits(ctx)
 	require.Len(t, deposits, 2)
 	require.Equal(t, deposits, keeper.GetDeposits(ctx, proposalID))

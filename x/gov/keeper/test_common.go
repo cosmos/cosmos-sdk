@@ -1,9 +1,11 @@
 // nolint
-// DONTCOVER
 package keeper // noalias
+
+// DONTCOVER
 
 import (
 	"bytes"
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,16 +31,16 @@ import (
 
 // dummy addresses used for testing
 var (
-	delPk1   = ed25519.GenPrivKey().PubKey()
-	delPk2   = ed25519.GenPrivKey().PubKey()
-	delPk3   = ed25519.GenPrivKey().PubKey()
+	delPk1   = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51")
+	delPk2   = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50")
+	delPk3   = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52")
 	delAddr1 = sdk.AccAddress(delPk1.Address())
 	delAddr2 = sdk.AccAddress(delPk2.Address())
 	delAddr3 = sdk.AccAddress(delPk3.Address())
 
-	valOpPk1    = ed25519.GenPrivKey().PubKey()
-	valOpPk2    = ed25519.GenPrivKey().PubKey()
-	valOpPk3    = ed25519.GenPrivKey().PubKey()
+	valOpPk1    = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53")
+	valOpPk2    = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB54")
+	valOpPk3    = newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB55")
 	valOpAddr1  = sdk.ValAddress(valOpPk1.Address())
 	valOpAddr2  = sdk.ValAddress(valOpPk2.Address())
 	valOpAddr3  = sdk.ValAddress(valOpPk3.Address())
@@ -62,6 +64,17 @@ var (
 	TestDescription     = staking.NewDescription("T", "E", "S", "T")
 	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
+
+// TODO move to common testing framework
+func newPubKey(pk string) (res crypto.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	var pkEd ed25519.PubKeyEd25519
+	copy(pkEd[:], pkBytes[:])
+	return pkEd
+}
 
 func makeTestCodec() *codec.Codec {
 	var cdc = codec.New()

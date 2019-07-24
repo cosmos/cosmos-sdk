@@ -51,7 +51,7 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, types.OptionNoWithVeto, vote.Option)
 
 	// Test vote iterator
-	// FIXME: non determinism on the order of the votes
+	// NOTE order of deposits is determined by the addresses
 	votes := keeper.GetAllVotes(ctx)
 	require.Len(t, votes, 2)
 	require.Equal(t, votes, keeper.GetVotes(ctx, proposalID))

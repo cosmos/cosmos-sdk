@@ -18,9 +18,9 @@ import (
 
 type testInput struct {
 	cdc *codec.Codec
-	ctx sdk.Context
-	ak  AccountKeeper
-	sk  types.SupplyKeeper
+	Ctx sdk.Context
+	Ak  AccountKeeper
+	Sk  types.SupplyKeeper
 }
 
 // moduleAccount defines an account for modules that holds coins on a pool
@@ -77,7 +77,7 @@ func SetupTestInput() testInput {
 
 	ak.SetParams(ctx, types.DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}
+	return testInput{cdc: cdc, Ctx: ctx, Ak: ak, Sk: sk}
 }
 
 // DummySupplyKeeper defines a supply keeper used only for testing to avoid

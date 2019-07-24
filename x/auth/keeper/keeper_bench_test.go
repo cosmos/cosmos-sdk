@@ -13,14 +13,14 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
+		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
+		input.Ak.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
+		input.Ak.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
@@ -39,15 +39,15 @@ func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
+		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
+		input.Ak.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
+		input.Ak.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
@@ -60,8 +60,8 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
+		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
+		input.Ak.SetAccount(input.Ctx, acc)
 	}
 }
 
@@ -82,8 +82,8 @@ func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
+		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
+		input.Ak.SetAccount(input.Ctx, acc)
 	}
 }

@@ -114,7 +114,15 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     if !SubscriptionExists(msg.Name) {
         return NoSuchSubscriptionErr
     }
+
     subscriptionID := hash(msg.Name|msg.Subscriber)
+    metadata := GetMetaData(ctx, msg.Name)
+    // subscribeMsg will pay for the first period
+    err := bank.Send(msg.Subscriber, metadata.Collector, metadata.Amount)
+    if err != nil {
+        return err
+    }
+
     // check if user already has subscribe to this service
     // if so renew the subscription
     if subscription := GetUserSubscriptions(msg.Subscriber, msg.Name); subscription != nil {
@@ -127,13 +135,7 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
         subscription.Active = true
         StoreSubscription(subscriptionID, subscription)
         return nil
-    }
-    metadata := GetMetaData(ctx, msg.Name)
-    // subscribeMsg will pay for the first period
-    err := bank.Send(msg.Subscriber, metadata.Collector, metadata.Amount)
-    if err != nil {
-        return err
-    }
+    }   
     subscription := Subscription{
         Name:       metadata.Name,
         Subscriber: msg.Subscriber,
@@ -145,14 +147,14 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     // adds subscription to list of user subscriptions
     AppendToUserSubscriptions(subscriptionID)
     // push to back of DueQueue for this service
-    PushToBackOfDueQueue(subscriptionID)
+    PushToBackOfDueQueue(msg.Name, subscriptionID)
 }
 ```
 
 ```go
 func HandleUnsubscribeMsg(ctx sdk.Context, msg UnsubscribeMsg) {
     subscription := GetUserSubscriptions(msg.Subscriber, msg.Name)
-    if subscription != nil {
+    if subscription == nil {
         return nil
     }
     subscription.Active = false
@@ -176,6 +178,12 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
         // top of the queue is "due"
         subscription := GetSubscription(queue[0])
         if subscription.LastPaid + metadata.Period >= ctx.BlockTime {
+            subscriptionID := PopOffFront(queue)
+            if subscription.Limit == 0 {
+                subscription.Active = false
+                StoreSubscription(subscriptionID, subscription)
+                continue
+            }
             err := bank.Send(subscription.Subscriber, metadata.Collector, metadata.Amount)
             if err != nil {
                 // insufficient funds. inactivate subscription

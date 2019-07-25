@@ -146,6 +146,7 @@ func TestProcessPostResponse(t *testing.T) {
 	// mock account
 	// PubKey field ensures amino encoding is used first since standard
 	// JSON encoding will panic on crypto.PubKey
+
 	type mockAccount struct {
 		Address       types.AccAddress `json:"address"`
 		Coins         types.Coins      `json:"coins"`
@@ -199,9 +200,7 @@ func TestProcessPostResponse(t *testing.T) {
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
-func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
-	expectedBody []byte, indent bool,
-) {
+func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{}, expectedBody []byte, indent bool) {
 	if indent {
 		ctx.Indent = indent
 	}

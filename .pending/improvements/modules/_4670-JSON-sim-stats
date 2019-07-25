@@ -1,0 +1,2 @@
+#4670 Update simulation statistics to JSON format
+  - Support exporting the simulation stats to a given JSON file

@@ -197,7 +197,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 				TotalVotingPower: totalVotingPower,
 			},
 		)
-		event("begin_block", "evicence", "ok")
+		event("begin_block", "evidence", "ok")
 	}
 
 	return abci.RequestBeginBlock{

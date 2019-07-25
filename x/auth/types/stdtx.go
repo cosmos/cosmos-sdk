@@ -6,6 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,10 +21,10 @@ var (
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
-	Msgs       []sdk.Msg      `json:"msg"`
-	Fee        StdFee         `json:"fee"`
-	Signatures []StdSignature `json:"signatures"`
-	Memo       string         `json:"memo"`
+	Msgs       []sdk.Msg      `json:"msg" yaml:"msg"`
+	Fee        StdFee         `json:"fee" yaml:"fee"`
+	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
+	Memo       string         `json:"memo" yaml:"memo"`
 }
 
 func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
@@ -112,8 +113,8 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
-	Amount sdk.Coins `json:"amount"`
-	Gas    uint64    `json:"gas"`
+	Amount sdk.Coins `json:"amount" yaml:"amount"`
+	Gas    uint64    `json:"gas" yaml:"gas"`
 }
 
 // NewStdFee returns a new instance of StdFee
@@ -157,12 +158,12 @@ func (fee StdFee) GasPrices() sdk.DecCoins {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	AccountNumber uint64            `json:"account_number"`
-	ChainID       string            `json:"chain_id"`
-	Fee           json.RawMessage   `json:"fee"`
-	Memo          string            `json:"memo"`
-	Msgs          []json.RawMessage `json:"msgs"`
-	Sequence      uint64            `json:"sequence"`
+	AccountNumber uint64            `json:"account_number" yaml:"account_number"`
+	ChainID       string            `json:"chain_id" yaml:"chain_id"`
+	Fee           json.RawMessage   `json:"fee" yaml:"fee"`
+	Memo          string            `json:"memo" yaml:"memo"`
+	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
+	Sequence      uint64            `json:"sequence" yaml:"sequence"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
@@ -187,8 +188,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 
 // StdSignature represents a sig
 type StdSignature struct {
-	crypto.PubKey `json:"pub_key"` // optional
-	Signature     []byte           `json:"signature"`
+	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
+	Signature     []byte                          `json:"signature" yaml:"signature"`
 }
 
 // DefaultTxDecoder logic for standard transaction decoding
@@ -216,4 +217,33 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryLengthPrefixed(tx)
 	}
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	var (
+		bz     []byte
+		pubkey string
+		err    error
+	)
+
+	if ss.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(ss.PubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bz, err = yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		PubKey:    pubkey,
+		Signature: fmt.Sprintf("%s", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
 }

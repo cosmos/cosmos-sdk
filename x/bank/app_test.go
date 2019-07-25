@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	supplytypes "github.com/cosmos/cosmos-sdk/x/supply/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/stretchr/testify/require"
 
@@ -93,7 +93,7 @@ var (
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
 	mapp, err := getBenchmarkMockApp()
-	supplytypes.RegisterCodec(mapp.Cdc)
+	supply.RegisterCodec(mapp.Cdc)
 	require.NoError(t, err)
 	return mapp
 }

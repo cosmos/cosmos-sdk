@@ -1,22 +1,18 @@
 package state
 
+// Mapping is key []byte -> value []byte mapping using a base(possibly prefixed)
 type Mapping struct {
-	base       Base
-	start, end []byte
+	base Base
 }
 
+// NewMapping() constructs a Mapping with a provided prefix
 func NewMapping(base Base, prefix []byte) Mapping {
 	return Mapping{
-		base:  base.Prefix(prefix),
-		start: []byte{}, // preventing nil key access in store.Last
-		end:   nil,
+		base: base.Prefix(prefix),
 	}
 }
 
-func (m Mapping) store(ctx Context) KVStore {
-	return m.base.Store(ctx)
-}
-
+// Value() returns the Value corresponding to the provided key
 func (m Mapping) Value(key []byte) Value {
 	return NewValue(m.base, key)
 }
@@ -43,12 +39,6 @@ func (m Mapping) Has(ctx Context, key []byte) bool {
 
 func (m Mapping) Delete(ctx Context, key []byte) {
 	m.Value(key).Delete(ctx)
-}
-
-func (m Mapping) IsEmpty(ctx Context) bool {
-	iter := m.store(ctx).Iterator(nil, nil)
-	defer iter.Close()
-	return iter.Valid()
 }
 
 func (m Mapping) Prefix(prefix []byte) Mapping {

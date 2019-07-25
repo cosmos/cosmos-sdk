@@ -1,0 +1,2 @@
+#4663 Refactor bank keeper by removing private functions
+  - `InputOutputCoins`, `SetCoins`, `SubtractCoins` and `AddCoins` are now part of the `SendKeeper` instead of the `Keeper` interface

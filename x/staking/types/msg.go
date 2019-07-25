@@ -22,23 +22,23 @@ var (
 
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	Description       Description     `json:"description"`
-	Commission        CommissionRates `json:"commission"`
-	MinSelfDelegation sdk.Int         `json:"min_self_delegation"`
-	DelegatorAddress  sdk.AccAddress  `json:"delegator_address"`
-	ValidatorAddress  sdk.ValAddress  `json:"validator_address"`
-	PubKey            crypto.PubKey   `json:"pubkey"`
-	Value             sdk.Coin        `json:"value"`
+	Description       Description     `json:"description" yaml:"description"`
+	Commission        CommissionRates `json:"commission" yaml:"commission"`
+	MinSelfDelegation sdk.Int         `json:"min_self_delegation" yaml:"min_self_delegation"`
+	DelegatorAddress  sdk.AccAddress  `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress  `json:"validator_address" yaml:"validator_address"`
+	PubKey            crypto.PubKey   `json:"pubkey" yaml:"pubkey"`
+	Value             sdk.Coin        `json:"value" yaml:"value"`
 }
 
 type msgCreateValidatorJSON struct {
-	Description       Description     `json:"description"`
-	Commission        CommissionRates `json:"commission"`
-	MinSelfDelegation sdk.Int         `json:"min_self_delegation"`
-	DelegatorAddress  sdk.AccAddress  `json:"delegator_address"`
-	ValidatorAddress  sdk.ValAddress  `json:"validator_address"`
-	PubKey            string          `json:"pubkey"`
-	Value             sdk.Coin        `json:"value"`
+	Description       Description     `json:"description" yaml:"description"`
+	Commission        CommissionRates `json:"commission" yaml:"commission"`
+	MinSelfDelegation sdk.Int         `json:"min_self_delegation" yaml:"min_self_delegation"`
+	DelegatorAddress  sdk.AccAddress  `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress  sdk.ValAddress  `json:"validator_address" yaml:"validator_address"`
+	PubKey            string          `json:"pubkey" yaml:"pubkey"`
+	Value             sdk.Coin        `json:"value" yaml:"value"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
@@ -155,15 +155,15 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 // MsgEditValidator - struct for editing a validator
 type MsgEditValidator struct {
 	Description
-	ValidatorAddress sdk.ValAddress `json:"address"`
+	ValidatorAddress sdk.ValAddress `json:"address" yaml:"address"`
 
 	// We pass a reference to the new commission rate and min self delegation as it's not mandatory to
 	// update. If not updated, the deserialized rate will be zero with no way to
 	// distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate    *sdk.Dec `json:"commission_rate"`
-	MinSelfDelegation *sdk.Int `json:"min_self_delegation"`
+	CommissionRate    *sdk.Dec `json:"commission_rate" yaml:"commission_rate"`
+	MinSelfDelegation *sdk.Int `json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 
 func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) MsgEditValidator {
@@ -213,9 +213,9 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgDelegate struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Amount           sdk.Coin       `json:"amount"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	Amount           sdk.Coin       `json:"amount" yaml:"amount"`
 }
 
 func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) MsgDelegate {
@@ -257,10 +257,10 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 
 // MsgDelegate - struct for bonding transactions
 type MsgBeginRedelegate struct {
-	DelegatorAddress    sdk.AccAddress `json:"delegator_address"`
-	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address"`
-	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address"`
-	Amount              sdk.Coin       `json:"amount"`
+	DelegatorAddress    sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorSrcAddress sdk.ValAddress `json:"validator_src_address" yaml:"validator_src_address"`
+	ValidatorDstAddress sdk.ValAddress `json:"validator_dst_address" yaml:"validator_dst_address"`
+	Amount              sdk.Coin       `json:"amount" yaml:"amount"`
 }
 
 func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
@@ -306,9 +306,9 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 
 // MsgUndelegate - struct for unbonding transactions
 type MsgUndelegate struct {
-	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	Amount           sdk.Coin       `json:"amount"`
+	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	Amount           sdk.Coin       `json:"amount" yaml:"amount"`
 }
 
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) MsgUndelegate {

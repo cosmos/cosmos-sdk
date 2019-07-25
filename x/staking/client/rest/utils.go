@@ -66,11 +66,13 @@ func queryBonds(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -99,11 +101,13 @@ func queryDelegator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -132,11 +136,13 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(endpoint, bz)
+		res, height, err := cliCtx.QueryWithData(endpoint, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

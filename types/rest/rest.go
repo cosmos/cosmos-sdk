@@ -269,9 +269,9 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 	)
 
 	if cliCtx.Indent {
-		output, err = json.MarshalIndent(wrappedResp, "", "  ")
+		output, err = cliCtx.Codec.MarshalJSONIndent(wrappedResp, "", "  ")
 	} else {
-		output, err = json.Marshal(wrappedResp)
+		output, err = cliCtx.Codec.MarshalJSON(wrappedResp)
 	}
 
 	if err != nil {

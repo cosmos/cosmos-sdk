@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -12,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	genutilRest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
+	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
 // query accountREST Handler
@@ -54,33 +55,28 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 // QueryTxsHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
-func QueryTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	heightStr := r.FormValue("height")
-	if heightStr != "" {
-		if height, err := strconv.ParseInt(heightStr, 10, 64); err != nil && height == 0 {
-			return genutilRest.QueryGenesisTxs(cliCtx)
-		}
-	}
-
-	return QueryTxsByEventsRequestHandlerFn(cliCtx)
-}
-
-// QueryTxsByEventsRequestHandlerFn implements a REST handler that searches for
-// transactions by events.
-func QueryTxsByEventsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			tags        []string
-			txs         []sdk.TxResponse
-			page, limit int
-		)
-
 		err := r.ParseForm()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,
 				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
 			return
 		}
+
+		heightStr := r.FormValue("height")
+		if heightStr != "" {
+			if height, err := strconv.ParseInt(heightStr, 10, 64); err != nil && height == 0 {
+				genutilrest.QueryGenesisTxs(cliCtx, w)
+				return
+			}
+		}
+
+		var (
+			tags        []string
+			txs         []sdk.TxResponse
+			page, limit int
+		)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {

@@ -39,12 +39,12 @@ jobs:
     executor: docs
     steps:
       - checkout
-      - make:
-          description: "Build docs"
-          target: make build_docs
-      - make:
-          description: "Deploy docs"
-          target: make sync_docs
+      - run:
+          name: "Build docs"
+          command: make build_docs
+      - run:
+          name: "Upload docs to S3"
+          command: make sync_docs
 
   setup_dependencies:
     executor: golang

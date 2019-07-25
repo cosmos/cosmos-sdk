@@ -1,4 +1,4 @@
-package genutil
+package types
 
 import (
 	"encoding/json"
@@ -9,11 +9,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// State to Unmarshal
+// GenesisState defines the raw genesis transaction in JSON
 type GenesisState struct {
 	GenTxs []json.RawMessage `json:"gentxs" yaml:"gentxs"`
 }
@@ -27,17 +27,15 @@ func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 
 // NewGenesisStateFromStdTx creates a new GenesisState object
 // from auth transactions
-func NewGenesisStateFromStdTx(genTxs []auth.StdTx) GenesisState {
+func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {
 	genTxsBz := make([]json.RawMessage, len(genTxs))
 	for i, genTx := range genTxs {
-		genTxsBz[i] = moduleCdc.MustMarshalJSON(genTx)
+		genTxsBz[i] = ModuleCdc.MustMarshalJSON(genTx)
 	}
-	return GenesisState{
-		GenTxs: genTxsBz,
-	}
+	return NewGenesisState(genTxsBz)
 }
 
-// get the genutil genesis state from the expected app state
+// GetGenesisStateFromAppState gets the genutil genesis state from the expected app state
 func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
 	var genesisState GenesisState
 	if appState[ModuleName] != nil {
@@ -46,7 +44,7 @@ func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawM
 	return genesisState
 }
 
-// set the genutil genesis state within the expected app state
+// SetGenesisStateInAppState sets the genutil genesis state within the expected app state
 func SetGenesisStateInAppState(cdc *codec.Codec,
 	appState map[string]json.RawMessage, genesisState GenesisState) map[string]json.RawMessage {
 
@@ -55,7 +53,8 @@ func SetGenesisStateInAppState(cdc *codec.Codec,
 	return appState
 }
 
-// Create the core parameters for genesis initialization for the application.
+// GenesisStateFromGenDoc creates the core parameters for genesis initialization
+// for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
@@ -67,7 +66,8 @@ func GenesisStateFromGenDoc(cdc *codec.Codec, genDoc tmtypes.GenesisDoc,
 	return genesisState, nil
 }
 
-// Create the core parameters for genesis initialization for the application.
+// GenesisStateFromGenFile creates the core parameters for genesis initialization
+// for the application.
 //
 // NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
@@ -86,11 +86,11 @@ func GenesisStateFromGenFile(cdc *codec.Codec, genFile string,
 	return genesisState, genDoc, err
 }
 
-// validate GenTx transactions
+// ValidateGenesis validates GenTx transactions
 func ValidateGenesis(genesisState GenesisState) error {
 	for i, genTx := range genesisState.GenTxs {
-		var tx auth.StdTx
-		if err := moduleCdc.UnmarshalJSON(genTx, &tx); err != nil {
+		var tx authtypes.StdTx
+		if err := ModuleCdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return err
 		}
 
@@ -100,10 +100,10 @@ func ValidateGenesis(genesisState GenesisState) error {
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
 
-		// TODO abstract back to staking
-		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
+		// TODO: abstract back to staking
+		if _, ok := msgs[0].(stakingtypes.MsgCreateValidator); !ok {
 			return fmt.Errorf(
-				"Genesis transaction %v does not contain a MsgCreateValidator", i)
+				"genesis transaction %v does not contain a MsgCreateValidator", i)
 		}
 	}
 	return nil

@@ -122,7 +122,7 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, c gov.Content, s simulation
 	return
 }
 
-// SimulateMsgDeposit generates a MsgDeposit with random values
+// SimulateMsgDeposit generates a MsgDeposit with random values.
 func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -148,7 +148,7 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 	}
 }
 
-// SimulateMsgVote generates a MsgVote with random values
+// SimulateMsgVote generates a MsgVote with random values.
 func SimulateMsgVote(k gov.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, simulation.Account{}, 0)
 }

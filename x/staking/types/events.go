@@ -16,7 +16,6 @@ var (
 	AttributeKeySrcValidator      = "source_validator"
 	AttributeKeyDstValidator      = "destination_validator"
 	AttributeKeyDelegator         = "delegator"
-	AttributeKeyAmount            = "amount"
 	AttributeKeyCompletionTime    = "completion_time"
 	AttributeValueCategory        = ModuleName
 )

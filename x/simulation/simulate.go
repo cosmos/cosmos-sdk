@@ -62,7 +62,7 @@ func SimulateFromSeed(
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
-	eventStats := newEventStats()
+	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
@@ -109,16 +109,16 @@ func SimulateFromSeed(
 	var pastVoteInfos [][]abci.VoteInfo
 
 	request := RandomRequestBeginBlock(r, params,
-		validators, pastTimes, pastVoteInfos, eventStats.tally, header)
+		validators, pastTimes, pastVoteInfos, eventStats.Tally, header)
 
 	// These are operations which have been queued by previous operations
-	operationQueue := newOperationQueue()
+	operationQueue := NewOperationQueue()
 	timeOperationQueue := []FutureOperation{}
 
 	logWriter := NewLogWriter(testingMode)
 
 	blockSimulator := createBlockSimulator(
-		testingMode, tb, t, w, params, eventStats.tally, invariants,
+		testingMode, tb, t, w, params, eventStats.Tally, invariants,
 		ops, operationQueue, timeOperationQueue,
 		numBlocks, blockSize, logWriter, lean, onOperation, allInvariants)
 
@@ -160,11 +160,11 @@ func SimulateFromSeed(
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		numQueuedOpsRan := runQueuedOperations(
 			operationQueue, int(header.Height),
-			tb, r, app, ctx, accs, logWriter, eventStats.tally, lean)
+			tb, r, app, ctx, accs, logWriter, eventStats.Tally, lean)
 
 		numQueuedTimeOpsRan := runQueuedTimeOperations(
 			timeOperationQueue, int(header.Height), header.Time,
-			tb, r, app, ctx, accs, logWriter, eventStats.tally, lean)
+			tb, r, app, ctx, accs, logWriter, eventStats.Tally, lean)
 
 		if testingMode && onOperation {
 			assertAllInvariants(t, app, invariants, "QueuedOperations", logWriter, allInvariants)
@@ -202,13 +202,13 @@ func SimulateFromSeed(
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
 		request = RandomRequestBeginBlock(r, params, validators,
-			pastTimes, pastVoteInfos, eventStats.tally, header)
+			pastTimes, pastVoteInfos, eventStats.Tally, header)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block
 		validators = nextValidators
 		nextValidators = updateValidators(tb, r, params,
-			validators, res.ValidatorUpdates, eventStats.tally)
+			validators, res.ValidatorUpdates, eventStats.Tally)
 
 		// update the exported params
 		if exportParams && exportParamsHeight == height {
@@ -240,7 +240,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
-	event func(string), invariants sdk.Invariants, ops WeightedOperations,
+	event func(route, op, evResult string), invariants sdk.Invariants, ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
 	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean, onOperation, allInvariants bool) blockSimFn {
 
@@ -276,7 +276,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			opMsg, futureOps, err := op(r2, app, ctx, accounts)
 			opMsg.LogEvent(event)
 			if !lean || opMsg.OK {
-				logWriter.AddEntry(MsgEntry(header.Height, opMsg, int64(i)))
+				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
 			if err != nil {
 				logWriter.PrintLogs()
@@ -305,7 +305,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 // nolint: errcheck
 func runQueuedOperations(queueOps map[int][]Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account, logWriter LogWriter, tallyEvent func(string), lean bool) (numOpsRan int) {
+	ctx sdk.Context, accounts []Account, logWriter LogWriter, event func(route, op, evResult string), lean bool) (numOpsRan int) {
 
 	queuedOp, ok := queueOps[height]
 	if !ok {
@@ -319,7 +319,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
 		opMsg, _, err := queuedOp[i](r, app, ctx, accounts)
-		opMsg.LogEvent(tallyEvent)
+		opMsg.LogEvent(event)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
@@ -335,7 +335,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 func runQueuedTimeOperations(queueOps []FutureOperation,
 	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []Account,
-	logWriter LogWriter, tallyEvent func(string), lean bool) (numOpsRan int) {
+	logWriter LogWriter, event func(route, op, evResult string), lean bool) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
@@ -344,7 +344,7 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
 		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts)
-		opMsg.LogEvent(tallyEvent)
+		opMsg.LogEvent(event)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
 		}

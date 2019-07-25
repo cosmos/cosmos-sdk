@@ -12,10 +12,6 @@ func NewMapping(base Base, prefix []byte) Mapping {
 	}
 }
 
-func (m Mapping) store(ctx Context) KVStore {
-	return m.base.store(ctx)
-}
-
 // Value() returns the Value corresponding to the provided key
 func (m Mapping) Value(key []byte) Value {
 	return NewValue(m.base, key)

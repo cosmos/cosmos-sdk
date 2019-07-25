@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values
+// SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -38,7 +38,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 	}
 }
 
-// SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values
+// SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -63,7 +63,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 	}
 }
 
-// SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values
+// SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,

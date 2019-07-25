@@ -8,7 +8,7 @@ import (
 )
 
 // EventStats defines an object that keeps a tally of each event that has occurred
-// during a simulation
+// during a simulation.
 type EventStats map[string]map[string]map[string]int
 
 // NewEventStats creates a new empty EventStats object
@@ -16,7 +16,7 @@ func NewEventStats() EventStats {
 	return make(EventStats)
 }
 
-// Tally increases the count of a simulation event
+// Tally increases the count of a simulation event.
 func (es EventStats) Tally(route, op, evResult string) {
 	_, ok := es[route]
 	if !ok {
@@ -31,7 +31,7 @@ func (es EventStats) Tally(route, op, evResult string) {
 	es[route][op][evResult]++
 }
 
-// Print the event stats in JSON format
+// Print the event stats in JSON format.
 func (es EventStats) Print(w io.Writer) {
 	obj, err := json.MarshalIndent(es, "", " ")
 	if err != nil {

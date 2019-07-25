@@ -64,12 +64,12 @@ func MsgEntry(height, order int64, opMsg OperationMsg) OperationEntry {
 	return NewOperationEntry(MsgEntryKind, height, order, opMsg.MustMarshal())
 }
 
-// QueuedMsgEntry - operation entry for queued msg
+// QueuedMsgEntry creates an operation entry for a given queued message.
 func QueuedMsgEntry(height int64, opMsg OperationMsg) OperationEntry {
 	return NewOperationEntry(QueuedMsgEntryKind, height, -1, opMsg.MustMarshal())
 }
 
-// MustMarshal Marshals the operation entry, panic on error
+// MustMarshal marshals the operation entry, panic on error.
 func (oe OperationEntry) MustMarshal() json.RawMessage {
 	out, err := json.Marshal(oe)
 	if err != nil {
@@ -89,7 +89,7 @@ type OperationMsg struct {
 	Msg     json.RawMessage `json:"msg" yaml:"msg"`
 }
 
-// NewOperationMsgBasic - create a new operation message from raw input
+// NewOperationMsgBasic creates a new operation message from raw input.
 func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
 	return OperationMsg{
 		Route:   route,
@@ -140,7 +140,7 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 // OperationQueue defines an object for a queue of operations
 type OperationQueue map[int][]Operation
 
-// NewOperationQueue creates a new OperationQueue instance
+// NewOperationQueue creates a new OperationQueue instance.
 func NewOperationQueue() OperationQueue {
 	return make(OperationQueue)
 }

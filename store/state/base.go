@@ -8,27 +8,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Base is a state accessor base layer, consists of Codec, KVStore getter function, and key prefix.
+// Base is a state accessor base layer, consists of Codec, StoreKey, and prefix.
+// StoreKey is used to get the KVStore, cdc is used to marshal/unmarshal the interfaces,
+// and the prefix is prefixed to the key.
 //
+// Base has practically the same capability with the storeKey.
+// It should not be passed to an untrusted actor.
 type Base struct {
-	cdc     *codec.Codec
-	storefn func(Context) KVStore
-	prefix  []byte
+	storeKey sdk.StoreKey
+	cdc      *codec.Codec
+	prefix   []byte
 }
 
-func EmptyBase() Base {
-	return NewBase(nil, nil)
-}
-
-func NewBase(cdc *codec.Codec, key sdk.StoreKey) Base {
+// NewBase() is the constructor for Base()
+func NewBase(cdc *codec.Codec, key sdk.StoreKey, rootkey []byte) Base {
 	return Base{
-		cdc:     cdc,
-		storefn: func(ctx Context) KVStore { return ctx.KVStore(key) },
+		storeKey: key,
+		cdc:      cdc,
+		prefix:   rootkey,
 	}
 }
 
 func (base Base) store(ctx Context) KVStore {
-	return prefix.NewStore(base.storefn(ctx), base.prefix)
+	return prefix.NewStore(ctx.KVStore(base.storeKey), base.prefix)
 }
 
 func join(a, b []byte) (res []byte) {
@@ -38,19 +40,35 @@ func join(a, b []byte) (res []byte) {
 	return
 }
 
+// Prefix() returns a copy of the Base with the updated prefix.
 func (base Base) Prefix(prefix []byte) (res Base) {
 	res = Base{
-		cdc:     base.cdc,
-		storefn: base.storefn,
-		prefix:  join(base.prefix, prefix),
+		storeKey: base.storeKey,
+		cdc:      base.cdc,
+		prefix:   join(base.prefix, prefix),
 	}
 	return
 }
 
+// Cdc() returns the codec of the base. It is safe to expose the codec.
 func (base Base) Cdc() *codec.Codec {
 	return base.cdc
 }
 
 func (base Base) key(key []byte) []byte {
 	return join(base.prefix, key)
+}
+
+// StoreName() returns the name of the storeKey. It is safe to expose the store name.
+// Used by the CLI side query operations.
+func (base Base) StoreName() string {
+	return base.storeKey.Name()
+}
+
+// PrefixBytes() returns the prefix bytes. It is safe to expsoe the prefix bytes.
+// Used by the CLI side query operations.
+func (base Base) PrefixBytes() (res []byte) {
+	res = make([]byte, len(base.prefix))
+	copy(res, base.prefix)
+	return
 }

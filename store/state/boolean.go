@@ -1,5 +1,7 @@
 package state
 
+// Boolean is a bool typed wrapper for Value.
+// Except for the type checking, it does not alter the behaviour.
 type Boolean struct {
 	Value
 }

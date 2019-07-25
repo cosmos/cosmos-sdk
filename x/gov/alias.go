@@ -74,8 +74,6 @@ var (
 	ErrUnknownProposal            = types.ErrUnknownProposal
 	ErrInactiveProposal           = types.ErrInactiveProposal
 	ErrAlreadyActiveProposal      = types.ErrAlreadyActiveProposal
-	ErrAlreadyFinishedProposal    = types.ErrAlreadyFinishedProposal
-	ErrAddressNotStaked           = types.ErrAddressNotStaked
 	ErrInvalidProposalContent     = types.ErrInvalidProposalContent
 	ErrInvalidProposalType        = types.ErrInvalidProposalType
 	ErrInvalidVote                = types.ErrInvalidVote

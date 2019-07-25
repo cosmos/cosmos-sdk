@@ -102,7 +102,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Check if proposal is still depositable
 	if (proposal.Status != types.StatusDepositPeriod) && (proposal.Status != types.StatusVotingPeriod) {
-		return types.ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
+		return types.ErrInactiveProposal(keeper.codespace, proposalID), false
 	}
 
 	// update the governance module's account coins pool

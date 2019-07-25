@@ -63,7 +63,7 @@ func (p Proposal) String() string {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-// nolint
+// String implements stringer interface
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
@@ -82,7 +82,7 @@ type (
 	ProposalStatus byte
 )
 
-//nolint
+// Valid Proposal statuses
 const (
 	StatusNil           ProposalStatus = 0x00
 	StatusDepositPeriod ProposalStatus = 0x01
@@ -205,7 +205,8 @@ const (
 	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
 )
 
-// Text Proposal
+// TextProposal defines a standard text proposal whose changes need to be 
+// manually updated in case of approval
 type TextProposal struct {
 	Title       string `json:"title" yaml:"title"`
 	Description string `json:"description" yaml:"description"`
@@ -219,13 +220,22 @@ func NewTextProposal(title, description string) Content {
 // Implements Content Interface
 var _ Content = TextProposal{}
 
-// nolint
+// GetTitle returns the proposal title
 func (tp TextProposal) GetTitle() string         { return tp.Title }
+
+// GetDescription returns the proposal description
 func (tp TextProposal) GetDescription() string   { return tp.Description }
+
+// ProposalRoute returns the proposal router key
 func (tp TextProposal) ProposalRoute() string    { return RouterKey }
+
+// ProposalType is "Text"
 func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
+
+// ValidateBasic validates the content's title and description of the proposal
 func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
 
+// String implements Stringer interface
 func (tp TextProposal) String() string {
 	return fmt.Sprintf(`Text Proposal:
   Title:       %s
@@ -233,7 +243,9 @@ func (tp TextProposal) String() string {
 `, tp.Title, tp.Description)
 }
 
-// Software Upgrade Proposals
+// SoftwareUpgradeProposal defines a proposal for upgrading the network nodes
+// without the need of manually halting at a given height
+//
 // TODO: We have to add fields for SUP specific arguments e.g. commit hash,
 // upgrade date, etc.
 type SoftwareUpgradeProposal struct {
@@ -241,7 +253,7 @@ type SoftwareUpgradeProposal struct {
 	Description string `json:"description" yaml:"description"`
 }
 
-// NewTextProposal creates a software upgrade proposal Content
+// NewSoftwareUpgradeProposal creates a software upgrade proposal Content
 func NewSoftwareUpgradeProposal(title, description string) Content {
 	return SoftwareUpgradeProposal{title, description}
 }
@@ -249,15 +261,24 @@ func NewSoftwareUpgradeProposal(title, description string) Content {
 // Implements Content Interface
 var _ Content = SoftwareUpgradeProposal{}
 
-// nolint
+// GetTitle returns the proposal title
 func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+
+// GetDescription returns the proposal description
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
+
+// ProposalRoute returns the proposal router key
 func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+
+// ProposalType is "SoftwareUpgrade"
 func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+
+// ValidateBasic validates the content's title and description of the proposal
 func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
 	return ValidateAbstract(DefaultCodespace, sup)
 }
 
+// String implements Stringer interface
 func (sup SoftwareUpgradeProposal) String() string {
 	return fmt.Sprintf(`Software Upgrade Proposal:
   Title:       %s

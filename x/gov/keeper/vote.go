@@ -104,6 +104,7 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 	}
 }
 
+// deleteVote deletes a vote from a given proposalID and voter from the store
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.VoteKey(proposalID, voterAddr))

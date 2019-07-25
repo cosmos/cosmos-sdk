@@ -177,8 +177,8 @@ func TestProcessPostResponse(t *testing.T) {
 	require.Nil(t, err)
 	jsonWithIndent, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
 	require.Nil(t, err)
-	respNoIndent := ResponseWithHeight{height, jsonNoIndent}
-	respWithIndent := ResponseWithHeight{height, jsonWithIndent}
+	respNoIndent := NewResponseWithHeight(height, jsonNoIndent)
+	respWithIndent := NewResponseWithHeight(height, jsonWithIndent)
 	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
 	expectedWithIndent, err := ctx.Codec.MarshalJSONIndent(respWithIndent, "", "  ")

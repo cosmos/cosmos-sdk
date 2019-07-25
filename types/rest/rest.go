@@ -31,6 +31,14 @@ type ResponseWithHeight struct {
 	Result json.RawMessage `json:"result"`
 }
 
+// NewResponseWithHeight creates a new ResponseWithHeight instance
+func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHeight {
+	return ResponseWithHeight{
+		Height: height,
+		Result: result,
+	}
+}
+
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
@@ -258,10 +266,7 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 		}
 	}
 
-	wrappedResp := ResponseWithHeight{
-		Height: cliCtx.Height,
-		Result: result,
-	}
+	wrappedResp := NewResponseWithHeight(cliCtx.Height, result)
 
 	var (
 		output []byte

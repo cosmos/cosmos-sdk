@@ -21,9 +21,7 @@ type Root struct {
 }
 
 func NewRoot(hash []byte) Root {
-	return Root{
-		Hash: hash,
-	}
+	return Root{hash}
 }
 
 func (Root) CommitmentKind() string {
@@ -80,7 +78,7 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 	}
 	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
 
-	// Hard coded for now
+	// TODO: Hard coded for now, proof runtime should be extensible for other proof types
 	runtime := rootmulti.DefaultProofRuntime()
 
 	if value != nil {

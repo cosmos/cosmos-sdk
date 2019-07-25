@@ -36,6 +36,8 @@ func commit(cms types.CommitMultiStore) Root {
 	return NewRoot(cid.Hash)
 }
 
+// TestStore tests Merkle proof on the commitment.Store
+// Sets/upates key-value pairs and prove with the query result proofs
 func TestStore(t *testing.T) {
 	k, ctx, cms, _ := defaultComponents()
 	kvstore := ctx.KVStore(k)

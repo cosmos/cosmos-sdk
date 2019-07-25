@@ -19,7 +19,11 @@ func (path Path) RequestQuery(key []byte) abci.RequestQuery {
 }
 
 func (path Path) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
-	qres := cms.(types.Queryable).Query(path.RequestQuery(key))
+	queryable, ok := cms.(types.Queryable)
+	if !ok {
+		panic("CommitMultiStore not queryable")
+	}
+	qres := queryable.Query(path.RequestQuery(key))
 	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
 }
 

@@ -21,13 +21,6 @@ func (base Base) Store(ctx sdk.Context) Store {
 	return NewPrefix(GetStore(ctx), base.prefix)
 }
 
-func join(a, b []byte) (res []byte) {
-	res = make([]byte, len(a)+len(b))
-	copy(res, a)
-	copy(res[len(a):], b)
-	return
-}
-
 func (base Base) Prefix(prefix []byte) Base {
 	return Base{
 		cdc:    base.cdc,

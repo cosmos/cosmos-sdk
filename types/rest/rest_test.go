@@ -148,12 +148,18 @@ func TestProcessPostResponse(t *testing.T) {
 	// mock account
 	// PubKey field ensures amino encoding is used first since standard
 	// JSON encoding will panic on crypto.PubKey
+
 	type mockAccount struct {
 		Address       types.AccAddress `json:"address"`
 		Coins         types.Coins      `json:"coins"`
 		PubKey        crypto.PubKey    `json:"public_key"`
 		AccountNumber uint64           `json:"account_number"`
 		Sequence      uint64           `json:"sequence"`
+	}
+
+	type mockAccountReturn struct {
+		Height int64 `json:"height"`
+		Result mockAccount `json:"result"`
 	}
 
 	// setup
@@ -168,16 +174,17 @@ func TestProcessPostResponse(t *testing.T) {
 	sequence := uint64(32)
 
 	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
+	wacc := mockAccountReturn{0, acc }
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 
 	// setup expected json responses with zero height
-	jsonNoHeight, err := cdc.MarshalJSON(acc)
+	jsonNoHeight, err := ctx.Codec.MarshalJSON(wacc)
 	require.Nil(t, err)
 	require.NotNil(t, jsonNoHeight)
-	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", "  ")
+	jsonIndentNoHeight, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
 	require.Nil(t, err)
 	require.NotNil(t, jsonIndentNoHeight)
 
@@ -212,9 +219,7 @@ func TestProcessPostResponse(t *testing.T) {
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
-func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
-	expectedBody []byte, indent bool,
-) {
+func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{}, expectedBody []byte, indent bool) {
 	if indent {
 		ctx.Indent = indent
 	}

@@ -17,11 +17,6 @@ all: tools build lint test
 include contrib/devtools/Makefile
 
 ########################################
-### CI
-
-ci: tools build test test_cover lint
-
-########################################
 ### Build
 
 build: go.sum
@@ -106,7 +101,7 @@ test_sim_import_export: runsim
 
 test_sim_after_import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppSimulationAfterImport
+	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 5 TestAppSimulationAfterImport
 
 test_sim_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."

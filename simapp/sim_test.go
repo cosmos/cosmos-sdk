@@ -53,7 +53,7 @@ func init() {
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int,
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, string,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
 	exportParams := exportParamsPath != ""

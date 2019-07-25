@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 )
 
-// EventStats defines an object that keeps a tally of each event that has occured
+// EventStats defines an object that keeps a tally of each event that has occurred
 // during a simulation
 type EventStats map[string]map[string]map[string]int
 
@@ -33,7 +33,7 @@ func (es EventStats) Tally(route, op, evResult string) {
 
 // Print the event stats in JSON format
 func (es EventStats) Print(w io.Writer) {
-	obj, err:= json.MarshalIndent(es, "", " ")
+	obj, err := json.MarshalIndent(es, "", " ")
 	if err != nil {
 		panic(err)
 	}
@@ -47,10 +47,9 @@ func (es EventStats) ExportJSON(path string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	err = ioutil.WriteFile(path, bz, 0644)
 	if err != nil {
 		panic(err)
 	}
 }
-

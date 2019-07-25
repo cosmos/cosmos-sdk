@@ -25,10 +25,10 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 
 // entry kinds for use within OperationEntry
 const (
-	BeginBlockEntryKind  = "begin_block"
-	EndBlockEntryKind    = "end_block"
-	MsgEntryKind         = "msg"
-	QueuedMsgEntryKind 		= "queued_msg"
+	BeginBlockEntryKind = "begin_block"
+	EndBlockEntryKind   = "end_block"
+	MsgEntryKind        = "msg"
+	QueuedMsgEntryKind  = "queued_msg"
 )
 
 // OperationEntry - an operation entry for logging (ex. BeginBlock, EndBlock, XxxMsg, etc)

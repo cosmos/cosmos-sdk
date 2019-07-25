@@ -45,9 +45,10 @@ func initChain(
 // TODO: split this monster function up
 func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
-	appStateFn AppStateFn, seed int64, ops WeightedOperations,
-	invariants sdk.Invariants,
+	appStateFn AppStateFn, seed int64,
+	ops WeightedOperations, invariants sdk.Invariants,
 	numBlocks, exportParamsHeight, blockSize int,
+	exportStatsPath string,
 	exportParams, commit, lean, onOperation, allInvariants bool,
 	blackListedAccs map[string]bool,
 ) (stopEarly bool, exportedParams Params, err error) {
@@ -217,7 +218,13 @@ func SimulateFromSeed(
 	}
 
 	if stopEarly {
-		eventStats.Print(w)
+		if exportStatsPath != "" {
+			fmt.Println("Exporting simulation statistics...")
+			eventStats.ExportJSON(exportStatsPath)
+		} else {
+			eventStats.Print(w)
+		}
+
 		return true, exportedParams, err
 	}
 
@@ -227,7 +234,12 @@ func SimulateFromSeed(
 		header.Height, header.Time, opCount,
 	)
 
-	eventStats.Print(w)
+	if exportStatsPath != "" {
+		fmt.Println("Exporting simulation statistics...")
+		eventStats.ExportJSON(exportStatsPath)
+	} else {
+		eventStats.Print(w)
+	}
 
 	return false, exportedParams, nil
 }

@@ -14,7 +14,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 
 // AllInvariants runs all invariants of the governance module
 func AllInvariants(keeper Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		return ModuleAccountInvariant(keeper)(ctx)
 	}
 }
@@ -22,7 +22,7 @@ func AllInvariants(keeper Keeper) sdk.Invariant {
 // ModuleAccountInvariant checks that the module account coins reflects the sum of
 // deposit amounts held on store
 func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) error {
+	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
 		keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {
@@ -31,12 +31,10 @@ func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 		})
 
 		macc := keeper.GetGovernanceAccount(ctx)
-		if !macc.GetCoins().IsEqual(expectedDeposits) {
-			return fmt.Errorf("deposits invariance:\n"+
-				"\tgov ModuleAccount coins: %s\n"+
-				"\tsum of deposit amounts: %s", macc.GetCoins(), expectedDeposits)
-		}
+		broken := !macc.GetCoins().IsEqual(expectedDeposits)
 
-		return nil
+		return sdk.FormatInvariant(types.ModuleName, "deposits",
+			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",
+				macc.GetCoins(), expectedDeposits), broken)
 	}
 }

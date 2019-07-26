@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* [Query Lifecycle](./query-lifecycle.md)
+* [Lifecycle of a Query](./query-lifecycle.md)
 
 ## Synopsis
 
@@ -19,7 +19,7 @@ One of the main entrypoints of an application is the command-line interface. Thi
 
 ### Cobra
 
-There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra) in order to implement the [`AppModuleBasic`](../building-modules) interface. Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
+There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra) in order to implement the [`AppModuleBasic`](../building-modules/modules-manager.md) interface. Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
 ### Main Function
 
@@ -49,23 +49,21 @@ The root command (also called `rootCmd`) is what the user first types into the c
 
 ### Transaction Commands
 
-Application [transactions](#./transactions.md) are objects that trigger state changes. To enable the creation of transactions using the CLI interface, `TxCmd` should add the following commands:
+[Transactions](#./transactions.md) are objects wrapping messages that trigger state changes within modules. To enable the creation of transactions using the CLI interface, `TxCmd` should add the following commands:
 
-* **Sign** command from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module, which signs messages in a transaction. To enable multisig, it should also add the `auth` module MultiSign command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
+* **Sign** command from the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module, which signs messages in a transaction. To enable multisig, it should also add the `auth` module MultiSign command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
 * **Broadcast** command from the SDK client tools, which broadcasts transactions.
-* **Send** command from the [`bank`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/bank) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
-* Any application-specific transaction commands defined by the application developer.
+* **Send** command from the [`bank`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/bank) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
 * All commands in each module the application is dependent on, retrieved by calling `GetTxCmd()` on all the modules or using the Module Manager's `AddTxCommands()` function.
 
 ### Query Commands
 
-Application queries are objects that allow users to retrieve information about the application's state. To enable basic queries, `QueryCmd` should add the following commands:
+[**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable basic queries, `QueryCmd` should add the following commands:
 
 * **QueryTx** and/or other transaction query commands from the `auth` module which allow the user to search for a transaction by inputting its hash, a list of tags, or a block height. These various queries allow users to see if transactions have been included in a block.
 * **Account** command from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
 * **Validator** command from the SDK rpc client tools, which displays the validator set of a given height.
 * **Block** command from the SDK rpc client tools, which displays the block data for a given height.
-* Any application-specific query commands defined by the application developer.
 * All commands in each module the application is dependent on, retrieved by calling `GetQueryCmd()` on all the modules or using the Module Manager's `AddQueryCommands()` function.
 
 ## Flags

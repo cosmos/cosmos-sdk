@@ -25,12 +25,13 @@ func (m Mapping) Get(ctx Context, key []byte, ptr interface{}) {
 }
 
 // GetSafe() unmarshales and sets the stored value to the pointer.
-// It will return an error if the value does not exists or unmarshalable.
+// It will return an error if the value does not exist or unmarshalable.
 func (m Mapping) GetSafe(ctx Context, key []byte, ptr interface{}) error {
 	return m.Value(key).GetSafe(ctx, ptr)
 }
 
 // Set() marshales and sets the argument to the state.
+// Calls Delete() if the argument is nil.
 func (m Mapping) Set(ctx Context, key []byte, o interface{}) {
 	if o == nil {
 		m.Delete(ctx, key)

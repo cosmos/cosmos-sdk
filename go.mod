@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.2.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190227231451-bbced9601137 // indirect
-	github.com/rakyll/statik v0.1.4
+	github.com/rakyll/statik v0.1.5
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -30,6 +30,7 @@ require (
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.3-0.20190712145259-c834d3192b52
 	github.com/tendermint/tendermint v0.32.1
+	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )

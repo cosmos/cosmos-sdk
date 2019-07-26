@@ -6,12 +6,12 @@
 
 ## Synopsis
 
-This document describes how to create a commmand-line interface for an SDK application. A separate document for creating module interfaces can be found [here](#./module-interfaces.md).
+This document describes how to create a commmand-line interface for an SDK application. A separate document for creating a module CLI can be found [here](#../module-interfaces.md#cli).
 
-1. [Application CLI](#application-cli)
-2. [Commands](#commands)
-3. [Flags](#flags)
-4. [Initialization and Configurations](#initialization-and-configurations)
+- [Application CLI](#application-cli)
+- [Commands](#commands)
+- [Flags](#flags)
+- [Initialization and Configurations](#initialization-and-configurations)
 
 ## Application CLI
 
@@ -19,7 +19,7 @@ One of the main entrypoints of an application is the command-line interface. Thi
 
 ### Cobra
 
-There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra). Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
+There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra) in order to implement the [`AppModuleBasic`]() interface. Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
 ### Main Function
 

@@ -1,4 +1,4 @@
-# ADR 3: Module SubAccounts
+# ADR 3: Module Account Hierarchy
 
 ## Changelog
 
@@ -10,69 +10,75 @@ We want to support the ability to define and manage sub-module-accounts.
 
 ## Decision
 
-We will use the type `ModuleMultiAccount` to manage sub-accounts of type `ModuleAccount`.
-A `ModuleMultiAccount` may have zero or more `ModuleAccount`s.
-Each sub-account will utilize the existing permissioned properties of `ModuleAccount`.
-`ModuleMultiAccount` and `ModuleAccount` have no pubkeys.
-There is no limit on the number of `ModuleAccount`s that a `ModuleMultiAccount` can have.
-A `ModuleMultiAccount` has no permissions since it cannot hold any coins.
-Its constructor returns a `ModuleMultiAccount` with no `ModuleAccount`s.
-A sub-account cannot be removed from a `MultiModuleAccount`.
-The account number assigned to sub-accounts will begin at 0 and be monotonically auto incrementing.
+We will modify the existing `ModuleAccount` interface to support a heirarchical account structure.
+The `ModuleAccount`s defined upon initialization of Supply Keeper are the roots of family trees.
+Each `ModuleAccount` in a family tree may have zero or more children.
+A `ModuleAccount` with one or more children is considered a parent to each child.
+All `ModuleAccount`s have exactly one parent, unless they are the root of their family tree.
+`ModuleAccount` permissions will be renamed to `Attribute`.
+Each child's attributes must be a subset of their parent's attributes.
+There is no limit on the number of children a `ModuleAccount` can have.
+No `ModuleAccount`s can be removed from a family tree.
+A `ModuleAccount` name is the path of the `ModuleAccount` names used to reach the child.
+It starts with the root `ModuleAccount` name and is separated by a colon for each parent that follows until the child is reached.
+Example name: `root:parent:child`
+We will add a `TrackBalance` function which recursively updates the passive tracking of parent balances.
+A `ModuleAccount` address is the hash of its name.
+A `ModuleAccount` has no pubkeys.
+
 
 ### Implementation Changes
 
-Introduce a new type into `x/supply`:
+Modify `ModuleAccount` interface in `x/supply`:
 
-* `ModuleMultiAccount`
+```go
+type ModuleAccount interface {
+    GetName() string
+    GetAddress() string
+    GetAttribute() []string 
+    HasAttribute() bool
+    GetParent() string
+    GetChildren() []string
+    HasChild(string) bool 
+    GetChildCoins() sdk.Coins
+}
+```
 
 ```go
 // Implements the Account interface.
-// SetCoins will return an error to prevent ModuleMultiAccount address from having a balance.
-// ModuleAccounts are appended to the SubAccounts array.
-// Passively tracks the sum of all ModuleAccount balances.
-type ModuleMultiAccount struct {
-    SubAccounts []ModuleAccount
-    Coins sdk.Coins // passively track all sub account balances
-
-    CreateSubAccount(name string, permissions ...string) (int, error) // returns account number of sub-account
-    GetSubAccount(subAccNumber int64) (ma ModuleAccount, found bool)
+// ModuleAccount defines an account for modules that holds coins on a pool. A ModuleAccount
+// may have sub-accounts by having children.
+type ModuleAccount struct {
+	*authtypes.BaseAccount
+	Name        string    `json:"name" yaml:"name"`               // name of the module
+	Attributes  []string  `json:"attributes" yaml:"attributes"`   // permissions of module account
+    ChildCoins  sdk.Coins `json:"child_coins" yaml:"child_coins"` // passive tracking of sum of child balances
+    Children    []string  `json:"children" yaml:"children"`       // array of children names
+    Parent      string    `json:"parent" yaml:"parent"`           // parent name
 }
 ```
 
-The `ModuleAccount` implementation will remain unchanged, but we will add the following constructor function:
 ```go
-// NewEmptyModuleSubAccount creates a sub-account ModuleAccount which has an address created from
-// the hash of the module's name with the sub-account number appended.
-func NewEmptyModuleSubAccount(name string, subAccNumber uint64, permissions ...string) ModuleAccount {
-    bz := make([]byte, 8)
-    binary.LittleEndian.PutUint64(bz, subAccNumber)
-    moduleAddress := append(NewModuleAddress(name), bz...)
-    baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
-
-    if err := validatePermissions(permissions...); err != nil {
-        panic(err)
+// Pseudocode
+func TrackBalance(name string, delta sdk.Coins) {
+    if name == "" {
+        return
+    } else {
+        self.Balance += delta
     }
-
-    return &ModuleAccount{
-        BaseAccount: &baseAcc,
-        Name:        name,
-        Permissions: permissions,
-    } 
+    TrackBalance(chopString(name)) // chop off last name after last ":"
+    return
 }
 ```
 
-**Permissions**:
+**Attributes**:
 
-A `ModuleMultiAccount` has no permissions since it does not have any coins.
-
-Since `ModuleAccount`s that are sub-accounts have the same name as its parent `ModuleMultiAccount`, a sub-account should only be granted a subset of the permissions registered with the Supply Keeper under its name.
+Attributes for a root `ModuleAccount` are decalred upon initialization of the Supply Keeper.
+A child `ModuleAccount` must have a subset of its parents attributes.
 
 **Other changes**
 
-We will add an invariant check for the `ModuleMultiAccount` `GetCoins()` function, which will iterate over all SubAccounts to see if the sum of the `ModuleAccount` balances equals the passive tracking which is returned in `GetCoins()`
-
-Bank Keepers `SetCoins()` function will be updated to return an error instead of calling panic on the account's SetCoins error.
+We will add an invariant check for the `ModuleAccount` `GetCoins()` function, which will iterate over all `ModuleAccounts` to see if the sum of the `ModuleAccount` balances equals the passive tracking which is returned in `GetCoins()`
 
 ## Status
 
@@ -82,18 +88,18 @@ Accepted
 
 ### Positive
 
-* ModuleMultiAccount can separate fungible coins.
-* ModuleMultiAccount can dynamically add accounts.
-* ModuleMultiAccount can distribute permissions to sub-accounts.
+* ModuleAccount can separate fungible coins.
+* ModuleAccount can dynamically add accounts.
+* Children can have a subset of its parent's attributes.
 
 ### Negative
 
-* Sub-accounts cannot be removed from `ModuleMultiAccount`
+* `ModuleAccount` cannot be removed from a family tree.
+* `ModuleAccount` implementation has increased complexity.
 
 ### Neutral
 
-* Use `ModuleAccount` type as a sub-account for `ModuleMultiAccount`
-* Adds a new Account type
+* `ModuleAccount` passively tracks child balances.
 
 ## References
 

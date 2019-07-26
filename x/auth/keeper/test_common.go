@@ -1,6 +1,7 @@
 // nolint
-// DONTCOVER
 package keeper
+
+// DONTCOVER
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,10 +18,10 @@ import (
 )
 
 type testInput struct {
-	cdc *codec.Codec
-	Ctx sdk.Context
-	Ak  AccountKeeper
-	Sk  types.SupplyKeeper
+	cdc           *codec.Codec
+	Ctx           sdk.Context
+	AccountKeeper AccountKeeper
+	SupplyKeeper  types.SupplyKeeper
 }
 
 // moduleAccount defines an account for modules that holds coins on a pool

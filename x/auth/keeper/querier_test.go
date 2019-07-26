@@ -20,7 +20,7 @@ func TestQueryAccount(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(input.Ak)
+	querier := NewQuerier(input.AccountKeeper)
 
 	bz, err := querier(input.Ctx, []string{"other"}, req)
 	require.Error(t, err)
@@ -30,23 +30,23 @@ func TestQueryAccount(t *testing.T) {
 		Path: fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount),
 		Data: []byte{},
 	}
-	res, err := queryAccount(input.Ctx, req, input.Ak)
+	res, err := queryAccount(input.Ctx, req, input.AccountKeeper)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
-	res, err = queryAccount(input.Ctx, req, input.Ak)
+	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := types.KeyTestPubAddr()
 	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
-	res, err = queryAccount(input.Ctx, req, input.Ak)
+	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	input.Ak.SetAccount(input.Ctx, input.Ak.NewAccountWithAddress(input.Ctx, addr))
-	res, err = queryAccount(input.Ctx, req, input.Ak)
+	input.AccountKeeper.SetAccount(input.Ctx, input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr))
+	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 

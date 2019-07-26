@@ -52,7 +52,7 @@ func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, si
 			// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 			// during runTx.
 			newCtx = SetGasMeter(simulate, ctx, 0)
-			return newCtx, sdk.ErrInternal("tx must be types.StdTx").Result(), true
+			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
 		params := ak.GetParams(ctx)

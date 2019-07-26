@@ -13,14 +13,14 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
-		input.Ak.SetAccount(input.Ctx, acc)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.Ak.GetAccount(input.Ctx, sdk.AccAddress(arr))
+		input.AccountKeeper.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
@@ -39,15 +39,15 @@ func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.Ak.SetAccount(input.Ctx, acc)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.Ak.GetAccount(input.Ctx, sdk.AccAddress(arr))
+		input.AccountKeeper.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
@@ -60,8 +60,8 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
-		input.Ak.SetAccount(input.Ctx, acc)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 }
 
@@ -82,8 +82,8 @@ func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.Ak.NewAccountWithAddress(input.Ctx, addr)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.Ak.SetAccount(input.Ctx, acc)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 }

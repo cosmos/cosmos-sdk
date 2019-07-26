@@ -2,6 +2,8 @@
 
 ## Prerequisites
 
+[Introduction to Interfaces](./interfaces-intro.md)
+
 ## Synopsis
 
 This document describes SDK interfaces in detail through the lifecycle of a query, from the user interface to application stores and back. The query will be referred to as `query`.

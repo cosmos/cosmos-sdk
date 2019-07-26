@@ -8,18 +8,18 @@
 
 This document describes how to create a commmand-line interface for an SDK application. A separate document for creating a module CLI can be found [here](#../module-interfaces.md#cli).
 
-- [Application CLI](#application-cli)
+- [Application CLI Components](#application-cli-components)
 - [Commands](#commands)
 - [Flags](#flags)
 - [Initialization and Configurations](#initialization-and-configurations)
 
-## Application CLI
+## Application CLI Components
 
 One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `app/cmd/cli` folder. The CLI for an application will typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`.
 
 ### Cobra
 
-There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra) in order to implement the [`AppModuleBasic`]() interface. Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
+There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra) in order to implement the [`AppModuleBasic`](../building-modules) interface. Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) represent the action users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
 ### Main Function
 

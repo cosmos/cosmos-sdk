@@ -78,7 +78,7 @@ func SetupTestInput() testInput {
 
 	ak.SetParams(ctx, types.DefaultParams())
 
-	return testInput{cdc: cdc, Ctx: ctx, Ak: ak, Sk: sk}
+	return testInput{cdc: cdc, Ctx: ctx, AccountKeeper: ak, SupplyKeeper: sk}
 }
 
 // DummySupplyKeeper defines a supply keeper used only for testing to avoid
@@ -138,7 +138,7 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	macc := &moduleAccount{
 		BaseAccount: &baseAcc,
 		name:        moduleName,
-		permissions: []string{"basic"},
+		permissions: nil,
 	}
 
 	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)

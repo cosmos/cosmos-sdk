@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+* All REST responses now wrap the original resource/result. The response
+  will contain two fields: height and result.
 * [\#3565](https://github.com/cosmos/cosmos-sdk/issues/3565) Updates to the governance module:
   * Rename JSON field from `proposal_content` to `content`
   * Rename JSON field from `proposal_id` to `id`
@@ -162,6 +164,7 @@
 
 ### Bug Fixes
 
+* Return height in responses when querying against BaseApp
 * [\#1351](https://github.com/cosmos/cosmos-sdk/issues/1351) Stable AppHash allows no_empty_blocks
 * [\#3705](https://github.com/cosmos/cosmos-sdk/issues/3705) Return `[]` instead of `null` when querying delegator rewards.
 * [\#3966](https://github.com/cosmos/cosmos-sdk/issues/3966) fixed multiple assigns to action tags

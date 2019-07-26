@@ -463,6 +463,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
+				Height:    req.Height,
 				Value:     []byte(app.appVersion),
 			}
 
@@ -474,6 +475,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		return abci.ResponseQuery{
 			Code:      uint32(sdk.CodeOK),
 			Codespace: string(sdk.CodespaceRoot),
+			Height:    req.Height,
 			Value:     value,
 		}
 	}
@@ -482,7 +484,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
-func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
@@ -491,7 +493,11 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
-	return queryable.Query(req)
+
+	resp := queryable.Query(req)
+	resp.Height = req.Height
+
+	return resp
 }
 
 func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.ResponseQuery) {
@@ -503,9 +509,11 @@ func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.
 			switch typ {
 			case "addr":
 				return app.FilterPeerByAddrPort(arg)
+
 			case "id":
 				return app.FilterPeerByID(arg)
 			}
+
 		default:
 			msg := "Expected second parameter to be filter"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
@@ -554,13 +562,15 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		return abci.ResponseQuery{
 			Code:      uint32(err.Code()),
 			Codespace: string(err.Codespace()),
+			Height:    req.Height,
 			Log:       err.ABCILog(),
 		}
 	}
 
 	return abci.ResponseQuery{
-		Code:  uint32(sdk.CodeOK),
-		Value: resBytes,
+		Code:   uint32(sdk.CodeOK),
+		Height: req.Height,
+		Value:  resBytes,
 	}
 }
 

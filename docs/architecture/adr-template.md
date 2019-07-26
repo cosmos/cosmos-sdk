@@ -2,38 +2,40 @@
 
 ## Changelog
 
-* {date}: {changelog}
+- {date}: {changelog}
 
 ## Context
 
-> This section contains all the context one needs to understand the current state, and why there is a problem. It should be as succinct as possible and introduce the high level idea behind the solution.
+> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
+> {context body}
 
 ## Decision
 
-> This section explains all of the details of the proposed solution, including implementation details.
-It should also describe affects / corollary items that may need to be changed as a part of this.
-If the proposed change will be large, please also indicate a way to do the change to maximize ease of review.
-(e.g. the optimal split of things to do between separate PR's)
+> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
+> {decision body}
 
 ## Status
 
-> A decision may be "proposed" if it hasn't been agreed upon yet, or "accepted" once it is agreed upon. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
-
-{Deprecated|Proposed|Accepted}
+> A decision may be "proposed" if the project stakeholders haven't agreed with it yet, or "accepted" once it is agreed. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
+> {Deprecated|Proposed|Accepted}
 
 ## Consequences
 
-> This section describes the consequences, after applying the decision. All consequences should be summarized here, not just the "positive" ones.
+> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
 ### Positive
 
+{positive consequences}
+
 ### Negative
+
+{negative consequences}
 
 ### Neutral
 
-## References
+{neutral consequences}
 
-> Are there any relevant PR comments, issues that led up to this, or articles referrenced for why we made the given design choice? If so link them here!
+## References
 <!-- * [#XXX](https://github.com/cosmos/cosmos-sdk/issues/XXX) -->
 <!-- * [#XXX](https://github.com/cosmos/cosmos-sdk/pull/XXX) -->
-* {reference link}
+- {reference link}

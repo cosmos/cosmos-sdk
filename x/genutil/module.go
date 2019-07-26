@@ -12,15 +12,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 var (
 	_ module.AppModuleGenesis = AppModule{}
 	_ module.AppModuleBasic   = AppModuleBasic{}
 )
-
-// module name
-const ModuleName = "genutil"
 
 // app module basics object
 type AppModuleBasic struct{}
@@ -35,13 +33,13 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
 // default genesis state
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return moduleCdc.MustMarshalJSON(GenesisState{})
+	return ModuleCdc.MustMarshalJSON(GenesisState{})
 }
 
 // module validate genesis
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
-	err := moduleCdc.UnmarshalJSON(bz, &data)
+	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
 	}
@@ -61,14 +59,14 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 // app module
 type AppModule struct {
 	AppModuleBasic
-	accountKeeper AccountKeeper
-	stakingKeeper StakingKeeper
+	accountKeeper types.AccountKeeper
+	stakingKeeper types.StakingKeeper
 	deliverTx     deliverTxfn
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper AccountKeeper,
-	stakingKeeper StakingKeeper, deliverTx deliverTxfn) module.AppModule {
+func NewAppModule(accountKeeper types.AccountKeeper,
+	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -81,8 +79,8 @@ func NewAppModule(accountKeeper AccountKeeper,
 // module init-genesis
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
-	moduleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, moduleCdc, am.stakingKeeper, am.deliverTx, genesisState)
+	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
+	return InitGenesis(ctx, ModuleCdc, am.stakingKeeper, am.deliverTx, genesisState)
 }
 
 // module export genesis

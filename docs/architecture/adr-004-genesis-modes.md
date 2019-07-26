@@ -8,12 +8,12 @@
 
 ### Problem
 
-Currently, each some of the modules `GenesisState` are populated if the corresponding
+Currently, some of the modules `GenesisState` are populated only if the corresponding
 object passed through the Genesis JSON is empty (_i.e_ as an empty array) or if it's
 undefined or the value is zero.
 
-This leads to confussion as you migh pass a valid genesis file which contains zero/empty
-values and have `InitGenenesis` perform this uncessesary check.
+This leads to confusion as you might pass a valid genesis file which contains zero/empty
+values and have `InitGenenesis` perform this unnecessary check.
 
 ### Proposed Solution
 
@@ -23,7 +23,7 @@ The proposed solution is to have two ways of initializing the daemon:
 start a chain. The rest is loaded directly from the mandatory genesis parameters.
 2. **Restarted chain**: the user provides all the fields from genesis.
 
-If an empty chain from `1.` recives _any_ field that should be populated, the initialization
+If an empty chain from `1.` receives _any_ field that should be populated, the initialization
 of the app should `panic`. Same applies for `2.` if a single field is missing.
 
 The fields that are not required are the ones in general are checked with simulation
@@ -40,7 +40,7 @@ app := NewSimApp(logger, db, nil, true, 0, SetPopulateGenesis(populate))
 ```
 
 Additionally, a new option function needs to be passed as parameter to the `BaseApp` during its
-initiallization:
+initialization:
 
 ```go
 // ./baseapp/options.go
@@ -108,8 +108,8 @@ Proposed
 
 ### Positive
 
-- Reduce confusion when initialize genesis as now there're two clearly distinct
-modes for it
+- Reduce confusion when initializing genesis as now there are two clearly
+  distinct modes for it
 
 ### Negative
 

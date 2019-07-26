@@ -26,4 +26,4 @@ Please add a entry below in your Pull Request for an ADR.
 ### ADR Table of Contents
 
 - [ADR-002-Docs-Structure](./adr-002-docs-structure.md)
-- [ADR-003-Module-SubAccounts](./adr-003-subaccounts.md)
+- [ADR-003-Module-Sub-Accounts](./adr-003-module-sub-accounts.md)

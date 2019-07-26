@@ -1,4 +1,4 @@
-# ADR 3: Module Account Hierarchy
+# ADR 3: Module Sub-Accounts
 
 ## Changelog
 

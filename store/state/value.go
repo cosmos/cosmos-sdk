@@ -57,7 +57,7 @@ func (v Value) GetRaw(ctx Context) []byte {
 	return v.store(ctx).Get(v.key)
 }
 
-// Set() marshales sets the "o" argument to the state.
+// Set() marshales and sets the argument to the state.
 func (v Value) Set(ctx Context, o interface{}) {
 	v.store(ctx).Set(v.key, v.base.cdc.MustMarshalBinaryBare(o))
 }

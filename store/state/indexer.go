@@ -49,30 +49,39 @@ func EncodeInt(index uint64, enc IntEncoding) (res []byte) {
 	}
 }
 
+// Value() returns the Value corresponding to the provided index
 func (ix Indexer) Value(index uint64) Value {
 	return ix.m.Value(EncodeInt(index, ix.enc))
 }
 
+// Get() unmarshales and sets the stored value to the pointer if it exists.
+// It will panic if the value exists but not unmarshalable.
 func (ix Indexer) Get(ctx Context, index uint64, ptr interface{}) {
 	ix.Value(index).Get(ctx, ptr)
 }
 
+// GetSafe() unmarshales and sets the stored value to the pointer.
+// It will return an error if the value does not exist or unmarshalable.
 func (ix Indexer) GetSafe(ctx Context, index uint64, ptr interface{}) error {
 	return ix.Value(index).GetSafe(ctx, ptr)
 }
 
+// Set() marshales and sets the argument to the state.
 func (ix Indexer) Set(ctx Context, index uint64, o interface{}) {
 	ix.Value(index).Set(ctx, o)
 }
 
+// Has() returns true if the stored value is not nil
 func (ix Indexer) Has(ctx Context, index uint64) bool {
 	return ix.Value(index).Exists(ctx)
 }
 
+// Delete() delets the stored value.
 func (ix Indexer) Delete(ctx Context, index uint64) {
 	ix.Value(index).Delete(ctx)
 }
 
+// Prefix() returns a new Indexer with the updated prefix
 func (ix Indexer) Prefix(prefix []byte) Indexer {
 	return Indexer{
 		m: ix.m.Prefix(prefix),

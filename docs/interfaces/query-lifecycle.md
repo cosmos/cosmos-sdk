@@ -6,11 +6,11 @@
 
 This document describes SDK interfaces in detail through the lifecycle of a query, from the user interface to application stores and back. The query will be referred to as `query`.
 
-1. [Interfaces](#interfaces)
-2. [CLIContext](#clicontext)
-3. [Tendermint and ABCI](#tendermint-and-abci)
-4. [Application Query Handling](#application-query-handling)
-5. [Response](#response)
+- [Interfaces](#interfaces)
+- [CLIContext](#clicontext)
+- [Tendermint and ABCI](#tendermint-and-abci)
+- [Application Query Handling](#application-query-handling)
+- [Response](#response)
 
 ## Interfaces
 

@@ -47,7 +47,7 @@ func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	invariants sdk.Invariants,
-	numBlocks, exportParamsHeight, blockSize int,
+	initialHeight, numBlocks, exportParamsHeight, blockSize int,
 	exportParams, commit, lean, onOperation, allInvariants bool,
 	blackListedAccs map[string]bool,
 ) (stopEarly bool, exportedParams Params, err error) {
@@ -138,10 +138,12 @@ func SimulateFromSeed(
 	}
 
 	// set exported params to the initial state
-	exportedParams = params
+	if exportParams && exportParamsHeight == 0 {
+		exportedParams = params
+	}
 
 	// TODO: split up the contents of this for loop into new functions
-	for height := 1; height <= numBlocks && !stopEarly; height++ {
+	for height := initialHeight; height < numBlocks+initialHeight && !stopEarly; height++ {
 
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)

@@ -15,17 +15,21 @@ The `ModuleAccount`s defined upon initialization of Supply Keeper are the roots 
 Each `ModuleAccount` in a family tree may have zero or more children.
 A `ModuleAccount` with one or more children is considered a parent to each child.
 All `ModuleAccount`s have exactly one parent, unless they are the root of their family tree.
+
 `ModuleAccount` permissions will be renamed to `Attribute`.
 Each child's attributes must be a subset of their parent's attributes.
 There is no limit on the number of children a `ModuleAccount` can have.
 No `ModuleAccount`s can be removed from a family tree.
 A `ModuleAccount` name is the path of the `ModuleAccount` names used to reach the child.
 It starts with the root `ModuleAccount` name and is separated by a colon for each parent that follows until the child is reached.
+
 Example name: `root:parent:child`
+
 We will add a `TrackBalance` function which recursively updates the passive tracking of parent balances.
 A `ModuleAccount` address is the hash of its name.
 A `ModuleAccount` has no pubkeys.
-
+The function `AddChildToModuleAccount` will be added to Supply Keeper, 
+It will validate that the granted attributes are a subset of the parent and then register the child's name with the Supply Keeper.
 
 ### Implementation Changes
 
@@ -47,11 +51,11 @@ type ModuleAccount interface {
 ```go
 // Implements the Account interface.
 // ModuleAccount defines an account for modules that holds coins on a pool. A ModuleAccount
-// may have sub-accounts by having children.
+// may have sub-accounts known as children.
 type ModuleAccount struct {
-	*authtypes.BaseAccount
-	Name        string    `json:"name" yaml:"name"`               // name of the module
-	Attributes  []string  `json:"attributes" yaml:"attributes"`   // permissions of module account
+    *authtypes.BaseAccount
+    Name        string    `json:"name" yaml:"name"`               // name of the module
+    Attributes  []string  `json:"attributes" yaml:"attributes"`   // permissions of module account
     ChildCoins  sdk.Coins `json:"child_coins" yaml:"child_coins"` // passive tracking of sum of child balances
     Children    []string  `json:"children" yaml:"children"`       // array of children names
     Parent      string    `json:"parent" yaml:"parent"`           // parent name
@@ -78,7 +82,7 @@ A child `ModuleAccount` must have a subset of its parents attributes.
 
 **Other changes**
 
-We will add an invariant check for the `ModuleAccount` `GetCoins()` function, which will iterate over all `ModuleAccounts` to see if the sum of the `ModuleAccount` balances equals the passive tracking which is returned in `GetCoins()`
+We will add an invariant check for the `ModuleAccount` `GetChildCoins()` function, which will iterate over all `ModuleAccounts` to see if the sum of their child balances equals the passive tracking which is returned in `GetChildCoins()`
 
 ## Status
 
@@ -88,8 +92,8 @@ Accepted
 
 ### Positive
 
-* ModuleAccount can separate fungible coins.
-* ModuleAccount can dynamically add accounts.
+* `ModuleAccount` can separate fungible coins.
+* `ModuleAccount` can dynamically add accounts.
 * Children can have a subset of its parent's attributes.
 
 ### Negative

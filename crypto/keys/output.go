@@ -12,7 +12,7 @@ type KeyOutput struct {
 	Address   string                 `json:"address" yaml:"address"`
 	PubKey    string                 `json:"pubkey" yaml:"pubkey"`
 	Mnemonic  string                 `json:"mnemonic,omitempty" yaml:"mnemonic"`
-	Threshold uint                   `json:"threshold,omitempty" yaml:"threshold"`
+	Threshold int                    `json:"threshold,omitempty" yaml:"threshold"`
 	PubKeys   []multisigPubKeyOutput `json:"pubkeys,omitempty" yaml:"pubkeys"`
 }
 
@@ -29,7 +29,7 @@ func NewKeyOutput(name, keyType, address, pubkey string) KeyOutput {
 type multisigPubKeyOutput struct {
 	Address string `json:"address" yaml:"address"`
 	PubKey  string `json:"pubkey" yaml:"pubkey"`
-	Weight  uint   `json:"weight" yaml:"weight"`
+	Weight  int    `json:"weight" yaml:"weight"`
 }
 
 // Bech32KeysOutput returns a slice of KeyOutput objects, each with the "acc"
@@ -95,10 +95,10 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 				return KeyOutput{}, err
 			}
 
-			pubKeys[i] = multisigPubKeyOutput{accAddr.String(), bechPubKey, pk.Weight}
+			pubKeys[i] = multisigPubKeyOutput{accAddr.String(), bechPubKey, int(pk.Weight)}
 		}
 
-		ko.Threshold = mInfo.Threshold
+		ko.Threshold = int(mInfo.Threshold)
 		ko.PubKeys = pubKeys
 	}
 

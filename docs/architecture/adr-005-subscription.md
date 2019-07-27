@@ -5,7 +5,7 @@
 
 ## Context
 
-Cosmos-SDK should allow developers to choose from a variety of payment models for their application. One of the most popular payment models for Internet applications, so it is natural to provide this payment model as a module for sdk users.
+Cosmos-SDK should allow developers to choose from a variety of payment models for their application. Subscriptions areo ne of the most popular payment models for Internet applications, so it is natural to provide this payment model as a module for sdk users.
 
 For fuller context around this issue: see [\#4642](https://github.com/cosmos/cosmos-sdk/issues/4642)
 
@@ -24,10 +24,10 @@ Introduce the following messages to `x/subscription` module:
 ```go
 // CreateSubscriptionMsg allows Service Provider to create new subscription service.
 type CreateSubscriptionMsg struct {
-    Name      string         // unique, human-readable name for subscription service
-    Amount    sdk.Coins      // amount to be collected for each subscription period
-    Period    time.time      // duration of subscription period
-    Collector sdk.AccAddress // address that will collect subscription payments
+    Name      string          // unique, human-readable name for subscription service
+    Amounts   []sdk.Coins       // amounts to be collected for each subscription period
+    Periods   []time.Duration // allowed duration of subscription periods
+    Collector sdk.AccAddress  // address that will collect subscription payments
 }
 ```
 
@@ -38,6 +38,7 @@ type CreateSubscriptionMsg struct {
 type SubscribeMsg struct {
     Name       string         // name of service to subscribe to
     Subscriber sdk.AccAddress // address of subscriber
+    Period     time.Duration  // Period that subscriber chooses. Must be one of predefined periods in corresponding CreateSubscriptionMsg
     Limit      int64          // Maximum number of periods that subscription remains active. Limit = -1 implies no limit
 }
 ```
@@ -63,9 +64,9 @@ Create a new store with the following key-values:
 
 `Address => []SubscriptionID // List of active/inactive subscriptions owned by the users`
 
-`Metadata:{Name} => SubscriptionMetaData`
+`Terms:{Name} => SubscriptionTerms`
 
-`DueQueue:{Name} => []SubscriptionID // FIFO queue of subscriptions. CONTRACT: All due subscriptions exist before all undue subscriptions. All subscriptions in DueQueue are active`
+`DueQueue:{Collector}{Name}{Period} => LinkedList<SubscriptionID> // FIFO queue of subscriptions for a given service and period. Note if a service allows for multiple periods, each period will maintain a separate queue. CONTRACT: All due subscriptions exist before all undue subscriptions. All subscriptions in DueQueue are active`
 
 `SubscriptionID => Subscription`
 
@@ -76,8 +77,8 @@ type SubscriptionID []byte
 ```
 
 ```go
-// Subscription Metadata contains information necessary for processing subscriptions
-type Metadata struct {
+// Subscription Terms contains information necessary for processing subscriptions
+type Terms struct {
     Amount    sdk.Coins      // amount to be collected for each subscription period
     Period    time.time      // duration of subscription period
     Collector sdk.AccAddress // address that will collect subscription payments
@@ -91,7 +92,6 @@ type Subscription {
     Subscriber sdk.AccAddress
     Limit      int64
     LastPaid   time.Time
-    Active     bool
 }
 ```
 
@@ -104,7 +104,7 @@ func HandleCreateSubscriptionMsg(ctx sdk.Context, msg CreateSubscriptionMsg) {
     if SubscriptionExists(msg.Name) {
         return DuplicateSubscriptionErr
     }
-    StoreMetadata(ctx, msg.Name, msg.Amount, msg.Period, msg.Collector) // Store metadata in store under key "Metadata:msg.Name"
+    StoreTerms(ctx, msg.Name, msg.Amount, msg.Period, msg.Collector) // Store Terms in store under key "Terms:msg.Name"
     InitializeDueQueue(ctx, msg.Name) // Initialize empty queue and store under key "DueQueue:Name"
 }
 ```
@@ -116,13 +116,12 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     }
 
     subscriptionID := hash(msg.Name|msg.Subscriber)
-    metadata := GetMetaData(ctx, msg.Name)
-    // subscribeMsg will pay for the first period
-    err := bank.Send(msg.Subscriber, metadata.Collector, metadata.Amount)
-    if err != nil {
-        return err
-    }
+    Terms := GetTerms(ctx, msg.Name)
 
+    if msg.Period not in Terms.Periods {
+        return InvalidPeriodErr
+    }
+    
     // check if user already has subscribe to this service
     // if so renew the subscription
     if subscription := GetUserSubscriptions(msg.Subscriber, msg.Name); subscription != nil {
@@ -131,17 +130,21 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
         } else {
             subscription.Limit += msg.Limit
         }
-        // set active to true
-        subscription.Active = true
         StoreSubscription(subscriptionID, subscription)
         return nil
-    }   
+    }
+
+    // new subscribeMsg will pay for the first period
+    err := bank.Send(msg.Subscriber, Terms.Collector, Terms.Amount)
+    if err != nil {
+        return err
+    }
+
     subscription := Subscription{
-        Name:       metadata.Name,
+        Name:       Terms.Name,
         Subscriber: msg.Subscriber,
         Limit:      msg.Limit,
         LastPaid:   ctx.BlockTime,
-        Active:     true
     }
     StoreSubscription(subscriptionID, subscription)
     // adds subscription to list of user subscriptions
@@ -152,15 +155,10 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
 ```
 
 ```go
+// simply deletes mapping subscriptionID => subscription and removes ID from user list
+// will not mutate duequeue
 func HandleUnsubscribeMsg(ctx sdk.Context, msg UnsubscribeMsg) {
-    subscription := GetUserSubscriptions(msg.Subscriber, msg.Name)
-    if subscription == nil {
-        return nil
-    }
-    subscription.Active = false
-    subscription.Limit = 0 // to ensure that renewal updates limit correctly
-    subscriptionID := hash(msg.Name|msg.Subscriber)
-    StoreSubscription(subscriptionID, subscription)
+    DeleteSubscription(msg.Subscriber, msg.Name)
 }
 ```
 
@@ -169,42 +167,58 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
     if !SubscriptionExists(msg.Name) {
         return NoSuchSubscriptionErr
     }
-    metadata := GetMetaData(ctx, msg.Name)
-    if msg.Collector != metadata.Collector {
+    Terms := GetTerms(ctx, msg.Name)
+    if msg.Collector != Terms.Collector {
         return InvalidCollectorErr
     }
-    queue := GetDueQueue(msg.Name)
-    for i := 0; i < msg.Limit; i++ {
-        // top of the queue is "due"
-        subscription := GetSubscription(queue[0])
-        if subscription.LastPaid + metadata.Period >= ctx.BlockTime {
-            subscriptionID := PopOffFront(queue)
-            if subscription.Limit == 0 {
-                subscription.Active = false
-                StoreSubscription(subscriptionID, subscription)
+    limit := msg.Limit
+    for limit > 0 {
+        for _, period := Terms.Period {
+            if limit == 0 {
+                // limit reached.
+                // emit event indicating that not all due subscriptions have been collected
+                return nil
+            }
+            queue := GetDueQueue(msg.Collector, msg.Name, period)
+            // top of the queue is "due"
+            subscription := GetSubscription(queue[0])
+            if subscription == nil {
+                limit--
                 continue
             }
-            err := bank.Send(subscription.Subscriber, metadata.Collector, metadata.Amount)
-            if err != nil {
-                // insufficient funds. inactivate subscription
-                subscription.Active = false
-                subscription.Limit = 0
-            } else {
-                // update subscription after successful payment
-                subscription.LastPaid = ctx.BlockTime
-                if subscription.Limit != -1 {
-                    subscription.Limit--
+            if subscription.LastPaid + period >= ctx.BlockTime {
+                subscriptionID := PopOffFront(queue)
+                if subscription.Limit == 0 {
+                    DeleteSubscription(subscription.Subscriber, subscription.Name)
+                    limit--
+                    continue
                 }
+                err := bank.Send(subscription.Subscriber, Terms.Collector, Terms.Amount)
+                if err != nil {
+                    DeleteSubscription(subscription.Subscriber, subscription.Name)
+                    limit--
+                    continue
+                } else {
+                    // update subscription after successful payment
+                    subscription.LastPaid = ctx.BlockTime
+                    if subscription.Limit != -1 {
+                        subscription.Limit--
+                    }
+                }
+                // store updated subscription
+                StoreSubscription(subscriptionID, subscription)
+                // push paid subscription back to end of queue
+                PushToBack(queue, subscriptionID)
+            } else {
+                // processed all due subscriptions
+                // emit event indicating all due subscriptions reached with time for next duedate
+                return nil
             }
-            // store updated subscription
-            StoreSubscription(subscriptionID, subscription)
-            // push paid subscription back to end of queue
-            PushToBack(queue, subscriptionID)
-        } else {
-            // processed all due subscriptions
-            return nil
         }
     }
+    // limit reached.
+    // emit event indicating that not all due subscriptions have been collected
+    return nil
 }
 ```
 

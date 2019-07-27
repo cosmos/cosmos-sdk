@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Base is a proof store accessor, consists of Codec and prefix.
+// The base uses the commitment store which is expected to be filled with the proofs.
 type Base struct {
 	cdc    *codec.Codec
 	prefix []byte
@@ -38,6 +40,8 @@ func NewMapping(base Base, prefix []byte) Mapping {
 	}
 }
 
+// Value is for proving commitment proof on a speicifc key-value point in the other state
+// using the already initialized commitment store.
 type Value struct {
 	base Base
 	key  []byte
@@ -47,34 +51,39 @@ func NewValue(base Base, key []byte) Value {
 	return Value{base, key}
 }
 
+// Is() proves the proof with the Value's key and the provided value.
 func (v Value) Is(ctx sdk.Context, value interface{}) bool {
 	return v.base.Store(ctx).Prove(v.key, v.base.cdc.MustMarshalBinaryBare(value))
 }
 
+// IsRaw() proves the proof with the Value's key and the provided raw value bytes.
 func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
 	return v.base.Store(ctx).Prove(v.key, value)
 }
 
+// Enum is a byte typed wrapper for Value.
+// Except for the type checking, it does not alter the behaviour.
 type Enum struct {
 	Value
 }
 
+// NewEnum() wraps the argument Value as Enum
 func NewEnum(v Value) Enum {
 	return Enum{v}
 }
 
+// Is() proves the proof with the Enum's key and the provided value
 func (v Enum) Is(ctx sdk.Context, value byte) bool {
 	return v.Value.IsRaw(ctx, []byte{value})
 }
 
+// Integer is a uint64 types wrapper for Value.
 type Integer struct {
 	Value
-
-	enc state.IntEncoding
 }
 
-func NewInteger(v Value, enc state.IntEncoding) Integer {
-	return Integer{v, enc}
+func NewInteger(v Value) Integer {
+	return Integer{v}
 }
 
 func (v Integer) Is(ctx sdk.Context, value uint64) bool {

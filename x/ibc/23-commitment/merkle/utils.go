@@ -6,11 +6,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// RequestQuery() constructs the abci.RequestQuery.
+//
+// RequestQuery.Path is a slash separated key list, ending with "/key"
+//
+// RequestQuery.Data is the concatanation of path.KeyPrefix and key argument
+//
+// RequestQuery.Prove is set to true
 func (path Path) RequestQuery(key []byte) abci.RequestQuery {
 	pathstr := ""
 	for _, inter := range path.KeyPath {
+		// The Queryable() stores uses slash-separated keypath format for querying
 		pathstr = pathstr + "/" + string(inter)
 	}
+	// Suffixing pathstr with "/key".
+	// iavl.Store.Query() switches over the last path element,
+	// and performs key-value query only if it is "/key"
 	pathstr = pathstr + "/key"
 
 	data := append(path.KeyPrefix, key...)

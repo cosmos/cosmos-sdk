@@ -23,6 +23,7 @@ func getBenchmarkMockApp() (*mock.App, error) {
 		mapp.AccountKeeper,
 		mapp.ParamsKeeper.Subspace(types.DefaultParamspace),
 		types.DefaultCodespace,
+		make(map[string]bool),
 	)
 	mapp.Router().AddRoute(types.RouterKey, bank.NewHandler(bankKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, bankKeeper))

@@ -44,6 +44,9 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	ms.LoadLatestVersion()
 
+	blacklistedAddrs := make(map[string]bool)
+	blacklistedAddrs[sdk.AccAddress([]byte("moduleAcc")).String()] = true
+
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 
 	ak := auth.NewAccountKeeper(
@@ -53,7 +56,7 @@ func setupTestInput() testInput {
 
 	ak.SetParams(ctx, auth.DefaultParams())
 
-	bankKeeper := NewBaseKeeper(ak, pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
+	bankKeeper := NewBaseKeeper(ak, pk.Subspace(types.DefaultParamspace), types.DefaultCodespace, blacklistedAddrs)
 	bankKeeper.SetSendEnabled(ctx, true)
 
 	return testInput{cdc: cdc, ctx: ctx, k: bankKeeper, ak: ak, pk: pk}
@@ -140,8 +143,12 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
+
+	blacklistedAddrs := make(map[string]bool)
+	blacklistedAddrs[sdk.AccAddress([]byte("moduleAcc")).String()] = true
+
 	paramSpace := input.pk.Subspace("newspace")
-	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace)
+	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace, blacklistedAddrs)
 	input.k.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))

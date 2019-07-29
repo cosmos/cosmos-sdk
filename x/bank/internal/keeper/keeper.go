@@ -34,11 +34,11 @@ type BaseKeeper struct {
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(ak types.AccountKeeper,
 	paramSpace params.Subspace,
-	codespace sdk.CodespaceType) BaseKeeper {
+	codespace sdk.CodespaceType, blacklistedAddrs map[string]bool) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
+		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace, blacklistedAddrs),
 		ak:             ak,
 		paramSpace:     ps,
 	}
@@ -145,6 +145,8 @@ type SendKeeper interface {
 
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
+
+	BlacklistedAddrs() map[string]bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -156,16 +158,20 @@ type BaseSendKeeper struct {
 
 	ak         types.AccountKeeper
 	paramSpace params.Subspace
+
+	// list of addresses that are restricted from receiving transactions
+	blacklistedAddrs map[string]bool
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(ak types.AccountKeeper,
-	paramSpace params.Subspace, codespace sdk.CodespaceType) BaseSendKeeper {
+	paramSpace params.Subspace, codespace sdk.CodespaceType, blacklistedAddrs map[string]bool) BaseSendKeeper {
 
 	return BaseSendKeeper{
 		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
 		ak:             ak,
 		paramSpace:     paramSpace,
+		blacklistedAddrs: blacklistedAddrs,
 	}
 }
 
@@ -319,6 +325,12 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 // SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
+}
+
+// BlacklistedAddrs returns the list of the blacklisted accounts addresses that
+// are not allowed to receive funds
+func (keeper BaseSendKeeper) BlacklistedAddrs() map[string]bool {
+	return keeper.blacklistedAddrs
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)

@@ -70,9 +70,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	)
 	cdc := makeTestCodec()
 
+	blacklistedAddrs := make(map[string]bool)
+
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
 
 	valTokens := sdk.TokensFromConsensusPower(initPower)
 

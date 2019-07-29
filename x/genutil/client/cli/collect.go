@@ -13,13 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
 func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
-	genAccIterator genutil.GenesisAccountsIterator, defaultNodeHome string) *cobra.Command {
+	genAccIterator types.GenesisAccountsIterator, defaultNodeHome string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",

@@ -5,7 +5,7 @@
 package genaccounts
 
 import (
-	types "github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
 )
 
 const (

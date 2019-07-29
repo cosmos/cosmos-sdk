@@ -131,6 +131,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
 	cmd.Flags().AddFlagSet(fsCommissionUpdate)
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
 
 	return cmd
 }

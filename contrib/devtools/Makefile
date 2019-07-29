@@ -5,10 +5,10 @@
 ###
 ifeq ($(OS),Windows_NT)
   GO := $(shell where go.exe 2> NUL)
-  FS := \\
+  FS := "\\"
 else
   GO := $(shell command -v go 2> /dev/null)
-  FS := /
+  FS := "/"
 endif
 
 ifeq ($(GO),)
@@ -33,8 +33,6 @@ mkdir -p $(GITHUBDIR)$(FS)$(1) &&\
 )\
 cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && git fetch origin && git checkout -q $(3)
 
-go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && $(GO) install
-
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 
@@ -48,31 +46,38 @@ GOLANGCI_LINT   = $(TOOLS_DESTDIR)/golangci-lint
 STATIK          = $(TOOLS_DESTDIR)/statik
 GOIMPORTS       = $(TOOLS_DESTDIR)/goimports
 CLOG            = $(TOOLS_DESTDIR)/clog
+RUNSIM			= $(TOOLS_DESTDIR)/runsim
 
 all: tools
 
-tools: tools-stamp
-	go mod tidy
+tools: statik clog runsim goimports golangci-lint
 
-tools-stamp: $(STATIK) $(GOIMPORTS)
-	touch $@
-
+golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
 	bash $(mkfile_dir)/install-golangci-lint.sh $(TOOLS_DESTDIR) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
+statik: $(STATIK)
 $(STATIK):
-	$(call go_install,rakyll,statik,v0.1.5)
+	@echo "Get statik"
+	@go get github.com/rakyll/statik
 
+goimports: $(GOIMPORTS)
 $(GOIMPORTS):
-	go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
+	@echo "Get goimports@v0.0.0-20190628034336-212fb13d595e"
+	@go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
 
+clog: $(CLOG)
 $(CLOG):
-	go get github.com/cosmos/tools/cmd/clog/
+	@echo "Get clog"
+	@go get github.com/cosmos/tools/cmd/clog
 
-golangci-lint: $(GOLANGCI_LINT)
+runsim: $(RUNSIM)
+$(RUNSIM):
+	@echo "Get runsim"
+	@go get github.com/cosmos/tools/cmd/runsim
 
 tools-clean:
-	rm -f $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT)
+	rm -f $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

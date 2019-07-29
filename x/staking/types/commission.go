@@ -10,8 +10,8 @@ import (
 type (
 	// Commission defines a commission parameters for a given validator.
 	Commission struct {
-		CommissionRates
-		UpdateTime time.Time `json:"update_time" yaml:"update_time"` // the last time the commission rate was changed
+		CommissionRates `json:"commission_rates" yaml:"commission_rates"`
+		UpdateTime      time.Time `json:"update_time" yaml:"update_time"` // the last time the commission rate was changed
 	}
 
 	// CommissionRates defines the initial commission rates to be used for creating a

@@ -68,7 +68,7 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-build_docs:
+build-docs:
 	cd docs && \
 	while read p; do \
 		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
@@ -77,7 +77,7 @@ build_docs:
 		echo "<a href='$${p}'>$${p}</a>" >> ~/output/index.html ; \
 	done < versions ;
 
-sync_docs:
+sync-docs:
 	cd ~/output && \
 	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
 	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \

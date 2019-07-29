@@ -38,7 +38,7 @@ func init() {
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
 	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks to run the current simulation, after which the simulation halts")
+	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
 	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")

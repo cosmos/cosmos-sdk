@@ -2,7 +2,7 @@ package supply
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -14,7 +14,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data Ge
 	if data.Supply.Total.Empty() {
 		var totalSupply sdk.Coins
 		ak.IterateAccounts(ctx,
-			func(acc authtypes.Account) (stop bool) {
+			func(acc authexported.Account) (stop bool) {
 				totalSupply = totalSupply.Add(acc.GetCoins())
 				return false
 			},

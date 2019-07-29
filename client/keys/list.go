@@ -26,7 +26,7 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 
 	if viper.GetBool(flags.FlagSecretStore) {
-		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+		os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {

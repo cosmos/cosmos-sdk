@@ -516,9 +516,6 @@ func GenNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Accoun
 			baseNFT := nft.NewBaseNFT(
 				simulation.RandStringOfLength(r, 10), // id
 				acc.Address,
-				simulation.RandStringOfLength(r, 15), // name
-				simulation.RandStringOfLength(r, 50), // description
-				simulation.RandStringOfLength(r, 30), // image
 				simulation.RandStringOfLength(r, 45), // tokenURI
 			)
 

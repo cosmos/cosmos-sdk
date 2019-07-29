@@ -72,13 +72,10 @@ func transferNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 }
 
 type editNFTMetadataReq struct {
-	BaseReq     rest.BaseReq `json:"base_req"`
-	Denom       string       `json:"denom"`
-	ID          string       `json:"id"`
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Image       string       `json:"image"`
-	TokenURI    string       `json:"tokenURI"`
+	BaseReq  rest.BaseReq `json:"base_req"`
+	Denom    string       `json:"denom"`
+	ID       string       `json:"id"`
+	TokenURI string       `json:"tokenURI"`
 }
 
 func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
@@ -94,23 +91,18 @@ func editNFTMetadataHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		// create the message
-		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), req.ID, req.Denom,
-			req.Name, req.Description, req.Image, req.TokenURI,
-		)
+		msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), req.ID, req.Denom, req.TokenURI)
 
 		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}
 }
 
 type mintNFTReq struct {
-	BaseReq     rest.BaseReq   `json:"base_req"`
-	Recipient   sdk.AccAddress `json:"recipient"`
-	Denom       string         `json:"denom"`
-	ID          string         `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Image       string         `json:"image"`
-	TokenURI    string         `json:"tokenURI"`
+	BaseReq   rest.BaseReq   `json:"base_req"`
+	Recipient sdk.AccAddress `json:"recipient"`
+	Denom     string         `json:"denom"`
+	ID        string         `json:"id"`
+	TokenURI  string         `json:"tokenURI"`
 }
 
 func mintNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
@@ -126,9 +118,7 @@ func mintNFTHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFun
 		}
 
 		// create the message
-		msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), req.Recipient, req.ID, req.Denom,
-			req.Name, req.Description, req.Image, req.TokenURI,
-		)
+		msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), req.Recipient, req.ID, req.Denom, req.TokenURI)
 
 		utils.WriteGenerateStdTxResponse(w, cliCtx, baseReq, []sdk.Msg{msg})
 	}

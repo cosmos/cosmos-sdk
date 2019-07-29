@@ -14,24 +14,18 @@ var _ exported.NFT = (*BaseNFT)(nil)
 
 // BaseNFT non fungible token definition
 type BaseNFT struct {
-	ID          string         `json:"id,omitempty" yaml:"id"`         // id of the token; not exported to clients
-	Owner       sdk.AccAddress `json:"owner" yaml:"owner"`             // account address that owns the NFT
-	Name        string         `json:"name" yaml:"name"`               // name of the token
-	Description string         `json:"description" yaml:"description"` // unique description of the NFT
-	Image       string         `json:"image" yaml:"image"`             // image path
-	TokenURI    string         `json:"token_uri" yaml:"token_uri"`     // optional extra properties available for querying
+	ID       string         `json:"id,omitempty" yaml:"id"`     // id of the token; not exported to clients
+	Owner    sdk.AccAddress `json:"owner" yaml:"owner"`         // account address that owns the NFT
+	TokenURI string         `json:"token_uri" yaml:"token_uri"` // optional extra properties available for querying
 }
 
 // NewBaseNFT creates a new NFT instance
-func NewBaseNFT(ID string, owner sdk.AccAddress, name, description, image, tokenURI string,
+func NewBaseNFT(ID string, owner sdk.AccAddress, tokenURI string,
 ) BaseNFT {
 	return BaseNFT{
-		ID:          ID,
-		Owner:       owner,
-		Name:        strings.TrimSpace(name),
-		Description: strings.TrimSpace(description),
-		Image:       strings.TrimSpace(image),
-		TokenURI:    strings.TrimSpace(tokenURI),
+		ID:       ID,
+		Owner:    owner,
+		TokenURI: strings.TrimSpace(tokenURI),
 	}
 }
 
@@ -46,38 +40,20 @@ func (bnft *BaseNFT) SetOwner(address sdk.AccAddress) {
 	bnft.Owner = address
 }
 
-// GetName returns the name of the token
-func (bnft BaseNFT) GetName() string { return bnft.Name }
-
-// GetDescription returns the unique description of the NFT
-func (bnft BaseNFT) GetDescription() string { return bnft.Description }
-
-// GetImage returns the image path of the NFT
-func (bnft BaseNFT) GetImage() string { return bnft.Image }
-
 // GetTokenURI returns the path to optional extra properties
 func (bnft BaseNFT) GetTokenURI() string { return bnft.TokenURI }
 
 // EditMetadata edits metadata of an nft
-func (bnft *BaseNFT) EditMetadata(name, description, image, tokenURI string) {
-	bnft.Name = name
-	bnft.Description = description
-	bnft.Image = image
+func (bnft *BaseNFT) EditMetadata(tokenURI string) {
 	bnft.TokenURI = tokenURI
 }
 
 func (bnft BaseNFT) String() string {
 	return fmt.Sprintf(`ID:				%s
 Owner:			%s
-Name:			%s
-Description: 	%s
-Image:			%s
 TokenURI:		%s`,
 		bnft.ID,
 		bnft.Owner,
-		bnft.Name,
-		bnft.Description,
-		bnft.Image,
 		bnft.TokenURI,
 	)
 }
@@ -176,7 +152,7 @@ func (nfts NFTs) MarshalJSON() ([]byte, error) {
 	nftJSON := make(NFTJSON)
 	for _, nft := range nfts {
 		id := nft.GetID()
-		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
+		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI())
 		nftJSON[id] = bnft
 	}
 	return json.Marshal(nftJSON)
@@ -190,7 +166,7 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	}
 
 	for id, nft := range nftJSON {
-		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetName(), nft.GetDescription(), nft.GetImage(), nft.GetTokenURI())
+		bnft := NewBaseNFT(id, nft.GetOwner(), nft.GetTokenURI())
 		*nfts = append(*nfts, &bnft)
 	}
 	return nil

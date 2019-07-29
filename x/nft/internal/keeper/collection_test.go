@@ -12,7 +12,7 @@ func TestSetCollection(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -20,7 +20,7 @@ func TestSetCollection(t *testing.T) {
 	collection, exists := keeper.GetCollection(ctx, denom)
 	require.True(t, exists)
 
-	nft2 := types.NewBaseNFT(id2, address, name, description, image, tokenURI)
+	nft2 := types.NewBaseNFT(id2, address, tokenURI)
 	collection, err = collection.AddNFT(&nft2)
 	require.NoError(t, err)
 	keeper.SetCollection(ctx, denom, collection)
@@ -39,7 +39,7 @@ func TestGetCollection(t *testing.T) {
 	require.False(t, exists)
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -56,7 +56,7 @@ func TestGetCollections(t *testing.T) {
 	require.Empty(t, collections)
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 

@@ -20,10 +20,7 @@ import (
 
 // Edit metadata flags
 const (
-	flagName        = "name"
-	flagDescription = "description"
-	flagImage       = "image"
-	flagTokenURI    = "tokenURI"
+	flagTokenURI = "tokenURI"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -96,7 +93,6 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 
 Example:
 $ %s tx %s edit-metadata cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
---name Katze --description="a german crypto kitty" --image path_to_image \
 --tokenURI path_to_token_URI_JSON --from mykey
 `,
 				version.ClientName, types.ModuleName,
@@ -109,20 +105,13 @@ $ %s tx %s edit-metadata cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd42
 
 			denom := args[0]
 			tokenID := args[1]
-
-			name := viper.GetString(flagName)
-			description := viper.GetString(flagDescription)
-			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, denom, name, description, image, tokenURI)
+			msg := types.NewMsgEditNFTMetadata(cliCtx.GetFromAddress(), tokenID, denom, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(flagName, "", "Name of the NFT")
-	cmd.Flags().String(flagDescription, "", "Unique description of the NFT")
-	cmd.Flags().String(flagImage, "", "Image path")
 	cmd.Flags().String(flagTokenURI, "", "Extra properties available for querying")
 	return cmd
 }
@@ -156,19 +145,13 @@ cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 				return err
 			}
 
-			name := viper.GetString(flagName)
-			description := viper.GetString(flagDescription)
-			image := viper.GetString(flagImage)
 			tokenURI := viper.GetString(flagTokenURI)
 
-			msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), recipient, tokenID, denom, name, description, image, tokenURI)
+			msg := types.NewMsgMintNFT(cliCtx.GetFromAddress(), recipient, tokenID, denom, tokenURI)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
-	cmd.Flags().String(flagName, "", "Name/title of nft")
-	cmd.Flags().String(flagDescription, "", "Description of nft")
-	cmd.Flags().String(flagImage, "", "Image uri of nft")
 	cmd.Flags().String(flagTokenURI, "", "URI for supplemental off-chain metadata (should return a JSON object)")
 
 	return cmd

@@ -59,9 +59,6 @@ func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
 			ownerAddr,
 			denom,
 			nftID,
-			simulation.RandStringOfLength(r, 15), // name
-			simulation.RandStringOfLength(r, 50), // description
-			simulation.RandStringOfLength(r, 30), // image
 			simulation.RandStringOfLength(r, 45), // tokenURI
 		)
 
@@ -91,9 +88,6 @@ func SimulateMsgMintNFT(k Keeper) simulation.Operation {
 			simulation.RandomAcc(r, accs).Address, // recipient
 			simulation.RandStringOfLength(r, 10),  // nft ID
 			simulation.RandStringOfLength(r, 10),  // denom
-			simulation.RandStringOfLength(r, 15),  // name
-			simulation.RandStringOfLength(r, 50),  // description
-			simulation.RandStringOfLength(r, 30),  // image
 			simulation.RandStringOfLength(r, 45),  // tokenURI
 		)
 

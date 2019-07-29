@@ -9,10 +9,7 @@ type NFT interface {
 	GetID() string
 	GetOwner() sdk.AccAddress
 	SetOwner(address sdk.AccAddress)
-	GetName() string
-	GetDescription() string
-	GetImage() string
 	GetTokenURI() string
-	EditMetadata(name, description, image, tokenURI string)
+	EditMetadata(tokenURI string)
 	String() string
 }

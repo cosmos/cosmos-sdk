@@ -61,50 +61,44 @@ func TestNewMsgEditNFTMetadata(t *testing.T) {
 	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address,
 		fmt.Sprintf("     %s     ", id),
 		fmt.Sprintf("     %s     ", denom),
-		fmt.Sprintf("     %s     ", name),
-		fmt.Sprintf("     %s     ", description),
-		fmt.Sprintf("     %s     ", image),
 		fmt.Sprintf("     %s     ", tokenURI))
 
 	require.Equal(t, newMsgEditNFTMetadata.Owner.String(), address.String())
 	require.Equal(t, newMsgEditNFTMetadata.ID, id)
 	require.Equal(t, newMsgEditNFTMetadata.Denom, denom)
-	require.Equal(t, newMsgEditNFTMetadata.Name, name)
-	require.Equal(t, newMsgEditNFTMetadata.Description, description)
-	require.Equal(t, newMsgEditNFTMetadata.Image, image)
 	require.Equal(t, newMsgEditNFTMetadata.TokenURI, tokenURI)
 }
 
 func TestMsgEditNFTMetadataValidateBasicMethod(t *testing.T) {
 
-	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(nil, id, denom, name, description, image, tokenURI)
+	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(nil, id, denom, tokenURI)
 
 	err := newMsgEditNFTMetadata.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, "", denom, name, description, image, tokenURI)
+	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, "", denom, tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, "", name, description, image, tokenURI)
+	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, "", tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, denom, name, description, image, tokenURI)
+	newMsgEditNFTMetadata = NewMsgEditNFTMetadata(address, id, denom, tokenURI)
 	err = newMsgEditNFTMetadata.ValidateBasic()
 	require.NoError(t, err)
 }
 
 func TestMsgEditNFTMetadataGetSignBytesMethod(t *testing.T) {
-	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address, id, denom, name, description, image, tokenURI)
+	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address, id, denom, tokenURI)
 	sortedBytes := newMsgEditNFTMetadata.GetSignBytes()
-	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgEditNFTMetadata","value":{"Denom":"%s","Description":"%s","ID":"%s","Image":"%s","Name":"%s","Owner":"%s","TokenURI":"%s"}}`,
-		denom, description, id, image, name, address.String(), tokenURI,
+	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgEditNFTMetadata","value":{"Denom":"%s","ID":"%s","Owner":"%s","TokenURI":"%s"}}`,
+		denom, id, address.String(), tokenURI,
 	))
 }
 
 func TestMsgEditNFTMetadataGetSignersMethod(t *testing.T) {
-	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address, id, denom, name, description, image, tokenURI)
+	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address, id, denom, tokenURI)
 	signers := newMsgEditNFTMetadata.GetSigners()
 	require.Equal(t, 1, len(signers))
 	require.Equal(t, address.String(), signers[0].String())
@@ -114,54 +108,48 @@ func TestNewMsgMintNFT(t *testing.T) {
 	newMsgMintNFT := NewMsgMintNFT(address, address2,
 		fmt.Sprintf("     %s     ", id),
 		fmt.Sprintf("     %s     ", denom),
-		fmt.Sprintf("     %s     ", name),
-		fmt.Sprintf("     %s     ", description),
-		fmt.Sprintf("     %s     ", image),
 		fmt.Sprintf("     %s     ", tokenURI))
 
 	require.Equal(t, newMsgMintNFT.Sender.String(), address.String())
 	require.Equal(t, newMsgMintNFT.Recipient.String(), address2.String())
 	require.Equal(t, newMsgMintNFT.ID, id)
 	require.Equal(t, newMsgMintNFT.Denom, denom)
-	require.Equal(t, newMsgMintNFT.Name, name)
-	require.Equal(t, newMsgMintNFT.Description, description)
-	require.Equal(t, newMsgMintNFT.Image, image)
 	require.Equal(t, newMsgMintNFT.TokenURI, tokenURI)
 }
 
 func TestMsgMsgMintNFTValidateBasicMethod(t *testing.T) {
 
-	newMsgMintNFT := NewMsgMintNFT(nil, address2, id, denom, name, description, image, tokenURI)
+	newMsgMintNFT := NewMsgMintNFT(nil, address2, id, denom, tokenURI)
 	err := newMsgMintNFT.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgMintNFT = NewMsgMintNFT(address, nil, id, denom, name, description, image, tokenURI)
+	newMsgMintNFT = NewMsgMintNFT(address, nil, id, denom, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgMintNFT = NewMsgMintNFT(address, address2, "", denom, name, description, image, tokenURI)
+	newMsgMintNFT = NewMsgMintNFT(address, address2, "", denom, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgMintNFT = NewMsgMintNFT(address, address2, id, "", name, description, image, tokenURI)
+	newMsgMintNFT = NewMsgMintNFT(address, address2, id, "", tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
 	require.Error(t, err)
 
-	newMsgMintNFT = NewMsgMintNFT(address, address2, id, denom, name, description, image, tokenURI)
+	newMsgMintNFT = NewMsgMintNFT(address, address2, id, denom, tokenURI)
 	err = newMsgMintNFT.ValidateBasic()
 	require.NoError(t, err)
 }
 
 func TestMsgMintNFTGetSignBytesMethod(t *testing.T) {
-	newMsgMintNFT := NewMsgMintNFT(address, address2, id, denom, name, description, image, tokenURI)
+	newMsgMintNFT := NewMsgMintNFT(address, address2, id, denom, tokenURI)
 	sortedBytes := newMsgMintNFT.GetSignBytes()
-	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgMintNFT","value":{"Denom":"%s","Description":"%s","ID":"%s","Image":"%s","Name":"%s","Recipient":"%s","Sender":"%s","TokenURI":"%s"}}`,
-		denom, description, id, image, name, address2.String(), address.String(), tokenURI,
+	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgMintNFT","value":{"Denom":"%s","ID":"%s","Recipient":"%s","Sender":"%s","TokenURI":"%s"}}`,
+		denom, id, address2.String(), address.String(), tokenURI,
 	))
 }
 
 func TestMsgMintNFTGetSignersMethod(t *testing.T) {
-	newMsgMintNFT := NewMsgMintNFT(address, address2, id, denom, name, description, image, tokenURI)
+	newMsgMintNFT := NewMsgMintNFT(address, address2, id, denom, tokenURI)
 	signers := newMsgMintNFT.GetSigners()
 	require.Equal(t, 1, len(signers))
 	require.Equal(t, address.String(), signers[0].String())

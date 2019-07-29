@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"

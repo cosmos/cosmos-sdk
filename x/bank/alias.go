@@ -30,6 +30,9 @@ var (
 	NewInput               = types.NewInput
 	NewOutput              = types.NewOutput
 	ParamKeyTable          = types.ParamKeyTable
+	NewGenesisState        = types.NewGenesisState
+	DefaultGenesisState    = types.DefaultGenesisState
+	ValidateGenesis        = types.ValidateGenesis
 
 	// variable aliases
 	ModuleCdc                = types.ModuleCdc
@@ -39,6 +42,7 @@ var (
 type (
 	BaseKeeper   = keeper.BaseKeeper // ibc module depends on this
 	Keeper       = keeper.Keeper
+	GenesisState = types.GenesisState
 	MsgSend      = types.MsgSend
 	MsgMultiSend = types.MsgMultiSend
 	Input        = types.Input

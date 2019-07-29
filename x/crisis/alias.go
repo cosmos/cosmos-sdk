@@ -23,6 +23,7 @@ var (
 	ErrUnknownInvariant   = types.ErrUnknownInvariant
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
+	ValidateGenesis       = types.ValidateGenesis
 	NewMsgVerifyInvariant = types.NewMsgVerifyInvariant
 	ParamKeyTable         = types.ParamKeyTable
 	NewInvarRoute         = types.NewInvarRoute

@@ -114,6 +114,9 @@ var (
 	NewVote                       = types.NewVote
 	VoteOptionFromString          = types.VoteOptionFromString
 	ValidVoteOption               = types.ValidVoteOption
+	NewGenesisState               = types.NewGenesisState
+	DefaultGenesisState           = types.DefaultGenesisState
+	ValidateGenesis               = types.ValidateGenesis
 
 	// variable aliases
 	ModuleCdc                   = types.ModuleCdc
@@ -154,4 +157,5 @@ type (
 	Vote                    = types.Vote
 	Votes                   = types.Votes
 	VoteOption              = types.VoteOption
+	GenesisState            = types.GenesisState
 )

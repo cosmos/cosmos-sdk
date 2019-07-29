@@ -32,6 +32,9 @@ var (
 	NewParams            = types.NewParams
 	DefaultParams        = types.DefaultParams
 	ValidateParams       = types.ValidateParams
+	NewGenesisState      = types.NewGenesisState
+	DefaultGenesisState  = types.DefaultGenesisState
+	ValidateGenesis      = types.ValidateGenesis
 
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc
@@ -45,7 +48,8 @@ var (
 )
 
 type (
-	Keeper = keeper.Keeper
-	Minter = types.Minter
-	Params = types.Params
+	Keeper       = keeper.Keeper
+	Minter       = types.Minter
+	Params       = types.Params
+	GenesisState = types.GenesisState
 )

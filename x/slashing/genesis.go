@@ -8,7 +8,7 @@ import (
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper types.StakingKeeper, data types.GenesisState) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper types.StakingKeeper, data GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator exported.ValidatorI) bool {
 			keeper.AddPubkey(ctx, validator.GetConsPubKey())
@@ -40,17 +40,17 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper types.StakingKeep
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func ExportGenesis(ctx sdk.Context, keeper Keeper) (data types.GenesisState) {
+func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	params := keeper.GetParams(ctx)
-	signingInfos := make(map[string]types.ValidatorSigningInfo)
-	missedBlocks := make(map[string][]types.MissedBlock)
-	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	signingInfos := make(map[string]ValidatorSigningInfo)
+	missedBlocks := make(map[string][]MissedBlock)
+	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos[bechAddr] = info
-		localMissedBlocks := []types.MissedBlock{}
+		localMissedBlocks := []MissedBlock{}
 
 		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			localMissedBlocks = append(localMissedBlocks, types.NewMissedBlock(index, missed))
+			localMissedBlocks = append(localMissedBlocks, NewMissedBlock(index, missed))
 			return false
 		})
 		missedBlocks[bechAddr] = localMissedBlocks
@@ -58,5 +58,5 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data types.GenesisState) {
 		return false
 	})
 
-	return types.NewGenesisState(params, signingInfos, missedBlocks)
+	return NewGenesisState(params, signingInfos, missedBlocks)
 }

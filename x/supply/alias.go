@@ -34,6 +34,7 @@ var (
 	RegisterCodec         = types.RegisterCodec
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
+	ValidateGenesis       = types.ValidateGenesis
 	NewSupply             = types.NewSupply
 	DefaultSupply         = types.DefaultSupply
 

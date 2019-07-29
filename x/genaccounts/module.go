@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	types "github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
 )
 
 var (

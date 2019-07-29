@@ -54,7 +54,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 		content := contentSim(r, app, ctx, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, content, sender)
 		if err != nil {
-			return simulation.NoOpMsg(), nil, err
+			return simulation.NoOpMsg(gov.ModuleName), nil, err
 		}
 
 		ok := simulateHandleMsgSubmitProposal(msg, handler, ctx)
@@ -66,7 +66,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim Con
 
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
-			return simulation.NoOpMsg(), nil, err
+			return simulation.NoOpMsg(gov.ModuleName), nil, err
 		}
 
 		proposalID = uint64(math.Max(float64(proposalID)-1, 0))
@@ -122,7 +122,7 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, c gov.Content, s simulation
 	return
 }
 
-// SimulateMsgDeposit
+// SimulateMsgDeposit generates a MsgDeposit with random values.
 func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -130,12 +130,12 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 		acc := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
-			return simulation.NoOpMsg(), nil, nil
+			return simulation.NoOpMsg(gov.ModuleName), nil, nil
 		}
 		deposit := randomDeposit(r)
 		msg := gov.NewMsgDeposit(acc.Address, proposalID, deposit)
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(gov.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 		ctx, write := ctx.CacheContext()
 		ok = gov.NewHandler(k)(ctx, msg).IsOK()
@@ -148,8 +148,7 @@ func SimulateMsgDeposit(k gov.Keeper) simulation.Operation {
 	}
 }
 
-// SimulateMsgVote
-// nolint: unparam
+// SimulateMsgVote generates a MsgVote with random values.
 func SimulateMsgVote(k gov.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, simulation.Account{}, 0)
 }
@@ -167,14 +166,14 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 			var ok bool
 			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {
-				return simulation.NoOpMsg(), nil, nil
+				return simulation.NoOpMsg(gov.ModuleName), nil, nil
 			}
 		}
 		option := randomVotingOption(r)
 
 		msg := gov.NewMsgVote(acc.Address, proposalID, option)
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(gov.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()

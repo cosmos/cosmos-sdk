@@ -25,6 +25,7 @@ type BaseNFT struct {
 // NewBaseNFT creates a new NFT instance
 func NewBaseNFT(ID string, owner sdk.AccAddress, name, description, image, tokenURI string,
 ) BaseNFT {
+
 	return BaseNFT{
 		ID:          ID,
 		Owner:       owner,

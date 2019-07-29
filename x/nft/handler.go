@@ -37,7 +37,6 @@ func HandleMsgTransferNFT(ctx sdk.Context, msg types.MsgTransferNFT, k keeper.Ke
 	if err != nil {
 		return err.Result()
 	}
-
 	// update NFT owner
 	nft.SetOwner(msg.Recipient)
 	// update the NFT (owners are updated within the keeper)

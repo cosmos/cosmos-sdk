@@ -143,7 +143,11 @@ func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, sdk.Err
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
 		)
 	}
-	owner.IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
+	if len(owner.IDCollections) == 1 {
+		owner.IDCollections = []IDCollection{idCollection}
+	} else {
+		owner.IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
+	}
 	return owner, nil
 }
 

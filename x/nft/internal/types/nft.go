@@ -92,6 +92,9 @@ func (nfts NFTs) Update(id string, nft exported.NFT) (NFTs, bool) {
 	if index == -1 {
 		return nfts, false
 	}
+	if len(nfts) == 1 {
+		return NewNFTs(nft), true
+	}
 
 	return append(append(nfts[:index], nft), nfts[:index+1]...), true
 }

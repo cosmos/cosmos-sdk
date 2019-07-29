@@ -2,9 +2,11 @@ package nft
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
 // DONTCOVER
@@ -23,6 +25,33 @@ var (
 	tokenURI  = "https://google.com/token-1.json"
 	tokenURI2 = "https://google.com/token-2.json"
 )
+
+// CheckInvariants checks the invariants
+func CheckInvariants(k Keeper, ctx sdk.Context) bool {
+
+	collectionsSupply := make(map[string]int)
+	ownersCollectionsSupply := make(map[string]int)
+
+	k.IterateCollections(ctx, func(collection types.Collection) bool {
+		collectionsSupply[collection.Denom] = collection.Supply()
+		return false
+	})
+
+	owners := k.GetOwners(ctx)
+	for _, owner := range owners {
+		for _, idCollection := range owner.IDCollections {
+			ownersCollectionsSupply[idCollection.Denom] += idCollection.Supply()
+		}
+	}
+
+	for denom, supply := range collectionsSupply {
+		if supply != ownersCollectionsSupply[denom] {
+			fmt.Printf("denom is %s, supply is %d, ownerSupply is %d", denom, supply, ownersCollectionsSupply[denom])
+			return false
+		}
+	}
+	return true
+}
 
 // CreateTestAddrs creates test addresses
 func CreateTestAddrs(numAddrs int) []sdk.AccAddress {

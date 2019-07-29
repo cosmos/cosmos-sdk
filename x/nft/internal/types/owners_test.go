@@ -43,12 +43,25 @@ func TestIDCollectionDeleteIDMethod(t *testing.T) {
 }
 
 func TestIDCollectionSupplyMethod(t *testing.T) {
+	idCollectionEmpty := IDCollection{}
+	require.Equal(t, 0, idCollectionEmpty.Supply())
+
 	ids := []string{id, id2}
 	idCollection := NewIDCollection(denom, ids)
 	require.Equal(t, 2, idCollection.Supply())
 
-	idCollection = IDCollection{}
-	require.Equal(t, 0, idCollection.Supply())
+	idCollection, err := idCollection.DeleteID(id)
+	require.Nil(t, err)
+	require.Equal(t, idCollection.Supply(), 1)
+
+	idCollection, err = idCollection.DeleteID(id2)
+	require.Nil(t, err)
+	require.Equal(t, idCollection.Supply(), 0)
+
+	idCollection = idCollection.AddID(id)
+	require.Nil(t, err)
+	require.Equal(t, idCollection.Supply(), 1)
+
 }
 
 func TestIDCollectionStringMethod(t *testing.T) {
@@ -133,23 +146,37 @@ func TestOwnerGetIDCollectionMethod(t *testing.T) {
 }
 
 func TestOwnerUpdateIDCollectionMethod(t *testing.T) {
-	ids := []string{id, id2}
+	ids := []string{id}
 	idCollection := NewIDCollection(denom, ids)
 	owner := NewOwner(address, idCollection)
+	require.Equal(t, owner.Supply(), 1)
 
-	ids2 := []string{id, id2, id3}
+	ids2 := []string{id, id2}
 	idCollection2 := NewIDCollection(denom2, ids2)
 
+	// UpdateIDCollection should fail if denom doesn't exist
 	returnedOwner, err := owner.UpdateIDCollection(idCollection2)
 	require.Error(t, err)
 	require.Equal(t, owner.String(), returnedOwner.String())
 
-	idCollection2 = NewIDCollection(denom, ids2)
-	returnedOwner, err = owner.UpdateIDCollection(idCollection2)
+	idCollection3 := NewIDCollection(denom, ids2)
+	returnedOwner, err = owner.UpdateIDCollection(idCollection3)
 	require.NoError(t, err)
+	require.NotEqual(t, owner.String(), returnedOwner.String())
+	require.Equal(t, returnedOwner.Supply(), 2)
+
+	owner = returnedOwner
 
 	returnedCollection, _ := owner.GetIDCollection(denom)
-	require.Equal(t, len(returnedCollection.IDs), 3)
+	require.Equal(t, len(returnedCollection.IDs), 2)
+
+	owner = NewOwner(address, idCollection, idCollection2)
+	require.Equal(t, owner.Supply(), 3)
+
+	returnedOwner, err = owner.UpdateIDCollection(idCollection3)
+	require.NoError(t, err)
+	require.Equal(t, returnedOwner.Supply(), 4)
+
 }
 
 func TestOwnerDeleteIDMethod(t *testing.T) {

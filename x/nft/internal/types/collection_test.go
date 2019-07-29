@@ -123,6 +123,19 @@ func TestCollectionSupplyMethod(t *testing.T) {
 	collection := NewCollection(denom, nfts)
 
 	require.Equal(t, collection.Supply(), 2)
+
+	collection, err := collection.DeleteNFT(&testNFT)
+	require.Nil(t, err)
+	require.Equal(t, collection.Supply(), 1)
+
+	collection, err = collection.DeleteNFT(&testNFT2)
+	require.Nil(t, err)
+	require.Equal(t, collection.Supply(), 0)
+
+	collection, err = collection.AddNFT(&testNFT)
+	require.Nil(t, err)
+	require.Equal(t, collection.Supply(), 1)
+
 }
 
 func TestCollectionStringMethod(t *testing.T) {

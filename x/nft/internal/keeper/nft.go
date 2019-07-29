@@ -48,6 +48,7 @@ func (k Keeper) UpdateNFT(ctx sdk.Context, denom string, nft exported.NFT) (err 
 		}
 	}
 	collection, err = collection.UpdateNFT(nft)
+
 	if err != nil {
 		return err
 	}

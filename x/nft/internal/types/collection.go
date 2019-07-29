@@ -63,6 +63,7 @@ func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
 // UpdateNFT updates an NFT from a collection
 func (collection Collection) UpdateNFT(nft exported.NFT) (Collection, sdk.Error) {
 	nfts, ok := collection.NFTs.Update(nft.GetID(), nft)
+
 	if !ok {
 		return collection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("NFT #%s doesn't exist on collection %s", nft.GetID(), collection.Denom),

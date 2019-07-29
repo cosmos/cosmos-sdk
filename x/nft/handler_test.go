@@ -53,6 +53,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	// handle should succeed when nft exists and is transferred by owner
 	res = h(ctx, transferNftMsg)
 	require.True(t, res.IsOK(), "%v", res)
+	require.True(t, CheckInvariants(k, ctx))
 
 	// event events should be emitted correctly
 	for _, event := range res.Events {
@@ -79,6 +80,7 @@ func TestTransferNFTMsg(t *testing.T) {
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.True(t, nftAfterwards.GetOwner().Equals(address2))
+	require.True(t, CheckInvariants(k, ctx))
 
 }
 
@@ -211,6 +213,8 @@ func TestMintNFTMsg(t *testing.T) {
 	res = h(ctx, mintNFT)
 	require.False(t, res.IsOK(), "%v", res)
 
+	require.True(t, CheckInvariants(k, ctx))
+
 }
 
 func TestBurnNFTMsg(t *testing.T) {
@@ -282,4 +286,6 @@ func TestBurnNFTMsg(t *testing.T) {
 
 	ownerReturned := k.GetOwner(ctx, address)
 	require.Equal(t, 0, ownerReturned.Supply())
+
+	require.True(t, CheckInvariants(k, ctx))
 }

@@ -141,6 +141,11 @@ type CommitMultiStore interface {
 	// in order to handle breaking formats in migrations
 	LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
 
+	// LoadVersionAndUpgrade will load the named version, but also
+	// rename/delete/create sub-store keys, before registering all the keys
+	// in order to handle breaking formats in migrations
+	LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
+
 	// Load a specific persisted version. When you load an old version, or when
 	// the last commit attempt didn't complete, the next commit after loading
 	// must be idempotent (return the same commit id). Otherwise the behavior is

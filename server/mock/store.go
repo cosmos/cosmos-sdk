@@ -75,6 +75,10 @@ func (ms multiStore) LoadLatestVersionAndUpgrade(upgrades *store.StoreUpgrades) 
 	return nil
 }
 
+func (ms multiStore) LoadVersionAndUpgrade(ver int64, upgrades *store.StoreUpgrades) error {
+	panic("not implemented")
+}
+
 func (ms multiStore) LoadVersion(ver int64) error {
 	panic("not implemented")
 }

@@ -106,6 +106,11 @@ func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) erro
 	return rs.loadVersion(ver, upgrades)
 }
 
+// LoadVersionAndUpgrade allows us to rename substores while loading an older version
+func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades) error {
+	return rs.loadVersion(ver, upgrades)
+}
+
 // LoadLatestVersion implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)

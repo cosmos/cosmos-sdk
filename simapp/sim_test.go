@@ -38,7 +38,7 @@ func init() {
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
 	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks to run the simulation, after which the simulation halts")
+	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks to run the current simulation, after which the simulation halts")
 	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
 	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
@@ -707,7 +707,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
-				0, 50, 100, 0,
+				1, 50, 100, 0,
 				false, true, false, false, false, app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash

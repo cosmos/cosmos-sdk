@@ -22,7 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
-	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -45,7 +45,9 @@ const (
 )
 
 // StoreLoader defines a customizable function to control how we load the CommitMultiStore
-// from disk
+// from disk. This is useful for state migration, when loading a datastore writen with
+// an older version of the software. In particular, if a module changed the substore key name
+// (or removed a substore) between two versions of the software.
 type StoreLoader func(ms sdk.CommitMultiStore) error
 
 // BaseApp reflects the ABCI application implementation.
@@ -225,7 +227,7 @@ func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 
 // StoreLoaderWithUpgrade is used to prepare baseapp with a fixed StoreLoader
 // pattern. This is useful in test cases, or with custom upgrade loading logic.
-func StoreLoaderWithUpgrade(upgrades *storeTypes.StoreUpgrades) StoreLoader {
+func StoreLoaderWithUpgrade(upgrades *storetypes.StoreUpgrades) StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		return ms.LoadLatestVersionAndUpgrade(upgrades)
 	}
@@ -233,11 +235,17 @@ func StoreLoaderWithUpgrade(upgrades *storeTypes.StoreUpgrades) StoreLoader {
 
 // UpgradeableStoreLoader can be configured by SetStoreLoader() to check for the
 // existence of a given upgrade file - json encoded StoreUpgrades data.
-// If the file if present, parse it and execute those upgrades
-// (rename or delete stores), while loading the data.
+//
+// If not file is present, it will peform the default load (no upgrades to store).
+//
+// If the file is present, it will parse the file and execute those upgrades
+// (rename or delete stores), while loading the data. It will also delete the
+// upgrade file upon successful load, so that the upgrade is only applied once,
+// and not re-applied on next restart
 //
 // This is useful for in place migrations when a store key is renamed between
-// two versions of the software.
+// two versions of the software. (Note: this code will move to x/upgrades
+// when PR #4233 is merged, here mainly to help test the design)
 func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		_, err := os.Stat(upgradeInfoPath)
@@ -252,15 +260,18 @@ func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 		if err != nil {
 			return fmt.Errorf("Cannot read upgrade file %s: %v", upgradeInfoPath, err)
 		}
-		var upgrades storeTypes.StoreUpgrades
+
+		var upgrades storetypes.StoreUpgrades
 		err = json.Unmarshal(data, &upgrades)
 		if err != nil {
 			return fmt.Errorf("Cannot parse upgrade file: %v", err)
 		}
+
 		err = ms.LoadLatestVersionAndUpgrade(&upgrades)
 		if err != nil {
 			return fmt.Errorf("Load and upgrade database: %v", err)
 		}
+
 		// if we have a successful load, we delete the file
 		err = os.Remove(upgradeInfoPath)
 		if err != nil {

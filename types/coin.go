@@ -395,6 +395,12 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 	return coinsB.IsAllGT(coins)
 }
 
+// IsAnyLT returns True iff for any denom in coins, the denom is present at
+// a smaller amount in coinsB.
+func (coins Coins) IsAnyLT(coinsB Coins) bool {
+	return coinsB.IsAnyGT(coins)
+}
+
 // IsAllLTE returns true iff for every denom in coins, the denom is present at
 // a smaller or equal amount in coinsB.
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
@@ -417,6 +423,22 @@ func (coins Coins) IsAnyGT(coinsB Coins) bool {
 	for _, coin := range coins {
 		amt := coinsB.AmountOf(coin.Denom)
 		if coin.Amount.GT(amt) && !amt.IsZero() {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsAnyGTInt returns true if for any denom in coins,
+// the denom is present at a greater amount than amount.
+func (coins Coins) IsAnyGTInt(amount Int) bool {
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		if coin.Amount.GT(amount) {
 			return true
 		}
 	}
@@ -506,6 +528,17 @@ func (coins Coins) AmountOf(denom string) Int {
 	}
 }
 
+// Returns the smallest amount of coin present inside coins
+func (coins Coins) SmallestAmount() Int {
+	smallestAmount := ZeroInt()
+	for _, coin := range coins {
+		if coin.Amount.LTE(smallestAmount) {
+			smallestAmount = coin.Amount
+		}
+	}
+	return smallestAmount
+}
+
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 func (coins Coins) IsAllPositive() bool {
@@ -567,6 +600,48 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+// MinCoins returns a set of coins having the minimum values between coinsA and coinsB.
+//
+// e.g.
+// MinCoins({2A, 3B}, {A}) = {A}
+// MinCoins({2A, 3B}, {5C}) = {}
+func MinCoins(coinsA Coins, coinsB Coins) Coins {
+	minCoins := Coins{}
+
+	for _, coin := range coinsA {
+		valueA := coin.Amount
+		valueB := coinsB.AmountOf(coin.Denom)
+		minValue := MinInt(valueA, valueB)
+
+		if minValue.GT(ZeroInt()) {
+			minCoins.Add(NewCoins(NewCoin(coin.Denom, minValue)))
+		}
+	}
+
+	return minCoins
+}
+
+// MaxCoins returns a set of coins having the maximum values between coinsA and coinsB.
+//
+// e.g.
+// MaxCoins({2A, 3B}, {A}) = {2A, 3B}
+// MaxCoins({2A, 3B}, {5C}) = {2A, 3B, 5C}
+func MaxCoins(coinsA Coins, coinsB Coins) Coins {
+	minCoins := Coins{}
+
+	for _, coin := range coinsA {
+		valueA := coin.Amount
+		valueB := coinsB.AmountOf(coin.Denom)
+		maxValue := MaxInt(valueA, valueB)
+
+		if maxValue.GT(ZeroInt()) {
+			minCoins.Add(NewCoins(NewCoin(coin.Denom, maxValue)))
+		}
+	}
+
+	return minCoins
 }
 
 //-----------------------------------------------------------------------------

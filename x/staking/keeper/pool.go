@@ -17,41 +17,37 @@ func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool exported.Module
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
-func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Coin) {
-	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
-	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, coins)
+func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Coins) {
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, tokens)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
-func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Coin) {
-	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
-	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, types.BondedPoolName, coins)
+func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Coins) {
+	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, types.BondedPoolName, tokens)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // burnBondedTokens removes coins from the bonded pool module account
-func (k Keeper) burnBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
-	if !amt.IsPositive() {
+func (k Keeper) burnBondedTokens(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	if !amt.IsAnyGTInt(sdk.ZeroInt()) {
 		// skip as no coins need to be burned
 		return nil
 	}
-	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
-	return k.supplyKeeper.BurnCoins(ctx, types.BondedPoolName, coins)
+	return k.supplyKeeper.BurnCoins(ctx, types.BondedPoolName, amt)
 }
 
 // burnNotBondedTokens removes coins from the not bonded pool module account
-func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) sdk.Error {
-	if !amt.IsPositive() {
+func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	if !amt.IsAnyGTInt(sdk.ZeroInt()) {
 		// skip as no coins need to be burned
 		return nil
 	}
-	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), amt))
-	return k.supplyKeeper.BurnCoins(ctx, types.NotBondedPoolName, coins)
+	return k.supplyKeeper.BurnCoins(ctx, types.NotBondedPoolName, amt)
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded

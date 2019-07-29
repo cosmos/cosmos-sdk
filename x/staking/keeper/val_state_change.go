@@ -28,7 +28,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := sdk.ZeroInt()
-	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
+	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.Coins{}, sdk.Coins{}
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.

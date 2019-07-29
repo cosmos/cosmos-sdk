@@ -807,6 +807,77 @@ func (coins DecCoins) IsAllPositive() bool {
 	return true
 }
 
+// IsAllLT returns True iff for every denom in coins, the denom is present at
+// a smaller amount in coinsB.
+func (coins DecCoins) IsAllLT(coinsB DecCoins) bool {
+	return coinsB.IsAllGT(coins)
+}
+
+// IsAllGT returns true if for every denom in coinsB,
+// the denom is present at a greater amount in coins.
+func (coins DecCoins) IsAllGT(coinsB DecCoins) bool {
+	if len(coins) == 0 {
+		return false
+	}
+
+	if len(coinsB) == 0 {
+		return true
+	}
+
+	if !coinsB.DenomsSubsetOf(coins) {
+		return false
+	}
+
+	for _, coinB := range coinsB {
+		amountA, amountB := coins.AmountOf(coinB.Denom), coinB.Amount
+		if !amountA.GT(amountB) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsAnyGT returns true iff for any denom in coins, the denom is present at a
+// greater amount in coinsB.
+//
+// e.g.
+// {2A, 3B}.IsAnyGT{A} = true
+// {2A, 3B}.IsAnyGT{5C} = false
+// {}.IsAnyGT{5C} = false
+// {2A, 3B}.IsAnyGT{} = false
+func (coins DecCoins) IsAnyGT(coinsB DecCoins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GT(amt) && !amt.IsZero() {
+			return true
+		}
+	}
+
+	return false
+}
+
+// DenomsSubsetOf returns true if receiver's denom set
+// is subset of coinsB's denoms.
+func (coins DecCoins) DenomsSubsetOf(coinsB DecCoins) bool {
+	// more denoms in B than in receiver
+	if len(coins) > len(coinsB) {
+		return false
+	}
+
+	for _, coin := range coins {
+		if coinsB.AmountOf(coin.Denom).IsZero() {
+			return false
+		}
+	}
+
+	return true
+}
+
 func removeZeroDecCoins(coins DecCoins) DecCoins {
 	i, l := 0, len(coins)
 	for i < l {
@@ -823,7 +894,7 @@ func removeZeroDecCoins(coins DecCoins) DecCoins {
 }
 
 func (coins DecCoins) SumAmounts() Dec {
-	sum := NewDec(0)
+	sum := ZeroDec()
 
 	for _, coin := range coins {
 		sum = sum.Add(coin.Amount)

@@ -122,7 +122,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd sdk.Coin) (valOut types.Validator, addedShares sdk.Coins) {
+	tokensToAdd sdk.Coins) (valOut types.Validator, addedShares sdk.DecCoins) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
@@ -133,7 +133,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	sharesToRemove sdk.Coins) (valOut types.Validator, removedTokens sdk.Int) {
+	sharesToRemove sdk.DecCoins) (valOut types.Validator, removedTokens sdk.Coins) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
@@ -144,7 +144,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
+	validator types.Validator, tokensToRemove sdk.Coins) types.Validator {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
@@ -187,7 +187,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	if validator.Tokens.IsAllPositive() {
 		panic("attempting to remove a validator which still contains tokens")
 	}
-	if validator.Tokens.GT(sdk.ZeroInt()) {
+	if validator.Tokens.IsAnyGTInt(sdk.ZeroInt()) {
 		panic("validator being removed should never have positive tokens")
 	}
 

@@ -228,17 +228,17 @@ type Redelegation struct {
 
 // RedelegationEntry - entry to a Redelegation
 type RedelegationEntry struct {
-	CreationHeight int64     `json:"creation_height" yaml:"creation_height"` // height at which the redelegation took place
-	CompletionTime time.Time `json:"completion_time" yaml:"completion_time"` // time at which the redelegation will complete
-	InitialBalance sdk.Coins `json:"initial_balance" yaml:"initial_balance"` // initial balance when redelegation started
-	SharesDst      sdk.Coins `json:"shares_dst" yaml:"shares_dst"`           // amount of destination-validator shares created by redelegation
+	CreationHeight int64        `json:"creation_height" yaml:"creation_height"` // height at which the redelegation took place
+	CompletionTime time.Time    `json:"completion_time" yaml:"completion_time"` // time at which the redelegation will complete
+	InitialBalance sdk.Coins    `json:"initial_balance" yaml:"initial_balance"` // initial balance when redelegation started
+	SharesDst      sdk.DecCoins `json:"shares_dst" yaml:"shares_dst"`           // amount of destination-validator shares created by redelegation
 }
 
 // NewRedelegation - create a new redelegation object
 func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
 	minTime time.Time, balance sdk.Coins,
-	sharesDst sdk.Coins) Redelegation {
+	sharesDst sdk.DecCoins) Redelegation {
 
 	entry := NewRedelegationEntry(creationHeight,
 		minTime, balance, sharesDst)
@@ -254,7 +254,7 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 // NewRedelegation - create a new redelegation object
 func NewRedelegationEntry(creationHeight int64,
 	completionTime time.Time, balance sdk.Coins,
-	sharesDst sdk.Coins) RedelegationEntry {
+	sharesDst sdk.DecCoins) RedelegationEntry {
 
 	return RedelegationEntry{
 		CreationHeight: creationHeight,
@@ -272,7 +272,7 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 // AddEntry - append entry to the unbonding delegation
 func (d *Redelegation) AddEntry(creationHeight int64,
 	minTime time.Time, balance sdk.Coins,
-	sharesDst sdk.Coins) {
+	sharesDst sdk.DecCoins) {
 
 	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst)
 	d.Entries = append(d.Entries, entry)
@@ -352,10 +352,10 @@ func (d Redelegations) String() (out string) {
 // in addition to shares which is more suitable for client responses.
 type DelegationResponse struct {
 	Delegation
-	Balance sdk.Int `json:"balance" yaml:"balance"`
+	Balance sdk.Coins `json:"balance" yaml:"balance"`
 }
 
-func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.DecCoins, b sdk.Int) DelegationResponse {
+func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.DecCoins, b sdk.Coins) DelegationResponse {
 	return DelegationResponse{NewDelegation(d, v, s), b}
 }
 
@@ -416,7 +416,7 @@ func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entrie
 	}
 }
 
-func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.Coins, ib, b sdk.Coins) RedelegationEntryResponse {
+func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.DecCoins, ib, b sdk.Coins) RedelegationEntryResponse {
 	return RedelegationEntryResponse{NewRedelegationEntry(ch, ct, ib, s), b}
 }
 

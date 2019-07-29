@@ -49,11 +49,10 @@ func AllInvariants(k Keeper) sdk.Invariant {
 // reflects the tokens actively bonded and not bonded
 func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		bonded := sdk.ZeroInt()
-		notBonded := sdk.ZeroInt()
+		bonded := sdk.Coins{}
+		notBonded := sdk.Coins{}
 		bondedPool := k.GetBondedPool(ctx)
 		notBondedPool := k.GetNotBondedPool(ctx)
-		bondDenom := k.BondDenom(ctx)
 
 		k.IterateValidators(ctx, func(_ int64, validator exported.ValidatorI) bool {
 			switch validator.GetStatus() {
@@ -74,9 +73,9 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		poolBonded := bondedPool.GetCoins().AmountOf(bondDenom)
-		poolNotBonded := notBondedPool.GetCoins().AmountOf(bondDenom)
-		broken := !poolBonded.Equal(bonded) || !poolNotBonded.Equal(notBonded)
+		poolBonded := bondedPool.GetCoins()
+		poolNotBonded := notBondedPool.GetCoins()
+		broken := !poolBonded.IsEqual(bonded) || !poolNotBonded.IsEqual(notBonded)
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		// Not-bonded tokens should equal unbonding delegations	plus tokens on unbonded validators
@@ -116,7 +115,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 					validator.GetConsensusPower(), powerKey, iterator.Key())
 			}
 
-			if validator.Tokens.IsNegative() {
+			if validator.Tokens.IsAnyNegative() {
 				broken = true
 				msg += fmt.Sprintf("\tnegative tokens for validator: %v\n", validator)
 			}
@@ -134,7 +133,7 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
-			if delegation.Shares.IsNegative() {
+			if delegation.Shares.IsAnyNegative() {
 				count++
 				msg += fmt.Sprintf("\tdelegation with negative shares: %+v\n", delegation)
 			}
@@ -163,13 +162,13 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 
 			valTotalDelShares := validator.GetDelegatorShares()
 
-			totalDelShares := sdk.ZeroDec()
+			totalDelShares := sdk.DecCoins{}
 			delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
 			for _, delegation := range delegations {
 				totalDelShares = totalDelShares.Add(delegation.Shares)
 			}
 
-			if !valTotalDelShares.Equal(totalDelShares) {
+			if !valTotalDelShares.IsEqual(totalDelShares) {
 				broken = true
 				msg += fmt.Sprintf("broken delegator shares invariance:\n"+
 					"\tvalidator.DelegatorShares: %v\n"+

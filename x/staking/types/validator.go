@@ -455,9 +455,9 @@ func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
+// NOTE: because token fractions are left in the validator,
 //       the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
+func (v Validator) RemoveDelShares(delShares sdk.Coins) (Validator, sdk.Coin) {
 
 	remainingShares := v.DelegatorShares.Sub(delShares)
 	var issuedTokens sdk.Int

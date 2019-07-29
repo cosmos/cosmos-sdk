@@ -115,8 +115,8 @@ type UnbondingDelegation struct {
 type UnbondingDelegationEntry struct {
 	CreationHeight int64     `json:"creation_height" yaml:"creation_height"` // height which the unbonding took place
 	CompletionTime time.Time `json:"completion_time" yaml:"completion_time"` // time at which the unbonding delegation will complete
-	InitialBalance sdk.Int   `json:"initial_balance" yaml:"initial_balance"` // atoms initially scheduled to receive at completion
-	Balance        sdk.Int   `json:"balance" yaml:"balance"`                 // atoms to receive at completion
+	InitialBalance sdk.Coins `json:"initial_balance" yaml:"initial_balance"` // tokens initially scheduled to receive at completion
+	Balance        sdk.Coins `json:"balance" yaml:"balance"`                 // tokens to receive at completion
 }
 
 // IsMature - is the current entry mature
@@ -127,7 +127,7 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 // NewUnbondingDelegation - create a new unbonding delegation object
 func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 	validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time,
-	balance sdk.Int) UnbondingDelegation {
+	balance sdk.Coins) UnbondingDelegation {
 
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
 	return UnbondingDelegation{
@@ -139,7 +139,7 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 
 // NewUnbondingDelegation - create a new unbonding delegation object
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
-	balance sdk.Int) UnbondingDelegationEntry {
+	balance sdk.Coins) UnbondingDelegationEntry {
 
 	return UnbondingDelegationEntry{
 		CreationHeight: creationHeight,
@@ -151,7 +151,7 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 
 // AddEntry - append entry to the unbonding delegation
 func (d *UnbondingDelegation) AddEntry(creationHeight int64,
-	minTime time.Time, balance sdk.Int) {
+	minTime time.Time, balance sdk.Coins) {
 
 	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
 	d.Entries = append(d.Entries, entry)
@@ -230,15 +230,15 @@ type Redelegation struct {
 type RedelegationEntry struct {
 	CreationHeight int64     `json:"creation_height" yaml:"creation_height"` // height at which the redelegation took place
 	CompletionTime time.Time `json:"completion_time" yaml:"completion_time"` // time at which the redelegation will complete
-	InitialBalance sdk.Int   `json:"initial_balance" yaml:"initial_balance"` // initial balance when redelegation started
-	SharesDst      sdk.Dec   `json:"shares_dst" yaml:"shares_dst"`           // amount of destination-validator shares created by redelegation
+	InitialBalance sdk.Coins `json:"initial_balance" yaml:"initial_balance"` // initial balance when redelegation started
+	SharesDst      sdk.Coins `json:"shares_dst" yaml:"shares_dst"`           // amount of destination-validator shares created by redelegation
 }
 
 // NewRedelegation - create a new redelegation object
 func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
-	minTime time.Time, balance sdk.Int,
-	sharesDst sdk.Dec) Redelegation {
+	minTime time.Time, balance sdk.Coins,
+	sharesDst sdk.Coins) Redelegation {
 
 	entry := NewRedelegationEntry(creationHeight,
 		minTime, balance, sharesDst)
@@ -253,8 +253,8 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 
 // NewRedelegation - create a new redelegation object
 func NewRedelegationEntry(creationHeight int64,
-	completionTime time.Time, balance sdk.Int,
-	sharesDst sdk.Dec) RedelegationEntry {
+	completionTime time.Time, balance sdk.Coins,
+	sharesDst sdk.Coins) RedelegationEntry {
 
 	return RedelegationEntry{
 		CreationHeight: creationHeight,
@@ -271,8 +271,8 @@ func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 
 // AddEntry - append entry to the unbonding delegation
 func (d *Redelegation) AddEntry(creationHeight int64,
-	minTime time.Time, balance sdk.Int,
-	sharesDst sdk.Dec) {
+	minTime time.Time, balance sdk.Coins,
+	sharesDst sdk.Coins) {
 
 	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst)
 	d.Entries = append(d.Entries, entry)
@@ -402,7 +402,7 @@ type RedelegationResponse struct {
 // responses.
 type RedelegationEntryResponse struct {
 	RedelegationEntry
-	Balance sdk.Int `json:"balance"`
+	Balance sdk.Coins `json:"balance"`
 }
 
 func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResponse) RedelegationResponse {
@@ -416,7 +416,7 @@ func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entrie
 	}
 }
 
-func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResponse {
+func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.Coins, ib, b sdk.Coins) RedelegationEntryResponse {
 	return RedelegationEntryResponse{NewRedelegationEntry(ch, ct, ib, s), b}
 }
 

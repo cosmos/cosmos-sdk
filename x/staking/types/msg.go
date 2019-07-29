@@ -24,27 +24,27 @@ var (
 type MsgCreateValidator struct {
 	Description       Description     `json:"description" yaml:"description"`
 	Commission        CommissionRates `json:"commission" yaml:"commission"`
-	MinSelfDelegation sdk.Int         `json:"min_self_delegation" yaml:"min_self_delegation"`
+	MinSelfDelegation sdk.Coins       `json:"min_self_delegation" yaml:"min_self_delegation"`
 	DelegatorAddress  sdk.AccAddress  `json:"delegator_address" yaml:"delegator_address"`
 	ValidatorAddress  sdk.ValAddress  `json:"validator_address" yaml:"validator_address"`
 	PubKey            crypto.PubKey   `json:"pubkey" yaml:"pubkey"`
-	Value             sdk.Coin        `json:"value" yaml:"value"`
+	Value             sdk.Coins       `json:"value" yaml:"value"`
 }
 
 type msgCreateValidatorJSON struct {
 	Description       Description     `json:"description" yaml:"description"`
 	Commission        CommissionRates `json:"commission" yaml:"commission"`
-	MinSelfDelegation sdk.Int         `json:"min_self_delegation" yaml:"min_self_delegation"`
+	MinSelfDelegation sdk.Coins       `json:"min_self_delegation" yaml:"min_self_delegation"`
 	DelegatorAddress  sdk.AccAddress  `json:"delegator_address" yaml:"delegator_address"`
 	ValidatorAddress  sdk.ValAddress  `json:"validator_address" yaml:"validator_address"`
 	PubKey            string          `json:"pubkey" yaml:"pubkey"`
-	Value             sdk.Coin        `json:"value" yaml:"value"`
+	Value             sdk.Coins       `json:"value" yaml:"value"`
 }
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(
-	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coin,
-	description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	valAddr sdk.ValAddress, pubKey crypto.PubKey, selfDelegation sdk.Coins,
+	description Description, commission CommissionRates, minSelfDelegation sdk.Coins,
 ) MsgCreateValidator {
 
 	return MsgCreateValidator{
@@ -130,7 +130,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}
-	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
+	if !msg.Value.IsAllPositive() {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
@@ -142,10 +142,10 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if err := msg.Commission.Validate(); err != nil {
 		return err
 	}
-	if !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if !msg.MinSelfDelegation.IsAllPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
+	if msg.Value.IsAllLT(msg.MinSelfDelegation) {
 		return ErrSelfDelegationBelowMinimum(DefaultCodespace)
 	}
 
@@ -162,11 +162,11 @@ type MsgEditValidator struct {
 	// distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate    *sdk.Dec `json:"commission_rate" yaml:"commission_rate"`
-	MinSelfDelegation *sdk.Int `json:"min_self_delegation" yaml:"min_self_delegation"`
+	CommissionRate    *sdk.Dec   `json:"commission_rate" yaml:"commission_rate"`
+	MinSelfDelegation *sdk.Coins `json:"min_self_delegation" yaml:"min_self_delegation"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Coins) MsgEditValidator {
 	return MsgEditValidator{
 		Description:       description,
 		CommissionRate:    newRate,
@@ -198,7 +198,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 
-	if msg.MinSelfDelegation != nil && !(*msg.MinSelfDelegation).GT(sdk.ZeroInt()) {
+	if msg.MinSelfDelegation != nil && !(*msg.MinSelfDelegation).IsAllPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 

@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -133,7 +132,7 @@ func TestLoadVersion(t *testing.T) {
 }
 
 func useDefaultLoader(app *BaseApp) {
-		app.SetStoreLoader(DefaultStoreLoader)
+	app.SetStoreLoader(DefaultStoreLoader)
 }
 
 func useUpgradeLoader(upgrades *store.StoreUpgrades) func(*BaseApp) {
@@ -162,7 +161,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	require.NotNil(t, kv)
 	kv.Set(k, v)
 	commitID := rs.Commit()
-	require.Equal(t, int64(1), commitID.Version)	
+	require.Equal(t, int64(1), commitID.Version)
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
@@ -180,7 +179,6 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 	require.Equal(t, v, kv.Get(k))
 }
 
-
 // Test that we can make commits and then reload old versions.
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
@@ -197,9 +195,8 @@ func TestSetLoader(t *testing.T) {
 	_, err = os.Stat(configName)
 	require.NoError(t, err)
 
-
-	cases := map[string]struct{
-		setLoader func(*BaseApp)
+	cases := map[string]struct {
+		setLoader    func(*BaseApp)
 		origStoreKey string
 		loadStoreKey string
 	}{
@@ -208,7 +205,7 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "foo",
 		},
 		"default loader": {
-			setLoader: useDefaultLoader,
+			setLoader:    useDefaultLoader,
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
 		},
@@ -223,12 +220,12 @@ func TestSetLoader(t *testing.T) {
 			loadStoreKey: "bar",
 		},
 		"file loader with missing file": {
-			setLoader: useFileUpgradeLoader(configName + "randomchars"),
+			setLoader:    useFileUpgradeLoader(configName + "randomchars"),
 			origStoreKey: "bnk",
 			loadStoreKey: "bnk",
 		},
 		"file loader with existing file": {
-			setLoader: useFileUpgradeLoader(configName),
+			setLoader:    useFileUpgradeLoader(configName),
 			origStoreKey: "bnk",
 			loadStoreKey: "banker",
 		},
@@ -242,24 +239,24 @@ func TestSetLoader(t *testing.T) {
 			// prepare a db with some data
 			db := dbm.NewMemDB()
 			initStore(t, db, tc.origStoreKey, k, v)
-		
+
 			// load the app with the existing db
 			opts := []func(*BaseApp){SetPruning(store.PruneSyncable)}
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
-			}	
+			}
 			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			capKey := sdk.NewKVStoreKey(MainStoreKey)
 			app.MountStores(capKey)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
-			err := app.LoadLatestVersion(capKey) 
+			err := app.LoadLatestVersion(capKey)
 			require.Nil(t, err)
 
 			// "execute" one block
 			app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: 2}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
-		
+
 			// check db is properly updated
 			checkStore(t, db, 2, tc.loadStoreKey, k, v)
 			checkStore(t, db, 2, tc.loadStoreKey, []byte("foo"), nil)
@@ -270,7 +267,6 @@ func TestSetLoader(t *testing.T) {
 	_, err = os.Stat(configName)
 	require.True(t, os.IsNotExist(err))
 }
-
 
 func TestAppVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()

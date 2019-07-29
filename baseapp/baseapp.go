@@ -45,7 +45,7 @@ const (
 )
 
 // StoreLoader defines a customizable function to control how we load the CommitMultiStore
-// from disk. This is useful for state migration, when loading a datastore writen with
+// from disk. This is useful for state migration, when loading a datastore written with
 // an older version of the software. In particular, if a module changed the substore key name
 // (or removed a substore) between two versions of the software.
 type StoreLoader func(ms sdk.CommitMultiStore) error

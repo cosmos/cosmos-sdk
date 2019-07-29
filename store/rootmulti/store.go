@@ -475,15 +475,6 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	}
 }
 
-func (rs *Store) nameToKey(name string) types.StoreKey {
-	for key := range rs.storesParams {
-		if key.Name() == name {
-			return key
-		}
-	}
-	panic("Unknown name " + name)
-}
-
 //----------------------------------------
 // storeParams
 

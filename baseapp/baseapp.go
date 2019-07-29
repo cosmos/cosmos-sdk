@@ -3,7 +3,6 @@ package baseapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -142,17 +141,6 @@ func (app *BaseApp) AppVersion() string {
 // Logger returns the logger of the BaseApp.
 func (app *BaseApp) Logger() log.Logger {
 	return app.logger
-}
-
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
-// SetStoreLoader allows us to customize the rootMultiStore initialization.
-func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
-	app.storeLoader = loader
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp

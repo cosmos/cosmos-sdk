@@ -11,7 +11,13 @@ For fuller context around this issue: see [\#4642](https://github.com/cosmos/cos
 
 ## Decision
 
-Create Subscription module in SDK so that users can subscribe to various subscription services. Subscription collectors will send messages to collect subscription payments from users who have due subscriptions. Subscriptions are paid out directly from a user account. If the user does not have enough funds to pay for the subscription is inactivated. Users can define maximum limits on how many periods the subscription is valid for; if this limit elapses before a subscription renewal, the subscription is invalidated.
+Create Subscription module in SDK so that users can subscribe to various subscription services. Subscription collectors will send messages to collect subscription payments from users who have due subscriptions. Subscriptions are paid out directly from a user account. 
+
+If the user does not have enough funds to pay for the subscription is inactivated. The user can always refund the account and resubscribe.
+
+Users can define maximum limits on how many periods the subscription is valid for; if this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without user noticing.
+
+Users can also manually unsubscribe by submitting an `UnsubscribeMsg`
 
 ## Status
 
@@ -25,7 +31,7 @@ Introduce the following messages to `x/subscription` module:
 // CreateSubscriptionMsg allows Service Provider to create new subscription service.
 type CreateSubscriptionMsg struct {
     Name      string          // unique, human-readable name for subscription service
-    Amounts   []sdk.Coins       // amounts to be collected for each subscription period
+    Amounts   []sdk.Coins     // amounts to be collected for each subscription period
     Periods   []time.Duration // allowed duration of subscription periods
     Collector sdk.AccAddress  // address that will collect subscription payments
 }
@@ -172,7 +178,12 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
         return InvalidCollectorErr
     }
     limit := msg.Limit
+    // Only process a limited number of subscriptions defined in CollectMsg
+    // This is to prevent msg handler from panicing with OutOfGasException if DueQueue gets too large
     for limit > 0 {
+        // Each subscription period maintains its own queue
+        // These queues are processed in a round robin fashion until all due subscriptions are collected
+        // or msg.Limit has been reached
         for _, period := Terms.Period {
             if limit == 0 {
                 // limit reached.

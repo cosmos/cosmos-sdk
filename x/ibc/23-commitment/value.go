@@ -6,59 +6,48 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Base is a proof store accessor, consists of Codec and prefix.
-// The base uses the commitment store which is expected to be filled with the proofs.
-type Base struct {
+type Mapping struct {
 	cdc    *codec.Codec
 	prefix []byte
 }
 
-func NewBase(cdc *codec.Codec) Base {
-	return Base{
-		cdc: cdc,
-	}
-}
-
-func (base Base) Store(ctx sdk.Context) Store {
-	return NewPrefix(GetStore(ctx), base.prefix)
-}
-
-func (base Base) Prefix(prefix []byte) Base {
-	return Base{
-		cdc:    base.cdc,
-		prefix: join(base.prefix, prefix),
-	}
-}
-
-type Mapping struct {
-	base Base
-}
-
-func NewMapping(base Base, prefix []byte) Mapping {
+func NewMapping(cdc *codec.Codec, prefix []byte) Mapping {
 	return Mapping{
-		base: base.Prefix(prefix),
+		cdc:    cdc,
+		prefix: prefix,
+	}
+}
+
+func (m Mapping) store(ctx sdk.Context) Store {
+	return NewPrefix(GetStore(ctx), m.prefix)
+}
+
+func (m Mapping) Prefix(prefix []byte) Mapping {
+	return Mapping{
+		cdc:    m.cdc,
+		prefix: join(m.prefix, prefix),
 	}
 }
 
 // Value is for proving commitment proof on a speicifc key-value point in the other state
 // using the already initialized commitment store.
 type Value struct {
-	base Base
-	key  []byte
+	m   Mapping
+	key []byte
 }
 
-func NewValue(base Base, key []byte) Value {
-	return Value{base, key}
+func (m Mapping) Value(key []byte) Value {
+	return Value{m, key}
 }
 
 // Is() proves the proof with the Value's key and the provided value.
 func (v Value) Is(ctx sdk.Context, value interface{}) bool {
-	return v.base.Store(ctx).Prove(v.key, v.base.cdc.MustMarshalBinaryBare(value))
+	return v.m.store(ctx).Prove(v.key, v.m.cdc.MustMarshalBinaryBare(value))
 }
 
 // IsRaw() proves the proof with the Value's key and the provided raw value bytes.
 func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
-	return v.base.Store(ctx).Prove(v.key, value)
+	return v.m.store(ctx).Prove(v.key, value)
 }
 
 // Enum is a byte typed wrapper for Value.
@@ -67,8 +56,8 @@ type Enum struct {
 	Value
 }
 
-// NewEnum() wraps the argument Value as Enum
-func NewEnum(v Value) Enum {
+// Enum() wraps the argument Value as Enum
+func (v Value) Enum() Enum {
 	return Enum{v}
 }
 
@@ -80,10 +69,12 @@ func (v Enum) Is(ctx sdk.Context, value byte) bool {
 // Integer is a uint64 types wrapper for Value.
 type Integer struct {
 	Value
+
+	enc state.IntEncoding
 }
 
-func NewInteger(v Value) Integer {
-	return Integer{v}
+func (v Value) Integer(enc state.IntEncoding) Integer {
+	return Integer{v, enc}
 }
 
 func (v Integer) Is(ctx sdk.Context, value uint64) bool {

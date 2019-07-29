@@ -33,19 +33,15 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 		count := 0
 
 		k.IterateCollections(ctx, func(collection types.Collection) bool {
-			fmt.Println("collection of ", collection.Denom)
 			collectionsSupply[collection.Denom] = collection.Supply()
 			return false
 		})
 
-		k.IterateOwners(ctx, func(owner types.Owner) bool {
-			fmt.Println("owner is", owner.Address)
+		for _, owner := range k.GetOwners(ctx) {
 			for _, idCollection := range owner.IDCollections {
-				fmt.Println("idCollection is", idCollection.Denom)
 				ownersCollectionsSupply[idCollection.Denom] += idCollection.Supply()
 			}
-			return false
-		})
+		}
 
 		for denom, supply := range collectionsSupply {
 			if supply != ownersCollectionsSupply[denom] {

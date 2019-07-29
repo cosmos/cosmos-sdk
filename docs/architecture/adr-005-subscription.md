@@ -5,7 +5,7 @@
 
 ## Context
 
-Cosmos-SDK should allow developers to choose from a variety of payment models for their application. Subscriptions areo ne of the most popular payment models for Internet applications, so it is natural to provide this payment model as a module for sdk users.
+Cosmos-SDK should allow developers to choose from a variety of payment models for their application. Subscriptions are one of the most popular payment models for Internet applications, so it is natural to provide this payment model as a module for sdk users.
 
 For fuller context around this issue: see [\#4642](https://github.com/cosmos/cosmos-sdk/issues/4642)
 
@@ -30,7 +30,7 @@ Introduce the following messages to `x/subscription` module:
 ```go
 // CreateSubscriptionMsg allows Service Provider to create new subscription service.
 type CreateSubscriptionMsg struct {
-    Name      string          // unique, human-readable name for subscription service
+    Name      string          // human-readable name for subscription service
     Amounts   []sdk.Coins     // amounts to be collected for each subscription period
     Periods   []time.Duration // allowed duration of subscription periods
     Collector sdk.AccAddress  // address that will collect subscription payments
@@ -42,7 +42,7 @@ type CreateSubscriptionMsg struct {
 // If subscription to the service from user already exists, this msg is treated as renewal.
 // If msg.Limit != -1, then subscription.Limit += msg.Limit. Else, subscription.Limit = -1 (unlimited)
 type SubscribeMsg struct {
-    Name       string         // name of service to subscribe to
+    ID         []byte         // id of service to subscribe to
     Subscriber sdk.AccAddress // address of subscriber
     Period     time.Duration  // Period that subscriber chooses. Must be one of predefined periods in corresponding CreateSubscriptionMsg
     Limit      int64          // Maximum number of periods that subscription remains active. Limit = -1 implies no limit
@@ -52,7 +52,7 @@ type SubscribeMsg struct {
 ```go
 // UnsubscribeMsg allows subscriber to inactivate an active subscription
 type UnsubscribeMsg struct {
-    Name       string         // name of service to unsubscribe to
+    ID         []byte         // id of service to unsubscribe to
     Subscriber sdk.AccAddress // address of subscriber
 }
 ```
@@ -60,7 +60,7 @@ type UnsubscribeMsg struct {
 ```go
 // CollectMsg allows a Collector for a service to collect payments on due subscriptions that are processed off a FIFO queue.
 type CollectMsg struct {
-    Name      string         // name of subscription service to collect payments from
+    ID        []byte         // id of subscription service to collect payments from
     Collector sdk.AccAddress // address that will collect payments
     Limit     int64          // maximum number of items to process in FIFO duequeue. If Limit = -1, try to process all due subscriptions
 }
@@ -70,7 +70,7 @@ Create a new store with the following key-values:
 
 `Address => []SubscriptionID // List of active/inactive subscriptions owned by the users`
 
-`Terms:{Name} => SubscriptionTerms`
+`Terms:{ID} => SubscriptionTerms`
 
 `DueQueue:{Collector}{Name}{Period} => LinkedList<SubscriptionID> // FIFO queue of subscriptions for a given service and period. Note if a service allows for multiple periods, each period will maintain a separate queue. CONTRACT: All due subscriptions exist before all undue subscriptions. All subscriptions in DueQueue are active`
 

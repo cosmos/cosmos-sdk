@@ -19,7 +19,7 @@ func SimulateMsgTransferNFT(k Keeper) simulation.Operation {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
-			return simulation.NoOpMsg(), nil, nil
+			return simulation.NoOpMsg(ModuleName), nil, nil
 		}
 
 		msg := NewMsgTransferNFT(
@@ -30,7 +30,7 @@ func SimulateMsgTransferNFT(k Keeper) simulation.Operation {
 		)
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -52,7 +52,7 @@ func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
-			return simulation.NoOpMsg(), nil, nil
+			return simulation.NoOpMsg(ModuleName), nil, nil
 		}
 
 		msg := NewMsgEditNFTMetadata(
@@ -66,7 +66,7 @@ func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
 		)
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -98,7 +98,7 @@ func SimulateMsgMintNFT(k Keeper) simulation.Operation {
 		)
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -120,13 +120,13 @@ func SimulateMsgBurnNFT(k Keeper) simulation.Operation {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
-			return simulation.NoOpMsg(), nil, nil
+			return simulation.NoOpMsg(ModuleName), nil, nil
 		}
 
 		msg := NewMsgBurnNFT(ownerAddr, nftID, denom)
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()

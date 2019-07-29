@@ -232,7 +232,7 @@ func StoreLoaderWithUpgrade(upgrades *storetypes.StoreUpgrades) StoreLoader {
 // and not re-applied on next restart
 //
 // This is useful for in place migrations when a store key is renamed between
-// two versions of the software. (Note: this code will move to x/upgrades
+// two versions of the software. (TODO: this code will move to x/upgrades
 // when PR #4233 is merged, here mainly to help test the design)
 func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
@@ -263,7 +263,7 @@ func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 		// if we have a successful load, we delete the file
 		err = os.Remove(upgradeInfoPath)
 		if err != nil {
-			return fmt.Errorf("Deleting upgrade file %s: %v", upgradeInfoPath, err)
+			return fmt.Errorf("deleting upgrade file %s: %v", upgradeInfoPath, err)
 		}
 		return nil
 	}

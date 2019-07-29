@@ -41,10 +41,10 @@ jobs:
       - checkout
       - run:
           name: "Build docs"
-          command: make build_docs
+          command: make build-docs
       - run:
           name: "Upload docs to S3"
-          command: make sync_docs
+          command: make sync-docs
 
   setup_dependencies:
     executor: golang

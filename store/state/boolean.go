@@ -1,13 +1,14 @@
 package state
 
 // Boolean is a bool typed wrapper for Value.
-// Except for the type checking, it does not alter the behaviour.
+//
+// false <-> []byte{0x00}
+// true <-> []byte{0x01}
 type Boolean struct {
 	Value
 }
 
-// NewBoolean() wraps the argument Value as Boolean
-func NewBoolean(v Value) Boolean {
+func (v Value) Boolean() Boolean {
 	return Boolean{v}
 }
 

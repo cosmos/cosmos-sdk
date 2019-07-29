@@ -1,21 +1,30 @@
 package state
 
+import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 // Mapping is key []byte -> value []byte mapping using a base(possibly prefixed).
 // All store accessing operations are redirected to the Value corresponding to the key argument
 type Mapping struct {
-	base Base
+	storeKey sdk.StoreKey
+	cdc      *codec.Codec
+	prefix   []byte
 }
 
 // NewMapping() constructs a Mapping with a provided prefix
-func NewMapping(base Base, prefix []byte) Mapping {
+func NewMapping(storeKey sdk.StoreKey, cdc *codec.Codec, prefix []byte) Mapping {
 	return Mapping{
-		base: base.Prefix(prefix),
+		storeKey: storeKey,
+		cdc:      cdc,
+		prefix:   prefix,
 	}
 }
 
 // Value() returns the Value corresponding to the provided key
 func (m Mapping) Value(key []byte) Value {
-	return NewValue(m.base, key)
+	return NewValue(m, key)
 }
 
 // Get() unmarshales and sets the stored value to the pointer if it exists.
@@ -50,7 +59,36 @@ func (m Mapping) Delete(ctx Context, key []byte) {
 	m.Value(key).Delete(ctx)
 }
 
+func (m Mapping) Cdc() *codec.Codec {
+	return m.cdc
+}
+
+func (m Mapping) StoreName() string {
+	return m.storeKey.Name()
+}
+
+func (m Mapping) PrefixBytes() (res []byte) {
+	res = make([]byte, len(m.prefix))
+	copy(res, m.prefix)
+	return
+}
+
+func (m Mapping) KeyBytes(key []byte) (res []byte) {
+	return join(m.prefix, key)
+}
+
+func join(a, b []byte) (res []byte) {
+	res = make([]byte, len(a)+len(b))
+	copy(res, a)
+	copy(res[len(a):], b)
+	return
+}
+
 // Prefix() returns a new mapping with the updated prefix.
 func (m Mapping) Prefix(prefix []byte) Mapping {
-	return NewMapping(m.base, prefix)
+	return Mapping{
+		storeKey: m.storeKey,
+		cdc:      m.cdc,
+		prefix:   join(m.prefix, prefix),
+	}
 }

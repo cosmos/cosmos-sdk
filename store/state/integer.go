@@ -8,13 +8,8 @@ type Integer struct {
 	enc IntEncoding
 }
 
-// NewInteger() wraps the argument value as Integer
-func NewInteger(v Value, enc IntEncoding) Integer {
-	return Integer{
-		Value: v,
-
-		enc: enc,
-	}
+func (v Value) Integer(enc IntEncoding) Integer {
+	return Integer{v, enc}
 }
 
 // Get() unmarshales and returns the stored uint64 value if it exists.

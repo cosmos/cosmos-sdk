@@ -8,25 +8,25 @@ import (
 // Value consists of Base and key []byte.
 // An actor holding a Value has a full access right on that state point.
 type Value struct {
-	base Base
-	key  []byte
+	m   Mapping
+	key []byte
 }
 
 // NewValue() constructs a Value
-func NewValue(base Base, key []byte) Value {
+func NewValue(m Mapping, key []byte) Value {
 	return Value{
-		base: base,
-		key:  key,
+		m:   m,
+		key: key,
 	}
 }
 
 func (v Value) store(ctx Context) KVStore {
-	return v.base.store(ctx)
+	return ctx.KVStore(v.m.storeKey)
 }
 
 // Cdc() returns the codec that the value is using to marshal/unmarshal
 func (v Value) Cdc() *codec.Codec {
-	return v.base.Cdc()
+	return v.m.Cdc()
 }
 
 // Get() unmarshales and sets the stored value to the pointer if it exists.
@@ -34,7 +34,7 @@ func (v Value) Cdc() *codec.Codec {
 func (v Value) Get(ctx Context, ptr interface{}) {
 	bz := v.store(ctx).Get(v.key)
 	if bz != nil {
-		v.base.cdc.MustUnmarshalBinaryBare(bz, ptr)
+		v.m.cdc.MustUnmarshalBinaryBare(bz, ptr)
 	}
 }
 
@@ -45,7 +45,7 @@ func (v Value) GetSafe(ctx Context, ptr interface{}) error {
 	if bz == nil {
 		return ErrEmptyValue()
 	}
-	err := v.base.cdc.UnmarshalBinaryBare(bz, ptr)
+	err := v.m.cdc.UnmarshalBinaryBare(bz, ptr)
 	if err != nil {
 		return ErrUnmarshal(err)
 	}
@@ -59,7 +59,7 @@ func (v Value) GetRaw(ctx Context) []byte {
 
 // Set() marshales and sets the argument to the state.
 func (v Value) Set(ctx Context, o interface{}) {
-	v.store(ctx).Set(v.key, v.base.cdc.MustMarshalBinaryBare(o))
+	v.store(ctx).Set(v.key, v.m.cdc.MustMarshalBinaryBare(o))
 }
 
 // SetRaw() sets the raw bytes to the state.
@@ -79,7 +79,7 @@ func (v Value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.key)
 }
 
-// Key() returns the prefixed key that the Value is providing to the KVStore
-func (v Value) Key() []byte {
-	return v.base.key(v.key)
+// KeyBytes() returns the prefixed key that the Value is providing to the KVStore
+func (v Value) KeyBytes() []byte {
+	return v.m.KeyBytes(v.key)
 }

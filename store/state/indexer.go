@@ -32,9 +32,9 @@ type Indexer struct {
 }
 
 // NewIndexer() constructs the Indexer with a predetermined prefix and IntEncoding
-func NewIndexer(base Base, prefix []byte, enc IntEncoding) Indexer {
+func NewIndexer(m Mapping, enc IntEncoding) Indexer {
 	return Indexer{
-		m:   NewMapping(base, prefix),
+		m:   m,
 		enc: enc,
 	}
 }

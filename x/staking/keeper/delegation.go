@@ -456,20 +456,20 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 
 // Perform a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
-func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdk.BondStatus,
-	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
+func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Coin, tokenSrc sdk.BondStatus,
+	validator types.Validator, subtractAccount bool) (newShares sdk.Coins, err sdk.Error) {
 
 	// In some situations, the exchange rate becomes invalid, e.g. if
 	// Validator loses all tokens due to slashing. In this case,
 	// make all future delegations invalid.
 	if validator.InvalidExRate() {
-		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())
+		return sdk.Coins{}, types.ErrDelegatorShareExRateInvalid(k.Codespace())
 	}
 
 	// Get or create the delegation object
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddress)
 	if !found {
-		delegation = types.NewDelegation(delAddr, validator.OperatorAddress, sdk.ZeroDec())
+		delegation = types.NewDelegation(delAddr, validator.OperatorAddress, sdk.Coins{})
 	}
 
 	// call the appropriate hook if present
@@ -497,10 +497,10 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 			panic("invalid validator status")
 		}
 
-		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
+		coins := sdk.NewCoins(bondAmt)
 		err := k.supplyKeeper.DelegateCoinsFromAccountToModule(ctx, delegation.DelegatorAddress, sendName, coins)
 		if err != nil {
-			return sdk.Dec{}, err
+			return sdk.Coins{}, err
 		}
 	} else {
 
@@ -535,7 +535,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.In
 
 // unbond a particular delegation and perform associated store operations
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	shares sdk.Dec) (amount sdk.Int, err sdk.Error) {
+	shares sdk.Coins) (amount sdk.Int, err sdk.Error) {
 
 	// check if a delegation object exists in the store
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
@@ -547,7 +547,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// ensure that we have enough shares to remove
-	if delegation.Shares.LT(shares) {
+	if delegation.Shares.IsAllLT(shares) {
 		return amount, types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
 	}
 

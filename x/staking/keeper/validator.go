@@ -122,7 +122,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd sdk.Int) (valOut types.Validator, addedShares sdk.Dec) {
+	tokensToAdd sdk.Coin) (valOut types.Validator, addedShares sdk.Coins) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
@@ -184,7 +184,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	if !validator.IsUnbonded() {
 		panic("cannot call RemoveValidator on bonded or unbonding validators")
 	}
-	if validator.Tokens.IsPositive() {
+	if validator.Tokens.IsAllPositive() {
 		panic("attempting to remove a validator which still contains tokens")
 	}
 	if validator.Tokens.GT(sdk.ZeroInt()) {

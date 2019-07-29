@@ -40,7 +40,7 @@ type Validator struct {
 	ConsPubKey              crypto.PubKey  `json:"consensus_pubkey" yaml:"consensus_pubkey"`       // the consensus public key of the validator; bech encoded in JSON
 	Jailed                  bool           `json:"jailed" yaml:"jailed"`                           // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status" yaml:"status"`                           // validator status (bonded/unbonding/unbonded)
-	Tokens                  sdk.Int        `json:"tokens" yaml:"tokens"`                           // delegated tokens (incl. self-delegation)
+	Tokens                  sdk.Coins      `json:"tokens" yaml:"tokens"`                           // delegated tokens (incl. self-delegation)
 	DelegatorShares         sdk.Dec        `json:"delegator_shares" yaml:"delegator_shares"`       // total shares issued to a validator's delegators
 	Description             Description    `json:"description" yaml:"description"`                 // description terms for the validator
 	UnbondingHeight         int64          `json:"unbonding_height" yaml:"unbonding_height"`       // if unbonding, height at which this validator has begun unbonding
@@ -355,7 +355,7 @@ func (v Validator) InvalidExRate() bool {
 }
 
 // calculate the token worth of provided shares
-func (v Validator) TokensFromShares(shares sdk.Dec) sdk.Dec {
+func (v Validator) TokensFromShares(shares sdk.Coins) sdk.Dec {
 	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
 }
 
@@ -372,9 +372,9 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
+func (v Validator) SharesFromTokens(amt sdk.Coin) (sdk.Coins, sdk.Error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+		return sdk.Coins{}, ErrInsufficientShares(DefaultCodespace)
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -420,7 +420,7 @@ func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
 }
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
+func (v Validator) AddTokensFromDel(amount sdk.Coin) (Validator, sdk.Coins) {
 
 	// calculate the shares to issue
 	var issuedShares sdk.Dec
@@ -488,7 +488,7 @@ func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }
 func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetTokens() sdk.Int            { return v.Tokens }
+func (v Validator) GetTokens() sdk.Coins          { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
 func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
 func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }

@@ -38,12 +38,12 @@ var _ exported.DelegationI = Delegation{}
 type Delegation struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
-	Shares           sdk.Coins      `json:"shares" yaml:"shares"`
+	Shares           sdk.DecCoins   `json:"shares" yaml:"shares"`
 }
 
 // NewDelegation creates a new delegation object
 func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	shares sdk.Coins) Delegation {
+	shares sdk.DecCoins) Delegation {
 
 	return Delegation{
 		DelegatorAddress: delegatorAddr,
@@ -82,7 +82,7 @@ func (d Delegation) Equal(d2 Delegation) bool {
 // nolint - for Delegation
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddress }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddress }
-func (d Delegation) GetShares() sdk.Coins             { return d.Shares }
+func (d Delegation) GetShares() sdk.DecCoins          { return d.Shares }
 
 // String returns a human readable string representation of a Delegation.
 func (d Delegation) String() string {
@@ -355,7 +355,7 @@ type DelegationResponse struct {
 	Balance sdk.Int `json:"balance" yaml:"balance"`
 }
 
-func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s []sdk.Coin, b sdk.Int) DelegationResponse {
+func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.DecCoins, b sdk.Int) DelegationResponse {
 	return DelegationResponse{NewDelegation(d, v, s), b}
 }
 

@@ -113,6 +113,16 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
+// Multiplies amounts of two coins with same denom. If the coins differ in denom then
+// it panics.
+func (coin DecCoin) Mul(coinB DecCoin) DecCoin {
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+	}
+
+	return DecCoin{coin.Denom, coin.Amount.Mul(coinB.Amount)}
+}
+
 // TruncateDecimal returns a Coin with a truncated decimal and a DecCoin for the
 // change. Note, the change may be zero.
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
@@ -273,6 +283,272 @@ func (coins DecCoins) Sub(coinsB DecCoins) DecCoins {
 	return diff
 }
 
+// Mul multiplies two sets of coins.
+//
+// e.g.
+// {2A} * {2A, 2B} = {4A, 2B}
+// {2A} * {0B} = {2A}
+//
+// NOTE: Mul operates under the invariant that coins are sorted by
+// denominations.
+//
+// CONTRACT: Mul will never return Coins where one Coin has a non-positive
+// amount. In other words, IsValid will always return true.
+func (coins DecCoins) Mul(coinsB DecCoins) DecCoins {
+	mul := ([]DecCoin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return mul
+			}
+
+			// return set B (excluding zero coins) if set A is empty
+			return append(mul, removeZeroDecCoins(coinsB[indexB:])...)
+		} else if indexB == lenB {
+			// return set A (excluding zero coins) if set B is empty
+			return append(mul, removeZeroDecCoins(coins[indexA:])...)
+		}
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if !coinA.IsZero() {
+				mul = append(mul, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			res := coinA.Mul(coinB)
+			if !res.IsZero() {
+				mul = append(mul, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if !coinB.IsZero() {
+				mul = append(mul, coinB)
+			}
+
+			indexB++
+		}
+	}
+}
+
+// Quo divides two sets of coins.
+//
+// e.g.
+// {2A} / {2A, 2B} = {A, 2B}
+// {2A} / {0B} = {2A}
+//
+// NOTE: Quo operates under the invariant that coins are sorted by
+// denominations.
+//
+// CONTRACT: Quo will never return DecCoins where one Coin has a non-positive
+// amount. In other words, IsValid will always return true.
+func (coins DecCoins) Quo(coinsB DecCoins) DecCoins {
+	quo := ([]DecCoin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return quo
+			}
+
+			// return set B (excluding zero coins) if set A is empty
+			return append(quo, removeZeroDecCoins(coinsB[indexB:])...)
+		} else if indexB == lenB {
+			// return set A (excluding zero coins) if set B is empty
+			return append(quo, removeZeroDecCoins(coins[indexA:])...)
+		}
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if !coinA.IsZero() {
+				quo = append(quo, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			res := coinA.Quo(coinB)
+			if !res.IsZero() {
+				quo = append(quo, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if !coinB.IsZero() {
+				quo = append(quo, coinB)
+			}
+
+			indexB++
+		}
+	}
+}
+
+// QuoTruncate divides two sets of coins truncating the result.
+//
+// e.g.
+// {2A} / {2A, 2B} = {A, 2B}
+// {2A} / {0B} = {2A}
+//
+// NOTE: QuoTruncate operates under the invariant that coins are sorted by
+// denominations.
+//
+// CONTRACT: QuoTruncate will never return DecCoins where one Coin has a non-positive
+// amount. In other words, IsValid will always return true.
+func (coins DecCoins) QuoTruncate(coinsB DecCoins) DecCoins {
+	quo := ([]DecCoin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return quo
+			}
+
+			// return set B (excluding zero coins) if set A is empty
+			return append(quo, removeZeroDecCoins(coinsB[indexB:])...)
+		} else if indexB == lenB {
+			// return set A (excluding zero coins) if set B is empty
+			return append(quo, removeZeroDecCoins(coins[indexA:])...)
+		}
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if !coinA.IsZero() {
+				quo = append(quo, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			res := coinA.QuoTruncate(coinB)
+			if !res.IsZero() {
+				quo = append(quo, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if !coinB.IsZero() {
+				quo = append(quo, coinB)
+			}
+
+			indexB++
+		}
+	}
+}
+
+// QuoRoundUp divides two sets of coins rounding up the result.
+//
+// e.g.
+// {2A} / {2A, 2B} = {A, 2B}
+// {2A} / {0B} = {2A}
+//
+// NOTE: QuoRoundUp operates under the invariant that coins are sorted by
+// denominations.
+//
+// CONTRACT: QuoRoundUp will never return DecCoins where one Coin has a non-positive
+// amount. In other words, IsValid will always return true.
+func (coins DecCoins) QuoRoundUp(coinsB DecCoins) DecCoins {
+	quo := ([]DecCoin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return quo
+			}
+
+			// return set B (excluding zero coins) if set A is empty
+			return append(quo, removeZeroDecCoins(coinsB[indexB:])...)
+		} else if indexB == lenB {
+			// return set A (excluding zero coins) if set B is empty
+			return append(quo, removeZeroDecCoins(coins[indexA:])...)
+		}
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if !coinA.IsZero() {
+				quo = append(quo, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			res := coinA.QuoRoundUp(coinB)
+			if !res.IsZero() {
+				quo = append(quo, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if !coinB.IsZero() {
+				quo = append(quo, coinB)
+			}
+
+			indexB++
+		}
+	}
+}
+
+// Divides amounts of two coins with same denom. If the coins differ in denom then
+// it panics.
+func (coin DecCoin) Quo(coinB DecCoin) DecCoin {
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+	}
+
+	return DecCoin{coin.Denom, coin.Amount.Quo(coinB.Amount)}
+}
+
+// Divides amounts of two coins with same denom truncating the result. If the coins differ in denom then
+// it panics.
+func (coin DecCoin) QuoTruncate(coinB DecCoin) DecCoin {
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+	}
+
+	return DecCoin{coin.Denom, coin.Amount.QuoTruncate(coinB.Amount)}
+}
+
+// Divides amounts of two coins with same denom rounding up the result. If the coins differ in denom then
+// it panics.
+func (coin DecCoin) QuoRoundUp(coinB DecCoin) DecCoin {
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
+	}
+
+	return DecCoin{coin.Denom, coin.Amount.QuoRoundUp(coinB.Amount)}
+}
+
 // SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
 func (coins DecCoins) SafeSub(coinsB DecCoins) (DecCoins, bool) {
@@ -295,6 +571,19 @@ func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 		res[i] = minCoin
 	}
 	return removeZeroDecCoins(res)
+}
+
+// TruncateInt truncates the decimals from the number and returns an Int
+func (coins DecCoins) TruncateInt() Coins {
+	res := make([]Coin, len(coins))
+	for i, coin := range coins {
+		minCoin := Coin{
+			Denom:  coin.Denom,
+			Amount: NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(coin.Amount.Int)),
+		}
+		res[i] = minCoin
+	}
+	return res
 }
 
 // IsAnyNegative returns true if there is at least one coin whose amount
@@ -531,6 +820,16 @@ func removeZeroDecCoins(coins DecCoins) DecCoins {
 	}
 
 	return coins[:i]
+}
+
+func (coins DecCoins) SumAmounts() Dec {
+	sum := NewDec(0)
+
+	for _, coin := range coins {
+		sum = sum.Add(coin.Amount)
+	}
+
+	return sum
 }
 
 //-----------------------------------------------------------------------------

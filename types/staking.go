@@ -26,8 +26,8 @@ const (
 var PowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
-func TokensToConsensusPower(tokens Int) int64 {
-	return (tokens.Quo(PowerReduction)).Int64()
+func TokensToConsensusPower(tokens DecCoins) int64 {
+	return (tokens.QuoDec(PowerReduction.ToDec())).SumAmounts().Int64()
 }
 
 // TokensFromConsensusPower - convert input power to tokens

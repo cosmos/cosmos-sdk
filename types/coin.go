@@ -243,7 +243,7 @@ func (coins Coins) IsValid() bool {
 // denominations.
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
-// amount. In otherwords, IsValid will always return true.
+// amount. In other words, IsValid will always return true.
 func (coins Coins) Add(coinsB Coins) Coins {
 	return coins.safeAdd(coinsB)
 }

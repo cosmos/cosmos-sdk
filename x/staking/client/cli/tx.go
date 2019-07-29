@@ -108,12 +108,12 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegation *sdk.Coins
 
 			minSelfDelegationString := viper.GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
-				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
-				if !ok {
+				msb, err := sdk.ParseCoins(minSelfDelegationString)
+				if err != nil {
 					return fmt.Errorf(types.ErrMinSelfDelegationInvalid(types.DefaultCodespace).Error())
 				}
 				newMinSelfDelegation = &msb
@@ -333,7 +333,7 @@ func PrepareFlagsForTxCreateValidator(
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
 func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (auth.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
-	amount, err := sdk.ParseCoin(amounstStr)
+	amount, err := sdk.ParseCoins(amounstStr)
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -364,8 +364,8 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (
 
 	// get the initial validator min self delegation
 	msbStr := viper.GetString(FlagMinSelfDelegation)
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-	if !ok {
+	minSelfDelegation, err := sdk.ParseCoins(msbStr)
+	if err != nil {
 		return txBldr, nil, fmt.Errorf(types.ErrMinSelfDelegationInvalid(types.DefaultCodespace).Error())
 	}
 

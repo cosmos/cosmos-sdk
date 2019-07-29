@@ -41,12 +41,12 @@ type Validator struct {
 	Jailed                  bool           `json:"jailed" yaml:"jailed"`                           // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status" yaml:"status"`                           // validator status (bonded/unbonding/unbonded)
 	Tokens                  sdk.Coins      `json:"tokens" yaml:"tokens"`                           // delegated tokens (incl. self-delegation)
-	DelegatorShares         sdk.Dec        `json:"delegator_shares" yaml:"delegator_shares"`       // total shares issued to a validator's delegators
+	DelegatorShares         sdk.DecCoins   `json:"delegator_shares" yaml:"delegator_shares"`       // total shares issued to a validator's delegators
 	Description             Description    `json:"description" yaml:"description"`                 // description terms for the validator
 	UnbondingHeight         int64          `json:"unbonding_height" yaml:"unbonding_height"`       // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time      `json:"unbonding_time" yaml:"unbonding_time"`           // if unbonding, min time for the validator to complete unbonding
 	Commission              Commission     `json:"commission" yaml:"commission"`                   // commission parameters
-	MinSelfDelegation       sdk.Int        `json:"min_self_delegation" yaml:"min_self_delegation"` // validator's self declared minimum self delegation
+	MinSelfDelegation       sdk.DecCoins   `json:"min_self_delegation" yaml:"min_self_delegation"` // validator's self declared minimum self delegation
 }
 
 // custom marshal yaml function due to consensus pubkey
@@ -56,13 +56,13 @@ func (v Validator) MarshalYAML() (interface{}, error) {
 		ConsPubKey              string
 		Jailed                  bool
 		Status                  sdk.BondStatus
-		Tokens                  sdk.Int
-		DelegatorShares         sdk.Dec
+		Tokens                  sdk.Coins
+		DelegatorShares         sdk.DecCoins
 		Description             Description
 		UnbondingHeight         int64
 		UnbondingCompletionTime time.Time
 		Commission              Commission
-		MinSelfDelegation       sdk.Int
+		MinSelfDelegation       sdk.DecCoins
 	}{
 		OperatorAddress:         v.OperatorAddress,
 		ConsPubKey:              sdk.MustBech32ifyConsPub(v.ConsPubKey),
@@ -108,13 +108,13 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		ConsPubKey:              pubKey,
 		Jailed:                  false,
 		Status:                  sdk.Unbonded,
-		Tokens:                  sdk.ZeroInt(),
-		DelegatorShares:         sdk.ZeroDec(),
+		Tokens:                  sdk.Coins{},
+		DelegatorShares:         sdk.DecCoins{},
 		Description:             description,
 		UnbondingHeight:         int64(0),
 		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
 		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-		MinSelfDelegation:       sdk.OneInt(),
+		MinSelfDelegation:       sdk.NewDecCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))),
 	}
 }
 
@@ -167,13 +167,13 @@ type bechValidator struct {
 	ConsPubKey              string         `json:"consensus_pubkey" yaml:"consensus_pubkey"`       // the bech32 consensus public key of the validator
 	Jailed                  bool           `json:"jailed" yaml:"jailed"`                           // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status" yaml:"status"`                           // validator status (bonded/unbonding/unbonded)
-	Tokens                  sdk.Int        `json:"tokens" yaml:"tokens"`                           // delegated tokens (incl. self-delegation)
-	DelegatorShares         sdk.Dec        `json:"delegator_shares" yaml:"delegator_shares"`       // total shares issued to a validator's delegators
+	Tokens                  sdk.Coins      `json:"tokens" yaml:"tokens"`                           // delegated tokens (incl. self-delegation)
+	DelegatorShares         sdk.DecCoins   `json:"delegator_shares" yaml:"delegator_shares"`       // total shares issued to a validator's delegators
 	Description             Description    `json:"description" yaml:"description"`                 // description terms for the validator
 	UnbondingHeight         int64          `json:"unbonding_height" yaml:"unbonding_height"`       // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time      `json:"unbonding_time" yaml:"unbonding_time"`           // if unbonding, min time for the validator to complete unbonding
 	Commission              Commission     `json:"commission" yaml:"commission"`                   // commission parameters
-	MinSelfDelegation       sdk.Int        `json:"min_self_delegation" yaml:"min_self_delegation"` // minimum self delegation
+	MinSelfDelegation       sdk.DecCoins   `json:"min_self_delegation" yaml:"min_self_delegation"` // minimum self delegation
 }
 
 // MarshalJSON marshals the validator to JSON using Bech32
@@ -229,8 +229,8 @@ func (v Validator) TestEquivalent(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
 		bytes.Equal(v.OperatorAddress, v2.OperatorAddress) &&
 		v.Status.Equal(v2.Status) &&
-		v.Tokens.Equal(v2.Tokens) &&
-		v.DelegatorShares.Equal(v2.DelegatorShares) &&
+		v.Tokens.IsEqual(v2.Tokens) &&
+		v.DelegatorShares.IsEqual(v2.DelegatorShares) &&
 		v.Description == v2.Description &&
 		v.Commission.Equal(v2.Commission)
 }
@@ -351,51 +351,51 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 // Validator loses all tokens due to slashing. In this case,
 // make all future delegations invalid.
 func (v Validator) InvalidExRate() bool {
-	return v.Tokens.IsZero() && v.DelegatorShares.IsPositive()
+	return v.Tokens.IsZero() && v.DelegatorShares.IsAllPositive()
 }
 
 // calculate the token worth of provided shares
-func (v Validator) TokensFromShares(shares sdk.Coins) sdk.Dec {
-	return (shares.MulInt(v.Tokens)).Quo(v.DelegatorShares)
+func (v Validator) TokensFromShares(shares sdk.DecCoins) sdk.DecCoins {
+	return (shares.Mul(sdk.NewDecCoins(v.Tokens))).Quo(v.DelegatorShares)
 }
 
 // calculate the token worth of provided shares, truncated
-func (v Validator) TokensFromSharesTruncated(shares sdk.Dec) sdk.Dec {
-	return (shares.MulInt(v.Tokens)).QuoTruncate(v.DelegatorShares)
+func (v Validator) TokensFromSharesTruncated(shares sdk.DecCoins) sdk.DecCoins {
+	return (shares.Mul(sdk.NewDecCoins(v.Tokens))).QuoTruncate(v.DelegatorShares)
 }
 
 // TokensFromSharesRoundUp returns the token worth of provided shares, rounded
 // up.
-func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
-	return (shares.MulInt(v.Tokens)).QuoRoundUp(v.DelegatorShares)
+func (v Validator) TokensFromSharesRoundUp(shares sdk.DecCoins) sdk.DecCoins {
+	return (shares.Mul(sdk.NewDecCoins(v.Tokens))).QuoRoundUp(v.DelegatorShares)
 }
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt sdk.Coin) (sdk.Coins, sdk.Error) {
+func (v Validator) SharesFromTokens(amt sdk.Coins) (sdk.DecCoins, sdk.Error) {
 	if v.Tokens.IsZero() {
-		return sdk.Coins{}, ErrInsufficientShares(DefaultCodespace)
+		return sdk.DecCoins{}, ErrInsufficientShares(DefaultCodespace)
 	}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
+	return v.GetDelegatorShares().Mul(sdk.NewDecCoins(amt)).Quo(sdk.NewDecCoins(v.GetTokens())), nil
 }
 
 // SharesFromTokensTruncated returns the truncated shares of a delegation given
 // a bond amount. It returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
+func (v Validator) SharesFromTokensTruncated(amt sdk.Coins) (sdk.DecCoins, sdk.Error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+		return sdk.DecCoins{}, ErrInsufficientShares(DefaultCodespace)
 	}
 
-	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil
+	return v.GetDelegatorShares().Mul(sdk.NewDecCoins(amt)).QuoTruncate(sdk.NewDecCoins(v.GetTokens())), nil
 }
 
 // get the bonded tokens which the validator holds
-func (v Validator) BondedTokens() sdk.Int {
+func (v Validator) BondedTokens() sdk.Coins {
 	if v.IsBonded() {
 		return v.Tokens
 	}
-	return sdk.ZeroInt()
+	return sdk.Coins{}
 }
 
 // get the consensus-engine power
@@ -409,7 +409,7 @@ func (v Validator) ConsensusPower() int64 {
 
 // potential consensus-engine power
 func (v Validator) PotentialConsensusPower() int64 {
-	return sdk.TokensToConsensusPower(v.Tokens)
+	return sdk.TokensToConsensusPower(sdk.NewDecCoins(v.Tokens))
 }
 
 // UpdateStatus updates the location of the shares within a validator
@@ -420,13 +420,13 @@ func (v Validator) UpdateStatus(newStatus sdk.BondStatus) Validator {
 }
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(amount sdk.Coin) (Validator, sdk.Coins) {
+func (v Validator) AddTokensFromDel(amount sdk.Coins) (Validator, sdk.DecCoins) {
 
 	// calculate the shares to issue
-	var issuedShares sdk.Dec
+	var issuedShares sdk.DecCoins
 	if v.DelegatorShares.IsZero() {
 		// the first delegation to a validator sets the exchange rate to one
-		issuedShares = amount.ToDec()
+		issuedShares = sdk.NewDecCoins(amount)
 	} else {
 		shares, err := v.SharesFromTokens(amount)
 		if err != nil {
@@ -443,11 +443,11 @@ func (v Validator) AddTokensFromDel(amount sdk.Coin) (Validator, sdk.Coins) {
 }
 
 // RemoveTokens removes tokens from a validator
-func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
-	if tokens.IsNegative() {
+func (v Validator) RemoveTokens(tokens sdk.Coins) Validator {
+	if !tokens.IsAllPositive() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
 	}
-	if v.Tokens.LT(tokens) {
+	if v.Tokens.IsAllLT(tokens) {
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
@@ -457,22 +457,22 @@ func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 // RemoveDelShares removes delegator shares from a validator.
 // NOTE: because token fractions are left in the validator,
 //       the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares sdk.Coins) (Validator, sdk.Coin) {
+func (v Validator) RemoveDelShares(delShares sdk.Coins) (Validator, sdk.Coins) {
 
-	remainingShares := v.DelegatorShares.Sub(delShares)
-	var issuedTokens sdk.Int
+	remainingShares := v.DelegatorShares.Sub(sdk.NewDecCoins(delShares))
+	var issuedTokens sdk.Coins
 	if remainingShares.IsZero() {
 
 		// last delegation share gets any trimmings
 		issuedTokens = v.Tokens
-		v.Tokens = sdk.ZeroInt()
+		v.Tokens = sdk.Coins{}
 	} else {
 
 		// leave excess tokens in the validator
 		// however fully use all the delegator shares
-		issuedTokens = v.TokensFromShares(delShares).TruncateInt()
+		issuedTokens = v.TokensFromShares(sdk.NewDecCoins(delShares)).TruncateInt()
 		v.Tokens = v.Tokens.Sub(issuedTokens)
-		if v.Tokens.IsNegative() {
+		if !v.Tokens.IsAllPositive() {
 			panic("attempting to remove more tokens than available in validator")
 		}
 	}
@@ -482,15 +482,15 @@ func (v Validator) RemoveDelShares(delShares sdk.Coins) (Validator, sdk.Coin) {
 }
 
 // nolint - for ValidatorI
-func (v Validator) IsJailed() bool                { return v.Jailed }
-func (v Validator) GetMoniker() string            { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus     { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress   { return v.OperatorAddress }
-func (v Validator) GetConsPubKey() crypto.PubKey  { return v.ConsPubKey }
-func (v Validator) GetConsAddr() sdk.ConsAddress  { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetTokens() sdk.Coins          { return v.Tokens }
-func (v Validator) GetBondedTokens() sdk.Int      { return v.BondedTokens() }
-func (v Validator) GetConsensusPower() int64      { return v.ConsensusPower() }
-func (v Validator) GetCommission() sdk.Dec        { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() sdk.Int { return v.MinSelfDelegation }
-func (v Validator) GetDelegatorShares() sdk.Dec   { return v.DelegatorShares }
+func (v Validator) IsJailed() bool                     { return v.Jailed }
+func (v Validator) GetMoniker() string                 { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus          { return v.Status }
+func (v Validator) GetOperator() sdk.ValAddress        { return v.OperatorAddress }
+func (v Validator) GetConsPubKey() crypto.PubKey       { return v.ConsPubKey }
+func (v Validator) GetConsAddr() sdk.ConsAddress       { return sdk.ConsAddress(v.ConsPubKey.Address()) }
+func (v Validator) GetTokens() sdk.Coins               { return v.Tokens }
+func (v Validator) GetBondedTokens() sdk.Coins         { return v.BondedTokens() }
+func (v Validator) GetConsensusPower() int64           { return v.ConsensusPower() }
+func (v Validator) GetCommission() sdk.Dec             { return v.Commission.Rate }
+func (v Validator) GetMinSelfDelegation() sdk.DecCoins { return v.MinSelfDelegation }
+func (v Validator) GetDelegatorShares() sdk.DecCoins   { return v.DelegatorShares }

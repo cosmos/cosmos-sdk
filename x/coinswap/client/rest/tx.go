@@ -160,12 +160,6 @@ func postSwapOrderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		// toAddr, err := sdk.AccAddressFromBech32(req.Recipient)
-		// if err != nil {
-		// 	rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 	return
-		// }
-
 		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

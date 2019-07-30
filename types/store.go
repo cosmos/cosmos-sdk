@@ -89,7 +89,7 @@ func NewTransientStoreKey(name string) *TransientStoreKey {
 	return types.NewTransientStoreKey(name)
 }
 
-// Constructs a new map of TransientStoreKey's
+// NewTransientStoreKeys constructs a new map of TransientStoreKey's
 // Must return pointers according to the ocap principle
 func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	keys := make(map[string]*TransientStoreKey)

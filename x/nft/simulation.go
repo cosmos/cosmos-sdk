@@ -57,8 +57,8 @@ func SimulateMsgEditNFTMetadata(k Keeper) simulation.Operation {
 
 		msg := NewMsgEditNFTMetadata(
 			ownerAddr,
-			denom,
 			nftID,
+			denom,
 			simulation.RandStringOfLength(r, 15), // name
 			simulation.RandStringOfLength(r, 50), // description
 			simulation.RandStringOfLength(r, 30), // image

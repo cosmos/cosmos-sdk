@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -54,6 +55,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		nft.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -97,6 +99,7 @@ type SimApp struct {
 	keyGov      *sdk.KVStoreKey
 	keyParams   *sdk.KVStoreKey
 	tkeyParams  *sdk.TransientStoreKey
+	keyNFT      *sdk.KVStoreKey
 
 	// keepers
 	accountKeeper  auth.AccountKeeper
@@ -109,6 +112,7 @@ type SimApp struct {
 	govKeeper      gov.Keeper
 	crisisKeeper   crisis.Keeper
 	paramsKeeper   params.Keeper
+	nftKeeper      nft.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -142,6 +146,7 @@ func NewSimApp(
 		keyGov:         sdk.NewKVStoreKey(gov.StoreKey),
 		keyParams:      sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:     sdk.NewTransientStoreKey(params.TStoreKey),
+		keyNFT:         sdk.NewKVStoreKey(nft.StoreKey),
 	}
 
 	// init params keeper and subspaces
@@ -167,6 +172,7 @@ func NewSimApp(
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.crisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName)
+	app.nftKeeper = nft.NewKeeper(app.cdc, app.keyNFT)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -193,6 +199,7 @@ func NewSimApp(
 		mint.NewAppModule(app.mintKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
 		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+		nft.NewAppModule(app.nftKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -214,7 +221,7 @@ func NewSimApp(
 	// initialize stores
 	app.MountStores(app.keyMain, app.keyAccount, app.keySupply, app.keyStaking,
 		app.keyMint, app.keyDistr, app.keySlashing, app.keyGov, app.keyParams,
-		app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
+		app.tkeyParams, app.tkeyStaking, app.tkeyDistr, app.keyNFT)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

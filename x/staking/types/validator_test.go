@@ -293,7 +293,7 @@ func TestValidatorMarshalYAML(t *testing.T) {
   unbondingheight: 0
   unbondingcompletiontime: 1970-01-01T00:00:00Z
   commission:
-    commissionrates:
+    commission_rates:
       rate: "0.000000000000000000"
       max_rate: "0.000000000000000000"
       max_change_rate: "0.000000000000000000"

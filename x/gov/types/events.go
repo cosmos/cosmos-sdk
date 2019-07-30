@@ -9,7 +9,6 @@ const (
 	EventTypeActiveProposal   = "active_proposal"
 
 	AttributeKeyProposalResult     = "proposal_result"
-	AttributeKeyAmount             = "amount"
 	AttributeKeyOption             = "option"
 	AttributeKeyProposalID         = "proposal_id"
 	AttributeKeyVotingPeriodStart  = "voting_period_start"

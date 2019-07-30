@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -43,6 +44,7 @@ var (
 	exportParamsPath   string
 	exportParamsHeight int
 	exportStatePath    string
+	exportStatsPath    string
 	seed               int64
 	numBlocks          int
 	blockSize          int
@@ -497,6 +499,50 @@ func GenStakingGenesisState(
 	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
 	return stakingGenesis
+}
+
+// GenNFTGenesisState generates a random GenesisState for nft
+func GenNFTGenesisState(cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+	const (
+		Kitties = "crypto-kitties"
+		Doggos  = "crypto-doggos"
+	)
+
+	collections := nft.NewCollections(nft.NewCollection(Kitties, nft.NFTs{}), nft.NewCollection(Doggos, nft.NFTs{}))
+	var ownerships []nft.Owner
+
+	for _, acc := range accs {
+		if r.Intn(100) < 50 {
+			baseNFT := nft.NewBaseNFT(
+				simulation.RandStringOfLength(r, 10), // id
+				acc.Address,
+				simulation.RandStringOfLength(r, 45), // tokenURI
+			)
+
+			var idCollection nft.IDCollection
+			var err error
+			if r.Intn(100) < 50 {
+				collections[0], err = collections[0].AddNFT(&baseNFT)
+				if err != nil {
+					panic(err)
+				}
+				idCollection = nft.NewIDCollection(Kitties, []string{baseNFT.ID})
+			} else {
+				collections[1], err = collections[1].AddNFT(&baseNFT)
+				if err != nil {
+					panic(err)
+				}
+				idCollection = nft.NewIDCollection(Doggos, []string{baseNFT.ID})
+			}
+			ownership := nft.NewOwner(acc.Address, idCollection)
+			ownerships = append(ownerships, ownership)
+		}
+	}
+
+	nftGenesis := nft.NewGenesisState(ownerships, collections)
+
+	fmt.Printf("Selected randomly generated NFT parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, nftGenesis))
+	genesisState[nft.ModuleName] = cdc.MustMarshalJSON(nftGenesis)
 }
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the

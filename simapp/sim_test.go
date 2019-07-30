@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -36,6 +37,7 @@ func init() {
 	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
 	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
 	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks")
 	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
@@ -52,7 +54,7 @@ func init() {
 // helper function for populating input for SimulateFromSeed
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int,
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, string,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
 	exportParams := exportParamsPath != ""
@@ -60,7 +62,7 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
 		numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
+		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
 func appStateFn(
@@ -141,6 +143,7 @@ func appStateRandomizedFn(
 	GenDistrGenesisState(cdc, r, appParams, genesisState)
 	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
 	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
+	GenNFTGenesisState(cdc, r, accs, appParams, genesisState)
 
 	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {
@@ -341,6 +344,50 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 			}(nil),
 			slashingsim.SimulateMsgUnjail(app.slashingKeeper),
 		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgTransferNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgTransferNFT(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgEditNFTMetadata, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgEditNFTMetadata(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgMintNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgMintNFT(app.nftKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightMsgBurnNFT, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			nft.SimulateMsgBurnNFT(app.nftKeeper),
+		},
 	}
 }
 
@@ -412,7 +459,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if commit {
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -471,7 +518,7 @@ func TestFullAppSimulation(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -528,7 +575,7 @@ func TestAppImportExport(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -644,7 +691,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -705,7 +752,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
-				50, 100, 0,
+				50, 100, 0, "",
 				false, true, false, false, false, app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash
@@ -734,7 +781,7 @@ func BenchmarkInvariants(b *testing.B) {
 	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
+		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)
 
 	// export state and params before the simulation error is checked

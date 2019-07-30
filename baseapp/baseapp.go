@@ -911,7 +911,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
 
-	if mode == runTxModeSimulate {
+	// Safety check: don't write the cache state unless we're in DeliverTx.
+	if mode != runTxModeDeliver {
 		return result
 	}
 

@@ -164,6 +164,7 @@
 
 ### Bug Fixes
 
+* (abci) [\#4639](https://github.com/cosmos/cosmos-sdk/issues/4639) Fix `CheckTx` by verifying the message route
 * Return height in responses when querying against BaseApp
 * [\#1351](https://github.com/cosmos/cosmos-sdk/issues/1351) Stable AppHash allows no_empty_blocks
 * [\#3705](https://github.com/cosmos/cosmos-sdk/issues/3705) Return `[]` instead of `null` when querying delegator rewards.

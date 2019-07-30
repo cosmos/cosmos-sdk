@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
-// RegisterInvariants registers bank the module invariants
+// RegisterInvariants registers the bank module invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, ak types.AccountKeeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding",
 		NonnegativeBalanceInvariant(ak))

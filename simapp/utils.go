@@ -43,6 +43,7 @@ var (
 	exportParamsPath   string
 	exportParamsHeight int
 	exportStatePath    string
+	exportStatsPath    string
 	seed               int64
 	numBlocks          int
 	blockSize          int

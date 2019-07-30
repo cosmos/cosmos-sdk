@@ -6,7 +6,7 @@
 
 ## Context
 
-Currently, .gaiacli directory stores key material and metadata in a plain text database in the user’s home directory.  Key material is encrypted by a passphrase and bcrypt hashing algorithm. Metadata (e.g. addresses, public keys, key storage details) is available in plain text. 
+Currently, .gaiacli directory stores key material and metadata in a plain text database in the user’s home directory.  Key material is encrypted by a passphrase, protected by bcrypt hashing algorithm. Metadata (e.g. addresses, public keys, key storage details) is available in plain text. 
 
 This is not desirable for a number of reasons. Perhaps the biggest reason is insufficient security protection of key material and metadata. Leaking the plain text allows an attacker to surveil what keys a given computer controls via a number of techniques, like compromised dependencies without any privilege execution. This could be followed by a more targeted attack on a particular user/computer.
 

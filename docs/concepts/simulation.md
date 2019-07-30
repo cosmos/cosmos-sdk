@@ -12,7 +12,7 @@ The blockchain simulator tests how the blockchain application would behave under
 The goal of this is to detect and debug failures that could halt a live chain, by providing logs and statistics about the operations run by the simulator as well as exporting the latest application state when a failure was found.
 
 Its main difference with integration testing is that the simulator app allows you to pass parameters to customize the chain that's being simulated.
-This comes handy when trying to reproduce bugs that were generated in the provided operations (randomized or not).
+This comes in handy when trying to reproduce bugs that were generated in the provided operations (randomized or not).
 
 ## Simulation commands
 

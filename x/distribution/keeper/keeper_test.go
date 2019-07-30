@@ -27,7 +27,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	keeper.blacklistedAddrs[distrAddr.String()] = true
 
-	require.NotNil(t, keeper.SetWithdrawAddr(ctx, delAddr1, distrAddr))
+	require.Error(t, keeper.SetWithdrawAddr(ctx, delAddr1, distrAddr))
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {

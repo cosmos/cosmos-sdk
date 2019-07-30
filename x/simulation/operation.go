@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"sort"
 	"time"
@@ -26,10 +25,10 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 
 // entry kinds for use within OperationEntry
 const (
-	BeginBlockEntryKind  = "begin_block"
-	EndBlockEntryKind    = "end_block"
-	MsgEntryKind         = "msg"
-	QueuedsgMsgEntryKind = "queued_msg"
+	BeginBlockEntryKind = "begin_block"
+	EndBlockEntryKind   = "end_block"
+	MsgEntryKind        = "msg"
+	QueuedMsgEntryKind  = "queued_msg"
 )
 
 // OperationEntry - an operation entry for logging (ex. BeginBlock, EndBlock, XxxMsg, etc)
@@ -40,47 +39,37 @@ type OperationEntry struct {
 	Operation json.RawMessage `json:"operation" yaml:"operation"`
 }
 
+// NewOperationEntry creates a new OperationEntry instance
+func NewOperationEntry(entry string, height, order int64, op json.RawMessage) OperationEntry {
+	return OperationEntry{
+		EntryKind: entry,
+		Height:    height,
+		Order:     order,
+		Operation: op,
+	}
+}
+
 // BeginBlockEntry - operation entry for begin block
 func BeginBlockEntry(height int64) OperationEntry {
-	return OperationEntry{
-		EntryKind: BeginBlockEntryKind,
-		Height:    height,
-		Order:     -1,
-		Operation: nil,
-	}
+	return NewOperationEntry(BeginBlockEntryKind, height, -1, nil)
 }
 
 // EndBlockEntry - operation entry for end block
 func EndBlockEntry(height int64) OperationEntry {
-	return OperationEntry{
-		EntryKind: EndBlockEntryKind,
-		Height:    height,
-		Order:     -1,
-		Operation: nil,
-	}
+	return NewOperationEntry(EndBlockEntryKind, height, -1, nil)
 }
 
 // MsgEntry - operation entry for standard msg
-func MsgEntry(height int64, opMsg OperationMsg, order int64) OperationEntry {
-	return OperationEntry{
-		EntryKind: MsgEntryKind,
-		Height:    height,
-		Order:     order,
-		Operation: opMsg.MustMarshal(),
-	}
+func MsgEntry(height, order int64, opMsg OperationMsg) OperationEntry {
+	return NewOperationEntry(MsgEntryKind, height, order, opMsg.MustMarshal())
 }
 
-// MsgEntry - operation entry for queued msg
+// QueuedMsgEntry creates an operation entry for a given queued message.
 func QueuedMsgEntry(height int64, opMsg OperationMsg) OperationEntry {
-	return OperationEntry{
-		EntryKind: QueuedsgMsgEntryKind,
-		Height:    height,
-		Order:     -1,
-		Operation: opMsg.MustMarshal(),
-	}
+	return NewOperationEntry(QueuedMsgEntryKind, height, -1, opMsg.MustMarshal())
 }
 
-// OperationEntry - log entry text for this operation entry
+// MustMarshal marshals the operation entry, panic on error.
 func (oe OperationEntry) MustMarshal() json.RawMessage {
 	out, err := json.Marshal(oe)
 	if err != nil {
@@ -100,19 +89,7 @@ type OperationMsg struct {
 	Msg     json.RawMessage `json:"msg" yaml:"msg"`
 }
 
-// OperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
-
-	return OperationMsg{
-		Route:   msg.Route(),
-		Name:    msg.Type(),
-		Comment: comment,
-		OK:      ok,
-		Msg:     msg.GetSignBytes(),
-	}
-}
-
-// OperationMsg - create a new operation message from raw input
+// NewOperationMsgBasic creates a new operation message from raw input.
 func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
 	return OperationMsg{
 		Route:   route,
@@ -123,15 +100,14 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 	}
 }
 
+// NewOperationMsg - create a new operation message from sdk.Msg
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
+	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
+}
+
 // NoOpMsg - create a no-operation message
-func NoOpMsg() OperationMsg {
-	return OperationMsg{
-		Route:   "",
-		Name:    "no-operation",
-		Comment: "",
-		OK:      false,
-		Msg:     nil,
-	}
+func NoOpMsg(route string) OperationMsg {
+	return NewOperationMsgBasic(route, "no-operation", "", false, nil)
 }
 
 // log entry text for this operation msg
@@ -143,7 +119,7 @@ func (om OperationMsg) String() string {
 	return string(out)
 }
 
-// Marshal the operation msg, panic on error
+// MustMarshal Marshals the operation msg, panic on error
 func (om OperationMsg) MustMarshal() json.RawMessage {
 	out, err := json.Marshal(om)
 	if err != nil {
@@ -152,24 +128,24 @@ func (om OperationMsg) MustMarshal() json.RawMessage {
 	return out
 }
 
-// add event for event stats
-func (om OperationMsg) LogEvent(eventLogger func(string)) {
+// LogEvent adds an event for the events stats
+func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 	pass := "ok"
 	if !om.OK {
 		pass = "failure"
 	}
-	eventLogger(fmt.Sprintf("%v/%v/%v", om.Route, om.Name, pass))
+	eventLogger(om.Route, om.Name, pass)
 }
 
-// queue of operations
+// OperationQueue defines an object for a queue of operations
 type OperationQueue map[int][]Operation
 
-func newOperationQueue() OperationQueue {
-	operationQueue := make(OperationQueue)
-	return operationQueue
+// NewOperationQueue creates a new OperationQueue instance.
+func NewOperationQueue() OperationQueue {
+	return make(OperationQueue)
 }
 
-// adds all future operations into the operation queue.
+// queueOperations adds all future operations into the operation queue.
 func queueOperations(queuedOps OperationQueue,
 	queuedTimeOps []FutureOperation, futureOps []FutureOperation) {
 

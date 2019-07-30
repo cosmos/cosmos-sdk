@@ -47,8 +47,9 @@ func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
 		)
 	}
-	idCollection.IDs[len(idCollection.IDs)-1], idCollection.IDs[index] = idCollection.IDs[index], idCollection.IDs[len(idCollection.IDs)-1]
-	idCollection.IDs = idCollection.IDs[:len(idCollection.IDs)-1]
+
+	idCollection.IDs = append(idCollection.IDs[:index], idCollection.IDs[index+1:]...)
+
 	return idCollection, nil
 }
 
@@ -143,11 +144,9 @@ func (owner Owner) UpdateIDCollection(idCollection IDCollection) (Owner, sdk.Err
 			fmt.Sprintf("ID Collection %s doesn't exist for owner %s", denom, owner.Address),
 		)
 	}
-	if len(owner.IDCollections) == 1 {
-		owner.IDCollections = []IDCollection{idCollection}
-	} else {
-		owner.IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[:index+1]...)
-	}
+
+	owner.IDCollections = append(append(owner.IDCollections[:index], idCollection), owner.IDCollections[index+1:]...)
+
 	return owner, nil
 }
 

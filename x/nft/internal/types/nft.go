@@ -117,21 +117,18 @@ func (nfts NFTs) Update(id string, nft exported.NFT) (NFTs, bool) {
 	if index == -1 {
 		return nfts, false
 	}
-	if len(nfts) == 1 {
-		return NewNFTs(nft), true
-	}
 
-	return append(append(nfts[:index], nft), nfts[:index+1]...), true
+	return append(append(nfts[:index], nft), nfts[index+1:]...), true
 }
 
-// Remove removes a collection from the set of collections
+// Remove removes an NFT from the set of NFTs
 func (nfts NFTs) Remove(id string) (NFTs, bool) {
 	index := nfts.find(id)
 	if index == -1 {
 		return nfts, false
 	}
-	nfts[len(nfts)-1], nfts[index] = nfts[index], nfts[len(nfts)-1]
-	return nfts[:len(nfts)-1], true
+
+	return append(nfts[:index], nfts[index+1:]...), true
 }
 
 // String follows stringer interface

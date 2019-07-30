@@ -76,6 +76,13 @@ jobs:
       - make:
           target: test_sim_import_export
           description: "Test application import/export simulation"
+      - run:
+          command: |
+            mkdir -p /tmp/errors
+            cp /tmp/**/app-simulation-seed* /tmp/errors/
+          when: on_fail
+      - store_artifacts:
+          path: /tmp/errors
 
   test_sim_after_import:
     executor: golang
@@ -88,7 +95,6 @@ jobs:
             mkdir -p /tmp/errors
             cp /tmp/**/app-simulation-seed* /tmp/errors/
           when: on_fail
-
       - store_artifacts:
           path: /tmp/errors
 
@@ -98,6 +104,13 @@ jobs:
       - make:
           target: test_sim_multi_seed_long
           description: "Test multi-seed simulation (long)"
+      - run:
+          command: |
+            mkdir -p /tmp/errors
+            cp /tmp/**/app-simulation-seed* /tmp/errors/
+          when: on_fail
+      - store_artifacts:
+          path: /tmp/errors
 
   test_sim_multi_seed_short:
     executor: golang
@@ -105,6 +118,14 @@ jobs:
       - make:
           target: test_sim_multi_seed_short
           description: "Test multi-seed simulation (short)"
+      - run:
+          command: |
+            mkdir -p /tmp/errors
+            cp /tmp/**/app-simulation-seed* /tmp/errors/
+          when: on_fail
+
+      - store_artifacts:
+          path: /tmp/errors
 
   test_cover:
     executor: golang

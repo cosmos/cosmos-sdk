@@ -49,6 +49,7 @@ func TestTransferNFTMsg(t *testing.T) {
 
 	// Create token (collection and owner)
 	k.MintNFT(ctx, denom, &nft)
+	require.True(t, CheckInvariants(k, ctx))
 
 	// handle should succeed when nft exists and is transferred by owner
 	res = h(ctx, transferNftMsg)
@@ -80,8 +81,33 @@ func TestTransferNFTMsg(t *testing.T) {
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.True(t, nftAfterwards.GetOwner().Equals(address2))
+
+	transferNftMsg = types.NewMsgTransferNFT(
+		address2,
+		address3,
+		denom,
+		id,
+	)
+
+	// handle should succeed when nft exists and is transferred by owner
+	res = h(ctx, transferNftMsg)
+	require.True(t, res.IsOK(), "%v", res)
 	require.True(t, CheckInvariants(k, ctx))
 
+	// Create token (collection and owner)
+	k.MintNFT(ctx, denom2, &nft)
+	require.True(t, CheckInvariants(k, ctx))
+
+	transferNftMsg = types.NewMsgTransferNFT(
+		address2,
+		address3,
+		denom2,
+		id,
+	)
+	// handle should succeed when nft exists and is transferred by owner
+	res = h(ctx, transferNftMsg)
+	require.True(t, res.IsOK(), "%v", res)
+	require.True(t, CheckInvariants(k, ctx))
 }
 
 func TestEditNFTMetadataMsg(t *testing.T) {

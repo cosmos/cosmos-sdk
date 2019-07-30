@@ -29,11 +29,13 @@ Introduce the following messages to `x/subscription` module:
 
 ```go
 // CreateSubscriptionMsg allows Service Provider to create new subscription service.
+// Generate unique serviceID from hash(name|collector)
 type CreateSubscriptionMsg struct {
-    Name      string          // human-readable name for subscription service
-    Amounts   []sdk.Coins     // amounts to be collected for each subscription period
-    Periods   []time.Duration // allowed duration of subscription periods
-    Collector sdk.AccAddress  // address that will collect subscription payments
+    Name        string          // human-readable name for subscription service
+    Description string          // description for what the service provides
+    Amounts     []sdk.Coins     // amounts to be collected for each subscription period
+    Periods     []time.Duration // allowed duration of subscription periods
+    Collector   sdk.AccAddress  // address that will collect subscription payments
 }
 ```
 
@@ -42,7 +44,7 @@ type CreateSubscriptionMsg struct {
 // If subscription to the service from user already exists, this msg is treated as renewal.
 // If msg.Limit != -1, then subscription.Limit += msg.Limit. Else, subscription.Limit = -1 (unlimited)
 type SubscribeMsg struct {
-    ID         []byte         // id of service to subscribe to
+    ServiceID  []byte         // id of service to subscribe to
     Subscriber sdk.AccAddress // address of subscriber
     Period     time.Duration  // Period that subscriber chooses. Must be one of predefined periods in corresponding CreateSubscriptionMsg
     Limit      int64          // Maximum number of periods that subscription remains active. Limit = -1 implies no limit
@@ -52,7 +54,7 @@ type SubscribeMsg struct {
 ```go
 // UnsubscribeMsg allows subscriber to inactivate an active subscription
 type UnsubscribeMsg struct {
-    ID         []byte         // id of service to unsubscribe to
+    ServiceID  []byte         // id of service to unsubscribe to
     Subscriber sdk.AccAddress // address of subscriber
 }
 ```
@@ -60,7 +62,7 @@ type UnsubscribeMsg struct {
 ```go
 // CollectMsg allows a Collector for a service to collect payments on due subscriptions that are processed off a FIFO queue.
 type CollectMsg struct {
-    ID        []byte         // id of subscription service to collect payments from
+    ServiceID []byte         // id of subscription service to collect payments from
     Collector sdk.AccAddress // address that will collect payments
     Limit     int64          // maximum number of items to process in FIFO duequeue. If Limit = -1, try to process all due subscriptions
 }
@@ -70,9 +72,9 @@ Create a new store with the following key-values:
 
 `Address => []SubscriptionID // List of active/inactive subscriptions owned by the users`
 
-`Terms:{ID} => SubscriptionTerms`
+`Terms:{ServiceID} => SubscriptionTerms`
 
-`DueQueue:{Collector}{Name}{Period} => LinkedList<SubscriptionID> // FIFO queue of subscriptions for a given service and period. Note if a service allows for multiple periods, each period will maintain a separate queue. CONTRACT: All due subscriptions exist before all undue subscriptions. All subscriptions in DueQueue are active`
+`DueQueue:{Collector}{ServiceID}{Period} => LinkedList<SubscriptionID> // FIFO queue of subscriptions for a given service and period. Note if a service allows for multiple periods, each period will maintain a separate queue. CONTRACT: All due subscriptions exist before all undue subscriptions. All subscriptions in DueQueue are active`
 
 `SubscriptionID => Subscription`
 
@@ -85,9 +87,11 @@ type SubscriptionID []byte
 ```go
 // Subscription Terms contains information necessary for processing subscriptions
 type Terms struct {
-    Amount    sdk.Coins      // amount to be collected for each subscription period
-    Period    time.time      // duration of subscription period
-    Collector sdk.AccAddress // address that will collect subscription payments
+    Name        string         // short, human-readable name of the service
+    Description string         // long-form description of the service
+    Amount      sdk.Coins      // amount to be collected for each subscription period
+    Period      time.time      // duration of subscription period
+    Collector   sdk.AccAddress // address that will collect subscription payments
 }
 ```
 
@@ -107,22 +111,23 @@ Note much of this logic may be done inside a keeper. This is a outline of how ms
 
 ```go
 func HandleCreateSubscriptionMsg(ctx sdk.Context, msg CreateSubscriptionMsg) {
-    if SubscriptionExists(msg.Name) {
+    serviceID := hash(msg.Name, msg.Collector)
+    if SubscriptionExists(serviceID) {
         return DuplicateSubscriptionErr
     }
-    StoreTerms(ctx, msg.Name, msg.Amount, msg.Period, msg.Collector) // Store Terms in store under key "Terms:msg.Name"
-    InitializeDueQueue(ctx, msg.Name) // Initialize empty queue and store under key "DueQueue:Name"
+    StoreTerms(ctx, serviceID, msg.Name, msg.Amount, msg.Period, msg.Collector) // Store Terms in store under key "Terms:serviceID"
+    InitializeDueQueues(ctx, msg.Collector, serviceID, msg.Periods) // Initialize a seperate empty queue for each valid period and store under key "DueQueue:Collector:ServiceID:Period"
 }
 ```
 
 ```go
 func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
-    if !SubscriptionExists(msg.Name) {
+    if !SubscriptionExists(msg.ServiceID) {
         return NoSuchSubscriptionErr
     }
 
-    subscriptionID := hash(msg.Name|msg.Subscriber)
-    Terms := GetTerms(ctx, msg.Name)
+    subscriptionID := hash(msg.ServiceID|msg.Subscriber)
+    Terms := GetTerms(ctx, msg.ServiceID)
 
     if msg.Period not in Terms.Periods {
         return InvalidPeriodErr
@@ -130,7 +135,7 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     
     // check if user already has subscribe to this service
     // if so renew the subscription
-    if subscription := GetUserSubscriptions(msg.Subscriber, msg.Name); subscription != nil {
+    if subscription := GetUserSubscriptions(msg.Subscriber, msg.ServiceID); subscription != nil {
         if msg.Limit == -1 {
             subscription.Limit = -1
         } else {
@@ -156,7 +161,7 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     // adds subscription to list of user subscriptions
     AppendToUserSubscriptions(subscriptionID)
     // push to back of DueQueue for this service
-    PushToBackOfDueQueue(msg.Name, subscriptionID)
+    PushToBackOfDueQueue(msg.Collector, msg.ServiceID, subscriptionID)
 }
 ```
 
@@ -164,16 +169,16 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
 // simply deletes mapping subscriptionID => subscription and removes ID from user list
 // will not mutate duequeue
 func HandleUnsubscribeMsg(ctx sdk.Context, msg UnsubscribeMsg) {
-    DeleteSubscription(msg.Subscriber, msg.Name)
+    DeleteSubscription(msg.Subscriber, msg.ServiceID)
 }
 ```
 
 ```go
 func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
-    if !SubscriptionExists(msg.Name) {
+    if !SubscriptionExists(msg.ServiceID) {
         return NoSuchSubscriptionErr
     }
-    Terms := GetTerms(ctx, msg.Name)
+    Terms := GetTerms(ctx, msg.ServiceID)
     if msg.Collector != Terms.Collector {
         return InvalidCollectorErr
     }
@@ -190,7 +195,7 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
                 // emit event indicating that not all due subscriptions have been collected
                 return nil
             }
-            queue := GetDueQueue(msg.Collector, msg.Name, period)
+            queue := GetDueQueue(msg.Collector, msg.ServiceID, period)
             // top of the queue is "due"
             subscription := GetSubscription(queue[0])
             if subscription == nil {

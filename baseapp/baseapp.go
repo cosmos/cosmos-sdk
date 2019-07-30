@@ -632,9 +632,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 }
 
 // CheckTx implements the ABCI interface. It runs the "basic checks" to see
-// whether or not a transaction can possibly be executed, first decoding, then
-// the ante handler (which checks signatures/fees/ValidateBasic), then finally
-// the route match to see whether a handler exists.
+// whether or not a transaction can possibly be executed, first decoding and then
+// the ante handler (which checks signatures/fees/ValidateBasic).
 //
 // NOTE:CheckTx does not run the actual Msg handler function(s).
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
@@ -904,10 +903,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 
 		msCache.Write()
-	}
-
-	if mode == runTxModeCheck {
-		return result
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped

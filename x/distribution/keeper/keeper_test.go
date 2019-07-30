@@ -5,15 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
-	distrAddr := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
 	keeper.SetWithdrawAddrEnabled(ctx, false)
 
@@ -25,9 +21,8 @@ func TestSetWithdrawAddr(t *testing.T) {
 	err = keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
 	require.Nil(t, err)
 
-	keeper.blacklistedAddrs[distrAddr.String()] = true
-
-	require.Error(t, keeper.SetWithdrawAddr(ctx, delAddr1, distrAddr))
+	keeper.blacklistedAddrs[distrAcc.GetAddress().String()] = true
+	require.Error(t, keeper.SetWithdrawAddr(ctx, delAddr1, distrAcc.GetAddress()))
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {

@@ -59,6 +59,8 @@ var (
 	emptyDelAddr sdk.AccAddress
 	emptyValAddr sdk.ValAddress
 	emptyPubkey  crypto.PubKey
+
+	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
 )
 
 // create a codec used only for testing
@@ -117,7 +119,6 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
 	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
-	distrAcc := supply.NewEmptyModuleAccount(types.ModuleName)
 
 	blacklistedAddrs := make(map[string]bool)
 	blacklistedAddrs[feeCollectorAcc.String()] = true

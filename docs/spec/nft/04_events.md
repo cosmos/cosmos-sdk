@@ -24,6 +24,7 @@ The nft module emits the following events:
 | message           | module        | nft               |
 | message           | action        | edit_nft_metadata |
 | message           | sender        | {senderAddress}   |
+| message           | token-uri     | {tokenURI}        |
 
 ### MsgMintNFT
 
@@ -34,6 +35,7 @@ The nft module emits the following events:
 | message  | module        | nft             |
 | message  | action        | mint_nft        |
 | message  | sender        | {senderAddress} |
+| message  | token-uri     | {tokenURI}      |
 
 ### MsgBurnNFTs
 

@@ -10,11 +10,8 @@ type NFT interface {
   GetID() string                    // unique identifier of the NFT
   GetOwner() sdk.AccAddress         // gets owner account of the NFT
   SetOwner(address sdk.AccAddress)  // gets owner account of the NFT
-  GetName() string                  // metadata field: name of the NFT
-  GetDescription() string           // metadata field: description of the NFT
-  GetImage() string                 // metadata field: image of the NFT
   GetTokenURI() string              // metadata field: URI to retrieve the of chain metadata of the NFT
-  EditMetadata(name, description, image, tokenURI string) // edit metadata of the NFT
+  EditMetadata(tokenURI string)     // edit metadata of the NFT
   String() string                   // string representation of the NFT object
 }
 ```

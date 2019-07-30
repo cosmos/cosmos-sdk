@@ -2,22 +2,22 @@
 
 ## Changelog
 
-- July 29, 2019: Initial Draft
+- July 29, 2019
 
 ## Context
 
-Currently, gaiacli stores key material and metadata in a plaintext database in the user’s home directory.  Key material is encrypted by a passphrase. Metadata is available in plaintext.
+Currently, .gaiacli directory stores key material and metadata in a plain text database in the user’s home directory.  Key material is encrypted by a passphrase and bcrypt hashing algorithm. Metadata (e.g. addresses, public keys, key storage details) is available in plain text. 
 
-This is not desirable for a number of reasons. Perhaps the biggest is that leaking the plain allows an attacker to surveil what keys a given computer controls via any number of techniques like compromised dependencies without any privilege execution. This would be followed by a more target attack on a particular user/computer.
+This is not desirable for a number of reasons. Perhaps the biggest reason is insufficient security protection of key material and metadata. Leaking the plain text allows an attacker to surveil what keys a given computer controls via a number of techniques, like compromised dependencies without any privilege execution. This could be followed by a more targeted attack on a particular user/computer.
 
-All modern desktop computers OS (Ubuntu,Debian, MacOS, Windows) provide a built in secret store that is designed to allow applications to store information that is isolated from all other applications and requires passphrase entry to access the data. 
+All modern desktop computers OS (Ubuntu, Debian, MacOS, Windows) provide a built-in secret store that is designed to allow applications to store information that is isolated from all other applications and requires passphrase entry to access the data. 
 
 We are seeking solution that provides a common abstraction layer to the many different backends and reasonable fallback for minimal platforms that don’t provide a native secret store.
 
 
 ## Decision
 
-We recommend replacing the current Keybase backend based on leveldb with [Keyring](https://github.com/99designs/keyring) by 99 designs. This application is designed to provide a common abstraction between many secret stores and is used by aws-vault application by 99-designs application.
+We recommend replacing the current Keybase backend based on LevelDB with [Keyring](https://github.com/99designs/keyring) by 99 designs. This application is designed to provide a common abstraction and uniform interface between many secret stores and is used by AWS Vault application by 99-designs application.
 
 This appears to fulfill the requirement of protecting both key material and metadata from rouge software on a user’s machine.
 

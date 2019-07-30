@@ -59,12 +59,6 @@ func handleMsgMultiSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgMultiSend
 		return types.ErrSendDisabled(k.Codespace()).Result()
 	}
 
-	for _, in := range msg.Inputs {
-		if k.BlacklistedAddrs()[in.Address.String()] {
-			return sdk.ErrUnauthorized(fmt.Sprintf("%s is not allowed to receive transactions", in.Address)).Result()
-		}
-	}
-
 	for _, out := range msg.Outputs {
 		if k.BlacklistedAddrs()[out.Address.String()] {
 			return sdk.ErrUnauthorized(fmt.Sprintf("%s is not allowed to receive transactions", out.Address)).Result()

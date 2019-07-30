@@ -94,14 +94,6 @@ var (
 			types.NewOutput(moduleAccAddr, coins),
 		},
 	}
-	multiSendMsg7 = types.MsgMultiSend{
-		Inputs: []types.Input{
-			types.NewInput(moduleAccAddr, coins),
-		},
-		Outputs: []types.Output{
-			types.NewOutput(addr1, coins),
-		},
-	}
 )
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -211,7 +203,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			privKeys:   []crypto.PrivKey{priv1},
 		},
 		{
-			msgs:       []sdk.Msg{multiSendMsg6, multiSendMsg7},
+			msgs:       []sdk.Msg{multiSendMsg6},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: false,

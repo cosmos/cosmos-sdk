@@ -60,7 +60,7 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 	filteredVals := make([]types.Validator, 0, len(validators))
 
 	for _, val := range validators {
-		if strings.ToLower(val.GetStatus().String()) == strings.ToLower(params.Status) {
+		if strings.EqualFold(strings.ToLower(val.GetStatus().String()), strings.ToLower(params.Status)) {
 			filteredVals = append(filteredVals, val)
 		}
 	}

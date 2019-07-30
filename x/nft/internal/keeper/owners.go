@@ -126,7 +126,7 @@ func (k Keeper) SwapOwners(ctx sdk.Context, denom string, id string, oldAddress 
 	if !found {
 		newOwnerIDCollection = types.NewIDCollection(denom, []string{})
 	}
-	newOwnerIDCollection.AddID(id)
+	newOwnerIDCollection = newOwnerIDCollection.AddID(id)
 	k.SetOwnerByDenom(ctx, newAddress, denom, newOwnerIDCollection.IDs)
 	return nil
 }

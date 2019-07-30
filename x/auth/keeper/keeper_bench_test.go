@@ -1,4 +1,4 @@
-package auth
+package keeper
 
 import (
 	"testing"
@@ -7,25 +7,25 @@ import (
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
+		input.AccountKeeper.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
 func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),
 		sdk.NewCoin("BTC", sdk.NewInt(1000)),
@@ -39,20 +39,20 @@ func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
+		input.AccountKeeper.GetAccount(input.Ctx, sdk.AccAddress(arr))
 	}
 }
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 
 	b.ResetTimer()
 
@@ -60,13 +60,13 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 }
 
 func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
-	input := setupTestInput()
+	input := SetupTestInput()
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),
 		sdk.NewCoin("BTC", sdk.NewInt(1000)),
@@ -82,8 +82,8 @@ func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
+		acc := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
 		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
+		input.AccountKeeper.SetAccount(input.Ctx, acc)
 	}
 }

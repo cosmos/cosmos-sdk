@@ -1,5 +1,7 @@
 // nolint
-package auth
+package keeper
+
+// DONTCOVER
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -16,10 +18,10 @@ import (
 )
 
 type testInput struct {
-	cdc *codec.Codec
-	ctx sdk.Context
-	ak  AccountKeeper
-	sk  types.SupplyKeeper
+	cdc           *codec.Codec
+	Ctx           sdk.Context
+	AccountKeeper AccountKeeper
+	SupplyKeeper  types.SupplyKeeper
 }
 
 // moduleAccount defines an account for modules that holds coins on a pool
@@ -49,7 +51,7 @@ func (ma moduleAccount) GetPermissions() []string {
 	return ma.permissions
 }
 
-func setupTestInput() testInput {
+func SetupTestInput() testInput {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
@@ -76,7 +78,7 @@ func setupTestInput() testInput {
 
 	ak.SetParams(ctx, types.DefaultParams())
 
-	return testInput{cdc: cdc, ctx: ctx, ak: ak, sk: sk}
+	return testInput{cdc: cdc, Ctx: ctx, AccountKeeper: ak, SupplyKeeper: sk}
 }
 
 // DummySupplyKeeper defines a supply keeper used only for testing to avoid
@@ -136,7 +138,7 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 	macc := &moduleAccount{
 		BaseAccount: &baseAcc,
 		name:        moduleName,
-		permissions: []string{"basic"},
+		permissions: nil,
 	}
 
 	maccI := (sk.ak.NewAccount(ctx, macc)).(exported.ModuleAccountI)

@@ -39,5 +39,12 @@ func (path Path) Query(cms types.CommitMultiStore, key []byte) (uint32, []byte, 
 }
 
 func (path Path) Key(key []byte) []byte {
-	return append(path.KeyPrefix, key...) // XXX: cloneAppend
+	return join(path.KeyPrefix, key)
+}
+
+func join(a, b []byte) (res []byte) {
+	res = make([]byte, len(a)+len(b))
+	copy(res, a)
+	copy(res[len(a):], b)
+	return
 }

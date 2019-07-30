@@ -69,27 +69,21 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
-	Owner       sdk.AccAddress
-	ID          string
-	Denom       string
-	Name        string
-	Description string
-	Image       string
-	TokenURI    string
+	Owner    sdk.AccAddress
+	ID       string
+	Denom    string
+	TokenURI string
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
 func NewMsgEditNFTMetadata(owner sdk.AccAddress, id,
-	denom, name, description, image, tokenURI string,
+	denom, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
-		Owner:       owner,
-		ID:          strings.TrimSpace(id),
-		Denom:       strings.TrimSpace(denom),
-		Name:        strings.TrimSpace(name),
-		Description: strings.TrimSpace(description),
-		Image:       strings.TrimSpace(image),
-		TokenURI:    strings.TrimSpace(tokenURI),
+		Owner:    owner,
+		ID:       strings.TrimSpace(id),
+		Denom:    strings.TrimSpace(denom),
+		TokenURI: strings.TrimSpace(tokenURI),
 	}
 }
 
@@ -130,27 +124,21 @@ func (msg MsgEditNFTMetadata) GetSigners() []sdk.AccAddress {
 
 // MsgMintNFT defines a MintNFT message
 type MsgMintNFT struct {
-	Sender      sdk.AccAddress
-	Recipient   sdk.AccAddress
-	ID          string
-	Denom       string
-	Name        string
-	Description string
-	Image       string
-	TokenURI    string
+	Sender    sdk.AccAddress
+	Recipient sdk.AccAddress
+	ID        string
+	Denom     string
+	TokenURI  string
 }
 
 // NewMsgMintNFT is a constructor function for MsgMintNFT
-func NewMsgMintNFT(sender, recipient sdk.AccAddress, id, denom, name, description, image, tokenURI string) MsgMintNFT {
+func NewMsgMintNFT(sender, recipient sdk.AccAddress, id, denom, tokenURI string) MsgMintNFT {
 	return MsgMintNFT{
-		Sender:      sender,
-		Recipient:   recipient,
-		ID:          strings.TrimSpace(id),
-		Denom:       strings.TrimSpace(denom),
-		Name:        strings.TrimSpace(name),
-		Description: strings.TrimSpace(description),
-		Image:       strings.TrimSpace(image),
-		TokenURI:    strings.TrimSpace(tokenURI),
+		Sender:    sender,
+		Recipient: recipient,
+		ID:        strings.TrimSpace(id),
+		Denom:     strings.TrimSpace(denom),
+		TokenURI:  strings.TrimSpace(tokenURI),
 	}
 }
 

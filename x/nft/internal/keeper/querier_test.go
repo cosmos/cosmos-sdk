@@ -26,7 +26,7 @@ func TestQuerySupply(t *testing.T) {
 	ctx, keeper, cdc := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestQueryCollection(t *testing.T) {
 	ctx, keeper, cdc := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -106,7 +106,7 @@ func TestQueryOwner(t *testing.T) {
 	ctx, keeper, cdc := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -171,7 +171,7 @@ func TestQueryNFT(t *testing.T) {
 	ctx, keeper, cdc := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -213,7 +213,7 @@ func TestQueryDenoms(t *testing.T) {
 	ctx, keeper, cdc := Initialize()
 
 	// MintNFT shouldn't fail when collection does not exist
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 

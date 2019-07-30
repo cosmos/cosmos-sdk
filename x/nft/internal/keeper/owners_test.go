@@ -11,30 +11,30 @@ import (
 func TestGetOwners(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
-	nft2 := types.NewBaseNFT(id2, address2, name, description, image, tokenURI)
+	nft2 := types.NewBaseNFT(id2, address2, tokenURI)
 	err = keeper.MintNFT(ctx, denom, &nft2)
 	require.NoError(t, err)
 
-	nft3 := types.NewBaseNFT(id3, address3, name, description, image, tokenURI)
+	nft3 := types.NewBaseNFT(id3, address3, tokenURI)
 	err = keeper.MintNFT(ctx, denom, &nft3)
 	require.NoError(t, err)
 
 	owners := keeper.GetOwners(ctx)
 	require.Equal(t, 3, len(owners))
 
-	nft = types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft = types.NewBaseNFT(id, address, tokenURI)
 	err = keeper.MintNFT(ctx, denom2, &nft)
 	require.NoError(t, err)
 
-	nft2 = types.NewBaseNFT(id2, address2, name, description, image, tokenURI)
+	nft2 = types.NewBaseNFT(id2, address2, tokenURI)
 	err = keeper.MintNFT(ctx, denom2, &nft2)
 	require.NoError(t, err)
 
-	nft3 = types.NewBaseNFT(id3, address3, name, description, image, tokenURI)
+	nft3 = types.NewBaseNFT(id3, address3, tokenURI)
 	err = keeper.MintNFT(ctx, denom2, &nft3)
 	require.NoError(t, err)
 
@@ -45,7 +45,7 @@ func TestGetOwners(t *testing.T) {
 func TestSetOwner(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -64,11 +64,11 @@ func TestSetOwner(t *testing.T) {
 func TestSetOwners(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
-	nft = types.NewBaseNFT(id2, address2, name, description, image, tokenURI)
+	nft = types.NewBaseNFT(id2, address2, tokenURI)
 	err = keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
@@ -93,7 +93,7 @@ func TestSetOwners(t *testing.T) {
 func TestSwapOwners(t *testing.T) {
 	ctx, keeper, _ := Initialize()
 
-	nft := types.NewBaseNFT(id, address, name, description, image, tokenURI)
+	nft := types.NewBaseNFT(id, address, tokenURI)
 	err := keeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 

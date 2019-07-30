@@ -71,7 +71,7 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 	}
 
 	// update NFT
-	nft.EditMetadata(msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	nft.EditMetadata(msg.TokenURI)
 	err = k.UpdateNFT(ctx, msg.Denom, nft)
 	if err != nil {
 		return err.Result()
@@ -96,7 +96,7 @@ func HandleMsgEditNFTMetadata(ctx sdk.Context, msg types.MsgEditNFTMetadata, k k
 func HandleMsgMintNFT(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keeper,
 ) sdk.Result {
 
-	nft := types.NewBaseNFT(msg.ID, msg.Recipient, msg.Name, msg.Description, msg.Image, msg.TokenURI)
+	nft := types.NewBaseNFT(msg.ID, msg.Recipient, msg.TokenURI)
 	err := k.MintNFT(ctx, msg.Denom, &nft)
 	if err != nil {
 		return err.Result()

@@ -29,9 +29,6 @@ func TestTransferNFTMsg(t *testing.T) {
 	nft := types.NewBaseNFT(
 		id,
 		address,
-		"Name",
-		"Description",
-		"ImageURI",
 		"TokenURI",
 	)
 
@@ -120,9 +117,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 	nft := types.NewBaseNFT(
 		id,
 		address,
-		name,
-		description,
-		image,
 		tokenURI,
 	)
 
@@ -134,9 +128,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 		address,
 		id,
 		denom2,
-		name2,
-		description2,
-		image2,
 		tokenURI2,
 	)
 
@@ -148,9 +139,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 		address,
 		id,
 		denom,
-		name2,
-		description2,
-		image2,
 		tokenURI2,
 	)
 
@@ -178,9 +166,6 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
-	require.Equal(t, name2, nftAfterwards.GetName())
-	require.Equal(t, description2, nftAfterwards.GetDescription())
-	require.Equal(t, image2, nftAfterwards.GetImage())
 	require.Equal(t, tokenURI2, nftAfterwards.GetTokenURI())
 
 }
@@ -196,9 +181,6 @@ func TestMintNFTMsg(t *testing.T) {
 		address,
 		id,
 		denom,
-		name,
-		description,
-		image,
 		tokenURI,
 	)
 
@@ -230,9 +212,6 @@ func TestMintNFTMsg(t *testing.T) {
 	nftAfterwards, err := k.GetNFT(ctx, denom, id)
 
 	require.NoError(t, err)
-	require.Equal(t, name, nftAfterwards.GetName())
-	require.Equal(t, description, nftAfterwards.GetDescription())
-	require.Equal(t, image, nftAfterwards.GetImage())
 	require.Equal(t, tokenURI, nftAfterwards.GetTokenURI())
 
 	// minting the same token should fail
@@ -252,9 +231,6 @@ func TestBurnNFTMsg(t *testing.T) {
 	nft := types.NewBaseNFT(
 		id,
 		address,
-		name,
-		description,
-		image,
 		tokenURI,
 	)
 

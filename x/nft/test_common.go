@@ -13,23 +13,17 @@ import (
 
 // nolint: deadcode unused
 var (
-	denom        = "denom"
-	denom2       = "test-denom2"
-	denom3       = "test-denom3"
-	id           = "1"
-	id2          = "2"
-	id3          = "3"
-	address      = CreateTestAddrs(1)[0]
-	address2     = CreateTestAddrs(2)[1]
-	address3     = CreateTestAddrs(3)[2]
-	name         = "cool token"
-	name2        = "cooler token"
-	description  = "a very cool token"
-	description2 = "a super cool token"
-	image        = "https://google.com/token-1.png"
-	image2       = "https://google.com/token-2.png"
-	tokenURI     = "https://google.com/token-1.json"
-	tokenURI2    = "https://google.com/token-2.json"
+	denom     = "denom"
+	denom2    = "test-denom2"
+	denom3    = "test-denom3"
+	id        = "1"
+	id2       = "2"
+	id3       = "3"
+	address   = CreateTestAddrs(1)[0]
+	address2  = CreateTestAddrs(2)[1]
+	address3  = CreateTestAddrs(3)[2]
+	tokenURI  = "https://google.com/token-1.json"
+	tokenURI2 = "https://google.com/token-2.json"
 )
 
 // CheckInvariants checks the invariants

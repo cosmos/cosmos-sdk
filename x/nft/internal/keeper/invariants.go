@@ -37,8 +37,7 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		owners := k.GetOwners(ctx)
-		for _, owner := range owners {
+		for _, owner := range k.GetOwners(ctx) {
 			for _, idCollection := range owner.IDCollections {
 				ownersCollectionsSupply[idCollection.Denom] += idCollection.Supply()
 			}

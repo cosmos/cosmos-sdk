@@ -69,18 +69,18 @@ func (msg MsgTransferNFT) GetSigners() []sdk.AccAddress {
 
 // MsgEditNFTMetadata edits an NFT's metadata
 type MsgEditNFTMetadata struct {
-	Owner    sdk.AccAddress
+	Sender   sdk.AccAddress
 	ID       string
 	Denom    string
 	TokenURI string
 }
 
 // NewMsgEditNFTMetadata is a constructor function for MsgSetName
-func NewMsgEditNFTMetadata(owner sdk.AccAddress, id,
+func NewMsgEditNFTMetadata(sender sdk.AccAddress, id,
 	denom, tokenURI string,
 ) MsgEditNFTMetadata {
 	return MsgEditNFTMetadata{
-		Owner:    owner,
+		Sender:   sender,
 		ID:       strings.TrimSpace(id),
 		Denom:    strings.TrimSpace(denom),
 		TokenURI: strings.TrimSpace(tokenURI),
@@ -95,8 +95,8 @@ func (msg MsgEditNFTMetadata) Type() string { return "edit_nft_metadata" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
-	if msg.Owner.Empty() {
-		return sdk.ErrInvalidAddress("invalid owner address")
+	if msg.Sender.Empty() {
+		return sdk.ErrInvalidAddress("invalid sender address")
 	}
 	if msg.ID == "" {
 		return ErrInvalidNFT(DefaultCodespace)
@@ -115,7 +115,7 @@ func (msg MsgEditNFTMetadata) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgEditNFTMetadata) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Owner}
+	return []sdk.AccAddress{msg.Sender}
 }
 
 /* --------------------------------------------------------------------------- */

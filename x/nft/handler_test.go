@@ -158,6 +158,8 @@ func TestEditNFTMetadataMsg(t *testing.T) {
 				require.Equal(t, value, id)
 			case "sender":
 				require.Equal(t, value, address.String())
+			case "token-uri":
+				require.Equal(t, value, tokenURI2)
 			default:
 				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}
@@ -203,6 +205,8 @@ func TestMintNFTMsg(t *testing.T) {
 				require.Equal(t, value, address.String())
 			case "recipient":
 				require.Equal(t, value, address.String())
+			case "token-uri":
+				require.Equal(t, value, tokenURI)
 			default:
 				require.Fail(t, fmt.Sprintf("unrecognized event %s", key))
 			}

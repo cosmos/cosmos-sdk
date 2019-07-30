@@ -10,9 +10,10 @@ var (
 
 	AttributeValueCategory = ModuleName
 
-	AttributeKeySender    = "sender"
-	AttributeKeyRecipient = "recipient"
-	AttributeKeyOwner     = "owner"
-	AttributeKeyNFTID     = "nft-id"
-	AttributeKeyDenom     = "denom"
+	AttributeKeySender      = "sender"
+	AttributeKeyRecipient   = "recipient"
+	AttributeKeyOwner       = "owner"
+	AttributeKeyNFTID       = "nft-id"
+	AttributeKeyNFTTokenURI = "token-uri"
+	AttributeKeyDenom       = "denom"
 )

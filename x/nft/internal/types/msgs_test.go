@@ -63,7 +63,7 @@ func TestNewMsgEditNFTMetadata(t *testing.T) {
 		fmt.Sprintf("     %s     ", denom),
 		fmt.Sprintf("     %s     ", tokenURI))
 
-	require.Equal(t, newMsgEditNFTMetadata.Owner.String(), address.String())
+	require.Equal(t, newMsgEditNFTMetadata.Sender.String(), address.String())
 	require.Equal(t, newMsgEditNFTMetadata.ID, id)
 	require.Equal(t, newMsgEditNFTMetadata.Denom, denom)
 	require.Equal(t, newMsgEditNFTMetadata.TokenURI, tokenURI)
@@ -92,7 +92,7 @@ func TestMsgEditNFTMetadataValidateBasicMethod(t *testing.T) {
 func TestMsgEditNFTMetadataGetSignBytesMethod(t *testing.T) {
 	newMsgEditNFTMetadata := NewMsgEditNFTMetadata(address, id, denom, tokenURI)
 	sortedBytes := newMsgEditNFTMetadata.GetSignBytes()
-	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgEditNFTMetadata","value":{"Denom":"%s","ID":"%s","Owner":"%s","TokenURI":"%s"}}`,
+	require.Equal(t, string(sortedBytes), fmt.Sprintf(`{"type":"cosmos-sdk/MsgEditNFTMetadata","value":{"Denom":"%s","ID":"%s","Sender":"%s","TokenURI":"%s"}}`,
 		denom, id, address.String(), tokenURI,
 	))
 }

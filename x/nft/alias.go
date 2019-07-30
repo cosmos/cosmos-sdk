@@ -77,6 +77,7 @@ var (
 	AttributeKeyRecipient    = types.AttributeKeyRecipient
 	AttributeKeyOwner        = types.AttributeKeyOwner
 	AttributeKeyNFTID        = types.AttributeKeyNFTID
+	AttributeKeyNFTTokenURI  = types.AttributeKeyNFTTokenURI
 	AttributeKeyDenom        = types.AttributeKeyDenom
 	CollectionsKeyPrefix     = types.CollectionsKeyPrefix
 	OwnersKeyPrefix          = types.OwnersKeyPrefix

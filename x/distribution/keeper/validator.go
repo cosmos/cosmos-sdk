@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -86,33 +88,20 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 }
 
 func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
-	if fraction.GT(sdk.OneDec()) {
-		panic("fraction greater than one")
+	if fraction.GT(sdk.OneDec()) || fraction.LT(sdk.ZeroDec()) {
+		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
 	}
+
+	val := k.stakingKeeper.Validator(ctx, valAddr)
+
+	// increment current period
+	newPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// increment reference count on period we need to track
+	k.incrementReferenceCount(ctx, valAddr, newPeriod)
+
+	slashEvent := types.NewValidatorSlashEvent(newPeriod, fraction)
 	height := uint64(ctx.BlockHeight())
-	currentFraction := sdk.ZeroDec()
-	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
-	current, found := k.GetValidatorSlashEvent(ctx, valAddr, height)
-	if found {
-		// there has already been a slash event this height,
-		// and we don't need to store more than one,
-		// so just update the current slash fraction
-		currentFraction = current.Fraction
-	} else {
-		val := k.stakingKeeper.Validator(ctx, valAddr)
-		// increment current period
-		endedPeriod = k.incrementValidatorPeriod(ctx, val)
-		// increment reference count on period we need to track
-		k.incrementReferenceCount(ctx, valAddr, endedPeriod)
-	}
-	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
-	newMultiplicand := sdk.OneDec().Sub(fraction)
 
-	// using MulTruncate here conservatively increases the slashing amount
-	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.MulTruncate(newMultiplicand))
-
-	if updatedFraction.LT(sdk.ZeroDec()) {
-		panic("negative slash fraction")
-	}
-	k.SetValidatorSlashEvent(ctx, valAddr, height, types.NewValidatorSlashEvent(endedPeriod, updatedFraction))
+	k.SetValidatorSlashEvent(ctx, valAddr, height, newPeriod, slashEvent)
 }

@@ -3,6 +3,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,6 +23,21 @@ const (
 	DefaultPage  = 1
 	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
+
+// ResponseWithHeight defines a response object type that wraps an original
+// response with a height.
+type ResponseWithHeight struct {
+	Height int64           `json:"height"`
+	Result json.RawMessage `json:"result"`
+}
+
+// NewResponseWithHeight creates a new ResponseWithHeight instance
+func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHeight {
+	return ResponseWithHeight{
+		Height: height,
+		Result: result,
+	}
+}
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
@@ -221,25 +237,51 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 	return cliCtx, true
 }
 
-// PostProcessResponse performs post processing for a REST response.
-func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
-	var output []byte
+// PostProcessResponse performs post processing for a REST response. The result
+// returned to clients will contain two fields, the height at which the resource
+// was queried at and the original result.
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp interface{}) {
+	var result []byte
 
-	switch response.(type) {
+	if cliCtx.Height < 0 {
+		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
+		return
+	}
+
+	switch resp.(type) {
 	case []byte:
-		output = response.([]byte)
+		result = resp.([]byte)
 
 	default:
 		var err error
 		if cliCtx.Indent {
-			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
+			result, err = cliCtx.Codec.MarshalJSONIndent(resp, "", "  ")
 		} else {
-			output, err = cliCtx.Codec.MarshalJSON(response)
+			result, err = cliCtx.Codec.MarshalJSON(resp)
 		}
+
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+	}
+
+	wrappedResp := NewResponseWithHeight(cliCtx.Height, result)
+
+	var (
+		output []byte
+		err    error
+	)
+
+	if cliCtx.Indent {
+		output, err = cliCtx.Codec.MarshalJSONIndent(wrappedResp, "", "  ")
+	} else {
+		output, err = cliCtx.Codec.MarshalJSON(wrappedResp)
+	}
+
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

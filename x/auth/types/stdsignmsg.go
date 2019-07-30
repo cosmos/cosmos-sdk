@@ -8,12 +8,12 @@ import (
 // a Msg with the other requirements for a StdSignDoc before
 // it is signed. For use in the CLI.
 type StdSignMsg struct {
-	ChainID       string    `json:"chain_id"`
-	AccountNumber uint64    `json:"account_number"`
-	Sequence      uint64    `json:"sequence"`
-	Fee           StdFee    `json:"fee"`
-	Msgs          []sdk.Msg `json:"msgs"`
-	Memo          string    `json:"memo"`
+	ChainID       string    `json:"chain_id" yaml:"chain_id"`
+	AccountNumber uint64    `json:"account_number" yaml:"account_number"`
+	Sequence      uint64    `json:"sequence" yaml:"sequence"`
+	Fee           StdFee    `json:"fee" yaml:"fee"`
+	Msgs          []sdk.Msg `json:"msgs" yaml:"msgs"`
+	Memo          string    `json:"memo" yaml:"memo"`
 }
 
 // get message bytes

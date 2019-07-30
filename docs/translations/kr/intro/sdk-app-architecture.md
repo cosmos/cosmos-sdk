@@ -57,3 +57,41 @@
 텐더민트 합의 알고리즘은 '검증인(Validators)'이라는 특정 노드 세트를 기반으로 작동합니다. 검증인의 주 역할은 트랜잭션을 블록 단위로 블록체인에 추가하는 것입니다. 특정 블록에는 V 검증인 세트 검증인 존재하며, 이 V 검증인 세트 안에 있는 검증인 중 하나의 검증인이 다음 블록 생성자로 알고리즘에 의해 선택됩니다. 만약 블록이 V 검증인 세트 2/3 이상의 [프리보트(prevote)](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)와 [프리커밋(precommit)](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)을 받고 내용 트랜잭션이 유효한 경우 해당 블록은 '유효(valid)'한 것으로 간주됩니다. 검증인 세트는 스테이트 머신에 작성된 규칙에 따라서 바뀔 수 있습니다. 알고리즘에 대해 더 자세한 정보는 [여기](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview)를 참고하세요.
 
 코스모스 SDK 애플리케이션의 주요 파트는 네트워크에 포함되어있는 노드가 각자 로컬 환경에서 운영하는 블록체인 데몬(daemon)입니다. 만약 *검증인 세트*의 1/3 이하가 악의적(byzantine)인 경우, 각 노드는 동시에 스테이트를 조회할때 동일한 결과를 받게됩니다.
+
+## ABCI
+
+텐더민트는 네트워크에서 어플리케이션으로 거래를 넘겨줍니다. 이때, ABCI 라고 불리우는 인터페이스를 사용합니다. 그리고 이는 어플리케이션이 반드시 구현해야하는 부분입니다. 
+
+```
++---------------------+
+|                     |
+|     Application     |
+|                     |
++--------+---+--------+
+         ^   |
+         |   | ABCI
+         |   v
++--------+---+--------+
+|                     |
+|                     |
+|     Tendermint      |
+|                     |
+|                     |
++---------------------+
+```
+
+**텐더민트는 오직 거래의 bytes 값들만 취급하지 실제 그 bytes 들이 어떤 의미를 가지고 있는지는 파악하지 않습니다.** 텐더민트가 하는 일은 이 거래 bytes 들을 결정론적으로 나열하는 것 뿐입니다. 텐더민트는 이 bytes 들을 ABCI 를 통해서 어플리케이션에 넘겨주고, 그 메세지에 담겨있는 거래들이 잘 처리되었는지 안되었는지를 확인해주는 return code 를 기다립니다. 
+
+아래에 ABCI 의 메세지들 중 가장 중요한 것들을 나열해놓았습니다:
+
+- `CheckTx`: 텐더민트 코어로부터 거래를 받게 될 때, 이 거래는 어플리케이션에 넘겨져서 몇가지 기본 요건을 잘 만족했는지를 확인합니다. `CheckTx` 는 풀노드의 mempool을 스팸행위로 부터 보호하는데 사용됩니다. "Ante Handler" 라고 불리우는 특별한 handler 는 일련의 검증 과정을 실행하는데 사용됩니다. 예를 들면, 충분한 수수료가 있는지와 서명이 유효한지를 확인합니다. 만약 검사 결과가 유효한 것으로 나오게 되면, 그 거래는 [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) 에 더해지게 됩니다. 그리고 피어 노드들에게도 전달됩니다. 거래가 블록에 담기기 전까지는 `CheckTx` 과정은 진행되지 않는다. (즉, 상태의 변경이 일어나지 않는다.) 
+
+- `DelieverTx` : [유효한 블록](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation)이 텐더민트 코어에 의해서 전달되었을 때, 해당 블록에 있는 모든 개별 거래들은 `DeliverTx`에 의해서 어플리케이션에게 전달됩니다. 상태 변환이 일어나는 단계가 이 단계이다. "Ante Handler" 는 실제 handler 와 함께 거래 내의 각 메세지에 대한 검증을 위해 다시 실행한다. 
+
+- `BeginBlock`/`EndBlock` : 이 메세지들은 블록이 거래를 담고 있던 아니던 각 블록의 시작과 끝에 실행됩니다. 과정을 자동화 해놓으면 상당히 유용할 것입니다. 하지만, 진행 중 주의해야 할 사안이 하나 있습니다. 과도하게 컴퓨팅 자원이 많이 필요로 하는 루프는 블록체인의 속도 면에서 악영향을 끼칠 수 있고 만약 무한 루프라면 작동을 멈출 수도 있습니다. 
+
+ABCI 메소드와 타입에 대해서 더 자세하게 싶다면, [여기](https://tendermint.com/docs/spec/abci/abci.html#overview)를 클릭하십시오. 
+
+텐더민트 상에서 구현된 모든 어플리케이션은 ABCI 인터페이스를 구현해야만 합니다. 그래야 로컬 텐더민트 엔진과 통신할 수 있습니다. 다행스럽게도, 당신이 스스로 직접 ABCI 인터페이스를 구현할 필요는 없습니다. Cosmos SDK 가 [baseapp](https://cosmos.network/docs/intro/sdk-design.html#baseapp) 의 형태로 boilerplate 를 제공합니다. 
+
+### 자 이제 다음단계로 [SDK 고수준 설계 원칙에 대해서 알아보자.](https://cosmos.network/docs/intro/sdk-design.html#baseapp)  

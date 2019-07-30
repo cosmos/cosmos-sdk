@@ -1,6 +1,7 @@
 package merkle
 
 import (
+	"crypto/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func defaultComponents() (sdk.StoreKey, sdk.Context, types.CommitMultiStore, *codec.Codec) {
@@ -36,54 +37,92 @@ func commit(cms types.CommitMultiStore) Root {
 	return NewRoot(cid.Hash)
 }
 
+// TestStore tests Merkle proof on the commitment.Store
+// Sets/upates key-value pairs and prove with the query result proofs
 func TestStore(t *testing.T) {
 	k, ctx, cms, _ := defaultComponents()
 	kvstore := ctx.KVStore(k)
 	path := Path{KeyPath: [][]byte{[]byte("test")}, KeyPrefix: []byte{0x01, 0x03, 0x05}}
 
-	kvstore.Set(path.Key([]byte("hello")), []byte("world"))
-	kvstore.Set(path.Key([]byte("merkle")), []byte("tree"))
-	kvstore.Set(path.Key([]byte("block")), []byte("chain"))
+	m := make(map[string][]byte)
+	kvpn := 1000
 
-	root := commit(cms)
+	// Repeat 100 times to test on multiple commits
+	for repeat := 0; repeat < 10; repeat++ {
 
-	c1, v1, p1 := path.QueryMultiStore(cms, []byte("hello"))
-	require.Equal(t, uint32(0), c1)
-	require.Equal(t, []byte("world"), v1)
-	c2, v2, p2 := path.QueryMultiStore(cms, []byte("merkle"))
-	require.Equal(t, uint32(0), c2)
-	require.Equal(t, []byte("tree"), v2)
-	c3, v3, p3 := path.QueryMultiStore(cms, []byte("block"))
-	require.Equal(t, uint32(0), c3)
-	require.Equal(t, []byte("chain"), v3)
+		// Initializes random generated key-value pairs
+		for i := 0; i < kvpn; i++ {
+			k, v := make([]byte, 64), make([]byte, 64)
+			rand.Read(k)
+			rand.Read(v)
+			m[string(k)] = v
+			kvstore.Set(path.Key(k), v)
+		}
 
-	cstore, err := commitment.NewStore(root, path, []commitment.Proof{p1, p2, p3})
-	require.NoError(t, err)
+		// Commit store
+		root := commit(cms)
 
-	require.True(t, cstore.Prove([]byte("hello"), []byte("world")))
-	require.True(t, cstore.Prove([]byte("merkle"), []byte("tree")))
-	require.True(t, cstore.Prove([]byte("block"), []byte("chain")))
+		// Test query, and accumulate proofs
+		proofs := make([]commitment.Proof, 0, kvpn)
+		for k, v := range m {
+			c, v0, p := path.Query(cms, []byte(k))
+			require.Equal(t, uint32(0), c)
+			require.Equal(t, v, v0)
+			proofs = append(proofs, p)
+		}
 
-	kvstore.Set(path.Key([]byte("12345")), []byte("67890"))
-	kvstore.Set(path.Key([]byte("qwerty")), []byte("zxcv"))
-	kvstore.Set(path.Key([]byte("hello")), []byte("dlrow"))
+		// Add some exclusion proofs
+		for i := 0; i < 100; i++ {
+			k := make([]byte, 64)
+			rand.Read(k)
+			c, v, p := path.Query(cms, k)
+			require.Equal(t, uint32(0), c)
+			require.Nil(t, v)
+			proofs = append(proofs, p)
+			m[string(k)] = []byte{}
+		}
 
-	root = commit(cms)
+		cstore, err := commitment.NewStore(root, path, proofs)
+		require.NoError(t, err)
 
-	c1, v1, p1 = path.QueryMultiStore(cms, []byte("12345"))
-	require.Equal(t, uint32(0), c1)
-	require.Equal(t, []byte("67890"), v1)
-	c2, v2, p2 = path.QueryMultiStore(cms, []byte("qwerty"))
-	require.Equal(t, uint32(0), c2)
-	require.Equal(t, []byte("zxcv"), v2)
-	c3, v3, p3 = path.QueryMultiStore(cms, []byte("hello"))
-	require.Equal(t, uint32(0), c3)
-	require.Equal(t, []byte("dlrow"), v3)
+		// Test commitment store
+		for k, v := range m {
+			if len(v) != 0 {
+				require.True(t, cstore.Prove([]byte(k), v))
+			} else {
+				require.True(t, cstore.Prove([]byte(k), nil))
+			}
+		}
 
-	cstore, err = commitment.NewStore(root, path, []commitment.Proof{p1, p2, p3})
-	require.NoError(t, err)
+		// Modify existing data
+		for k := range m {
+			v := make([]byte, 64)
+			rand.Read(v)
+			m[k] = v
+			kvstore.Set(path.Key([]byte(k)), v)
+		}
 
-	require.True(t, cstore.Prove([]byte("12345"), []byte("67890")))
-	require.True(t, cstore.Prove([]byte("qwerty"), []byte("zxcv")))
-	require.True(t, cstore.Prove([]byte("hello"), []byte("dlrow")))
+		root = commit(cms)
+
+		// Test query, and accumulate proofs
+		proofs = make([]commitment.Proof, 0, kvpn)
+		for k, v := range m {
+			c, v0, p := path.Query(cms, []byte(k))
+			require.Equal(t, uint32(0), c)
+			require.Equal(t, v, v0)
+			proofs = append(proofs, p)
+		}
+
+		cstore, err = commitment.NewStore(root, path, proofs)
+		require.NoError(t, err)
+
+		// Test commitment store
+		for k, v := range m {
+			if len(v) != 0 {
+				require.True(t, cstore.Prove([]byte(k), v))
+			} else {
+				require.True(t, cstore.Prove([]byte(k), nil))
+			}
+		}
+	}
 }

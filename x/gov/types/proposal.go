@@ -12,18 +12,18 @@ import (
 // Proposal defines a struct used by the governance module to allow for voting
 // on network changes.
 type Proposal struct {
-	Content `json:"content"` // Proposal content interface
+	Content `json:"content" yaml:"content"` // Proposal content interface
 
-	ProposalID       uint64         `json:"id"`                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
+	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
+	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
 
-	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit"`    // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
@@ -197,10 +197,10 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 
 // Tally Results
 type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
+	Yes        sdk.Int `json:"yes" yaml:"yes"`
+	Abstain    sdk.Int `json:"abstain" yaml:"abstain"`
+	No         sdk.Int `json:"no" yaml:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto" yaml:"no_with_veto"`
 }
 
 func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
@@ -255,8 +255,8 @@ const (
 
 // Text Proposal
 type TextProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
 func NewTextProposal(title, description string) Content {
@@ -284,8 +284,8 @@ func (tp TextProposal) String() string {
 // TODO: We have to add fields for SUP specific arguments e.g. commit hash,
 // upgrade date, etc.
 type SoftwareUpgradeProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
 func NewSoftwareUpgradeProposal(title, description string) Content {

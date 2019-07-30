@@ -21,8 +21,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 // SendReq defines the properties of a send request's body.
 type SendReq struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-	Amount  sdk.Coins    `json:"amount"`
+	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
+	Amount  sdk.Coins    `json:"amount" yaml:"amount"`
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address.

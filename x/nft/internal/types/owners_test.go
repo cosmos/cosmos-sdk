@@ -157,12 +157,10 @@ func TestOwnerUpdateIDCollectionMethod(t *testing.T) {
 	// UpdateIDCollection should fail if denom doesn't exist
 	returnedOwner, err := owner.UpdateIDCollection(idCollection2)
 	require.Error(t, err)
-	require.Equal(t, owner.String(), returnedOwner.String())
 
 	idCollection3 := NewIDCollection(denom, ids2)
 	returnedOwner, err = owner.UpdateIDCollection(idCollection3)
 	require.NoError(t, err)
-	require.NotEqual(t, owner.String(), returnedOwner.String())
 	require.Equal(t, returnedOwner.Supply(), 2)
 
 	owner = returnedOwner

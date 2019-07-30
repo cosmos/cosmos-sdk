@@ -17,7 +17,7 @@ Service providers can define valid periods their users can choose from (e.g.: 3 
 
 If the user does not have enough funds to pay for the current period, the subscription is inactivated. The user can always refund the account and resubscribe.
 
-Users can define maximum limits on how many periods the subscription is valid for. If this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without user noticing. For example, a user can subscribe to a service with a period of 3 months with a limit of 4. This subscription will automatically expire after a year unless the user manually increases/removes the limit with a second `SubscribeMsg`.
+Users can define maximum limits on how many periods the subscription is valid for. If this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without the user noticing. For example, a user can subscribe to a service with a period of 3 months with a limit of 4. This subscription will automatically expire after a year unless the user manually increases/removes the limit with a second `SubscribeMsg`.
 
 Users can also manually unsubscribe by submitting an `UnsubscribeMsg`
 
@@ -117,7 +117,7 @@ func HandleCreateSubscriptionMsg(ctx sdk.Context, msg CreateSubscriptionMsg) {
     if SubscriptionExists(serviceID) {
         return DuplicateSubscriptionErr
     }
-    StoreTerms(ctx, serviceID, msg.Name, msg.Amount, msg.Period, msg.Collector) // Store Terms in store under key "Terms:serviceID"
+    StoreTerms(ctx, serviceID, msg.Name, msg.Amounts, msg.Periods, msg.Collector) // Store Terms in store under key "Terms:serviceID"
     InitializeDueQueues(ctx, msg.Collector, serviceID, msg.Periods) // Initialize a seperate empty queue for each valid period and store under key "DueQueue:Collector:ServiceID:Period"
 }
 ```
@@ -139,8 +139,13 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     // if so renew the subscription
     if subscription := GetUserSubscriptions(msg.Subscriber, msg.ServiceID); subscription != nil {
         if msg.Limit == -1 {
+            // make subscription infinite
             subscription.Limit = -1
+        } else if subscription.Limit = -1 {
+            // change infinite subscription limit to finite
+            subscription.Limit = msg.Limit
         } else {
+            // increase limit of subscription by msg.Limit
             subscription.Limit += msg.Limit
         }
         StoreSubscription(subscriptionID, subscription)
@@ -198,20 +203,26 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
                 return nil
             }
             queue := GetDueQueue(msg.Collector, msg.ServiceID, period)
-            // top of the queue is "due"
             subscription := GetSubscription(queue[0])
+            // check if subscription has been deleted. If so decrement limit and continue
+            // Do not place back on DueQueue
             if subscription == nil {
                 limit--
                 continue
             }
+            // top of the queue is "due"
             if subscription.LastPaid + period >= ctx.BlockTime {
                 subscriptionID := PopOffFront(queue)
+                // User-set expiration has been reached without renewal. Delete subscription
                 if subscription.Limit == 0 {
                     DeleteSubscription(subscription.Subscriber, subscription.Name)
                     limit--
                     continue
                 }
+                // pay for the current period
                 err := bank.Send(subscription.Subscriber, Terms.Collector, Terms.Amount)
+                // Could not make payment (insufficient funds in account)
+                // Delete subscription and decrement limit. Do not place back on DueQueue
                 if err != nil {
                     DeleteSubscription(subscription.Subscriber, subscription.Name)
                     limit--

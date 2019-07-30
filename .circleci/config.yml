@@ -83,6 +83,14 @@ jobs:
       - make:
           target: test_sim_after_import
           description: "Test simulation after import"
+      - run:
+          command: |
+            mkdir -p /tmp/errors
+            cp /tmp/**/app-simulation-seed* /tmp/errors/
+          when: on_fail
+
+      - store_artifacts:
+          path: /tmp/errors
 
   test_sim_multi_seed_long:
     executor: golang

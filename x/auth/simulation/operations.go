@@ -1,5 +1,7 @@
 package simulation
 
+// DONTCOVER
+
 import (
 	"errors"
 	"fmt"
@@ -7,13 +9,36 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateDeductFee
+// Simulation parameter constants
+const (
+	OpWeightDeductFee = "op_weight_deduct_fee"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(cdc *codec.Codec, ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.WeightedOperations {
+	return simulation.WeightedOperations{
+		simulation.NewWeigthedOperation(
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(cdc, OpWeightDeductFee, &v, nil,
+					func(_ *rand.Rand) {
+						v = 5
+					})
+				return v
+			}(nil),
+			SimulateDeductFee(ak, supplyKeeper),
+		),
+	}
+}
+
+// SimulateDeductFee operation
 func SimulateDeductFee(ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (

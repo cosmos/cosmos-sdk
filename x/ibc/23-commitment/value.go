@@ -6,11 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Mapping is key []byte -> value []byte mapping, possibly prefixed.
+// Proof verification should be done over Value constructed from the Mapping.
 type Mapping struct {
 	cdc    *codec.Codec
 	prefix []byte
 }
 
+// NewMapping() constructs a new Mapping.
+// The KVStore accessor is fixed to the commitment store.
 func NewMapping(cdc *codec.Codec, prefix []byte) Mapping {
 	return Mapping{
 		cdc:    cdc,
@@ -22,6 +26,7 @@ func (m Mapping) store(ctx sdk.Context) Store {
 	return NewPrefix(GetStore(ctx), m.prefix)
 }
 
+// Prefix() returns a new Mapping with the updated prefix
 func (m Mapping) Prefix(prefix []byte) Mapping {
 	return Mapping{
 		cdc:    m.cdc,
@@ -73,10 +78,12 @@ type Integer struct {
 	enc state.IntEncoding
 }
 
+// Integer() wraps the argument Value as Integer
 func (v Value) Integer(enc state.IntEncoding) Integer {
 	return Integer{v, enc}
 }
 
+// Is() proves the proof with the Integer's key and the provided value
 func (v Integer) Is(ctx sdk.Context, value uint64) bool {
 	return v.Value.IsRaw(ctx, state.EncodeInt(value, v.enc))
 }

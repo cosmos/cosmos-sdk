@@ -13,9 +13,11 @@ For fuller context around this issue: see [\#4642](https://github.com/cosmos/cos
 
 Create Subscription module in SDK so that users can subscribe to various subscription services. Subscription collectors will send messages to collect subscription payments from users who have due subscriptions. Subscriptions are paid out directly from a user account. 
 
-If the user does not have enough funds to pay for the subscription is inactivated. The user can always refund the account and resubscribe.
+Service providers can define valid periods their users can choose from (e.g.: 3 months, 6 months, 1 year) and their associated rates when they create the subscription service.
 
-Users can define maximum limits on how many periods the subscription is valid for; if this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without user noticing.
+If the user does not have enough funds to pay for the current period, the subscription is inactivated. The user can always refund the account and resubscribe.
+
+Users can define maximum limits on how many periods the subscription is valid for. If this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without user noticing. For example, a user can subscribe to a service with a period of 3 months with a limit of 4. This subscription will automatically expire after a year unless the user manually increases/removes the limit with a second `SubscribeMsg`.
 
 Users can also manually unsubscribe by submitting an `UnsubscribeMsg`
 
@@ -90,7 +92,7 @@ type Terms struct {
     Name        string         // short, human-readable name of the service
     Description string         // long-form description of the service
     Amount      sdk.Coins      // amount to be collected for each subscription period
-    Period      time.time      // duration of subscription period
+    Period      time.Duration  // duration of subscription period
     Collector   sdk.AccAddress // address that will collect subscription payments
 }
 ```

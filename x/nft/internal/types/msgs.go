@@ -36,7 +36,7 @@ func (msg MsgTransferNFT) Type() string { return "transfer_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
-	if msg.Denom == "" {
+	if strings.TrimSpace(msg.Denom) == "" {
 		return ErrInvalidCollection(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -45,7 +45,7 @@ func (msg MsgTransferNFT) ValidateBasic() sdk.Error {
 	if msg.Recipient.Empty() {
 		return sdk.ErrInvalidAddress("invalid recipient address")
 	}
-	if msg.ID == "" {
+	if strings.TrimSpace(msg.ID) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
 
@@ -98,10 +98,10 @@ func (msg MsgEditNFTMetadata) ValidateBasic() sdk.Error {
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("invalid sender address")
 	}
-	if msg.ID == "" {
+	if strings.TrimSpace(msg.ID) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
-	if msg.Denom == "" {
+	if strings.TrimSpace(msg.Denom) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
 	return nil
@@ -150,10 +150,10 @@ func (msg MsgMintNFT) Type() string { return "mint_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMintNFT) ValidateBasic() sdk.Error {
-	if msg.Denom == "" {
+	if strings.TrimSpace(msg.Denom) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
-	if msg.ID == "" {
+	if strings.TrimSpace(msg.ID) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {
@@ -204,10 +204,10 @@ func (msg MsgBurnNFT) Type() string { return "burn_nft" }
 
 // ValidateBasic Implements Msg.
 func (msg MsgBurnNFT) ValidateBasic() sdk.Error {
-	if msg.ID == "" {
+	if strings.TrimSpace(msg.ID) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
-	if msg.Denom == "" {
+	if strings.TrimSpace(msg.Denom) == "" {
 		return ErrInvalidNFT(DefaultCodespace)
 	}
 	if msg.Sender.Empty() {

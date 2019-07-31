@@ -115,7 +115,7 @@ func TestBurnCoins(t *testing.T) {
 	keeper.SetModuleAccount(ctx, burnerAcc)
 
 	initialSupply := keeper.GetSupply(ctx)
-	initialSupply.Inflate(initCoins)
+	initialSupply = initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
 	require.Error(t, keeper.BurnCoins(ctx, "", initCoins), "no module account")
@@ -130,7 +130,7 @@ func TestBurnCoins(t *testing.T) {
 
 	// test same functionality on module account with multiple permissions
 	initialSupply = keeper.GetSupply(ctx)
-	initialSupply.Inflate(initCoins)
+	initialSupply = initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
 	require.NoError(t, multiPermAcc.SetCoins(initCoins))

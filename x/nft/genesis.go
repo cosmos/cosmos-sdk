@@ -18,5 +18,3 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	return NewGenesisState(k.GetOwners(ctx), k.GetCollections(ctx))
 }
-
-// DONTCOVER

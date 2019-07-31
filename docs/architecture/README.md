@@ -25,4 +25,5 @@ Please add a entry below in your Pull Request for an ADR.
 
 ### ADR Table of Contents
 
-- [ADR-002-Docs-Structure](./adr-002-docs-structure.md)
+- [ADR 002: Docs Structure](./adr-002-docs-structure.md)
+- [ADR 003: Evidence Module](./adr-003-evidence-module.md)

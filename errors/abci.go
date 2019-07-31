@@ -14,9 +14,10 @@ const (
 	// All unclassified errors that do not provide an ABCI code are clubbed
 	// under an internal error code and a generic message instead of
 	// detailed error string.
-	internalABCICode   uint32 = 1
-	internalABCILog    string = "internal error"
-	multiErrorABCICode uint32 = 1000
+	internalABCICodespace        = UndefinedCodespace
+	internalABCICode      uint32 = 1
+	internalABCILog       string = "internal error"
+	// multiErrorABCICode uint32 = 1000
 )
 
 // ABCIInfo returns the ABCI error information as consumed by the tendermint
@@ -94,11 +95,10 @@ func abciCodespace(err error) string {
 		if c, ok := err.(causer); ok {
 			err = c.Cause()
 		} else {
-			return UndefinedCodespace
+			return internalABCICodespace
 		}
 	}
 }
-
 
 // errIsNil returns true if value represented by the given error is nil.
 //

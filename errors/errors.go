@@ -18,7 +18,7 @@ var (
 	//nolint
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
-	// ErrTxDecode is returned if we cannot parse a transaction 
+	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = Register(RootCodespace, 2, "tx parse error")
 
 	// ErrInvalidSequence is used the sequence number (nonce) is incorrect
@@ -84,9 +84,9 @@ func Register(codespace string, code uint32, description string) *Error {
 		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
 	}
 	err := &Error{
-		code: code,
+		code:      code,
 		codespace: codespace,
-		desc: description,
+		desc:      description,
 	}
 	setUsed(err)
 	return err
@@ -135,8 +135,8 @@ func ABCIError(codespace string, code uint32, log string) error {
 // error code uniqueness.
 type Error struct {
 	codespace string
-	code uint32
-	desc string
+	code      uint32
+	desc      string
 }
 
 func (e Error) Error() string {

@@ -9,59 +9,59 @@ import (
 
 func TestABCInfo(t *testing.T) {
 	cases := map[string]struct {
-		err      error
-		debug    bool
-		wantCode uint32
+		err       error
+		debug     bool
+		wantCode  uint32
 		wantSpace string
-		wantLog  string
+		wantLog   string
 	}{
 		"plain weave error": {
-			err:      ErrUnauthorized,
-			debug:    false,
-			wantLog:  "unauthorized",
-			wantCode: ErrUnauthorized.code,
+			err:       ErrUnauthorized,
+			debug:     false,
+			wantLog:   "unauthorized",
+			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},
 		"wrapped weave error": {
-			err:      Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
-			debug:    false,
-			wantLog:  "bar: foo: unauthorized",
-			wantCode: ErrUnauthorized.code,
+			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
+			debug:     false,
+			wantLog:   "bar: foo: unauthorized",
+			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},
 		"nil is empty message": {
-			err:      nil,
-			debug:    false,
-			wantLog:  "",
-			wantCode: 0,
+			err:       nil,
+			debug:     false,
+			wantLog:   "",
+			wantCode:  0,
 			wantSpace: "",
 		},
 		"nil weave error is not an error": {
-			err:      (*Error)(nil),
-			debug:    false,
-			wantLog:  "",
-			wantCode: 0,
+			err:       (*Error)(nil),
+			debug:     false,
+			wantLog:   "",
+			wantCode:  0,
 			wantSpace: "",
 		},
 		"stdlib is generic message": {
-			err:      io.EOF,
-			debug:    false,
-			wantLog:  "internal error",
-			wantCode: 1,
+			err:       io.EOF,
+			debug:     false,
+			wantLog:   "internal error",
+			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
 		"stdlib returns error message in debug mode": {
-			err:      io.EOF,
-			debug:    true,
-			wantLog:  "EOF",
-			wantCode: 1,
+			err:       io.EOF,
+			debug:     true,
+			wantLog:   "EOF",
+			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
 		"wrapped stdlib is only a generic message": {
-			err:      Wrap(io.EOF, "cannot read file"),
-			debug:    false,
-			wantLog:  "internal error",
-			wantCode: 1,
+			err:       Wrap(io.EOF, "cannot read file"),
+			debug:     false,
+			wantLog:   "internal error",
+			wantCode:  1,
 			wantSpace: UndefinedCodespace,
 		},
 		// This is hard to test because of attached stacktrace. This
@@ -73,17 +73,17 @@ func TestABCInfo(t *testing.T) {
 		//	wantCode: 1,
 		//},
 		"custom error": {
-			err:      customErr{},
-			debug:    false,
-			wantLog:  "custom",
-			wantCode: 999,
+			err:       customErr{},
+			debug:     false,
+			wantLog:   "custom",
+			wantCode:  999,
 			wantSpace: "extern",
 		},
 		"custom error in debug mode": {
-			err:      customErr{},
-			debug:    true,
-			wantLog:  "custom",
-			wantCode: 999,
+			err:       customErr{},
+			debug:     true,
+			wantLog:   "custom",
+			wantCode:  999,
 			wantSpace: "extern",
 		},
 	}
@@ -192,7 +192,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		// Create errors with stacktrace for equal comparision.
 		myErrDecode = Wrap(ErrTxDecode, "test")
 		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
-		myPanic    = ErrPanic
+		myPanic     = ErrPanic
 	)
 
 	specs := map[string]struct {
@@ -232,24 +232,24 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myPanic),
 		},
-// 		"redact in multi error": {
-// 			src:   Append(myPanic, myErrMsg),
-// 			debug: false,
-// 			exp:   "internal error",
-// 		},
-// 		"no redact in multi error": {
-// 			src:   Append(myPanic, myErrMsg),
-// 			debug: true,
-// 			exp: `2 errors occurred:
-// 	* panic
-// 	* test: invalid message
-// `,
-// 		},
-// 		"wrapped multi error with redact": {
-// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
-// 			debug: false,
-// 			exp:   "internal error",
-// 		},
+		// 		"redact in multi error": {
+		// 			src:   Append(myPanic, myErrMsg),
+		// 			debug: false,
+		// 			exp:   "internal error",
+		// 		},
+		// 		"no redact in multi error": {
+		// 			src:   Append(myPanic, myErrMsg),
+		// 			debug: true,
+		// 			exp: `2 errors occurred:
+		// 	* panic
+		// 	* test: invalid message
+		// `,
+		// 		},
+		// 		"wrapped multi error with redact": {
+		// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
+		// 			debug: false,
+		// 			exp:   "internal error",
+		// 		},
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {

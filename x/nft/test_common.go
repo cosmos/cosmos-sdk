@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
-// DONTCOVER
-
 // nolint: deadcode unused
 var (
 	denom     = "denom"

@@ -24,5 +24,3 @@ ignore:
   - "docs"
   - "*.md"
   - "*.rst"
-  - "x/*/test_common.go"
-  - "x/**/test_common.go"

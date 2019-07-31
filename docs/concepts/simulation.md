@@ -3,7 +3,7 @@
 The Cosmos SDK offers a full fledged simulation framework to fuzz test every message defined by a module.
 
 This functionality is provided by the[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go),
-which is an dummy application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/tree/master/x/simulation) module.
+which is a dummy application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/tree/master/x/simulation) module.
 This module defines all the simulation logic as well as the operations for randomized parameters like accounts, balances etc.
 
 ## Goals
@@ -20,7 +20,7 @@ The simulation app has different commands, each of it tests a different failure 
 
 - `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation.
 - `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.
-- `AppImportExport`: The simulator exportes the initial app state and then it creates a new app with the exported `genesis.json` as an input, checking for inconsistencies between the stores.
+- `AppImportExport`: The simulator exports the initial app state and then it creates a new app with the exported `genesis.json` as an input, checking for inconsistencies between the stores.
 - `AppSimulationAfterImport`: Queues two simulations together. The first one provides the app state (_i.e_ genesis) to the second. Useful to test software upgrades or hard-forks from a live chain.
 - `BenchmarkInvariants`: An invariant checks for differences between the values that are on the store and the passive tracker. Eg: total coins held by accounts vs total supply tracker.
 
@@ -29,7 +29,7 @@ Check the full list of flags [here](https://github.com/cosmos/cosmos-sdk/blob/ad
 
 ## Simulator Modes
 
-In addition to the various inputs and commands. The simulator runs in three modes:
+In addition to the various inputs and commands, the simulator runs in three modes:
 
 1. Completely random where the initial state, module parameters and simulation parameters are **pseudo-randomly generated**.
 2. From a `genesis.json` file where the initial state and the module parameters are defined.
@@ -61,7 +61,7 @@ Here are some suggestions when encountering a simulation failure:
 - Export the app state at the height were the failure was found. You can do this by passing the `-ExportStatePath` flag to the simulator.
 - Use `-Verbose` logs. They could give you a better hint on all the operations involved.
 
-- Reduce the simulation `-Period`. This will run the invariants checks more frecuently.
+- Reduce the simulation `-Period`. This will run the invariants checks more frequently.
 - Print all the invariants at once with `-PrintAllInvariants`.
 - Try using another `-Seed`. If it can reproduce the same error and if it fails sooner you will spend less time running the simulations.
 - Reduce the `-NumBlocks` . How's the app state at the height previous to the failure?

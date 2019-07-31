@@ -78,7 +78,7 @@ It is common to add a _persistent_ flag for `--chain-id`, the unique identifier 
 
 ### Transaction Flags
 
-To **create** a transaction, the user enters a `tx` command and provides several flags.
+To **create** a transaction, the user enters a `tx` command and provides several flags. These are the basic flags added to every command using the SDK `./client/flags` package [`PostCommands`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function:
 
 * `--from` indicates which account the transaction originates from. This account is used to sign the transaction.
 * `--gas` refers to how much gas, which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for --gas.
@@ -124,7 +124,7 @@ appcli tx broadcast mySignedTx.json --node <node>
 ```
 ### Query Flags
 
-Queries also have flags.
+Queries also have flags. These are the basic flags added to every command using the SDK `./client/flags` package [`GetCommand`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L67-L82) function:
 
 * `--node` indicates which full-node to connect to.
 * `--trust-node` (optional) represents whether or not the connected node is trusted. If the node is not trusted, all proofs in the responses are verified.

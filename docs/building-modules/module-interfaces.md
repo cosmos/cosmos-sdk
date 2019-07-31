@@ -145,11 +145,11 @@ Finally, the module also needs a `GetQueryCmd`, which aggregates all of the quer
 
 [Flags](../interfaces/cli.md#flags) are entered by the user and allow for command customizations. Examples include the [fees](../core/accounts-fees.md) or gas prices users are willing to pay for their transactions.
 
-The flags for a module are typically found in a `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as *required* so that an error is thrown if the user does not provide values for them.
+The flags for a module are typically found in the `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as *required* so that an error is thrown if the user does not provide values for them.
 
 For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
-For example, the SDK `./client/flags` package includes a [`PostCommands()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. Here is an example of how to add a flag using the `from` flag from this function.
+For example, the SDK `./client/flags` package includes a [`PostCommands`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. Here is an example of how to add a flag using the `from` flag from this function.
 
 ```go
 cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
@@ -163,11 +163,11 @@ A flag can be marked as *required* so that an error is automatically thrown if t
 cmd.MarkFlagRequired(FlagFrom)
 ```
 
-Since `PostCommands()` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate). For a full list of what flags are included in the `PostCommands()` function, including which are required inputs from users, see the CLI documentation [here](../interfaces/cli.md#transaction-flags).
+For a full list of what flags are in `PostCommands`, including which are required inputs from users, see the CLI documentation [here](../interfaces/cli.md#transaction-flags).
 
 ## REST
 
-Applications are typically required to support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](lunie.io)). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+Applications are typically required to support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](lunie.io)). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining routes for all possible requests and handlers for each of them. The REST interface file `rest.go` is typically found in the module's `./x/moduleName/client/rest` folder.
 
 ### Request Types
 
@@ -183,23 +183,7 @@ type buyNameReq struct {
   Buyer string `json:"buyer"`
 }
 ```
-
 The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the arguments `Name` and `Amount` fields in the body and `Buyer` will be provided by the user's address.
-
-#### BaseReq
-
-`BaseReq` is a type defined in the SDK that encapsulates much of the transaction configurations similar to CLI command flags. Users must provide the information in the body of their requests.
-
-* `From` indicates which [account](../core/accounts-fees.md) the transaction originates from. This account is used to sign the transaction.
-*	`Memo` sends a memo along with the transaction.
-*	`ChainID` specifies the unique identifier of the blockchain the transaction pertains to.
-*	`AccountNumber` is an identifier for the account.
-*	`Sequence`is the value of a counter measuring how many transactions have been sent from the account. It is used to prevent replay attacks.
-*	`Gas` refers to how much [gas](../core/gas.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
-*	`GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
-*	`GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
-*	`Fees` specifies how much in [fees](../core/accounts-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.
-*	`Simulate` instructs the application to ignore gas and simulate the transaction running without broadcasting.
 
 ### Request Handlers
 
@@ -246,6 +230,16 @@ func buyNameHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFun
   }
 }
 ```
+
+The request handler can be broken down as follows:
+
+* **Parse Request:** The request handler first attempts to parse the request, and then run `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Next, it attempts to parse the arguments `Buyer` and `Amount` to the types `AccountAddress` and `Coins` respectively.
+* **Message:** Then, a [message](./messages-and-queries.md) of the type `MsgBuyName` (defined by the module developer to trigger the state changes for this transaction) is created from the values and another sanity check, `ValidateBasic` is run on it.
+* **Generate Transaction:** Finally, the HTTP `ResponseWriter`, application [`codec`](../core/encoding.md), [`CLIContext`](../interfaces/query-lifecycle.md#clicontext), request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGenerateStdTxResponse` to further process the request.
+
+To read more about how a transaction is generated, visit the transactions documentation [here](../core/transactions.md#transaction-generation).
+
+### Register Routes
 
 The request handler can be broken down as follows:
 

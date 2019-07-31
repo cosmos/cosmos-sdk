@@ -2,7 +2,7 @@
 
 ## NFT
 
-The `NFT` Interface inherits the BaseNFT struct and includes getter functions for the asset data. It also lincludes a Stringer function in order to print the struct. The interface may change if metadata is moved to it’s own module as it might no longer be necessary for the flexibility of an interface.
+The `NFT` Interface inherits the BaseNFT struct and includes getter functions for the asset data. It also includes a Stringer function in order to print the struct. The interface may change if metadata is moved to it’s own module as it might no longer be necessary for the flexibility of an interface.
 
 ```go
 // NFT non fungible token interface
@@ -30,7 +30,7 @@ type Collection struct {
 
 ## Owner
 
-An Owner is a struct that includes information about all NFTs owned by a single account. It would be possible to retrieve this information by looping through all Collections but that process could become computationaly prohibitive so a more efficient retrieval system is to store redundant information limited to the token ID by owner.
+An Owner is a struct that includes information about all NFTs owned by a single account. It would be possible to retrieve this information by looping through all Collections but that process could become computationally prohibitive so a more efficient retrieval system is to store redundant information limited to the token ID by owner.
 
 ```go
 // Owner of non fungible tokens

@@ -9,22 +9,22 @@ NFTs on application specific blockchains share some but not all features as thei
 ## Contents
 
 1. **[Concepts](./01_concepts.md)**
-  - [NFT](./01_concepts.md#nft)
-  - [Collections](./01_concepts.md#collections)
+   - [NFT](./01_concepts.md#nft)
+   - [Collections](./01_concepts.md#collections)
 2. **[State](./02_state.md)**
-  - [Collections](./02_state.md#collections)
-  - [Owners](./02_state.md#owners)
+   - [Collections](./02_state.md#collections)
+   - [Owners](./02_state.md#owners)
 3. **[Messages](./03_messages.md)**
-  - [Transfer NFT](./03_messages.md#transfer-nft)
-  - [Edit Metadata](./03_messages.md#edit-metadata)
-  - [Mint NFT](./03_messages.md#mint-nft)
-  - [Burn NFT](./03_messages.md#burn-nft)
+   - [Transfer NFT](./03_messages.md#transfer-nft)
+   - [Edit Metadata](./03_messages.md#edit-metadata)
+   - [Mint NFT](./03_messages.md#mint-nft)
+   - [Burn NFT](./03_messages.md#burn-nft)
 4. **[Events](./04_events.md)**
 5. **[Future Improvements](./05_future_improvements.md)**
 
 ## A Note on Metadata & IBC
 
-The BaseNFT includes `tokenURI` in order to be backwards compatible with Ethereum based NFTs. However the `NFT` type is an interface that allows arbitrary metadata to be stored on chain should it need be. Orignially the module included `name`, `description` and `image` to demonstrate these capabilities. They were removed in order for the NFT to be more efficient for use cases that don't include a need for that information to be stored on chain. A demonstration of includeing them will be included in a sample app. It is also under discussion to move all metadata to a separate module that can handle arbitrary amounts of data on chain and can be used to describe assets beyond Non-Fungible Tokens, like normal Fungible Tokens `Coin` that could describe attributes like decimal places and vesting status.
+The BaseNFT includes `tokenURI` in order to be backwards compatible with Ethereum based NFTs. However the `NFT` type is an interface that allows arbitrary metadata to be stored on chain should it need be. Originally the module included `name`, `description` and `image` to demonstrate these capabilities. They were removed in order for the NFT to be more efficient for use cases that don't include a need for that information to be stored on chain. A demonstration of includeing them will be included in a sample app. It is also under discussion to move all metadata to a separate module that can handle arbitrary amounts of data on chain and can be used to describe assets beyond Non-Fungible Tokens, like normal Fungible Tokens `Coin` that could describe attributes like decimal places and vesting status.
 
 A stand-alone metadata Module would allow for independent standards to evolve regarding arbitrary asset types with expanding precision. The standards supported by [http://schema.org](http://schema.org) and the process of adding nested information is being considered as a starting point for that standard. The Blockchain Gaming Alliance is working on a metadata standard to be used for specifically blockchain gaming assets.
 
@@ -96,4 +96,4 @@ func HandleMsgMintNFTCustom(ctx sdk.Context, msg types.MsgMintNFT, k keeper.Keep
 
 The default handlers are imported here with the NFT module and used for `MsgTransferNFT`, `MsgEditNFTMetadata` and `MsgBurnNFT`. The `MsgMintNFT` however is handled with a custom function called `HandleMsgMintNFTCustom`. This custom function also utilizes the imported NFT module handler `HandleMsgMintNFT`, but only after certain conditions are checked. In this case it checks a function called `checkTwilight` which returns a boolean. Only if `isTwilight` is true will the Message succeed.
 
-This pattern of inheriting and utlizing the module handlers wrapped in custom logic should allow each application specific blockchain to use the NFT while customizing it to their specific requirements.
+This pattern of inheriting and utilizing the module handlers wrapped in custom logic should allow each application specific blockchain to use the NFT while customizing it to their specific requirements.

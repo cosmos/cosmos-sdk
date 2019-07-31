@@ -62,11 +62,12 @@ type UnsubscribeMsg struct {
 ```
 
 ```go
-// CollectMsg allows a Collector for a service to collect payments on due subscriptions that are processed off a FIFO queue.
+// CollectMsg allows a Collector for a service to collect payments on due subscriptions for a specified period that are processed off a FIFO queue.
 type CollectMsg struct {
-    ServiceID []byte         // id of subscription service to collect payments from
-    Collector sdk.AccAddress // address that will collect payments
-    Limit     int64          // maximum number of items to process in FIFO duequeue. If Limit = -1, try to process all due subscriptions
+    ServiceID    []byte         // id of subscription service to collect payments from
+    Collector    sdk.AccAddress // address that will collect payments
+    ProcessItems int64          // maximum number of items to process in FIFO duequeue. If Limit = -1, try to process all due subscriptions
+    Period       time.Duration  // period field defines what due-queue to collect from
 }
 ```
 
@@ -89,11 +90,11 @@ type SubscriptionID []byte
 ```go
 // Subscription Terms contains information necessary for processing subscriptions
 type Terms struct {
-    Name        string         // short, human-readable name of the service
-    Description string         // long-form description of the service
-    Amount      sdk.Coins      // amount to be collected for each subscription period
-    Period      time.Duration  // duration of subscription period
-    Collector   sdk.AccAddress // address that will collect subscription payments
+    Name        string          // short, human-readable name of the service
+    Description string          // long-form description of the service
+    Amounts     []sdk.Coins     // amounts to be collected for each subscription period
+    Periods     []time.Duration // durations of each subscription period
+    Collector   sdk.AccAddress  // address that will collect subscription payments
 }
 ```
 
@@ -136,18 +137,9 @@ func HandleSubscribeMsg(ctx sdk.Context, msg SubscribeMsg) {
     }
     
     // check if user already has subscribe to this service
-    // if so renew the subscription
+    // if so update the subscription's limit with msg.Limit
     if subscription := GetUserSubscriptions(msg.Subscriber, msg.ServiceID); subscription != nil {
-        if msg.Limit == -1 {
-            // make subscription infinite
-            subscription.Limit = -1
-        } else if subscription.Limit = -1 {
-            // change infinite subscription limit to finite
-            subscription.Limit = msg.Limit
-        } else {
-            // increase limit of subscription by msg.Limit
-            subscription.Limit += msg.Limit
-        }
+        subscription.Limit = msg.Limit 
         StoreSubscription(subscriptionID, subscription)
         return nil
     }
@@ -189,63 +181,59 @@ func HandleCollectMsg(ctx sdk.Context, msg CollectMsg) {
     if msg.Collector != Terms.Collector {
         return InvalidCollectorErr
     }
-    limit := msg.Limit
+    queue := GetDueQueue(msg.Collector, msg.ServiceID, period)
+    if queue == nil {
+        return NoSuchPeriodErr
+    }
+    remaining := msg.ProcessItems
     // Only process a limited number of subscriptions defined in CollectMsg
     // This is to prevent msg handler from panicing with OutOfGasException if DueQueue gets too large
-    for limit > 0 {
-        // Each subscription period maintains its own queue
-        // These queues are processed in a round robin fashion until all due subscriptions are collected
-        // or msg.Limit has been reached
-        for _, period := Terms.Period {
-            if limit == 0 {
-                // limit reached.
-                // emit event indicating that not all due subscriptions have been collected
-                return nil
-            }
-            queue := GetDueQueue(msg.Collector, msg.ServiceID, period)
-            subscription := GetSubscription(queue[0])
-            // check if subscription has been deleted. If so decrement limit and continue
-            // Do not place back on DueQueue
-            if subscription == nil {
-                limit--
+    for remainingItems > 0 {
+        subscription := GetSubscription(queue[0])
+        // check if subscription has been deleted. If so decrement limit and continue
+        // Do not place back on DueQueue
+        if subscription == nil {
+            remaining--
+            continue
+        }
+        // top of the queue is "due"
+        if subscription.LastPaid + period >= ctx.BlockTime {
+            // pop first id off of due-queue
+            subscriptionID := PopOffFront(queue)
+            // User-set expiration has been reached without renewal. Delete subscription
+            if subscription.Limit == 0 {
+                // emit user-limit reached event
+                DeleteSubscription(subscription.Subscriber, subscription.Name)
+                remaining--
                 continue
             }
-            // top of the queue is "due"
-            if subscription.LastPaid + period >= ctx.BlockTime {
-                subscriptionID := PopOffFront(queue)
-                // User-set expiration has been reached without renewal. Delete subscription
-                if subscription.Limit == 0 {
-                    DeleteSubscription(subscription.Subscriber, subscription.Name)
-                    limit--
-                    continue
-                }
-                // pay for the current period
-                err := bank.Send(subscription.Subscriber, Terms.Collector, Terms.Amount)
-                // Could not make payment (insufficient funds in account)
-                // Delete subscription and decrement limit. Do not place back on DueQueue
-                if err != nil {
-                    DeleteSubscription(subscription.Subscriber, subscription.Name)
-                    limit--
-                    continue
-                } else {
-                    // update subscription after successful payment
-                    subscription.LastPaid = ctx.BlockTime
-                    if subscription.Limit != -1 {
-                        subscription.Limit--
-                    }
-                }
-                // store updated subscription
-                StoreSubscription(subscriptionID, subscription)
-                // push paid subscription back to end of queue
-                PushToBack(queue, subscriptionID)
+            // pay for the current period
+            err := bank.Send(subscription.Subscriber, Terms.Collector, Terms.Amount)
+            // Could not make payment (insufficient funds in account)
+            // Delete subscription and decrement limit. Do not place back on DueQueue
+            if err != nil {
+                // emit insufficient funds reached event
+                DeleteSubscription(subscription.Subscriber, subscription.Name)
+                remaining--
+                continue
             } else {
-                // processed all due subscriptions
-                // emit event indicating all due subscriptions reached with time for next duedate
-                return nil
+                // update subscription after successful payment
+                subscription.LastPaid = ctx.BlockTime
+                if subscription.Limit != -1 {
+                    subscription.Limit--
+                }
             }
+            // store updated subscription
+            StoreSubscription(subscriptionID, subscription)
+            // push paid subscription back to end of queue
+            PushToBack(queue, subscriptionID)
+        } else {
+            // processed all due subscriptions
+            // emit event indicating all due subscriptions reached with time for next duedate
+            return nil
         }
     }
-    // limit reached.
+    // processed maximum items allowed by msg.
     // emit event indicating that not all due subscriptions have been collected
     return nil
 }

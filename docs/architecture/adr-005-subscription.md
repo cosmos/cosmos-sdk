@@ -17,7 +17,7 @@ Service providers can define valid periods their users can choose from (e.g.: 3 
 
 If the user does not have enough funds to pay for the current period, the subscription is inactivated. The user can always refund the account and resubscribe.
 
-Users can define maximum limits on how many periods the subscription is valid for. If this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without the user noticing. For example, a user can subscribe to a service with a period of 3 months with a limit of 4. This subscription will automatically expire after a year unless the user manually increases/removes the limit with a second `SubscribeMsg`.
+Users can define maximum limits on how many periods the subscription is valid for. If this limit elapses before a subscription renewal, the subscription is invalidated. This is to mitigate the common problem of unused subscriptions siphoning off funds from account without the user noticing. For example, a user can subscribe to a service with a period of 3 months with a limit of 4. This subscription will automatically expire after a year unless the user manually changes the limit with a second `SubscribeMsg`.
 
 Users can also manually unsubscribe by submitting an `UnsubscribeMsg`
 

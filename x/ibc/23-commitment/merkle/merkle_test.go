@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/state"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -40,23 +41,24 @@ func commit(cms types.CommitMultiStore) Root {
 // TestStore tests Merkle proof on the commitment.Store
 // Sets/upates key-value pairs and prove with the query result proofs
 func TestStore(t *testing.T) {
-	k, ctx, cms, _ := defaultComponents()
-	kvstore := ctx.KVStore(k)
-	path := Path{KeyPath: [][]byte{[]byte("test")}, KeyPrefix: []byte{0x01, 0x03, 0x05}}
+	k, ctx, cms, cdc := defaultComponents()
+	prefix := []byte{0x01, 0x03, 0x05, 0xAA, 0xBB}
+	mapp := state.NewMapping(k, cdc, prefix)
+	path := NewPath([][]byte{[]byte(k.Name())}, prefix)
 
 	m := make(map[string][]byte)
-	kvpn := 1000
+	kvpn := 10
 
-	// Repeat 100 times to test on multiple commits
+	// Repeat to test on multiple commits
 	for repeat := 0; repeat < 10; repeat++ {
 
 		// Initializes random generated key-value pairs
 		for i := 0; i < kvpn; i++ {
-			k, v := make([]byte, 64), make([]byte, 64)
+			k, v := make([]byte, 16), make([]byte, 16)
 			rand.Read(k)
 			rand.Read(v)
 			m[string(k)] = v
-			kvstore.Set(path.Key(k), v)
+			mapp.Value(k).Set(ctx, v)
 		}
 
 		// Commit store
@@ -65,18 +67,18 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs := make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			c, v0, p := path.QueryMultiStore(cms, []byte(k))
-			require.Equal(t, uint32(0), c)
+			v0, p, err := QueryMultiStore(cms, path, []byte(k))
+			require.NoError(t, err)
 			require.Equal(t, v, v0)
 			proofs = append(proofs, p)
 		}
 
 		// Add some exclusion proofs
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 10; i++ {
 			k := make([]byte, 64)
 			rand.Read(k)
-			c, v, p := path.QueryMultiStore(cms, k)
-			require.Equal(t, uint32(0), c)
+			v, p, err := QueryMultiStore(cms, path, k)
+			require.NoError(t, err)
 			require.Nil(t, v)
 			proofs = append(proofs, p)
 			m[string(k)] = []byte{}
@@ -99,7 +101,7 @@ func TestStore(t *testing.T) {
 			v := make([]byte, 64)
 			rand.Read(v)
 			m[k] = v
-			kvstore.Set(path.Key([]byte(k)), v)
+			mapp.Value([]byte(k)).Set(ctx, v)
 		}
 
 		root = commit(cms)
@@ -107,8 +109,8 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs = make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			c, v0, p := path.QueryMultiStore(cms, []byte(k))
-			require.Equal(t, uint32(0), c)
+			v0, p, err := QueryMultiStore(cms, path, []byte(k))
+			require.NoError(t, err)
 			require.Equal(t, v, v0)
 			proofs = append(proofs, p)
 		}

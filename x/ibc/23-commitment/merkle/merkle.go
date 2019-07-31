@@ -1,6 +1,7 @@
 package merkle
 
 import (
+	"bytes"
 	"errors"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -109,9 +110,9 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 
 type Value interface {
 	KeyBytes() []byte
-	Unmarshal([]byte, interface{})
 }
 
-func NewProofFromValue(proof *merkle.Proof, value Value) Proof {
-	return Proof{proof, value.KeyBytes()}
+func NewProofFromValue(proof *merkle.Proof, path Path, value Value) Proof {
+	// TODO: check HasPrefix
+	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), path.KeyPrefix)}
 }

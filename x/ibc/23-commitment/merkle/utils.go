@@ -1,14 +1,52 @@
 package merkle
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
+
+func QueryMultiStore(cms types.CommitMultiStore, path Path, key []byte) ([]byte, Proof, error) {
+	queryable, ok := cms.(types.Queryable)
+	if !ok {
+		panic("CommitMultiStore not queryable")
+	}
+	qres := queryable.Query(RequestQueryMultiStore(path, key))
+	if !qres.IsOK() {
+		return nil, Proof{}, errors.New(qres.Log)
+	}
+
+	fmt.Printf("Q: %X -> %X\n", path.Key(key), qres.Value)
+	return qres.Value, Proof{Key: key, Proof: qres.Proof}, nil
+}
+
+func RequestQueryMultiStore(path Path, key []byte) abci.RequestQuery {
+	// Suffixing path with "/key".
+	// iavl.Store.Query() switches over the last path element,
+	// and performs key-value query only if it is "/key"
+	return abci.RequestQuery{
+		Path:  "/" + string(bytes.Join(path.KeyPath, []byte("/"))) + "/key",
+		Data:  path.Key(key),
+		Prove: true,
+	}
+}
+
+func (path Path) Key(key []byte) []byte {
+	return join(path.KeyPrefix, key)
+}
+
+func join(a, b []byte) (res []byte) {
+	res = make([]byte, len(a)+len(b))
+	copy(res, a)
+	copy(res[len(a):], b)
+	return
+}
+
+/*
 
 // RequestQuery() constructs the abci.RequestQuery.
 //
@@ -25,12 +63,6 @@ func (path Path) RequestQuery(key []byte) abci.RequestQuery {
 	return req
 }
 
-func (path Path) RequestQueryMultiStore(key []byte) abci.RequestQuery {
-	// Suffixing path with "/key".
-	// iavl.Store.Query() switches over the last path element,
-	// and performs key-value query only if it is "/key"
-	return abci.RequestQuery{Path: path.Path() + "/key", Data: path.Key(key), Prove: true}
-}
 
 func (path Path) Query(ctx context.CLIContext, key []byte) (code uint32, value []byte, proof Proof, err error) {
 	resp, err := ctx.QueryABCI(path.RequestQuery(key))
@@ -52,25 +84,9 @@ func (path Path) QueryValue(ctx context.CLIContext, cdc *codec.Codec, key []byte
 	return proof, err
 }
 
-func (path Path) QueryMultiStore(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
-	queryable, ok := cms.(types.Queryable)
-	if !ok {
-		panic("CommitMultiStore not queryable")
-	}
-	qres := queryable.Query(path.RequestQueryMultiStore(key))
-	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
-}
 
-func (path Path) Key(key []byte) []byte {
-	return join(path.KeyPrefix, key)
-}
 
-func join(a, b []byte) (res []byte) {
-	res = make([]byte, len(a)+len(b))
-	copy(res, a)
-	copy(res[len(a):], b)
-	return
-}
+
 
 func (path Path) Path() string {
 	pathstr := ""
@@ -81,3 +97,4 @@ func (path Path) Path() string {
 
 	return pathstr
 }
+*/

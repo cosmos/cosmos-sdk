@@ -16,12 +16,12 @@ func TestCause(t *testing.T) {
 		root error
 	}{
 		"Errors are self-causing": {
-			err:  ErrNotFound,
-			root: ErrNotFound,
+			err:  ErrUnauthorized,
+			root: ErrUnauthorized,
 		},
 		"Wrap reveals root cause": {
-			err:  Wrap(ErrNotFound, "foo"),
-			root: ErrNotFound,
+			err:  Wrap(ErrUnauthorized, "foo"),
+			root: ErrUnauthorized,
 		},
 		"Cause works for stderr as root": {
 			err:  Wrap(std, "Some helpful text"),
@@ -45,32 +45,32 @@ func TestErrorIs(t *testing.T) {
 		wantIs bool
 	}{
 		"instance of the same error": {
-			a:      ErrNotFound,
-			b:      ErrNotFound,
+			a:      ErrUnauthorized,
+			b:      ErrUnauthorized,
 			wantIs: true,
 		},
 		"two different coded errors": {
-			a:      ErrNotFound,
-			b:      ErrModel,
+			a:      ErrUnauthorized,
+			b:      ErrOutOfGas,
 			wantIs: false,
 		},
 		"successful comparison to a wrapped error": {
-			a:      ErrNotFound,
-			b:      errors.Wrap(ErrNotFound, "gone"),
+			a:      ErrUnauthorized,
+			b:      errors.Wrap(ErrUnauthorized, "gone"),
 			wantIs: true,
 		},
 		"unsuccessful comparison to a wrapped error": {
-			a:      ErrNotFound,
-			b:      errors.Wrap(ErrOverflow, "too big"),
+			a:      ErrUnauthorized,
+			b:      errors.Wrap(ErrInsufficientFee, "too big"),
 			wantIs: false,
 		},
 		"not equal to stdlib error": {
-			a:      ErrNotFound,
+			a:      ErrUnauthorized,
 			b:      fmt.Errorf("stdlib error"),
 			wantIs: false,
 		},
 		"not equal to a wrapped stdlib error": {
-			a:      ErrNotFound,
+			a:      ErrUnauthorized,
 			b:      errors.Wrap(fmt.Errorf("stdlib error"), "wrapped"),
 			wantIs: false,
 		},
@@ -86,54 +86,54 @@ func TestErrorIs(t *testing.T) {
 		},
 		"nil is not not-nil": {
 			a:      nil,
-			b:      ErrNotFound,
+			b:      ErrUnauthorized,
 			wantIs: false,
 		},
 		"not-nil is not nil": {
-			a:      ErrNotFound,
+			a:      ErrUnauthorized,
 			b:      nil,
 			wantIs: false,
 		},
-		"multierr with the same error": {
-			a:      ErrNotFound,
-			b:      Append(ErrNotFound, ErrState),
-			wantIs: true,
-		},
-		"multierr with random order": {
-			a:      ErrNotFound,
-			b:      Append(ErrState, ErrNotFound),
-			wantIs: true,
-		},
-		"multierr with wrapped err": {
-			a:      ErrNotFound,
-			b:      Append(ErrState, Wrap(ErrNotFound, "test")),
-			wantIs: true,
-		},
-		"multierr with nil error": {
-			a:      ErrNotFound,
-			b:      Append(nil, nil),
-			wantIs: false,
-		},
-		"multierr with different error": {
-			a:      ErrNotFound,
-			b:      Append(ErrState, nil),
-			wantIs: false,
-		},
-		"multierr from nil": {
-			a:      nil,
-			b:      Append(ErrState, ErrNotFound),
-			wantIs: false,
-		},
-		"field error wrapper": {
-			a:      ErrEmpty,
-			b:      Field("name", ErrEmpty, "name is required"),
-			wantIs: true,
-		},
-		"nil field error wrapper": {
-			a:      nil,
-			b:      Field("name", nil, "name is required"),
-			wantIs: true,
-		},
+		// "multierr with the same error": {
+		// 	a:      ErrUnauthorized,
+		// 	b:      Append(ErrUnauthorized, ErrState),
+		// 	wantIs: true,
+		// },
+		// "multierr with random order": {
+		// 	a:      ErrUnauthorized,
+		// 	b:      Append(ErrState, ErrUnauthorized),
+		// 	wantIs: true,
+		// },
+		// "multierr with wrapped err": {
+		// 	a:      ErrUnauthorized,
+		// 	b:      Append(ErrState, Wrap(ErrUnauthorized, "test")),
+		// 	wantIs: true,
+		// },
+		// "multierr with nil error": {
+		// 	a:      ErrUnauthorized,
+		// 	b:      Append(nil, nil),
+		// 	wantIs: false,
+		// },
+		// "multierr with different error": {
+		// 	a:      ErrUnauthorized,
+		// 	b:      Append(ErrState, nil),
+		// 	wantIs: false,
+		// },
+		// "multierr from nil": {
+		// 	a:      nil,
+		// 	b:      Append(ErrState, ErrUnauthorized),
+		// 	wantIs: false,
+		// },
+		// "field error wrapper": {
+		// 	a:      ErrEmpty,
+		// 	b:      Field("name", ErrEmpty, "name is required"),
+		// 	wantIs: true,
+		// },
+		// "nil field error wrapper": {
+		// 	a:      nil,
+		// 	b:      Field("name", nil, "name is required"),
+		// 	wantIs: true,
+		// },
 	}
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {

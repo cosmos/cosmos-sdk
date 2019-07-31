@@ -14,8 +14,8 @@ func TestStackTrace(t *testing.T) {
 		wantError string
 	}{
 		"New gives us a stacktrace": {
-			err:       Wrap(ErrDuplicate, "name"),
-			wantError: "name: duplicate",
+			err:       Wrap(ErrNoSignatures, "name"),
+			wantError: "name: no signatures supplied",
 		},
 		"Wrapping stderr gives us a stacktrace": {
 			err:       Wrap(fmt.Errorf("foo"), "standard"),
@@ -33,18 +33,18 @@ func TestStackTrace(t *testing.T) {
 
 	// Wrapping code is unwanted in the errors stack trace.
 	unwantedSrc := []string{
-		"github.com/iov-one/weave/errors.Wrap\n",
-		"github.com/iov-one/weave/errors.Wrapf\n",
-		"github.com/iov-one/weave/errors.Error.New\n",
-		"github.com/iov-one/weave/errors.Error.Newf\n",
+		"github.com/cosmos/cosmos-sdk/errors.Wrap\n",
+		"github.com/cosmos/cosmos-sdk/errors.Wrapf\n",
+		"github.com/cosmos/cosmos-sdk/errors.Error.New\n",
+		"github.com/cosmos/cosmos-sdk/errors.Error.Newf\n",
 		"runtime.goexit\n",
 	}
-	const thisTestSrc = "weave/errors/stacktrace_test.go"
+	const thisTestSrc = "cosmos-sdk/errors/stacktrace_test.go"
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {
 			if !reflect.DeepEqual(tc.err.Error(), tc.wantError) {
-				t.Fatal("errors not equal")
+				t.Fatalf("errors not equal, got '%s', want '%s'", tc.err.Error(), tc.wantError)
 			}
 
 			if stackTrace(tc.err) == nil {

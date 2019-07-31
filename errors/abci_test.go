@@ -15,16 +15,16 @@ func TestABCInfo(t *testing.T) {
 		wantLog  string
 	}{
 		"plain weave error": {
-			err:      ErrNotFound,
+			err:      ErrUnauthorized,
 			debug:    false,
-			wantLog:  "not found",
-			wantCode: ErrNotFound.code,
+			wantLog:  "unauthorized",
+			wantCode: ErrUnauthorized.code,
 		},
 		"wrapped weave error": {
-			err:      Wrap(Wrap(ErrNotFound, "foo"), "bar"),
+			err:      Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:    false,
-			wantLog:  "bar: foo: not found",
-			wantCode: ErrNotFound.code,
+			wantLog:  "bar: foo: unauthorized",
+			wantCode: ErrUnauthorized.code,
 		},
 		"nil is empty message": {
 			err:      nil,
@@ -99,16 +99,16 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		wantErrMsg     string
 	}{
 		"wrapped weave error in debug mode provides stacktrace": {
-			err:            Wrap(ErrNotFound, "wrapped"),
+			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "wrapped: not found",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped weave error in non-debug mode does not have stacktrace": {
-			err:            Wrap(ErrNotFound, "wrapped"),
+			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "wrapped: not found",
+			wantErrMsg:     "wrapped: unauthorized",
 		},
 		"wrapped stdlib error in debug mode provides stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
@@ -124,7 +124,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		},
 	}
 
-	const thisTestSrc = "github.com/iov-one/weave/errors.TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/cosmos/cosmos-sdk/errors.TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {
@@ -147,10 +147,10 @@ func TestABCIInfoStacktrace(t *testing.T) {
 }
 
 func TestABCIInfoHidesStacktrace(t *testing.T) {
-	err := Wrap(ErrNotFound, "wrapped")
+	err := Wrap(ErrUnauthorized, "wrapped")
 	_, log := ABCIInfo(err, false)
 
-	if log != "wrapped: not found" {
+	if log != "wrapped: unauthorized" {
 		t.Fatalf("unexpected message in non debug mode: %s", log)
 	}
 }
@@ -159,7 +159,7 @@ func TestRedact(t *testing.T) {
 	if err := Redact(ErrPanic); ErrPanic.Is(err) {
 		t.Error("reduct must not pass through panic error")
 	}
-	if err := Redact(ErrNotFound); !ErrNotFound.Is(err) {
+	if err := Redact(ErrUnauthorized); !ErrUnauthorized.Is(err) {
 		t.Error("reduct should pass through weave error")
 	}
 
@@ -177,8 +177,8 @@ func TestRedact(t *testing.T) {
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
 		// Create errors with stacktrace for equal comparision.
-		myErrState = Wrap(ErrState, "test")
-		myErrMsg   = Wrap(ErrMsg, "test")
+		myErrDecode = Wrap(ErrTxDecode, "test")
+		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
 		myPanic    = ErrPanic
 	)
 
@@ -188,23 +188,28 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		exp   string
 	}{
 		"single error": {
-			src:   myErrMsg,
+			src:   myErrDecode,
 			debug: false,
-			exp:   "test: invalid message",
+			exp:   "test: tx parse error",
+		},
+		"second error": {
+			src:   myErrAddr,
+			debug: false,
+			exp:   "tester: invalid address",
 		},
 		"single error with debug": {
-			src:   myErrMsg,
+			src:   myErrDecode,
 			debug: true,
-			exp:   fmt.Sprintf("%+v", myErrMsg),
+			exp:   fmt.Sprintf("%+v", myErrDecode),
 		},
-		"multi error default encoder": {
-			src: Append(myErrMsg, myErrState),
-			exp: Append(myErrMsg, myErrState).Error(),
-		},
-		"multi error default with internal": {
-			src: Append(myErrMsg, myPanic),
-			exp: "internal error",
-		},
+		// "multi error default encoder": {
+		// 	src: Append(myErrMsg, myErrAddr),
+		// 	exp: Append(myErrMsg, myErrAddr).Error(),
+		// },
+		// "multi error default with internal": {
+		// 	src: Append(myErrMsg, myPanic),
+		// 	exp: "internal error",
+		// },
 		"redact in default encoder": {
 			src: myPanic,
 			exp: "internal error",
@@ -214,24 +219,24 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 			debug: true,
 			exp:   fmt.Sprintf("%+v", myPanic),
 		},
-		"redact in multi error": {
-			src:   Append(myPanic, myErrMsg),
-			debug: false,
-			exp:   "internal error",
-		},
-		"no redact in multi error": {
-			src:   Append(myPanic, myErrMsg),
-			debug: true,
-			exp: `2 errors occurred:
-	* panic
-	* test: invalid message
-`,
-		},
-		"wrapped multi error with redact": {
-			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
-			debug: false,
-			exp:   "internal error",
-		},
+// 		"redact in multi error": {
+// 			src:   Append(myPanic, myErrMsg),
+// 			debug: false,
+// 			exp:   "internal error",
+// 		},
+// 		"no redact in multi error": {
+// 			src:   Append(myPanic, myErrMsg),
+// 			debug: true,
+// 			exp: `2 errors occurred:
+// 	* panic
+// 	* test: invalid message
+// `,
+// 		},
+// 		"wrapped multi error with redact": {
+// 			src:   Wrap(Append(myPanic, myErrMsg), "wrap"),
+// 			debug: false,
+// 			exp:   "internal error",
+// 		},
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {

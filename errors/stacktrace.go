@@ -36,8 +36,8 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 	// manual error creation, or runtime for caught panics
 	for matchesFile(st[0],
 		// where we create errors
-		"weave/errors/errors.go",
-		"weave/errors/stacktrace.go",
+		"cosmos-sdk/errors/errors.go",
+		"cosmos-sdk/errors/stacktrace.go",
 		// runtime are added on panics
 		"/runtime/",
 		// _test is defined in coverage tests, causing failure

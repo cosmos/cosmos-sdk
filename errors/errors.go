@@ -7,91 +7,68 @@ import (
 	"github.com/pkg/errors"
 )
 
+// RootCodespace is the codespace for all errors defined in this package
+const RootCodespace = "sdk"
+
+// UndefinedCodespace when we explicitly declare no codespace
+const UndefinedCodespace = ""
+
+
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	//nolint
-	errInternal = Register(1, "internal")
+	errInternal = Register(UndefinedCodespace, 1, "internal")
+
+	// ErrTxDecode is returned if we cannot parse a transaction 
+	ErrTxDecode = Register(RootCodespace, 2, "tx parse error")
+
+	// ErrInvalidSequence is used the sequence number (nonce) is incorrect
+	// for the signature
+	ErrInvalidSequence = Register(RootCodespace, 3, "invalid sequence")
 
 	// ErrUnauthorized is used whenever a request without sufficient
 	// authorization is handled.
-	ErrUnauthorized = Register(2, "unauthorized")
+	ErrUnauthorized = Register(RootCodespace, 4, "unauthorized")
 
-	// ErrNotFound is used when a requested operation cannot be completed
-	// due to missing data.
-	ErrNotFound = Register(3, "not found")
+	// ErrInsufficientFunds is used when the account cannot pay requested amount.
+	ErrInsufficientFunds = Register(RootCodespace, 5, "insufficient funds")
 
-	// ErrMsg is returned whenever an event is invalid and cannot be
-	// handled.
-	ErrMsg = Register(4, "invalid message")
+	// ErrUnknownRequest to doc
+	ErrUnknownRequest = Register(RootCodespace, 6, "unknown request")
 
-	// ErrModel is returned whenever a message is invalid and cannot
-	// be used (ie. persisted).
-	ErrModel = Register(5, "invalid model")
+	// ErrInvalidAddress to doc
+	ErrInvalidAddress = Register(RootCodespace, 7, "invalid address")
 
-	// ErrDuplicate is returned when there is a record already that has the same
-	// unique key/index used
-	ErrDuplicate = Register(6, "duplicate")
+	// ErrInvalidPubKey to doc
+	ErrInvalidPubKey = Register(RootCodespace, 8, "invalid pubkey")
 
-	// ErrHuman is returned when application reaches a code path which should not
-	// ever be reached if the code was written as expected by the framework
-	ErrHuman = Register(7, "coding error")
+	// ErrUnknownAddress to doc
+	ErrUnknownAddress = Register(RootCodespace, 9, "unknown address")
 
-	// ErrImmutable is returned when something that is considered immutable
-	// gets modified
-	ErrImmutable = Register(8, "cannot be modified")
+	// ErrInsufficientCoins to doc (what is the difference between ErrInsufficientFunds???)
+	ErrInsufficientCoins = Register(RootCodespace, 10, "insufficient coins")
 
-	// ErrEmpty is returned when a value fails a not empty assertion
-	ErrEmpty = Register(9, "value is empty")
+	// ErrInvalidCoins to doc
+	ErrInvalidCoins = Register(RootCodespace, 11, "invalid coins")
 
-	// ErrState is returned when an object is in invalid state
-	ErrState = Register(10, "invalid state")
+	// ErrOutOfGas to doc
+	ErrOutOfGas = Register(RootCodespace, 12, "out of gas")
 
-	// ErrType is returned whenever the type is not what was expected
-	ErrType = Register(11, "invalid type")
+	// ErrMemoTooLarge to doc
+	ErrMemoTooLarge = Register(RootCodespace, 13, "memo too large")
 
-	// ErrAmount is returned when processed amount is invalid.
-	ErrAmount = Register(13, "invalid amount")
+	// ErrInsufficientFee to doc
+	ErrInsufficientFee = Register(RootCodespace, 14, "insufficient fee")
 
-	// ErrInput stands for general input problems indication
-	ErrInput = Register(14, "invalid input")
+	// ErrTooManySignatures to doc
+	ErrTooManySignatures = Register(RootCodespace, 15, "maximum numer of signatures exceeded")
 
-	// ErrExpired stands for expired entities, normally has to do with block height expirations
-	ErrExpired = Register(15, "expired")
-
-	// ErrOverflow s returned when a computation cannot be completed
-	// because the result value exceeds the type.
-	ErrOverflow = Register(16, "an operation cannot be completed due to value overflow")
-
-	// ErrCurrency is returned whenever an operation cannot be completed
-	// due to a currency issues.
-	ErrCurrency = Register(17, "currency")
-
-	// ErrMetadata is returned whenever a weave.Metadata payload is invalid.
-	ErrMetadata = Register(18, "metadata")
-
-	// ErrSchema is returned whenever an operation cannot be completed due
-	// to an object schema version issue.
-	ErrSchema = Register(19, "schema")
-
-	// ErrDatabase is returned whenever the underlying kvstore fails to
-	// process raw bytes (get/set/delete/write)
-	ErrDatabase = Register(20, "database")
-
-	// ErrDeleted is returned whenever a deleted object version is accessed.
-	ErrDeleted = Register(21, "content deleted")
-
-	// ErrIteratorDone is returned when an iterator hits the end of the data source.
-	ErrIteratorDone = Register(22, "iterator done")
-
-	// ErrNetwork is returned on network failure (only for client libraries)
-	ErrNetwork = Register(100200, "network")
-
-	// ErrTimeout is returned on context timeout (only for client libraries)
-	ErrTimeout = Register(100300, "timeout")
+	// ErrNoSignatures to doc
+	ErrNoSignatures = Register(RootCodespace, 16, "no signatures supplied")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
-	ErrPanic = Register(111222, "panic")
+	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 
 // Register returns an error instance that should be used as the base for
@@ -102,23 +79,34 @@ var (
 // twice. Attempt to reuse an error code results in panic.
 //
 // Use this function only during a program startup phase.
-func Register(code uint32, description string) *Error {
-	if e, ok := usedCodes[code]; ok {
+func Register(codespace string, code uint32, description string) *Error {
+	// TODO - uniqueness is (codespace, code) combo
+	if e := getUsed(codespace, code); e != nil {
 		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
 	}
 	err := &Error{
 		code: code,
+		codespace: codespace,
 		desc: description,
 	}
-	usedCodes[err.code] = err
+	setUsed(err)
 	return err
 }
 
 // usedCodes is keeping track of used codes to ensure their uniqueness. No two
-// error instances should share the same error code.
-var usedCodes = map[uint32]*Error{
-	// Register multi error code so that it cannot be used.
-	multiErrorABCICode: nil,
+// error instances should share the same (codespace, code) tuple.
+var usedCodes = map[string]*Error{}
+
+func errorID(codespace string, code uint32) string {
+	return fmt.Sprintf("%s:%d", codespace, code)
+}
+
+func getUsed(codespace string, code uint32) *Error {
+	return usedCodes[errorID(codespace, code)]
+}
+
+func setUsed(err *Error) {
+	usedCodes[errorID(err.codespace, err.code)] = err
 }
 
 // ABCIError will resolve an error code/log from an abci result into
@@ -128,13 +116,13 @@ var usedCodes = map[uint32]*Error{
 //
 // This should *only* be used in clients, not in the server side.
 // The server (abci app / blockchain) should only refer to registered errors
-func ABCIError(code uint32, log string) error {
-	if e, ok := usedCodes[code]; ok {
+func ABCIError(codespace string, code uint32, log string) error {
+	if e := getUsed(codespace, code); e != nil {
 		return Wrap(e, log)
 	}
 	// This is a unique error, will never match on .Is()
 	// Use Wrap here to get a stack trace
-	return Wrap(&Error{code: code}, log)
+	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
 }
 
 // Error represents a root error.
@@ -147,6 +135,7 @@ func ABCIError(code uint32, log string) error {
 // declare a custom root error, always use Register function to ensure
 // error code uniqueness.
 type Error struct {
+	codespace string
 	code uint32
 	desc string
 }
@@ -157,6 +146,10 @@ func (e Error) Error() string {
 
 func (e Error) ABCICode() uint32 {
 	return e.code
+}
+
+func (e Error) Codespace() string {
+	return e.codespace
 }
 
 // Is check if given error instance is of a given kind/type. This involves

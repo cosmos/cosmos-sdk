@@ -143,8 +143,8 @@ jobs:
           command: |
             excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
             for filename in ${excludelist}; do
-              echo "Excluding ${filename} ..."
-              sed -i "\%${filename}:%d" coverage.txt
+              echo "Excluding ${filename} from coverage report..."
+              sed -i.bak "/${filename//\//\\/}/d" coverage.txt
             done
       - run:
           name: upload

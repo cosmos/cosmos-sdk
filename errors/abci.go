@@ -20,15 +20,15 @@ const (
 )
 
 // ABCIInfo returns the ABCI error information as consumed by the tendermint
-// client. Returned code and log message should be used as a ABCI response.
+// client. Returned codespace, code, and log message should be used as a ABCI response.
 // Any error that does not provide ABCICode information is categorized as error
-// with code 1.
+// with code 1, codespace UndefinedCodespace
 // When not running in a debug mode all messages of errors that do not provide
 // ABCICode information are replaced with generic "internal error". Errors
 // without an ABCICode information as considered internal.
-func ABCIInfo(err error, debug bool) (uint32, string) {
+func ABCIInfo(err error, debug bool) (codespace string, code uint32, log string) {
 	if errIsNil(err) {
-		return SuccessABCICode, ""
+		return "", SuccessABCICode, ""
 	}
 
 	encode := defaultErrEncoder
@@ -36,7 +36,7 @@ func ABCIInfo(err error, debug bool) (uint32, string) {
 		encode = debugErrEncoder
 	}
 
-	return abciCode(err), encode(err)
+	return abciCodespace(err), abciCode(err), encode(err)
 }
 
 // The debugErrEncoder encodes the error with a stacktrace.
@@ -73,6 +73,32 @@ func abciCode(err error) uint32 {
 		}
 	}
 }
+
+type codespacer interface {
+	Codespace() string
+}
+
+// abciCodespace tests if given error contains a codespace and returns the value of
+// it if available. This function is testing for the causer interface as well
+// and unwraps the error.
+func abciCodespace(err error) string {
+	if errIsNil(err) {
+		return ""
+	}
+
+	for {
+		if c, ok := err.(codespacer); ok {
+			return c.Codespace()
+		}
+
+		if c, ok := err.(causer); ok {
+			err = c.Cause()
+		} else {
+			return UndefinedCodespace
+		}
+	}
+}
+
 
 // errIsNil returns true if value represented by the given error is nil.
 //

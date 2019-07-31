@@ -12,6 +12,7 @@ func TestABCInfo(t *testing.T) {
 		err      error
 		debug    bool
 		wantCode uint32
+		wantSpace string
 		wantLog  string
 	}{
 		"plain weave error": {
@@ -19,42 +20,49 @@ func TestABCInfo(t *testing.T) {
 			debug:    false,
 			wantLog:  "unauthorized",
 			wantCode: ErrUnauthorized.code,
+			wantSpace: RootCodespace,
 		},
 		"wrapped weave error": {
 			err:      Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:    false,
 			wantLog:  "bar: foo: unauthorized",
 			wantCode: ErrUnauthorized.code,
+			wantSpace: RootCodespace,
 		},
 		"nil is empty message": {
 			err:      nil,
 			debug:    false,
 			wantLog:  "",
 			wantCode: 0,
+			wantSpace: "",
 		},
 		"nil weave error is not an error": {
 			err:      (*Error)(nil),
 			debug:    false,
 			wantLog:  "",
 			wantCode: 0,
+			wantSpace: "",
 		},
 		"stdlib is generic message": {
 			err:      io.EOF,
 			debug:    false,
 			wantLog:  "internal error",
 			wantCode: 1,
+			wantSpace: UndefinedCodespace,
 		},
 		"stdlib returns error message in debug mode": {
 			err:      io.EOF,
 			debug:    true,
 			wantLog:  "EOF",
 			wantCode: 1,
+			wantSpace: UndefinedCodespace,
 		},
 		"wrapped stdlib is only a generic message": {
 			err:      Wrap(io.EOF, "cannot read file"),
 			debug:    false,
 			wantLog:  "internal error",
 			wantCode: 1,
+			wantSpace: UndefinedCodespace,
 		},
 		// This is hard to test because of attached stacktrace. This
 		// case is tested in an another test.
@@ -69,18 +77,23 @@ func TestABCInfo(t *testing.T) {
 			debug:    false,
 			wantLog:  "custom",
 			wantCode: 999,
+			wantSpace: "extern",
 		},
 		"custom error in debug mode": {
 			err:      customErr{},
 			debug:    true,
 			wantLog:  "custom",
 			wantCode: 999,
+			wantSpace: "extern",
 		},
 	}
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {
-			code, log := ABCIInfo(tc.err, tc.debug)
+			space, code, log := ABCIInfo(tc.err, tc.debug)
+			if space != tc.wantSpace {
+				t.Errorf("want %s space, got %s", tc.wantSpace, space)
+			}
 			if code != tc.wantCode {
 				t.Errorf("want %d code, got %d", tc.wantCode, code)
 			}
@@ -128,7 +141,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {
-			_, log := ABCIInfo(tc.err, tc.debug)
+			_, _, log := ABCIInfo(tc.err, tc.debug)
 			if tc.wantStacktrace {
 				if !strings.Contains(log, thisTestSrc) {
 					t.Errorf("log does not contain this file stack trace: %s", log)
@@ -148,7 +161,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 
 func TestABCIInfoHidesStacktrace(t *testing.T) {
 	err := Wrap(ErrUnauthorized, "wrapped")
-	_, log := ABCIInfo(err, false)
+	_, _, log := ABCIInfo(err, false)
 
 	if log != "wrapped: unauthorized" {
 		t.Fatalf("unexpected message in non debug mode: %s", log)
@@ -240,7 +253,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			_, log := ABCIInfo(spec.src, spec.debug)
+			_, _, log := ABCIInfo(spec.src, spec.debug)
 			if exp, got := spec.exp, log; exp != got {
 				t.Errorf("expected %v but got %v", exp, got)
 			}
@@ -251,6 +264,8 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 // customErr is a custom implementation of an error that provides an ABCICode
 // method.
 type customErr struct{}
+
+func (customErr) Codespace() string { return "extern" }
 
 func (customErr) ABCICode() uint32 { return 999 }
 

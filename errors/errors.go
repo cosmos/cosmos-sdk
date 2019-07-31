@@ -11,8 +11,7 @@ import (
 const RootCodespace = "sdk"
 
 // UndefinedCodespace when we explicitly declare no codespace
-const UndefinedCodespace = ""
-
+const UndefinedCodespace = "undefined"
 
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors

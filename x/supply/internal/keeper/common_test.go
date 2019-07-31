@@ -88,7 +88,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 		multiPerm:    {types.Minter, types.Burner, types.Staking},
 		randomPerm:   {"random"},
 	}
-	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, maccPerms)
+	keeper := NewKeeper(cdc, keySupply, ak, bk, maccPerms)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 

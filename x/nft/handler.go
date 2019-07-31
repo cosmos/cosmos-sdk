@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
+// DONTCOVER
+
 // GenericHandler routes the messages to the handlers
 func GenericHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {

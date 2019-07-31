@@ -81,6 +81,16 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 		return res, height, err
 	}
 
+	// When a client did not provide a query height, manually query for it so it can
+	// be injected downstream into responses.
+	if ctx.Height == 0 {
+		status, err := node.Status()
+		if err != nil {
+			return res, height, err
+		}
+		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
+	}
+
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
 		Prove:  !ctx.TrustNode,

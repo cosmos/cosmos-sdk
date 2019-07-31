@@ -40,7 +40,7 @@ func GetCmdAddLiquidity(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add-liquidity [deposit] [deposit-amount] [min-reward] [deadline]",
 		Args:  cobra.ExactArgs(4),
-		Short: "Add liquidity in the reserve pool",
+		Short: "Add liquidity to the reserve pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Add liquidity in the reserve pool for a trading pair.
 			

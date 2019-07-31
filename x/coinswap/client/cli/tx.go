@@ -42,7 +42,7 @@ func GetCmdAddLiquidity(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		Short: "Add liquidity to the reserve pool",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Add liquidity in the reserve pool for a trading pair.
+			fmt.Sprintf(`Add liquidity to the reserve pool for a trading pair.
 			
 Example:
 $ %s tx coinswap add-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm --from mykey

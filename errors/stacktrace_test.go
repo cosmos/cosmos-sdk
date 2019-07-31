@@ -39,7 +39,7 @@ func TestStackTrace(t *testing.T) {
 		"github.com/cosmos/cosmos-sdk/errors.Error.Newf\n",
 		"runtime.goexit\n",
 	}
-	const thisTestSrc = "cosmos-sdk/errors/stacktrace_test.go"
+	const thisTestSrc = "errors/stacktrace_test.go"
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {

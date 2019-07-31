@@ -3,6 +3,7 @@ package bank_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,18 +12,44 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
+
+var moduleAccAddr = sdk.AccAddress([]byte("moduleAcc"))
+
+// initialize the mock application for this module
+func getMockApp(t *testing.T) *mock.App {
+	mapp, err := getBenchmarkMockApp()
+	supply.RegisterCodec(mapp.Cdc)
+	require.NoError(t, err)
+	return mapp
+}
+
+// overwrite the mock init chainer
+func getInitChainer(mapp *mock.App, keeper keeper.BaseKeeper) sdk.InitChainer {
+	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		mapp.InitChainer(ctx, req)
+		bankGenesis := bank.DefaultGenesisState()
+		bank.InitGenesis(ctx, keeper, bankGenesis)
+
+		return abci.ResponseInitChain{}
+	}
+}
 
 // getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
 // Any long term API support commitments do not apply to this function.
 func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
-
 	types.RegisterCodec(mapp.Cdc)
+
+	blacklistedAddrs := make(map[string]bool)
+	blacklistedAddrs[moduleAccAddr.String()] = true
+
 	bankKeeper := keeper.NewBaseKeeper(
 		mapp.AccountKeeper,
 		mapp.ParamsKeeper.Subspace(types.DefaultParamspace),
 		types.DefaultCodespace,
+		blacklistedAddrs,
 	)
 	mapp.Router().AddRoute(types.RouterKey, bank.NewHandler(bankKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, bankKeeper))

@@ -51,3 +51,12 @@ func (v Integer) Incr(ctx Context) (res uint64) {
 	v.Set(ctx, res)
 	return
 }
+
+func (v Integer) Query(ctx CLIContext) (res uint64, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(ctx)
+	if err != nil {
+		return
+	}
+	res, err = DecodeInt(value, v.enc)
+	return
+}

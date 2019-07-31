@@ -33,13 +33,11 @@ func TestStackTrace(t *testing.T) {
 
 	// Wrapping code is unwanted in the errors stack trace.
 	unwantedSrc := []string{
-		"github.com/cosmos/cosmos-sdk/errors.Wrap\n",
-		"github.com/cosmos/cosmos-sdk/errors.Wrapf\n",
-		"github.com/cosmos/cosmos-sdk/errors.Error.New\n",
-		"github.com/cosmos/cosmos-sdk/errors.Error.Newf\n",
+		"github.com/cosmos/cosmos-sdk/types/errors.Wrap\n",
+		"github.com/cosmos/cosmos-sdk/types/errors.Wrapf\n",
 		"runtime.goexit\n",
 	}
-	const thisTestSrc = "errors/stacktrace_test.go"
+	const thisTestSrc = "types/errors/stacktrace_test.go"
 
 	for testName, tc := range cases {
 		t.Run(testName, func(t *testing.T) {

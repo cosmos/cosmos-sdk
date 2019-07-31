@@ -327,7 +327,7 @@ func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
-// BlacklistedAddr checks if a given addres is blacklisted (i.e restricted from
+// BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
 // receiving funds)
 func (keeper BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
 	return keeper.blacklistedAddrs[addr.String()]

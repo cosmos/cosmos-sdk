@@ -9,14 +9,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-func matchesFile(f errors.Frame, substrs ...string) bool {
-	file, _ := fileLine(f)
-	for _, sub := range substrs {
-		if strings.Contains(file, sub) {
+func matchesFunc(f errors.Frame, prefixes ...string) bool {
+	fn := funcName(f)
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(fn, prefix) {
 			return true
 		}
 	}
 	return false
+}
+
+// funcName returns the name of this function, if known.
+func funcName(f errors.Frame) string {
+	// this looks a bit like magic, but follows example here:
+	// https://github.com/pkg/errors/blob/v0.8.1/stack.go#L43-L50
+	pc := uintptr(f) - 1
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown"
+	}
+	return fn.Name()
 }
 
 func fileLine(f errors.Frame) (string, int) {
@@ -34,18 +46,20 @@ func fileLine(f errors.Frame) (string, int) {
 func trimInternal(st errors.StackTrace) errors.StackTrace {
 	// trim our internal parts here
 	// manual error creation, or runtime for caught panics
-	for matchesFile(st[0],
+	for matchesFunc(st[0],
 		// where we create errors
-		"cosmos-sdk/errors/errors.go",
-		"cosmos-sdk/errors/stacktrace.go",
+		"github.com/cosmos/cosmos-sdk/errors.Wrap",
+		"github.com/cosmos/cosmos-sdk/errors.Wrapf",
+		"github.com/cosmos/cosmos-sdk/errors.WithType",
 		// runtime are added on panics
-		"/runtime/",
+		"runtime.",
 		// _test is defined in coverage tests, causing failure
-		"/_test/") {
+		// "/_test/"
+	) {
 		st = st[1:]
 	}
 	// trim out outer wrappers (runtime.goexit and test library if present)
-	for l := len(st) - 1; matchesFile(st[l], "/runtime/", "src/testing/testing.go"); l-- {
+	for l := len(st) - 1; l > 0 && matchesFunc(st[l], "runtime.", "testing."); l-- {
 		st = st[:l]
 	}
 	return st

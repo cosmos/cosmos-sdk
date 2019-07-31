@@ -32,7 +32,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 	r.HandleFunc(
 		"/nfts/mint",
 		mintNFTHandler(cdc, cliCtx),
-	).Methods("PUT")
+	).Methods("POST")
 
 	// Burn an NFT
 	r.HandleFunc(

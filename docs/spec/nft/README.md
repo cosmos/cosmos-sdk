@@ -12,13 +12,13 @@ NFTs on application specific blockchains share some but not all features as thei
   - [NFT](./01_concepts.md#nft)
   - [Collections](./01_concepts.md#collections)
 2. **[State](./02_state.md)**
-	- [Collections](./02_state.md#collections)
+  - [Collections](./02_state.md#collections)
   - [Owners](./02_state.md#owners)
 3. **[Messages](./03_messages.md)**
-	- [Transfer NFT](./03_messages.md#transfer-nft)
-	- [Edit Metadata](./03_messages.md#edit-metadata)
+  - [Transfer NFT](./03_messages.md#transfer-nft)
+  - [Edit Metadata](./03_messages.md#edit-metadata)
   - [Mint NFT](./03_messages.md#mint-nft)
-	- [Burn NFT](./03_messages.md#burn-nft)
+  - [Burn NFT](./03_messages.md#burn-nft)
 4. **[Events](./04_events.md)**
 5. **[Future Improvements](./05_future_improvements.md)**
 

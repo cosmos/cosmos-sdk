@@ -49,6 +49,12 @@ func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, in
 	return ctx.queryStore(key, storeName, "key")
 }
 
+// QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
+// It returns the ResultQuery obtained from the query.
+func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+	return ctx.queryABCI(req)
+}
+
 // QuerySubspace performs a query to a Tendermint node with the provided
 // store name and subspace. It returns key value pair and height of the query
 // upon success or an error if the query fails.
@@ -72,13 +78,10 @@ func (ctx CLIContext) GetFromName() string {
 	return ctx.FromName
 }
 
-// query performs a query to a Tendermint node with the provided store name
-// and path. It returns the result and height of the query upon success
-// or an error if the query fails.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return res, height, err
+		return
 	}
 
 	// When a client did not provide a query height, manually query for it so it can
@@ -86,7 +89,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 	if ctx.Height == 0 {
 		status, err := node.Status()
 		if err != nil {
-			return res, height, err
+			return resp, err
 		}
 		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
 	}
@@ -96,24 +99,40 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 		Prove:  !ctx.TrustNode,
 	}
 
-	result, err := node.ABCIQueryWithOptions(path, key, opts)
+	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)
 	if err != nil {
-		return res, height, err
+		return
 	}
 
-	resp := result.Response
+	resp = result.Response
 	if !resp.IsOK() {
-		return res, height, errors.New(resp.Log)
+		err = errors.New(resp.Log)
+		return
 	}
 
 	// data from trusted node or subspace query doesn't need verification
-	if ctx.TrustNode || !isQueryStoreWithProof(path) {
-		return resp.Value, resp.Height, nil
+	if ctx.TrustNode || !isQueryStoreWithProof(req.Path) {
+		return resp, nil
 	}
 
-	err = ctx.verifyProof(path, resp)
+	err = ctx.verifyProof(req.Path, resp)
 	if err != nil {
-		return res, height, err
+		return
+	}
+
+	return
+}
+
+// query performs a query to a Tendermint node with the provided store name
+// and path. It returns the result and height of the query upon success
+// or an error if the query fails.
+func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+	resp, err := ctx.queryABCI(abci.RequestQuery{
+		Path: path,
+		Data: key,
+	})
+	if err != nil {
+		return
 	}
 
 	return resp.Value, resp.Height, nil

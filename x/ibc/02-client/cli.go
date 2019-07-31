@@ -14,8 +14,6 @@ func (obj Object) CLIObject() CLIObject {
 	return CLIObject{obj}
 }
 
-// (path, )
-
 func (obj CLIObject) ConsensusState(ctx context.CLIContext) (res ConsensusState, proof merkle.Proof, err error) {
 	tmproof, err := obj.obj.ConsensusState.Query(ctx, &res)
 	proof = merkle.NewProofFromValue(tmproof, obj.obj.ConsensusState)

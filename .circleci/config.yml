@@ -141,10 +141,11 @@ jobs:
       - run:
           name: filter out DONTCOVER
           command: |
-            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
+            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
             for filename in ${excludelist}; do
+              filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
               echo "Excluding ${filename} from coverage report..."
-              sed -i.bak "/${filename//\//\\/}/d" coverage.txt
+              sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
             done
       - run:
           name: upload

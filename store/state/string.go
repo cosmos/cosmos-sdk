@@ -30,3 +30,8 @@ func (v String) GetSafe(ctx Context) (res string, err error) {
 func (v String) Set(ctx Context, value string) {
 	v.Value.SetRaw(ctx, []byte(value))
 }
+
+func (v String) Query(ctx CLIContext) (res string, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(ctx)
+	return string(value), proof, err
+}

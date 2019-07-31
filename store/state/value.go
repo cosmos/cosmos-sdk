@@ -1,6 +1,10 @@
 package state
 
 import (
+	"errors"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -29,12 +33,24 @@ func (v Value) Cdc() *codec.Codec {
 	return v.m.Cdc()
 }
 
+func (v Value) Marshal(value interface{}) []byte {
+	return v.m.cdc.MustMarshalBinaryBare(value)
+}
+
+func (v Value) Unmarshal(bz []byte, ptr interface{}) error {
+	return v.m.cdc.UnmarshalBinaryBare(bz, ptr)
+}
+
+func (v Value) mustUnmarshal(bz []byte, ptr interface{}) {
+	v.m.cdc.MustUnmarshalBinaryBare(bz, ptr)
+}
+
 // Get() unmarshales and sets the stored value to the pointer if it exists.
 // It will panic if the value exists but not unmarshalable.
 func (v Value) Get(ctx Context, ptr interface{}) {
 	bz := v.store(ctx).Get(v.key)
 	if bz != nil {
-		v.m.cdc.MustUnmarshalBinaryBare(bz, ptr)
+		v.mustUnmarshal(bz, ptr)
 	}
 }
 
@@ -45,7 +61,7 @@ func (v Value) GetSafe(ctx Context, ptr interface{}) error {
 	if bz == nil {
 		return ErrEmptyValue()
 	}
-	err := v.m.cdc.UnmarshalBinaryBare(bz, ptr)
+	err := v.Unmarshal(bz, ptr)
 	if err != nil {
 		return ErrUnmarshal(err)
 	}
@@ -59,7 +75,7 @@ func (v Value) GetRaw(ctx Context) []byte {
 
 // Set() marshales and sets the argument to the state.
 func (v Value) Set(ctx Context, o interface{}) {
-	v.store(ctx).Set(v.key, v.m.cdc.MustMarshalBinaryBare(o))
+	v.store(ctx).Set(v.key, v.Marshal(o))
 }
 
 // SetRaw() sets the raw bytes to the state.
@@ -82,4 +98,32 @@ func (v Value) Delete(ctx Context) {
 // KeyBytes() returns the prefixed key that the Value is providing to the KVStore
 func (v Value) KeyBytes() []byte {
 	return v.m.KeyBytes(v.key)
+}
+
+func (v Value) QueryRaw(ctx CLIContext) ([]byte, *Proof, error) {
+	req := abci.RequestQuery{
+		Path:  "/store" + v.m.StoreName() + "/key",
+		Data:  v.KeyBytes(),
+		Prove: true,
+	}
+
+	resp, err := ctx.QueryABCI(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !resp.IsOK() {
+		return nil, nil, errors.New(resp.Log)
+	}
+
+	return resp.Value, resp.Proof, nil
+}
+
+func (v Value) Query(ctx CLIContext, ptr interface{}) (*Proof, error) {
+	value, proof, err := v.QueryRaw(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = v.Cdc().UnmarshalBinaryBare(value, ptr)
+	return proof, err
 }

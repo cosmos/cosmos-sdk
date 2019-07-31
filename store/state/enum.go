@@ -47,3 +47,8 @@ func (v Enum) Transit(ctx Context, from, to byte) bool {
 	v.Set(ctx, to)
 	return true
 }
+
+func (v Enum) Query(ctx CLIContext) (res byte, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(ctx)
+	return value[0], proof, err
+}

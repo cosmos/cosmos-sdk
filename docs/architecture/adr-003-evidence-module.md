@@ -2,12 +2,17 @@
 
 ## Changelog
 
-- {date}: {changelog}
+- 31-07-2019: Initial draft
 
 ## Context
 
-> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
-> {context body}
+In order to support building highly secure, robust and interoperable blockchain
+applications, it is vital for the Cosmos SDK to expose a mechanism in which arbitrary
+evidence can be submitted, evaluated and verified resulting in some agreed upon
+penalty for any equivocations committed by a validator. Furthermore, such a
+mechanism is paramount for any IBC protocol implementation in order to support the
+ability for any equivocations to be relayed back from a collateralized chain to
+a primary chain so that the equivocating validator(s) can be slashed.
 
 ## Decision
 

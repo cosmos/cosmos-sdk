@@ -5,11 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/stretchr/testify/require"
 
@@ -50,6 +47,7 @@ var (
 	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
 	sendMsg1 = types.NewMsgSend(addr1, addr2, coins)
+	sendMsg2 = types.NewMsgSend(addr1, moduleAccAddr, coins)
 
 	multiSendMsg1 = types.MsgMultiSend{
 		Inputs:  []types.Input{types.NewInput(addr1, coins)},
@@ -88,26 +86,15 @@ var (
 			types.NewOutput(addr2, manyCoins),
 		},
 	}
-)
-
-// initialize the mock application for this module
-func getMockApp(t *testing.T) *mock.App {
-	mapp, err := getBenchmarkMockApp()
-	supply.RegisterCodec(mapp.Cdc)
-	require.NoError(t, err)
-	return mapp
-}
-
-// overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper keeper.BaseKeeper) sdk.InitChainer {
-	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-		mapp.InitChainer(ctx, req)
-		bankGenesis := bank.DefaultGenesisState()
-		bank.InitGenesis(ctx, keeper, bankGenesis)
-
-		return abci.ResponseInitChain{}
+	multiSendMsg6 = types.MsgMultiSend{
+		Inputs: []types.Input{
+			types.NewInput(addr1, coins),
+		},
+		Outputs: []types.Output{
+			types.NewOutput(moduleAccAddr, coins),
+		},
 	}
-}
+)
 
 func TestSendNotEnoughBalance(t *testing.T) {
 	mapp := getMockApp(t)
@@ -140,6 +127,41 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.True(t, res2.GetSequence() == origSeq+1)
 }
 
+func TestSendToModuleAcc(t *testing.T) {
+	mapp := getMockApp(t)
+	acc := &auth.BaseAccount{
+		Address: addr1,
+		Coins:   coins,
+	}
+
+	macc := &auth.BaseAccount{
+		Address: moduleAccAddr,
+	}
+
+	mock.SetGenesis(mapp, []auth.Account{acc, macc})
+
+	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	require.NotNil(t, res1)
+	require.Equal(t, acc, res1.(*auth.BaseAccount))
+
+	origAccNum := res1.GetAccountNumber()
+	origSeq := res1.GetSequence()
+
+	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg2}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+
+	mock.CheckBalance(t, mapp, addr1, coins)
+	mock.CheckBalance(t, mapp, moduleAccAddr, sdk.Coins(nil))
+
+	res2 := mapp.AccountKeeper.GetAccount(mapp.NewContext(true, abci.Header{}), addr1)
+	require.NotNil(t, res2)
+
+	require.True(t, res2.GetAccountNumber() == origAccNum)
+	require.True(t, res2.GetSequence() == origSeq+1)
+}
+
 func TestMsgMultiSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
@@ -147,7 +169,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc})
+	macc := &auth.BaseAccount{
+		Address: moduleAccAddr,
+	}
+
+	mock.SetGenesis(mapp, []auth.Account{acc, macc})
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 
@@ -173,6 +199,14 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true, // doesn't check signature
+			expPass:    false,
+			privKeys:   []crypto.PrivKey{priv1},
+		},
+		{
+			msgs:       []sdk.Msg{multiSendMsg6},
+			accNums:    []uint64{0},
+			accSeqs:    []uint64{0},
+			expSimPass: false,
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
 		},

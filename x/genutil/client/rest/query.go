@@ -1,4 +1,4 @@
-package query
+package rest
 
 import (
 	"net/http"

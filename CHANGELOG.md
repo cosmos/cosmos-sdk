@@ -164,6 +164,7 @@
 
 ### Bug Fixes
 
+* (modules) [\#4823](https://github.com/cosmos/cosmos-sdk/issues/4823) Update the `DefaultUnbondingTime` from 3 days to 3 weeks to be inline with documentation.
 * (abci) [\#4639](https://github.com/cosmos/cosmos-sdk/issues/4639) Fix `CheckTx` by verifying the message route
 * Return height in responses when querying against BaseApp
 * [\#1351](https://github.com/cosmos/cosmos-sdk/issues/1351) Stable AppHash allows no_empty_blocks

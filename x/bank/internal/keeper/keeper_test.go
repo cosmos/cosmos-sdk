@@ -97,7 +97,6 @@ func TestSendKeeper(t *testing.T) {
 	ctx := input.ctx
 
 	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[sdk.AccAddress([]byte("moduleAcc")).String()] = true
 
 	paramSpace := input.pk.Subspace("newspace")
 	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace, blacklistedAddrs)

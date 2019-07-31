@@ -146,7 +146,7 @@ type SendKeeper interface {
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
 
-	BlacklistedAddrs() map[string]bool
+	BlacklistedAddr(addr sdk.AccAddress) bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -168,9 +168,9 @@ func NewBaseSendKeeper(ak types.AccountKeeper,
 	paramSpace params.Subspace, codespace sdk.CodespaceType, blacklistedAddrs map[string]bool) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
-		ak:             ak,
-		paramSpace:     paramSpace,
+		BaseViewKeeper:   NewBaseViewKeeper(ak, codespace),
+		ak:               ak,
+		paramSpace:       paramSpace,
 		blacklistedAddrs: blacklistedAddrs,
 	}
 }
@@ -327,10 +327,10 @@ func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
 }
 
-// BlacklistedAddrs returns the list of the blacklisted accounts addresses that
-// are not allowed to receive funds
-func (keeper BaseSendKeeper) BlacklistedAddrs() map[string]bool {
-	return keeper.blacklistedAddrs
+// BlacklistedAddr checks if a given addres is blacklisted (i.e restricted from
+// receiving funds)
+func (keeper BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
+	return keeper.blacklistedAddrs[addr.String()]
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)

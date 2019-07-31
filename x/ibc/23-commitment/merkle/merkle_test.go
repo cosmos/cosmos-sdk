@@ -65,7 +65,7 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs := make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			c, v0, p := path.Query(cms, []byte(k))
+			c, v0, p := path.QueryMultiStore(cms, []byte(k))
 			require.Equal(t, uint32(0), c)
 			require.Equal(t, v, v0)
 			proofs = append(proofs, p)
@@ -75,7 +75,7 @@ func TestStore(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			k := make([]byte, 64)
 			rand.Read(k)
-			c, v, p := path.Query(cms, k)
+			c, v, p := path.QueryMultiStore(cms, k)
 			require.Equal(t, uint32(0), c)
 			require.Nil(t, v)
 			proofs = append(proofs, p)
@@ -107,7 +107,7 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs = make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			c, v0, p := path.Query(cms, []byte(k))
+			c, v0, p := path.QueryMultiStore(cms, []byte(k))
 			require.Equal(t, uint32(0), c)
 			require.Equal(t, v, v0)
 			proofs = append(proofs, p)

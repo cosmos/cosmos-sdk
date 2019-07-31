@@ -1,8 +1,12 @@
 package merkle
 
 import (
+	"errors"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -28,12 +32,32 @@ func (path Path) RequestQueryMultiStore(key []byte) abci.RequestQuery {
 	return abci.RequestQuery{Path: path.Path() + "/key", Data: path.Key(key), Prove: true}
 }
 
+func (path Path) Query(ctx context.CLIContext, key []byte) (code uint32, value []byte, proof Proof, err error) {
+	resp, err := ctx.QueryABCI(path.RequestQuery(key))
+	if err != nil {
+		return code, value, proof, err
+	}
+	if !resp.IsOK() {
+		return resp.Code, value, proof, errors.New(resp.Log)
+	}
+	return resp.Code, resp.Value, Proof{Key: key, Proof: resp.Proof}, nil
+}
+
+func (path Path) QueryValue(ctx context.CLIContext, cdc *codec.Codec, key []byte, ptr interface{}) (Proof, error) {
+	_, value, proof, err := path.Query(ctx, key)
+	if err != nil {
+		return Proof{}, err
+	}
+	err = cdc.UnmarshalBinaryBare(value, ptr) // TODO
+	return proof, err
+}
+
 func (path Path) QueryMultiStore(cms types.CommitMultiStore, key []byte) (uint32, []byte, Proof) {
 	queryable, ok := cms.(types.Queryable)
 	if !ok {
 		panic("CommitMultiStore not queryable")
 	}
-	qres := queryable.Query(path.RequestQuery(key))
+	qres := queryable.Query(path.RequestQueryMultiStore(key))
 	return qres.Code, qres.Value, Proof{Key: key, Proof: qres.Proof}
 }
 

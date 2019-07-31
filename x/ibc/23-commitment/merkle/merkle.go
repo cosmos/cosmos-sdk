@@ -6,8 +6,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/state"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const merkleKind = "merkle"
@@ -57,6 +58,10 @@ func (Path) CommitmentKind() string {
 	return merkleKind
 }
 
+func NewPathFromMapping(mapp state.Mapping) Path {
+	return NewPath([][]byte{[]byte(mapp.StoreName())}, mapp.PrefixBytes())
+}
+
 var _ commitment.Proof = Proof{}
 
 // Proof is Merkle proof with the key information.
@@ -100,4 +105,13 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 		return runtime.VerifyValue(proof.Proof, root.Hash, keypath.String(), value)
 	}
 	return runtime.VerifyAbsence(proof.Proof, root.Hash, keypath.String())
+}
+
+type Value interface {
+	KeyBytes() []byte
+	Unmarshal([]byte, interface{})
+}
+
+func NewProofFromValue(proof *merkle.Proof, value Value) Proof {
+	return Proof{proof, value.KeyBytes()}
 }

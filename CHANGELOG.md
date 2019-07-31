@@ -103,6 +103,7 @@
 
 ### Improvements
 
+* (keys) [\#4611](https://github.com/cosmos/cosmos-sdk/issues/4611) store keys in simapp now use a map instead of using individual literal keys
 * [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of CacheKVStore iterator.
 * [\#3512](https://github.com/cosmos/cosmos-sdk/issues/3512) Implement Logger method on each module's keeper.
 * [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
@@ -164,6 +165,9 @@
 
 ### Bug Fixes
 
+* (keys) [\#4338](https://github.com/cosmos/cosmos-sdk/issues/4338) fix multisig key output for CLI
+* (modules) [\#4795](https://github.com/cosmos/cosmos-sdk/issues/4795) restrict module accounts from receiving transactions.
+  Allowing this would cause an invariant on the module account coins.
 * (modules) [\#4823](https://github.com/cosmos/cosmos-sdk/issues/4823) Update the `DefaultUnbondingTime` from 3 days to 3 weeks to be inline with documentation.
 * (abci) [\#4639](https://github.com/cosmos/cosmos-sdk/issues/4639) Fix `CheckTx` by verifying the message route
 * Return height in responses when querying against BaseApp

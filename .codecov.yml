@@ -24,4 +24,4 @@ ignore:
   - "docs"
   - "*.md"
   - "*.rst"
-  - "x/**/test_common.go"
+  - "x/nft/test_common.go"

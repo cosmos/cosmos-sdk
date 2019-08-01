@@ -16,7 +16,7 @@ func TestSupply(t *testing.T) {
 
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	total := keeper.GetSupply(ctx).Total
+	total := keeper.GetSupply(ctx).GetTotal()
 	expectedTotal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(nAccs)))
 
 	require.Equal(t, expectedTotal, total)

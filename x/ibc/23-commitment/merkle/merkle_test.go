@@ -69,7 +69,7 @@ func TestStore(t *testing.T) {
 		for k, v := range m {
 			v0, p, err := QueryMultiStore(cms, path, []byte(k))
 			require.NoError(t, err)
-			require.Equal(t, v, v0)
+			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0, "Queried value different at %d", repeat)
 			proofs = append(proofs, p)
 		}
 
@@ -90,7 +90,7 @@ func TestStore(t *testing.T) {
 		// Test commitment store
 		for k, v := range m {
 			if len(v) != 0 {
-				require.True(t, cstore.Prove([]byte(k), v))
+				require.True(t, cstore.Prove([]byte(k), cdc.MustMarshalBinaryBare(v)))
 			} else {
 				require.True(t, cstore.Prove([]byte(k), nil))
 			}
@@ -111,7 +111,7 @@ func TestStore(t *testing.T) {
 		for k, v := range m {
 			v0, p, err := QueryMultiStore(cms, path, []byte(k))
 			require.NoError(t, err)
-			require.Equal(t, v, v0)
+			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0)
 			proofs = append(proofs, p)
 		}
 
@@ -121,7 +121,7 @@ func TestStore(t *testing.T) {
 		// Test commitment store
 		for k, v := range m {
 			if len(v) != 0 {
-				require.True(t, cstore.Prove([]byte(k), v))
+				require.True(t, cstore.Prove([]byte(k), cdc.MustMarshalBinaryBare(v)))
 			} else {
 				require.True(t, cstore.Prove([]byte(k), nil))
 			}

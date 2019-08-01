@@ -6,23 +6,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-type CLIObject struct {
-	obj Object
-}
-
-func (obj Object) CLIObject() CLIObject {
-	return CLIObject{obj}
-}
-
-func (obj CLIObject) ConsensusState(ctx context.CLIContext) (res ConsensusState, proof merkle.Proof, err error) {
-	tmproof, err := obj.obj.ConsensusState.Query(ctx, &res)
-	proof = merkle.NewProofFromValue(tmproof, obj.obj.ConsensusState)
+func (obj Object) ConsensusStateCLI(ctx context.CLIContext, path merkle.Path) (res ConsensusState, proof merkle.Proof, err error) {
+	tmproof, err := obj.ConsensusState.Query(ctx, &res)
+	proof = merkle.NewProofFromValue(tmproof, path, obj.ConsensusState)
 	return
 }
 
-func (obj CLIObject) Frozen(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.obj.Frozen.Query(ctx)
-	proof = merkle.NewProofFromValue(tmproof, obj.obj.Frozen)
+func (obj Object) FrozenCLI(ctx context.CLIContext, path merkle.Path) (res bool, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Frozen.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, path, obj.Frozen)
 	return
 }
 

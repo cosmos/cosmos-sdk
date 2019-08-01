@@ -3,7 +3,6 @@ package merkle
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -20,7 +19,6 @@ func QueryMultiStore(cms types.CommitMultiStore, path Path, key []byte) ([]byte,
 		return nil, Proof{}, errors.New(qres.Log)
 	}
 
-	fmt.Printf("Q: %X -> %X\n", path.Key(key), qres.Value)
 	return qres.Value, Proof{Key: key, Proof: qres.Proof}, nil
 }
 

@@ -143,8 +143,8 @@ func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset Mock
 }
 
 func (node *Node) Query(t *testing.T, path merkle.Path, k []byte) ([]byte, commitment.Proof) {
-	code, value, proof := path.QueryMultiStore(node.Cms, k)
-	require.Equal(t, uint32(0), code)
+	value, proof, err := merkle.QueryMultiStore(node.Cms, path, k)
+	require.NoError(t, err)
 	return value, proof
 }
 

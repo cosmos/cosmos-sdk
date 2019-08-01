@@ -20,9 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-func mapping(cdc *codec.Codec, storeKey string, version int64) state.Mapping {
+func mapping(cdc *codec.Codec, storeKey string, version int64) (state.Mapping, merkle.Path) {
 	prefix := []byte(strconv.FormatInt(version, 10) + "/")
-	return state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+	return state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix), merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -48,11 +48,11 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			mapp := mapping(cdc, storeKey, ibc.Version)
+			mapp, path := mapping(cdc, storeKey, ibc.Version)
 			man := client.NewManager(mapp)
 			id := args[0]
 
-			state, _, err := man.Object(id).CLIObject().ConsensusState(ctx)
+			state, _, err := man.Object(id).ConsensusStateCLI(ctx, path)
 			if err != nil {
 				return err
 			}

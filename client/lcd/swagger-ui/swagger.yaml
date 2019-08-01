@@ -2365,8 +2365,8 @@ definitions:
         type: string
       shares:
         type: string
-      height:
-        type: integer
+      balance:
+        $ref: "#/definitions/Coin"
   UnbondingDelegationPair:
     type: object
     properties:

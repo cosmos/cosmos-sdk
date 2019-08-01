@@ -119,14 +119,42 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
 		infraction.ConsensusAddress, 
 		infraction.InfractionHeight, 
 		infraction.Power, 
-		keeper.getSlashingPenalty(ctx, infraction.Evidence.Type()),
+		keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type()),
 	)
 
 	keeper.setInfraction(ctx, infraction)
 }
 ```
 
-TODO: Add section of keys/slashing penalties
+We require the the `x/evidence` module's keeper to keep an internal persistent
+mapping between `Evidence` types and slashing penalties represented as `InfractionPenalty`.
+
+```go
+var slashingPenaltyPrefixKey = []byte{0x01}
+
+type InfractionPenalty struct {
+	EvidenceType    string
+	Penalty         sdk.Dec
+}
+
+func GetSlashingPenaltyKey(evidenceType string) []byte {
+	return append(slashingPenaltyPrefixKey, []byte(evidenceType)...)
+}
+
+func (k Keeper) GetSlashingPenalty(ctx sdk.Context, evidenceType string) sdk.Dec {
+	store := ctx.KVStore(k.storeKey)
+	
+	bz := store.Get(GetSlashingPenaltyKey(evidenceType))
+	if len(bz) == 0 {
+		return sdk.ZeroDec()
+	}
+	
+	var ip InfractionPenalty
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
+	
+	return ip.Penalty
+}
+```
 
 ## Consequences
 

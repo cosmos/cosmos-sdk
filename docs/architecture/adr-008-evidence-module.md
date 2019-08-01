@@ -48,6 +48,7 @@ as an `Infraction` which includes mandatory fields outlined below.
  
 ```go
 type Evidence interface {
+	Jailable() bool
 	Route() string
 	Type() string
 	ValidateBasic() sdk.Error
@@ -112,7 +113,8 @@ func handleMsgSubmitInfraction(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvid
 
 The `x/evidence` module's keeper is responsible for matching the `Evidence` against
 the module's router. Upon success the validator is slashed and the infraction is
-persisted.
+persisted. In addition, the validator is jailed is the `Evidence` type is configured
+to do so. 
 
 ```go
 func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Error {
@@ -122,11 +124,16 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
 	}
 	
 	keeper.stakingKeeper.Slash(
+		ctx,
 		infraction.ConsensusAddress, 
 		infraction.InfractionHeight, 
 		infraction.Power, 
 		keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type()),
 	)
+	
+	if infraction.Evidence.Jailable() {
+		keeper.stakingKeeper.Jail(ctx, infraction.ConsensusAddress)
+	}
 
 	keeper.setInfraction(ctx, infraction)
 }

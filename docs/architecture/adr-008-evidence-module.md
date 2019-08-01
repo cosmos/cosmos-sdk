@@ -112,8 +112,8 @@ persisted.
 func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Error {
 	handler := keeper.router.GetRoute(infraction.Evidence.Route())
 	if err := handler(cacheCtx, infraction.Evidence); err != nil {
-    	return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
-    }
+		return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
+	}
 	
 	slashPenalty := keeper.getSlashingPenalty(ctx, infraction.Evidence.Type())
 	keeper.stakingKeeper.Slash(

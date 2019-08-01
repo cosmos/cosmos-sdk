@@ -115,17 +115,18 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
 		return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
 	}
 	
-	slashPenalty := keeper.getSlashingPenalty(ctx, infraction.Evidence.Type())
 	keeper.stakingKeeper.Slash(
 		infraction.ConsensusAddress, 
 		infraction.InfractionHeight, 
 		infraction.Power, 
-		slashPenalty,
+		keeper.getSlashingPenalty(ctx, infraction.Evidence.Type()),
 	)
 
 	keeper.setInfraction(ctx, infraction)
 }
 ```
+
+TODO: Add section of keys/slashing penalties
 
 ## Consequences
 

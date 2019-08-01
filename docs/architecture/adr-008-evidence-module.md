@@ -116,7 +116,12 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
     }
 	
 	slashPenalty := keeper.getSlashingPenalty(ctx, infraction.Evidence.Type())
-	keeper.stakingKeeper.Slash(infraction.ConsensusAddress, infraction.InfractionHeight, infraction.Power, slashPenalty)
+	keeper.stakingKeeper.Slash(
+		infraction.ConsensusAddress, 
+		infraction.InfractionHeight, 
+		infraction.Power, 
+		slashPenalty,
+	)
 
 	keeper.setInfraction(ctx, infraction)
 }

@@ -4,6 +4,10 @@
 
 - 31-07-2019: Initial draft
 
+## Status
+
+Proposed
+
 ## Context
 
 In order to support building highly secure, robust and interoperable blockchain
@@ -34,8 +38,11 @@ its own types that can be used by many chains (e.g. `CounterFactualEvidence`).
 In addition, other modules may implement their own `Evidence` types in a similar
 manner in which governance is extensible. It is important to note any concrete 
 type implementing the `Evidence` interface may include arbitrary fields such as
-infraction and submission time. We want the `Evidence` type to remain as flexible
+an infraction time. We want the `Evidence` type to remain as flexible
 as possible.
+
+However, when submitting evidence to the `x/evidence` module, it must be submitted
+as an `Infraction` which includes mandatory fields outlined below.
  
 ```go
 type Evidence interface {
@@ -43,6 +50,14 @@ type Evidence interface {
 	Type() string
 	ValidateBasic() sdk.Error
 	String() string
+}
+
+type Infraction struct {
+	Evidence
+	
+	ConsensusAddress    sdk.ConsAddress
+	InfractionHeight    int64
+	Power               int64
 }
 ```
 
@@ -60,15 +75,49 @@ type Router interface {
 
 Upon successful routing through the `x/evidence` module, the `Evidence` type
 is passed through a `Handler`. This `Handler` is responsible for executing all
-corresponding business logic necessary for verifying the evidence.
+corresponding business logic necessary for verifying the evidence. If no error
+is returned, the `Evidence` is considered valid.
 
 ```go
 type Handler func(ctx sdk.Context, evidence Evidence) sdk.Error
 ```
 
-## Status
+Assuming the `Evidence` is valid, the corresponding slashing penalty is invoked
+for the `Evidence`'s `Type`. Keep in mind the slashing penalty for any `Type` can
+be configured through governance.
 
-Proposed
+```go
+type MsgSubmitEvidence struct {
+	Infraction
+}
+
+func handleMsgSubmitEvidence(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvidence) sdk.Result {
+	if err := keeper.SubmitEvidence(ctx, msg.Infraction); err != nil {
+		return err.Result()
+	}
+    
+	keeper.setEvidence(ctx, evidence)
+	// emit events
+
+	return sdk.Result{ 
+		// ...
+	}
+}
+```
+
+The `x/evidence` module's keeper is responsible
+
+```go
+func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence Evidence) sdk.Error {
+	handler := keeper.router.GetRoute(evidence.Route())
+	if err := handler(cacheCtx, content); err != nil {
+    	return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
+    }
+	
+	slashPenalty := keeper.getSlashingPenalty(ctx, evidence.Type())
+	keeper.stakingKeeper.Slash(consAddr, infractionHeight, power, slashPenalty)
+}
+```
 
 ## Consequences
 

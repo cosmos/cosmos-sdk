@@ -96,8 +96,7 @@ func handleMsgSubmitEvidence(ctx sdk.Context, keeper Keeper, msg MsgSubmitEviden
 		return err.Result()
 	}
     
-	keeper.setEvidence(ctx, evidence)
-	// emit events
+	// emit events...
 
 	return sdk.Result{ 
 		// ...
@@ -105,17 +104,21 @@ func handleMsgSubmitEvidence(ctx sdk.Context, keeper Keeper, msg MsgSubmitEviden
 }
 ```
 
-The `x/evidence` module's keeper is responsible
+The `x/evidence` module's keeper is responsible for matching the `Evidence` against
+the module's router. Upon success the validator is slashed and the infraction is
+persisted.
 
 ```go
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence Evidence) sdk.Error {
-	handler := keeper.router.GetRoute(evidence.Route())
-	if err := handler(cacheCtx, content); err != nil {
+func (k Keeper) SubmitEvidence(ctx sdk.Context, infraction Infraction) sdk.Error {
+	handler := keeper.router.GetRoute(infraction.Evidence.Route())
+	if err := handler(cacheCtx, infraction.Evidence); err != nil {
     	return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
     }
 	
-	slashPenalty := keeper.getSlashingPenalty(ctx, evidence.Type())
-	keeper.stakingKeeper.Slash(consAddr, infractionHeight, power, slashPenalty)
+	slashPenalty := keeper.getSlashingPenalty(ctx, infraction.Evidence.Type())
+	keeper.stakingKeeper.Slash(infraction.ConsensusAddress, infraction.InfractionHeight, infraction.Power, slashPenalty)
+
+	keeper.setEvidence(ctx, evidence)
 }
 ```
 
@@ -133,6 +136,8 @@ validators based on agreed upon slashing parameters
 due to the inability to introduce the new evidence type's corresponding handler
 
 ### Neutral
+
+- Should we persist infractions indefinitely? Or should we rather rely on events?
 
 ## References
 

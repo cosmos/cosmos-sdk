@@ -1,5 +1,9 @@
 package types
 
+import (
+	"strings"
+)
+
 const (
 	// Query endpoints supported by the coinswap querier
 	QueryLiquidity  = "liquidity"

@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"bytes"
 	"net/http"
 	"time"
 
@@ -76,19 +75,10 @@ func postAddLiquidityHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		msg := types.NewMsgAddLiquidity(req.Deposit, req.DepositAmount, req.MinReward, req.Deadline, req.Sender)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		_, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.Sender) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own sender address")
 			return
 		}
 
@@ -110,19 +100,10 @@ func postRemoveLiquidityHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		msg := types.NewMsgRemoveLiquidity(req.Withdraw, req.WithdrawAmount, req.MinNative, req.Deadline, req.Sender)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		_, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.Sender) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own sender address")
 			return
 		}
 
@@ -144,19 +125,10 @@ func postSwapOrderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		msg := types.NewMsgSwapOrder(req.Input, req.Output, req.Deadline, req.Sender, req.Recipient, req.IsBuyOrder)
-		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		_, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		if !bytes.Equal(fromAddr, req.Sender) {
-			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own sender address")
 			return
 		}
 

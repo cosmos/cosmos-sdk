@@ -36,7 +36,7 @@ func GetCmdQueryLiquidity(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "liquidity",
 		Short: "Query the current liquidity values",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query values for the liquidity stored in the reserve pool.
+			fmt.Sprintf(`Query the liquidity of a specific trading pair stored in the reserve pool.
 			
 Example:
 $ %s query coinswap liquidity

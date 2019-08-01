@@ -30,3 +30,8 @@ func (v Boolean) GetSafe(ctx Context) (res bool, err error) {
 func (v Boolean) Set(ctx Context, value bool) {
 	v.Value.Set(ctx, value)
 }
+
+func (v Boolean) Query(ctx CLIContext) (res bool, proof *Proof, err error) {
+	proof, err = v.Value.Query(ctx, &res)
+	return
+}

@@ -62,7 +62,7 @@ type Infraction struct {
 ```
 
 Each `Evidence` type must map to a specific unique route and be registered with
-the `x/evidence` module. It does this through the `Router` implementation. 
+the `x/evidence` module. It accomplishes this through the `Router` implementation. 
 
 ```go
 type Router interface {
@@ -87,12 +87,12 @@ for the `Evidence`'s `Type`. Keep in mind the slashing penalty for any `Type` ca
 be configured through governance.
 
 ```go
-type MsgSubmitEvidence struct {
+type MsgSubmitInfraction struct {
 	Infraction
 }
 
-func handleMsgSubmitEvidence(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvidence) sdk.Result {
-	if err := keeper.SubmitEvidence(ctx, msg.Infraction); err != nil {
+func handleMsgSubmitInfraction(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvidence) sdk.Result {
+	if err := keeper.SubmitInfraction(ctx, msg.Infraction); err != nil {
 		return err.Result()
 	}
     
@@ -109,7 +109,7 @@ the module's router. Upon success the validator is slashed and the infraction is
 persisted.
 
 ```go
-func (k Keeper) SubmitEvidence(ctx sdk.Context, infraction Infraction) sdk.Error {
+func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Error {
 	handler := keeper.router.GetRoute(infraction.Evidence.Route())
 	if err := handler(cacheCtx, infraction.Evidence); err != nil {
     	return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
@@ -118,7 +118,7 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, infraction Infraction) sdk.Error
 	slashPenalty := keeper.getSlashingPenalty(ctx, infraction.Evidence.Type())
 	keeper.stakingKeeper.Slash(infraction.ConsensusAddress, infraction.InfractionHeight, infraction.Power, slashPenalty)
 
-	keeper.setEvidence(ctx, evidence)
+	keeper.setInfraction(ctx, infraction)
 }
 ```
 

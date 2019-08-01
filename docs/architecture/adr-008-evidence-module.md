@@ -33,6 +33,8 @@ evidence type
 - Querier implementation to support querying params, evidence types, params, and
 all submitted valid equivocations
 
+### Types
+
 First, we define the `Evidence` interface type. The `x/evidence` module may implement
 its own types that can be used by many chains (e.g. `CounterFactualEvidence`).
 In addition, other modules may implement their own `Evidence` types in a similar
@@ -61,6 +63,8 @@ type Infraction struct {
 }
 ```
 
+### Routing & Handling
+
 Each `Evidence` type must map to a specific unique route and be registered with
 the `x/evidence` module. It accomplishes this through the `Router` implementation. 
 
@@ -81,6 +85,8 @@ is returned, the `Evidence` is considered valid.
 ```go
 type Handler func(ctx sdk.Context, evidence Evidence) sdk.Error
 ```
+
+### Submission
 
 Assuming the `Evidence` is valid, the corresponding slashing penalty is invoked
 for the `Evidence`'s `Type`. Keep in mind the slashing penalty for any `Type` can
@@ -125,6 +131,8 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
 	keeper.setInfraction(ctx, infraction)
 }
 ```
+
+### Genesis
 
 We require the the `x/evidence` module's keeper to keep an internal persistent
 mapping between `Evidence` types and slashing penalties represented as `InfractionPenalty`.

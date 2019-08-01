@@ -156,6 +156,17 @@ func (k Keeper) GetSlashingPenalty(ctx sdk.Context, evidenceType string) sdk.Dec
 }
 ```
 
+Finally, we need to represent the genesis state of the `x/evidence` module. The
+module only needs a list of all submitted valid infractions and the infraction
+penalties.
+
+```go
+type GenesisState struct {
+	Infractions         []Infraction
+	InfractionPenalties []InfractionPenalty
+}
+```
+
 ## Consequences
 
 ### Positive

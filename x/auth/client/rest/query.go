@@ -64,6 +64,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		// if the height query param is set to zero, query for genesis transactions
 		heightStr := r.FormValue("height")
 		if heightStr != "" {
 			if height, err := strconv.ParseInt(heightStr, 10, 64); err == nil && height == 0 {
@@ -73,7 +74,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		var (
-			tags        []string
+			events      []string
 			txs         []sdk.TxResponse
 			page, limit int
 		)
@@ -88,13 +89,13 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		tags, page, limit, err = rest.ParseHTTPArgs(r)
+		events, page, limit, err = rest.ParseHTTPArgs(r)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		searchResult, err := utils.QueryTxsByEvents(cliCtx, tags, page, limit)
+		searchResult, err := utils.QueryTxsByEvents(cliCtx, events, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

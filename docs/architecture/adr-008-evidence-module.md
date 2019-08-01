@@ -10,9 +10,10 @@ In order to support building highly secure, robust and interoperable blockchain
 applications, it is vital for the Cosmos SDK to expose a mechanism in which arbitrary
 evidence can be submitted, evaluated and verified resulting in some agreed upon
 penalty for any equivocations committed by a validator. Furthermore, such a
-mechanism is paramount for any IBC protocol implementation in order to support the
-ability for any equivocations to be relayed back from a collateralized chain to
-a primary chain so that the equivocating validator(s) can be slashed.
+mechanism is paramount for any [IBC](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
+protocol implementation in order to support the ability for any equivocations to
+be relayed back from a collateralized chain to a primary chain so that the
+equivocating validator(s) can be slashed.
 
 ## Decision
 
@@ -29,25 +30,24 @@ all submitted valid equivocations
 
 ## Status
 
-> A decision may be "proposed" if the project stakeholders haven't agreed with it yet, or "accepted" once it is agreed. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
-> {Deprecated|Proposed|Accepted}
+Proposed
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Positive
 
-{positive consequences}
+- Allows the state machine to process equivocations submitted on-chain and penalize
+validators based on agreed upon slashing parameters
+- Does not solely rely on Tendermint to submit evidence
 
 ### Negative
 
-{negative consequences}
+- No easy way to introduce new evidence types through governance on a live chain
+due to the inability to introduce the new evidence type's corresponding handler
 
 ### Neutral
 
-{neutral consequences}
-
 ## References
 
-- {reference link}
+- [ICS](https://github.com/cosmos/ics)
+- [IBC Architecture](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)

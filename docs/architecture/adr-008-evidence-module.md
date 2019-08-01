@@ -1,4 +1,4 @@
-# ADR 003: Evidence Module
+# ADR 008: Evidence Module
 
 ## Changelog
 
@@ -16,8 +16,16 @@ a primary chain so that the equivocating validator(s) can be slashed.
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
+We will implement an evidence module in the Cosmos SDK supporting the following
+functionality:
+
+- Provide developers with the abstractions and interfaces necessary to define:
+  - Custom evidence messages and types along with their slashing penalties
+  - Evidence message handlers to determine the validity of a submitted equivocation
+- Support the ability through governance to modify slashing penalties of any
+evidence type
+- Querier implementation to support querying params, evidence types, params, and
+all submitted valid equivocations  
 
 ## Status
 

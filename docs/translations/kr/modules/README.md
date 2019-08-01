@@ -10,7 +10,7 @@
 
 [API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/staking)를 확인하세요.
 
-관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/staking)에서 확인하실 수 있습니다.
+관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/staking)에서 확인하실 수 있습니다.
 
 
 # Slashing
@@ -19,15 +19,15 @@
 
 [API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/slashing)를 확인하세요.
 
-관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/slashing)에서 확인하실 수 있습니다.
+관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/slashing)에서 확인하실 수 있습니다.
 
 # Provisions
 
 `x/provisions` 모듈은 수수료 보상 분배와 스테이킹 인플레이션을 조정할때 사용됩니다.
 
-[API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/provisions)를 확인하세요.
+[API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/distribution)를 확인하세요.
 
-관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/provisions)에서 확인하실 수 있습니다.
+관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/distribution)에서 확인하실 수 있습니다.
 
 # Governance
 
@@ -35,4 +35,4 @@
 
 [API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)를 확인하세요.
 
-관렉 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance)에서 확인하실 수 있습니다.
+관렉 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/governance)에서 확인하실 수 있습니다.

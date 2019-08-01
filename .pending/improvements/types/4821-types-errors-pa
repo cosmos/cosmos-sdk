@@ -1,0 +1,2 @@
+#4821 types/errors package added with support for stacktraces
+Meant as a more feature-rich replacement for sdk.Errors in the mid-term

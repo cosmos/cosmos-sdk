@@ -7,57 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
-
-type testInput struct {
-	cdc *codec.Codec
-	ctx sdk.Context
-	k   Keeper
-	ak  auth.AccountKeeper
-	pk  params.Keeper
-}
-
-func setupTestInput() testInput {
-	db := dbm.NewMemDB()
-
-	cdc := codec.New()
-	auth.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-
-	authCapKey := sdk.NewKVStoreKey("authCapKey")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
-
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	ms.LoadLatestVersion()
-
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
-
-	ak := auth.NewAccountKeeper(
-		cdc, authCapKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount,
-	)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
-
-	ak.SetParams(ctx, auth.DefaultParams())
-
-	bankKeeper := NewBaseKeeper(ak, pk.Subspace(types.DefaultParamspace), types.DefaultCodespace)
-	bankKeeper.SetSendEnabled(ctx, true)
-
-	return testInput{cdc: cdc, ctx: ctx, k: bankKeeper, ak: ak, pk: pk}
-}
 
 func TestKeeper(t *testing.T) {
 	input := setupTestInput()
@@ -140,8 +95,11 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
+
+	blacklistedAddrs := make(map[string]bool)
+
 	paramSpace := input.pk.Subspace("newspace")
-	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace)
+	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace, blacklistedAddrs)
 	input.k.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))

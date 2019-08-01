@@ -2,7 +2,7 @@
 
 We define 'service providers' as entities providing services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
 
-This section does not concern wallet builders that want to provide [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/light) functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
+This section does not concern wallet builders that want to provide [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/master/docs/interfaces/lite) functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
 
 ## High-level description of the architecture
 

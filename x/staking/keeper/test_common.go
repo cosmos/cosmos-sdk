@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // dummy addresses used for testing
@@ -70,8 +69,7 @@ func MakeTestCodec() *codec.Codec {
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
-	cdc.RegisterInterface((*exported.ModuleAccountI)(nil), nil)
-	cdc.RegisterConcrete(&supply.ModuleAccount{}, "test/staking/ModuleAccount", nil)
+	supply.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
 	return cdc
@@ -139,7 +137,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		types.NotBondedPoolName: []string{supply.Burner, supply.Staking},
 		types.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace, maccPerms)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
 
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))

@@ -96,7 +96,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 		staking.NotBondedPoolName: []string{supply.Burner, supply.Staking},
 		staking.BondedPoolName:    []string{supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, supply.DefaultCodespace, maccPerms)
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(int64(len(addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))

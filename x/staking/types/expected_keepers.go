@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
@@ -21,7 +20,7 @@ type AccountKeeper interface {
 
 // SupplyKeeper defines the expected supply Keeper (noalias)
 type SupplyKeeper interface {
-	GetSupply(ctx sdk.Context) supply.Supply
+	GetSupply(ctx sdk.Context) supplyexported.SupplyI
 
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, moduleName string) supplyexported.ModuleAccountI

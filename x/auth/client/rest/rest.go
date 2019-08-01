@@ -16,7 +16,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 // RegisterTxRoutes registers all transaction routes on the provided router.
 func RegisterTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/txs", QueryTxsByEventsRequestHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/txs", QueryTxsRequestHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/txs", BroadcastTxRequest(cliCtx)).Methods("POST")
 	r.HandleFunc("/txs/encode", EncodeTxRequestHandlerFn(cliCtx)).Methods("POST")
 }

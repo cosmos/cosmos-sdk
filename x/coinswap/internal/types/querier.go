@@ -17,6 +17,6 @@ type QueryLiquidityParams struct {
 
 func NewQueryLiquidityParams(nonNativeDenom string) QueryLiquidityParams {
 	return QueryLiquidityParams{
-		NonNativeDenom: nonNativeDenom,
+		NonNativeDenom: strings.TrimSpace(nonNativeDenom),
 	}
 }

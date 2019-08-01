@@ -20,13 +20,51 @@ equivocating validator(s) can be slashed.
 We will implement an evidence module in the Cosmos SDK supporting the following
 functionality:
 
-- Provide developers with the abstractions and interfaces necessary to define:
-  - Custom evidence messages and types along with their slashing penalties
-  - Evidence message handlers to determine the validity of a submitted equivocation
+- Provide developers with the abstractions and interfaces necessary to define
+custom evidence messages and types along with their slashing penalties
+- Support the ability to route evidence message to handlers in any module to
+ determine the validity of a submitted equivocation
 - Support the ability through governance to modify slashing penalties of any
 evidence type
 - Querier implementation to support querying params, evidence types, params, and
-all submitted valid equivocations  
+all submitted valid equivocations
+
+First, we define the `Evidence` interface type. The `x/evidence` module may implement
+its own types that can be used by many chains (e.g. `CounterFactualEvidence`).
+In addition, other modules may implement their own `Evidence` types in a similar
+manner in which governance is extensible. It is important to note any concrete 
+type implementing the `Evidence` interface may include arbitrary fields such as
+infraction and submission time. We want the `Evidence` type to remain as flexible
+as possible.
+ 
+```go
+type Evidence interface {
+	Route() string
+	Type() string
+	ValidateBasic() sdk.Error
+	String() string
+}
+```
+
+Each `Evidence` type must map to a specific unique route and be registered with
+the `x/evidence` module. It does this through the `Router` implementation. 
+
+```go
+type Router interface {
+	AddRoute(r string, h Handler) (rtr Router)
+	HasRoute(r string) bool
+	GetRoute(path string) (h Handler)
+	Seal()
+}
+```
+
+Upon successful routing through the `x/evidence` module, the `Evidence` type
+is passed through a `Handler`. This `Handler` is responsible for executing all
+corresponding business logic necessary for verifying the evidence.
+
+```go
+type Handler func(ctx sdk.Context, evidence Evidence) sdk.Error
+```
 
 ## Status
 

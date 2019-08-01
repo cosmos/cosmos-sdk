@@ -9,9 +9,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
@@ -40,6 +41,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	distr.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
+	supply.RegisterCodec(cdc)
 	return
 }
 
@@ -47,23 +49,47 @@ func TestGetSimulationLog(t *testing.T) {
 	cdc := makeTestCodec()
 
 	tests := []struct {
-		store  string
-		kvPair cmn.KVPair
+		store   string
+		kvPairs []cmn.KVPair
 	}{
-		{auth.StoreKey, cmn.KVPair{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})}},
-		{mint.StoreKey, cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})}},
-		{staking.StoreKey, cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
-		{gov.StoreKey, cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
-		{distribution.StoreKey, cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
-		{slashing.StoreKey, cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)}},
-		{supply.StoreKey, cmn.KVPair{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))}},
-		{"Empty", cmn.KVPair{}},
-		{"OtherStore", cmn.KVPair{Key: []byte("key"), Value: []byte("value")}},
+		{auth.StoreKey, []cmn.KVPair{
+			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
+			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
+		}},
+		{mint.StoreKey, []cmn.KVPair{
+			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
+			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
+		}},
+		{staking.StoreKey, []cmn.KVPair{
+			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+		}},
+		{gov.StoreKey, []cmn.KVPair{
+			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
+			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
+		}},
+		{distribution.StoreKey, []cmn.KVPair{
+			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
+			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
+		}},
+		{slashing.StoreKey, []cmn.KVPair{
+			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
+			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
+		}},
+		{supply.StoreKey, []cmn.KVPair{
+			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
+			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
+		}},
+		{"Empty", []cmn.KVPair{{}, {}}},
+		{"OtherStore", []cmn.KVPair{
+			{Key: []byte("key"), Value: []byte("value")},
+			{Key: []byte("key"), Value: []byte("other_value")},
+		}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.store, func(t *testing.T) {
-			require.NotPanics(t, func() { getSimulationLog(tt.store, cdc, cdc, tt.kvPair, tt.kvPair) }, tt.store)
+			require.NotPanics(t, func() { GetSimulationLog(tt.store, cdc, cdc, tt.kvPairs) }, tt.store)
 		})
 	}
 }
@@ -91,9 +117,9 @@ func TestDecodeAccountStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeAccountStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -119,9 +145,9 @@ func TestDecodeMintStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeMintStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -149,7 +175,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 		cmn.KVPair{Key: distr.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
 		cmn.KVPair{Key: distr.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
 		cmn.KVPair{Key: distr.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
-		cmn.KVPair{Key: distr.GetValidatorSlashEventKey(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
+		cmn.KVPair{Key: distr.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 
@@ -172,9 +198,9 @@ func TestDecodeDistributionStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeDistributionStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -216,9 +242,9 @@ func TestDecodeStakingStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeStakingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -251,9 +277,9 @@ func TestDecodeSlashingStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeSlashingStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -294,9 +320,9 @@ func TestDecodeGovStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeGovStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}
@@ -324,9 +350,9 @@ func TestDecodeSupplyStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, decodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeSupplyStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

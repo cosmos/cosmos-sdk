@@ -1,20 +1,21 @@
 package state
 
+// Integer is a uint64 types wrapper for Value.
+// The serialization follows the @IntEncoding@ format provided to the NewInteger.
 type Integer struct {
 	Value
 
 	enc IntEncoding
 }
 
-func NewInteger(v Value, enc IntEncoding) Integer {
-	return Integer{
-		Value: v,
-		enc:   enc,
-	}
+func (v Value) Integer(enc IntEncoding) Integer {
+	return Integer{v, enc}
 }
 
-func (v Integer) Get(ctx Context) (res uint64) {
-	bz := v.GetRaw(ctx)
+// Get() unmarshales and returns the stored uint64 value if it exists.
+// If will panic if the value exists but not decodable.
+func (v Integer) Get(ctx Context) uint64 {
+	bz := v.Value.GetRaw(ctx)
 	if bz == nil {
 		return 0
 	}
@@ -25,24 +26,37 @@ func (v Integer) Get(ctx Context) (res uint64) {
 	return res
 }
 
-func (v Integer) GetSafe(ctx Context) (uint64, error) {
-	bz := v.GetRaw(ctx)
+// GetSafe() unmarshales and returns the stored uint64 value.
+// It will return an error if the value does not exist or not uint64.
+func (v Integer) GetSafe(ctx Context) (res uint64, err error) {
+	bz := v.Value.GetRaw(ctx)
 	if bz == nil {
-		return 0, &GetSafeError{}
+		return 0, ErrEmptyValue()
 	}
-	res, err := DecodeInt(bz, v.enc)
+	res, err = DecodeInt(bz, v.enc)
 	if err != nil {
-		panic(err)
+		err = ErrUnmarshal(err)
 	}
-	return res, nil
+	return
 }
 
+// Set() marshales and sets the uint64 argument to the state.
 func (v Integer) Set(ctx Context, value uint64) {
-	v.SetRaw(ctx, EncodeInt(value, v.enc))
+	v.Value.SetRaw(ctx, EncodeInt(value, v.enc))
 }
 
+// Incr() increments the stored value, and returns the updated value.
 func (v Integer) Incr(ctx Context) (res uint64) {
 	res = v.Get(ctx) + 1
 	v.Set(ctx, res)
+	return
+}
+
+func (v Integer) Query(ctx CLIContext) (res uint64, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(ctx)
+	if err != nil {
+		return
+	}
+	res, err = DecodeInt(value, v.enc)
 	return
 }

@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -55,11 +56,6 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	stakingParams := k.GetParams(ctx)
-	if params.Limit == 0 {
-		params.Limit = int(stakingParams.MaxValidators)
-	}
-
 	validators := k.GetAllValidators(ctx)
 	filteredVals := make([]types.Validator, 0, len(validators))
 
@@ -69,15 +65,8 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 		}
 	}
 
-	// get pagination bounds
-	start := (params.Page - 1) * params.Limit
-	end := params.Limit + start
-	if end >= len(filteredVals) {
-		end = len(filteredVals)
-	}
-
-	if start >= len(filteredVals) {
-		// page is out of bounds
+	start, end := client.Paginate(len(filteredVals), params.Page, params.Limit, int(k.GetParams(ctx).MaxValidators))
+	if start < 0 || end < 0 {
 		filteredVals = []types.Validator{}
 	} else {
 		filteredVals = filteredVals[start:end]

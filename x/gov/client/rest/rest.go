@@ -64,26 +64,26 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, phs []ProposalREST
 
 // PostProposalReq defines the properties of a proposal request's body.
 type PostProposalReq struct {
-	BaseReq        rest.BaseReq   `json:"base_req"`
-	Title          string         `json:"title"`           // Title of the proposal
-	Description    string         `json:"description"`     // Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   // Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        // Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
+	BaseReq        rest.BaseReq   `json:"base_req" yaml:"base_req"`
+	Title          string         `json:"title" yaml:"title"`                     // Title of the proposal
+	Description    string         `json:"description" yaml:"description"`         // Description of the proposal
+	ProposalType   string         `json:"proposal_type" yaml:"proposal_type"`     // Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               // Address of the proposer
+	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
 // DepositReq defines the properties of a deposit request's body.
 type DepositReq struct {
-	BaseReq   rest.BaseReq   `json:"base_req"`
-	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
-	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
+	BaseReq   rest.BaseReq   `json:"base_req" yaml:"base_req"`
+	Depositor sdk.AccAddress `json:"depositor" yaml:"depositor"` // Address of the depositor
+	Amount    sdk.Coins      `json:"amount" yaml:"amount"`       // Coins to add to the proposal's deposit
 }
 
 // VoteReq defines the properties of a vote request's body.
 type VoteReq struct {
-	BaseReq rest.BaseReq   `json:"base_req"`
-	Voter   sdk.AccAddress `json:"voter"`  // address of the voter
-	Option  string         `json:"option"` // option from OptionSet chosen by the voter
+	BaseReq rest.BaseReq   `json:"base_req" yaml:"base_req"`
+	Voter   sdk.AccAddress `json:"voter" yaml:"voter"`   // address of the voter
+	Option  string         `json:"option" yaml:"option"` // option from OptionSet chosen by the voter
 }
 
 func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -201,12 +201,13 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", types.QueryParams, paramType), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -240,12 +241,13 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -607,12 +609,13 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -647,12 +650,13 @@ func queryTallyOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData("custom/gov/tally", bz)
+		res, height, err := cliCtx.QueryWithData("custom/gov/tally", bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

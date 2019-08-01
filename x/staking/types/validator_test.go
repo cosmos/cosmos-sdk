@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -293,11 +293,11 @@ func TestValidatorMarshalYAML(t *testing.T) {
   unbondingheight: 0
   unbondingcompletiontime: 1970-01-01T00:00:00Z
   commission:
-    commissionrates:
+    commission_rates:
       rate: "0.000000000000000000"
-      maxrate: "0.000000000000000000"
-      maxchangerate: "0.000000000000000000"
-    updatetime: 1970-01-01T00:00:00Z
+      max_rate: "0.000000000000000000"
+      max_change_rate: "0.000000000000000000"
+    update_time: 1970-01-01T00:00:00Z
   minselfdelegation: "1"
 `, validator.OperatorAddress.String(), bechifiedPub)
 	require.Equal(t, want, string(bs))

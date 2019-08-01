@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
@@ -22,7 +22,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 // Unjail TX body
 type UnjailReq struct {
-	BaseReq rest.BaseReq `json:"base_req"`
+	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 }
 
 func unjailRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

@@ -4,13 +4,17 @@ package rest
 
 import (
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -136,6 +140,96 @@ func TestParseQueryHeight(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProcessPostResponse(t *testing.T) {
+	// mock account
+	// PubKey field ensures amino encoding is used first since standard
+	// JSON encoding will panic on crypto.PubKey
+
+	type mockAccount struct {
+		Address       types.AccAddress `json:"address"`
+		Coins         types.Coins      `json:"coins"`
+		PubKey        crypto.PubKey    `json:"public_key"`
+		AccountNumber uint64           `json:"account_number"`
+		Sequence      uint64           `json:"sequence"`
+	}
+
+	// setup
+	ctx := context.NewCLIContext()
+	height := int64(194423)
+
+	privKey := secp256k1.GenPrivKey()
+	pubKey := privKey.PubKey()
+	addr := types.AccAddress(pubKey.Address())
+	coins := types.NewCoins(types.NewCoin("atom", types.NewInt(100)), types.NewCoin("tree", types.NewInt(125)))
+	accNumber := uint64(104)
+	sequence := uint64(32)
+
+	acc := mockAccount{addr, coins, pubKey, accNumber, sequence}
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
+	ctx = ctx.WithCodec(cdc)
+
+	// setup expected results
+	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
+	require.Nil(t, err)
+	jsonWithIndent, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
+	require.Nil(t, err)
+	respNoIndent := NewResponseWithHeight(height, jsonNoIndent)
+	respWithIndent := NewResponseWithHeight(height, jsonWithIndent)
+	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
+	require.Nil(t, err)
+	expectedWithIndent, err := ctx.Codec.MarshalJSONIndent(respWithIndent, "", "  ")
+	require.Nil(t, err)
+
+	// check that negative height writes an error
+	w := httptest.NewRecorder()
+	ctx = ctx.WithHeight(-1)
+	PostProcessResponse(w, ctx, acc)
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+
+	// check that height returns expected response
+	ctx = ctx.WithHeight(height)
+	runPostProcessResponse(t, ctx, acc, expectedNoIndent, false)
+	// check height with indent
+	runPostProcessResponse(t, ctx, acc, expectedWithIndent, true)
+}
+
+// asserts that ResponseRecorder returns the expected code and body
+// runs PostProcessResponse on the objects regular interface and on
+// the marshalled struct.
+func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{}, expectedBody []byte, indent bool) {
+	if indent {
+		ctx.Indent = indent
+	}
+
+	// test using regular struct
+	w := httptest.NewRecorder()
+	PostProcessResponse(w, ctx, obj)
+	require.Equal(t, http.StatusOK, w.Code, w.Body)
+	resp := w.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	require.Nil(t, err)
+	require.Equal(t, expectedBody, body)
+
+	var marshalled []byte
+	if indent {
+		marshalled, err = ctx.Codec.MarshalJSONIndent(obj, "", "  ")
+	} else {
+		marshalled, err = ctx.Codec.MarshalJSON(obj)
+	}
+	require.Nil(t, err)
+
+	// test using marshalled struct
+	w = httptest.NewRecorder()
+	PostProcessResponse(w, ctx, marshalled)
+	require.Equal(t, http.StatusOK, w.Code, w.Body)
+	resp = w.Result()
+	body, err = ioutil.ReadAll(resp.Body)
+	require.Nil(t, err)
+	require.Equal(t, expectedBody, body)
 }
 
 func mustNewRequest(t *testing.T, method, url string, body io.Reader) *http.Request {

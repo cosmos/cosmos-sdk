@@ -1,0 +1,2 @@
+#4681 panic on invalid amount on `MintCoins` and `BurnCoins`
+  - skip minting if inflation is set to zero

@@ -1,3 +1,5 @@
+// nolint
+// DONTCOVER
 package slashing
 
 import (
@@ -36,8 +38,12 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
-	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace,
-		[]string{auth.FeeCollectorName}, []string{}, []string{staking.NotBondedPoolName, staking.BondedPoolName})
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     nil,
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
+	}
+	supplyKeeper := supply.NewKeeper(mapp.Cdc, keySupply, mapp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
 	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
@@ -65,9 +71,9 @@ func getEndBlocker(keeper staking.Keeper) sdk.EndBlocker {
 func getInitChainer(mapp *mock.App, keeper staking.Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		// set module accounts
-		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName, supply.Basic)
-		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner)
-		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner)
+		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
+		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
+		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 
 		supplyKeeper.SetModuleAccount(ctx, feeCollector)
 		supplyKeeper.SetModuleAccount(ctx, bondPool)
@@ -93,7 +99,7 @@ func checkValidator(t *testing.T, mapp *mock.App, keeper staking.Keeper,
 func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 	addr sdk.ConsAddress, expFound bool) ValidatorSigningInfo {
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	signingInfo, found := keeper.getValidatorSigningInfo(ctxCheck, addr)
+	signingInfo, found := keeper.GetValidatorSigningInfo(ctxCheck, addr)
 	require.Equal(t, expFound, found)
 	return signingInfo
 }

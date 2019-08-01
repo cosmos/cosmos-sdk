@@ -142,18 +142,11 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 	return nil
 }
 
-func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	resp := node.Cms.(stypes.Queryable).Query(abci.RequestQuery{
-		Path:  "/" + string(node.Path.KeyPath[0]) + "/key",
-		Data:  k,
-		Prove: true,
-	})
-	require.Equal(t, uint32(0), resp.Code)
-	proof := merkle.Proof{
-		Key:   k,
-		Proof: resp.Proof,
-	}
-	return resp.Value, proof
+
+func (node *Node) Query(t *testing.T, path merkle.Path, k []byte) ([]byte, commitment.Proof) {
+	value, proof, err := merkle.QueryMultiStore(node.Cms, path, k)
+	require.NoError(t, err)
+	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {

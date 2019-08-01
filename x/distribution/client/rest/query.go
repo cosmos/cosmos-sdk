@@ -115,12 +115,13 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute stri
 		}
 
 		bz := cliCtx.Codec.MustMarshalJSON(types.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -128,9 +129,9 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute stri
 // ValidatorDistInfo defines the properties of
 // validator distribution information response.
 type ValidatorDistInfo struct {
-	OperatorAddress     sdk.AccAddress                       `json:"operator_address"`
-	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards"`
-	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission"`
+	OperatorAddress     sdk.AccAddress                       `json:"operator_address" yaml:"operator_address"`
+	SelfBondRewards     sdk.DecCoins                         `json:"self_bond_rewards" yaml:"self_bond_rewards"`
+	ValidatorCommission types.ValidatorAccumulatedCommission `json:"val_commission" yaml:"val_commission"`
 }
 
 // NewValidatorDistInfo creates a new instance of ValidatorDistInfo.
@@ -232,7 +233,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/community_pool", queryRoute), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -244,6 +245,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, result)
 	}
 }
@@ -262,12 +264,13 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 		}
 
 		bin := cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorOutstandingRewardsParams(validatorAddr))
-		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
+		res, height, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validator_outstanding_rewards", queryRoute), bin)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

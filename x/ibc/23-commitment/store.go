@@ -5,9 +5,10 @@ import (
 	"errors"
 )
 
+// Store proves key-value pairs' inclusion or non-inclusion with
+// the stored commitment proofs against the commitment root.
 type Store interface {
 	Prove(key, value []byte) bool
-	HasProof(key []byte) bool
 }
 
 var _ Store = prefix{} // TODO: pointer
@@ -24,9 +25,6 @@ func NewPrefix(store Store, pref []byte) prefix {
 	}
 }
 
-func (prefix prefix) HasProof(key []byte) bool {
-	return prefix.store.HasProof(join(prefix.prefix, key))
-}
 
 func (prefix prefix) Prove(key, value []byte) bool {
 	return prefix.store.Prove(join(prefix.prefix, key), value)
@@ -41,14 +39,16 @@ type store struct {
 	verified map[string][]byte
 }
 
-// Proofs must be provided
-func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
+// NewStore constructs a new Store with the root, path, and proofs.
+// The proofs are not proven immediately because proofs require value bytes to verify.
+// If the kinds of the arguments don't match, returns error.
+func NewStore(root Root, path Path, proofs []Proof) (res store, err error) {
 	if root.CommitmentKind() != path.CommitmentKind() {
 		err = errors.New("path type not matching with root's")
 		return
 	}
 
-	res = &store{
+	res = store{
 		root:     root,
 		path:     path,
 		proofs:   make(map[string]Proof),
@@ -66,18 +66,19 @@ func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
 	return
 }
 
-func (store *store) Get(key []byte) ([]byte, bool) {
+// Get() returns the value only if it is already proven.
+func (store store) Get(key []byte) ([]byte, bool) {
 	res, ok := store.verified[string(key)]
 	return res, ok
 }
 
-func (store *store) Prove(key, value []byte) bool {
-	pathkey := store.path.Pathify(key)
-	stored, ok := store.Get(pathkey)
+// Prove() proves the key-value pair with the stored proof.
+func (store store) Prove(key, value []byte) bool {
+	stored, ok := store.Get(key)
 	if ok && bytes.Equal(stored, value) {
 		return true
 	}
-	proof, ok := store.proofs[string(pathkey)]
+	proof, ok := store.proofs[string(key)]
 	if !ok {
 		return false
 	}
@@ -85,17 +86,14 @@ func (store *store) Prove(key, value []byte) bool {
 	if err != nil {
 		return false
 	}
-	store.verified[string(pathkey)] = value
+	store.verified[string(key)] = value
 
 	return true
 }
 
-func (store *store) HasProof(key []byte) bool {
-	_, ok := store.proofs[string(key)]
-	return ok
-}
 
-func (store *store) Proven(key []byte) bool {
+// Proven() returns true if the key-value pair is already proven
+func (store store) Proven(key []byte) bool {
 	_, ok := store.Get(key)
 	return ok
 }

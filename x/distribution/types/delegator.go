@@ -12,9 +12,9 @@ import (
 // delegators within the validator may be left with less than a full token,
 // thus sdk.Dec is used
 type DelegatorStartingInfo struct {
-	PreviousPeriod uint64  `json:"previous_period"` // period at which the delegation should withdraw starting from
-	Stake          sdk.Dec `json:"stake"`           // amount of staking token delegated
-	Height         uint64  `json:"height"`          // height at which delegation was created
+	PreviousPeriod uint64  `json:"previous_period" yaml:"previous_period"` // period at which the delegation should withdraw starting from
+	Stake          sdk.Dec `json:"stake" yaml:"stake"`                     // amount of staking token delegated
+	Height         uint64  `json:"creation_height" yaml:"creation_height"` // height at which delegation was created
 }
 
 // create a new DelegatorStartingInfo

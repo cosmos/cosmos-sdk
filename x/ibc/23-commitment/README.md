@@ -11,14 +11,14 @@ type verifyMembership = (root: CommitmentRoot, proof: CommitmentProof, key: Key,
 type verifyNonMembership = (root: CommitmentRoot, proof: CommitmentProof, key: Key) => bool
 ```
 
-## Impl
+## Implementation
 
 ### types.go
 
 `type Proof` implements `spec: type CommitmentProof`. CommitmentProof is an arbitrary object which can be used as
 an argument for `spec: verifyMembership` / `spec: verifyNonMembership`, constructed with `spec: createMembershipProof` / 
 `spec: createNonMembershipProof`. The implementation type `Proof` defines `spec: verify(Non)Membership` as its method 
-`Verify(Root, []byte) error`, which takes the commitment root and the value bytes argument. The method acts as 
+`Verify(Root, []byte) error`, which takes the commitment root and the value bytes as arguments. The method acts as 
 `spec: verifyMembership` when the value bytes is not nil, and `spec: verifyNonMembership` if it is nil.
 
 `type Root` implements `spec: type CommitmentRoot`. 

@@ -45,7 +45,8 @@ func init() {
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
 	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks")
+	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
+	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
 	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
@@ -58,16 +59,17 @@ func init() {
 }
 
 // helper function for populating input for SimulateFromSeed
+// TODO: clean up this function along with the simulation refactor
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, string,
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, int, string,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
 	exportParams := exportParamsPath != ""
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
-		numBlocks, exportParamsHeight, blockSize,
+		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
@@ -715,7 +717,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
-				50, 100, 0, "",
+				1, 50, 100, 0, "",
 				false, true, false, false, false, app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash
@@ -743,7 +745,7 @@ func BenchmarkInvariants(b *testing.B) {
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
+		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)
 

@@ -6,11 +6,9 @@ require (
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
 	github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8
 	github.com/cosmos/ledger-cosmos-go v0.10.3
-	github.com/cosmos/tools/cmd/clog v0.0.0-20190722180430-ea942c183cba // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
-	github.com/golang/protobuf v1.3.0
 	github.com/gorilla/mux v1.7.0
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.6
@@ -30,8 +28,8 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5
 	github.com/tendermint/go-amino v0.15.0
-	github.com/tendermint/iavl v0.12.3-0.20190712145259-c834d3192b52
-	github.com/tendermint/tendermint v0.32.1
-	google.golang.org/grpc v1.19.0 // indirect
+	github.com/tendermint/iavl v0.12.4
+	github.com/tendermint/tendermint v0.32.2
+	github.com/tendermint/tm-db v0.1.1
 	gopkg.in/yaml.v2 v2.2.2
 )

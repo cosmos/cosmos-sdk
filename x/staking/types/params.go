@@ -10,11 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+// Staking params default values
 const (
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
 	// TODO: Justify our choice of default here.
-	DefaultUnbondingTime time.Duration = time.Second * 60 * 60 * 24 * 3
+	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
 	// Default maximum number of bonded validators
 	DefaultMaxValidators uint16 = 100
@@ -42,6 +43,7 @@ type Params struct {
 	BondDenom string `json:"bond_denom" yaml:"bond_denom"` // bondable coin denomination
 }
 
+// NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 	bondDenom string) Params {
 

@@ -15,8 +15,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -157,6 +157,28 @@ func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 		default:
 			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
 		}
+	}
+}
+
+// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
+// multistore.
+func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
+	for _, key := range keys {
+		if !app.fauxMerkleMode {
+			app.MountStore(key, sdk.StoreTypeIAVL)
+		} else {
+			// StoreTypeDB doesn't do anything upon commit, and it doesn't
+			// retain history, but it's useful for faster simulation.
+			app.MountStore(key, sdk.StoreTypeDB)
+		}
+	}
+}
+
+// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
+// multistore.
+func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 

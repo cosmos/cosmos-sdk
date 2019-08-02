@@ -26,4 +26,4 @@ block.
 - [NFT](./nft) - Non-fungible tokens.
 
 For details on the underlying blockchain and p2p protocols, see
-the [Tendermint specification](https://github.com/tendermint/tendermint/tree/develop/docs/spec).
+the [Tendermint specification](https://github.com/tendermint/tendermint/tree/master/docs/spec).

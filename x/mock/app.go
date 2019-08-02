@@ -17,9 +17,7 @@ import (
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const chainID = ""
@@ -31,20 +29,29 @@ type App struct {
 	*bam.BaseApp
 	Cdc *codec.Codec // Cdc is public since the codec is passed into the module anyways
 
+	// keys to access the substores
 	Keys  map[string]*sdk.KVStoreKey
 	TKeys map[string]*sdk.TransientStoreKey
 
-	// TODO: Abstract this out from not needing to be auth specifically
-	// TODO: Add keepers: bank, supply, staking, distr, slashing, etc
-	AccountKeeper auth.AccountKeeper
-	ParamsKeeper  params.Keeper
+	// keepers
+	AccountKeeper      AccountKeeper
+	BankKeeper         BankKeeper
+	SupplyKeeper       SupplyKeeper
+	StakingKeeper      StakingKeeper
+	SlashingKeeper     SlashingKeeper
+	MintKeeper         MintKeeper
+	DistributionKeeper DistributionKeeper
+	GovKeeper          GovKeeper
+	CrisisKeeper       CrisisKeeper
+	ParamsKeeper       ParamsKeeper
 
 	GenesisAccounts  []authexported.Account
 	TotalCoinsSupply sdk.Coins
 }
 
 // NewApp partially constructs a new app on the memstore for module and genesis
-// testing.
+// testing. The integration test receiving this new app is responsible for
+// initializing the keepers it will use.
 func NewApp() *App {
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 	db := dbm.NewMemDB()
@@ -52,17 +59,22 @@ func NewApp() *App {
 	// Create the cdc with some standard codecs
 	cdc := createCodec()
 
-	// TODO: create key mapping
+	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, AuthStoreKey, StakingStoreKey,
+		SupplyStoreKey, MintStoreKey, DistrStoreKey, SlashingStoreKey,
+		GovStoreKey, ParamsStoreKey)
+	tkeys := sdk.NewTransientStoreKeys(StakingTStoreKey, ParamsTStoreKey)
 
-	// Create your application object
+	// Create application object
 	app := &App{
 		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
+		Keys:             keys,
+		TKeys:            tkeys,
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
 	// define keepers
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams, params.DefaultCodespace)
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, ParamsTStoreKey, params.DefaultCodespace)
 
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
@@ -76,6 +88,7 @@ func NewApp() *App {
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
+	// TODO: Mock Ante handler
 	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
 
 	// Not sealing for custom extension

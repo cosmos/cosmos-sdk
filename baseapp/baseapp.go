@@ -569,7 +569,12 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	if req.Height > 0 {
 		cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
 		if err != nil {
-			return sdk.ErrInternal(fmt.Sprintf("failed to load state at height %d; %s", req.Height, err)).QueryResult()
+			return sdk.ErrInternal(
+				fmt.Sprintf(
+					"failed to load state at height %d; %s (latest height: %d)",
+					req.Height, err, app.LastBlockHeight(),
+				),
+			).QueryResult()
 		}
 
 		ctx = ctx.WithMultiStore(cacheMS)

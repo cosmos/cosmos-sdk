@@ -4,6 +4,8 @@
 
 ### Breaking Changes
 
+* (rest) [\#4837](https://github.com/cosmos/cosmos-sdk/pull/4837) Remove /version and /node_version
+  endpoints in favor of refactoring /node_info to also include application version info.
 * All REST responses now wrap the original resource/result. The response
   will contain two fields: height and result.
 * [\#3565](https://github.com/cosmos/cosmos-sdk/issues/3565) Updates to the governance module:

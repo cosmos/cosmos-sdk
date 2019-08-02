@@ -35,15 +35,6 @@ securityDefinitions:
   kms:
     type: basic
 paths:
-  /version:
-    get:
-      summary: Version of Gaia-lite
-      tags:
-        - Misc
-      description: Get the version of gaia-lite running locally to compare against expected
-      responses:
-        200:
-          description: Plaintext version i.e. "v0.25.0"
   /node_info:
     get:
       description: Information about the connected node
@@ -58,44 +49,62 @@ paths:
           schema:
             type: object
             properties:
-              id:
-                type: string
-              moniker:
-                type: string
-                example: validator-name
-              protocol_version:
+              application_version:
                 properties:
-                  p2p:
+                  build_tags:
                     type: string
-                    example: 7
-                  block:
+                  client_name:
                     type: string
-                    example: 10
-                  app:
+                  commit:
                     type: string
-                    example: 0
-              network:
-                type: string
-                example: gaia-2
-              channels:
-                type: string
-              listen_addr:
-                type: string
-                example: 192.168.56.1:26656
-              version:
-                description: Tendermint version
-                type: string
-                example: 0.15.0
-              other:
-                description: more information on versions
-                type: object
+                  go:
+                    type: string
+                  name:
+                    type: string
+                  server_name:
+                    type: string
+                  version:
+                    type: string
+              node_info:
                 properties:
-                  tx_index:
+                  id:
                     type: string
-                    example: on
-                  rpc_address:
+                  moniker:
                     type: string
-                    example: tcp://0.0.0.0:26657
+                    example: validator-name
+                  protocol_version:
+                    properties:
+                      p2p:
+                        type: string
+                        example: 7
+                      block:
+                        type: string
+                        example: 10
+                      app:
+                        type: string
+                        example: 0
+                  network:
+                    type: string
+                    example: gaia-2
+                  channels:
+                    type: string
+                  listen_addr:
+                    type: string
+                    example: 192.168.56.1:26656
+                  version:
+                    description: Tendermint version
+                    type: string
+                    example: 0.15.0
+                  other:
+                    description: more information on versions
+                    type: object
+                    properties:
+                      tx_index:
+                        type: string
+                        example: on
+                      rpc_address:
+                        type: string
+                        example: tcp://0.0.0.0:26657
         500:
           description: Failed to query node status
   /syncing:
@@ -104,9 +113,16 @@ paths:
       tags:
         - Tendermint RPC
       description: Get if the node is currently syning with other nodes
+      produces:
+        - application/json
       responses:
         200:
-          description: '"true" or "false"'
+          description: Node syncing status
+          schema:
+            type: object
+            properties:
+              syncing:
+                type: boolean
         500:
           description: Server internal error
   /blocks/latest:
@@ -2365,8 +2381,8 @@ definitions:
         type: string
       shares:
         type: string
-      height:
-        type: integer
+      balance:
+        $ref: "#/definitions/Coin"
   UnbondingDelegationPair:
     type: object
     properties:

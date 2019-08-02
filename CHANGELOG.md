@@ -80,6 +80,7 @@
 
 ### Features
 
+* (rest) [\#3867](https://github.com/cosmos/cosmos-sdk/issues/3867) Allow querying for genesis transaction when height query param is set to zero.
 * [\#2020](https://github.com/cosmos/cosmos-sdk/issues/2020) New keys export/import command line utilities to export/import private keys in ASCII format
   that rely on Keybase's new underlying ExportPrivKey()/ImportPrivKey() API calls.
 * [\#3565](https://github.com/cosmos/cosmos-sdk/issues/3565) Implement parameter change proposal support.

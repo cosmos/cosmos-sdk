@@ -166,6 +166,7 @@
 
 ### Bug Fixes
 
+* (modules) [\#4831](https://github.com/cosmos/cosmos-sdk/issues/4831) Prevent community spend proposal from transferring funds to a module account
 * (keys) [\#4338](https://github.com/cosmos/cosmos-sdk/issues/4338) fix multisig key output for CLI
 * (modules) [\#4795](https://github.com/cosmos/cosmos-sdk/issues/4795) restrict module accounts from receiving transactions.
   Allowing this would cause an invariant on the module account coins.

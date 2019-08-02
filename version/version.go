@@ -39,13 +39,13 @@ var (
 
 // Info defines the application version information.
 type Info struct {
-	Name       string `json:"name"`
-	ServerName string `json:"server_name"`
-	ClientName string `json:"client_name"`
-	Version    string `json:"version"`
-	GitCommit  string `json:"commit"`
-	BuildTags  string `json:"build_tags"`
-	GoVersion  string `json:"go"`
+	Name       string `json:"name" yaml:"name"`
+	ServerName string `json:"server_name" yaml:"server_name"`
+	ClientName string `json:"client_name" yaml:"client_name"`
+	Version    string `json:"version" yaml:"version"`
+	GitCommit  string `json:"commit" yaml:"commit"`
+	BuildTags  string `json:"build_tags" yaml:"build_tags"`
+	GoVersion  string `json:"go" yaml:"go"`
 }
 
 func NewInfo() Info {

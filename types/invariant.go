@@ -18,6 +18,5 @@ type InvariantRegistry interface {
 
 // FormatInvariant returns a standardized invariant message.
 func FormatInvariant(module, name, msg string) string {
-	return fmt.Sprintf("%s: %s invariant\n%s\n",
-		module, name, msg)
+	return fmt.Sprintf("%s: %s invariant\n%s\n", module, name, msg)
 }

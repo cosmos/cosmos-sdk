@@ -60,7 +60,9 @@ $ %s query coinswap liquidity
 			}
 
 			var liquidity sdk.Coins
-			cdc.MustUnmarshalJSON(res, &liquidity)
+			if err := cdc.UnmarshalJSON(res, &liquidity); err != nil {
+				return err
+			}
 			return cliCtx.PrintOutput(liquidity)
 		},
 	}
@@ -91,7 +93,9 @@ $ %s query coinswap params
 			}
 
 			var params types.Params
-			cdc.MustUnmarshalJSON(bz, &params)
+			if err := cdc.UnmarshalJSON(bz, &params); err != nil {
+				return err
+			}
 			return cliCtx.PrintOutput(params)
 		},
 	}

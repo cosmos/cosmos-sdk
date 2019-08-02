@@ -1,0 +1,1 @@
+#4783 The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int

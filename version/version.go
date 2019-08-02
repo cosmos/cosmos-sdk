@@ -48,7 +48,7 @@ type Info struct {
 	GoVersion  string `json:"go"`
 }
 
-func New() Info {
+func NewInfo() Info {
 	return Info{
 		Name:       Name,
 		ServerName: ServerName,

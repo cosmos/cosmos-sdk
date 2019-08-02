@@ -16,7 +16,7 @@ This comes in handy when trying to reproduce bugs that were generated in the pro
 
 ## Simulation commands
 
-The simulation app has different commands, each of it tests a different failure type:
+The simulation app has different commands, each of which tests a different failure type:
 
 - `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation.
 - `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.

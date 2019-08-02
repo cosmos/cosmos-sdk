@@ -104,6 +104,7 @@
 
 ### Improvements
 
+* [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
 * Upgrade IAVL to v0.12.4
 * (tendermint) Upgrade Tendermint to v0.32.2
 * (modules) [\#4751](https://github.com/cosmos/cosmos-sdk/issues/4751) update `x/genutils` to match module spec

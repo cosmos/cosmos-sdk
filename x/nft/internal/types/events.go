@@ -1,4 +1,3 @@
-// DONTCOVER
 package types
 
 // NFT module event types

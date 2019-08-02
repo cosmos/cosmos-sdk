@@ -1,5 +1,7 @@
 package nft
 
+// DONTCOVER
+
 import (
 	"bytes"
 	"fmt"
@@ -8,8 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
-
-// DONTCOVER
 
 // nolint: deadcode unused
 var (

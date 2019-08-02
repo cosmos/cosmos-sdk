@@ -1,5 +1,7 @@
 package nft
 
+// DONTCOVER
+
 import (
 	"encoding/json"
 
@@ -15,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
 )
-
-// DONTCOVER
 
 var (
 	_ module.AppModule      = AppModule{}

@@ -1,13 +1,13 @@
 package types
 
+// DONTCOVER
+
 import (
 	"bytes"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// DONTCOVER
 
 // nolint: deadcode unused
 var (

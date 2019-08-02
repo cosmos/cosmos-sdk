@@ -1,5 +1,6 @@
-// DONTCOVER
 package types
+
+// DONTCOVER
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

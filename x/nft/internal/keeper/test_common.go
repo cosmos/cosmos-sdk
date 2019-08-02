@@ -1,5 +1,7 @@
 package keeper
 
+// DONTCOVER
+
 import (
 	"bytes"
 	"strconv"
@@ -14,8 +16,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-// DONTCOVER
 
 // nolint: deadcode unused
 var (

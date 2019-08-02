@@ -22,7 +22,7 @@ var Cmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the app version",
 	RunE: func(_ *cobra.Command, _ []string) error {
-		verInfo := newVersionInfo()
+		verInfo := New()
 
 		if !viper.GetBool(flagLong) {
 			fmt.Println(verInfo.Version)

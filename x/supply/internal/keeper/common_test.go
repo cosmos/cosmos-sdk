@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
@@ -69,9 +70,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	)
 	cdc := makeTestCodec()
 
+	blacklistedAddrs := make(map[string]bool)
+
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
 
 	valTokens := sdk.TokensFromConsensusPower(initPower)
 
@@ -85,7 +88,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 		multiPerm:    {types.Minter, types.Burner, types.Staking},
 		randomPerm:   {"random"},
 	}
-	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, maccPerms)
+	keeper := NewKeeper(cdc, keySupply, ak, bk, maccPerms)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 
@@ -93,7 +96,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 }
 
 // nolint: unparam deadcode unused
-func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *auth.AccountKeeper) (accs []auth.Account) {
+func createTestAccs(ctx sdk.Context, numAccs int, initialCoins sdk.Coins, ak *auth.AccountKeeper) (accs []authexported.Account) {
 	for i := 0; i < numAccs; i++ {
 		privKey := secp256k1.GenPrivKey()
 		pubKey := privKey.PubKey()

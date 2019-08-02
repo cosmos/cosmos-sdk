@@ -1,0 +1,2 @@
+#4795 restrict module accounts from receiving transactions.
+Allowing this would cause an invariant on the module account coins.

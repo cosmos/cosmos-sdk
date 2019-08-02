@@ -14,20 +14,27 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func init() {
@@ -36,6 +43,7 @@ func init() {
 	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
 	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
 	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
 	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks to run the current simulation, after which the simulation halts")
@@ -54,7 +62,7 @@ func init() {
 // TODO: clean up this function along with the simulation refactor
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, int,
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, int, string,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
 	exportParams := exportParamsPath != ""
@@ -62,7 +70,7 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
 		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
+		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
 func appStateFn(
@@ -414,7 +422,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if commit {
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -473,7 +481,7 @@ func TestFullAppSimulation(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -504,9 +512,9 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
-	// export state and params before the simulation error is checked
+	// export state and simParams before the simulation error is checked
 	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -518,10 +526,10 @@ func TestAppImportExport(t *testing.T) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
+		simParamsBz, err := json.MarshalIndent(simParams, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(exportParamsPath, simParamsBz, 0644)
 		require.NoError(t, err)
 	}
 
@@ -530,7 +538,7 @@ func TestAppImportExport(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -571,16 +579,18 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keyMain, newApp.keyMain, [][]byte{}},
-		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
-			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
-		{app.keySlashing, newApp.keySlashing, [][]byte{}},
-		{app.keyMint, newApp.keyMint, [][]byte{}},
-		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keySupply, newApp.keySupply, [][]byte{}},
-		{app.keyParams, newApp.keyParams, [][]byte{}},
-		{app.keyGov, newApp.keyGov, [][]byte{}},
+		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
+		{app.keys[auth.StoreKey], newApp.keys[auth.StoreKey], [][]byte{}},
+		{app.keys[staking.StoreKey], newApp.keys[staking.StoreKey],
+			[][]byte{
+				staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey,
+			}}, // ordering may change but it doesn't matter
+		{app.keys[slashing.StoreKey], newApp.keys[slashing.StoreKey], [][]byte{}},
+		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
+		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
+		{app.keys[supply.StoreKey], newApp.keys[supply.StoreKey], [][]byte{}},
+		{app.keys[params.StoreKey], newApp.keys[params.StoreKey], [][]byte{}},
+		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {
@@ -646,7 +656,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("GoLevelDB Stats")
+		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
@@ -707,7 +717,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app), []sdk.Invariant{},
-				1, 50, 100, 0,
+				1, 50, 100, 0, "",
 				false, true, false, false, false, app.ModuleAccountAddrs(),
 			)
 			appHash := app.LastCommitID().Hash
@@ -736,7 +746,7 @@ func BenchmarkInvariants(b *testing.B) {
 	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
+		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)
 
 	// export state and params before the simulation error is checked

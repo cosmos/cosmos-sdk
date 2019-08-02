@@ -28,7 +28,7 @@ commands:
       - restore_cache:
             name: "Restore go modules cache"
             keys:
-              - go-mod-v1-{{ checksum "go.sum" }}
+              - go-mod-v2-{{ checksum "go.sum" }}
       - run:
           name: << parameters.description >>
           command: |
@@ -42,7 +42,7 @@ jobs:
       - restore_cache:
           name: "Restore go modules cache"
           keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-mod-v2-{{ checksum "go.sum" }}
       - run:
           name: Cache go modules
           command: make go-mod-cache
@@ -54,7 +54,7 @@ jobs:
           command: git gc
       - save_cache:
           name: "Save go modules cache"
-          key: go-mod-v1-{{ checksum "go.sum" }}
+          key: go-mod-v2-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - save_cache:
@@ -105,7 +105,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-mod-v2-{{ checksum "go.sum" }}
       - run:
           name: Run tests
           command: |
@@ -141,10 +141,11 @@ jobs:
       - run:
           name: filter out DONTCOVER
           command: |
-            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
+            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
             for filename in ${excludelist}; do
-              echo "Excluding ${filename} ..."
-              sed -i "\%${filename}:%d" coverage.txt
+              filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
+              echo "Excluding ${filename} from coverage report..."
+              sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
             done
       - run:
           name: upload

@@ -38,7 +38,7 @@ This mode is helpful for running simulations on a known state such as a live net
 This allows for a more controlled and deterministic simulation setup while allowing the state space to still be pseudo-randomly simulated. The list of available parameters is listed [here](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/simulation/params.go#L170-L178).
 
 ::: tip
-These modes are not excluding between each other. So you can for example run a randomly generated genesis state (`1`) with manually generated simulation params (`3`).
+These modes are not mutually exclusive. So you can for example run a randomly generated genesis state (`1`) with manually generated simulation params (`3`).
 :::
 
 ## Usage

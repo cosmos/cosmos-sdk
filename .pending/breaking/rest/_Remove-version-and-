@@ -1,0 +1,2 @@
+Remove /version and /node_version endpoints in favor of refactoring /node_info to also
+include application version info.

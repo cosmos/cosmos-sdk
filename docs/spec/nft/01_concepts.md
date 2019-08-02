@@ -24,7 +24,7 @@ A Collection is used to organized sets of NFTs. It contains the denomination of 
 // Collection of non fungible tokens
 type Collection struct {
   Denom string `json:"denom,omitempty"` // name of the collection; not exported to clients
-  NFTs  []NFT   `json:"nfts"`            // NFTs that belongs to a collection
+  NFTs  []*NFT   `json:"nfts"`            // NFTs that belongs to a collection
 }
 ```
 

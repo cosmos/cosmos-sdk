@@ -29,13 +29,13 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    *sdk.KVStoreKey
-	KeyAccount *sdk.KVStoreKey
-	KeyParams  *sdk.KVStoreKey
-	TKeyParams *sdk.TransientStoreKey
+	Cdc *codec.Codec // Cdc is public since the codec is passed into the module anyways
+
+	Keys  map[string]*sdk.KVStoreKey
+	TKeys map[string]*sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
+	// TODO: Add keepers: bank, supply, staking, distr, slashing, etc
 	AccountKeeper auth.AccountKeeper
 	ParamsKeeper  params.Keeper
 
@@ -52,14 +52,12 @@ func NewApp() *App {
 	// Create the cdc with some standard codecs
 	cdc := createCodec()
 
+	// TODO: create key mapping
+
 	// Create your application object
 	app := &App{
 		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
-		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
-		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		KeyParams:        sdk.NewKVStoreKey("params"),
-		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 		TotalCoinsSupply: sdk.NewCoins(),
 	}
 
@@ -327,12 +325,4 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	for i := 0; i < len(initSeqNums); i++ {
 		initSeqNums[i]++
 	}
-}
-
-func createCodec() *codec.Codec {
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	auth.RegisterCodec(cdc)
-	return cdc
 }

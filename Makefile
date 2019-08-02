@@ -25,11 +25,11 @@ build: go.sum
 
 update-swagger-docs: statik
 	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
-	if [ -n "$(git status --porcelain)" ]; then \
-		echo "swagger docs out of sync";\
+	@if [ -n "$(git status --porcelain)" ]; then \
+    	echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\
     else \
-    	echo "swagger docs are in sync";\
+    	echo "\033[92mSwagger docs are in sync\033[0m";\
     fi
 .PHONY: update-swagger-docs
 

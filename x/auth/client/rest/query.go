@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
 // query accountREST Handler
@@ -50,22 +52,32 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 	}
 }
 
-// QueryTxsByEventsRequestHandlerFn implements a REST handler that searches for
-// transactions by events.
-func QueryTxsByEventsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+// QueryTxsHandlerFn implements a REST handler that searches for transactions.
+// Genesis transactions are returned if the height parameter is set to zero,
+// otherwise the transactions are searched for by events.
+func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			tags        []string
-			txs         []sdk.TxResponse
-			page, limit int
-		)
-
 		err := r.ParseForm()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,
 				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
 			return
 		}
+
+		// if the height query param is set to zero, query for genesis transactions
+		heightStr := r.FormValue("height")
+		if heightStr != "" {
+			if height, err := strconv.ParseInt(heightStr, 10, 64); err == nil && height == 0 {
+				genutilrest.QueryGenesisTxs(cliCtx, w)
+				return
+			}
+		}
+
+		var (
+			events      []string
+			txs         []sdk.TxResponse
+			page, limit int
+		)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
@@ -77,13 +89,13 @@ func QueryTxsByEventsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFun
 			return
 		}
 
-		tags, page, limit, err = rest.ParseHTTPArgs(r)
+		events, page, limit, err = rest.ParseHTTPArgs(r)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		searchResult, err := utils.QueryTxsByEvents(cliCtx, tags, page, limit)
+		searchResult, err := utils.QueryTxsByEvents(cliCtx, events, page, limit)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

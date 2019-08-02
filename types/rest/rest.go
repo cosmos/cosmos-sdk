@@ -237,6 +237,35 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 	return cliCtx, true
 }
 
+// PostProcessResponseBare post processes a body similar to PostProcessResponse
+// except it does not wrap the body and inject the height.
+func PostProcessResponseBare(w http.ResponseWriter, cliCtx context.CLIContext, body interface{}) {
+	var (
+		resp []byte
+		err  error
+	)
+
+	switch body.(type) {
+	case []byte:
+		resp = body.([]byte)
+
+	default:
+		if cliCtx.Indent {
+			resp, err = cliCtx.Codec.MarshalJSONIndent(body, "", "  ")
+		} else {
+			resp, err = cliCtx.Codec.MarshalJSON(body)
+		}
+
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(resp)
+}
+
 // PostProcessResponse performs post processing for a REST response. The result
 // returned to clients will contain two fields, the height at which the resource
 // was queried at and the original result.

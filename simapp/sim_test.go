@@ -148,7 +148,7 @@ func appStateRandomizedFn(
 	GenMintGenesisState(cdc, r, appParams, genesisState)
 	GenDistrGenesisState(cdc, r, appParams, genesisState)
 	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
-	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
+	GenSlashingGenesisState(cdc, r, stakingGen.Params.UnbondingTime, appParams, genesisState)
 
 	appState, err := MakeCodec().MarshalJSON(genesisState)
 	if err != nil {

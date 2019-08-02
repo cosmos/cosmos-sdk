@@ -13,17 +13,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // GenSlashingGenesisState generates a random GenesisState for slashing
 func GenSlashingGenesisState(
-	cdc *codec.Codec, r *rand.Rand, stakingGen staking.GenesisState,
+	cdc *codec.Codec, r *rand.Rand, maxEvidenceAge time.Duration,
 	ap simulation.AppParams, genesisState map[string]json.RawMessage,
 ) {
 	slashingGenesis := slashing.NewGenesisState(
 		slashing.NewParams(
-			stakingGen.Params.UnbondingTime,
+			maxEvidenceAge,
 			func(r *rand.Rand) int64 {
 				var v int64
 				ap.GetOrGenerate(cdc, simulation.SignedBlocksWindow, &v, r,

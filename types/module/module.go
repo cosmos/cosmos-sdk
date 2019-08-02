@@ -124,6 +124,7 @@ type AppModuleGenesis interface {
 	AppModuleBasic
 	InitGenesis(sdk.Context, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context) json.RawMessage
+	GenGenesisState(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams) json.RawMessage
 }
 
 // AppModule is the standard form for an application module

@@ -81,7 +81,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		resp := nodeInfoResponse{
 			DefaultNodeInfo:    status.NodeInfo,
-			ApplicationVersion: version.New(),
+			ApplicationVersion: version.NewInfo(),
 		}
 		rest.PostProcessResponseBare(w, cliCtx, resp)
 	}

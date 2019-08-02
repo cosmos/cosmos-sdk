@@ -104,6 +104,7 @@
 
 ### Improvements
 
+* (modules) [\#4751](https://github.com/cosmos/cosmos-sdk/issues/4751) update `x/genutils` to match module spec
 * (keys) [\#4611](https://github.com/cosmos/cosmos-sdk/issues/4611) store keys in simapp now use a map instead of using individual literal keys
 * [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of CacheKVStore iterator.
 * [\#3512](https://github.com/cosmos/cosmos-sdk/issues/3512) Implement Logger method on each module's keeper.

@@ -122,7 +122,7 @@ paths:
             type: object
             properties:
               syncing:
-                type: bool
+                type: boolean
         500:
           description: Server internal error
   /blocks/latest:

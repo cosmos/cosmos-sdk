@@ -43,7 +43,7 @@ func liquidityHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryLiquidity)
-		res, _, err := cliCtx.QueryWithData(route, bz)
+		res, height, err := cliCtx.QueryWithData(route, bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

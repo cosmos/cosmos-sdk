@@ -37,5 +37,5 @@ func QueryGenesisTxs(cliCtx context.CLIContext, w http.ResponseWriter) {
 		}
 	}
 
-	rest.PostProcessResponse(w, cliCtx, genTxs)
+	rest.PostProcessResponseBare(w, cliCtx, genTxs)
 }

@@ -561,31 +561,37 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	if err != nil {
+		return sdk.ErrInternal(
+			fmt.Sprintf(
+				"failed to load state at height %d; %s (latest height: %d)",
+				req.Height, err, app.LastBlockHeight(),
+			),
+		).QueryResult()
+	}
+
 	// cache wrap the commit-multistore for safety
 	ctx := sdk.NewContext(
-		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
+		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
-
-	if req.Height > 0 {
-		cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
-		if err != nil {
-			return sdk.ErrInternal(fmt.Sprintf("failed to load state at height %d; %s", req.Height, err)).QueryResult()
-		}
-
-		ctx = ctx.WithMultiStore(cacheMS)
-	}
 
 	// Passes the rest of the path as an argument to the querier.
 	//
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets
 	// []string{"proposal", "test"} as the path.
-	resBytes, err := querier(ctx, path[2:], req)
-	if err != nil {
+	resBytes, queryErr := querier(ctx, path[2:], req)
+	if queryErr != nil {
 		return abci.ResponseQuery{
-			Code:      uint32(err.Code()),
-			Codespace: string(err.Codespace()),
+			Code:      uint32(queryErr.Code()),
+			Codespace: string(queryErr.Codespace()),
 			Height:    req.Height,
-			Log:       err.ABCILog(),
+			Log:       queryErr.ABCILog(),
 		}
 	}
 

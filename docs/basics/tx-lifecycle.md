@@ -20,7 +20,7 @@ This document describes the lifecycle of a transaction from creation to committe
 
 One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
-```
+```bash
 [appname] tx [command] [args] [flags]
 ```
 
@@ -60,11 +60,13 @@ Each full-node (running Tendermint) that receives `Tx` sends an [ABCI message](h
 
 ### Types of Checks
 
-The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to identify and reject an invalid transaction as early on as possible to avoid wasted computation. ***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do them - and are thus less computationally expensive. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
+The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to identify and reject an invalid transaction as early on as possible to avoid wasted computation. 
+
+***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do them - and are thus less computationally expensive. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
 
 ***Stateful*** checks validate transactions and messages based on a committed state. Examples include checking that the relevant values exist and are able to be transacted with, the address has sufficient funds, and the sender is authorized or has the correct ownership to transact. At any given moment, full-nodes typically have [multiple versions](./baseapp.md#volatile-states) of the application's internal state for different purposes. For example, nodes will execute state changes while in the process of verifying transactions, but still need a copy of the last committed state in order to answer queries - they should not respond using state with uncommitted changes.
 
-In order to verify `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_ checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes through several steps, beginning with decoding `Tx`:
+In order to verify `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_ checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 

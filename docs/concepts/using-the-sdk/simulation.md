@@ -18,11 +18,11 @@ This comes in handy when trying to reproduce bugs that were generated in the pro
 
 The simulation app has different commands, each of which tests a different failure type:
 
-- `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation.
-- `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.
 - `AppImportExport`: The simulator exports the initial app state and then it creates a new app with the exported `genesis.json` as an input, checking for inconsistencies between the stores.
 - `AppSimulationAfterImport`: Queues two simulations together. The first one provides the app state (_i.e_ genesis) to the second. Useful to test software upgrades or hard-forks from a live chain.
-- `BenchmarkInvariants`: An invariant checks for differences between the values that are on the store and the passive tracker. Eg: total coins held by accounts vs total supply tracker.
+- `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.
+- `BenchmarkInvariants`: Analyses the performance of running all the modules' invariants (_i.e_ secuentially runs a [benchmark](https://golang.org/pkg/testing/#hdr-Benchmarks) test). An invariant checks for differences between the values that are on the store and the passive tracker. Eg: total coins held by accounts vs total supply tracker.
+- `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation. It does also run invariant checks on every `Period` but they are not benchmarked.
 
 Each simulation must receive a set of inputs (_i.e_ flags) such as the number of blocks that the simulation is run, seed, block size, etc.
 Check the full list of flags [here](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/simapp/sim_test.go#L34-L50).
@@ -54,19 +54,17 @@ This is a general example of how simulations are run. For more specific examples
 
 ## Debugging Tips
 
-<!-- TODO: add output image -->
-
 Here are some suggestions when encountering a simulation failure:
 
 - Export the app state at the height were the failure was found. You can do this by passing the `-ExportStatePath` flag to the simulator.
 - Use `-Verbose` logs. They could give you a better hint on all the operations involved.
 
 - Reduce the simulation `-Period`. This will run the invariants checks more frequently.
-- Print all the invariants at once with `-PrintAllInvariants`.
+- Print all the failed invariants at once with `-PrintAllInvariants`.
 - Try using another `-Seed`. If it can reproduce the same error and if it fails sooner you will spend less time running the simulations.
 - Reduce the `-NumBlocks` . How's the app state at the height previous to the failure?
-- Run invariants on every operation with `-SimulateEveryOperation`. Note: this will slow down your simulation **a lot**.
-- Try adding logs to operations that are not logged. You will have to define a [Logger](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/staking/keeper/keeper.go#L65:17) on your Keeper.
+- Run invariants on every operation with `-SimulateEveryOperation`. _Note_: this will slow down your simulation **a lot**.
+- Try adding logs to operations that are not logged. You will have to define a [Logger](https://github.com/cosmos/cosmos-sdk/blob/adf6ddd4a807c8363e33083a3281f6a5e112ab89/x/staking/keeper/keeper.go#L65:17) on your `Keeper`.
 
 <!-- ## Use simulation in your SDK-based application -->
 <!-- TODO: link to the simulation section on the tutorial for how to add your own simulation messages -->

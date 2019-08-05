@@ -1,20 +1,20 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/supply/exported"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenesisState is the supply state that must be provided at genesis.
 type GenesisState struct {
-	Supply exported.SupplyI `json:"supply" yaml:"supply"`
+	Supply sdk.Coins `json:"supply" yaml:"supply"`
 }
 
 // NewGenesisState creates a new genesis state.
-func NewGenesisState(supply exported.SupplyI) GenesisState {
+func NewGenesisState(supply sdk.Coins) GenesisState {
 	return GenesisState{supply}
 }
 
 // DefaultGenesisState returns a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultSupply())
+	return NewGenesisState(DefaultSupply().GetTotal())
 }

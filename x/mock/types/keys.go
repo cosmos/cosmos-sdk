@@ -1,4 +1,4 @@
-package mock
+package types
 
 const (
 	// keys
@@ -14,4 +14,6 @@ const (
 	// transient keys
 	StakingTStoreKey = "transient_staking"
 	ParamsTStoreKey  = "transient_params"
+
+	ParamsDefaultCodespace = "params"
 )

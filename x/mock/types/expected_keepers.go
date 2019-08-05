@@ -1,8 +1,7 @@
-package mock
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
@@ -12,10 +11,6 @@ import (
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
-
-	GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error)
-	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, sdk.Error)
-	GetNextAccountNumber(ctx sdk.Context) uint64
 
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 	GetAllAccounts(ctx sdk.Context) []authexported.Account
@@ -87,7 +82,7 @@ type StakingKeeper interface {
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
-	GetAllSDKDelegations(ctx sdk.Context) []staking.Delegation
+	GetAllSDKDelegations(ctx sdk.Context) []stakingexported.DelegationI
 }
 
 // SlashingKeeper expected slashing keeper (noalias)
@@ -99,8 +94,11 @@ type MintKeeper interface{}
 // GovKeeper expected gov keeper (noalias)
 type GovKeeper interface{}
 
-// ParamsKeeper expected params keeper (noalias)
-type ParamsKeeper interface{}
+// ParamKeeper expected param keeper (noalias)
+type ParamsKeeper interface {
+	Subspace(s string) Subspace
+	GetSubspace(s string) (Subspace, bool)
+}
 
 // CrisisKeeper expected crisis keeper (noalias)
 type CrisisKeeper interface{}

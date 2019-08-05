@@ -66,7 +66,7 @@ func NewApp() *App {
 
 	// Create application object
 	app := &App{
-		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
+		BaseApp:          bam.NewBaseApp("mock", logger, db, AuthDefaultTxDecoder(cdc)),
 		Cdc:              cdc,
 		Keys:             keys,
 		TKeys:            tkeys,
@@ -74,22 +74,22 @@ func NewApp() *App {
 	}
 
 	// define keepers
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, ParamsTStoreKey, params.DefaultCodespace)
+	// TODO: mock keepers
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, keys[ParamsStoreKey], tkey[ParamsTStoreKey], ParamsDefaultCodespace)
 
-	app.AccountKeeper = auth.NewAccountKeeper(
+	app.AccountKeeper = NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
 		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
 	)
 
-	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
+	supplyKeeper := NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	// TODO: Mock Ante handler
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, supplyKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(NewAnteHandler(app.AccountKeeper, supplyKeeper))
 
 	// Not sealing for custom extension
 
@@ -218,7 +218,7 @@ func SetGenesis(app *App, accs []authexported.Account) {
 }
 
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
 		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
@@ -313,6 +313,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		}
 
 		app.TotalCoinsSupply = app.TotalCoinsSupply.Add(coins)
+		// TODO: mock baseAcc
 		baseAcc := auth.NewBaseAccountWithAddress(addrs[i])
 
 		(&baseAcc).SetCoins(coins)
@@ -324,8 +325,8 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
-	txs := make([]auth.StdTx, numToGenerate)
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []StdTx {
+	txs := make([]StdTx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
 		incrementAllSequenceNumbers(initSeqNums)
@@ -339,3 +340,5 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 		initSeqNums[i]++
 	}
 }
+
+// TODO: Add funcs to swap from dummy keepers to actual keepers

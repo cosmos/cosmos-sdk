@@ -114,7 +114,7 @@ func TestResultFromError(t *testing.T) {
 			expect: Result{
 				Codespace: CodespaceRoot,
 				Code:      CodeUnauthorized,
-				Log:       "not owner: unauthorized",
+				Log:       `{"codespace":"sdk","code":4,"message":"not owner: unauthorized"}`,
 			},
 		},
 		"stdlib errors": {
@@ -123,7 +123,7 @@ func TestResultFromError(t *testing.T) {
 				Codespace: CodespaceType("undefined"),
 				Code:      CodeInternal,
 				// note that we redact the internal errors in the new package to not leak eg. panics
-				Log: "internal error",
+				Log: `{"codespace":"undefined","code":1,"message":"internal error"}`,
 			},
 		},
 	}

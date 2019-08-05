@@ -250,10 +250,14 @@ func (err *sdkError) Code() CodeType {
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
 	errMsg := err.cmnError.Error()
+	return encodeErrorLog(err.codespace, err.code, errMsg)
+}
+
+func encodeErrorLog(codespace CodespaceType, code CodeType, msg string) string {
 	jsonErr := humanReadableError{
-		Codespace: err.codespace,
-		Code:      err.code,
-		Message:   errMsg,
+		Codespace: codespace,
+		Code:      code,
+		Message:   msg,
 	}
 
 	var buff bytes.Buffer
@@ -298,7 +302,7 @@ func ResultFromError(err error) Result {
 	return Result{
 		Codespace: CodespaceType(space),
 		Code:      CodeType(code),
-		Log:       log,
+		Log:       encodeErrorLog(CodespaceType(space), CodeType(code), log),
 	}
 }
 

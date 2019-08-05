@@ -25,7 +25,7 @@ const (
 func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
 
 	var communityTax sdk.Dec
-	communityTax = ap.GetOrGenerate(cdc, CommunityTax, &communityTax, r,
+	ap.GetOrGenerate(cdc, CommunityTax, &communityTax, r,
 		func(r *rand.Rand) {
 			communityTax = sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 		})

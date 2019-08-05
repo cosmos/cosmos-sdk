@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
@@ -33,7 +34,7 @@ func GenSlashingGenesisState(
 	var signedBlocksWindow int64
 	ap.GetOrGenerate(cdc, SignedBlocksWindow, &signedBlocksWindow, r,
 		func(r *rand.Rand) {
-			signedBlocksWindow = int64(RandIntBetween(r, 10, 1000))
+			signedBlocksWindow = int64(simutil.RandIntBetween(r, 10, 1000))
 		})
 
 	var minSignedPerWindow sdk.Dec
@@ -45,7 +46,7 @@ func GenSlashingGenesisState(
 	var downtimeJailDuration time.Duration
 	ap.GetOrGenerate(cdc, DowntimeJailDuration, &downtimeJailDuration, r,
 		func(r *rand.Rand) {
-			downtimeJailDuration = time.Duration(RandIntBetween(r, 60, 60*60*24)) * time.Second
+			downtimeJailDuration = time.Duration(simutil.RandIntBetween(r, 60, 60*60*24)) * time.Second
 		})
 
 	var slashFractionDoubleSign sdk.Dec

@@ -28,7 +28,9 @@ func GenGenesisAccounts(
 	for i, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))}
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
-		bacc.SetCoins(coins)
+		if err := bacc.SetCoins(coins); err != nil {
+			panic(err)
+		}
 
 		var gacc genaccounts.GenesisAccount
 

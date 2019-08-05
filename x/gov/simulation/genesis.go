@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // Simulation parameter constants
@@ -33,33 +34,33 @@ func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams,
 	var period time.Duration
 	ap.GetOrGenerate(cdc, VotingParamsVotingPeriod, &period, r,
 		func(r *rand.Rand) {
-			period = time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
+			period = time.Duration(simutil.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		})
 
 	// deposit params
 	var minDeposit sdk.Coins
 		ap.GetOrGenerate(cdc, DepositParamsMinDeposit, &minDeposit, r,
 			func(r *rand.Rand) {
-				minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3))))
+				minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simutil.RandIntBetween(r, 1, 1e3))))
 			})
 
 	// tally params
 	var quorum sdk.Dec
 	ap.GetOrGenerate(cdc, TallyParamsQuorum, &quorum, r,
 		func(r *rand.Rand) {
-			quorum = sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
+			quorum = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 334, 500)), 3)
 		})
 
 	var threshold sdk.Dec
 	ap.GetOrGenerate(cdc, TallyParamsThreshold, &threshold, r,
 		func(r *rand.Rand) {
-			threshold = sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
+			threshold = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 450, 550)), 3)
 		})
 
 	var veto sdk.Dec
 	ap.GetOrGenerate(cdc, TallyParamsVeto, &veto, r,
 		func(r *rand.Rand) {
-			veto = sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
+			veto = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 250, 334)), 3)
 		})
 
 	govGenesis := gov.NewGenesisState(

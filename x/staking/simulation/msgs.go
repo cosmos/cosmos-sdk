@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
@@ -21,21 +22,21 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 
 		denom := k.GetParams(ctx).BondDenom
 		description := staking.Description{
-			Moniker: simulation.RandStringOfLength(r, 10),
+			Moniker: simutil.RandStringOfLength(r, 10),
 		}
 
 		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
 		commission := staking.NewCommissionRates(
-			simulation.RandomDecAmount(r, maxCommission),
+			simutil.RandomDecAmount(r, maxCommission),
 			maxCommission,
-			simulation.RandomDecAmount(r, maxCommission),
+			simutil.RandomDecAmount(r, maxCommission),
 		)
 
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		amount := m.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simutil.RandomAmount(r, amount)
 		}
 
 		if amount.Equal(sdk.ZeroInt()) {
@@ -68,10 +69,10 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		description := staking.Description{
-			Moniker:  simulation.RandStringOfLength(r, 10),
-			Identity: simulation.RandStringOfLength(r, 10),
-			Website:  simulation.RandStringOfLength(r, 10),
-			Details:  simulation.RandStringOfLength(r, 10),
+			Moniker:  simutil.RandStringOfLength(r, 10),
+			Identity: simutil.RandStringOfLength(r, 10),
+			Website:  simutil.RandStringOfLength(r, 10),
+			Details:  simutil.RandStringOfLength(r, 10),
 		}
 
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -79,7 +80,7 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		}
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
-		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
+		newCommissionRate := simutil.RandomDecAmount(r, val.Commission.MaxRate)
 
 		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
@@ -112,7 +113,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		delegatorAddress := delegatorAcc.Address
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simutil.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
 			return simulation.NoOpMsg(staking.ModuleName), nil, nil
@@ -154,7 +155,7 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		}
 
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
-		unbondAmt := simulation.RandomAmount(r, totalBond)
+		unbondAmt := simutil.RandomAmount(r, totalBond)
 		if unbondAmt.Equal(sdk.ZeroInt()) {
 			return simulation.NoOpMsg(staking.ModuleName), nil, nil
 		}
@@ -197,7 +198,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		// TODO
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+			amount = simutil.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
 			return simulation.NoOpMsg(staking.ModuleName), nil, nil

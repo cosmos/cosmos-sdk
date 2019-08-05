@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 type simParamChange struct {
@@ -111,7 +112,7 @@ var paramChangePool = []simParamChange{
 			}
 
 			pc := make(map[string]string)
-			numChanges := simulation.RandIntBetween(r, 1, len(changes))
+			numChanges := simutil.RandIntBetween(r, 1, len(changes))
 			for i := 0; i < numChanges; i++ {
 				c := changes[r.Intn(len(changes))]
 
@@ -159,7 +160,7 @@ var paramChangePool = []simParamChange{
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // 3 parameter changes all of which have random, but valid values.
 func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
-	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool)/2)
+	numChanges := simutil.RandIntBetween(r, 1, len(paramChangePool)/2)
 	paramChanges := make([]params.ParamChange, numChanges, numChanges)
 	paramChangesKeys := make(map[string]struct{})
 
@@ -178,8 +179,8 @@ func SimulateParamChangeProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.
 	}
 
 	return params.NewParameterChangeProposal(
-		simulation.RandStringOfLength(r, 140),
-		simulation.RandStringOfLength(r, 5000),
+		simutil.RandStringOfLength(r, 140),
+		simutil.RandStringOfLength(r, 5000),
 		paramChanges,
 	)
 }

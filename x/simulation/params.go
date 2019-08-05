@@ -33,16 +33,9 @@ var (
 		{15, 92, 1},
 		{0, 3, 99},
 	})
-
-	// ModuleParamSimulator defines module parameter value simulators. All
-	// values simulated should be within valid acceptable range for the given
-	// parameter.
-	ModuleParamSimulator = map[string]func(r *rand.Rand) interface{}{
-		// TODO: use modules' GenParam()
-	}
 )
 
-// TODO add description
+// TODO: add description
 type (
 	AppParams      map[string]json.RawMessage
 	ParamSimulator func(r *rand.Rand)

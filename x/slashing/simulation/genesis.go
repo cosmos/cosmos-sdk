@@ -15,58 +15,54 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
+// Simulation parameter constants
+const (
+	SignedBlocksWindow      = "signed_blocks_window"
+	MinSignedPerWindow      = "min_signed_per_window"
+	DowntimeJailDuration    = "downtime_jail_duration"
+	SlashFractionDoubleSign = "slash_fraction_double_sign"
+	SlashFractionDowntime   = "slash_fraction_downtime"
+)
+
 // GenSlashingGenesisState generates a random GenesisState for slashing
 func GenSlashingGenesisState(
 	cdc *codec.Codec, r *rand.Rand, maxEvidenceAge time.Duration,
 	ap simulation.AppParams, genesisState map[string]json.RawMessage,
 ) {
-	slashingGenesis := slashing.NewGenesisState(
-		slashing.NewParams(
-			maxEvidenceAge,
-			func(r *rand.Rand) int64 {
-				var v int64
-				ap.GetOrGenerate(cdc, simulation.SignedBlocksWindow, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.SignedBlocksWindow](r).(int64)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.MinSignedPerWindow, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.MinSignedPerWindow](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) time.Duration {
-				var v time.Duration
-				ap.GetOrGenerate(cdc, simulation.DowntimeJailDuration, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.DowntimeJailDuration](r).(time.Duration)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.SlashFractionDoubleSign, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.SlashFractionDoubleSign](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.SlashFractionDowntime, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.SlashFractionDowntime](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-		),
-		nil,
-		nil,
-	)
+
+	var signedBlocksWindow int64
+	ap.GetOrGenerate(cdc, SignedBlocksWindow, &signedBlocksWindow, r,
+		func(r *rand.Rand) {
+			signedBlocksWindow = int64(RandIntBetween(r, 10, 1000))
+		})
+
+	var minSignedPerWindow sdk.Dec
+	ap.GetOrGenerate(cdc, MinSignedPerWindow, &minSignedPerWindow, r,
+		func(r *rand.Rand) {
+			minSignedPerWindow = sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
+		})
+
+	var downtimeJailDuration time.Duration
+	ap.GetOrGenerate(cdc, DowntimeJailDuration, &downtimeJailDuration, r,
+		func(r *rand.Rand) {
+			downtimeJailDuration = time.Duration(RandIntBetween(r, 60, 60*60*24)) * time.Second
+		})
+
+	var slashFractionDoubleSign sdk.Dec
+	ap.GetOrGenerate(cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, r,
+		func(r *rand.Rand) {
+			slashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
+		})
+
+	var slashFractionDowntime sdk.Dec
+	ap.GetOrGenerate(cdc, SlashFractionDowntime, &slashFractionDowntime, r,
+		func(r *rand.Rand) {
+			slashFractionDowntime = sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
+		})
+
+	params := slashing.NewParams(maxEvidenceAge, signedBlocksWindow, minSignedPerWindow,
+		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)
+	slashingGenesis := slashing.NewGenesisState(params, nil, nil)
 
 	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, slashingGenesis.Params))
 	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)

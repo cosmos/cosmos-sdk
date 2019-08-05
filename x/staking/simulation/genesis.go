@@ -15,41 +15,38 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
+// Simulation parameter constants
+const (
+	UnbondingTime = "unbonding_time"
+	MaxValidators = "max_validators"
+)
+
 // GenStakingGenesisState generates a random GenesisState for staking
 func GenStakingGenesisState(
 	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
 	ap simulation.AppParams, genesisState map[string]json.RawMessage,
 ) staking.GenesisState {
 
-	stakingGenesis := staking.NewGenesisState(
-		staking.NewParams(
-			func(r *rand.Rand) time.Duration {
-				var v time.Duration
-				ap.GetOrGenerate(cdc, simulation.UnbondingTime, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.UnbondingTime](r).(time.Duration)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) uint16 {
-				var v uint16
-				ap.GetOrGenerate(cdc, simulation.MaxValidators, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.MaxValidators](r).(uint16)
-					})
-				return v
-			}(r),
-			7,
-			sdk.DefaultBondDenom,
-		),
-		nil,
-		nil,
-	)
-
 	var (
 		validators  []staking.Validator
 		delegations []staking.Delegation
 	)
+
+	var ubdTime time.Duration
+	ap.GetOrGenerate(cdc, UnbondingTime, &ubdTime, r,
+		func(r *rand.Rand) {
+			v = time.Duration(RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
+		})
+
+	var maxValidators uint16
+	ap.GetOrGenerate(cdc, MaxValidators, &maxValidators, r,
+		func(r *rand.Rand) {
+			v = uint16(r.Intn(250) + 1)
+		})
+	
+	maxEntries := 7
+
+	params := staking.NewParams(ubdTime, maxValidators, maxEntries, sdk.DefaultBondDenom)
 
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
@@ -64,8 +61,7 @@ func GenStakingGenesisState(
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Validators = validators
-	stakingGenesis.Delegations = delegations
+	stakingGenesis := staking.NewGenesisState(params, validators, delegations)
 
 	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, stakingGenesis.Params))
 	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)

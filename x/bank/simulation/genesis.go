@@ -13,18 +13,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+
+// Simulation parameter constants
+const (
+	SendEnabled = "send_enabled"
+)
+
 // GenBankGenesisState generates a random GenesisState for bank
 func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
-	bankGenesis := bank.NewGenesisState(
-		func(r *rand.Rand) bool {
-			var v bool
-			ap.GetOrGenerate(cdc, simulation.SendEnabled, &v, r,
-				func(r *rand.Rand) {
-					v = simulation.ModuleParamSimulator[simulation.SendEnabled](r).(bool)
-				})
-			return v
-		}(r),
-	)
+	var sendEnabled bool
+	sendEnabled = ap.GetOrGenerate(cdc, SendEnabled, &v, r,
+		func(r *rand.Rand) {
+			sendEnabled = r.Int63n(2) == 0
+		})
+	
+	bankGenesis := bank.NewGenesisState(sendEnabled)
 
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, bankGenesis))
 	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)

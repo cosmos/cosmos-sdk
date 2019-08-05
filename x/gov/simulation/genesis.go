@@ -15,54 +15,58 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// Simulation parameter constants
+const (
+	DepositParamsMinDeposit  = "deposit_params_min_deposit"
+	VotingParamsVotingPeriod = "voting_params_voting_period"
+	TallyParamsQuorum        = "tally_params_quorum"
+	TallyParamsThreshold     = "tally_params_threshold"
+	TallyParamsVeto          = "tally_params_veto"
+)
+
 // GenGovGenesisState generates a random GenesisState for gov
 func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
-	var vp time.Duration
-	ap.GetOrGenerate(cdc, simulation.VotingParamsVotingPeriod, &vp, r,
+	startingProposalID := uint64(r.Intn(100))
+	
+	// period
+	// TODO: create 2 separate periods for deposit and voting
+	var period time.Duration
+	ap.GetOrGenerate(cdc, VotingParamsVotingPeriod, &period, r,
 		func(r *rand.Rand) {
-			vp = simulation.ModuleParamSimulator[simulation.VotingParamsVotingPeriod](r).(time.Duration)
+			period = time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
+		})
+
+	// deposit params
+	var minDeposit sdk.Coins
+		ap.GetOrGenerate(cdc, DepositParamsMinDeposit, &minDeposit, r,
+			func(r *rand.Rand) {
+				minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3))))
+			})
+
+	// tally params
+	var quorum sdk.Dec
+	ap.GetOrGenerate(cdc, TallyParamsQuorum, &quorum, r,
+		func(r *rand.Rand) {
+			quorum = sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
+		})
+
+	var threshold sdk.Dec
+	ap.GetOrGenerate(cdc, TallyParamsThreshold, &threshold, r,
+		func(r *rand.Rand) {
+			threshold = sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
+		})
+
+	var veto sdk.Dec
+	ap.GetOrGenerate(cdc, TallyParamsVeto, &veto, r,
+		func(r *rand.Rand) {
+			veto = sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
 		})
 
 	govGenesis := gov.NewGenesisState(
-		uint64(r.Intn(100)),
-		gov.NewDepositParams(
-			func(r *rand.Rand) sdk.Coins {
-				var v sdk.Coins
-				ap.GetOrGenerate(cdc, simulation.DepositParamsMinDeposit, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.DepositParamsMinDeposit](r).(sdk.Coins)
-					})
-				return v
-			}(r),
-			vp,
-		),
-		gov.NewVotingParams(vp),
-		gov.NewTallyParams(
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.TallyParamsQuorum, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.TallyParamsQuorum](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.TallyParamsThreshold, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.TallyParamsThreshold](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-			func(r *rand.Rand) sdk.Dec {
-				var v sdk.Dec
-				ap.GetOrGenerate(cdc, simulation.TallyParamsVeto, &v, r,
-					func(r *rand.Rand) {
-						v = simulation.ModuleParamSimulator[simulation.TallyParamsVeto](r).(sdk.Dec)
-					})
-				return v
-			}(r),
-		),
+		startingProposalID,
+		gov.NewDepositParams(minDeposit, period),
+		gov.NewVotingParams(period),
+		gov.NewTallyParams(quorum, threshold, veto),
 	)
 
 	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, govGenesis))

@@ -12,17 +12,14 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -37,18 +34,22 @@ import (
 )
 
 var (
-	genesisFile   string
-	paramsFile    string
-	seed          int64
-	numBlocks     int
-	blockSize     int
-	enabled       bool
-	verbose       bool
-	lean          bool
-	commit        bool
-	period        int
-	onOperation   bool // TODO Remove in favor of binary search for invariant violation
-	allInvariants bool
+	genesisFile        string
+	paramsFile         string
+	exportParamsPath   string
+	exportParamsHeight int
+	exportStatePath    string
+	seed               int64
+	numBlocks          int
+	blockSize          int
+	enabled            bool
+	verbose            bool
+	lean               bool
+	commit             bool
+	period             int
+	onOperation        bool // TODO Remove in favor of binary search for invariant violation
+	allInvariants      bool
+	genesisTime        int64
 )
 
 // NewSimAppUNSAFE is used for debugging purposes only.
@@ -59,7 +60,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 ) (gapp *SimApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {
 
 	gapp = NewSimApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
-	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
+	return gapp, gapp.keys[baseapp.MainStoreKey], gapp.keys[staking.StoreKey], gapp.stakingKeeper
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState

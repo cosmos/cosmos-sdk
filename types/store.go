@@ -74,10 +74,30 @@ func NewKVStoreKey(name string) *KVStoreKey {
 	return types.NewKVStoreKey(name)
 }
 
+// NewKVStoreKeys returns a map of new  pointers to KVStoreKey's.
+// Uses pointers so keys don't collide.
+func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
+	keys := make(map[string]*KVStoreKey)
+	for _, name := range names {
+		keys[name] = NewKVStoreKey(name)
+	}
+	return keys
+}
+
 // Constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
 func NewTransientStoreKey(name string) *TransientStoreKey {
 	return types.NewTransientStoreKey(name)
+}
+
+// NewTransientStoreKeys constructs a new map of TransientStoreKey's
+// Must return pointers according to the ocap principle
+func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
+	keys := make(map[string]*TransientStoreKey)
+	for _, name := range names {
+		keys[name] = NewTransientStoreKey(name)
+	}
+	return keys
 }
 
 // PrefixEndBytes returns the []byte that would end a

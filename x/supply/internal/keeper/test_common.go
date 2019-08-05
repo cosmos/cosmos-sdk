@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -69,9 +69,11 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 	)
 	cdc := makeTestCodec()
 
+	blacklistedAddrs := make(map[string]bool)
+
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	ak := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	bk := bank.NewBaseKeeper(ak, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
 
 	valTokens := sdk.TokensFromConsensusPower(initPower)
 
@@ -85,7 +87,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64, nAccs int64)
 		multiPerm:    []string{types.Minter, types.Burner, types.Staking},
 		randomPerm:   []string{"random"},
 	}
-	keeper := NewKeeper(cdc, keySupply, ak, bk, DefaultCodespace, maccPerms)
+	keeper := NewKeeper(cdc, keySupply, ak, bk, maccPerms)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, valTokens.MulRaw(nAccs)))
 	keeper.SetSupply(ctx, types.NewSupply(totalSupply))
 

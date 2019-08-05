@@ -39,6 +39,9 @@ var (
 	NewParamChange             = types.NewParamChange
 	NewParamChangeWithSubkey   = types.NewParamChangeWithSubkey
 	ValidateChanges            = types.ValidateChanges
+
+	// variable aliases
+	ModuleCdc = types.ModuleCdc
 )
 
 type (

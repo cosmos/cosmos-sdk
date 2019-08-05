@@ -5,5 +5,12 @@ sections:
   bugfixes: Bugfixes
 
 tags:
-  - sdk
+  - keys
+  - store
+  - abci
+  - rest
+  - cli
+  - modules
+  - simulation
+  - types
   - tendermint

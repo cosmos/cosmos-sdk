@@ -137,6 +137,7 @@ var (
 	AttributeKeyAction = "action"
 	AttributeKeyModule = "module"
 	AttributeKeySender = "sender"
+	AttributeKeyAmount = "amount"
 )
 
 type (

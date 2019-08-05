@@ -4,6 +4,10 @@
 
 ### Breaking Changes
 
+* (rest) [\#4837](https://github.com/cosmos/cosmos-sdk/pull/4837) Remove /version and /node_version
+  endpoints in favor of refactoring /node_info to also include application version info.
+* All REST responses now wrap the original resource/result. The response
+  will contain two fields: height and result.
 * [\#3565](https://github.com/cosmos/cosmos-sdk/issues/3565) Updates to the governance module:
   * Rename JSON field from `proposal_content` to `content`
   * Rename JSON field from `proposal_id` to `id`
@@ -78,6 +82,9 @@
 
 ### Features
 
+* [\#4843](https://github.com/cosmos/cosmos-sdk/issues/4843) Add RegisterEvidences function in the codec package to register
+  Tendermint evidence types with a given codec.
+* (rest) [\#3867](https://github.com/cosmos/cosmos-sdk/issues/3867) Allow querying for genesis transaction when height query param is set to zero.
 * [\#2020](https://github.com/cosmos/cosmos-sdk/issues/2020) New keys export/import command line utilities to export/import private keys in ASCII format
   that rely on Keybase's new underlying ExportPrivKey()/ImportPrivKey() API calls.
 * [\#3565](https://github.com/cosmos/cosmos-sdk/issues/3565) Implement parameter change proposal support.
@@ -101,6 +108,11 @@
 
 ### Improvements
 
+* [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
+* Upgrade IAVL to v0.12.4
+* (tendermint) Upgrade Tendermint to v0.32.2
+* (modules) [\#4751](https://github.com/cosmos/cosmos-sdk/issues/4751) update `x/genutils` to match module spec
+* (keys) [\#4611](https://github.com/cosmos/cosmos-sdk/issues/4611) store keys in simapp now use a map instead of using individual literal keys
 * [\#2286](https://github.com/cosmos/cosmos-sdk/issues/2286) Improve performance of CacheKVStore iterator.
 * [\#3512](https://github.com/cosmos/cosmos-sdk/issues/3512) Implement Logger method on each module's keeper.
 * [\#3655](https://github.com/cosmos/cosmos-sdk/issues/3655) Improve signature verification failure error message.
@@ -162,6 +174,13 @@
 
 ### Bug Fixes
 
+* (modules) [\#4831](https://github.com/cosmos/cosmos-sdk/issues/4831) Prevent community spend proposal from transferring funds to a module account
+* (keys) [\#4338](https://github.com/cosmos/cosmos-sdk/issues/4338) fix multisig key output for CLI
+* (modules) [\#4795](https://github.com/cosmos/cosmos-sdk/issues/4795) restrict module accounts from receiving transactions.
+  Allowing this would cause an invariant on the module account coins.
+* (modules) [\#4823](https://github.com/cosmos/cosmos-sdk/issues/4823) Update the `DefaultUnbondingTime` from 3 days to 3 weeks to be inline with documentation.
+* (abci) [\#4639](https://github.com/cosmos/cosmos-sdk/issues/4639) Fix `CheckTx` by verifying the message route
+* Return height in responses when querying against BaseApp
 * [\#1351](https://github.com/cosmos/cosmos-sdk/issues/1351) Stable AppHash allows no_empty_blocks
 * [\#3705](https://github.com/cosmos/cosmos-sdk/issues/3705) Return `[]` instead of `null` when querying delegator rewards.
 * [\#3966](https://github.com/cosmos/cosmos-sdk/issues/3966) fixed multiple assigns to action tags
@@ -188,6 +207,7 @@
 * [\#4654](https://github.com/cosmos/cosmos-sdk/issues/4654) validator slash event stored by period and height
 * [\#4681](https://github.com/cosmos/cosmos-sdk/issues/4681) panic on invalid amount on `MintCoins` and `BurnCoins`
   - skip minting if inflation is set to zero
+* Sort state JSON during export and initialization  
 
 ## 0.35.0
 

@@ -1,0 +1,2 @@
+[\#4837](https://github.com/cosmos/cosmos-sdk/pull/4837) Remove /version and /node_version
+endpoints in favor of refactoring /node_info to also include application version info.

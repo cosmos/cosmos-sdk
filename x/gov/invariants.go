@@ -35,6 +35,6 @@ func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",
-				macc.GetCoins(), expectedDeposits), broken)
+				macc.GetCoins(), expectedDeposits)), broken
 	}
 }

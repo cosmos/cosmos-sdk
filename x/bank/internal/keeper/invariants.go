@@ -32,6 +32,6 @@ func NonnegativeBalanceInvariant(ak types.AccountKeeper) sdk.Invariant {
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative-outstanding",
-			fmt.Sprintf("amount of negative accounts found %d\n%s", count, msg), broken)
+			fmt.Sprintf("amount of negative accounts found %d\n%s", count, msg)), broken
 	}
 }

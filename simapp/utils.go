@@ -504,7 +504,11 @@ func GenStakingGenesisState(
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvs []cmn.KVPair) (log string) {
+func GetSimulationLog(sdr sdk.StoreDecoderRegistry, storeName string, cdcA, cdcB *codec.Codec, kvs []cmn.KVPair) (log string) {
+	if kvs%2 != 0 {
+		panic("KVPairs are not multiple of 2. There should be one for each app store")
+	}
+
 	var kvA, kvB cmn.KVPair
 	for i := 0; i < len(kvs); i += 2 {
 		kvA = kvs[i]
@@ -515,22 +519,10 @@ func GetSimulationLog(storeName string, cdcA, cdcB *codec.Codec, kvs []cmn.KVPai
 			continue
 		}
 
-		switch storeName {
-		case auth.StoreKey:
-			log += authsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case mint.StoreKey:
-			log += mintsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case staking.StoreKey:
-			log += stakingsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case slashing.StoreKey:
-			log += slashingsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case gov.StoreKey:
-			log += govsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case distribution.StoreKey:
-			log += distributionsim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		case supply.StoreKey:
-			log += supplysim.DecodeStore(cdcA, cdcB, kvA, kvB)
-		default:
+		decoder, ok := sdr[storeName]
+		if ok {
+			log += decoder(cdcA, cdcB, kvA, kvB)
+		} else {
 			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 		}
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 )
 
 var (
@@ -91,6 +92,12 @@ func (AppModule) Name() string {
 
 // register invariants
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// RegisterStoreDecoder registers the function to decode the types stored in the
+// KVStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) string) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
 
 // module message route name
 func (AppModule) Route() string {

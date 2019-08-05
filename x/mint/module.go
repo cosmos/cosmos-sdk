@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 )
 
 var (
@@ -84,6 +85,12 @@ func (AppModule) Name() string {
 
 // register invariants
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// RegisterStoreDecoder registers the function to decode the types stored in the
+// KVStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) string) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
 
 // module message route name
 func (AppModule) Route() string { return "" }

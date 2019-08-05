@@ -237,6 +237,13 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // register all module routes and module querier routes
+func (m *Manager) RegisterStoreDecoders(sd map[string]func(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string) {
+	for _, module := range m.Modules {
+		module.RegisterStoreDecoder(sd)
+	}
+}
+
+// register all module routes and module querier routes
 func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter) {
 	for _, module := range m.Modules {
 		if module.Route() != "" {

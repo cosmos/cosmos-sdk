@@ -4,7 +4,10 @@
 
 ## Context
 
-Currently `ModuleAccount`s must be declared upon Supply Keeper initialization. In addition to this they don't allow for separation of fungible coins within an account.
+In the design of a simple decentralized exchange, it is likely that a `ModuleAccount` will be used to store the liquidity used for fulfilling trades. 
+In the case of the uniswap, trading pairs do not share liquidity pools. A reserve pool of atoms may only be allowed to be traded for denom A and not denom B. 
+This would require multiple accounts since the atom is fungible coin. It is likely that trading pairs will be added over time, but `ModuleAccount`s cannot be dynamically created.
+`ModuleAccount`s must be declared upon Supply Keeper initialization. In addition to this they don't allow for separation of fungible coins within an account.
 
 We want to support the ability to define and manage sub-module-accounts.
 

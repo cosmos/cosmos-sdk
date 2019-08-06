@@ -6,14 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // 3 parameter changes all of which have random, but valid values.
 func SimulateParamChangeProposalContent(r *rand.Rand, paramChangePool []simulation.SimParamChange) gov.Content {
-	numChanges := simutil.RandIntBetween(r, 1, len(paramChangePool))
+	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool))
 	paramChanges := make([]params.ParamChange, numChanges, numChanges)
 	paramChangesKeys := make(map[string]struct{})
 
@@ -32,8 +31,8 @@ func SimulateParamChangeProposalContent(r *rand.Rand, paramChangePool []simulati
 	}
 
 	return params.NewParameterChangeProposal(
-		simutil.RandStringOfLength(r, 140),  // title
-		simutil.RandStringOfLength(r, 5000), // description
+		simulation.RandStringOfLength(r, 140),  // title
+		simulation.RandStringOfLength(r, 5000), // description
 		paramChanges,
 	)
 }

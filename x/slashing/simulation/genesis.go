@@ -12,7 +12,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
@@ -29,7 +28,7 @@ const (
 func GenSignedBlocksWindow(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (signedBlocksWindow int64) {
 	ap.GetOrGenerate(cdc, SignedBlocksWindow, &signedBlocksWindow, r,
 		func(r *rand.Rand) {
-			signedBlocksWindow = int64(simutil.RandIntBetween(r, 10, 1000))
+			signedBlocksWindow = int64(simulation.RandIntBetween(r, 10, 1000))
 		})
 	return
 }
@@ -47,7 +46,7 @@ func GenMinSignedPerWindow(cdc *codec.Codec, r *rand.Rand, ap simulation.AppPara
 func GenDowntimeJailDuration(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (downtimeJailDuration time.Duration) {
 	ap.GetOrGenerate(cdc, DowntimeJailDuration, &downtimeJailDuration, r,
 		func(r *rand.Rand) {
-			downtimeJailDuration = time.Duration(simutil.RandIntBetween(r, 60, 60*60*24)) * time.Second
+			downtimeJailDuration = time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second
 		})
 	return
 }

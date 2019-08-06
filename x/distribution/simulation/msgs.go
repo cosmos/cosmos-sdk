@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
@@ -96,15 +95,15 @@ func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsim.Con
 		balance := k.GetFeePool(ctx).CommunityPool
 		if len(balance) > 0 {
 			denomIndex := r.Intn(len(balance))
-			amount, goErr := simutil.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+			amount, goErr := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
 			if goErr == nil {
 				denom := balance[denomIndex].Denom
 				coins = sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
 			}
 		}
 		return distribution.NewCommunityPoolSpendProposal(
-			simutil.RandStringOfLength(r, 10),
-			simutil.RandStringOfLength(r, 100),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 100),
 			recipientAcc.Address,
 			coins,
 		)

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // ContentSimulator defines a function type alias for generating random proposal
@@ -110,8 +109,8 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 // SimulateTextProposalContent returns random text proposal content.
 func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
 	return gov.NewTextProposal(
-		simutil.RandStringOfLength(r, 140),
-		simutil.RandStringOfLength(r, 5000),
+		simulation.RandStringOfLength(r, 140),
+		simulation.RandStringOfLength(r, 5000),
 	)
 }
 

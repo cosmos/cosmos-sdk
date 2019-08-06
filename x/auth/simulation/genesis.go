@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // Simulation parameter constants
@@ -27,7 +26,7 @@ const (
 func GenMaxMemoChars(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (maxMemoChars uint64) {
 	ap.GetOrGenerate(cdc, MaxMemoChars, &maxMemoChars, r,
 		func(r *rand.Rand) {
-			maxMemoChars = uint64(simutil.RandIntBetween(r, 100, 200))
+			maxMemoChars = uint64(simulation.RandIntBetween(r, 100, 200))
 		})
 	return
 }
@@ -45,7 +44,7 @@ func GenTxSigLimit(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (txS
 func GenTxSizeCostPerByte(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (txSizeCostPerByte uint64) {
 	ap.GetOrGenerate(cdc, TxSizeCostPerByte, &txSizeCostPerByte, r,
 		func(r *rand.Rand) {
-			txSizeCostPerByte = uint64(simutil.RandIntBetween(r, 5, 15))
+			txSizeCostPerByte = uint64(simulation.RandIntBetween(r, 5, 15))
 		})
 	return
 }
@@ -54,7 +53,7 @@ func GenTxSizeCostPerByte(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParam
 func GenSigVerifyCostED25519(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (sigVerifyCostED25519 uint64) {
 	ap.GetOrGenerate(cdc, SigVerifyCostED25519, &sigVerifyCostED25519, r,
 		func(r *rand.Rand) {
-			sigVerifyCostED25519 = uint64(simutil.RandIntBetween(r, 500, 1000))
+			sigVerifyCostED25519 = uint64(simulation.RandIntBetween(r, 500, 1000))
 		})
 	return
 }
@@ -63,7 +62,7 @@ func GenSigVerifyCostED25519(cdc *codec.Codec, r *rand.Rand, ap simulation.AppPa
 func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (sigVerifyCostSECP256K1 uint64) {
 	ap.GetOrGenerate(cdc, SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, r,
 		func(r *rand.Rand) {
-			sigVerifyCostSECP256K1 = uint64(simutil.RandIntBetween(r, 500, 1000))
+			sigVerifyCostSECP256K1 = uint64(simulation.RandIntBetween(r, 500, 1000))
 		})
 	return
 }

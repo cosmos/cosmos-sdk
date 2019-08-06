@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // Simulation parameter constants
@@ -30,7 +29,7 @@ const (
 func GenDepositParamsDepositPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (period time.Duration) {
 	ap.GetOrGenerate(cdc, DepositParamsDepositPeriod, &period, r,
 		func(r *rand.Rand) {
-			period = time.Duration(simutil.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
+			period = time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		})
 	return
 }
@@ -39,7 +38,7 @@ func GenDepositParamsDepositPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation
 func GenDepositParamsMinDeposit(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (minDeposit sdk.Coins) {
 	ap.GetOrGenerate(cdc, DepositParamsMinDeposit, &minDeposit, r,
 		func(r *rand.Rand) {
-			minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simutil.RandIntBetween(r, 1, 1e3))))
+			minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
 		})
 	return
 }
@@ -48,7 +47,7 @@ func GenDepositParamsMinDeposit(cdc *codec.Codec, r *rand.Rand, ap simulation.Ap
 func GenVotingParamsVotingPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (period time.Duration) {
 	ap.GetOrGenerate(cdc, VotingParamsVotingPeriod, &period, r,
 		func(r *rand.Rand) {
-			period = time.Duration(simutil.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
+			period = time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 		})
 	return
 }
@@ -57,7 +56,7 @@ func GenVotingParamsVotingPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation.A
 func GenTallyParamsQuorum(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (quorum sdk.Dec) {
 	ap.GetOrGenerate(cdc, TallyParamsQuorum, &quorum, r,
 		func(r *rand.Rand) {
-			quorum = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 334, 500)), 3)
+			quorum = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 		})
 	return
 }
@@ -66,7 +65,7 @@ func GenTallyParamsQuorum(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParam
 func GenTallyParamsThreshold(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (threshold sdk.Dec) {
 	ap.GetOrGenerate(cdc, TallyParamsThreshold, &threshold, r,
 		func(r *rand.Rand) {
-			threshold = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 450, 550)), 3)
+			threshold = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
 		})
 	return
 }
@@ -75,7 +74,7 @@ func GenTallyParamsThreshold(cdc *codec.Codec, r *rand.Rand, ap simulation.AppPa
 func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (veto sdk.Dec) {
 	ap.GetOrGenerate(cdc, TallyParamsVeto, &veto, r,
 		func(r *rand.Rand) {
-			veto = sdk.NewDecWithPrec(int64(simutil.RandIntBetween(r, 250, 334)), 3)
+			veto = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 		})
 	return
 }

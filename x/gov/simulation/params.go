@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simutil "github.com/cosmos/cosmos-sdk/x/simulation/util"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -39,7 +38,7 @@ func ParamChanges(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) []sim
 				}
 
 				pc := make(map[string]string)
-				numChanges := simutil.RandIntBetween(r, 1, len(changes))
+				numChanges := simulation.RandIntBetween(r, 1, len(changes))
 				for i := 0; i < numChanges; i++ {
 					c := changes[r.Intn(len(changes))]
 

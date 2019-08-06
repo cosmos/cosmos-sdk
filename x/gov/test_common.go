@@ -61,9 +61,9 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
 
 	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[govAcc.String()] = true
-	blacklistedAddrs[notBondedPool.String()] = true
-	blacklistedAddrs[bondPool.String()] = true
+	blacklistedAddrs[govAcc.GetAddress().String()] = true
+	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
+	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
 	pk := mApp.ParamsKeeper
 

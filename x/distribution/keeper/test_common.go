@@ -121,10 +121,10 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
 
 	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[feeCollectorAcc.String()] = true
-	blacklistedAddrs[notBondedPool.String()] = true
-	blacklistedAddrs[bondPool.String()] = true
-	blacklistedAddrs[distrAcc.String()] = true
+	blacklistedAddrs[feeCollectorAcc.GetAddress().String()] = true
+	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
+	blacklistedAddrs[bondPool.GetAddress().String()] = true
+	blacklistedAddrs[distrAcc.GetAddress().String()] = true
 
 	cdc := MakeTestCodec()
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)

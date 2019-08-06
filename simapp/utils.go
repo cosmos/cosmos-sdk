@@ -12,18 +12,14 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
-	cmn "github.com/tendermint/tendermint/libs/common"
-
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -37,13 +33,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+// List of available flags for the simulator
 var (
 	genesisFile        string
 	paramsFile         string
 	exportParamsPath   string
 	exportParamsHeight int
 	exportStatePath    string
+	exportStatsPath    string
 	seed               int64
+	initialBlockHeight int
 	numBlocks          int
 	blockSize          int
 	enabled            bool
@@ -64,7 +63,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 ) (gapp *SimApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {
 
 	gapp = NewSimApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
-	return gapp, gapp.keyMain, gapp.keyStaking, gapp.stakingKeeper
+	return gapp, gapp.keys[baseapp.MainStoreKey], gapp.keys[staking.StoreKey], gapp.stakingKeeper
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
@@ -175,7 +174,7 @@ func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams
 func GenSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
 	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
 	supplyGenesis := supply.NewGenesisState(
-		supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))),
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply)),
 	)
 
 	fmt.Printf("Generated supply parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, supplyGenesis))

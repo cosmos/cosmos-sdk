@@ -24,6 +24,21 @@ const (
 	DefaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
+// ResponseWithHeight defines a response object type that wraps an original
+// response with a height.
+type ResponseWithHeight struct {
+	Height int64           `json:"height"`
+	Result json.RawMessage `json:"result"`
+}
+
+// NewResponseWithHeight creates a new ResponseWithHeight instance
+func NewResponseWithHeight(height int64, result json.RawMessage) ResponseWithHeight {
+	return ResponseWithHeight{
+		Height: height,
+		Result: result,
+	}
+}
+
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate"`
@@ -217,33 +232,63 @@ func ParseQueryHeightOrReturnBadRequest(w http.ResponseWriter, cliCtx context.CL
 		if height > 0 {
 			cliCtx = cliCtx.WithHeight(height)
 		}
+	} else {
+		cliCtx = cliCtx.WithHeight(0)
 	}
 
 	return cliCtx, true
 }
 
-// PostProcessResponse performs post processing for a REST response.
-// If the height is greater than zero it will be injected into the body
-// of the response. An internal server error is written to the response
-// if the height is negative or an encoding/decoding error occurs.
-func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, response interface{}) {
-	var output []byte
+// PostProcessResponseBare post processes a body similar to PostProcessResponse
+// except it does not wrap the body and inject the height.
+func PostProcessResponseBare(w http.ResponseWriter, cliCtx context.CLIContext, body interface{}) {
+	var (
+		resp []byte
+		err  error
+	)
+
+	switch body.(type) {
+	case []byte:
+		resp = body.([]byte)
+
+	default:
+		if cliCtx.Indent {
+			resp, err = cliCtx.Codec.MarshalJSONIndent(body, "", "  ")
+		} else {
+			resp, err = cliCtx.Codec.MarshalJSON(body)
+		}
+
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(resp)
+}
+
+// PostProcessResponse performs post processing for a REST response. The result
+// returned to clients will contain two fields, the height at which the resource
+// was queried at and the original result.
+func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp interface{}) {
+	var result []byte
 
 	if cliCtx.Height < 0 {
 		WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("negative height in response").Error())
 		return
 	}
 
-	switch response.(type) {
+	switch resp.(type) {
 	case []byte:
-		output = response.([]byte)
+		result = resp.([]byte)
 
 	default:
 		var err error
 		if cliCtx.Indent {
-			output, err = cliCtx.Codec.MarshalJSONIndent(response, "", "  ")
+			result, err = cliCtx.Codec.MarshalJSONIndent(resp, "", "  ")
 		} else {
-			output, err = cliCtx.Codec.MarshalJSON(response)
+			result, err = cliCtx.Codec.MarshalJSON(resp)
 		}
 
 		if err != nil {
@@ -252,29 +297,22 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, respo
 		}
 	}
 
-	// inject the height into the response by:
-	// - decoding into a map
-	// - adding the height to the map
-	// - encoding using standard JSON library
-	if cliCtx.Height > 0 {
-		m := make(map[string]interface{})
-		err := json.Unmarshal(output, &m)
-		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+	wrappedResp := NewResponseWithHeight(cliCtx.Height, result)
 
-		m["height"] = cliCtx.Height
+	var (
+		output []byte
+		err    error
+	)
 
-		if cliCtx.Indent {
-			output, err = json.MarshalIndent(m, "", "  ")
-		} else {
-			output, err = json.Marshal(m)
-		}
-		if err != nil {
-			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+	if cliCtx.Indent {
+		output, err = cliCtx.Codec.MarshalJSONIndent(wrappedResp, "", "  ")
+	} else {
+		output, err = cliCtx.Codec.MarshalJSON(wrappedResp)
+	}
+
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

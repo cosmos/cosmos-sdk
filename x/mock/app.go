@@ -11,13 +11,14 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -38,7 +39,7 @@ type App struct {
 	AccountKeeper auth.AccountKeeper
 	ParamsKeeper  params.Keeper
 
-	GenesisAccounts  []auth.Account
+	GenesisAccounts  []authexported.Account
 	TotalCoinsSupply sdk.Coins
 }
 
@@ -167,7 +168,7 @@ func (b AddrKeysSlice) Swap(i, j int) {
 
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
-func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
+func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []authexported.Account,
 	addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 
 	addrKeysSlice := AddrKeysSlice{}
@@ -196,7 +197,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
 }
 
 // SetGenesis sets the mock app genesis accounts.
-func SetGenesis(app *App, accs []auth.Account) {
+func SetGenesis(app *App, accs []authexported.Account) {
 	// Pass the accounts in via the application (lazy) instead of through
 	// RequestInitChain.
 	app.GenesisAccounts = accs
@@ -283,7 +284,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 // provided addresses and coin denominations.
 // nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
-	accts := make([]auth.Account, len(addrs))
+	accts := make([]authexported.Account, len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
 		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},

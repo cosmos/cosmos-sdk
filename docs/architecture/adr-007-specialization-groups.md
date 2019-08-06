@@ -59,10 +59,10 @@ type Electionator interface {
     // is the election object active
     Active() bool 
 
-    // functionality to execute for when a member casts a vote, here the
-    // vote field is anticipated to be marshalled into a vote type used 
-    // by an election
-    Vote(addr sdk.Address, vote []byte)  
+    // functionality to execute for when a vote is cast in this election, here
+    // the vote field is anticipated to be marshalled into a vote type used 
+    // by an election. 
+    Vote(addr sdk.Address, vote []byte) 
 
     // here lies all functionality to authenticate and execute changes for
     // when a member accepts being elected
@@ -74,9 +74,18 @@ type Electionator interface {
     // No more revokers may be registered after this function is called
     SealRevokers()
 
+    // register hooks to call when an election actions occur
+    RegisterHooks(ElectionatorHooks) 
+
     // query for the current winner(s) of this election based on arbitrary
     // election ruleset
     QueryWinners() []sdk.Address 
+}
+
+type ElectionatorHooks interface {
+    VoteCast(addr sdk.Address, vote []byte)
+    MemberAccepted(addr sdk.Address)
+    MemberRevoked(addr sdk.Address, cause []byte)
 }
 
 // Revoker defines the function required for an membership revocation ruleset
@@ -88,7 +97,7 @@ type Electionator interface {
 // memos, etc.
 type Revoker interface {
     RevokeName() string      // identifier for this revoker type 
-    RevokeMember(revokeAddr sdk.Address, cause []byte) (successful bool)
+    RevokeMember(addr sdk.Address, cause []byte) (successful bool)
 }
 ```
 
@@ -97,7 +106,7 @@ Certain level of commonality likely exists between the existing code within
 functionality should be abstracted during implementation time. 
 
 The specialization group abstraction firstly depends on the `Electionator`
-but also further defines the con
+but also further defines the 
 
 ``` golang
 type SpecializationGroup interface {
@@ -107,10 +116,6 @@ type SpecializationGroup interface {
 }
 ```
 
-TODO talk about throttlers 
-
-
-
 ## Status
 
 > Proposed
@@ -119,13 +124,15 @@ TODO talk about throttlers
 
 ### Positive
 
- - Increases specialization capabilities of a blockchain
+ - increases specialization capabilities of a blockchain
 
 ### Negative
 
- - Could be used to negatively increase centralization within a community
+ - could be used to negatively increase centralization within a community
 
 ### Neutral
 
 ## References
+
+  (CERT ADR)[./adr-008-CERT-group.md]
  

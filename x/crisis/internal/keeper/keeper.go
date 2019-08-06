@@ -1,4 +1,3 @@
-// DONTCOVER
 package keeper
 
 import (
@@ -56,14 +55,15 @@ func (k Keeper) Routes() []types.InvarRoute {
 
 // Invariants returns all the registered Crisis keeper invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
-	var invars []sdk.Invariant
-	for _, route := range k.routes {
-		invars = append(invars, route.Invar)
+	invars := make([]sdk.Invariant, len(k.routes))
+	for i, route := range k.routes {
+		invars[i] = route.Invar
 	}
 	return invars
 }
 
-// assert all invariants
+// AssertInvariants asserts all registered invariants. If any invariant fails,
+// the method panics.
 func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	logger := k.Logger(ctx)
 

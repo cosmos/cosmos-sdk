@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -195,7 +195,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			bank.SimulateMsgSend(app.accountKeeper, app.bankKeeper),
+			banksim.SimulateMsgSend(app.accountKeeper, app.bankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -206,7 +206,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			bank.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper),
+			banksim.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

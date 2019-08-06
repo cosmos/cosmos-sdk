@@ -1,3 +1,4 @@
+// DONTCOVER
 package keeper
 
 import (
@@ -23,11 +24,13 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper object
-func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
+func NewKeeper(
+	paramSpace params.Subspace, invCheckPeriod uint, supplyKeeper types.SupplyKeeper,
+	feeCollectorName string,
+) Keeper {
 
 	return Keeper{
-		routes:           []types.InvarRoute{},
+		routes:           make([]types.InvarRoute, 0),
 		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
@@ -66,9 +69,9 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 
 	start := time.Now()
 	invarRoutes := k.Routes()
+
 	for _, ir := range invarRoutes {
 		if res, stop := ir.Invar(ctx); stop {
-
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
@@ -90,5 +93,3 @@ func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }
-
-// DONTCOVER

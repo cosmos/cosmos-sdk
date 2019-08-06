@@ -89,6 +89,7 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		appState[v036staking.ModuleName] = v036Codec.MustMarshalJSON(v036staking.Migrate(stakingGenState))
 	}
 
+	// migrate supply state
 	appState[v036supply.ModuleName] = v036Codec.MustMarshalJSON(v036supply.EmptyGenesisState())
 
 	return appState

@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -73,4 +74,30 @@ func RandomParams(r *rand.Rand) Params {
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Param change proposals
+
+// SimParamChange defines the object used for simulating parameter change proposals
+type SimParamChange struct {
+	Subspace string
+	Key      string
+	Subkey   string
+	SimValue func(r *rand.Rand) string
+}
+
+// NewSimParamChange creates a new SimParamChange instance
+func NewSimParamChange(subspace, key, subkey string, simVal func(r *rand.Rand) string) SimParamChange {
+	return SimParamChange{
+		Subspace: subspace,
+		Key:      key,
+		Subkey:   subkey,
+		SimValue: simVal,
+	}
+}
+
+// ComposedKey creates a new composed key for the param change proposal
+func (spc SimParamChange) ComposedKey() string {
+	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
 }

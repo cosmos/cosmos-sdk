@@ -185,7 +185,7 @@ func TestSetLoader(t *testing.T) {
 	// write a renamer to a file
 	f, err := ioutil.TempFile("", "upgrade-*.json")
 	require.NoError(t, err)
-	data := []byte(`{"renamed":[{"old": "bnk", "new": "banker"}]}`)
+	data := []byte(`{"renamed":[{"old_key": "bnk", "new_key": "banker"}]}`)
 	_, err = f.Write(data)
 	require.NoError(t, err)
 	configName := f.Name()
@@ -1133,7 +1133,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		fmt.Printf("debug i: %v\n", i)
 		tx := tc.tx
 
 		// reset the block gas

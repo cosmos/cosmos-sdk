@@ -48,8 +48,8 @@ type StoreUpgrades struct {
 // All data previously under a PrefixStore with OldKey will be copied
 // to a PrefixStore with NewKey, then deleted from OldKey store.
 type StoreRename struct {
-	OldKey string `json:"old"`
-	NewKey string `json:"new"`
+	OldKey string `json:"old_key"`
+	NewKey string `json:"new_key"`
 }
 
 // IsDeleted returns true if the given key should be deleted

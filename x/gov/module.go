@@ -92,7 +92,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //___________________________
 
-// AppModule - app module ob
+// AppModule - app module object
 type AppModule struct {
 	AppModuleBasic
 	keeper       Keeper

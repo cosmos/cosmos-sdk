@@ -152,7 +152,8 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	rtr := types.NewRouter().
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
-	keeper := NewKeeper(cdc, keyGov, pk.Subspace(types.DefaultParamspace), supplyKeeper, sk, types.DefaultCodespace, rtr)
+	keeper := NewKeeper(cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()),
+	supplyKeeper, sk, types.DefaultCodespace, rtr)
 
 	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)
 	keeper.SetDepositParams(ctx, types.DefaultDepositParams())

@@ -58,7 +58,7 @@ func NewKeeper(
 
 	return Keeper{
 		storeKey:     key,
-		paramSpace:   paramSpace.WithKeyTable(types.ParamKeyTable()),
+		paramSpace:   paramSpace, // CONTRACT: must have the param key table already initialized
 		supplyKeeper: supplyKeeper,
 		sk:           sk,
 		cdc:          cdc,

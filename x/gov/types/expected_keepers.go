@@ -2,14 +2,12 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	stakingexported "github.com/cosmos/cosmos-sdk/x/staking/exported"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // ParamSubspace defines the expected Subspace interface for parameters (noalias)
 type ParamSubspace interface {
-	WithKeyTable(table subspace.KeyTable) subspace.Subspace
 	Get(ctx sdk.Context, key []byte, ptr interface{})
 	Set(ctx sdk.Context, key []byte, param interface{})
 }

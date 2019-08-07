@@ -1,4 +1,4 @@
-package simulation
+package decoder
 
 import (
 	"fmt"
@@ -11,7 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,7 +28,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	distr.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 	return
 }
 
@@ -35,25 +36,25 @@ func TestDecodeDistributionStore(t *testing.T) {
 	cdc := makeTestCodec()
 
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
-	feePool := distr.InitialFeePool()
+	feePool := types.InitialFeePool()
 	feePool.CommunityPool = decCoins
-	info := distr.NewDelegatorStartingInfo(2, sdk.OneDec(), 200)
-	outstanding := distr.ValidatorOutstandingRewards{decCoins[0]}
-	commission := distr.ValidatorAccumulatedCommission{decCoins[0]}
-	historicalRewards := distr.NewValidatorHistoricalRewards(decCoins, 100)
-	currentRewards := distr.NewValidatorCurrentRewards(decCoins, 5)
-	slashEvent := distr.NewValidatorSlashEvent(10, sdk.OneDec())
+	info :=  types.NewDelegatorStartingInfo(2, sdk.OneDec(), 200)
+	outstanding :=  types.ValidatorOutstandingRewards{decCoins[0]}
+	commission :=  types.ValidatorAccumulatedCommission{decCoins[0]}
+	historicalRewards :=  types.NewValidatorHistoricalRewards(decCoins, 100)
+	currentRewards :=  types.NewValidatorCurrentRewards(decCoins, 5)
+	slashEvent :=  types.NewValidatorSlashEvent(10, sdk.OneDec())
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: distr.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
-		cmn.KVPair{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
-		cmn.KVPair{Key: distr.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
-		cmn.KVPair{Key: distr.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
-		cmn.KVPair{Key: distr.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: distr.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
-		cmn.KVPair{Key: distr.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
-		cmn.KVPair{Key: distr.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
-		cmn.KVPair{Key: distr.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
+		cmn.KVPair{Key: keeper.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
+		cmn.KVPair{Key:  keeper.ProposerKey, Value: consAddr1.Bytes()},
+		cmn.KVPair{Key:  keeper.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
+		cmn.KVPair{Key:  keeper.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
+		cmn.KVPair{Key:  keeper.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
+		cmn.KVPair{Key:  keeper.GetValidatorHistoricalRewardsKey(valAddr1, 100), Value: cdc.MustMarshalBinaryLengthPrefixed(historicalRewards)},
+		cmn.KVPair{Key:  keeper.GetValidatorCurrentRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(currentRewards)},
+		cmn.KVPair{Key:  keeper.GetValidatorAccumulatedCommissionKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(commission)},
+		cmn.KVPair{Key:  keeper.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshalBinaryLengthPrefixed(slashEvent)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

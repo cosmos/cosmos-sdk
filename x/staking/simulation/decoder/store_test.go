@@ -1,4 +1,4 @@
-package simulation
+package decoder
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,7 +27,7 @@ func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	staking.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 	return
 }
 
@@ -36,18 +36,18 @@ func TestDecodeStore(t *testing.T) {
 
 	bondTime := time.Now().UTC()
 
-	val := staking.NewValidator(valAddr1, delPk1, staking.NewDescription("test", "test", "test", "test"))
-	del := staking.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
-	ubd := staking.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
-	red := staking.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
+	val := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test"))
+	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
+	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
+	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: staking.LastTotalPowerKey, Value: cdc.MustMarshalBinaryLengthPrefixed(sdk.OneInt())},
-		cmn.KVPair{Key: staking.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(val)},
-		cmn.KVPair{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-		cmn.KVPair{Key: staking.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(del)},
-		cmn.KVPair{Key: staking.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(ubd)},
-		cmn.KVPair{Key: staking.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(red)},
+		cmn.KVPair{Key: types.LastTotalPowerKey, Value: cdc.MustMarshalBinaryLengthPrefixed(sdk.OneInt())},
+		cmn.KVPair{Key: types.GetValidatorKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(val)},
+		cmn.KVPair{Key: types.LastValidatorPowerKey, Value: valAddr1.Bytes()},
+		cmn.KVPair{Key: types.GetDelegationKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(del)},
+		cmn.KVPair{Key: types.GetUBDKey(delAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(ubd)},
+		cmn.KVPair{Key: types.GetREDKey(delAddr1, valAddr1, valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(red)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

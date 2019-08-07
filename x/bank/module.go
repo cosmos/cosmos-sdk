@@ -85,6 +85,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.accountKeeper)
 }
 
+// RegisterStoreDecoder doesn't register any KVPair
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
 // module message route name
 func (AppModule) Route() string { return RouterKey }
 

@@ -1,4 +1,4 @@
-package simulation
+package decoder
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,21 +27,21 @@ func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	slashing.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 	return
 }
 
 func TestDecodeStore(t *testing.T) {
 	cdc := makeTestCodec()
 
-	info := slashing.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
+	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	bechPK := sdk.MustBech32ifyAccPub(delPk1)
 	missed := true
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: slashing.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
-		cmn.KVPair{Key: slashing.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
+		cmn.KVPair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
+		cmn.KVPair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
+		cmn.KVPair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 

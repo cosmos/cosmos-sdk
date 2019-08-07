@@ -217,7 +217,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgSetWithdrawAddress(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -228,7 +228,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgWithdrawDelegatorReward(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -239,7 +239,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgWithdrawValidatorCommission(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

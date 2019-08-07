@@ -88,7 +88,7 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterStoreDecoder registers the function to decode the types stored in the
 // KVStore
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) string) {
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
 }
 

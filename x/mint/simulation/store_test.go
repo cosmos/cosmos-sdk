@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,10 +23,10 @@ func makeTestCodec() (cdc *codec.Codec) {
 
 func TestDecodeStore(t *testing.T) {
 	cdc := makeTestCodec()
-	minter := mint.NewMinter(sdk.OneDec(), sdk.NewDec(15))
+	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
+		cmn.KVPair{Key: types.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(minter)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
 	tests := []struct {

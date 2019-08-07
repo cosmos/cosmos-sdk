@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation/decoder"
 )
 
 var (
@@ -90,8 +90,8 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterStoreDecoder registers the function to decode the types stored in the
 // KVStore
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) string) {
-	sdr[StoreKey] = simulation.DecodeStore
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = decoder.DecodeStore
 }
 
 // module message route name

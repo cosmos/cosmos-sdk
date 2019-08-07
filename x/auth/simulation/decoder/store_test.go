@@ -1,10 +1,8 @@
-package simulation
+package decoder
 
 import (
-	"encoding/binary"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,38 +27,26 @@ func makeTestCodec() (cdc *codec.Codec) {
 	cdc = codec.New()
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	gov.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 	return
 }
 
 func TestDecodeStore(t *testing.T) {
 	cdc := makeTestCodec()
-
-	endTime := time.Now().UTC()
-
-	content := gov.ContentFromProposalType("test", "test", gov.ProposalTypeText)
-	proposal := gov.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
-	proposalIDBz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(proposalIDBz, 1)
-	deposit := gov.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
-	vote := gov.NewVote(1, delAddr1, gov.OptionYes)
+	acc := types.NewBaseAccountWithAddress(delAddr1)
+	globalAccNumber := uint64(10)
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: gov.ProposalKey(1), Value: cdc.MustMarshalBinaryLengthPrefixed(proposal)},
-		cmn.KVPair{Key: gov.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-		cmn.KVPair{Key: gov.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(deposit)},
-		cmn.KVPair{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(vote)},
+		cmn.KVPair{Key: types.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(acc)},
+		cmn.KVPair{Key: types.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(globalAccNumber)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
-
 	tests := []struct {
 		name        string
 		expectedLog string
 	}{
-		{"proposals", fmt.Sprintf("%v\n%v", proposal, proposal)},
-		{"proposal IDs", "proposalIDA: 1\nProposalIDB: 1"},
-		{"deposits", fmt.Sprintf("%v\n%v", deposit, deposit)},
-		{"votes", fmt.Sprintf("%v\n%v", vote, vote)},
+		{"Minter", fmt.Sprintf("%v\n%v", acc, acc)},
+		{"GlobalAccNumber", fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumber, globalAccNumber)},
 		{"other", ""},
 	}
 

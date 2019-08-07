@@ -1,4 +1,4 @@
-package simulation
+package decoder
 
 import (
 	"bytes"
@@ -10,25 +10,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type
 func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
-	case bytes.Equal(kvA.Key[:1], slashing.ValidatorSigningInfoKey):
-		var infoA, infoB slashing.ValidatorSigningInfo
+	case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKey):
+		var infoA, infoB types.ValidatorSigningInfo
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
 		return fmt.Sprintf("%v\n%v", infoA, infoB)
 
-	case bytes.Equal(kvA.Key[:1], slashing.ValidatorMissedBlockBitArrayKey):
+	case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKey):
 		var missedA, missedB bool
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
 		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA, missedB)
 
-	case bytes.Equal(kvA.Key[:1], slashing.AddrPubkeyRelationKey):
+	case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &pubKeyA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &pubKeyB)

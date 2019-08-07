@@ -132,6 +132,7 @@ type AppModule interface {
 
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
+	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
 
 	// routes
 	Route() string
@@ -139,6 +140,7 @@ type AppModule interface {
 	QuerierRoute() string
 	NewQuerierHandler() sdk.Querier
 
+	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
@@ -158,6 +160,9 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 
 // register invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// RegisterStoreDecoder empty store decoder registry
+func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // module message route ngame
 func (GenesisOnlyAppModule) Route() string { return "" }
@@ -236,8 +241,8 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	}
 }
 
-// register all module routes and module querier routes
-func (m *Manager) RegisterStoreDecoders(sd map[string]func(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string) {
+// RegisterStoreDecoders registers the each type decoder with the respective key
+func (m *Manager) RegisterStoreDecoders(sd sdk.StoreDecoderRegistry) {
 	for _, module := range m.Modules {
 		module.RegisterStoreDecoder(sd)
 	}

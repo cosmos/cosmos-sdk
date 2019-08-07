@@ -1,4 +1,4 @@
-package simulation
+package decoder
 
 import (
 	"bytes"
@@ -8,19 +8,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding auth type
 func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
-	case bytes.Equal(kvA.Key[:1], auth.AddressStoreKeyPrefix):
+	case bytes.Equal(kvA.Key[:1], types.AddressStoreKeyPrefix):
 		var accA, accB exported.Account
 		cdcA.MustUnmarshalBinaryBare(kvA.Value, &accA)
 		cdcB.MustUnmarshalBinaryBare(kvB.Value, &accB)
 		return fmt.Sprintf("%v\n%v", accA, accB)
-	case bytes.Equal(kvA.Key, auth.GlobalAccountNumberKey):
+	case bytes.Equal(kvA.Key, types.GlobalAccountNumberKey):
 		var globalAccNumberA, globalAccNumberB uint64
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &globalAccNumberA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &globalAccNumberB)

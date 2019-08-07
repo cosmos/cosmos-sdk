@@ -8,14 +8,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding supply type
 func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
-	case bytes.Equal(kvA.Key[:1], supply.SupplyKey):
-		var supplyA, supplyB supply.Supply
+	case bytes.Equal(kvA.Key[:1], keeper.SupplyKey):
+		var supplyA, supplyB types.Supply
 		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
 		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)

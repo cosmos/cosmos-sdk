@@ -13,12 +13,12 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding supply type
-func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], keeper.SupplyKey):
 		var supplyA, supplyB types.Supply
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &supplyA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &supplyB)
 		return fmt.Sprintf("%v\n%v", supplyB, supplyB)
 	default:
 		panic(fmt.Sprintf("invalid supply key %X", kvA.Key))

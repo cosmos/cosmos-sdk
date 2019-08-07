@@ -14,24 +14,24 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding slashing type
-func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.ValidatorSigningInfoKey):
 		var infoA, infoB types.ValidatorSigningInfo
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
 		return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 	case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKey):
 		var missedA, missedB bool
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
 		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA, missedB)
 
 	case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &pubKeyA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &pubKeyB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &pubKeyA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &pubKeyB)
 		bechPKA := sdk.MustBech32ifyAccPub(pubKeyA)
 		bechPKB := sdk.MustBech32ifyAccPub(pubKeyB)
 		return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPKA, bechPKB)

@@ -110,7 +110,6 @@ func NewSimApp(
 ) *SimApp {
 
 	cdc := MakeCodec()
-	storeDecoderRegistry := make(sdk.StoreDecoderRegistry)
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -195,7 +194,7 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
-	app.mm.RegisterStoreDecoders(storeDecoderRegistry)
+	app.mm.RegisterStoreDecoders()
 
 	// initialize stores
 	app.MountKVStores(keys)

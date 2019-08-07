@@ -14,12 +14,12 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding distribution type
-func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], keeper.FeePoolKey):
 		var feePoolA, feePoolB types.FeePool
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &feePoolA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &feePoolB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &feePoolA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &feePoolB)
 		return fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ProposerKey):
@@ -27,8 +27,8 @@ func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ValidatorOutstandingRewardsPrefix):
 		var rewardsA, rewardsB types.ValidatorOutstandingRewards
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
 		return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.DelegatorWithdrawAddrPrefix):
@@ -36,32 +36,32 @@ func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 
 	case bytes.Equal(kvA.Key[:1],  keeper.DelegatorStartingInfoPrefix):
 		var infoA, infoB types.DelegatorStartingInfo
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &infoA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &infoB)
 		return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ValidatorHistoricalRewardsPrefix):
 		var rewardsA, rewardsB types.ValidatorHistoricalRewards
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
 		return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ValidatorCurrentRewardsPrefix):
 		var rewardsA, rewardsB types.ValidatorCurrentRewards
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &rewardsA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &rewardsB)
 		return fmt.Sprintf("%v\n%v", rewardsA, rewardsB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ValidatorAccumulatedCommissionPrefix):
 		var commissionA, commissionB types.ValidatorAccumulatedCommission
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &commissionA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &commissionB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &commissionA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &commissionB)
 		return fmt.Sprintf("%v\n%v", commissionA, commissionB)
 
 	case bytes.Equal(kvA.Key[:1],  keeper.ValidatorSlashEventPrefix):
 		var eventA, eventB types.ValidatorSlashEvent
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &eventA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &eventB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &eventA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &eventB)
 		return fmt.Sprintf("%v\n%v", eventA, eventB)
 
 	default:

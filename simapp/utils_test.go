@@ -85,7 +85,7 @@ func TestGetSimulationLog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.store, func(t *testing.T) {
-			require.NotPanics(t, func() { GetSimulationLog(tt.store, cdc, cdc, tt.kvPairs) }, tt.store)
+			require.NotPanics(t, func() { GetSimulationLog(tt.store, make(sdk.StoreDecoderRegistry) , cdc, tt.kvPairs) }, tt.store)
 		})
 	}
 }

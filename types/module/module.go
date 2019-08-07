@@ -189,6 +189,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // operations for a group of modules
 type Manager struct {
 	Modules            map[string]AppModule
+	StoreDecoders 		sdk.StoreDecoderRegistry
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -199,6 +200,7 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 
 	moduleMap := make(map[string]AppModule)
+	decoders := make(sdk.StoreDecoderRegistry)
 	var modulesStr []string
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
@@ -207,6 +209,7 @@ func NewManager(modules ...AppModule) *Manager {
 
 	return &Manager{
 		Modules:            moduleMap,
+		StoreDecoders: decoders,
 		OrderInitGenesis:   modulesStr,
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,
@@ -242,9 +245,9 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // RegisterStoreDecoders registers the each type decoder with the respective key
-func (m *Manager) RegisterStoreDecoders(sd sdk.StoreDecoderRegistry) {
+func (m *Manager) RegisterStoreDecoders() {
 	for _, module := range m.Modules {
-		module.RegisterStoreDecoder(sd)
+		module.RegisterStoreDecoder(m.StoreDecoders)
 	}
 }
 

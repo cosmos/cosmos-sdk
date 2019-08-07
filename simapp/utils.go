@@ -497,7 +497,7 @@ func GenStakingGenesisState(
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(sdr sdk.StoreDecoderRegistry, storeName string, cdcA, cdcB *codec.Codec, kvs []cmn.KVPair) (log string) {
+func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, cdc *codec.Codec, kvs []cmn.KVPair) (log string) {
 	if len(kvs)%2 != 0 {
 		panic("KVPairs are not multiple of 2. There should be one for each app store")
 	}
@@ -511,10 +511,10 @@ func GetSimulationLog(sdr sdk.StoreDecoderRegistry, storeName string, cdcA, cdcB
 			// skip if the value doesn't have any bytes
 			continue
 		}
-
+		
 		decoder, ok := sdr[storeName]
 		if ok {
-			log += decoder(cdcA, cdcB, kvA, kvB)
+			log += decoder(cdc, kvA, kvB)
 		} else {
 			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 		}

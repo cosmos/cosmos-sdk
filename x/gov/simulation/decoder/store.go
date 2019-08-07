@@ -13,12 +13,12 @@ import (
 )
 
 // DecodeStore unmarshals the KVPair's Value to the corresponding gov type
-func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
+func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 	switch {
 	case bytes.Equal(kvA.Key[:1], types.ProposalsKeyPrefix):
 		var proposalA, proposalB types.Proposal
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &proposalA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &proposalB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &proposalA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &proposalB)
 		return fmt.Sprintf("%v\n%v", proposalA, proposalB)
 
 	case bytes.Equal(kvA.Key[:1], types.ActiveProposalQueuePrefix),
@@ -30,14 +30,14 @@ func DecodeStore(cdcA, cdcB *codec.Codec, kvA, kvB cmn.KVPair) string {
 
 	case bytes.Equal(kvA.Key[:1], types.DepositsKeyPrefix):
 		var depositA, depositB types.Deposit
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &depositA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &depositB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &depositA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &depositB)
 		return fmt.Sprintf("%v\n%v", depositA, depositB)
 
 	case bytes.Equal(kvA.Key[:1], types.VotesKeyPrefix):
 		var voteA, voteB types.Vote
-		cdcA.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &voteA)
-		cdcB.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &voteB)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &voteA)
+		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &voteB)
 		return fmt.Sprintf("%v\n%v", voteA, voteB)
 
 	default:

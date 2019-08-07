@@ -6,7 +6,7 @@
 
 ## Synopsis
 
-This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](./transactions.md). The transaction will be referred to as `Tx`.
+This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/tx-msgs.md#transactions). The transaction will be referred to as `Tx`.
 
 1. [Creation](#creation)
 2. [Addition to Mempool](#addition-to-mempool)
@@ -18,7 +18,7 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ### Transaction Creation
 
-One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((./interfaces.md#cli)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
+One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((../interfaces/cli.md)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
 ```bash
 [appname] tx [command] [args] [flags]
@@ -26,13 +26,13 @@ One of the main application interfaces is the command-line interface. The transa
 
 This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node.
 
-There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](../core/accounts-fees.md#accounts) the transaction is orginating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
+There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees-gas.md#accounts) the transaction is orginating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
 
 #### Gas and Fees
 
-Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./acccounts-fees.md#fees):
+Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./acccounts-fees-gas.md#fees):
 
-* `--gas` refers to how much [gas](../core/fees-signature.md#gas), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
+* `--gas` refers to how much [gas](./accounts-fees-gas.md#gas), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
 * `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 * `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 * `--fees` specifies how much in fees the user is willing to pay in total.
@@ -64,27 +64,27 @@ The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`,
 
 ***Stateless*** checks do not require nodes to access state - light clients or offline nodes can do them - and are thus less computationally expensive. Stateless checks include making sure addresses are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
 
-***Stateful*** checks validate transactions and messages based on a committed state. Examples include checking that the relevant values exist and are able to be transacted with, the address has sufficient funds, and the sender is authorized or has the correct ownership to transact. At any given moment, full-nodes typically have [multiple versions](./baseapp.md#volatile-states) of the application's internal state for different purposes. For example, nodes will execute state changes while in the process of verifying transactions, but still need a copy of the last committed state in order to answer queries - they should not respond using state with uncommitted changes.
+***Stateful*** checks validate transactions and messages based on a committed state. Examples include checking that the relevant values exist and are able to be transacted with, the address has sufficient funds, and the sender is authorized or has the correct ownership to transact. At any given moment, full-nodes typically have [multiple versions](../core/baseapp.md#volatile-states) of the application's internal state for different purposes. For example, nodes will execute state changes while in the process of verifying transactions, but still need a copy of the last committed state in order to answer queries - they should not respond using state with uncommitted changes.
 
 In order to verify `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_ checks. Further validation happens later in the [`DeliverTx`](#delivertx) stage. `CheckTx` goes through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its encoded (i.e. using [Amino](https://tendermint.com/docs/spec/blockchain/encoding.html#amino)) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](./baseapp.md#runtx-and-runmsgs) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its encoded (i.e. using [Amino](https://tendermint.com/docs/spec/blockchain/encoding.html#amino)) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/baseapp.md#runtx-and-runmsgs) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
 
 ### ValidateBasic
 
-[Messages](./tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](./msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[Messages](../core/tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](../core/msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 
 ### AnteHandler
 
-The [`AnteHandler`](./baseapp.md#antehandler), which is technically optional but should be defined for each application, is run. A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the handler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
+The [`AnteHandler`](../core/baseapp.md#antehandler), which is technically optional but should be defined for each application, is run. A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the handler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
 For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/auth) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 
-The [`Context`](./context.md) used to keep track of important data while `AnteHandler` is executing `Tx` keeps a `GasMeter` which tracks how much gas has been used. The user-provided amount for gas is known as the value `GasWanted`. If `GasConsumed`, the amount of gas consumed so far, ever exceeds `GasWanted`, execution stops. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is less than their locally defined `min-gas-prices`.
+The [`Context`](../core/context.md) used to keep track of important data while `AnteHandler` is executing `Tx` keeps a `GasMeter` which tracks how much gas has been used. The user-provided amount for gas is known as the value `GasWanted`. If `GasConsumed`, the amount of gas consumed so far, ever exceeds `GasWanted`, execution stops. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is less than their locally defined `min-gas-prices`.
 
 ### Discard or Addition to Mempool
 
@@ -143,11 +143,11 @@ The next step of consensus is to execute the transactions to fully validate them
 
 ### DeliverTx
 
-The `DeliverTx` ABCI function defined in [`baseapp`](./baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
+The `DeliverTx` ABCI function defined in [`baseapp`](../core/baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
 
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 * **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid ones. One difference here is that the `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices`since that value is local to each node - differing values across nodes would yield nondeterministic results.
-* **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](./baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
+* **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
 * **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.
 * **Gas:** While `Tx` is being delivered, a `GasMeter` is used to keep track of how much gas is left for each transaction; if execution completes, `GasUsed` is set and returned in the `Response`. If execution halts because `GasMeter` has run out or something else goes wrong, a deferred function at the end appropriately errors or panics.
 
@@ -163,7 +163,7 @@ The consensus layer may technically run any consensus algorithm to come to agree
 
 #### Commit
 
-In the **Commit** stage, full-nodes commit to a new block to be added to the blockchain and finalize the state changes on the application layer. A new state root is generated to serve as a merkle proof for the state change. Applications use the [`Commit`](./baseapp.md#commit) ABCI method inherited from [Baseapp](./baseapp.md); it syncs all the states by writing the `deliverState` into the application's internal state. As soon as the state changes are committed, `checkState` and `queryState` start afresh from the most recently committed state and `deliverState` resets to `nil` in order to be consistent and reflect the changes.
+In the **Commit** stage, full-nodes commit to a new block to be added to the blockchain and finalize the state changes on the application layer. A new state root is generated to serve as a merkle proof for the state change. Applications use the [`Commit`](../core/baseapp.md#commit) ABCI method inherited from [Baseapp](./baseapp.md); it syncs all the states by writing the `deliverState` into the application's internal state. As soon as the state changes are committed, `checkState` and `queryState` start afresh from the most recently committed state and `deliverState` resets to `nil` in order to be consistent and reflect the changes.
 
 Note that not all blocks have the same number of transactions and it is possible for consensus to result in a `nil` block or one with none at all. In a public blockchain network, it is also possible for validators to be **byzantine**, or malicious, which may prevent `Tx` from being committed in the blockchain. Possible malicious behaviors include the proposer deciding to censor `Tx` by excluding it from the block or a validator voting against the block.
 
@@ -171,4 +171,4 @@ At this point, the transaction lifecycle of `Tx` is over: nodes have verified it
 
 ## Next
 
-Learn about [Baseapp](./baseapp.md).
+Learn about [Baseapp](../core/baseapp.md).

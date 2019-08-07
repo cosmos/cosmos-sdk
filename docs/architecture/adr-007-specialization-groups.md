@@ -128,7 +128,7 @@ type SpecializationGroup interface {
 
 ### Negative
 
- - could be used to negatively increase centralization within a community
+ - could be used to increase centralization within a community
 
 ### Neutral
 

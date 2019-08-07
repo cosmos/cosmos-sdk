@@ -1,3 +1,4 @@
+// nolint: misspell
 package client_test
 
 import (

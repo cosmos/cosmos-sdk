@@ -4,19 +4,20 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
-
-	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -128,6 +129,143 @@ func TestLoadVersion(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	app.Commit()
 	testLoadVersionHelper(t, app, int64(2), commitID2)
+}
+
+func useDefaultLoader(app *BaseApp) {
+	app.SetStoreLoader(DefaultStoreLoader)
+}
+
+func useUpgradeLoader(upgrades *store.StoreUpgrades) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.SetStoreLoader(StoreLoaderWithUpgrade(upgrades))
+	}
+}
+
+func useFileUpgradeLoader(upgradeInfoPath string) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.SetStoreLoader(UpgradeableStoreLoader(upgradeInfoPath))
+	}
+}
+
+func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db)
+	rs.SetPruning(store.PruneSyncable)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	err := rs.LoadLatestVersion()
+	require.Nil(t, err)
+	require.Equal(t, int64(0), rs.LastCommitID().Version)
+
+	// write some data in substore
+	kv, _ := rs.GetStore(key).(store.KVStore)
+	require.NotNil(t, kv)
+	kv.Set(k, v)
+	commitID := rs.Commit()
+	require.Equal(t, int64(1), commitID.Version)
+}
+
+func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	rs := rootmulti.NewStore(db)
+	rs.SetPruning(store.PruneSyncable)
+	key := sdk.NewKVStoreKey(storeKey)
+	rs.MountStoreWithDB(key, store.StoreTypeIAVL, nil)
+	err := rs.LoadLatestVersion()
+	require.Nil(t, err)
+	require.Equal(t, ver, rs.LastCommitID().Version)
+
+	// query data in substore
+	kv, _ := rs.GetStore(key).(store.KVStore)
+	require.NotNil(t, kv)
+	require.Equal(t, v, kv.Get(k))
+}
+
+// Test that we can make commits and then reload old versions.
+// Test that LoadLatestVersion actually does.
+func TestSetLoader(t *testing.T) {
+	// write a renamer to a file
+	f, err := ioutil.TempFile("", "upgrade-*.json")
+	require.NoError(t, err)
+	data := []byte(`{"renamed":[{"old_key": "bnk", "new_key": "banker"}]}`)
+	_, err = f.Write(data)
+	require.NoError(t, err)
+	configName := f.Name()
+	require.NoError(t, f.Close())
+
+	// make sure it exists before running everything
+	_, err = os.Stat(configName)
+	require.NoError(t, err)
+
+	cases := map[string]struct {
+		setLoader    func(*BaseApp)
+		origStoreKey string
+		loadStoreKey string
+	}{
+		"don't set loader": {
+			origStoreKey: "foo",
+			loadStoreKey: "foo",
+		},
+		"default loader": {
+			setLoader:    useDefaultLoader,
+			origStoreKey: "foo",
+			loadStoreKey: "foo",
+		},
+		"rename with inline opts": {
+			setLoader: useUpgradeLoader(&store.StoreUpgrades{
+				Renamed: []store.StoreRename{{
+					OldKey: "foo",
+					NewKey: "bar",
+				}},
+			}),
+			origStoreKey: "foo",
+			loadStoreKey: "bar",
+		},
+		"file loader with missing file": {
+			setLoader:    useFileUpgradeLoader(configName + "randomchars"),
+			origStoreKey: "bnk",
+			loadStoreKey: "bnk",
+		},
+		"file loader with existing file": {
+			setLoader:    useFileUpgradeLoader(configName),
+			origStoreKey: "bnk",
+			loadStoreKey: "banker",
+		},
+	}
+
+	k := []byte("key")
+	v := []byte("value")
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// prepare a db with some data
+			db := dbm.NewMemDB()
+			initStore(t, db, tc.origStoreKey, k, v)
+
+			// load the app with the existing db
+			opts := []func(*BaseApp){SetPruning(store.PruneSyncable)}
+			if tc.setLoader != nil {
+				opts = append(opts, tc.setLoader)
+			}
+			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
+			capKey := sdk.NewKVStoreKey(MainStoreKey)
+			app.MountStores(capKey)
+			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
+			err := app.LoadLatestVersion(capKey)
+			require.Nil(t, err)
+
+			// "execute" one block
+			app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: 2}})
+			res := app.Commit()
+			require.NotNil(t, res.Data)
+
+			// check db is properly updated
+			checkStore(t, db, 2, tc.loadStoreKey, k, v)
+			checkStore(t, db, 2, tc.loadStoreKey, []byte("foo"), nil)
+		})
+	}
+
+	// ensure config file was deleted
+	_, err = os.Stat(configName)
+	require.True(t, os.IsNotExist(err))
 }
 
 func TestAppVersionSetterGetter(t *testing.T) {
@@ -995,7 +1133,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		fmt.Printf("debug i: %v\n", i)
 		tx := tc.tx
 
 		// reset the block gas

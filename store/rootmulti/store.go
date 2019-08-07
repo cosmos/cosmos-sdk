@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -100,63 +100,124 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key].(types.CommitKVStore)
 }
 
-// Implements CommitMultiStore.
-func (rs *Store) LoadLatestVersion() error {
+// LoadLatestVersionAndUpgrade implements CommitMultiStore
+func (rs *Store) LoadLatestVersionAndUpgrade(upgrades *types.StoreUpgrades) error {
 	ver := getLatestVersion(rs.db)
-	return rs.LoadVersion(ver)
+	return rs.loadVersion(ver, upgrades)
 }
 
-// Implements CommitMultiStore.
-func (rs *Store) LoadVersion(ver int64) error {
-	if ver == 0 {
-		// Special logic for version 0 where there is no need to get commit
-		// information.
-		for key, storeParams := range rs.storesParams {
-			store, err := rs.loadCommitStoreFromParams(key, types.CommitID{}, storeParams)
-			if err != nil {
-				return fmt.Errorf("failed to load Store: %v", err)
-			}
+// LoadVersionAndUpgrade allows us to rename substores while loading an older version
+func (rs *Store) LoadVersionAndUpgrade(ver int64, upgrades *types.StoreUpgrades) error {
+	return rs.loadVersion(ver, upgrades)
+}
 
-			rs.stores[key] = store
+// LoadLatestVersion implements CommitMultiStore.
+func (rs *Store) LoadLatestVersion() error {
+	ver := getLatestVersion(rs.db)
+	return rs.loadVersion(ver, nil)
+}
+
+// LoadVersion implements CommitMultiStore.
+func (rs *Store) LoadVersion(ver int64) error {
+	return rs.loadVersion(ver, nil)
+}
+
+func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
+	infos := make(map[string]storeInfo)
+	var lastCommitID types.CommitID
+
+	// load old data if we are not version 0
+	if ver != 0 {
+		cInfo, err := getCommitInfo(rs.db, ver)
+		if err != nil {
+			return err
 		}
 
-		rs.lastCommitID = types.CommitID{}
-		return nil
+		// convert StoreInfos slice to map
+		for _, storeInfo := range cInfo.StoreInfos {
+			infos[storeInfo.Name] = storeInfo
+		}
+		lastCommitID = cInfo.CommitID()
 	}
 
-	cInfo, err := getCommitInfo(rs.db, ver)
-	if err != nil {
-		return err
-	}
-
-	// convert StoreInfos slice to map
-	infos := make(map[types.StoreKey]storeInfo)
-	for _, storeInfo := range cInfo.StoreInfos {
-		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
-	}
-
-	// load each Store
+	// load each Store (note this doesn't panic on unmounted keys now)
 	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
-		var id types.CommitID
 
-		info, ok := infos[key]
-		if ok {
-			id = info.Core.CommitID
-		}
-
-		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+		// Load it
+		store, err := rs.loadCommitStoreFromParams(key, rs.getCommitID(infos, key.Name()), storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
-
 		newStores[key] = store
+
+		// If it was deleted, remove all data
+		if upgrades.IsDeleted(key.Name()) {
+			if err := deleteKVStore(store.(types.KVStore)); err != nil {
+				return fmt.Errorf("failed to delete store %s: %v", key.Name(), err)
+			}
+		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
+			// handle renames specially
+			// make an unregistered key to satify loadCommitStore params
+			oldKey := types.NewKVStoreKey(oldName)
+			oldParams := storeParams
+			oldParams.key = oldKey
+
+			// load from the old name
+			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
+			if err != nil {
+				return fmt.Errorf("failed to load old Store '%s': %v", oldName, err)
+			}
+
+			// move all data
+			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+				return fmt.Errorf("failed to move store %s -> %s: %v", oldName, key.Name(), err)
+			}
+		}
 	}
 
-	rs.lastCommitID = cInfo.CommitID()
+	rs.lastCommitID = lastCommitID
 	rs.stores = newStores
 
 	return nil
+}
+
+func (rs *Store) getCommitID(infos map[string]storeInfo, name string) types.CommitID {
+	info, ok := infos[name]
+	if !ok {
+		return types.CommitID{}
+	}
+	return info.Core.CommitID
+}
+
+func deleteKVStore(kv types.KVStore) error {
+	// Note that we cannot write while iterating, so load all keys here, delete below
+	var keys [][]byte
+	itr := kv.Iterator(nil, nil)
+	for itr.Valid() {
+		keys = append(keys, itr.Key())
+		itr.Next()
+	}
+	itr.Close()
+
+	for _, k := range keys {
+		kv.Delete(k)
+	}
+	return nil
+}
+
+// we simulate move by a copy and delete
+func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
+	// we read from one and write to another
+	itr := oldDB.Iterator(nil, nil)
+	for itr.Valid() {
+		newDB.Set(itr.Key(), itr.Value())
+		itr.Next()
+	}
+	itr.Close()
+
+	// then delete the old store
+	return deleteKVStore(oldDB)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -380,14 +441,15 @@ func parsePath(path string) (storeName string, subpath string, err errors.Error)
 }
 
 //----------------------------------------
-
+// Note: why do we use key and params.key in different places. Seems like there should be only one key used.
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitStore, err error) {
 	var db dbm.DB
 
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
 	} else {
-		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
+		prefix := "s/k:" + params.key.Name() + "/"
+		db = dbm.NewPrefixDB(rs.db, []byte(prefix))
 	}
 
 	switch params.typ {
@@ -411,15 +473,6 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
-}
-
-func (rs *Store) nameToKey(name string) types.StoreKey {
-	for key := range rs.storesParams {
-		if key.Name() == name {
-			return key
-		}
-	}
-	panic("Unknown name " + name)
 }
 
 //----------------------------------------

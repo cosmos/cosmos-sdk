@@ -1,9 +1,10 @@
 package cachemulti
 
 import (
+	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -140,5 +141,9 @@ func (cms Store) GetStore(key types.StoreKey) types.Store {
 
 // GetKVStore returns an underlying KVStore by key.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
-	return cms.stores[key].(types.KVStore)
+	store := cms.stores[key]
+	if key == nil {
+		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
+	}
+	return store.(types.KVStore)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
+	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -25,18 +26,28 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	tkeyStaking := sdk.NewTransientStoreKey(TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
-	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
+	feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
+	notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
+	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
+
+	blacklistedAddrs := make(map[string]bool)
+	blacklistedAddrs[feeCollector.String()] = true
+	blacklistedAddrs[notBondedPool.String()] = true
+	blacklistedAddrs[bondPool.String()] = true
+
+	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
 	maccPerms := map[string][]string{
 		auth.FeeCollectorName:   nil,
-		types.NotBondedPoolName: []string{supply.Burner, supply.Staking},
-		types.BondedPoolName:    []string{supply.Burner, supply.Staking},
+		types.NotBondedPoolName: {supply.Burner, supply.Staking},
+		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, maccPerms)
 	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
-	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper, supplyKeeper))
+	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper, supplyKeeper,
+		[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool}))
 
 	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking, keySupply))
 	return mApp, keeper
@@ -55,18 +66,15 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 
 // getInitChainer initializes the chainer of the mock app and sets the genesis
 // state. It returns an empty ResponseInitChain.
-func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper,
+	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
 		// set module accounts
-		feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
-		notBondedPool := supply.NewEmptyModuleAccount(types.NotBondedPoolName, supply.Burner, supply.Staking)
-		bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
-
-		supplyKeeper.SetModuleAccount(ctx, feeCollector)
-		supplyKeeper.SetModuleAccount(ctx, bondPool)
-		supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+		for _, macc := range blacklistedAddrs {
+			supplyKeeper.SetModuleAccount(ctx, macc)
+		}
 
 		stakingGenesis := DefaultGenesisState()
 		validators := InitGenesis(ctx, keeper, accountKeeper, supplyKeeper, stakingGenesis)

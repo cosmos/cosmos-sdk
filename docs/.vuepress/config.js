@@ -11,7 +11,7 @@ module.exports = {
     repo: "cosmos/cosmos-sdk",
     editLinks: true,
     docsDir: "docs",
-    docsBranch: "develop",
+    docsBranch: "master",
     editLinkText: "Edit this page on Github",
     lastUpdated: true,
     algolia: {

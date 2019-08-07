@@ -20,3 +20,9 @@ it stands today.
 If recorded decisions turned out to be lacking, convene a discussion, record the new decisions here, and then modify the code to match.
 
 Note the context/background should be written in the present tense.
+
+Please add a entry below in your Pull Request for an ADR.
+
+### ADR Table of Contents
+
+- [ADR-002-Docs-Structure](./adr-002-docs-structure.md)

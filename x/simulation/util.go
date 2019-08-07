@@ -18,19 +18,15 @@ func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants
 
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 
-	var broken bool
 	var invariantResults []string
 	for i := 0; i < len(invs); i++ {
 		res, stop := invs[i](ctx)
 		if stop {
-			broken = true
-			invariantResults = append(invariantResults, res)
-		} else if allInvariants {
 			invariantResults = append(invariantResults, res)
 		}
 	}
 
-	if broken {
+	if len(invariantResults) > 0 {
 		fmt.Printf("Invariants broken after %s\n\n", event)
 		for _, res := range invariantResults {
 			fmt.Printf("%s\n", res)

@@ -124,7 +124,7 @@ func (coin Coin) Sub(coinB Coin) Coin {
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		panic("negative count amount")
+		panic("negative coin amount")
 	}
 
 	return res

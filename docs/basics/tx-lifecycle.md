@@ -18,7 +18,7 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ### Transaction Creation
 
-One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line]((../interfaces/cli.md)), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
+One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../interfaces/cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
 ```bash
 [appname] tx [command] [args] [flags]
@@ -30,7 +30,7 @@ There are several required and optional flags for transaction creation. The `--f
 
 #### Gas and Fees
 
-Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./acccounts-fees-gas.md#fees):
+Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./accounts-fees-gas.md#fees):
 
 * `--gas` refers to how much [gas](./accounts-fees-gas.md#gas), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
 * `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
@@ -51,7 +51,7 @@ appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --
 
 #### Other Transaction Creation Methods
 
-The command-line is an easy way to interact with an application, but `Tx` can also be created using a [REST interface](../interfaces/rest.md) or some other entrypoint defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](lunie.io) and signing it with a Ledger Nano S).
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [REST interface](../interfaces/rest.md) or some other entrypoint defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](https://lunie.io/#/) and signing it with a Ledger Nano S).
 
 ## Addition to Mempool
 
@@ -74,7 +74,7 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[Messages](../core/tx-msgs.md#messages) are extracted from `Tx` and [`ValidateBasic`](../core/msg-tx.md#validatebasic), a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[Messages](../core/tx-msgs.md#messages) are extracted from `Tx` and `ValidateBasic`, a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 
 ### AnteHandler
 
@@ -143,11 +143,12 @@ The next step of consensus is to execute the transactions to fully validate them
 
 ### DeliverTx
 
-The `DeliverTx` ABCI function defined in [`baseapp`](../core/baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
+The `DeliverTx` ABCI function defined in [`baseapp`](../core/baseapp.md) does the bulk of the state change work: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, `DeliverTx` is almost identical to `CheckTx` but calls the [`runTx`](../core/baseapp.md#runtx-and-runmsgs) function in deliver mode instead of check mode. Instead of using their `checkState` or `queryState`, full-nodes select a new copy, `deliverState`, to deliver `Tx`:
 
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 * **Checks:** Full-nodes call `validateBasicMsgs` and the `AnteHandler` again. This second check happens because they may not have seen the same transactions during the Addition to Mempool stage and a malicious proposer may have included invalid ones. One difference here is that the `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices`since that value is local to each node - differing values across nodes would yield nondeterministic results.
-* **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](./msg-tx.md#route) function is called to retrieve the route name and find the `Handler` within the module.
+* **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `baseapp` needs to know which module to find the appropriate Handler. Thus, the [`Route`](../core/tx-msgs.md#route)
+ function is called to retrieve the route name and find the `Handler` within the module.
 * **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each message's actions and causes state changes to persist in `deliverTxState`. It is defined within a `Msg`'s module and writes to the appropriate stores within the module.
 * **Gas:** While `Tx` is being delivered, a `GasMeter` is used to keep track of how much gas is left for each transaction; if execution completes, `GasUsed` is set and returned in the `Response`. If execution halts because `GasMeter` has run out or something else goes wrong, a deferred function at the end appropriately errors or panics.
 

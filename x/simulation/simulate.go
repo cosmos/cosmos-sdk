@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 	"testing"
 	"time"
@@ -126,14 +125,12 @@ func SimulateFromSeed(
 	if !testingMode {
 		b.ResetTimer()
 	} else {
-		// Recover logs in case of panic
+		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Fprintf(w, "panic with err: %v\n", r)
-				stackTrace := string(debug.Stack())
-				fmt.Println(stackTrace)
+				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d; %v\n", header.Height, r)
 				logWriter.PrintLogs()
-				err = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
+				panic(r)
 			}
 		}()
 	}

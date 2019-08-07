@@ -118,7 +118,7 @@ func DefaultVotingParams() VotingParams {
 	return NewVotingParams(DefaultPeriod)
 }
 
-// String implements stringer insterface
+// String implements stringer interface
 func (vp VotingParams) String() string {
 	return fmt.Sprintf(`Voting Params:
   Voting Period:      %s`, vp.VotingPeriod)

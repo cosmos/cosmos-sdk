@@ -19,12 +19,13 @@ func TestVotes(t *testing.T) {
 	var invalidOption types.VoteOption
 	invalidOption = 0x10
 
-	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes))
-	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], types.OptionYes))
-	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], invalidOption))
+	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes), "proposal not on voting period")
+	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], types.OptionYes), "invalid proposal ID")
 
 	proposal.Status = types.StatusVotingPeriod
 	keeper.SetProposal(ctx, proposal)
+
+	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], invalidOption), "invalid option")
 
 	// Test first vote
 	require.NoError(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionAbstain))

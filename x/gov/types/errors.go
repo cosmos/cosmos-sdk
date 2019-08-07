@@ -1,4 +1,3 @@
-//nolint
 package types
 
 // DONTCOVER
@@ -41,7 +40,7 @@ func ErrAlreadyActiveProposal(codespace sdk.CodespaceType, proposalID uint64) sd
 	return sdk.NewError(codespace, CodeAlreadyActiveProposal, fmt.Sprintf("proposal %d has been already active", proposalID))
 }
 
-// ErrInvalidProposalContent error for invalid proposal title or description 
+// ErrInvalidProposalContent error for invalid proposal title or description
 func ErrInvalidProposalContent(cs sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(cs, CodeInvalidContent, fmt.Sprintf("invalid proposal content: %s", msg))
 }

@@ -714,6 +714,11 @@ func TestAppStateDeterminism(t *testing.T) {
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, 0)
 
+			fmt.Printf(
+				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
+				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
+			)
+
 			_, _, err := simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
 				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,

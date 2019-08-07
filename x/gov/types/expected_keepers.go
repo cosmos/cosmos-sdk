@@ -14,7 +14,7 @@ type ParamSubspace interface {
 	Set(ctx sdk.Context, key []byte, param interface{})
 }
 
-// SupplyKeeper defines the supply Keeper for module accounts (noalias)
+// SupplyKeeper defines the expected supply keeper for module accounts (noalias)
 type SupplyKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) supplyexported.ModuleAccountI

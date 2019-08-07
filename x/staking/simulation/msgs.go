@@ -20,9 +20,13 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
-		description := staking.Description{
-			Moniker: simulation.RandStringOfLength(r, 10),
-		}
+		description := staking.NewDescription(
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+		)
 
 		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
 		commission := staking.NewCommissionRates(
@@ -67,12 +71,13 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		description := staking.Description{
-			Moniker:  simulation.RandStringOfLength(r, 10),
-			Identity: simulation.RandStringOfLength(r, 10),
-			Website:  simulation.RandStringOfLength(r, 10),
-			Details:  simulation.RandStringOfLength(r, 10),
-		}
+		description := staking.NewDescription(
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 10),
+		)
 
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(staking.ModuleName), nil, nil

@@ -16,10 +16,11 @@ const (
 	FlagSharesAmount        = "shares-amount"
 	FlagSharesFraction      = "shares-fraction"
 
-	FlagMoniker  = "moniker"
-	FlagIdentity = "identity"
-	FlagWebsite  = "website"
-	FlagDetails  = "details"
+	FlagMoniker         = "moniker"
+	FlagIdentity        = "identity"
+	FlagWebsite         = "website"
+	FlagSecurityContact = "security-contact"
+	FlagDetails         = "details"
 
 	FlagCommissionRate          = "commission-rate"
 	FlagCommissionMaxRate       = "commission-max-rate"

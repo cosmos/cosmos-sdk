@@ -221,7 +221,7 @@ var (
 		ed25519.GenPrivKey().PubKey(),
 	}
 
-	testDescription     = staking.NewDescription("T", "E", "S", "T")
+	testDescription     = staking.NewDescription("T", "E", "S", "T", ">:)")
 	testCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 

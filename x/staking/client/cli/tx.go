@@ -89,12 +89,13 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valAddr := cliCtx.GetFromAddress()
-			description := types.Description{
-				Moniker:  viper.GetString(FlagMoniker),
-				Identity: viper.GetString(FlagIdentity),
-				Website:  viper.GetString(FlagWebsite),
-				Details:  viper.GetString(FlagDetails),
-			}
+			description := types.NewDescription(
+				viper.GetString(FlagMoniker),
+				viper.GetString(FlagIdentity),
+				viper.GetString(FlagWebsite),
+				viper.GetString(FlagSecurityContact),
+				viper.GetString(FlagDetails),
+			)
 
 			var newRate *sdk.Dec
 
@@ -350,6 +351,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (
 		viper.GetString(FlagMoniker),
 		viper.GetString(FlagIdentity),
 		viper.GetString(FlagWebsite),
+		viper.GetString(FlagSecurityContact),
 		viper.GetString(FlagDetails),
 	)
 

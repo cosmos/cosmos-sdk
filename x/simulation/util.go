@@ -53,21 +53,23 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 //  - "over stuffed" blocks with average size of 2 * avgblocksize,
 //  - normal sized blocks, hitting avgBlocksize on average,
 //  - and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(r *rand.Rand, params Params,
-	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
-
+func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
 	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+
 	switch state {
 	case 0:
-		blocksize = r.Intn(avgBlockSize * 4)
+		blockSize = r.Intn(avgBlockSize * 4)
+
 	case 1:
-		blocksize = r.Intn(avgBlockSize * 2)
+		blockSize = r.Intn(avgBlockSize * 2)
+
 	default:
-		blocksize = 0
+		blockSize = 0
 	}
-	return state, blocksize
+
+	return state, blockSize
 }
 
 // PeriodicInvariants  returns an array of wrapped Invariants. Where each

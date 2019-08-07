@@ -681,7 +681,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -708,21 +708,29 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		seed := rand.Int63()
+
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, 0)
 
-			// Run randomized simulation
-			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
-				testAndRunTxs(app), []sdk.Invariant{},
-				1, 50, 100, 0, "",
-				false, true, false, false, false, app.ModuleAccountAddrs(),
+			fmt.Printf(
+				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
+				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
 			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
+				blockSize, "", false, commit, lean,
+				false, false, app.ModuleAccountAddrs(),
+			)
+			require.NoError(t, err)
+
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}
+
 		for k := 1; k < numTimesToRunPerSeed; k++ {
 			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}

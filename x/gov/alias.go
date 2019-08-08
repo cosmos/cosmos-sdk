@@ -82,6 +82,8 @@ var (
 	NewGenesisState               = types.NewGenesisState
 	DefaultGenesisState           = types.DefaultGenesisState
 	ValidateGenesis               = types.ValidateGenesis
+	GetProposalIDBytes            = types.GetProposalIDBytes
+	GetProposalIDFromBytes        = types.GetProposalIDFromBytes
 	ProposalKey                   = types.ProposalKey
 	ActiveProposalByTimeKey       = types.ActiveProposalByTimeKey
 	ActiveProposalQueueKey        = types.ActiveProposalQueueKey

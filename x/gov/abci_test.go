@@ -1,7 +1,6 @@
 package gov
 
 import (
-	"encoding/binary"
 	"testing"
 	"time"
 
@@ -155,7 +154,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	proposalID := binary.LittleEndian.Uint64(res.Data)
+	proposalID := GetProposalIDFromBytes(res.Data)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -200,7 +199,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	proposalID := binary.LittleEndian.Uint64(res.Data)
+	proposalID := GetProposalIDFromBytes(res.Data)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
@@ -221,9 +220,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
 
-	var activeProposalID uint64
-
-	require.NoError(t, input.mApp.Cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID))
+	activeProposalID := GetProposalIDFromBytes(activeQueue.Value())
 	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)

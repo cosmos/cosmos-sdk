@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -20,12 +19,11 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, phs []ProposalRE
 	for _, ph := range phs {
 		propSubRtr.HandleFunc(fmt.Sprintf("/%s", ph.SubRoute), ph.Handler).Methods("POST")
 	}
-	
+
 	r.HandleFunc("/gov/proposals", postProposalHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cliCtx)).Methods("POST")
 }
-
 
 func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -58,8 +56,7 @@ func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		strProposalID := vars[RestProposalID]
 
 		if len(strProposalID) == 0 {
-			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "proposalId required but not specified")
 			return
 		}
 
@@ -95,8 +92,7 @@ func voteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		strProposalID := vars[RestProposalID]
 
 		if len(strProposalID) == 0 {
-			err := errors.New("proposalId required but not specified")
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "proposalId required but not specified")
 			return
 		}
 

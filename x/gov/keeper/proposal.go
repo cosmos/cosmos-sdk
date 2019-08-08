@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -156,16 +155,14 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err sdk.
 	if bz == nil {
 		return 0, types.ErrInvalidGenesis(keeper.codespace, "initial proposal ID hasn't been set")
 	}
-	proposalID = binary.LittleEndian.Uint64(bz)
+	proposalID = types.GetProposalIDFromBytes(bz)
 	return proposalID, nil
 }
 
 // SetProposalID sets the new proposal ID to the store
 func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bz, proposalID)
-	store.Set(types.ProposalIDKey, bz)
+	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {

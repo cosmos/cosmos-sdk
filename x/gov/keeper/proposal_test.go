@@ -43,8 +43,8 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.VotingEndTime)
 	require.True(t, activeIterator.Valid())
-	var proposalID uint64
-	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+
+	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
 	require.Equal(t, proposalID, proposal.ProposalID)
 	activeIterator.Close()
 }

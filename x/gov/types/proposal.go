@@ -205,7 +205,7 @@ const (
 	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
 )
 
-// TextProposal defines a standard text proposal whose changes need to be 
+// TextProposal defines a standard text proposal whose changes need to be
 // manually updated in case of approval
 type TextProposal struct {
 	Title       string `json:"title" yaml:"title"`
@@ -221,16 +221,16 @@ func NewTextProposal(title, description string) Content {
 var _ Content = TextProposal{}
 
 // GetTitle returns the proposal title
-func (tp TextProposal) GetTitle() string         { return tp.Title }
+func (tp TextProposal) GetTitle() string { return tp.Title }
 
 // GetDescription returns the proposal description
-func (tp TextProposal) GetDescription() string   { return tp.Description }
+func (tp TextProposal) GetDescription() string { return tp.Description }
 
 // ProposalRoute returns the proposal router key
-func (tp TextProposal) ProposalRoute() string    { return RouterKey }
+func (tp TextProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType is "Text"
-func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
+func (tp TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
 func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
@@ -262,16 +262,16 @@ func NewSoftwareUpgradeProposal(title, description string) Content {
 var _ Content = SoftwareUpgradeProposal{}
 
 // GetTitle returns the proposal title
-func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+func (sup SoftwareUpgradeProposal) GetTitle() string { return sup.Title }
 
 // GetDescription returns the proposal description
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
 
 // ProposalRoute returns the proposal router key
-func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType is "SoftwareUpgrade"
-func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
 
 // ValidateBasic validates the content's title and description of the proposal
 func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {

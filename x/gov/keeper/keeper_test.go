@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,8 +32,8 @@ func TestProposalQueues(t *testing.T) {
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)
 	require.True(t, inactiveIterator.Valid())
-	var proposalID uint64
-	keeper.cdc.UnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
+
+	proposalID := types.GetProposalIDFromBytes(inactiveIterator.Value())
 	require.Equal(t, proposalID, proposal.ProposalID)
 	inactiveIterator.Close()
 

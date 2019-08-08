@@ -41,6 +41,8 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
+//
+// CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, codespace sdk.CodespaceType, rtr types.Router,
@@ -58,7 +60,7 @@ func NewKeeper(
 
 	return Keeper{
 		storeKey:     key,
-		paramSpace:   paramSpace, // CONTRACT: must have the param key table already initialized
+		paramSpace:   paramSpace,
 		supplyKeeper: supplyKeeper,
 		sk:           sk,
 		cdc:          cdc,
@@ -87,7 +89,7 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) exported.ModuleAccoun
 // InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
+	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
 }
 
@@ -100,7 +102,7 @@ func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID u
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
+	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
 }
 

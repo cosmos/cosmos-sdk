@@ -47,11 +47,11 @@ func (ctx CLIContext) BroadcastTxCommit(txBytes []byte) (sdk.TxResponse, error) 
 	}
 
 	if !res.CheckTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 
 	if !res.DeliverTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 
 	return sdk.NewResponseFormatBroadcastTxCommit(res), nil

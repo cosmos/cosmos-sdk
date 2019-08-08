@@ -10,16 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // GenGenesisAccounts generates a random GenesisState for the genesis accounts
 func GenGenesisAccounts(
-	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account,
-	genesisTimestamp time.Time, amount, numInitiallyBonded int64,
-	genesisState map[string]json.RawMessage,
+	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
+	accs []simulation.Account, genesisTimestamp time.Time, amount, numInitiallyBonded int64,
 ) {
 
 	var genesisAccounts []genaccounts.GenesisAccount
@@ -27,7 +27,7 @@ func GenGenesisAccounts(
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))}
-		bacc := auth.NewBaseAccountWithAddress(acc.Address)
+		bacc := authtypes.NewBaseAccountWithAddress(acc.Address)
 		if err := bacc.SetCoins(coins); err != nil {
 			panic(err)
 		}
@@ -38,7 +38,7 @@ func GenGenesisAccounts(
 		// set is exhausted due to needing to track DelegatedVesting.
 		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
 			var (
-				vacc    auth.VestingAccount
+				vacc    authexported.VestingAccount
 				endTime int64
 			)
 
@@ -56,9 +56,9 @@ func GenGenesisAccounts(
 			}
 
 			if r.Intn(100) < 50 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
+				vacc = authtypes.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
+				vacc = authtypes.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
 			var err error

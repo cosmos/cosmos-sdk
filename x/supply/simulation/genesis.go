@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
@@ -13,11 +14,10 @@ import (
 )
 
 // GenSupplyGenesisState generates a random GenesisState for supply
-func GenSupplyGenesisState(cdc *codec.Codec, amount, numInitiallyBonded, numAccs int64, genesisState map[string]json.RawMessage) {
+func GenSupplyGenesisState(cdc *codec.Codec, _ *rand.Rand, _, genesisState map[string]json.RawMessage,
+	amount, numInitiallyBonded, numAccs int64) {
 	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
-	supplyGenesis := supply.NewGenesisState(
-		supply.NewSupply(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))),
-	)
+	supplyGenesis := supply.NewGenesisState(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply)))
 
 	fmt.Printf("Generated supply parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, supplyGenesis))
 	genesisState[supply.ModuleName] = cdc.MustMarshalJSON(supplyGenesis)

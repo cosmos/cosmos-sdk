@@ -12,21 +12,21 @@ import (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) []simulation.SimParamChange {
+func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.SimParamChange {
 	return []simulation.SimParamChange{
 		simulation.NewSimParamChange("auth", "MaxMemoCharacters", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(cdc, r, ap))
+				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(cdc, r))
 			},
 		),
 		simulation.NewSimParamChange("auth", "TxSigLimit", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenTxSigLimit(cdc, r, ap))
+				return fmt.Sprintf("\"%d\"", GenTxSigLimit(cdc, r))
 			},
 		),
 		simulation.NewSimParamChange("auth", "TxSizeCostPerByte", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(cdc, r, ap))
+				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(cdc, r))
 			},
 		),
 	}

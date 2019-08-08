@@ -2,14 +2,12 @@ package simapp
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,26 +35,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-func init() {
-	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
-	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
-	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
-	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
-	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
-	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
-	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
-	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
-	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
-	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
-	flag.BoolVar(&lean, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&commit, "Commit", false, "have the simulation commit")
-	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
-	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
-	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
-	flag.Int64Var(&genesisTime, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
-}
+// Get flags every time the simulator is run
+func init() { getSimulatorFlags() }
 
 // helper function for populating input for SimulateFromSeed
 // TODO: clean up this function along with the simulation refactor
@@ -67,97 +47,10 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 
 	exportParams := exportParamsPath != ""
 
-	return tb, w, app.BaseApp, appStateFn, seed,
+	return tb, w, app.BaseApp, AppStateFn, seed,
 		testAndRunTxs(app), invariants(app),
 		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
-}
-
-func appStateFn(
-	r *rand.Rand, accs []simulation.Account,
-) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
-
-	cdc := MakeCodec()
-
-	if genesisTime == 0 {
-		genesisTimestamp = simulation.RandTimestamp(r)
-	} else {
-		genesisTimestamp = time.Unix(genesisTime, 0)
-	}
-
-	switch {
-	case paramsFile != "" && genesisFile != "":
-		panic("cannot provide both a genesis file and a params file")
-
-	case genesisFile != "":
-		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
-
-	case paramsFile != "":
-		appParams := make(simulation.AppParams)
-		bz, err := ioutil.ReadFile(paramsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		cdc.MustUnmarshalJSON(bz, &appParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-
-	default:
-		appParams := make(simulation.AppParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-	}
-
-	return appState, simAccs, chainID, genesisTimestamp
-}
-
-// TODO refactor out random initialization code to the modules
-func appStateRandomizedFn(
-	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
-
-	cdc := MakeCodec()
-	genesisState := NewDefaultGenesisState()
-
-	var (
-		amount             int64
-		numInitiallyBonded int64
-	)
-
-	appParams.GetOrGenerate(cdc, StakePerAccount, &amount, r,
-		func(r *rand.Rand) { amount = int64(r.Intn(1e12)) })
-	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &amount, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
-
-	numAccs := int64(len(accs))
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%v",
-  initially_bonded_validators: "%v"
-}
-`, amount, numInitiallyBonded,
-	)
-
-	GenGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
-	GenAuthGenesisState(cdc, r, appParams, genesisState)
-	GenBankGenesisState(cdc, r, appParams, genesisState)
-	GenSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
-	GenGovGenesisState(cdc, r, appParams, genesisState)
-	GenMintGenesisState(cdc, r, appParams, genesisState)
-	GenDistrGenesisState(cdc, r, appParams, genesisState)
-	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
-	GenSlashingGenesisState(cdc, r, stakingGen.Params.UnbondingTime, appParams, genesisState)
-
-	appState, err := MakeCodec().MarshalJSON(genesisState)
-	if err != nil {
-		panic(err)
-	}
-
-	return appState, accs, "simulation"
 }
 
 // TODO: add description

@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // Simulation parameter constants
@@ -19,17 +18,13 @@ const (
 )
 
 // GenSendEnabled randomized SendEnabled
-func GenSendEnabled(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (sendEnabled bool) {
-	ap.GetOrGenerate(cdc, SendEnabled, &sendEnabled, r,
-		func(r *rand.Rand) {
-			sendEnabled = r.Int63n(2) == 0
-		})
-	return
+func GenSendEnabled(cdc *codec.Codec, r *rand.Rand) bool {
+	return r.Int63n(2) == 0
 }
 
 // GenBankGenesisState generates a random GenesisState for bank
-func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
-	sendEnabled := GenSendEnabled(cdc, r, ap)
+func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	sendEnabled := GenSendEnabled(cdc, r)
 
 	bankGenesis := bank.NewGenesisState(sendEnabled)
 

@@ -23,58 +23,38 @@ const (
 )
 
 // GenMaxMemoChars randomized MaxMemoChars
-func GenMaxMemoChars(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (maxMemoChars uint64) {
-	ap.GetOrGenerate(cdc, MaxMemoChars, &maxMemoChars, r,
-		func(r *rand.Rand) {
-			maxMemoChars = uint64(simulation.RandIntBetween(r, 100, 200))
-		})
-	return
+func GenMaxMemoChars(cdc *codec.Codec, r *rand.Rand) uint64 {
+	return uint64(simulation.RandIntBetween(r, 100, 200))
 }
 
 // GenTxSigLimit randomized TxSigLimit
-func GenTxSigLimit(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (txSigLimit uint64) {
-	ap.GetOrGenerate(cdc, TxSigLimit, &txSigLimit, r,
-		func(r *rand.Rand) {
-			txSigLimit = uint64(r.Intn(7) + 1)
-		})
-	return
+func GenTxSigLimit(cdc *codec.Codec, r *rand.Rand) uint64 {
+	return uint64(r.Intn(7) + 1)
 }
 
 // GenTxSizeCostPerByte randomized TxSizeCostPerByte
-func GenTxSizeCostPerByte(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (txSizeCostPerByte uint64) {
-	ap.GetOrGenerate(cdc, TxSizeCostPerByte, &txSizeCostPerByte, r,
-		func(r *rand.Rand) {
-			txSizeCostPerByte = uint64(simulation.RandIntBetween(r, 5, 15))
-		})
-	return
+func GenTxSizeCostPerByte(cdc *codec.Codec, r *rand.Rand) uint64 {
+	return uint64(simulation.RandIntBetween(r, 5, 15))
 }
 
 // GenSigVerifyCostED25519 randomized SigVerifyCostED25519
-func GenSigVerifyCostED25519(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (sigVerifyCostED25519 uint64) {
-	ap.GetOrGenerate(cdc, SigVerifyCostED25519, &sigVerifyCostED25519, r,
-		func(r *rand.Rand) {
-			sigVerifyCostED25519 = uint64(simulation.RandIntBetween(r, 500, 1000))
-		})
-	return
+func GenSigVerifyCostED25519(cdc *codec.Codec, r *rand.Rand) uint64 {
+	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
 // GenSigVerifyCostSECP256K1 randomized SigVerifyCostSECP256K1
-func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (sigVerifyCostSECP256K1 uint64) {
-	ap.GetOrGenerate(cdc, SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, r,
-		func(r *rand.Rand) {
-			sigVerifyCostSECP256K1 = uint64(simulation.RandIntBetween(r, 500, 1000))
-		})
-	return
+func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand) uint64 {
+	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
 // GenAuthGenesisState generates a random GenesisState for auth
-func GenAuthGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenAuthGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 
-	maxMemoChars := GenMaxMemoChars(cdc, r, ap)
-	txSigLimit := GenTxSigLimit(cdc, r, ap)
-	txSizeCostPerByte := GenTxSizeCostPerByte(cdc, r, ap)
-	sigVerifyCostED25519 := GenSigVerifyCostED25519(cdc, r, ap)
-	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(cdc, r, ap)
+	maxMemoChars := GenMaxMemoChars(cdc, r)
+	txSigLimit := GenTxSigLimit(cdc, r)
+	txSizeCostPerByte := GenTxSizeCostPerByte(cdc, r)
+	sigVerifyCostED25519 := GenSigVerifyCostED25519(cdc, r)
+	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(cdc, r)
 
 	authGenesis := auth.NewGenesisState(
 		auth.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,

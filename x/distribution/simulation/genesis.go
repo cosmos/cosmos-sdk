@@ -11,7 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // Simulation parameter constants
@@ -22,38 +21,26 @@ const (
 )
 
 // GenCommunityTax randomized CommunityTax
-func GenCommunityTax(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (communityTax sdk.Dec) {
-	ap.GetOrGenerate(cdc, CommunityTax, &communityTax, r,
-		func(r *rand.Rand) {
-			communityTax = sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		})
-	return
+func GenCommunityTax(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenBaseProposerReward randomized BaseProposerReward
-func GenBaseProposerReward(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (baseProposerReward sdk.Dec) {
-	ap.GetOrGenerate(cdc, BaseProposerReward, &baseProposerReward, r,
-		func(r *rand.Rand) {
-			baseProposerReward = sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		})
-	return
+func GenBaseProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenBonusProposerReward randomized BonusProposerReward
-func GenBonusProposerReward(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (bonusProposerReward sdk.Dec) {
-	ap.GetOrGenerate(cdc, BonusProposerReward, &bonusProposerReward, r,
-		func(r *rand.Rand) {
-			bonusProposerReward = sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		})
-	return
+func GenBonusProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenDistrGenesisState generates a random GenesisState for distribution
-func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 
-	communityTax := GenCommunityTax(cdc, r, ap)
-	baseProposerReward := GenBaseProposerReward(cdc, r, ap)
-	bonusProposerReward := GenBonusProposerReward(cdc, r, ap)
+	communityTax := GenCommunityTax(cdc, r)
+	baseProposerReward := GenBaseProposerReward(cdc, r)
+	bonusProposerReward := GenBonusProposerReward(cdc, r)
 
 	distrGenesis := distribution.GenesisState{
 		FeePool:             distribution.InitialFeePool(),

@@ -14,16 +14,16 @@ import (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) []simulation.SimParamChange {
+func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.SimParamChange {
 	return []simulation.SimParamChange{
 		simulation.NewSimParamChange("gov", "votingparams", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf(`{"voting_period": "%d"}`, GenVotingParamsVotingPeriod(cdc, r, ap))
+				return fmt.Sprintf(`{"voting_period": "%d"}`, GenVotingParamsVotingPeriod(cdc, r))
 			},
 		),
 		simulation.NewSimParamChange("gov", "depositparams", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf(`{"max_deposit_period": "%d"}`, GenDepositParamsDepositPeriod(cdc, r, ap))
+				return fmt.Sprintf(`{"max_deposit_period": "%d"}`, GenDepositParamsDepositPeriod(cdc, r))
 			},
 		),
 		simulation.NewSimParamChange("gov", "tallyparams", "",
@@ -32,9 +32,9 @@ func ParamChanges(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) []sim
 					key   string
 					value sdk.Dec
 				}{
-					{"quorum", GenTallyParamsQuorum(cdc, r, ap)},
-					{"threshold", GenTallyParamsThreshold(cdc, r, ap)},
-					{"veto", GenTallyParamsVeto(cdc, r, ap)},
+					{"quorum", GenTallyParamsQuorum(cdc, r)},
+					{"threshold", GenTallyParamsThreshold(cdc, r)},
+					{"veto", GenTallyParamsVeto(cdc, r)},
 				}
 
 				pc := make(map[string]string)

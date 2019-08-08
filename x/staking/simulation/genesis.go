@@ -22,27 +22,19 @@ const (
 )
 
 // GenUnbondingTime randomized UnbondingTime
-func GenUnbondingTime(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (ubdTime time.Duration) {
-	ap.GetOrGenerate(cdc, UnbondingTime, &ubdTime, r,
-		func(r *rand.Rand) {
-			ubdTime = time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
-		})
-	return
+func GenUnbondingTime(cdc *codec.Codec, r *rand.Rand) (ubdTime time.Duration) {
+	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 }
 
 // GenMaxValidators randomized MaxValidators
-func GenMaxValidators(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (maxValidators uint16) {
-	ap.GetOrGenerate(cdc, MaxValidators, &maxValidators, r,
-		func(r *rand.Rand) {
-			maxValidators = uint16(r.Intn(250) + 1)
-		})
-	return
+func GenMaxValidators(cdc *codec.Codec, r *rand.Rand) (maxValidators uint16) {
+	return uint16(r.Intn(250) + 1)
 }
 
 // GenStakingGenesisState generates a random GenesisState for staking
 func GenStakingGenesisState(
-	cdc *codec.Codec, r *rand.Rand, accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
-	ap simulation.AppParams, genesisState map[string]json.RawMessage,
+	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
+	accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
 ) staking.GenesisState {
 
 	var (
@@ -51,8 +43,8 @@ func GenStakingGenesisState(
 	)
 
 	// params
-	ubdTime := GenUnbondingTime(cdc, r, ap)
-	maxValidators := GenMaxValidators(cdc, r, ap)
+	ubdTime := GenUnbondingTime(cdc, r)
+	maxValidators := GenMaxValidators(cdc, r)
 	params := staking.NewParams(ubdTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations

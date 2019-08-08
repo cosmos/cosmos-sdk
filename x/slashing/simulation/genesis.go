@@ -25,61 +25,38 @@ const (
 )
 
 // GenSignedBlocksWindow randomized SignedBlocksWindow
-func GenSignedBlocksWindow(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (signedBlocksWindow int64) {
-	ap.GetOrGenerate(cdc, SignedBlocksWindow, &signedBlocksWindow, r,
-		func(r *rand.Rand) {
-			signedBlocksWindow = int64(simulation.RandIntBetween(r, 10, 1000))
-		})
-	return
+func GenSignedBlocksWindow(cdc *codec.Codec, r *rand.Rand) int64 {
+	return int64(simulation.RandIntBetween(r, 10, 1000))
 }
 
 // GenMinSignedPerWindow randomized MinSignedPerWindow
-func GenMinSignedPerWindow(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (minSignedPerWindow sdk.Dec) {
-	ap.GetOrGenerate(cdc, MinSignedPerWindow, &minSignedPerWindow, r,
-		func(r *rand.Rand) {
-			minSignedPerWindow = sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
-		})
-	return
+func GenMinSignedPerWindow(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 }
 
 // GenDowntimeJailDuration randomized DowntimeJailDuration
-func GenDowntimeJailDuration(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (downtimeJailDuration time.Duration) {
-	ap.GetOrGenerate(cdc, DowntimeJailDuration, &downtimeJailDuration, r,
-		func(r *rand.Rand) {
-			downtimeJailDuration = time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second
-		})
-	return
+func GenDowntimeJailDuration(cdc *codec.Codec, r *rand.Rand) time.Duration {
+	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second
 }
 
 // GenSlashFractionDoubleSign randomized SlashFractionDoubleSign
-func GenSlashFractionDoubleSign(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (slashFractionDoubleSign sdk.Dec) {
-	ap.GetOrGenerate(cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, r,
-		func(r *rand.Rand) {
-			slashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
-		})
-	return
+func GenSlashFractionDoubleSign(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
 }
 
 // GenSlashFractionDowntime randomized SlashFractionDowntime
-func GenSlashFractionDowntime(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (slashFractionDowntime sdk.Dec) {
-	ap.GetOrGenerate(cdc, SlashFractionDowntime, &slashFractionDowntime, r,
-		func(r *rand.Rand) {
-			slashFractionDowntime = sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
-		})
-	return
+func GenSlashFractionDowntime(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
 }
 
 // GenSlashingGenesisState generates a random GenesisState for slashing
-func GenSlashingGenesisState(
-	cdc *codec.Codec, r *rand.Rand, maxEvidenceAge time.Duration,
-	ap simulation.AppParams, genesisState map[string]json.RawMessage,
-) {
+func GenSlashingGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage, maxEvidenceAge time.Duration) {
 
-	signedBlocksWindow := GenSignedBlocksWindow(cdc, r, ap)
-	minSignedPerWindow := GenMinSignedPerWindow(cdc, r, ap)
-	downtimeJailDuration := GenDowntimeJailDuration(cdc, r, ap)
-	slashFractionDoubleSign := GenSlashFractionDoubleSign(cdc, r, ap)
-	slashFractionDowntime := GenSlashFractionDowntime(cdc, r, ap)
+	signedBlocksWindow := GenSignedBlocksWindow(cdc, r)
+	minSignedPerWindow := GenMinSignedPerWindow(cdc, r)
+	downtimeJailDuration := GenDowntimeJailDuration(cdc, r)
+	slashFractionDoubleSign := GenSlashFractionDoubleSign(cdc, r)
+	slashFractionDowntime := GenSlashFractionDowntime(cdc, r)
 
 	params := slashing.NewParams(maxEvidenceAge, signedBlocksWindow, minSignedPerWindow,
 		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)

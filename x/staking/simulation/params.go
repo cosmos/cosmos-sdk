@@ -12,16 +12,16 @@ import (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) []simulation.SimParamChange {
+func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.SimParamChange {
 	return []simulation.SimParamChange{
 		simulation.NewSimParamChange("staking", "MaxValidators", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%d", GenMaxValidators(cdc, r, ap))
+				return fmt.Sprintf("%d", GenMaxValidators(cdc, r))
 			},
 		),
 		simulation.NewSimParamChange("staking", "UnbondingTime", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenUnbondingTime(cdc, r, ap))
+				return fmt.Sprintf("\"%d\"", GenUnbondingTime(cdc, r))
 			},
 		),
 	}

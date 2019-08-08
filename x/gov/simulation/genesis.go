@@ -26,69 +26,45 @@ const (
 )
 
 // GenDepositParamsDepositPeriod randomized DepositParamsDepositPeriod
-func GenDepositParamsDepositPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (period time.Duration) {
-	ap.GetOrGenerate(cdc, DepositParamsDepositPeriod, &period, r,
-		func(r *rand.Rand) {
-			period = time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
-		})
-	return
+func GenDepositParamsDepositPeriod(cdc *codec.Codec, r *rand.Rand) time.Duration {
+	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
 // GenDepositParamsMinDeposit randomized DepositParamsMinDeposit
-func GenDepositParamsMinDeposit(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (minDeposit sdk.Coins) {
-	ap.GetOrGenerate(cdc, DepositParamsMinDeposit, &minDeposit, r,
-		func(r *rand.Rand) {
-			minDeposit = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
-		})
-	return
+func GenDepositParamsMinDeposit(cdc *codec.Codec, r *rand.Rand) sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
 }
 
 // GenVotingParamsVotingPeriod randomized VotingParamsVotingPeriod
-func GenVotingParamsVotingPeriod(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (period time.Duration) {
-	ap.GetOrGenerate(cdc, VotingParamsVotingPeriod, &period, r,
-		func(r *rand.Rand) {
-			period = time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
-		})
-	return
+func GenVotingParamsVotingPeriod(cdc *codec.Codec, r *rand.Rand) time.Duration {
+	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
 // GenTallyParamsQuorum randomized TallyParamsQuorum
-func GenTallyParamsQuorum(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (quorum sdk.Dec) {
-	ap.GetOrGenerate(cdc, TallyParamsQuorum, &quorum, r,
-		func(r *rand.Rand) {
-			quorum = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
-		})
-	return
+func GenTallyParamsQuorum(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenTallyParamsThreshold randomized TallyParamsThreshold
-func GenTallyParamsThreshold(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (threshold sdk.Dec) {
-	ap.GetOrGenerate(cdc, TallyParamsThreshold, &threshold, r,
-		func(r *rand.Rand) {
-			threshold = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
-		})
-	return
+func GenTallyParamsThreshold(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
 }
 
 // GenTallyParamsVeto randomized TallyParamsVeto
-func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams) (veto sdk.Dec) {
-	ap.GetOrGenerate(cdc, TallyParamsVeto, &veto, r,
-		func(r *rand.Rand) {
-			veto = sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
-		})
-	return
+func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
 // GenGovGenesisState generates a random GenesisState for gov
-func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, ap simulation.AppParams, genesisState map[string]json.RawMessage) {
+func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	startingProposalID := uint64(r.Intn(100))
 
-	minDeposit := GenDepositParamsMinDeposit(cdc, r, ap)
-	depositPeriod := GenDepositParamsDepositPeriod(cdc, r, ap)
-	votingPeriod := GenVotingParamsVotingPeriod(cdc, r, ap)
-	quorum := GenTallyParamsQuorum(cdc, r, ap)
-	threshold := GenTallyParamsThreshold(cdc, r, ap)
-	veto := GenTallyParamsVeto(cdc, r, ap)
+	minDeposit := GenDepositParamsMinDeposit(cdc, r)
+	depositPeriod := GenDepositParamsDepositPeriod(cdc, r)
+	votingPeriod := GenVotingParamsVotingPeriod(cdc, r)
+	quorum := GenTallyParamsQuorum(cdc, r)
+	threshold := GenTallyParamsThreshold(cdc, r)
+	veto := GenTallyParamsVeto(cdc, r)
 
 	govGenesis := gov.NewGenesisState(
 		startingProposalID,

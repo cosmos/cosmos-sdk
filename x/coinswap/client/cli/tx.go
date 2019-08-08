@@ -69,10 +69,11 @@ $ %s tx coinswap add-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388kuv9k
 				return err
 			}
 
-			deadline, err := time.Parse(time.RFC3339, args[3])
+			duration, err := time.ParseDuration(args[3])
 			if err != nil {
-				return fmt.Errorf("failed to parse the deadline: %s", err)
+				return fmt.Errorf("failed to parse the duration : %s", err)
 			}
+			deadline := time.Now().Add(duration).UTC()
 
 			senderAddr := cliCtx.GetFromAddress()
 
@@ -108,7 +109,7 @@ $ %s tx coinswap remove-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388ku
 
 			poolTokens, ok := sdk.NewIntFromString(args[1])
 			if !ok {
-				return fmt.Errorf("pool-tokens %s is not a valid uint, please input valid pool-tokens", args[1])
+				return fmt.Errorf("pool-tokens %s is not a valid int, please input valid pool-tokens", args[1])
 			}
 
 			minNative, err := sdk.ParseCoin(args[2])
@@ -116,10 +117,11 @@ $ %s tx coinswap remove-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388ku
 				return err
 			}
 
-			deadline, err := time.Parse(time.RFC3339, args[3])
+			duration, err := time.ParseDuration(args[3])
 			if err != nil {
-				return fmt.Errorf("failed to parse the deadline: %s", err)
+				return fmt.Errorf("failed to parse the duration : %s", err)
 			}
+			deadline := time.Now().Add(duration).UTC()
 
 			senderAddr := cliCtx.GetFromAddress()
 

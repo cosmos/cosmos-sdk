@@ -86,6 +86,7 @@ You can see an example of application type definition [here](https://github.com/
 
 This function constructs a new application of the type defined above. It is called every time the full-node is started with the [`start`](https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L117) command. Here are the main actions performed by this function:
 
+- Instantiate a new [`codec`](../core/encoding.md) and initialize the `codec` of each of the application's module using the [basic manager](../building-modules/module-manager.md#basicmanager)
 - Instantiate a new application with a reference to a `baseapp` instance, a codec and all the appropriate store keys.
 - Instantiate all the [`keeper`s](#keeper) defined in the application's `type` using the `NewKeeper` function of each of the application's modules. Note that `keepers` must be instantiated in the correct order, as the `NewKeeper` of one module might require a reference to another module's `keeper`. 
 - Instantiate the application's [module manager](../building-modules/module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules. 

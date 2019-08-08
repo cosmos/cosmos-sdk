@@ -136,12 +136,16 @@ Module managers are used to manage collections of `AppModuleBasic` and `AppModul
 
 ### `BasicManager`
 
-The `BasicManager` is a structure that lists all the `AppModuleBasic` of an application: 
+The [`BasicManager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L60) is a structure that lists all the `AppModuleBasic` of an application: 
 
 ```go
 type BasicManager map[string]AppModuleBasic
 ```
 
+It implements the following methods:
+
+- `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L59-L74) to see an example).
+- `RegisterCodec(cdc *codec.Codec)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually early on in the [application's construction](../basics/app-anatomy.md#constructor)
 
 
 ### `Manager`

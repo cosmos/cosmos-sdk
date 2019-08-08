@@ -14,6 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/coinswap/internal/types"
 )
 
+const (
+	nativeDenom = "atom"
+)
+
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	coinswapQueryCmd := &cobra.Command{
@@ -47,6 +51,11 @@ $ %s query coinswap liquidity btc
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// Added a check to ensure that input provided is not a native denom
+			if strings.Compare(strings.TrimSpace(args[0]), nativeDenom) == 0 {
+				return fmt.Errorf("%s is not a valid denom, please input a valid denom", args[0])
+			}
 
 			bz, err := cdc.MarshalJSON(types.NewQueryLiquidityParams(args[0]))
 			if err != nil {

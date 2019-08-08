@@ -319,7 +319,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), MaxWebsiteLength)
 	}
 	if len(d.SecurityContact) > MaxSecurityContactLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), MaxWebsiteLength)
+		return d, ErrDescriptionLength(DefaultCodespace, "security contact", len(d.SecurityContact), MaxSecurityContactLength)
 	}
 	if len(d.Details) > MaxDetailsLength {
 		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), MaxDetailsLength)

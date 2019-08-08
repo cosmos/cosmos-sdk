@@ -174,6 +174,9 @@
 
 ### Bug Fixes
 
+* [\#4868](https://github.com/cosmos/cosmos-sdk/issues/4868) Context#CacheContext now sets a new EventManager. This prevents unwanted events
+  from being emitted.
+* (cli) [\#4870](https://github.com/cosmos/cosmos-sdk/issues/4870) Disable the `withdraw-all-rewards` command when `--generate-only` is supplied
 * (modules) [\#4831](https://github.com/cosmos/cosmos-sdk/issues/4831) Prevent community spend proposal from transferring funds to a module account
 * (keys) [\#4338](https://github.com/cosmos/cosmos-sdk/issues/4338) fix multisig key output for CLI
 * (modules) [\#4795](https://github.com/cosmos/cosmos-sdk/issues/4795) restrict module accounts from receiving transactions.

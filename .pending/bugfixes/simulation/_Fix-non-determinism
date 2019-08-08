@@ -1,2 +1,0 @@
-[\#4861](https://github.com/cosmos/cosmos-sdk/pull/4861) Fix non-determinism simulation
-by using CLI flags as input and updating Makefile target.

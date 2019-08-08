@@ -108,6 +108,10 @@
 
 ### Improvements
 
+* (simulation) PrintAllInvariants flag will print all failed invariants
+* (simulation) Add `InitialBlockHeight` flag to resume a simulation from a given block
+* (simulation) [\#4670](https://github.com/cosmos/cosmos-sdk/issues/4670) Update simulation statistics to JSON format
+  - Support exporting the simulation stats to a given JSON file
 * [\#4775](https://github.com/cosmos/cosmos-sdk/issues/4775) Refactor CI config
 * Upgrade IAVL to v0.12.4
 * (tendermint) Upgrade Tendermint to v0.32.2
@@ -174,6 +178,8 @@
 
 ### Bug Fixes
 
+* (simulation) [\#4861](https://github.com/cosmos/cosmos-sdk/pull/4861) Fix non-determinism simulation
+  by using CLI flags as input and updating Makefile target.
 * [\#4868](https://github.com/cosmos/cosmos-sdk/issues/4868) Context#CacheContext now sets a new EventManager. This prevents unwanted events
   from being emitted.
 * (cli) [\#4870](https://github.com/cosmos/cosmos-sdk/issues/4870) Disable the `withdraw-all-rewards` command when `--generate-only` is supplied

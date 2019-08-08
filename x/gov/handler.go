@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// Handle all "gov" type messages.
+// NewHandler creates an sdk.Handler for all the gov type messages
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
@@ -58,7 +58,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	return sdk.Result{
-		Data:   keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.ProposalID),
+		Data:   GetProposalIDBytes(proposal.ProposalID),
 		Events: ctx.EventManager().Events(),
 	}
 }

@@ -89,7 +89,7 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 				"module accounts total (bonded + not bonded):\n"+
 				"\tModule Accounts' tokens: %v\n"+
 				"\tsum tokens:              %v\n",
-			poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded)), broken)
+			poolBonded, bonded, poolNotBonded, notBonded, poolBonded.Add(poolNotBonded), bonded.Add(notBonded))), broken
 	}
 }
 
@@ -122,7 +122,7 @@ func NonNegativePowerInvariant(k Keeper) sdk.Invariant {
 			}
 		}
 		iterator.Close()
-		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", fmt.Sprintf("found invalid validator powers\n%s", msg), broken)
+		return sdk.FormatInvariant(types.ModuleName, "nonnegative power", fmt.Sprintf("found invalid validator powers\n%s", msg)), broken
 	}
 }
 
@@ -146,7 +146,7 @@ func PositiveDelegationInvariant(k Keeper) sdk.Invariant {
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "positive delegations", fmt.Sprintf(
-			"%d invalid delegations found\n%s", count, msg), broken)
+			"%d invalid delegations found\n%s", count, msg)), broken
 	}
 }
 
@@ -176,6 +176,6 @@ func DelegatorSharesInvariant(k Keeper) sdk.Invariant {
 					"\tsum of Delegator.Shares: %v\n", valTotalDelShares, totalDelShares)
 			}
 		}
-		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg, broken)
+		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg), broken
 	}
 }

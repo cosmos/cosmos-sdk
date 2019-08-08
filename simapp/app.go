@@ -163,14 +163,17 @@ func NewSimApp(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.stakingKeeper = *stakingKeeper.SetHooks(
-		staking.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
+		staking.NewMultiStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
+	)
 
+	// NOTE: Any module instantiated in the module manager that is later modified
+	// must be passed by reference here.
 	app.mm = module.NewManager(
 		genaccounts.NewAppModule(app.accountKeeper),
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		crisis.NewAppModule(app.crisisKeeper),
+		crisis.NewAppModule(&app.crisisKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
 		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
@@ -184,13 +187,15 @@ func NewSimApp(
 	// CanWithdrawInvariant invariant.
 	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 
-	app.mm.SetOrderEndBlockers(gov.ModuleName, staking.ModuleName)
+	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
 
-	// genutils must occur after staking so that pools are properly
-	// initialized with tokens from genesis accounts.
-	app.mm.SetOrderInitGenesis(genaccounts.ModuleName, distr.ModuleName,
-		staking.ModuleName, auth.ModuleName, bank.ModuleName, slashing.ModuleName,
-		gov.ModuleName, mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName)
+	// NOTE: The genutils moodule must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	app.mm.SetOrderInitGenesis(
+		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
+		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
+		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
+	)
 
 	app.mm.RegisterInvariants(&app.crisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())

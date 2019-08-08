@@ -1,0 +1,4 @@
+#4724 Multistore supports substore migrations upon load.
+New `rootmulti.Store.LoadLatestVersionAndUpgrade` method
+Baseapp supports `StoreLoader` to enable various upgrade strategies
+No longer panics if the store to load contains substores that we didn't explicitly mount.

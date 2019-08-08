@@ -143,6 +143,8 @@ $ %s tx distr withdraw-all-rewards --from mykey
 
 			delAddr := cliCtx.GetFromAddress()
 
+			// The transaction cannot be generated offline since it requires a query
+			// to get all the validators.
 			if cliCtx.GenerateOnly {
 				return fmt.Errorf("command disabled with the provided flag: %s", client.FlagGenerateOnly)
 			}

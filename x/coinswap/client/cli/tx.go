@@ -38,7 +38,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // GetCmdAddLiquidity implements the add liquidity command handler
 func GetCmdAddLiquidity(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "add-liquidity [deposit] [deposit-amount] [min-reward] [deadline]",
+		Use:   "add-liquidity [deposit-coin] [deposit] [min-reward] [deadline]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Add liquidity to the reserve pool",
 		Long: strings.TrimSpace(
@@ -54,29 +54,29 @@ $ %s tx coinswap add-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388kuv9k
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			deposit, err := sdk.ParseCoin(args[0])
+			depositCoin, err := sdk.ParseCoin(args[0])
 			if err != nil {
 				return err
 			}
 
-			depositAmount, ok := sdk.NewIntFromString(args[1])
-			if !ok {
-				return fmt.Errorf(types.ErrNotPositive(types.DefaultCodespace, "deposit amount provided is not positive").Error())
+			deposit, err := sdk.ParseCoin(args[1])
+			if err != nil {
+				return err
 			}
 
-			minReward, ok := sdk.NewIntFromString(args[2])
-			if !ok {
-				return fmt.Errorf(types.ErrNotPositive(types.DefaultCodespace, "minimum liquidity is not positive").Error())
+			minReward, err := sdk.ParseCoin(args[2])
+			if err != nil {
+				return err
 			}
 
 			deadline, err := time.Parse(time.RFC3339, args[3])
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse the deadline: %s", err)
 			}
 
 			senderAddr := cliCtx.GetFromAddress()
 
-			msg := types.NewMsgAddLiquidity(deposit, depositAmount, minReward, deadline, senderAddr)
+			msg := types.NewMsgAddLiquidity(depositCoin, deposit.Amount, minReward.Amount, deadline, senderAddr)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -85,7 +85,7 @@ $ %s tx coinswap add-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388kuv9k
 // GetCmdRemoveLiquidity implements the remove liquidity command handler
 func GetCmdRemoveLiquidity(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "remove-liquidity [withdraw] [withdraw-amount] [min-native] [deadline]",
+		Use:   "remove-liquidity [withdraw-coin] [pool-tokens] [min-native] [deadline]",
 		Args:  cobra.ExactArgs(4),
 		Short: "Remove liquidity from the reserve pool",
 		Long: strings.TrimSpace(
@@ -101,29 +101,29 @@ $ %s tx coinswap remove-liquidity dai 1000atom 1000 2 cosmosvaloper1l2rsakp388ku
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			withdraw, err := sdk.ParseCoin(args[0])
+			withdrawCoin, err := sdk.ParseCoin(args[0])
 			if err != nil {
 				return err
 			}
 
-			withdrawAmount, ok := sdk.NewIntFromString(args[1])
+			poolTokens, ok := sdk.NewIntFromString(args[1])
 			if !ok {
-				return fmt.Errorf(types.ErrNotPositive(types.DefaultCodespace, "withdraw amount provided is not positive").Error())
+				return fmt.Errorf("pool-tokens %s is not a valid uint, please input valid pool-tokens", args[1])
 			}
 
-			minNative, ok := sdk.NewIntFromString(args[2])
-			if !ok {
-				return fmt.Errorf(types.ErrNotPositive(types.DefaultCodespace, "minimum native amount is not positive").Error())
+			minNative, err := sdk.ParseCoin(args[2])
+			if err != nil {
+				return err
 			}
 
 			deadline, err := time.Parse(time.RFC3339, args[3])
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse the deadline: %s", err)
 			}
 
 			senderAddr := cliCtx.GetFromAddress()
 
-			msg := types.NewMsgRemoveLiquidity(withdraw, withdrawAmount, minNative, deadline, senderAddr)
+			msg := types.NewMsgRemoveLiquidity(withdrawCoin, poolTokens, minNative.Amount, deadline, senderAddr)
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

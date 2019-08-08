@@ -3,6 +3,7 @@ package baseapp
 
 import (
 	"fmt"
+	"io"
 
 	dbm "github.com/tendermint/tm-db"
 
@@ -109,4 +110,18 @@ func (app *BaseApp) SetFauxMerkleMode() {
 		panic("SetFauxMerkleMode() on sealed BaseApp")
 	}
 	app.fauxMerkleMode = true
+}
+
+// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
+// CommitMultiStore.
+func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
+	app.cms.SetTracer(w)
+}
+
+// SetStoreLoader allows us to customize the rootMultiStore initialization.
+func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
+	if app.sealed {
+		panic("SetStoreLoader() on sealed BaseApp")
+	}
+	app.storeLoader = loader
 }

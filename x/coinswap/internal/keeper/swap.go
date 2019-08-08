@@ -40,7 +40,7 @@ func (k Keeper) GetInputAmount(ctx sdk.Context, outputAmt sdk.Int, inputDenom, o
 	outputBalance := reservePool.AmountOf(outputDenom)
 	fee := k.GetFeeParam(ctx)
 
-	numerator := inputBalance.Mul(outputBalance).Mul(fee.Denominator)
+	numerator := inputBalance.Mul(outputAmt).Mul(fee.Denominator)
 	denominator := (outputBalance.Sub(outputAmt)).Mul(fee.Numerator)
 	return numerator.Quo(denominator).Add(sdk.OneInt())
 }

@@ -511,7 +511,7 @@ func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, cdc *codec
 			// skip if the value doesn't have any bytes
 			continue
 		}
-		
+
 		decoder, ok := sdr[storeName]
 		if ok {
 			log += decoder(cdc, kvA, kvB)

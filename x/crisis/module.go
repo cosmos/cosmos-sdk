@@ -85,7 +85,7 @@ func (AppModule) Name() string {
 // register invariants
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// RegisterStoreDecoder doesn't register any KVPair 
+// RegisterStoreDecoder doesn't register any KVPair
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // module querier route name

@@ -189,7 +189,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // operations for a group of modules
 type Manager struct {
 	Modules            map[string]AppModule
-	StoreDecoders 		sdk.StoreDecoderRegistry
+	StoreDecoders      sdk.StoreDecoderRegistry
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -209,7 +209,7 @@ func NewManager(modules ...AppModule) *Manager {
 
 	return &Manager{
 		Modules:            moduleMap,
-		StoreDecoders: decoders,
+		StoreDecoders:      decoders,
 		OrderInitGenesis:   modulesStr,
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,

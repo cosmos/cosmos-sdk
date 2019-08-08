@@ -45,7 +45,7 @@ func TestDecodeStore(t *testing.T) {
 		name        string
 		expectedLog string
 	}{
-		{"Minter", fmt.Sprintf("%v\n%v", acc, acc)},
+		{"Account", fmt.Sprintf("%v\n%v", acc, acc)},
 		{"GlobalAccNumber", fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumber, globalAccNumber)},
 		{"other", ""},
 	}

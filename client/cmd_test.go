@@ -1,4 +1,3 @@
-// nolint: misspell
 package client_test
 
 import (
@@ -38,10 +37,10 @@ func TestValidateCmd(t *testing.T) {
 		args    []string
 		wantErr bool
 	}{
-		{"misspelled command", []string{"comission"}, true},
+		{"misspelled command", []string{"comission"}, true}, // nolint: misspell
 		{"no command provided", []string{}, false},
-		{"help flag", []string{"comission", "--help"}, false},
-		{"shorthand help flag", []string{"comission", "-h"}, false},
+		{"help flag", []string{"commission", "--help"}, false},       // nolint: misspell
+		{"shorthand help flag", []string{"commission", "-h"}, false}, // nolint: misspell
 	}
 
 	for _, tt := range tests {

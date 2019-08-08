@@ -12,16 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// ContentSimulator defines a function type alias for generating random proposal
-// content.
-type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content
-
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim ContentSimulator) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim simulation.ContentSimulator) simulation.Operation {
 	handler := gov.NewHandler(k)
 
 	// The states are:

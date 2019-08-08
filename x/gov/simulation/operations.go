@@ -5,10 +5,11 @@ package simulation
 import (
 	"math/rand"
 
-	// distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 )
 
 // Simulation parameter constants

@@ -5,8 +5,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 // nolint
@@ -177,7 +179,7 @@ type Params struct {
 	BlockSizeTransitionMatrix TransitionMatrix
 }
 
-// Return random simulation parameters
+// RandomParams return random simulation parameters
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
@@ -188,3 +190,7 @@ func RandomParams(r *rand.Rand) Params {
 		BlockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}
 }
+
+// ContentSimulator defines a function type alias for generating random proposal
+// content.
+type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []Account) gov.Content

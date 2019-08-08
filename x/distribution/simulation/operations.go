@@ -6,8 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -19,7 +18,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, keeper distr.Keeper) simulation.WeightedOperations {
+func WeightedOperations(cdc *codec.Codec, k keeper.Keeper) simulation.WeightedOperations {
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
 			func(_ *rand.Rand) int {
@@ -30,7 +29,7 @@ func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, keeper distr.K
 					})
 				return v
 			}(nil),
-			SimulateMsgSetWithdrawAddress(ak, keeper),
+			SimulateMsgSetWithdrawAddress(k),
 		),
 		simulation.NewWeigthedOperation(
 			func(_ *rand.Rand) int {
@@ -41,7 +40,7 @@ func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, keeper distr.K
 					})
 				return v
 			}(nil),
-			SimulateMsgWithdrawDelegatorReward(ak, keeper),
+			SimulateMsgWithdrawDelegatorReward(k),
 		),
 		simulation.NewWeigthedOperation(
 			func(_ *rand.Rand) int {
@@ -52,7 +51,7 @@ func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, keeper distr.K
 					})
 				return v
 			}(nil),
-			SimulateMsgWithdrawValidatorCommission(ak, keeper),
+			SimulateMsgWithdrawValidatorCommission(k),
 		),
 	}
 }

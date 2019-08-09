@@ -70,6 +70,9 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
+// GenerateGenesisState performs a no-op.
+func (AppModuleSimulation) GenerateGenesisState(_ *codec.Codec, _ *rand.Rand, _ map[string]json.RawMessage) {}
+
 //____________________________________________________________________________
 
 // AppModule implements an application module for the crisis module.

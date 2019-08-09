@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 )
 
 var (
@@ -69,6 +70,11 @@ type AppModuleSimulation struct{}
 
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState creates a randomized GenState of the bank module.
+func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	simulation.GenBankGenesisState(cdc, r, genesisState)
+}
 
 //____________________________________________________________________________
 

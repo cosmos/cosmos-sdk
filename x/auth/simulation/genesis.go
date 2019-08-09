@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -56,11 +56,11 @@ func GenAuthGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string
 	sigVerifyCostED25519 := GenSigVerifyCostED25519(cdc, r)
 	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(cdc, r)
 
-	authGenesis := auth.NewGenesisState(
-		auth.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
+	authGenesis := types.NewGenesisState(
+		types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
 			sigVerifyCostED25519, sigVerifyCostSECP256K1),
 	)
 
 	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, authGenesis.Params))
-	genesisState[auth.ModuleName] = cdc.MustMarshalJSON(authGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 }

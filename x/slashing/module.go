@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation/decoder"
 )
 
@@ -78,6 +79,11 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder registers a decoder for slashing module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = decoder.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the slashing module.
+func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	simulation.GenSlashingGenesisState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

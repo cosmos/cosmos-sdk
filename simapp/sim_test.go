@@ -36,7 +36,7 @@ import (
 )
 
 // Get flags every time the simulator is run
-func init() { getSimulatorFlags() }
+func init() { GetSimulatorFlags() }
 
 // helper function for populating input for SimulateFromSeed
 // TODO: clean up this function along with the simulation refactor

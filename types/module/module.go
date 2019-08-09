@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -135,6 +136,9 @@ type AppModuleGenesis interface {
 type AppModuleSimulation interface {
 	// register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
+
+	// randomized genesis states
+	GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage)
 }
 
 // AppModule is the standard form for an application module
@@ -364,5 +368,13 @@ func NewSimulationManager(moduleMap map[string]AppModule) *SimulationManager {
 func (sm *SimulationManager) RegisterStoreDecoders() {
 	for _, module := range sm.Modules {
 		module.RegisterStoreDecoder(sm.StoreDecoders)
+	}
+}
+
+// GenerateGenesisStates generates a randomized GenesisState for each of the 
+// registered modules
+func (sm *SimulationManager) GenerateGenesisStates(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	for _, module := range sm.Modules {
+		module.GenerateGenesisState(cdc, r, genesisState)
 	}
 }

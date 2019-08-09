@@ -1,22 +1,13 @@
-//nolint
 package simapp
 
 import (
-	"bytes"
-	"encoding/binary"
 	"flag"
 	"fmt"
+
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 //---------------------------------------------------------------------
@@ -44,8 +35,8 @@ var (
 	genesisTime        int64
 )
 
-// getSimulatorFlags gets the values of all the available simulation flags
-func getSimulatorFlags() {
+// GetSimulatorFlags gets the values of all the available simulation flags
+func GetSimulatorFlags() {
 	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
 	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
 	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")

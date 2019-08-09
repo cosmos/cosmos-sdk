@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
 )
 
 var (
@@ -81,6 +82,11 @@ type AppModuleSimulation struct{}
 
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState creates a randomized GenState of the genesis accounts module.
+func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	simulation.GenGenesisAccounts(cdc, r, genesisState)
+}
 
 //____________________________________________________________________________
 

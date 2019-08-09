@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 // Simulation parameter constants
@@ -26,8 +26,8 @@ func GenSendEnabled(cdc *codec.Codec, r *rand.Rand) bool {
 func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	sendEnabled := GenSendEnabled(cdc, r)
 
-	bankGenesis := bank.NewGenesisState(sendEnabled)
+	bankGenesis := types.NewGenesisState(sendEnabled)
 
 	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, bankGenesis))
-	genesisState[bank.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 }

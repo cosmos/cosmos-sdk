@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/mint/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation/decoder"
 )
 
@@ -73,6 +74,11 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = decoder.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the mint module.
+func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	simulation.GenMintGenesisState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

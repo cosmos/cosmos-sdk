@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation/decoder"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -99,6 +100,11 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = decoder.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the gov module.
+func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+	simulation.GenGovGenesisState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

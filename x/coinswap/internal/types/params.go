@@ -68,6 +68,14 @@ Fee:			%s`, p.NativeDenom, p.Fee,
 	)
 }
 
+// String returns a decimal representation of the parameters.
+func (fp FeeParam) String() sdk.Dec {
+	feeN := sdk.NewDecFromInt(fp.Numerator)
+	feeD := sdk.NewDecFromInt(fp.Denominator)
+	fee := sdk.OneDec().Sub((feeN.Quo(feeD)))
+	return fee
+}
+
 // DefaultParams returns the default coinswap module parameters
 func DefaultParams() Params {
 	feeParam := NewFeeParam(sdk.NewInt(997), sdk.NewInt(1000))

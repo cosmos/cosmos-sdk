@@ -55,7 +55,7 @@ func GetCmdAddLiquidity(cdc *codec.Codec) *cobra.Command {
 			fmt.Sprintf(`Add liquidity to the reserve pool for a trading pair.
 			
 Example:
-$ %s tx coinswap add-liquidity dai 1000atom --min-reward 100atom --deadline 2h  --from mykey
+$ %s tx coinswap add-liquidity dai 1000atom --min-reward 100 --deadline 2h --from mykey
 `,
 				version.ClientName,
 			),
@@ -113,7 +113,7 @@ func GetCmdRemoveLiquidity(cdc *codec.Codec) *cobra.Command {
 			fmt.Sprintf(`Remove liquidity from the reserve pool for a trading pair.
 			
 Example:
-$ %s tx coinswap remove-liquidity dai 1000atom --min-native 100atom --deadline 2h  --from mykey
+$ %s tx coinswap remove-liquidity dai 1000atom --min-native 100atom --deadline 2h --from mykey
 `,
 				version.ClientName,
 			),

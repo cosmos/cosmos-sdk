@@ -1,0 +1,2 @@
+Fix IAVL `Store` to panic on any error when calling `DeleteVersion` on the
+underlying tree.

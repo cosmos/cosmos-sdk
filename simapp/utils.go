@@ -33,13 +33,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+// List of available flags for the simulator
 var (
 	genesisFile        string
 	paramsFile         string
 	exportParamsPath   string
 	exportParamsHeight int
 	exportStatePath    string
+	exportStatsPath    string
 	seed               int64
+	initialBlockHeight int
 	numBlocks          int
 	blockSize          int
 	enabled            bool

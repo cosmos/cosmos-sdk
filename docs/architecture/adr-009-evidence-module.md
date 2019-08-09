@@ -13,11 +13,13 @@ Proposed
 In order to support building highly secure, robust and interoperable blockchain
 applications, it is vital for the Cosmos SDK to expose a mechanism in which arbitrary
 evidence can be submitted, evaluated and verified resulting in some agreed upon
-penalty for any equivocations committed by a validator. Furthermore, such a
-mechanism is paramount for any [IBC](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
-protocol implementation in order to support the ability for any equivocations to
-be relayed back from a collateralized chain to a primary chain so that the
-equivocating validator(s) can be slashed.
+penalty for any misbehaviour committed by a validator, such as equivocation (double-voting),
+signing when unbonded, signing an incorrect state transition (in the future), etc.
+Furthermore, such a mechanism is paramount for any
+[IBC](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md) protocol
+implementation in order to support the ability for any misbehaviour to be relayed
+back from a collateralized chain to a primary chain so that the equivocating
+validator(s) can be slashed.
 
 ## Decision
 

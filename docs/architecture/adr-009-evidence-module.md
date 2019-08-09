@@ -33,7 +33,7 @@ custom evidence messages and types along with their slashing penalties
 - Support the ability through governance to modify slashing penalties of any
 evidence type
 - Querier implementation to support querying params, evidence types, params, and
-all submitted valid equivocations
+all submitted valid misbehaviour
 
 ### Types
 

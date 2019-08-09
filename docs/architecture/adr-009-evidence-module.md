@@ -28,8 +28,8 @@ functionality:
 
 - Provide developers with the abstractions and interfaces necessary to define
 custom evidence messages and types along with their slashing penalties
-- Support the ability to route evidence message to handlers in any module to
- determine the validity of a submitted equivocation
+- Support the ability to route evidence messages to handlers in any module to
+ determine the validity of submitted misbehaviour
 - Support the ability through governance to modify slashing penalties of any
 evidence type
 - Querier implementation to support querying params, evidence types, params, and

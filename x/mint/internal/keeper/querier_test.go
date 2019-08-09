@@ -1,76 +1,81 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	. "github.com/cosmos/cosmos-sdk/x/mint/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestNewQuerier(t *testing.T) {
-	input := newTestInput(t)
-	querier := NewQuerier(input.mintKeeper)
+	ctx, app := simapp.NewSimAppWithContext(true)
+	querier := NewQuerier(app.MintKeeper)
 
 	query := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
 	}
 
-	_, err := querier(input.ctx, []string{types.QueryParameters}, query)
+	_, err := querier(ctx, []string{types.QueryParameters}, query)
 	require.NoError(t, err)
 
-	_, err = querier(input.ctx, []string{types.QueryInflation}, query)
+	_, err = querier(ctx, []string{types.QueryInflation}, query)
 	require.NoError(t, err)
 
-	_, err = querier(input.ctx, []string{types.QueryAnnualProvisions}, query)
+	_, err = querier(ctx, []string{types.QueryAnnualProvisions}, query)
 	require.NoError(t, err)
 
-	_, err = querier(input.ctx, []string{"foo"}, query)
+	_, err = querier(ctx, []string{"foo"}, query)
 	require.Error(t, err)
 }
 
 func TestQueryParams(t *testing.T) {
-	input := newTestInput(t)
+	ctx, app := simapp.NewSimAppWithContext(true)
+	querier := NewQuerier(app.MintKeeper)
 
 	var params types.Params
 
-	res, sdkErr := queryParams(input.ctx, input.mintKeeper)
+	res, sdkErr := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := input.cdc.UnmarshalJSON(res, &params)
+	err := app.Cdc.UnmarshalJSON(res, &params)
 	require.NoError(t, err)
 
-	require.Equal(t, input.mintKeeper.GetParams(input.ctx), params)
+	require.Equal(t, app.MintKeeper.GetParams(ctx), params)
 }
 
 func TestQueryInflation(t *testing.T) {
-	input := newTestInput(t)
+	ctx, app := simapp.NewSimAppWithContext(true)
+	querier := NewQuerier(app.MintKeeper)
 
 	var inflation sdk.Dec
 
-	res, sdkErr := queryInflation(input.ctx, input.mintKeeper)
+	res, sdkErr := querier(ctx, []string{types.QueryInflation}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := input.cdc.UnmarshalJSON(res, &inflation)
+	err := app.Cdc.UnmarshalJSON(res, &inflation)
 	require.NoError(t, err)
 
-	require.Equal(t, input.mintKeeper.GetMinter(input.ctx).Inflation, inflation)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).Inflation, inflation)
 }
 
 func TestQueryAnnualProvisions(t *testing.T) {
-	input := newTestInput(t)
+	ctx, app := simapp.NewSimAppWithContext(true)
+	querier := NewQuerier(app.MintKeeper)
 
 	var annualProvisions sdk.Dec
 
-	res, sdkErr := queryAnnualProvisions(input.ctx, input.mintKeeper)
+	res, sdkErr := querier(ctx, []string{types.QueryAnnualProvisions}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)
 
-	err := input.cdc.UnmarshalJSON(res, &annualProvisions)
+	err := app.Cdc.UnmarshalJSON(res, &annualProvisions)
 	require.NoError(t, err)
 
-	require.Equal(t, input.mintKeeper.GetMinter(input.ctx).AnnualProvisions, annualProvisions)
+	require.Equal(t, app.MintKeeper.GetMinter(ctx).AnnualProvisions, annualProvisions)
 }

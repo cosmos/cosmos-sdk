@@ -561,7 +561,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
-	err = app.cdc.UnmarshalJSON(appState, &genesisState)
+	err = app.Cdc.UnmarshalJSON(appState, &genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -601,7 +601,7 @@ func TestAppImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.Cdc, newApp.Cdc, failedKVs))
 	}
 
 }

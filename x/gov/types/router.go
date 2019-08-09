@@ -1,4 +1,4 @@
-package gov
+package types
 
 import (
 	"fmt"
@@ -26,6 +26,7 @@ type router struct {
 	sealed bool
 }
 
+// NewRouter creates a new Router interface instance
 func NewRouter() Router {
 	return &router{
 		routes: make(map[string]Handler),

@@ -9,11 +9,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -62,7 +63,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -130,7 +131,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -153,8 +154,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID uint64
-	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	proposalID := GetProposalIDFromBytes(res.Data)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -178,7 +178,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedVotingPeriod(t *testing.T) {
-	input := getMockApp(t, 10, GenesisState{}, nil)
+	input := getMockApp(t, 10, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -195,12 +195,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
-	newProposalMsg := NewMsgSubmitProposal(testProposal(), proposalCoins, input.addrs[0])
+	newProposalMsg := NewMsgSubmitProposal(keep.TestProposal, proposalCoins, input.addrs[0])
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID uint64
-	input.keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
+	proposalID := GetProposalIDFromBytes(res.Data)
 
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
@@ -221,15 +220,11 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
 
-	var activeProposalID uint64
-
-	require.NoError(t, input.keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID))
+	activeProposalID := GetProposalIDFromBytes(activeQueue.Value())
 	proposal, ok := input.keeper.GetProposal(ctx, activeProposalID)
 	require.True(t, ok)
 	require.Equal(t, StatusVotingPeriod, proposal.Status)
-	depositsIterator := input.keeper.GetDepositsIterator(ctx, proposalID)
-	require.True(t, depositsIterator.Valid())
-	depositsIterator.Close()
+
 	activeQueue.Close()
 
 	EndBlocker(ctx, input.keeper)
@@ -240,7 +235,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	input := getMockApp(t, 1, GenesisState{}, nil)
+	input := getMockApp(t, 1, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
@@ -259,7 +254,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := macc.GetCoins()
 
-	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
@@ -289,11 +284,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	input := getMockApp(t, 1, GenesisState{}, nil)
-	SortAddresses(input.addrs)
-
 	// hijack the router to one that will fail in a proposal's handler
-	input.keeper.router = NewRouter().AddRoute(RouterKey, badProposalHandler)
+	input := getMockApp(t, 1, GenesisState{}, nil, badProposalHandler)
+	SortAddresses(input.addrs)
 
 	handler := NewHandler(input.keeper)
 	stakingHandler := staking.NewHandler(input.sk)
@@ -310,7 +303,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
 	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := input.keeper.SubmitProposal(ctx, testProposal())
+	proposal, err := input.keeper.SubmitProposal(ctx, keep.TestProposal)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))

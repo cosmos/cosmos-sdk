@@ -16,32 +16,31 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-const moduleName = "params"
-
-// app module basics object
+// AppModuleBasic defines the basic application module used by the params module.
 type AppModuleBasic struct{}
 
-// module name
+// Name returns the params module's name.
 func (AppModuleBasic) Name() string {
-	return moduleName
+	return ModuleName
 }
 
-// register module codec
+// RegisterCodec registers the params module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	types.RegisterCodec(cdc)
 }
 
-// default genesis state
+// DefaultGenesis returns default genesis state as raw bytes for the params
+// module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage { return nil }
 
-// module validate genesis
+// ValidateGenesis performs genesis state validation for the params module.
 func (AppModuleBasic) ValidateGenesis(_ json.RawMessage) error { return nil }
 
-// register rest routes
+// RegisterRESTRoutes registers the REST routes for the params module.
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
-// get the root tx command of this module
+// GetTxCmd returns the root tx command for the params module.
 func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-// get the root query command of this module
+// GetQueryCmd returns no root query command for the params module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }

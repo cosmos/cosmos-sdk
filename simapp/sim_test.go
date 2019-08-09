@@ -110,7 +110,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgSetWithdrawAddress(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -121,7 +121,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgWithdrawDelegatorReward(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -132,7 +132,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper),
+			distrsim.SimulateMsgWithdrawValidatorCommission(app.distrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -494,7 +494,7 @@ func TestAppImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVs))
 	}
 
 }

@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -11,8 +11,8 @@ import (
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // 3 parameter changes all of which have random, but valid values.
-func SimulateParamChangeProposalContent(r *rand.Rand, paramChangePool []simulation.SimParamChange) gov.Content {
-	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool))
+func SimulateParamChangeProposalContent(r *rand.Rand, paramChangePool []simulation.SimParamChange) govtypes.Content {
+	numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool)/2)
 	paramChanges := make([]params.ParamChange, numChanges, numChanges)
 	paramChangesKeys := make(map[string]struct{})
 

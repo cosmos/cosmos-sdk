@@ -39,7 +39,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 	keeper.IterateActiveProposalsQueue(ctx, ctx.BlockHeader().Time, func(proposal Proposal) bool {
 		var tagValue, logMsg string
 
-		passes, burnDeposits, tallyResults := tally(ctx, keeper, proposal)
+		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
 		if burnDeposits {
 			keeper.DeleteDeposits(ctx, proposal.ProposalID)
@@ -48,7 +48,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 		}
 
 		if passes {
-			handler := keeper.router.GetRoute(proposal.ProposalRoute())
+			handler := keeper.Router().GetRoute(proposal.ProposalRoute())
 			cacheCtx, writeCache := ctx.CacheContext()
 
 			// The proposal handler may execute state mutating logic depending

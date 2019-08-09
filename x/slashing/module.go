@@ -19,8 +19,8 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
@@ -94,10 +94,10 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, stakingKeeper types.StakingKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
-		keeper:         keeper,
-		stakingKeeper:  stakingKeeper,
+		keeper:              keeper,
+		stakingKeeper:       stakingKeeper,
 	}
 }
 

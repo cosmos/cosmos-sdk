@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	_ module.AppModuleGenesis = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis    = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
@@ -82,11 +82,11 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		deliverTx:      deliverTx,
+		accountKeeper:       accountKeeper,
+		stakingKeeper:       stakingKeeper,
+		deliverTx:           deliverTx,
 	})
 }
 

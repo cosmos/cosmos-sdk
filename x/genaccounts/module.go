@@ -49,10 +49,10 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes registers the REST routes for the genesis accounts module.
+// RegisterRESTRoutes registers no REST routes for the genesis accounts module.
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
-// GetTxCmd returns the root tx command for the genesis accounts module.
+// GetTxCmd returns no root tx command for the genesis accounts module.
 func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the genesis accounts module.
@@ -79,7 +79,7 @@ func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[st
 // AppModuleSimulation defines the module simulation functions used by the genesis accounts module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder registers a decoder for genesis accounts module's types
+// RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 //____________________________________________________________________________

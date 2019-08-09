@@ -67,7 +67,7 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 // AppModuleSimulation defines the module simulation functions used by the crisis module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder registers a decoder for the crisis module's types
+// RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 //____________________________________________________________________________
@@ -134,7 +134,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	return types.ModuleCdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the crisis module.
+// BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the crisis module. It returns no validator

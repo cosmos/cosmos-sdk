@@ -109,12 +109,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the slashing module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// RegisterStoreDecoder registers the function to decode the types stored in the
-// KVStore
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = decoder.DecodeStore
-}
-
 // Route returns the message routing key for the slashing module.
 func (AppModule) Route() string {
 	return RouterKey

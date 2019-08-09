@@ -73,8 +73,10 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModuleSimulation defines the module simulation functions used by the distribution module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder registers no decoder for distribution module's types
-func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+// RegisterStoreDecoder registers a decoder for distribution module's types
+func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = decoder.DecodeStore
+}
 
 //____________________________________________________________________________
 
@@ -105,12 +107,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the distribution module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
-}
-
-// RegisterStoreDecoder registers the function to decode the types stored in the
-// KVStore
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = decoder.DecodeStore
 }
 
 // Route returns the message routing key for the distribution module.

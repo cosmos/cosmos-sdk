@@ -70,7 +70,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModuleSimulation defines the module simulation functions used by the mint module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder registers a decoder for mint module's types
+// RegisterStoreDecoder registers a decoder for mint module's types.
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = decoder.DecodeStore
 }
@@ -101,12 +101,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants registers the mint module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// RegisterStoreDecoder registers the function to decode the types stored in the
-// KVStore
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = decoder.DecodeStore
-}
 
 // Route returns the message routing key for the mint module.
 func (AppModule) Route() string { return "" }

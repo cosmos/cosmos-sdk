@@ -52,7 +52,6 @@ power at same height in which the infraction occured.
 
 ```go
 type Evidence interface {
-  Jailable() bool
   Route() string
   Type() string
   ValidateBasic() sdk.Error
@@ -127,15 +126,17 @@ func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Err
     return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
   }
 
+  penalty := keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type())
+
   keeper.stakingKeeper.Slash(
     ctx,
     infraction.ConsensusAddress,
     infraction.InfractionHeight,
     infraction.Power,
-    keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type()),
+    penalty.SlashFraction,
   )
 
-  if infraction.Evidence.Jailable() {
+  if penalty.Jailable {
     keeper.stakingKeeper.Jail(ctx, infraction.ConsensusAddress)
   }
 
@@ -180,9 +181,15 @@ module only needs a list of all submitted valid infractions and the infraction
 penalties which we represent through parameters managed by the `x/params` module.
 
 ```go
+type PenaltyParam struct {
+  SlashFraction  sdk.Dec
+  Jailable       bool
+}
+
 type PenaltyParams struct {
-  // A series of slashing penalties all of which are of type sdk.Dec and these
-  // can individually be changed through a governance parameter change proposal.
+  // A series of misbehaviour penalties all of which are of type PenaltyParam
+  // and these can individually be changed through a governance parameter change
+  // proposal.
 }
 
 type GenesisState struct {

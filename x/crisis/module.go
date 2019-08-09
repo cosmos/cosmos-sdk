@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
 // AppModuleBasic defines the basic application module used by the crisis module.
@@ -61,9 +62,20 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
+//____________________________________________________________________________
+
+// AppModuleSimulation defines the module simulation functions used by the crisis module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder registers a decoder for the crisis module's types
+func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+//____________________________________________________________________________
+
 // AppModule implements an application module for the crisis module.
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
 
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
@@ -74,8 +86,9 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		keeper:              keeper,
 	}
 }
 
@@ -86,9 +99,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// RegisterStoreDecoder doesn't register any KVPair
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // Route returns the message routing key for the crisis module.
 func (AppModule) Route() string {

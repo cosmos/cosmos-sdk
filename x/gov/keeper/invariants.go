@@ -1,4 +1,6 @@
-package gov
+package keeper
+
+// DONTCOVER
 
 import (
 	"fmt"

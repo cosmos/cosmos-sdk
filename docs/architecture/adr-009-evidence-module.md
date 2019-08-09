@@ -40,13 +40,15 @@ all submitted valid misbehaviour
 First, we define the `Evidence` interface type. The `x/evidence` module may implement
 its own types that can be used by many chains (e.g. `CounterFactualEvidence`).
 In addition, other modules may implement their own `Evidence` types in a similar
-manner in which governance is extensible. It is important to note any concrete 
+manner in which governance is extensible. It is important to note any concrete
 type implementing the `Evidence` interface may include arbitrary fields such as
-an infraction time. We want the `Evidence` type to remain as flexible
-as possible.
+an infraction time. We want the `Evidence` type to remain as flexible as possible.
 
 However, when submitting evidence to the `x/evidence` module, it must be submitted
-as an `Infraction` which includes mandatory fields outlined below.
+as an `Infraction` which includes mandatory fields outlined below. The `Infraction`
+type must include the validator's consensus address, which should be known by the
+`x/slashing` module, the height at which the infraction occured and the validator's
+power at same height in which the infraction occured.
 
 ```go
 type Evidence interface {

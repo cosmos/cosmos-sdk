@@ -2343,6 +2343,8 @@ definitions:
             type: string
           website:
             type: string
+          security_contact:
+            type: string
           details:
             type: string
       bond_height:

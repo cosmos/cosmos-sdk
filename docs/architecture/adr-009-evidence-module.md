@@ -47,22 +47,22 @@ as possible.
 
 However, when submitting evidence to the `x/evidence` module, it must be submitted
 as an `Infraction` which includes mandatory fields outlined below.
- 
+
 ```go
 type Evidence interface {
-	Jailable() bool
-	Route() string
-	Type() string
-	ValidateBasic() sdk.Error
-	String() string
+  Jailable() bool
+  Route() string
+  Type() string
+  ValidateBasic() sdk.Error
+  String() string
 }
 
 type Infraction struct {
-	Evidence
-	
-	ConsensusAddress    sdk.ConsAddress
-	InfractionHeight    int64
-	Power               int64
+  Evidence
+
+  ConsensusAddress    sdk.ConsAddress
+  InfractionHeight    int64
+  Power               int64
 }
 ```
 
@@ -73,10 +73,10 @@ the `x/evidence` module. It accomplishes this through the `Router` implementatio
 
 ```go
 type Router interface {
-	AddRoute(r string, h Handler) (rtr Router)
-	HasRoute(r string) bool
-	GetRoute(path string) (h Handler)
-	Seal()
+  AddRoute(r string, h Handler) (rtr Router)
+  HasRoute(r string) bool
+  GetRoute(path string) (h Handler)
+  Seal()
 }
 ```
 
@@ -97,47 +97,47 @@ be configured through governance.
 
 ```go
 type MsgSubmitInfraction struct {
-	Infraction
+  Infraction
 }
 
 func handleMsgSubmitInfraction(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvidence) sdk.Result {
-	if err := keeper.SubmitInfraction(ctx, msg.Infraction); err != nil {
-		return err.Result()
-	}
-    
-	// emit events...
+  if err := keeper.SubmitInfraction(ctx, msg.Infraction); err != nil {
+    return err.Result()
+  }
 
-	return sdk.Result{ 
-		// ...
-	}
+  // emit events...
+
+  return sdk.Result{
+    // ...
+  }
 }
 ```
 
 The `x/evidence` module's keeper is responsible for matching the `Evidence` against
 the module's router. Upon success the validator is slashed and the infraction is
 persisted. In addition, the validator is jailed is the `Evidence` type is configured
-to do so. 
+to do so.
 
 ```go
 func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Error {
-	handler := keeper.router.GetRoute(infraction.Evidence.Route())
-	if err := handler(cacheCtx, infraction.Evidence); err != nil {
-		return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
-	}
-	
-	keeper.stakingKeeper.Slash(
-		ctx,
-		infraction.ConsensusAddress, 
-		infraction.InfractionHeight, 
-		infraction.Power, 
-		keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type()),
-	)
-	
-	if infraction.Evidence.Jailable() {
-		keeper.stakingKeeper.Jail(ctx, infraction.ConsensusAddress)
-	}
+  handler := keeper.router.GetRoute(infraction.Evidence.Route())
+  if err := handler(cacheCtx, infraction.Evidence); err != nil {
+    return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
+  }
 
-	keeper.setInfraction(ctx, infraction)
+  keeper.stakingKeeper.Slash(
+    ctx,
+    infraction.ConsensusAddress,
+    infraction.InfractionHeight,
+    infraction.Power,
+    keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type()),
+  )
+
+  if infraction.Evidence.Jailable() {
+    keeper.stakingKeeper.Jail(ctx, infraction.ConsensusAddress)
+  }
+
+  keeper.setInfraction(ctx, infraction)
 }
 ```
 
@@ -150,26 +150,26 @@ mapping between `Evidence` types and slashing penalties represented as `Infracti
 var slashingPenaltyPrefixKey = []byte{0x01}
 
 type InfractionPenalty struct {
-	EvidenceType    string
-	Penalty         sdk.Dec
+  EvidenceType    string
+  Penalty         sdk.Dec
 }
 
 func GetSlashingPenaltyKey(evidenceType string) []byte {
-	return append(slashingPenaltyPrefixKey, []byte(evidenceType)...)
+  return append(slashingPenaltyPrefixKey, []byte(evidenceType)...)
 }
 
 func (k Keeper) GetSlashingPenalty(ctx sdk.Context, evidenceType string) sdk.Dec {
-	store := ctx.KVStore(k.storeKey)
-	
-	bz := store.Get(GetSlashingPenaltyKey(evidenceType))
-	if len(bz) == 0 {
-		return sdk.ZeroDec()
-	}
-	
-	var ip InfractionPenalty
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
-	
-	return ip.Penalty
+  store := ctx.KVStore(k.storeKey)
+
+  bz := store.Get(GetSlashingPenaltyKey(evidenceType))
+  if len(bz) == 0 {
+    return sdk.ZeroDec()
+  }
+
+  var ip InfractionPenalty
+  k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
+
+  return ip.Penalty
 }
 ```
 
@@ -179,8 +179,8 @@ penalties.
 
 ```go
 type GenesisState struct {
-	Infractions         []Infraction
-	InfractionPenalties []InfractionPenalty
+  Infractions         []Infraction
+  InfractionPenalties []InfractionPenalty
 }
 ```
 

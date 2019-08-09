@@ -48,44 +48,47 @@ func TestGetSimulationLog(t *testing.T) {
 		store   string
 		kvPairs []cmn.KVPair
 	}{
-		{auth.StoreKey, []cmn.KVPair{
-			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
-			{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})},
-		}},
-		{mint.StoreKey, []cmn.KVPair{
-			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
-			{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})},
-		}},
-		{staking.StoreKey, []cmn.KVPair{
-			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-			{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()},
-		}},
-		{gov.StoreKey, []cmn.KVPair{
-			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
-			{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})},
-		}},
-		{distribution.StoreKey, []cmn.KVPair{
-			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
-			{Key: distr.ProposerKey, Value: consAddr1.Bytes()},
-		}},
-		{slashing.StoreKey, []cmn.KVPair{
-			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
-			{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)},
-		}},
-		{supply.StoreKey, []cmn.KVPair{
-			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
-			{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))},
-		}},
-		{"Empty", []cmn.KVPair{{}, {}}},
-		{"OtherStore", []cmn.KVPair{
-			{Key: []byte("key"), Value: []byte("value")},
-			{Key: []byte("key"), Value: []byte("other_value")},
-		}},
+		{
+			auth.StoreKey,
+			[]cmn.KVPair{{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})}},
+		},
+		{
+			mint.StoreKey,
+			[]cmn.KVPair{{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})}},
+		},
+		{
+			staking.StoreKey,
+			[]cmn.KVPair{{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
+		},
+		{
+			gov.StoreKey,
+			[]cmn.KVPair{{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
+		},
+		{
+			distribution.StoreKey,
+			[]cmn.KVPair{{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
+		},
+		{
+			slashing.StoreKey,
+			[]cmn.KVPair{{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)}},
+		},
+		{
+			supply.StoreKey,
+			[]cmn.KVPair{{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))}},
+		},
+		{
+			"Empty",
+			[]cmn.KVPair{{}},
+		},
+		{
+			"OtherStore",
+			[]cmn.KVPair{{Key: []byte("key"), Value: []byte("value")}},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.store, func(t *testing.T) {
-			require.NotPanics(t, func() { GetSimulationLog(tt.store, make(sdk.StoreDecoderRegistry), cdc, tt.kvPairs) }, tt.store)
+			require.NotPanics(t, func() { GetSimulationLog(tt.store, make(sdk.StoreDecoderRegistry), cdc, tt.kvPairs, tt.kvPairs) }, tt.store)
 		})
 	}
 }

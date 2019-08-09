@@ -177,12 +177,17 @@ func (k Keeper) GetSlashingPenalty(ctx sdk.Context, evidenceType string) sdk.Dec
 
 Finally, we need to represent the genesis state of the `x/evidence` module. The
 module only needs a list of all submitted valid infractions and the infraction
-penalties.
+penalties which we represent through parameters managed by the `x/params` module.
 
 ```go
+type PenaltyParams struct {
+  // A series of slashing penalties all of which are of type sdk.Dec and these
+  // can individually be changed through a governance parameter change proposal.
+}
+
 type GenesisState struct {
-  Infractions         []Infraction
-  InfractionPenalties []InfractionPenalty
+  Params       PenaltyParams
+  Infractions  []Infraction
 }
 ```
 

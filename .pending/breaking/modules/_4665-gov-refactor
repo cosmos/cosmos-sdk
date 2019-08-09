@@ -1,0 +1,3 @@
+#4665 Refactored `x/gov` module structure and dev-UX:
+  - Prepare for module spec integration
+  - Update gov keys to use big endian encoding instead of little endian

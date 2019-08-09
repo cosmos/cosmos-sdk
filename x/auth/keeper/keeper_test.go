@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -10,82 +10,82 @@ import (
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	input := SetupTestInput()
+	ctx, app := newTestApp(t)
 	addr := sdk.AccAddress([]byte("some-address"))
 
 	// no account before its created
-	acc := input.AccountKeeper.GetAccount(input.Ctx, addr)
+	acc := app.AccountKeeper.GetAccount(ctx, addr)
 	require.Nil(t, acc)
 
 	// create account and check default values
-	acc = input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr)
+	acc = app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 	require.NotNil(t, acc)
 	require.Equal(t, addr, acc.GetAddress())
 	require.EqualValues(t, nil, acc.GetPubKey())
 	require.EqualValues(t, 0, acc.GetSequence())
 
 	// NewAccount doesn't call Set, so it's still nil
-	require.Nil(t, input.AccountKeeper.GetAccount(input.Ctx, addr))
+	require.Nil(t, app.AccountKeeper.GetAccount(ctx, addr))
 
 	// set some values on the account and save it
 	newSequence := uint64(20)
 	acc.SetSequence(newSequence)
-	input.AccountKeeper.SetAccount(input.Ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, acc)
 
 	// check the new values
-	acc = input.AccountKeeper.GetAccount(input.Ctx, addr)
+	acc = app.AccountKeeper.GetAccount(ctx, addr)
 	require.NotNil(t, acc)
 	require.Equal(t, newSequence, acc.GetSequence())
 }
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
-	input := SetupTestInput()
+	ctx, app := newTestApp(t)
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
 	// create accounts
-	acc1 := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr1)
-	acc2 := input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr2)
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 
 	accSeq1 := uint64(20)
 	accSeq2 := uint64(40)
 
 	acc1.SetSequence(accSeq1)
 	acc2.SetSequence(accSeq2)
-	input.AccountKeeper.SetAccount(input.Ctx, acc1)
-	input.AccountKeeper.SetAccount(input.Ctx, acc2)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	app.AccountKeeper.SetAccount(ctx, acc2)
 
-	acc1 = input.AccountKeeper.GetAccount(input.Ctx, addr1)
+	acc1 = app.AccountKeeper.GetAccount(ctx, addr1)
 	require.NotNil(t, acc1)
 	require.Equal(t, accSeq1, acc1.GetSequence())
 
 	// remove one account
-	input.AccountKeeper.RemoveAccount(input.Ctx, acc1)
-	acc1 = input.AccountKeeper.GetAccount(input.Ctx, addr1)
+	app.AccountKeeper.RemoveAccount(ctx, acc1)
+	acc1 = app.AccountKeeper.GetAccount(ctx, addr1)
 	require.Nil(t, acc1)
 
-	acc2 = input.AccountKeeper.GetAccount(input.Ctx, addr2)
+	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
 	require.NotNil(t, acc2)
 	require.Equal(t, accSeq2, acc2.GetSequence())
 }
 
 func TestSetParams(t *testing.T) {
-	input := SetupTestInput()
+	ctx, app := newTestApp(t)
 	params := types.DefaultParams()
 
-	input.AccountKeeper.SetParams(input.Ctx, params)
+	app.AccountKeeper.SetParams(ctx, params)
 
 	newParams := types.Params{}
-	input.AccountKeeper.paramSubspace.Get(input.Ctx, types.KeyTxSigLimit, &newParams.TxSigLimit)
+	app.AccountKeeper.paramSubspace.Get(ctx, types.KeyTxSigLimit, &newParams.TxSigLimit)
 	require.Equal(t, newParams.TxSigLimit, types.DefaultTxSigLimit)
 }
 
 func TestGetParams(t *testing.T) {
-	input := SetupTestInput()
+	ctx, app := newTestApp(t)
 	params := types.DefaultParams()
 
-	input.AccountKeeper.SetParams(input.Ctx, params)
+	app.AccountKeeper.SetParams(ctx, params)
 
-	newParams := input.AccountKeeper.GetParams(input.Ctx)
+	newParams := app.AccountKeeper.GetParams(ctx)
 	require.Equal(t, params, newParams)
 }

@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
@@ -13,16 +13,17 @@ import (
 )
 
 func TestQueryAccount(t *testing.T) {
-	input := SetupTestInput()
+	ctx, app := newTestApp(t)
 
 	req := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(input.AccountKeeper)
+	path := []string{types.QueryAccount}
+	querier := NewQuerier(app.AccountKeeper)
 
-	bz, err := querier(input.Ctx, []string{"other"}, req)
+	bz, err := querier(ctx, []string{"other"}, req)
 	require.Error(t, err)
 	require.Nil(t, bz)
 
@@ -30,27 +31,27 @@ func TestQueryAccount(t *testing.T) {
 		Path: fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAccount),
 		Data: []byte{},
 	}
-	res, err := queryAccount(input.Ctx, req, input.AccountKeeper)
+	res, err := querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams([]byte("")))
-	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
+	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	_, _, addr := types.KeyTestPubAddr()
 	req.Data = input.cdc.MustMarshalJSON(types.NewQueryAccountParams(addr))
-	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
+	res, err = querier(ctx, path, req)
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	input.AccountKeeper.SetAccount(input.Ctx, input.AccountKeeper.NewAccountWithAddress(input.Ctx, addr))
-	res, err = queryAccount(input.Ctx, req, input.AccountKeeper)
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addr))
+	res, err = querier(ctx, path, req)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	res, err = querier(input.Ctx, []string{types.QueryAccount}, req)
+	res, err = querier(ctx, path, req)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 

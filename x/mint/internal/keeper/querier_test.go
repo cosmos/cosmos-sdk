@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	. "github.com/cosmos/cosmos-sdk/x/mint/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	ctx, app := simapp.NewSimAppWithContext(true)
+	ctx, app := newTestApp(t)
 	querier := NewQuerier(app.MintKeeper)
 
 	query := abci.RequestQuery{
@@ -36,7 +35,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	ctx, app := simapp.NewSimAppWithContext(true)
+	ctx, app := newTestApp(t)
 	querier := NewQuerier(app.MintKeeper)
 
 	var params types.Params
@@ -51,7 +50,7 @@ func TestQueryParams(t *testing.T) {
 }
 
 func TestQueryInflation(t *testing.T) {
-	ctx, app := simapp.NewSimAppWithContext(true)
+	ctx, app := newTestApp(t)
 	querier := NewQuerier(app.MintKeeper)
 
 	var inflation sdk.Dec
@@ -66,7 +65,7 @@ func TestQueryInflation(t *testing.T) {
 }
 
 func TestQueryAnnualProvisions(t *testing.T) {
-	ctx, app := simapp.NewSimAppWithContext(true)
+	ctx, app := newTestApp(t)
 	querier := NewQuerier(app.MintKeeper)
 
 	var annualProvisions sdk.Dec

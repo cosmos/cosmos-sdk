@@ -39,7 +39,7 @@ func (AppModuleBasic) ValidateGenesis(_ json.RawMessage) error { return nil }
 // RegisterRESTRoutes registers the REST routes for the params module.
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
-// GetTxCmd returns the root tx command for the params module.
+// GetTxCmd returns no root tx command for the params module.
 func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // GetQueryCmd returns no root query command for the params module.

@@ -1,0 +1,2 @@
+#4843 Add RegisterEvidences function in the codec package to register
+Tendermint evidence types with a given codec.

@@ -16,9 +16,7 @@ type InvariantRegistry interface {
 	RegisterRoute(moduleName, route string, invar Invariant)
 }
 
-// FormatInvariant returns a standardized invariant message along with
-// a boolean indicating whether the invariant has been broken.
-func FormatInvariant(module, name, msg string, broken bool) (string, bool) {
-	return fmt.Sprintf("%s: %s invariant\n%sinvariant broken: %v\n",
-		module, name, msg, broken), broken
+// FormatInvariant returns a standardized invariant message.
+func FormatInvariant(module, name, msg string) string {
+	return fmt.Sprintf("%s: %s invariant\n%s\n", module, name, msg)
 }

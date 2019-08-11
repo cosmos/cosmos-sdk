@@ -18,7 +18,6 @@ import (
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
@@ -85,7 +84,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		if len(r.Form) == 0 {
-			rest.PostProcessResponse(w, cliCtx, txs)
+			rest.PostProcessResponseBare(w, cliCtx, txs)
 			return
 		}
 
@@ -101,7 +100,7 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, searchResult)
+		rest.PostProcessResponseBare(w, cliCtx, searchResult)
 	}
 }
 
@@ -131,6 +130,6 @@ func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, cliCtx, output)
 	}
 }

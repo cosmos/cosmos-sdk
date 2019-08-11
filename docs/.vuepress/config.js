@@ -31,8 +31,7 @@ module.exports = {
           "/intro/",
           "/intro/why-app-specific",
           "/intro/sdk-app-architecture",
-          "/intro/sdk-design",
-          "/intro/ocap"
+          "/intro/sdk-design"
         ]
       },
       {
@@ -63,15 +62,15 @@ module.exports = {
         ]
       },
       {
-        title: "Clients",
+        title: "Interfaces",
         collapsable: true,
         children: [
-          "/clients/",
-          "/clients/cli",
-          "/clients/service-providers",
-          "/clients/lite/", // this renders the readme
-          "/clients/lite/getting_started",
-          "/clients/lite/specification"
+          "/interfaces/",
+          "/interfaces/cli",
+          "/interfaces/service-providers",
+          "/interfaces/lite/", // this renders the readme
+          "/interfaces/lite/getting_started",
+          "/interfaces/lite/specification"
         ]
       }
     ]

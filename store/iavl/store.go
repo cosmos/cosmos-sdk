@@ -113,6 +113,7 @@ func (st *Store) Commit() types.CommitID {
 	if st.numRecent < previous {
 		toRelease := previous - st.numRecent
 		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
+			err := st.tree.DeleteVersion(toRelease)
 			if err != nil && errors.Cause(err) != iavl.ErrVersionDoesNotExist {
 				panic(err)
 			}

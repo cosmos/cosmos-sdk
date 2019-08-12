@@ -13,7 +13,7 @@ func TestSupply(t *testing.T) {
 	initialPower := int64(100)
 	initTokens := sdk.TokensFromConsensusPower(initialPower)
 
-	app, ctx := createTestApp(t, false)
+	app, ctx := createTestApp(false)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	app.SupplyKeeper.SetSupply(ctx, types.NewSupply(totalSupply))
 
@@ -23,7 +23,7 @@ func TestSupply(t *testing.T) {
 }
 
 func TestValidatePermissions(t *testing.T) {
-	app, _ := createTestApp(t, false)
+	app, _ := createTestApp(false)
 
 	err := app.SupplyKeeper.ValidatePermissions(multiPermAcc)
 	require.NoError(t, err)

@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	ctx, app := createTestApp(t, false)
+	app, ctx := createTestApp(t, false)
 	keeper := app.SupplyKeeper
 
 	supplyCoins := sdk.NewCoins(
@@ -58,7 +58,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQuerySupply(t *testing.T) {
-	ctx, app := createTestApp(t, false)
+	app, ctx := createTestApp(t, false)
 	keeper := app.SupplyKeeper
 
 	supplyCoins := sdk.NewCoins(

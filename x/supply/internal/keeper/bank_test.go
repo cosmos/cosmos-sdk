@@ -34,7 +34,7 @@ func getCoinsByName(ctx sdk.Context, sk Keeper, ak types.AccountKeeper, moduleNa
 }
 
 func TestSendCoins(t *testing.T) {
-	ctx, app := createTestApp(t, false)
+	app, ctx := createTestApp(t, false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
 
@@ -79,7 +79,7 @@ func TestSendCoins(t *testing.T) {
 }
 
 func TestMintCoins(t *testing.T) {
-	ctx, app := createTestApp(t, false)
+	app, ctx := createTestApp(t, false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
 
@@ -113,7 +113,7 @@ func TestMintCoins(t *testing.T) {
 }
 
 func TestBurnCoins(t *testing.T) {
-	ctx, app := createTestApp(t, false)
+	app, ctx := createTestApp(t, false)
 	keeper := app.SupplyKeeper
 	ak := app.AccountKeeper
 

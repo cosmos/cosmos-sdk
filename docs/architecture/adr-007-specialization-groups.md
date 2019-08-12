@@ -131,6 +131,11 @@ type SpecializationGroup interface {
 
     // messages which can be executed by the members of the group
 	Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result
+
+    // logic to be executed at endblock, this may for instance
+    // include payment of a stipend to the group members
+    // for participation in the security group.   
+	EndBlocker(ctx sdk.Context)
 }
 ```
 

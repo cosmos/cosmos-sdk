@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// GenGenesisAccounts generates a random GenesisState for the genesis accounts
-func GenGenesisAccounts(
+// RandomizedGenState generates a random GenesisState for the genesis accounts
+func RandomizedGenState(
 	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
 	accs []simulation.Account, genesisTimestamp time.Time, amount, numInitiallyBonded int64,
 ) {

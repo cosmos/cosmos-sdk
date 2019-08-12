@@ -78,7 +78,7 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.GenMintGenesisState(cdc, r, genesisState)
+	simulation.RandomizedGenState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

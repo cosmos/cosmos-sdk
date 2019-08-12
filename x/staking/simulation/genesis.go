@@ -31,8 +31,8 @@ func GenMaxValidators(cdc *codec.Codec, r *rand.Rand) (maxValidators uint16) {
 	return uint16(r.Intn(250) + 1)
 }
 
-// GenStakingGenesisState generates a random GenesisState for staking
-func GenStakingGenesisState(
+// RandomizedGenState generates a random GenesisState for staking
+func RandomizedGenState(
 	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
 	accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
 ) types.GenesisState {

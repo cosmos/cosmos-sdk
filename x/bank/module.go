@@ -74,7 +74,7 @@ func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.GenBankGenesisState(cdc, r, genesisState)
+	simulation.RandomizedGenState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

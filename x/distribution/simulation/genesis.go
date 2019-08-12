@@ -35,8 +35,8 @@ func GenBonusProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
-// GenDistrGenesisState generates a random GenesisState for distribution
-func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+// RandomizedGenState generates a random GenesisState for distribution
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 
 	communityTax := GenCommunityTax(cdc, r)
 	baseProposerReward := GenBaseProposerReward(cdc, r)

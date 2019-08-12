@@ -47,8 +47,8 @@ func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
-// GenAuthGenesisState generates a random GenesisState for auth
-func GenAuthGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+// RandomizedGenState generates a random GenesisState for auth
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 
 	maxMemoChars := GenMaxMemoChars(cdc, r)
 	txSigLimit := GenTxSigLimit(cdc, r)

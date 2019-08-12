@@ -22,8 +22,8 @@ func GenSendEnabled(cdc *codec.Codec, r *rand.Rand) bool {
 	return r.Int63n(2) == 0
 }
 
-// GenBankGenesisState generates a random GenesisState for bank
-func GenBankGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+// RandomizedGenState generates a random GenesisState for bank
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	sendEnabled := GenSendEnabled(cdc, r)
 
 	bankGenesis := types.NewGenesisState(sendEnabled)

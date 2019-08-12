@@ -49,8 +49,8 @@ func GenSlashFractionDowntime(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
 }
 
-// GenSlashingGenesisState generates a random GenesisState for slashing
-func GenSlashingGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage, maxEvidenceAge time.Duration) {
+// RandomizedGenState generates a random GenesisState for slashing
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage, maxEvidenceAge time.Duration) {
 
 	signedBlocksWindow := GenSignedBlocksWindow(cdc, r)
 	minSignedPerWindow := GenMinSignedPerWindow(cdc, r)

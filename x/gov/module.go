@@ -4,6 +4,7 @@ package gov
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -103,7 +104,7 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // GenerateGenesisState creates a randomized GenState of the gov module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.GenGovGenesisState(cdc, r, genesisState)
+	simulation.RandomizedGenState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

@@ -55,8 +55,8 @@ func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
-// GenGovGenesisState generates a random GenesisState for gov
-func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+// RandomizedGenState generates a random GenesisState for gov
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	startingProposalID := uint64(r.Intn(100))
 
 	minDeposit := GenDepositParamsMinDeposit(cdc, r)

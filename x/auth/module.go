@@ -80,7 +80,7 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // GenerateGenesisState creates a randomized GenState of the auth module
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.GenAuthGenesisState(cdc, r, genesisState)
+	simulation.RandomizedGenState(cdc, r, genesisState)
 }
 
 //____________________________________________________________________________

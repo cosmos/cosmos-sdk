@@ -47,8 +47,8 @@ func GenGoalBonded(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(67, 2)
 }
 
-// GenMintGenesisState generates a random GenesisState for mint
-func GenMintGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+// RandomizedGenState generates a random GenesisState for mint
+func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	// minter
 	inflation := GenInflation(cdc, r)
 	minter := types.InitialMinter(inflation)

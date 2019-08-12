@@ -34,11 +34,11 @@ func migrateValidators(oldValidators v036staking.Validators) Validators {
 			Tokens:          val.Tokens,
 			DelegatorShares: val.DelegatorShares,
 			Description: NewDescription(
-				val.moniker,
-				val.identity,
-				val.website,
+				val.Description.Moniker,
+				val.Description.Identity,
+				val.Description.Website,
 				"", // security contact field
-				val.details,
+				val.Description.Details,
 			),
 			UnbondingHeight:         val.UnbondingHeight,
 			UnbondingCompletionTime: val.UnbondingCompletionTime,

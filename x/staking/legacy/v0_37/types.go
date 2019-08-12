@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
 
@@ -41,13 +42,13 @@ type (
 	Validators []Validator
 
 	GenesisState struct {
-		Params               v036staking.Params                `json:"params"`
+		Params               v034staking.Params                `json:"params"`
 		LastTotalPower       sdk.Int                           `json:"last_total_power"`
-		LastValidatorPowers  []v036staking.LastValidatorPower  `json:"last_validator_powers"`
+		LastValidatorPowers  []v034staking.LastValidatorPower  `json:"last_validator_powers"`
 		Validators           Validators                        `json:"validators"`
-		Delegations          v036staking.Delegations           `json:"delegations"`
-		UnbondingDelegations []v036staking.UnbondingDelegation `json:"unbonding_delegations"`
-		Redelegations        []v036staking.Redelegation        `json:"redelegations"`
+		Delegations          v034staking.Delegations           `json:"delegations"`
+		UnbondingDelegations []v034staking.UnbondingDelegation `json:"unbonding_delegations"`
+		Redelegations        []v034staking.Redelegation        `json:"redelegations"`
 		Exported             bool                              `json:"exported"`
 	}
 )
@@ -67,9 +68,9 @@ func NewDescription(moniker, identity, website,
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(
-	params v036staking.Params, lastTotalPower sdk.Int, lastValPowers []v036staking.LastValidatorPower,
-	validators Validators, delegations v036staking.Delegations,
-	ubds []v036staking.UnbondingDelegation, reds []v036staking.Redelegation, exported bool,
+	params v034staking.Params, lastTotalPower sdk.Int, lastValPowers []v034staking.LastValidatorPower,
+	validators Validators, delegations v034staking.Delegations,
+	ubds []v034staking.UnbondingDelegation, reds []v034staking.Redelegation, exported bool,
 ) GenesisState {
 
 	return GenesisState{

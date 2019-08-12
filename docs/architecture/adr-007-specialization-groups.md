@@ -53,20 +53,20 @@ members of a specialization group.
 
 ``` golang
 // The Electionator abstraction covers the concept space for 
-// a wide variety of elections. 
+// a wide variety of election kinds.  
 type Electionator interface {
     
-    // is the election object active
+    // is the election object accepting votes.
     Active() bool 
 
     // functionality to execute for when a vote is cast in this election, here
     // the vote field is anticipated to be marshalled into a vote type used 
     // by an election. 
-    Vote(addr sdk.Address, vote []byte) 
+    Vote(addr sdk.AccAddress, vote []byte) 
 
     // here lies all functionality to authenticate and execute changes for
     // when a member accepts being elected
-    Accept(sdk.Address) 
+    Accept(sdk.AccAddress) 
 
     // Register a revoker object
     RegisterRevoker(Revoker)
@@ -79,40 +79,58 @@ type Electionator interface {
 
     // query for the current winner(s) of this election based on arbitrary
     // election ruleset
-    QueryWinners() []sdk.Address 
+    QueryWinners() []sdk.AccAddress 
+
+    // query metadata for an address in the election this 
+    // could include for example position that an address
+    // is being elected for within a group   
+    // 
+    // this metadata may be directly related to 
+    // voting information and/or privileges enabled
+    // to members within a group. 
+    QueryMetadata(sdk.AccAddress) []byte
 }
 
 type ElectionatorHooks interface {
-    VoteCast(addr sdk.Address, vote []byte)
-    MemberAccepted(addr sdk.Address)
-    MemberRevoked(addr sdk.Address, cause []byte)
+    VoteCast(addr sdk.AccAddress, vote []byte)
+    MemberAccepted(addr sdk.AccAddress)
+    MemberRevoked(addr sdk.AccAddress, cause []byte)
 }
 
-// Revoker defines the function required for an membership revocation ruleset
-// used by a specialazation group. This could be used to create self revoking,
+// Revoker defines the function required for an membership revocation rule-set
+// used by a specialization group. This could be used to create self revoking,
 // and evidence based revoking, etc. Revokers types may be created and
 // reused for different election types. 
 // 
-// When revoking the "cause" bytes may be arbirarily marshalled into evidence,
+// When revoking the "cause" bytes may be arbitrarily marshalled into evidence,
 // memos, etc.
 type Revoker interface {
     RevokeName() string      // identifier for this revoker type 
-    RevokeMember(addr sdk.Address, cause []byte) (successful bool)
+    RevokeMember(addr sdk.AccAddress, cause []byte) (successful bool)
 }
 ```
 
 Certain level of commonality likely exists between the existing code within
 `x/governance` and required functionality of elections. This common
-functionality should be abstracted during implementation time. 
+functionality should be abstracted during implementation. Similarly for each 
+vote implementation client CLI/REST functionality should be abstracted
+to be reused for multiple elections. 
 
-The specialization group abstraction firstly depends on the `Electionator`
-but also further defines the 
+The specialization group abstraction firstly extends the `Electionator`
+but also further defines traits of the group. 
 
 ``` golang
 type SpecializationGroup interface {
-   election Election // election object
-   p
-   
+    Electionator 
+    GetName() string
+    GetDescription() string 
+
+    // general soft contract the group is expected
+    // to fulfill with the greater community
+    GetContract() string
+
+    // messages which can be executed by the members of the group
+	Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result
 }
 ```
 

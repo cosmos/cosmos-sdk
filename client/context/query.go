@@ -84,7 +84,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 	}
 
 	if ctx.Height <= 1 && !ctx.TrustNode {
-		return res, height, fmt.Errorf("cannot query with proof when height <= 1; please provide a valid height")
+		return res, height, errors.New("cannot query with proof when height <= 1; please provide a valid height")
 	}
 
 	opts := rpcclient.ABCIQueryOptions{

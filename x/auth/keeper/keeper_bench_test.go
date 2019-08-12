@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(false)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -25,7 +25,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 }
 
 func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(false)
 
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),
@@ -53,7 +53,7 @@ func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(false)
 
 	b.ResetTimer()
 
@@ -67,7 +67,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(false)
 
 	coins := sdk.Coins{
 		sdk.NewCoin("LTC", sdk.NewInt(1000)),

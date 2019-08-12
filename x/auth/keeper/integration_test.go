@@ -1,19 +1,15 @@
-// nolint
 package keeper_test
 
-// DONTCOVER
-
 import (
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // returns context and app with params set on account keeper
-func newTestApp(t *testing.T) (sdk.Context, *simapp.SimApp) {
-	ctx, app := simapp.NewSimAppWithContext(true)
-	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+func createTestApp(isCheckTx bool) (app *simapp.SimApp, ctx sdk.Context) {
+	app, ctx = simapp.Setup(isCheckTx)
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
-	return ctx, app
+	return app, ctx
 }

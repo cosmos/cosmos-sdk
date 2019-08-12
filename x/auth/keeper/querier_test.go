@@ -13,7 +13,7 @@ import (
 )
 
 func TestQueryAccount(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := newTestApp(t)
 
 	req := abci.RequestQuery{
 		Path: "",
@@ -46,7 +46,7 @@ func TestQueryAccount(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addr))
+	app.AccountKeeper.SetAccount(app, ctx.AccountKeeper.NewAccountWithAddress(ctx, addr))
 	res, err = querier(ctx, path, req)
 	require.NoError(t, err)
 	require.NotNil(t, res)

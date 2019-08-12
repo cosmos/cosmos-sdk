@@ -23,16 +23,16 @@
 >*NOTE*: 코스모스 SDK 지원 문서의 완성도와 정확성을 높이기 위해 해당 문서는 꾸준히 업데이트 되고 있습니다. 혹시 오류나 제안사항이 있으시다면 [코스모스 포럼](https://forum.cosmos.network) 또는 [깃허브 이슈를](https://github.com/cosmos/cosmos-sdk/issues/new) 통해서 알려주시면 감사하겠습니다.
 
 - [인트로](./intro/README.md): 코스모스 SDK에 대한 high-level 소개 자료
-- [Gaia](./gaia/README.md): Gaia 애플리케이션(현재 코스모스 허브 명칭)에 대한 모든 문서들이 있습니다. Gaia 테스트넷에 참여하는 방법에 대한 정보
+- [Gaia](https://github.com/cosmos/gaia/blob/master/docs/translations/kr/README.md): Gaia 애플리케이션(현재 코스모스 허브 명칭)에 대한 모든 문서들이 있습니다. Gaia 테스트넷에 참여하는 방법에 대한 정보
 - [클라이언트](./clients/README.md): SDK Command-Line Interface 와 SDK 라이트 클라이언트 같은 SDK 클라이언트에 관련한 문서
 - [스펙](./spec/README.md): SDK와 모듈들에 대한 스펙 정의
 
 ## 코스모스 허브 테스트넷
 
 `gaia` 애플리케이션(코스모스 허브의 애플리케이션)을 설치하고 퍼블릭 테스트넷에 참가하고 싶으시다면 여기를 클릭해주세요.
-자체적인 `gaia` 테스트넷을 운영하고 싶으시다면 **[여기](./gaia/join-testnet.md)** 를 클릭해주세요.
+자체적인 `gaia` 테스트넷을 운영하고 싶으시다면 **[여기](https://github.com/cosmos/gaia/blob/master/docs/translations/kr/join-testnet.md)** 를 클릭해주세요.
 
-자체적인 `gaia` 테스트넷 운영을 원하시는 경우 **[여기](./gaia/deploy-testnet.md)** 를 확인하세요 
+자체적인 `gaia` 테스트넷 운영을 원하시는 경우 **[여기](https://github.com/cosmos/gaia/blob/master/docs/translations/kr/deploy-testnet.md)** 를 확인하세요
 
 ## 기여하기
 

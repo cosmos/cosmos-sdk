@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,13 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -34,61 +28,40 @@ func makeTestCodec() (cdc *codec.Codec) {
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	auth.RegisterCodec(cdc)
-	distr.RegisterCodec(cdc)
-	gov.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	supply.RegisterCodec(cdc)
 	return
 }
 
 func TestGetSimulationLog(t *testing.T) {
 	cdc := makeTestCodec()
 
+	decoders := make(sdk.StoreDecoderRegistry)
+	decoders[auth.StoreKey] = func(cdc *codec.Codec, kvAs, kvBs cmn.KVPair) string { return "10" }
+
 	tests := []struct {
-		store   string
-		kvPairs []cmn.KVPair
+		store       string
+		kvPairs     []cmn.KVPair
+		expectedLog string
 	}{
-		{
-			auth.StoreKey,
-			[]cmn.KVPair{{Key: auth.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(auth.BaseAccount{})}},
-		},
-		{
-			mint.StoreKey,
-			[]cmn.KVPair{{Key: mint.MinterKey, Value: cdc.MustMarshalBinaryLengthPrefixed(mint.Minter{})}},
-		},
-		{
-			staking.StoreKey,
-			[]cmn.KVPair{{Key: staking.LastValidatorPowerKey, Value: valAddr1.Bytes()}},
-		},
-		{
-			gov.StoreKey,
-			[]cmn.KVPair{{Key: gov.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(gov.Vote{})}},
-		},
-		{
-			distribution.StoreKey,
-			[]cmn.KVPair{{Key: distr.ProposerKey, Value: consAddr1.Bytes()}},
-		},
-		{
-			slashing.StoreKey,
-			[]cmn.KVPair{{Key: slashing.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(true)}},
-		},
-		{
-			supply.StoreKey,
-			[]cmn.KVPair{{Key: supply.SupplyKey, Value: cdc.MustMarshalBinaryLengthPrefixed(supply.NewSupply(sdk.Coins{}))}},
-		},
 		{
 			"Empty",
 			[]cmn.KVPair{{}},
+			"",
+		},
+		{
+			auth.StoreKey,
+			[]cmn.KVPair{{Key: auth.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(uint64(10))}},
+			"10",
 		},
 		{
 			"OtherStore",
 			[]cmn.KVPair{{Key: []byte("key"), Value: []byte("value")}},
+			fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", []byte("key"), []byte("value"), []byte("key"), []byte("value")),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.store, func(t *testing.T) {
-			require.NotPanics(t, func() { GetSimulationLog(tt.store, make(sdk.StoreDecoderRegistry), cdc, tt.kvPairs, tt.kvPairs) }, tt.store)
+			require.Equal(t, tt.expectedLog, GetSimulationLog(tt.store, decoders, cdc, tt.kvPairs, tt.kvPairs), tt.store)
 		})
 	}
 }

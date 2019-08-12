@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/simulation/decoder"
+	"github.com/cosmos/cosmos-sdk/x/supply/simulation"
 )
 
 var (
@@ -73,7 +73,7 @@ type AppModuleSimulation struct{}
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = decoder.DecodeStore
+	sdr[StoreKey] = simulation.DecodeStore
 }
 
 //____________________________________________________________________________

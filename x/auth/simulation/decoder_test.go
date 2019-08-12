@@ -1,9 +1,8 @@
-package decoder
+package simulation
 
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -12,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -32,27 +31,23 @@ func makeTestCodec() (cdc *codec.Codec) {
 
 func TestDecodeStore(t *testing.T) {
 	cdc := makeTestCodec()
-
-	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
-	bechPK := sdk.MustBech32ifyAccPub(delPk1)
-	missed := true
+	acc := types.NewBaseAccountWithAddress(delAddr1)
+	globalAccNumber := uint64(10)
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
-		cmn.KVPair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
+		cmn.KVPair{Key: types.AddressStoreKey(delAddr1), Value: cdc.MustMarshalBinaryBare(acc)},
+		cmn.KVPair{Key: types.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryLengthPrefixed(globalAccNumber)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
-
 	tests := []struct {
 		name        string
 		expectedLog string
 	}{
-		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed, missed)},
-		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
+		{"Account", fmt.Sprintf("%v\n%v", acc, acc)},
+		{"GlobalAccNumber", fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumber, globalAccNumber)},
 		{"other", ""},
 	}
+
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {

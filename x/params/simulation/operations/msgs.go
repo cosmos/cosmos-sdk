@@ -1,4 +1,4 @@
-package simulation
+package operations
 
 import (
 	"encoding/json"

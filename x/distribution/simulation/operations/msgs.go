@@ -1,4 +1,4 @@
-package simulation
+package operations
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -87,7 +87,7 @@ func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Op
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsim.ContentSimulator {
+func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.ContentSimulator {
 	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
 		recipientAcc := simulation.RandomAcc(r, accs)
 		coins := sdk.Coins{}

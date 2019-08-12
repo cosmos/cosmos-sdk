@@ -1,2 +1,2 @@
 #4875 refactor integration tests to use SimApp and separate test package
-- Updated supply keeper tests
+  - Updated supply keeper tests

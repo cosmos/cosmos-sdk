@@ -211,7 +211,7 @@ func TestDecodeStakingStore(t *testing.T) {
 
 	bondTime := time.Now().UTC()
 
-	val := staking.NewValidator(valAddr1, delPk1, staking.NewDescription("test", "test", "test", "test"))
+	val := staking.NewValidator(valAddr1, delPk1, staking.NewDescription("test", "test", "test", "test", "test"))
 	del := staking.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := staking.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := staking.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())

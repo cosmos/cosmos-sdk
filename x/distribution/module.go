@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	"github.com/cosmos/cosmos-sdk/x/distribution/simulation/decoder"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -76,7 +75,7 @@ type AppModuleSimulation struct{}
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = decoder.DecodeStore
+	sdr[StoreKey] = simulation.DecodeStore
 }
 
 // GenerateGenesisState creates a randomized GenState of the distribution module.

@@ -12,7 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 // Simulation parameter constants
@@ -58,11 +58,11 @@ func GenSlashingGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[st
 	slashFractionDoubleSign := GenSlashFractionDoubleSign(cdc, r)
 	slashFractionDowntime := GenSlashFractionDowntime(cdc, r)
 
-	params := slashing.NewParams(maxEvidenceAge, signedBlocksWindow, minSignedPerWindow,
+	params := types.NewParams(maxEvidenceAge, signedBlocksWindow, minSignedPerWindow,
 		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)
 
-	slashingGenesis := slashing.NewGenesisState(params, nil, nil)
+	slashingGenesis := types.NewGenesisState(params, nil, nil)
 
 	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, slashingGenesis.Params))
-	genesisState[slashing.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
 }

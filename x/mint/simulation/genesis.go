@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 )
 
 // Simulation parameter constants
@@ -51,7 +51,7 @@ func GenGoalBonded(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 func GenMintGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	// minter
 	inflation := GenInflation(cdc, r)
-	minter := mint.InitialMinter(inflation)
+	minter := types.InitialMinter(inflation)
 
 	// params
 	inflationRateChange := GenInflationRateChange(cdc, r)
@@ -60,10 +60,10 @@ func GenMintGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string
 	inflationMin := GenInflationMin(cdc, r)
 	goalBonded := GenGoalBonded(cdc, r)
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)
-	params := mint.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear)
+	params := types.NewParams(mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, blocksPerYear)
 
-	mintGenesis := mint.NewGenesisState(minter, params)
+	mintGenesis := types.NewGenesisState(minter, params)
 
 	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, mintGenesis))
-	genesisState[mint.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(mintGenesis)
 }

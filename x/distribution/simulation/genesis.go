@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Simulation parameter constants
@@ -42,13 +42,13 @@ func GenDistrGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[strin
 	baseProposerReward := GenBaseProposerReward(cdc, r)
 	bonusProposerReward := GenBonusProposerReward(cdc, r)
 
-	distrGenesis := distribution.GenesisState{
-		FeePool:             distribution.InitialFeePool(),
+	distrGenesis := types.GenesisState{
+		FeePool:             types.InitialFeePool(),
 		CommunityTax:        communityTax,
 		BaseProposerReward:  baseProposerReward,
 		BonusProposerReward: bonusProposerReward,
 	}
 
 	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, distrGenesis))
-	genesisState[distribution.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
 }

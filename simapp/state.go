@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/fedekunze/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"

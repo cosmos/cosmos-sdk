@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -66,13 +66,13 @@ func GenGovGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]
 	threshold := GenTallyParamsThreshold(cdc, r)
 	veto := GenTallyParamsVeto(cdc, r)
 
-	govGenesis := gov.NewGenesisState(
+	govGenesis := types.NewGenesisState(
 		startingProposalID,
-		gov.NewDepositParams(minDeposit, depositPeriod),
-		gov.NewVotingParams(votingPeriod),
-		gov.NewTallyParams(quorum, threshold, veto),
+		types.NewDepositParams(minDeposit, depositPeriod),
+		types.NewVotingParams(votingPeriod),
+		types.NewTallyParams(quorum, threshold, veto),
 	)
 
 	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, govGenesis))
-	genesisState[gov.ModuleName] = cdc.MustMarshalJSON(govGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(govGenesis)
 }

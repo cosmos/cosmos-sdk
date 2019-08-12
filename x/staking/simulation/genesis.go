@@ -12,7 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Simulation parameter constants
@@ -35,17 +35,17 @@ func GenMaxValidators(cdc *codec.Codec, r *rand.Rand) (maxValidators uint16) {
 func GenStakingGenesisState(
 	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
 	accs []simulation.Account, amount, numAccs, numInitiallyBonded int64,
-) staking.GenesisState {
+) types.GenesisState {
 
 	var (
-		validators  []staking.Validator
-		delegations []staking.Delegation
+		validators  []types.Validator
+		delegations []types.Delegation
 	)
 
 	// params
 	ubdTime := GenUnbondingTime(cdc, r)
 	maxValidators := GenMaxValidators(cdc, r)
-	params := staking.NewParams(ubdTime, maxValidators, 7, sdk.DefaultBondDenom)
+	params := types.NewParams(ubdTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
@@ -53,18 +53,18 @@ func GenStakingGenesisState(
 		valAddr := sdk.ValAddress(accs[i].Address)
 		valAddrs[i] = valAddr
 
-		validator := staking.NewValidator(valAddr, accs[i].PubKey, staking.Description{})
+		validator := types.NewValidator(valAddr, accs[i].PubKey, types.Description{})
 		validator.Tokens = sdk.NewInt(amount)
 		validator.DelegatorShares = sdk.NewDec(amount)
-		delegation := staking.NewDelegation(accs[i].Address, valAddr, sdk.NewDec(amount))
+		delegation := types.NewDelegation(accs[i].Address, valAddr, sdk.NewDec(amount))
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis := staking.NewGenesisState(params, validators, delegations)
+	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
 	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, stakingGenesis.Params))
-	genesisState[staking.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
 	return stakingGenesis
 }

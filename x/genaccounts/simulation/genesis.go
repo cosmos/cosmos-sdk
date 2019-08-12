@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -22,7 +22,7 @@ func GenGenesisAccounts(
 	accs []simulation.Account, genesisTimestamp time.Time, amount, numInitiallyBonded int64,
 ) {
 
-	var genesisAccounts []genaccounts.GenesisAccount
+	var genesisAccounts []types.GenesisAccount
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
@@ -32,7 +32,7 @@ func GenGenesisAccounts(
 			panic(err)
 		}
 
-		var gacc genaccounts.GenesisAccount
+		var gacc types.GenesisAccount
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
@@ -62,16 +62,16 @@ func GenGenesisAccounts(
 			}
 
 			var err error
-			gacc, err = genaccounts.NewGenesisAccountI(vacc)
+			gacc, err = types.NewGenesisAccountI(vacc)
 			if err != nil {
 				panic(err)
 			}
 		} else {
-			gacc = genaccounts.NewGenesisAccount(&bacc)
+			gacc = types.NewGenesisAccount(&bacc)
 		}
 
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	genesisState[genaccounts.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
+	genesisState[types.ModuleName] = cdc.MustMarshalJSON(genesisAccounts)
 }

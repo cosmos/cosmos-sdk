@@ -2,6 +2,7 @@ package crisis
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -71,7 +72,8 @@ type AppModuleSimulation struct{}
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState performs a no-op.
-func (AppModuleSimulation) GenerateGenesisState(_ *codec.Codec, _ *rand.Rand, _ map[string]json.RawMessage) {}
+func (AppModuleSimulation) GenerateGenesisState(_ *codec.Codec, _ *rand.Rand, _ map[string]json.RawMessage) {
+}
 
 //____________________________________________________________________________
 

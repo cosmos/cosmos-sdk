@@ -81,7 +81,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	sk := staking.NewKeeper(mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 
 	keeper := keep.NewKeeper(mApp.Cdc, keyGov, pk.Subspace(DefaultParamspace).WithKeyTable(ParamKeyTable()),
-	supplyKeeper, sk, types.DefaultCodespace, rtr)
+		supplyKeeper, sk, types.DefaultCodespace, rtr)
 
 	mApp.Router().AddRoute(types.RouterKey, NewHandler(keeper))
 	mApp.QueryRouter().AddRoute(types.QuerierRoute, keep.NewQuerier(keeper))

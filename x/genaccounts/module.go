@@ -31,7 +31,7 @@ func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// RegisterCodec registers the genesis accounts module's types for the given codec.
+// RegisterCodec performs a no-op.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the genesis accounts

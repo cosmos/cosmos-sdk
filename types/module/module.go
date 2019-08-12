@@ -78,7 +78,7 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 	}
 }
 
-// DefaultGenesis provided default genesis information for all modules
+// DefaultGenesis provides default genesis information for all modules
 func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
@@ -87,7 +87,7 @@ func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	return genesis
 }
 
-// ValidateGenesis provided default genesis information for all modules
+// ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
 		if err := b.ValidateGenesis(genesis[b.Name()]); err != nil {
@@ -174,7 +174,7 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 	}
 }
 
-// RegisterInvariants register no invariants
+// RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterStoreDecoder empty store decoder registry
@@ -183,19 +183,19 @@ func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 // Route empty module message route
 func (GenesisOnlyAppModule) Route() string { return "" }
 
-// NewHandler empty module handler
+// NewHandler returns an empty module handler
 func (GenesisOnlyAppModule) NewHandler() sdk.Handler { return nil }
 
-// QuerierRoute empty module querier route
+// QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
 
-// NewQuerierHandler empty module querier
+// NewQuerierHandler returns an empty module querier
 func (gam GenesisOnlyAppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-// BeginBlock empty module begin-block
+// BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
-// EndBlock empty module end-block
+// EndBlock returns an empty module end-block
 func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

@@ -14,9 +14,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -61,7 +61,7 @@ var (
 // TODO: remove dependency with staking
 var (
 	TestProposal        = types.NewTextProposal("Test", "description")
-	TestDescription     = staking.NewDescription("T", "E", "S", "T")
+	TestDescription     = staking.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
@@ -153,7 +153,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
 	keeper := NewKeeper(cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()),
-	supplyKeeper, sk, types.DefaultCodespace, rtr)
+		supplyKeeper, sk, types.DefaultCodespace, rtr)
 
 	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)
 	keeper.SetDepositParams(ctx, types.DefaultDepositParams())

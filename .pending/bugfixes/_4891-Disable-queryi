@@ -1,0 +1,1 @@
+#4891 Disable querying with proofs enabled when the query height <= 1.

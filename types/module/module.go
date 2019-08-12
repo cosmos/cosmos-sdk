@@ -77,7 +77,7 @@ func (bm BasicManager) RegisterCodec(cdc *codec.Codec) {
 	}
 }
 
-// DefaultGenesis provided default genesis information for all modules
+// DefaultGenesis provides default genesis information for all modules
 func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
@@ -86,7 +86,7 @@ func (bm BasicManager) DefaultGenesis() map[string]json.RawMessage {
 	return genesis
 }
 
-// ValidateGenesis provides default genesis information for all modules
+// ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
 		if err := b.ValidateGenesis(genesis[b.Name()]); err != nil {

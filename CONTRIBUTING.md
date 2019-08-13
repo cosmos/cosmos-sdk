@@ -22,24 +22,27 @@ Contributing to this repo can mean many things such as participated in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-1. either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
-   [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with,
-2. participate in thoughtful discussion on that issue,
-3. if you would then like to contribute code:
-   1. if a the issue is a proposal, ensure that the proposal has been accepted,
-   2. ensure that nobody else has already begun working on this issue, if they have
-      make sure to contact them to collaborate,
-   3. if nobody has been assigned the issue and you would like to work on it
+1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
+   [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with
+2. Participate in thoughtful discussion on that issue
+3. If you would like to contribute:
+   1. If a the issue is a proposal, ensure that the proposal has been accepted
+   2. Ensure that nobody else has already begun working on this issue, if they have
+      make sure to contact them to collaborate
+   3. If nobody has been assigned the issue and you would like to work on it
       make a comment on the issue to inform the community of your intentions
-      to begin work,
-   4. follow standard github best practices: fork the repo, branch from the
-      top of `master`, make some commits, and submit a PR to `master`, - for core developers working within the cosmos-sdk repo,
-      to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.
-   5. include `WIP:` in the PR-title to and submit your PR early, even if it's
-      incomplete, this indicates to the community you're working on something and
-      allows them to provide comments early in the development process. When the code
-      is complete it can be marked as ready-for-review by replacing `WIP:` with
-      `R4R:` in the PR-title.
+      to begin work
+   4. Follow standard Github best practices: fork the repo, branch from the
+      HEAD of `master`, make some commits, and submit a PR to `master`
+      - For core developers working within the cosmos-sdk repo, to ensure a clear
+      ownership of branches, branches must be named with the convention
+      `{moniker}/{issue#}-branch-name`
+   5. Be sure to submit the PR in `Draft` mode submit your PR early, even if
+      it's incomplete as this indicates to the community you're working on
+      something and allows them to provide comments early in the development process
+   6. When the code is complete it can be marked `Ready for Review`
+   7. Be sure to include a relevant change log entry in the `Unreleased` section
+      of `CHANGELOG.md` (see file for log format)
 
 Note that for very small or blatantly obvious problems (such as typos) it is
 not required to an open issue to submit a PR, but be aware that for more complex

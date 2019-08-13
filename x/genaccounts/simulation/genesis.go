@@ -19,7 +19,7 @@ import (
 // RandomizedGenState generates a random GenesisState for the genesis accounts
 func RandomizedGenState(
 	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
-	accs []simulation.Account, genesisTimestamp time.Time, amount, numInitiallyBonded int64,
+	accs []simulation.Account, amount, numInitiallyBonded int64, genesisTimestamp time.Time,
 ) {
 
 	var genesisAccounts []types.GenesisAccount

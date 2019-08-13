@@ -15,7 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
+	// "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -86,7 +87,12 @@ func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState creates a randomized GenState of the genesis accounts module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.RandomizedGenState(cdc, r, genesisState)
+	// simulation.RandomizedGenState(cdc, r, genesisState)
+}
+
+// RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []sim.ParamChange {
+	return nil
 }
 
 //____________________________________________________________________________

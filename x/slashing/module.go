@@ -84,7 +84,7 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // GenerateGenesisState creates a randomized GenState of the slashing module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	simulation.RandomizedGenState(cdc, r, genesisState)
+	// simulation.RandomizedGenState(cdc, r, genesisState)
 }
 
 // RandomizedParams creates randomized slashing param changes for the simulator.

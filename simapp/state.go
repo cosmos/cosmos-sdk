@@ -14,7 +14,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	genaccsim "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
+	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	mintsim "github.com/cosmos/cosmos-sdk/x/mint/simulation"
+	supplysim "github.com/cosmos/cosmos-sdk/x/supply/simulation"
 )
+
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
@@ -89,15 +99,15 @@ func AppStateRandomizedFn(
 `, amount, numInitiallyBonded,
 	)
 
-	GenGenesisAccounts(cdc, r, genesisState, accs, genesisTimestamp, amount, numInitiallyBonded)
-	GenAuthGenesisState(cdc, r, genesisState)
-	GenBankGenesisState(cdc, r, genesisState)
-	GenSupplyGenesisState(cdc, r, genesisState, amount, numInitiallyBonded, int64(len(accs)))
-	GenGovGenesisState(cdc, r, genesisState)
-	GenMintGenesisState(cdc, r, genesisState)
-	GenDistrGenesisState(cdc, r, genesisState)
-	stakingGen := GenStakingGenesisState(cdc, r, genesisState, accs, amount, numAccs, numInitiallyBonded)
-	GenSlashingGenesisState(cdc, r, genesisState, stakingGen.Params.UnbondingTime)
+	genaccsim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded, genesisTimestamp)
+	authsim.RandomizedGenState(cdc, r, genesisState)
+	banksim.RandomizedGenState(cdc, r, genesisState)
+	supplysim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded)
+	govsim.RandomizedGenState(cdc, r, genesisState)
+	mintsim.RandomizedGenState(cdc, r, genesisState)
+	distrsim.RandomizedGenState(cdc, r, genesisState)
+	stakingGen := stakingsim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded)
+	slashingsim.RandomizedGenState(cdc, r, genesisState, stakingGen.Params.UnbondingTime)
 
 	appState, err := cdc.MarshalJSON(genesisState)
 	if err != nil {

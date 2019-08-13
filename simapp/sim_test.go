@@ -167,7 +167,7 @@ func testAndRunTxs(app *SimApp, seed int64) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -619,7 +619,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app, seed),
+				t, os.Stdout, app.BaseApp, AppStateFn, seed, testAndRunTxs(app, seed),
 				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
 				blockSize, "", false, commit, lean,
 				false, false, app.ModuleAccountAddrs(),
@@ -651,7 +651,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app, seed),
+		b, ioutil.Discard, app.BaseApp, AppStateFn, seed, testAndRunTxs(app, seed),
 		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)

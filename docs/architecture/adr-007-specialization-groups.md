@@ -7,7 +7,7 @@
 ## Context
 
 This idea was first conceived of in order to fulfill the use case of the
-creation of a decentralized Computer Emergency Response Team (CERT), Whose
+creation of a decentralized Computer Emergency Response Team (dCERT), Whose
 members would be elected by the Cosmos Community and would fulfill the role of
 coordinating the Cosmos community under an emergency situations. This thinking
 can be further abstracted into the conception of "blockchain specialization
@@ -157,5 +157,5 @@ type SpecializationGroup interface {
 
 ## References
 
-  (CERT ADR)[./adr-008-CERT-group.md]
+  (dCERT ADR)[./adr-008-dCERT-group.md]
  

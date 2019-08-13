@@ -35,3 +35,8 @@ func TestSimAppExport(t *testing.T) {
 	_, _, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
+
+func TestGetMaccPerms(t *testing.T) {
+	dup := GetMaccPerms()
+	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
+}

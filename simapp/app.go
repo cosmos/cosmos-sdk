@@ -57,7 +57,7 @@ var (
 	)
 
 	// module account permissions
-	MaccPerms = map[string][]string{
+	maccPerms = map[string][]string{
 		auth.FeeCollectorName:     nil,
 		distr.ModuleName:          nil,
 		mint.ModuleName:           {supply.Minter},
@@ -144,7 +144,7 @@ func NewSimApp(
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(app.cdc, keys[auth.StoreKey], authSubspace, auth.ProtoBaseAccount)
 	app.BankKeeper = bank.NewBaseKeeper(app.AccountKeeper, bankSubspace, bank.DefaultCodespace, app.ModuleAccountAddrs())
-	app.SupplyKeeper = supply.NewKeeper(app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, MaccPerms)
+	app.SupplyKeeper = supply.NewKeeper(app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms)
 	stakingKeeper := staking.NewKeeper(app.cdc, keys[staking.StoreKey], tkeys[staking.TStoreKey],
 		app.SupplyKeeper, stakingSubspace, staking.DefaultCodespace)
 	app.MintKeeper = mint.NewKeeper(app.cdc, keys[mint.StoreKey], mintSubspace, &stakingKeeper, app.SupplyKeeper, auth.FeeCollectorName)
@@ -246,7 +246,7 @@ func (app *SimApp) LoadHeight(height int64) error {
 // ModuleAccountAddrs returns all the app's module account addresses.
 func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
-	for acc := range MaccPerms {
+	for acc := range maccPerms {
 		modAccAddrs[app.SupplyKeeper.GetModuleAddress(acc).String()] = true
 	}
 
@@ -266,4 +266,13 @@ func (app *SimApp) GetKey(storeKey string) *sdk.KVStoreKey {
 // GetTKey returns the TransientStoreKey for the provided store key
 func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 	return app.tkeys[storeKey]
+}
+
+// GetMaccPerms returns a copy of the module account permissions
+func GetMaccPerms() map[string][]string {
+	dupMaccPerms := make(map[string][]string)
+	for k, v := range maccPerms {
+		dupMaccPerms[k] = v
+	}
+	return dupMaccPerms
 }

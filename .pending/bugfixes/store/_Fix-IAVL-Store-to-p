@@ -1,2 +1,0 @@
-[\#4880](https://github.com/cosmos/cosmos-sdk/pull/4880) Fix error check in
-IAVL `Store#DeleteVersion`.

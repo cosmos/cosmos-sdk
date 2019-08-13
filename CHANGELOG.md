@@ -9,6 +9,17 @@ The latest version comes first.
 The release date of each version is displayed.
 Mention whether you follow Semantic Versioning.
 
+Usage:
+
+Change log entries are to be added to the Unreleased section under the
+appropriate stanza (see below). Each entry should ideally include a tag and
+the Github issue reference in the following format:
+
+* (<tag>) \#<issue-number> message
+
+The issue numbers will later be link-ified during the release process so you do
+not have to worry about including a link manually, but you can if you wish.
+
 Types of changes (Stanzas):
 
 "Features" for new features.

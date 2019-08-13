@@ -1,17 +1,18 @@
 # Contributing
 
-* [Pull Requests](#pull-requests)
-  * [Process for reviewing PRs](#process-for-reviewing-prs)
-  * [Updating Documentation](#updating-documentation)
-* [Forking](#forking)
-* [Dependencies](#dependencies)
-* [Testing](#testing)
-* [Branching Model and Release](#branching-model-and-release)
-  * [PR Targeting](#pr-targeting)
-  * [Development Procedure](#development-procedure)
-  * [Pull Merge Procedure](#pull-merge-procedure)
-  * [Release Procedure](#release-procedure)
-  * [Point Release Procedure](#point-release-procedure)
+- [Contributing](#contributing)
+  - [Pull Requests](#pull-requests)
+    - [Process for reviewing PRs](#process-for-reviewing-prs)
+    - [Updating Documentation](#updating-documentation)
+  - [Forking](#forking)
+  - [Dependencies](#dependencies)
+  - [Testing](#testing)
+  - [Branching Model and Release](#branching-model-and-release)
+    - [PR Targeting](#pr-targeting)
+    - [Development Procedure](#development-procedure)
+    - [Pull Merge Procedure](#pull-merge-procedure)
+    - [Release Procedure](#release-procedure)
+    - [Point Release Procedure](#point-release-procedure)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -20,25 +21,27 @@ Contributing to this repo can mean many things such as participated in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
-  1. either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
-     [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with,
-  2. participate in thoughtful discussion on that issue,
-  3. if you would then like to contribute code:
-     1. if a the issue is a proposal, ensure that the proposal has been accepted,
-     2. ensure that nobody else has already begun working on this issue, if they have
-       make sure to contact them to collaborate,
-     3. if nobody has been assigned the issue and you would like to work on it
-       make a comment on the issue to inform the community of your intentions
-       to begin work,
-     4. follow standard github best practices: fork the repo, branch from the
-       top of `master`, make some commits, and submit a PR to `master`,
-         - for core developers working within the cosmos-sdk repo, 
-	 to ensure a clear ownership of branches, branches must be named with the convention `yourname/{issue-}feature-name`.  
-     5. include `WIP:` in the PR-title to and submit your PR early, even if it's
-       incomplete, this indicates to the community you're working on something and
-       allows them to provide comments early in the development process. When the code
-       is complete it can be marked as ready-for-review by replacing `WIP:` with
-       `R4R:` in the PR-title.
+1. Either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
+   [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with
+2. Participate in thoughtful discussion on that issue
+3. If you would like to contribute:
+   1. If a the issue is a proposal, ensure that the proposal has been accepted
+   2. Ensure that nobody else has already begun working on this issue, if they have
+      make sure to contact them to collaborate
+   3. If nobody has been assigned the issue and you would like to work on it
+      make a comment on the issue to inform the community of your intentions
+      to begin work
+   4. Follow standard Github best practices: fork the repo, branch from the
+      HEAD of `master`, make some commits, and submit a PR to `master`
+      - For core developers working within the cosmos-sdk repo, to ensure a clear
+      ownership of branches, branches must be named with the convention
+      `{moniker}/{issue#}-branch-name`
+   5. Be sure to submit the PR in `Draft` mode submit your PR early, even if
+      it's incomplete as this indicates to the community you're working on
+      something and allows them to provide comments early in the development process
+   6. When the code is complete it can be marked `Ready for Review`
+   7. Be sure to include a relevant change log entry in the `Unreleased` section
+      of `CHANGELOG.md` (see file for log format)
 
 Note that for very small or blatantly obvious problems (such as typos) it is
 not required to an open issue to submit a PR, but be aware that for more complex
@@ -186,14 +189,22 @@ only pull requests targeted directly against master.
   - merge pull request
 
 ### Release Procedure
-  - start on `master`
-  - create the release candidate branch `rc/v*` (going forward known as **RC**) and ensure it's protected against pushing from anyone except the release manager/coordinator. **no PRs targeting this branch should be merged unless exceptional circumstances arise**
-  - on the `RC` branch, use `clog` to prepare the `CHANGELOG.md` and kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks).
-  - if errors are found during the simulation testing, commit the fixes to `master` and create a new `RC` branch (making sure to increment the `rcN`)
-  - after simulation has successfully completed, create the release branch (`release/vX.XX.X`) from the `RC` branch
-  - merge the release branch to `master` to incorporate the `CHANGELOG.md` updates
-  - delete the `RC` branches
- 
+
+- Start on `master`
+- Create the release candidate branch `rc/v*` (going forward known as **RC**)
+  and ensure it's protected against pushing from anyone except the release
+  manager/coordinator
+  - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+- On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
+  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+- Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
+- If errors are found during the simulation testing, commit the fixes to `master`
+  and create a new `RC` branch (making sure to increment the `rcN`)
+- After simulation has successfully completed, create the release branch
+  (`release/vX.XX.X`) from the `RC` branch
+- Create a PR to `master` to incorporate the `CHANGELOG.md` updates
+- Delete the `RC` branches
+
 ### Point Release Procedure
 
 At the moment, only a single major release will be supported, so all point

@@ -1,6 +1,41 @@
+<!--
+Guiding Principles:
+
+Changelogs are for humans, not machines.
+There should be an entry for every single version.
+The same types of changes should be grouped.
+Versions and sections should be linkable.
+The latest version comes first.
+The release date of each version is displayed.
+Mention whether you follow Semantic Versioning.
+
+Usage:
+
+Change log entries are to be added to the Unreleased section under the
+appropriate stanza (see below). Each entry should ideally include a tag and
+the Github issue reference in the following format:
+
+* (<tag>) \#<issue-number> message
+
+The issue numbers will later be link-ified during the release process so you do
+not have to worry about including a link manually, but you can if you wish.
+
+Types of changes (Stanzas):
+
+"Features" for new features.
+"Improvements" for changes in existing functionality.
+"Deprecated" for soon-to-be removed features.
+"Bug Fixes" for any bug fixes.
+"Breaking" for breaking API changes.
+
+Ref: https://keepachangelog.com/en/1.0.0/
+-->
+
 # Changelog
 
-## 0.36.0
+## [Unreleased]
+
+## [v0.36.0] - 2019-08-13
 
 ### Breaking Changes
 
@@ -162,12 +197,19 @@
   Replace complex Context construct with a simpler immutible struct.
   Only breaking change is not to support `Value` and `GetValue` as first class calls.
   We do embed ctx.Context() as a raw context.Context instead to be used as you see fit.
-  
+
   Migration guide:
-  
-  `ctx = ctx.WithValue(contextKeyBadProposal, false)` ->
-  `ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))`
-  
+
+  ```go
+  ctx = ctx.WithValue(contextKeyBadProposal, false)
+  ```
+
+  Now becomes:
+
+  ```go
+  ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))
+  ```
+
   A bit more verbose, but also allows `context.WithTimeout()`, etc and only used
   in one function in this repo, in test code.
 * [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685)  Add `SetAddressVerifier` and `GetAddressVerifier` to `sdk.Config` to allow SDK users to configure custom address format verification logic (to override the default limitation of 20-byte addresses).
@@ -222,8 +264,8 @@
   methods.
 * [\#4654](https://github.com/cosmos/cosmos-sdk/issues/4654) validator slash event stored by period and height
 * [\#4681](https://github.com/cosmos/cosmos-sdk/issues/4681) panic on invalid amount on `MintCoins` and `BurnCoins`
-  - skip minting if inflation is set to zero
-* Sort state JSON during export and initialization  
+  * skip minting if inflation is set to zero
+* Sort state JSON during export and initialization
 
 ## 0.35.0
 
@@ -2468,3 +2510,8 @@ BUG FIXES:
 ##### September 22, 2016
 
 * Basecoin compiles again
+
+<!-- Release links -->
+
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.0...HEAD
+[v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

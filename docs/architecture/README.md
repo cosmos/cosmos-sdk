@@ -26,3 +26,4 @@ Please add a entry below in your Pull Request for an ADR.
 ### ADR Table of Contents
 
 - [ADR-002-Docs-Structure](./adr-002-docs-structure.md)
+- [ADR-006-secret-store-replacement](./adr-006-secret-store-replacement.md)

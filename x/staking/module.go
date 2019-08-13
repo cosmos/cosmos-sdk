@@ -18,35 +18,38 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
-// app module basics object
+// AppModuleBasic defines the basic application module used by the staking module.
 type AppModuleBasic struct{}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
-// module name
+// Name returns the staking module's name.
 func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// register module codec
+// RegisterCodec registers the staking module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
 }
 
-// default genesis state
+// DefaultGenesis returns default genesis state as raw bytes for the staking
+// module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
-// module validate genesis
+// ValidateGenesis performs genesis state validation for the staking module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	err := ModuleCdc.UnmarshalJSON(bz, &data)
@@ -56,17 +59,17 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// register rest routes
+// RegisterRESTRoutes registers the REST routes for the staking module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	rest.RegisterRoutes(ctx, rtr)
 }
 
-// get the root tx command of this module
+// GetTxCmd returns the root tx command for the staking module.
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetTxCmd(StoreKey, cdc)
 }
 
-// get the root query command of this module
+// GetQueryCmd returns no root query command for the staking module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
@@ -92,9 +95,23 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 	return cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 }
 
-// app module
+//____________________________________________________________________________
+
+// AppModuleSimulation defines the module simulation functions used by the staking module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder registers a decoder for staking module's types
+func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+//____________________________________________________________________________
+
+// AppModule implements an application module for the staking module.
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
+
 	keeper       Keeper
 	distrKeeper  types.DistributionKeeper
 	accKeeper    types.AccountKeeper
@@ -106,61 +123,65 @@ func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper
 	supplyKeeper types.SupplyKeeper) AppModule {
 
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
-		distrKeeper:    distrKeeper,
-		accKeeper:      accKeeper,
-		supplyKeeper:   supplyKeeper,
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		keeper:              keeper,
+		distrKeeper:         distrKeeper,
+		accKeeper:           accKeeper,
+		supplyKeeper:        supplyKeeper,
 	}
 }
 
-// module name
+// Name returns the staking module's name.
 func (AppModule) Name() string {
 	return ModuleName
 }
 
-// register invariants
+// RegisterInvariants registers the staking module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
 }
 
-// module message route name
+// Route returns the message routing key for the staking module.
 func (AppModule) Route() string {
 	return RouterKey
 }
 
-// module handler
+// NewHandler returns an sdk.Handler for the staking module.
 func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
 }
 
-// module querier route name
+// QuerierRoute returns the staking module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return QuerierRoute
 }
 
-// module querier
+// NewQuerierHandler returns the staking module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-// module init-genesis
+// InitGenesis performs genesis initialization for the staking module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
 	return InitGenesis(ctx, am.keeper, am.accKeeper, am.supplyKeeper, genesisState)
 }
 
-// module export genesis
+// ExportGenesis returns the exported genesis state as raw bytes for the staking
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 
-// module begin-block
+// BeginBlock returns the begin blocker for the staking module.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// module end-block
+// EndBlock returns the end blocker for the staking module. It returns no validator
+// updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
 }

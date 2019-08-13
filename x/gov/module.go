@@ -17,15 +17,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
-// AppModuleBasic - app module basics object
+// AppModuleBasic defines the basic application module used by the gov module.
 type AppModuleBasic struct {
 	proposalHandlers []client.ProposalHandler // proposal handlers which live in governance cli and rest
 }
@@ -37,24 +39,23 @@ func NewAppModuleBasic(proposalHandlers ...client.ProposalHandler) AppModuleBasi
 	}
 }
 
-var _ module.AppModuleBasic = AppModuleBasic{}
-
-// Name - module name
+// Name returns the gov module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec -register module codec
+// RegisterCodec registers the gov module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
 }
 
-// DefaultGenesis - default genesis state
+// DefaultGenesis returns default genesis state as raw bytes for the gov
+// module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
-// ValidateGenesis - module validate genesis
+// ValidateGenesis performs genesis state validation for the gov module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	err := ModuleCdc.UnmarshalJSON(bz, &data)
@@ -64,7 +65,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// RegisterRESTRoutes - register rest routes
+// RegisterRESTRoutes registers the REST routes for the gov module.
 func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	var proposalRESTHandlers []rest.ProposalRESTHandler
 	for _, proposalHandler := range a.proposalHandlers {
@@ -74,7 +75,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 	rest.RegisterRoutes(ctx, rtr, proposalRESTHandlers)
 }
 
-// GetTxCmd gets the root tx command of this module
+// GetTxCmd returns the root tx command for the gov module.
 func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	var proposalCLIHandlers []*cobra.Command
@@ -85,16 +86,28 @@ func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetTxCmd(StoreKey, cdc, proposalCLIHandlers)
 }
 
-// GetQueryCmd gets the root query command of this module
+// GetQueryCmd returns the root query command for the gov module.
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
-//___________________________
+//____________________________________________________________________________
 
-// AppModule - app module object
+// AppModuleSimulation defines the module simulation functions used by the gov module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+//____________________________________________________________________________
+
+// AppModule implements an application module for the gov module.
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
+
 	keeper       Keeper
 	supplyKeeper types.SupplyKeeper
 }
@@ -102,13 +115,14 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
-		supplyKeeper:   supplyKeeper,
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		keeper:              keeper,
+		supplyKeeper:        supplyKeeper,
 	}
 }
 
-// Name - module name
+// Name returns the gov module's name.
 func (AppModule) Name() string {
 	return ModuleName
 }
@@ -118,27 +132,28 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	RegisterInvariants(ir, am.keeper)
 }
 
-// Route - module message route name
+// Route returns the message routing key for the gov module.
 func (AppModule) Route() string {
 	return RouterKey
 }
 
-// NewHandler - module handler
+// NewHandler returns an sdk.Handler for the gov module.
 func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
 }
 
-// QuerierRoute - module querier route name
+// QuerierRoute returns the gov module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return QuerierRoute
 }
 
-// NewQuerierHandler - module querier
+// NewQuerierHandler returns no sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
-// InitGenesis - module init-genesis
+// InitGenesis performs genesis initialization for the gov module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
@@ -146,16 +161,18 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis - module export genesis
+// ExportGenesis returns the exported genesis state as raw bytes for the gov
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock - module begin-block
+// BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock - module end-block
+// EndBlock returns the end blocker for the gov module. It returns no validator
+// updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}

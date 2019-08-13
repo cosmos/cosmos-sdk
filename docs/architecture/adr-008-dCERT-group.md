@@ -19,7 +19,7 @@ gained.
 
 Additionally, a special privilege is proposed for the dCERT group:
 the capacity to "circuit-break" (aka. temporarily disable)  a particular
-transaction path. 
+message path. 
 
 In the future it is foreseeable that the community may wish to expand the roles
 of dCERT with further responsibilities such as the capacity to "pre-approve" a
@@ -56,7 +56,7 @@ implemented with the following specifications:
    preferred representation on the dCERT group. 
  - Preferred representation may be arbitrarily split between address (ex. 50%
    to John, 25% to Sally, 25% to Carol) 
- - Addresses which control the greatest amount of prefered-representation are
+ - Addresses which control the greatest amount of preferred-representation are
    eligible to join the dCERT group (up the _maximum number of dCERT members_)
  - In order for a new member to be added to the dCERT group they must 
    send a transaction accepting their admission at which point the validity of
@@ -75,8 +75,25 @@ is suspended by the dCERT group prior to being slashed by governance.
 
 Active dCERT members 
  - change of the description of the dCERT group
- - circuit break a transaction route
+ - circuit break a message route
  - vote to suspend a dCERT member. 
+
+Here circuit-breaking refers to the capability to disable a groups of messages,
+This could for instance mean: "disable all staking-delegation messages", or
+"disable all distribution messages". This could be accomplished by verifying
+that the message route has not been "circuit-broken" at CheckTx time (in
+`baseapp/baseapp.go`). 
+
+"unbreaking" a circuit is anticipated only to occur during a hard fork upgrade
+meaning that no capability to unbreak a message route on a live chain is
+required. 
+
+Note also, that if there was a problem with governance voting (for instance a
+capability to vote many times) then governance would be broken and should be
+halted with this mechanism, it would be then up to the validator set to
+coordinate and hard-fork upgrade to a patched version of the software where
+governance is re-enabled (and fixed). If the dCERT group abuses this privilege
+they should all be severely slashed.
 
 ## Status
 

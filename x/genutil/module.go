@@ -81,6 +81,7 @@ func (AppModuleSimulation) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []sim.
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
 
 	accountKeeper types.AccountKeeper
 	stakingKeeper types.StakingKeeper
@@ -92,10 +93,11 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		deliverTx:      deliverTx,
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		accountKeeper:       accountKeeper,
+		stakingKeeper:       stakingKeeper,
+		deliverTx:           deliverTx,
 	})
 }
 

@@ -1,2 +1,0 @@
-#4868 Context#CacheContext now sets a new EventManager. This prevents unwanted events
-from being emitted.

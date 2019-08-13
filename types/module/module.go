@@ -339,30 +339,3 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		Events:           ctx.EventManager().ABCIEvents(),
 	}
 }
-
-//____________________________________________________________________________
-
-// SimulationManager defines a simulation manager that provides the high level utility
-// for managing and executing simulation functionalities for a group of modules
-type SimulationManager struct {
-	Modules       map[string]AppModule
-	StoreDecoders sdk.StoreDecoderRegistry
-}
-
-// NewSimulationManager creates a new SimulationManager object
-func NewSimulationManager(moduleMap map[string]AppModule) *SimulationManager {
-
-	decoders := make(sdk.StoreDecoderRegistry)
-
-	return &SimulationManager{
-		Modules:       moduleMap,
-		StoreDecoders: decoders,
-	}
-}
-
-// RegisterStoreDecoders registers each of the modules' store decoders into a map
-func (sm *SimulationManager) RegisterStoreDecoders() {
-	for _, module := range sm.Modules {
-		module.RegisterStoreDecoder(sm.StoreDecoders)
-	}
-}

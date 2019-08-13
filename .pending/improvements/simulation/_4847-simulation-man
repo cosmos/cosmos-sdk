@@ -1,3 +1,0 @@
-#4847 `SimApp` and simulation refactors
-  - Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
-  - Add `DecodeStore` to the `SimulationManager` for decoding each module's types

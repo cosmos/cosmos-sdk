@@ -184,7 +184,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			authsim.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
+			authsimops.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

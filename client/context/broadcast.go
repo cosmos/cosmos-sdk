@@ -30,7 +30,8 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error
 }
 
 // BroadcastTxCommit broadcasts transaction bytes to a Tendermint node and
-// waits for a commit.
+// waits for a commit. An error is only returned if there is no RPC node
+// connection or if broadcasting fails.
 //
 // NOTE: This should ideally not be used as the request may timeout but the tx
 // may still be included in a block. Use BroadcastTxAsync or BroadcastTxSync
@@ -47,11 +48,11 @@ func (ctx CLIContext) BroadcastTxCommit(txBytes []byte) (sdk.TxResponse, error) 
 	}
 
 	if !res.CheckTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 
 	if !res.DeliverTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), nil
 	}
 
 	return sdk.NewResponseFormatBroadcastTxCommit(res), nil

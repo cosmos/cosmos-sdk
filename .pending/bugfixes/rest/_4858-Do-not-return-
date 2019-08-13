@@ -1,0 +1,3 @@
+#4858 Do not return an error in BroadcastTxCommit when the tx broadcasting
+was successful. This allows the proper REST response to be returned for a
+failed tx during `block` broadcasting mode.

@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -85,6 +86,12 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	simulation.RandomizedGenState(cdc, r, genesisState)
 }
+
+// RandomizedParams creates randomized slashing param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(cdc, r)
+}
+
 
 //____________________________________________________________________________
 

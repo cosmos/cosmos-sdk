@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -106,6 +107,12 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	simulation.RandomizedGenState(cdc, r, genesisState)
 }
+
+// RandomizedParams creates randomized gov param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(cdc, r)
+}
+
 
 //____________________________________________________________________________
 

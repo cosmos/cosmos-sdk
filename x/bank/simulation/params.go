@@ -12,8 +12,8 @@ import (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.SimParamChange {
-	return []simulation.SimParamChange{
+func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
+	return []simulation.ParamChange{
 		simulation.NewSimParamChange("bank", "SendEnabled", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%t", GenSendEnabled(cdc, r))

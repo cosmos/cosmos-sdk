@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -109,6 +110,11 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // GenerateGenesisState creates a randomized GenState of the staking module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	simulation.RandomizedGenState(cdc, r, genesisState)
+}
+
+// RandomizedParams creates randomized staking param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(cdc, r)
 }
 
 //____________________________________________________________________________

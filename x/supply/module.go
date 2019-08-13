@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/simulation"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -80,6 +81,11 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 // GenerateGenesisState creates a randomized GenState of the supply module.
 func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	simulation.RandomizedGenState(cdc, r, genesisState)
+}
+
+// RandomizedParams doesn't create any randomized supply param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []sim.ParamChange {
+	return nil
 }
 
 //____________________________________________________________________________

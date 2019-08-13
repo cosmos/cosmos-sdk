@@ -40,6 +40,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 //__________________________________________________________________________________________
@@ -139,6 +140,9 @@ type AppModuleSimulation interface {
 
 	// randomized genesis states
 	GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage)
+
+	// randomized module parameters for param change proposals
+	RandomizedParams(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange
 }
 
 // AppModule is the standard form for an application module
@@ -352,6 +356,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 type SimulationManager struct {
 	Modules       map[string]AppModule
 	StoreDecoders sdk.StoreDecoderRegistry
+	ParamChanges  []simulation.ParamChange
 }
 
 // NewSimulationManager creates a new SimulationManager object
@@ -362,6 +367,7 @@ func NewSimulationManager(moduleMap map[string]AppModule) *SimulationManager {
 	return &SimulationManager{
 		Modules:       moduleMap,
 		StoreDecoders: decoders,
+		ParamChanges: []simulation.ParamChange{},
 	}
 }
 
@@ -377,5 +383,15 @@ func (sm *SimulationManager) RegisterStoreDecoders() {
 func (sm *SimulationManager) GenerateGenesisStates(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	for _, module := range sm.Modules {
 		module.GenerateGenesisState(cdc, r, genesisState)
+	}
+}
+
+// RandomizedSimParamChanges generates randomized contents for creating params change
+// proposal transactions
+func (sm *SimulationManager) RandomizedSimParamChanges(cdc *codec.Codec, seed int64) {
+	r := rand.New(rand.NewSource(seed))
+
+	for _, module := range sm.Modules {
+		sm.ParamChanges = append(sm.ParamChanges, module.RandomizedParams(cdc, r)...)
 	}
 }

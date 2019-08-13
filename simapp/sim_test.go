@@ -48,15 +48,17 @@ func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	exportParams := exportParamsPath != ""
 
 	return tb, w, app.BaseApp, AppStateFn, seed,
-		testAndRunTxs(app), invariants(app),
+		testAndRunTxs(app, seed), invariants(app),
 		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
 // TODO: add description
-func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
+func testAndRunTxs(app *SimApp, seed int64) []simulation.WeightedOperation {
 	cdc := MakeCodec()
 	ap := make(simulation.AppParams)
+
+	app.sm.RandomizedSimParamChanges(cdc, seed)
 
 	if paramsFile != "" {
 		bz, err := ioutil.ReadFile(paramsFile)
@@ -165,7 +167,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsimops.SimulateParamChangeProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -617,7 +619,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app, seed),
 				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
 				blockSize, "", false, commit, lean,
 				false, false, app.ModuleAccountAddrs(),
@@ -649,7 +651,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app, seed),
 		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)

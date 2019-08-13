@@ -178,6 +178,13 @@
 
 ### Bug Fixes
 
+* [\#4891](https://github.com/cosmos/cosmos-sdk/issues/4891) Disable querying with proofs enabled when the query height <= 1.
+* (rest) [\#4858](https://github.com/cosmos/cosmos-sdk/issues/4858) Do not return an error in BroadcastTxCommit when the tx broadcasting
+  was successful. This allows the proper REST response to be returned for a
+  failed tx during `block` broadcasting mode.
+* (store) [\#4880](https://github.com/cosmos/cosmos-sdk/pull/4880) Fix error check in
+  IAVL `Store#DeleteVersion`.
+* (tendermint) [\#4879](https://github.com/cosmos/cosmos-sdk/issues/4879) Don't terminate the process immediately after startup when run in standalone mode.
 * (simulation) [\#4861](https://github.com/cosmos/cosmos-sdk/pull/4861) Fix non-determinism simulation
   by using CLI flags as input and updating Makefile target.
 * [\#4868](https://github.com/cosmos/cosmos-sdk/issues/4868) Context#CacheContext now sets a new EventManager. This prevents unwanted events

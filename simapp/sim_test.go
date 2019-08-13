@@ -184,7 +184,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			authsimops.SimulateDeductFee(app.accountKeeper, app.supplyKeeper),
+			authsim.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -195,7 +195,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			banksimops.SimulateMsgSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -206,7 +206,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			banksimops.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -217,7 +217,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgSetWithdrawAddress(app.distrKeeper),
+			distrsimops.SimulateMsgSetWithdrawAddress(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -228,7 +228,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawDelegatorReward(app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawDelegatorReward(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -239,7 +239,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawValidatorCommission(app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawValidatorCommission(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -250,7 +250,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsimops.SimulateTextProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, govsimops.SimulateTextProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -261,7 +261,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.distrKeeper)),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -272,7 +272,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsimops.SimulateParamChangeProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -283,7 +283,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateMsgDeposit(app.govKeeper),
+			govsimops.SimulateMsgDeposit(app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -294,7 +294,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -305,7 +305,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgEditValidator(app.stakingKeeper),
+			stakingsimops.SimulateMsgEditValidator(app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -316,7 +316,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgDelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -327,7 +327,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgUndelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -338,7 +338,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -349,7 +349,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			slashingsimops.SimulateMsgUnjail(app.slashingKeeper),
+			slashingsimops.SimulateMsgUnjail(app.SlashingKeeper),
 		},
 	}
 }
@@ -358,9 +358,9 @@ func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
 	if period == 1 {
-		return app.crisisKeeper.Invariants()
+		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), period, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -802,7 +802,7 @@ func BenchmarkInvariants(b *testing.B) {
 	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.crisisKeeper.Routes() {
+	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
 				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)

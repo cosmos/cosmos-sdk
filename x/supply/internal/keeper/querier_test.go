@@ -37,7 +37,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, bz)
 
 	queryTotalSupplyParams := types.NewQueryTotalSupplyParams(1, 20)
-	bz, errRes := app.Cdc.MarshalJSON(queryTotalSupplyParams)
+	bz, errRes := app.Codec().MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
@@ -47,7 +47,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, err)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
-	bz, errRes = app.Cdc.MarshalJSON(querySupplyParams)
+	bz, errRes = app.Codec().MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)
@@ -60,6 +60,7 @@ func TestNewQuerier(t *testing.T) {
 func TestQuerySupply(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
+	cdc := app.Codec()
 
 	supplyCoins := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -73,7 +74,7 @@ func TestQuerySupply(t *testing.T) {
 	keeper.SetSupply(ctx, types.NewSupply(supplyCoins))
 
 	queryTotalSupplyParams := types.NewQueryTotalSupplyParams(1, 10)
-	bz, errRes := app.Cdc.MarshalJSON(queryTotalSupplyParams)
+	bz, errRes := cdc.MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
@@ -88,12 +89,12 @@ func TestQuerySupply(t *testing.T) {
 	require.Nil(t, err)
 
 	var totalCoins sdk.Coins
-	errRes = app.Cdc.UnmarshalJSON(res, &totalCoins)
+	errRes = cdc.UnmarshalJSON(res, &totalCoins)
 	require.Nil(t, errRes)
 	require.Equal(t, supplyCoins, totalCoins)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
-	bz, errRes = app.Cdc.MarshalJSON(querySupplyParams)
+	bz, errRes = cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)

@@ -18,7 +18,7 @@ func TestSimAppExport(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	genesisState := NewDefaultGenesisState()
-	stateBytes, err := codec.MarshalJSONIndent(app.Cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 	require.NoError(t, err)
 
 	// Initialize the chain

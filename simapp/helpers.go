@@ -16,7 +16,7 @@ func Setup(isCheckTx bool) (app *SimApp, ctx sdk.Context) {
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
-		stateBytes, err := codec.MarshalJSONIndent(app.Cdc, genesisState)
+		stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 		if err != nil {
 			panic(err)
 		}

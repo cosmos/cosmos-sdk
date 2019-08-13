@@ -81,12 +81,12 @@ func MakeCodec() *codec.Codec {
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*bam.BaseApp
-	Cdc *codec.Codec
+	cdc *codec.Codec
 
 	invCheckPeriod uint
 
 	// keys to access the substores
-	Keys  map[string]*sdk.KVStoreKey
+	keys  map[string]*sdk.KVStoreKey
 	tkeys map[string]*sdk.TransientStoreKey
 
 	// keepers
@@ -127,9 +127,9 @@ func NewSimApp(
 
 	app := &SimApp{
 		BaseApp:        bApp,
-		Cdc:            cdc,
+		cdc:            cdc,
 		invCheckPeriod: invCheckPeriod,
-		Keys:           keys,
+		keys:           keys,
 		tkeys:          tkeys,
 	}
 
@@ -219,7 +219,7 @@ func NewSimApp(
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
-		err := app.LoadLatestVersion(app.Keys[bam.MainStoreKey])
+		err := app.LoadLatestVersion(app.keys[bam.MainStoreKey])
 		if err != nil {
 			cmn.Exit(err.Error())
 		}
@@ -240,13 +240,13 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 // application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
-	app.Cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
+	app.cdc.MustUnmarshalJSON(req.AppStateBytes, &genesisState)
 	return app.mm.InitGenesis(ctx, genesisState)
 }
 
 // load a particular height
 func (app *SimApp) LoadHeight(height int64) error {
-	return app.LoadVersion(height, app.Keys[bam.MainStoreKey])
+	return app.LoadVersion(height, app.keys[bam.MainStoreKey])
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.

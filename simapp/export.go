@@ -28,7 +28,7 @@ func (app *SimApp) ExportAppStateAndValidators(
 	}
 
 	genState := app.mm.ExportGenesis(ctx)
-	appState, err = codec.MarshalJSONIndent(app.Cdc, genState)
+	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -129,7 +129,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []str
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.Keys[staking.StoreKey])
+	store := ctx.KVStore(app.keys[staking.StoreKey])
 	iter := sdk.KVStoreReversePrefixIterator(store, staking.ValidatorsKey)
 	counter := int16(0)
 

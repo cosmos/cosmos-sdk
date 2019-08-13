@@ -561,7 +561,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
-	err = app.Cdc.UnmarshalJSON(appState, &genesisState)
+	err = app.cdc.UnmarshalJSON(appState, &genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -579,18 +579,18 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.Keys[baseapp.MainStoreKey], newApp.Keys[baseapp.MainStoreKey], [][]byte{}},
-		{app.Keys[auth.StoreKey], newApp.Keys[auth.StoreKey], [][]byte{}},
-		{app.Keys[staking.StoreKey], newApp.Keys[staking.StoreKey],
+		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
+		{app.keys[auth.StoreKey], newApp.keys[auth.StoreKey], [][]byte{}},
+		{app.keys[staking.StoreKey], newApp.keys[staking.StoreKey],
 			[][]byte{
 				staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey,
 			}}, // ordering may change but it doesn't matter
-		{app.Keys[slashing.StoreKey], newApp.Keys[slashing.StoreKey], [][]byte{}},
-		{app.Keys[mint.StoreKey], newApp.Keys[mint.StoreKey], [][]byte{}},
-		{app.Keys[distr.StoreKey], newApp.Keys[distr.StoreKey], [][]byte{}},
-		{app.Keys[supply.StoreKey], newApp.Keys[supply.StoreKey], [][]byte{}},
-		{app.Keys[params.StoreKey], newApp.Keys[params.StoreKey], [][]byte{}},
-		{app.Keys[gov.StoreKey], newApp.Keys[gov.StoreKey], [][]byte{}},
+		{app.keys[slashing.StoreKey], newApp.keys[slashing.StoreKey], [][]byte{}},
+		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
+		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
+		{app.keys[supply.StoreKey], newApp.keys[supply.StoreKey], [][]byte{}},
+		{app.keys[params.StoreKey], newApp.keys[params.StoreKey], [][]byte{}},
+		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {

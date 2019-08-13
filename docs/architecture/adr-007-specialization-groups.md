@@ -24,11 +24,9 @@ governance proposals include a field for issue type.
 
 ## Decision
 
-A specialization group can be broadly broken down into
-the following functions: 
+A specialization group can be broadly broken down into the following functions
+(herein containing examples): 
  - Membership Admittance
-   - via governance
-   - via special appointment
  - Membership Acceptance
  - Membership Revocation
    - (probably) Without Penalty 
@@ -44,9 +42,15 @@ the following functions:
    - Individual compensation for all constituents of a group from the
      greater community
 
-Election of the members of a specialization group can happen in a wide variety
-of ways and be subject to an arbitrary number of associated rules. For its
-initial implementation as a part of this ADR we recommend that a general
+Membership admittance to a specialization group could take place over a wide
+variety of mechanisms. The most obvious example is through a general vote among
+the entire community, however in certain systems a community may want to allow
+the members already in a specialization group to internally elect new members,
+or maybe the community may assign a permission to a particular specialization
+group to appoint members to other 3rd party groups. The sky is really the limit
+as to how membership admittance can be structured. We attempt to capture these
+some of these possiblities in a common interface dubbed the `Electionator`. For
+its initial implementation as a part of this ADR we recommend that the general
 election abstraction (`Electionator`) is provided as well as a basic
 implementation of that abstraction which allows for a continuous election of
 members of a specialization group. 

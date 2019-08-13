@@ -15,6 +15,7 @@ import (
 func TestNewQuerier(t *testing.T) {
 	app, ctx := createTestApp(false)
 	keeper := app.SupplyKeeper
+	cdc := app.Codec()
 
 	supplyCoins := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -37,7 +38,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, bz)
 
 	queryTotalSupplyParams := types.NewQueryTotalSupplyParams(1, 20)
-	bz, errRes := app.Codec().MarshalJSON(queryTotalSupplyParams)
+	bz, errRes := cdc.MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
@@ -47,7 +48,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, err)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
-	bz, errRes = app.Codec().MarshalJSON(querySupplyParams)
+	bz, errRes = cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)

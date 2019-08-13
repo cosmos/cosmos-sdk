@@ -68,6 +68,13 @@ type Electionator interface {
     // functionality to execute for when a vote is cast in this election, here
     // the vote field is anticipated to be marshalled into a vote type used 
     // by an election. 
+    // 
+    // NOTE There are no explicit ids here. Just votes which pertain specifically
+    // to one electionator. Anyone can create and send a vote to the electionator item
+    // which will presumably attempt to marshal those bytes into a particular struct
+    // and apply the vote information in some arbitrary way. There can be multiple
+    // Electionators within the Cosmos-Hub for multiple specialization groups, votes
+    // would need to be routed to the Electionator upstream of here.
     Vote(addr sdk.AccAddress, vote []byte) 
 
     // here lies all functionality to authenticate and execute changes for

@@ -1,6 +1,74 @@
+<!--
+Guiding Principles:
+
+Changelogs are for humans, not machines.
+There should be an entry for every single version.
+The same types of changes should be grouped.
+Versions and sections should be linkable.
+The latest version comes first.
+The release date of each version is displayed.
+Mention whether you follow Semantic Versioning.
+
+Usage:
+
+Change log entries are to be added to the Unreleased section under the
+appropriate stanza (see below). Each entry should ideally include a tag and
+the Github issue reference in the following format:
+
+* (<tag>) \#<issue-number> message
+
+The issue numbers will later be link-ified during the release process so you do
+not have to worry about including a link manually, but you can if you wish.
+
+Types of changes (Stanzas):
+
+"Features" for new features.
+"Improvements" for changes in existing functionality.
+"Deprecated" for soon-to-be removed features.
+"Bug Fixes" for any bug fixes.
+"Breaking" for breaking API changes.
+
+Ref: https://keepachangelog.com/en/1.0.0/
+-->
+
 # Changelog
 
-## 0.36.0
+## [Unreleased]
+
+### Breaking Changes
+
+* (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
+  * Prepare for module spec integration
+  * Update gov keys to use big endian encoding instead of little endian
+* (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
+
+### Features
+
+* (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
+`Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
+longer panics if the store to load contains substores that we didn't explicitly mount.
+
+### Improvements
+
+* (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
+* (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec.
+* (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description.
+* (sdk) [\#4566](https://github.com/cosmos/cosmos-sdk/issues/4566) Export simulation's parameters and app state to JSON in order to reproduce bugs and invariants.
+* (sdk) [\#4640](https://github.com/cosmos/cosmos-sdk/issues/4640) improve import/export simulation errors by extending `DiffKVStores` to return an array of `KVPairs` that are then compared to check for inconsistencies.
+* (sdk) [\#4717](https://github.com/cosmos/cosmos-sdk/issues/4717) refactor `x/slashing` to match the new module spec
+* (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
+* (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
+* (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
+  * Support exporting the simulation stats to a given JSON file
+* (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
+* (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
+
+### Bug Fixes
+
+* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
+* (keys) Fix ledger custom coin type support bug
+
+## [v0.36.0] - 2019-08-13
 
 ### Breaking Changes
 
@@ -162,12 +230,19 @@
   Replace complex Context construct with a simpler immutible struct.
   Only breaking change is not to support `Value` and `GetValue` as first class calls.
   We do embed ctx.Context() as a raw context.Context instead to be used as you see fit.
-  
+
   Migration guide:
-  
-  `ctx = ctx.WithValue(contextKeyBadProposal, false)` ->
-  `ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))`
-  
+
+  ```go
+  ctx = ctx.WithValue(contextKeyBadProposal, false)
+  ```
+
+  Now becomes:
+
+  ```go
+  ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))
+  ```
+
   A bit more verbose, but also allows `context.WithTimeout()`, etc and only used
   in one function in this repo, in test code.
 * [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685)  Add `SetAddressVerifier` and `GetAddressVerifier` to `sdk.Config` to allow SDK users to configure custom address format verification logic (to override the default limitation of 20-byte addresses).
@@ -222,8 +297,8 @@
   methods.
 * [\#4654](https://github.com/cosmos/cosmos-sdk/issues/4654) validator slash event stored by period and height
 * [\#4681](https://github.com/cosmos/cosmos-sdk/issues/4681) panic on invalid amount on `MintCoins` and `BurnCoins`
-  - skip minting if inflation is set to zero
-* Sort state JSON during export and initialization  
+  * skip minting if inflation is set to zero
+* Sort state JSON during export and initialization
 
 ## 0.35.0
 
@@ -2468,3 +2543,8 @@ BUG FIXES:
 ##### September 22, 2016
 
 * Basecoin compiles again
+
+<!-- Release links -->
+
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.0...HEAD
+[v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

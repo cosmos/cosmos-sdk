@@ -19,11 +19,6 @@ func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
 				return fmt.Sprintf("\"%s\"", GenInflationRateChange(cdc, r))
 			},
 		),
-		simulation.NewSimParamChange("mint", "Inflation", "",
-			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%s\"", GenInflation(cdc, r))
-			},
-		),
 		simulation.NewSimParamChange("mint", "InflationMax", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenInflationMax(cdc, r))

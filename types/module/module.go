@@ -31,6 +31,7 @@ package module
 import (
 	"encoding/json"
 	"math/rand"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -184,6 +185,11 @@ func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterStoreDecoder empty store decoder registry
 func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// RandomizedParams returns empty params for the simulator.
+func (GenesisOnlyAppModule) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []simulation.ParamChange {
+	return nil
+}
 
 // Route empty module message route
 func (GenesisOnlyAppModule) Route() string { return "" }
@@ -392,6 +398,7 @@ func (sm *SimulationManager) RandomizedSimParamChanges(cdc *codec.Codec, seed in
 	r := rand.New(rand.NewSource(seed))
 
 	for _, module := range sm.Modules {
+		fmt.Println(module.Name())
 		sm.ParamChanges = append(sm.ParamChanges, module.RandomizedParams(cdc, r)...)
 	}
 }

@@ -14,17 +14,17 @@ import (
 // on the simulation
 func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange("distribution", "CommunityTax", "",
+		simulation.NewSimParamChange("distribution", "communitytax", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenCommunityTax(cdc, r))
 			},
 		),
-		simulation.NewSimParamChange("distribution", "BaseProposerReward", "",
+		simulation.NewSimParamChange("distribution", "baseproposerreward", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBaseProposerReward(cdc, r))
 			},
 		),
-		simulation.NewSimParamChange("distribution", "BonusProposerReward", "",
+		simulation.NewSimParamChange("distribution", "bonusproposerreward", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBonusProposerReward(cdc, r))
 			},

@@ -14,7 +14,7 @@ import (
 // on the simulation
 func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange("bank", "SendEnabled", "",
+		simulation.NewSimParamChange("bank", "sendenabled", "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%t", GenSendEnabled(cdc, r))
 			},

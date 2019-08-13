@@ -26,8 +26,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* All REST responses now wrap the original resource/result. The response
-  will contain two fields: height and result.
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
@@ -35,37 +33,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load.
-  New `rootmulti.Store.LoadLatestVersionAndUpgrade` method
-  Baseapp supports `StoreLoader` to enable various upgrade strategies
-  No longer panics if the store to load contains substores that we didn't explicitly mount.
+* (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
+`Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
+longer panics if the store to load contains substores that we didn't explicitly mount.
 
 ### Improvements
 
-* Upgrade IAVL to v0.12.4
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
-* (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec
-* (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description
-* (rest) # 3867 Allow querying for genesis transaction when height query param is set to zero.
-* (sdk) [\#4566](https://github.com/cosmos/cosmos-sdk/issues/4566) Export simulation's parameters and app state to JSON in order to reproduce bugs
-  and invariants.
-* (sdk) [\#4640](https://github.com/cosmos/cosmos-sdk/issues/4640) improve import/export simulation errors by extending `DiffKVStores`
-  to return an array of `KVPairs` that are then compared to check for inconsistencies.
+* (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec.
+* (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description.
+* (sdk) [\#4566](https://github.com/cosmos/cosmos-sdk/issues/4566) Export simulation's parameters and app state to JSON in order to reproduce bugs and invariants.
+* (sdk) [\#4640](https://github.com/cosmos/cosmos-sdk/issues/4640) improve import/export simulation errors by extending `DiffKVStores` to return an array of `KVPairs` that are then compared to check for inconsistencies.
 * (sdk) [\#4717](https://github.com/cosmos/cosmos-sdk/issues/4717) refactor `x/slashing` to match the new module spec
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
-* (tendermint) Upgrade Tendermint to v0.32.2
-* (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces
-  Meant as a more feature-rich replacement for sdk.Errors in the mid-term
+* (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
 
-### Bugfixes
+### Bug Fixes
 
-* Return height in responses when querying against BaseApp
-* Sort state JSON during export and initialization
-* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) fix flag `--min-self-delegation` for staking `EditValidator`
+* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
 
 ## [v0.36.0] - 2019-08-13

@@ -202,8 +202,9 @@ only pull requests targeted directly against master.
   and ensure it's protected against pushing from anyone except the release
   manager/coordinator
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
-- On the `RC` branch, prepare a new version section in the `CHANGELOG.md` and
-  kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
+- On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
+  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+- Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
 - After simulation has successfully completed, create the release branch

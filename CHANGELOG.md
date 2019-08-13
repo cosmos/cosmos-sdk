@@ -219,12 +219,19 @@ longer panics if the store to load contains substores that we didn't explicitly 
   Replace complex Context construct with a simpler immutible struct.
   Only breaking change is not to support `Value` and `GetValue` as first class calls.
   We do embed ctx.Context() as a raw context.Context instead to be used as you see fit.
-  
+
   Migration guide:
-  
-  `ctx = ctx.WithValue(contextKeyBadProposal, false)` ->
-  `ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))`
-  
+
+  ```go
+  ctx = ctx.WithValue(contextKeyBadProposal, false)
+  ```
+
+  Now becomes:
+
+  ```go
+  ctx = ctx.WithContext(context.WithValue(ctx.Context(), contextKeyBadProposal, false))
+  ```
+
   A bit more verbose, but also allows `context.WithTimeout()`, etc and only used
   in one function in this repo, in test code.
 * [\#3685](https://github.com/cosmos/cosmos-sdk/issues/3685)  Add `SetAddressVerifier` and `GetAddressVerifier` to `sdk.Config` to allow SDK users to configure custom address format verification logic (to override the default limitation of 20-byte addresses).
@@ -279,8 +286,8 @@ longer panics if the store to load contains substores that we didn't explicitly 
   methods.
 * [\#4654](https://github.com/cosmos/cosmos-sdk/issues/4654) validator slash event stored by period and height
 * [\#4681](https://github.com/cosmos/cosmos-sdk/issues/4681) panic on invalid amount on `MintCoins` and `BurnCoins`
-  - skip minting if inflation is set to zero
-* Sort state JSON during export and initialization  
+  * skip minting if inflation is set to zero
+* Sort state JSON during export and initialization
 
 ## 0.35.0
 

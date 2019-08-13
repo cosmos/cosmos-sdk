@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	. "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
+	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -30,7 +30,7 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(keeper)
+	querier := keep.NewQuerier(keeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.Error(t, err)
@@ -69,7 +69,7 @@ func TestQuerySupply(t *testing.T) {
 		sdk.NewCoin("btc", sdk.NewInt(21000000)),
 	)
 
-	querier := NewQuerier(keeper)
+	querier := keep.NewQuerier(keeper)
 
 	keeper.SetSupply(ctx, types.NewSupply(supplyCoins))
 

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	. "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
+	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
@@ -25,7 +25,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
-	app.SupplyKeeper = NewKeeper(app.Codec(), app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
+	app.SupplyKeeper = keep.NewKeeper(app.Codec(), app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	app.SupplyKeeper.SetSupply(ctx, types.NewSupply(sdk.NewCoins()))
 
 	return app, ctx

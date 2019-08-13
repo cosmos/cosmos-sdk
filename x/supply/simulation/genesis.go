@@ -10,14 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
 // RandomizedGenState generates a random GenesisState for supply
 func RandomizedGenState(cdc *codec.Codec, _ *rand.Rand, genesisState map[string]json.RawMessage,
 	accs []simulation.Account, amount, numInitiallyBonded int64) {
-	
+
 	numAccs := int64(len(accs))
 	totalSupply := sdk.NewInt(amount * (numAccs + numInitiallyBonded))
 	supplyGenesis := types.NewGenesisState(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply)))

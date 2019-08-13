@@ -32,4 +32,3 @@ func ValidateGenesis(data GenesisState) error {
 
 	return ValidateMinter(data.Minter)
 }
-

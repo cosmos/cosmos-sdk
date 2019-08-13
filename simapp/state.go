@@ -12,19 +12,18 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-	genaccsim "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	genaccsim "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	mintsim "github.com/cosmos/cosmos-sdk/x/mint/simulation"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
+	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	supplysim "github.com/cosmos/cosmos-sdk/x/supply/simulation"
 )
-
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.

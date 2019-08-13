@@ -113,7 +113,6 @@ func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []si
 	return simulation.ParamChanges(cdc, r)
 }
 
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the gov module.

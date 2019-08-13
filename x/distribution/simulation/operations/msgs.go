@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -89,21 +89,21 @@ func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Op
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
 func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
-		var coins sdk.Coins 
-		
+		var coins sdk.Coins
+
 		recipientAcc := simulation.RandomAcc(r, accs)
 		balance := k.GetFeePool(ctx).CommunityPool
 
 		if len(balance) > 0 {
 			denomIndex := r.Intn(len(balance))
 			amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
-			
+
 			if err == nil {
 				denom := balance[denomIndex].Denom
 				coins = sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
 			}
 		}
-		
+
 		return distribution.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 100),

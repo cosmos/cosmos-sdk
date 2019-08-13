@@ -31,7 +31,6 @@ package module
 import (
 	"encoding/json"
 	"math/rand"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -373,7 +372,7 @@ func NewSimulationManager(moduleMap map[string]AppModule) *SimulationManager {
 	return &SimulationManager{
 		Modules:       moduleMap,
 		StoreDecoders: decoders,
-		ParamChanges: []simulation.ParamChange{},
+		ParamChanges:  []simulation.ParamChange{},
 	}
 }
 
@@ -384,7 +383,7 @@ func (sm *SimulationManager) RegisterStoreDecoders() {
 	}
 }
 
-// GenerateGenesisStates generates a randomized GenesisState for each of the 
+// GenerateGenesisStates generates a randomized GenesisState for each of the
 // registered modules
 func (sm *SimulationManager) GenerateGenesisStates(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
 	for _, module := range sm.Modules {
@@ -398,7 +397,6 @@ func (sm *SimulationManager) RandomizedSimParamChanges(cdc *codec.Codec, seed in
 	r := rand.New(rand.NewSource(seed))
 
 	for _, module := range sm.Modules {
-		fmt.Println(module.Name())
 		sm.ParamChanges = append(sm.ParamChanges, module.RandomizedParams(cdc, r)...)
 	}
 }

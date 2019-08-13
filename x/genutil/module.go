@@ -68,7 +68,8 @@ type AppModuleSimulation struct{}
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState creates a randomized GenState of the genutil module.
-func (AppModuleSimulation) GenerateGenesisState(_ *codec.Codec, _ *rand.Rand, _ map[string]json.RawMessage) {}
+func (AppModuleSimulation) GenerateGenesisState(_ *codec.Codec, _ *rand.Rand, _ map[string]json.RawMessage) {
+}
 
 // RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
 func (AppModuleSimulation) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []sim.ParamChange {
@@ -91,10 +92,10 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		accountKeeper:       accountKeeper,
-		stakingKeeper:       stakingKeeper,
-		deliverTx:           deliverTx,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  accountKeeper,
+		stakingKeeper:  stakingKeeper,
+		deliverTx:      deliverTx,
 	})
 }
 

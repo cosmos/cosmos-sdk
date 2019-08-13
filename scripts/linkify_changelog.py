@@ -1,4 +1,3 @@
-
 import fileinput
 import re
 

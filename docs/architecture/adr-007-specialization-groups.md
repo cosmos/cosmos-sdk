@@ -36,7 +36,9 @@ A specialization group can be broadly broken down into the following functions
      - due to breach of soft-agreement (determined through governance)
      - due to breach of hard-agreement (determined by code) 
  - Execution of Duties
-   - Special transactions which only execute for members of a specialization group
+   - Special transactions which only execute for members of a specialization
+     group (for example, dCERT members voting to turn off transaction routes in
+     an emergency scenario) 
  - Compensation
    - Group compensation (further distribution decided by the specialization group) 
    - Individual compensation for all constituents of a group from the
@@ -70,7 +72,7 @@ type Electionator interface {
 
     // here lies all functionality to authenticate and execute changes for
     // when a member accepts being elected
-    Accept(sdk.AccAddress) 
+    AcceptElection(sdk.AccAddress) 
 
     // Register a revoker object
     RegisterRevoker(Revoker)
@@ -95,10 +97,13 @@ type Electionator interface {
     QueryMetadata(sdk.AccAddress) []byte
 }
 
+// ElectionatorHooks, once registered with an Electionator, 
+// trigger execution of relevant interface functions when 
+// Electionator events occur. 
 type ElectionatorHooks interface {
-    VoteCast(addr sdk.AccAddress, vote []byte)
-    MemberAccepted(addr sdk.AccAddress)
-    MemberRevoked(addr sdk.AccAddress, cause []byte)
+    AfterVoteCast(addr sdk.AccAddress, vote []byte)
+    AfterMemberAccepted(addr sdk.AccAddress)
+    AfterMemberRevoked(addr sdk.AccAddress, cause []byte)
 }
 
 // Revoker defines the function required for an membership revocation rule-set
@@ -134,12 +139,12 @@ type SpecializationGroup interface {
     GetContract() string
 
     // messages which can be executed by the members of the group
-	Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result
+    Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result
 
     // logic to be executed at endblock, this may for instance
     // include payment of a stipend to the group members
     // for participation in the security group.   
-	EndBlocker(ctx sdk.Context)
+    EndBlocker(ctx sdk.Context)
 }
 ```
 
@@ -152,6 +157,7 @@ type SpecializationGroup interface {
 ### Positive
 
  - increases specialization capabilities of a blockchain
+ - improve abstractions in `x/gov/` such that they can be used with specialization groups
 
 ### Negative
 

@@ -28,12 +28,13 @@ implementation of:
  - continuous voting
  - slashing due to breach of soft contract
  - revoking a member due to breach of soft contract
- - compensation stipend from the community pool 
+ - compensation stipend from the community pool or other means decided by
+   governance
 
 This system necessitates the following new parameters: 
  - blockly stipend allowance per dCERT member (suggested ~$10K/yr of atoms)
  - maximum number of dCERT members (suggested 7) 
- - required staked tokens for each dCERT member (suggested $10K of atoms)
+ - required staked slashable tokens for each dCERT member (suggested $10K of atoms)
  - unbonding time for dCERT staked token (suggested 3 week)
  - quorum for suspending a particular member (suggested 5/7) 
 

@@ -1,4 +1,4 @@
-package simulation
+package operations
 
 import (
 	"fmt"
@@ -6,15 +6,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -39,7 +38,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -64,7 +63,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
@@ -88,7 +87,7 @@ func SimulateMsgWithdrawValidatorCommission(m auth.AccountKeeper, k distribution
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsim.ContentSimulator {
+func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.ContentSimulator {
 	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
 		recipientAcc := simulation.RandomAcc(r, accs)
 		coins := sdk.Coins{}

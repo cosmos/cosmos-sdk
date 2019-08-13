@@ -60,6 +60,9 @@ longer panics if the store to load contains substores that we didn't explicitly 
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
+* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847) `SimApp` and simulation refactors
+  * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
+  * Add `DecodeStore` to the `SimulationManager` for decoding each module's types
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
 * (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.

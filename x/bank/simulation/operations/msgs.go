@@ -1,4 +1,4 @@
-package bank
+package operations
 
 import (
 	"fmt"
@@ -8,16 +8,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SendTx tests and runs a single msg send where both
+// SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(mapper types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	handler := NewHandler(bk)
+func SimulateMsgSend(mapper types.AccountKeeper, bk bank.Keeper) simulation.Operation {
+	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -108,10 +108,10 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg 
 	return nil
 }
 
-// SingleInputSendMsg tests and runs a single msg multisend, with one input and one output, where both
+// SimulateSingleInputMsgMultiSend tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
-func SimulateSingleInputMsgMultiSend(mapper types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	handler := NewHandler(bk)
+func SimulateSingleInputMsgMultiSend(mapper types.AccountKeeper, bk bank.Keeper) simulation.Operation {
+	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 

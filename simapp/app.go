@@ -103,6 +103,9 @@ type SimApp struct {
 
 	// the module manager
 	mm *module.Manager
+
+	// simulation manager
+	sm *module.SimulationManager
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
@@ -201,6 +204,9 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
+
+	app.sm = module.NewSimulationManager(app.mm.Modules)
+	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
 	app.MountKVStores(keys)

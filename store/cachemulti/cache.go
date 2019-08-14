@@ -1,9 +1,9 @@
 package cachemulti
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/types"
-
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/store/types"
 
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -19,10 +19,10 @@ var (
 
 type (
 	// StoreCache defines a cache that is meant to be used in a persistent
-	// (inter-block) fashion and which wraps an underlying KVStore. Reads first
-	// hit the ARC (Adaptive Replacement Cache). During a cache miss, the read
-	// is delegated to the underlying KVStore. Deletes and writes always happen
-	// to both the cache and the KVStore in a write-through manner. Caching
+	// (inter-block) fashion and in which it wraps an underlying KVStore. Reads
+	// first hit the ARC (Adaptive Replacement Cache). During a cache miss, the
+	// read is delegated to the underlying KVStore. Deletes and writes always
+	// happen to both the cache and the KVStore in a write-through manner. Caching
 	// performed in the KVStore is completely irrelevant to this layer.
 	StoreCache struct {
 		types.KVStore

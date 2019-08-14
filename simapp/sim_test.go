@@ -457,9 +457,7 @@ func TestAppImportExport(t *testing.T) {
 
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
@@ -569,9 +567,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	fmt.Printf("Exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	fmt.Printf("Importing genesis...\n")
 
@@ -591,7 +587,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -628,10 +624,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
-		}
-
-		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
+			require.Equal(t, appHashList[0], appHashList[j], "non-determinism in seed %d: %d/%d, attempt: %d/%d\n", seed, i+1, numSeeds, j+1, numTimesToRunPerSeed)
 		}
 	}
 }

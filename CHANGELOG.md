@@ -35,6 +35,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.36.1] - 2019-08-TBD
+
+### Bug Fixes
+
+* (baseapp) [\#4903](https://github.com/cosmos/cosmos-sdk/issues/4903) Various height query fixes:
+  * Move height with proof check from `CLIContext` to `BaseApp` as the height
+  can automatically be injected there.
+  * Update `handleQueryStore` to resemble `handleQueryCustom`
+
 ## [v0.36.0] - 2019-08-13
 
 ### Breaking Changes
@@ -2513,5 +2522,6 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.1...HEAD
+[v0.36.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.1
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

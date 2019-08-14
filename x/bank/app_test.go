@@ -1,19 +1,21 @@
 package bank_test
 
 import (
+	"os"
 	"testing"
-
-	dbm "github.com/tendermint/tm-db"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 type (
@@ -144,7 +146,7 @@ func TestSendToModuleAcc(t *testing.T) {
 		Address: moduleAccAddr,
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc, macc})
+	mock.SetGenesis(app, []auth.Account{acc, macc})
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
@@ -181,7 +183,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		Address: moduleAccAddr,
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc, macc})
+	mock.SetGenesis(app, []auth.Account{acc, macc})
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
@@ -243,7 +245,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc1, acc2})
+	mock.SetGenesis(app, []auth.Account{acc1, acc2})
 
 	testCases := []appTestCase{
 		{
@@ -288,7 +290,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc1, acc2, acc4})
+	mock.SetGenesis(app, []auth.Account{acc1, acc2, acc4})
 
 	testCases := []appTestCase{
 		{
@@ -328,7 +330,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	mock.SetGenesis(mapp, []auth.Account{&acc1, &acc2})
+	mock.SetGenesis(app, []auth.Account{&acc1, &acc2})
 
 	testCases := []appTestCase{
 		{
@@ -357,7 +359,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
 		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {

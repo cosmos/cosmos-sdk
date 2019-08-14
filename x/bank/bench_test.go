@@ -25,7 +25,7 @@ func getMockApp(t *testing.T) *mock.App {
 }
 
 // overwrite the mock init chainer
-func getInitChainer(mapp *mock.App, keeper keeper.BaseKeeper) sdk.InitChainer {
+func getInitChainer(app *simapp.SimApp, keeper keeper.BaseKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		bankGenesis := bank.DefaultGenesisState()

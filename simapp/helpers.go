@@ -39,6 +39,14 @@ func Setup(isCheckTx bool) *SimApp {
 	return app
 }
 
+// CheckBalance checks the balance of an account.
+func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins) {
+	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+	res := app.AccountKeeper.GetAccount(ctxCheck, addr)
+
+	require.Equal(t, exp, res.GetCoins())
+}
+
 // GenTx generates a signed mock transaction.
 func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free

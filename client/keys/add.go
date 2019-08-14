@@ -103,9 +103,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = DefaultKeyPass
 	} else {
-		// c.Flags().Bool(FlagSecretSore, false, "Use legacy secret store")
 		if viper.GetBool(flags.FlagSecretStore) {
-			os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
+			fmt.Println(os.Stderr, "Using deprecated secret store. This will be removed in a future release.")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {
 				return err
@@ -119,7 +118,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
 
 			if err2 != nil {
-				// fmt.Println("testing error")
 				return err2
 			}
 			if !response {
@@ -161,7 +159,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) && viper.GetBool(flags.FlagSecretStore) {
+		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) && viper.GetBool(flags.FlagLegacy) {
 			encryptPassword, err = input.GetCheckPassword(
 				"Enter a passphrase to encrypt your key to disk:",
 				"Repeat the passphrase:", inBuf)

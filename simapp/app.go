@@ -227,14 +227,6 @@ func NewSimApp(
 	return app
 }
 
-// NewSimAppWithContext returns a new SimApp and context.
-func NewSimAppWithContext(isCheckTx bool) (sdk.Context, *SimApp) {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, 0)
-	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
-	return ctx, app
-}
-
 // application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)

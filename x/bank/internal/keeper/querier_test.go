@@ -10,17 +10,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	keep "github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 func TestBalances(t *testing.T) {
 	app, ctx := createTestApp(false)
 	req := abci.RequestQuery{
-		Path: fmt.Sprintf("custom/bank/%s", QueryBalance),
+		Path: fmt.Sprintf("custom/bank/%s", keep.QueryBalance),
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(app.BankKeeper)
+	querier := keep.NewQuerier(app.BankKeeper)
 
 	res, err := querier(ctx, []string{"balances"}, req)
 	require.NotNil(t, err)
@@ -53,7 +54,7 @@ func TestQuerierRouteNotFound(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(app.BankKeeper)
+	querier := keep.NewQuerier(app.BankKeeper)
 	_, err := querier(ctx, []string{"notfound"}, req)
 	require.Error(t, err)
 }

@@ -11,6 +11,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	keep "github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
@@ -97,7 +98,7 @@ func TestSendKeeper(t *testing.T) {
 	blacklistedAddrs := make(map[string]bool)
 
 	paramSpace := app.ParamsKeeper.Subspace("newspace")
-	sendKeeper := NewBaseSendKeeper(app.AccountKeeper, paramSpace, types.DefaultCodespace, blacklistedAddrs)
+	sendKeeper := keep.NewBaseSendKeeper(app.AccountKeeper, paramSpace, types.DefaultCodespace, blacklistedAddrs)
 	app.BankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -145,7 +146,7 @@ func TestViewKeeper(t *testing.T) {
 	app, ctx := createTestApp(false)
 
 	//paramSpace := app.ParamsKeeper.Subspace(types.DefaultParamspace)
-	viewKeeper := NewBaseViewKeeper(app.AccountKeeper, types.DefaultCodespace)
+	viewKeeper := keep.NewBaseViewKeeper(app.AccountKeeper, types.DefaultCodespace)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)

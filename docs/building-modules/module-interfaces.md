@@ -183,7 +183,23 @@ type buyNameReq struct {
   Buyer string `json:"buyer"`
 }
 ```
+
 The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the arguments `Name` and `Amount` fields in the body and `Buyer` will be provided by the user's address.
+
+#### BaseReq
+
+`BaseReq` is a type defined in the SDK that encapsulates much of the transaction configurations similar to CLI command flags. Users must provide the information in the body of their requests.
+
+* `From` indicates which [account](../core/accounts-fees.md) the transaction originates from. This account is used to sign the transaction.
+*	`Memo` sends a memo along with the transaction.
+*	`ChainID` specifies the unique identifier of the blockchain the transaction pertains to.
+*	`AccountNumber` is an identifier for the account.
+*	`Sequence`is the value of a counter measuring how many transactions have been sent from the account. It is used to prevent replay attacks.
+*	`Gas` refers to how much [gas](../core/gas.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
+*	`GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
+*	`GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
+*	`Fees` specifies how much in [fees](../core/accounts-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.
+*	`Simulate` instructs the application to ignore gas and simulate the transaction running without broadcasting.
 
 ### Request Handlers
 

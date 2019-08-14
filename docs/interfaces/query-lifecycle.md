@@ -16,21 +16,29 @@ This document describes SDK interfaces in detail through the lifecycle of a quer
 
 ## Interfaces
 
-A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by users of applications. Users can query information about the network, the application itself, and application state directly from the application's stores or modules.
+A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed; they can be fully handled by one full-node.
 
 For the purpose of explaining a query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module handles this query. But first, there are a few ways `Query` can be created by users.
 
 ### CLI
 
-The main interface for an application is the command-line interface. Users connect to a full node and run the CLI directly from their machines. To create `Query` from their terminal, users type the following command:
+The main interface for an application is the command-line interface. Users connect to a full-node and run the CLI directly from their machines - the CLI interacts directly with the full-node. To create `Query` from their terminal, users type the following command:
 
-```
+```bash
 appcli query staking delegations <delegatorAddress>
 ```
 
-To provide values such as `--chain-id` (the ID of the blockchain to make the query to), the user must use the `config` command to set them or provide them as flags.
+Note that the general format is as follows:
+
+```bash
+appcli query [moduleName] [command] <arguments> --flag <flagArg>
+```
+
+To provide values such as `--node` (the full-node the CLI connects to), the user must use the `config` command to set them or provide them as flags.
 
 This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
+
+The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command  (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 
 ### REST
 
@@ -40,15 +48,15 @@ Another interface through which users can make queries is through HTTP Requests 
 GET http://localhost:{PORT}/staking/delegators/{delegatorAddr}/delegations
 ```
 
-To provide values such as `--chain-id` (the ID of the blockchain to make the query to) that are required by [`baseReq`](./rest.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
+To provide values such as `--node` (the full-node the CLI connects to) that are required by [`baseReq`](./rest.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
 
-The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function (to see the handler itself, click [here]()). Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
+The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function (to see the handler itself, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/query.go#L103-L106)). Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
 
-When users interact with the interfaces, the result is a CLI command or HTTP request. `Query` is then created when the command is executed or request handled.
+To summarize, when users interact with the interfaces, they create a CLI command or HTTP request. `Query` is then created when the command is executed or HTTP request is handled.
 
 ## Request and Command Handling
 
-The interactions from the users' perspective are a bit different, but the underlying functions are almost identical. This section describes how the CLI command or HTTP request is processed, up until the ABCI request is sent. This step of processing heavily involves a `CLIContext`.
+The interactions from the users' perspective are a bit different, but the underlying functions are almost identical because they are implementations of the same command defined by the module developer. This step of processing heavily involves a `CLIContext`.
 
 ### CLIContext
 
@@ -65,27 +73,27 @@ For full specification of the `CLIContext` type, click [here](https://github.com
 
 ### Parameters and Route Creation
 
-The next step is to parse the command or request, extract the arguments, create a `queryRoute`, and encode everything.
+The first step is to parse the command or request, extract the arguments, create a `queryRoute`, and encode everything.
 
-In this case, `Query` contains an [address](../core/accounts-fees.md) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine node that has no inherent knowledge of the application types. Thus, the `CLIContext` `codec` is used to marshal the address as the type [`QueryDelegatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L30-L38). All query arguments (e.g. the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module also has [`QueryValidatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L45-L53) and [`QueryBondsParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L59-L69)) have their own types that the application `codec` understands how to encode and decode. The module [`querier`](.//building-modules/querier.md) declares these types and the application registers the `codec`s.
+**Arguments:** In this case, `Query` contains an [address](../core/accounts-fees.md) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine node that has no inherent knowledge of the application types. Thus, the `CLIContext` `codec` is used to marshal the address as the type [`QueryDelegatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L30-L38). All query arguments (e.g. the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module also has [`QueryValidatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L45-L53) and [`QueryBondsParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L59-L69)) have their own types that the application `codec` understands how to encode and decode. The module [`querier`](.//building-modules/querier.md) declares these types and the application registers the `codec`s.
 
-A `route` is also created for `Query` so that the application will understand which module to route the query to. [Baseapp](../core/baseapp.md#query-routing) will understand this query to be a `custom` query in the module `staking` with the type `QueryDelegatorDelegations`. Thus, the route will be `"custom/staking/delegatorDelegations"`.
+**Route:** A `route` is also created for `Query` so that the application will understand which module to route the query to. [Baseapp](../core/baseapp.md#query-routing) will understand this query to be a `custom` query in the module `staking` with the type `QueryDelegatorDelegations`. Thus, the route will be `"custom/staking/delegatorDelegations"`.
 
 ### ABCI Query
 
-The `CLIContext`'s main `Query` function takes the `route`, which is now called `path`, and arguments, now called `key`. It first retrieves the RPC Client (called the [**node**](../core/node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
+The `CLIContext`'s main `Query` function takes the `route` and arguments. It first retrieves the RPC Client (called the [**node**](../core/node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
 
 ## Tendermint and ABCI
 
-With a call to `ABCIQueryWithOptions()`, `Query` arrives at the consensus engine portion of its lifecycle. Nodes running the consensus engine (e.g. Tendermint Core) make ABCI calls to interact with the application. At this point, `Query` exists as an ABCI `RequestQuery` and the [ABCI Client](https://github.com/tendermint/tendermint/blob/master/abci/client/client.go#L16-L50) calls the ABCI method [`Query()`](https://tendermint.com/docs/spec/abci/abci.html#query) on the application.
+With a call to `ABCIQueryWithOptions()`, `Query` is received by a full-node which will then process the request. Note that, while the RPC is made to the consensus engine (e.g. Tendermint Core) of a full-node, queries are not part of consensus and will not be broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
 Read more about ABCI Clients and Tendermint RPC in the Tendermint documentation [here](https://tendermint.com/rpc).
 
 ## Application Query Handling
 
-[Baseapp](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The `queryRoute` is parsed such that the first string must be one of the four options, then the rest of the path is parsed within the subroutines handling each type of query. The first three types (`app`, `store`, `p2p`) are purely application-level and thus directly handled by Baseapp or the stores, but the `custom` query type requires Baseapp to route the query to a module's [querier](../building-modules/querier.md).
+[baseapp](../core/baseapp.md) implements the ABCI [`Query()`](../core/baseapp.md#query) function and handles four different types of queries: `app`, `store`, `p2p`, and `custom`. The `queryRoute` is parsed such that the first string must be one of the four options, then the rest of the path is parsed within the subroutines handling each type of query. The first three types (`app`, `store`, `p2p`) are purely application-level and thus directly handled by Baseapp or the stores, but the `custom` query type requires Baseapp to route the query to a module's [querier](../building-modules/querier.md).
 
-Since `Query` is a custom query type from the `staking` module, Baseapp first parses the path, then uses the `QueryRouter` to retrieve the corresponding querier. The querier is responsible for recognizing this query, retrieving the appropriate values from the application's stores, and returning a response.
+Since `Query` is a custom query type from the `staking` module, Baseapp first parses the path, then uses the `QueryRouter` to retrieve the corresponding querier. The querier is responsible for recognizing this query, retrieving the appropriate values from the application's stores, and returning a response. Read more about queriers [here](../building-modules/querier.md).
 
 ## Response
 

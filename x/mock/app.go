@@ -206,6 +206,32 @@ func SetGenesis(app *App, accs []authexported.Account) {
 	app.Commit()
 }
 
+// GenTx generates a signed mock transaction.
+func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+	// Make the transaction free
+	fee := auth.StdFee{
+		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
+		Gas:    100000,
+	}
+
+	sigs := make([]auth.StdSignature, len(priv))
+	memo := "testmemotestmemo"
+
+	for i, p := range priv {
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
+		if err != nil {
+			panic(err)
+		}
+
+		sigs[i] = auth.StdSignature{
+			PubKey:    p.PubKey(),
+			Signature: sig,
+		}
+	}
+
+	return auth.NewStdTx(msgs, fee, sigs, memo)
+}
+
 // GeneratePrivKeys generates a total n secp256k1 private keys.
 func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO: Randomize this between ed25519 and secp256k1

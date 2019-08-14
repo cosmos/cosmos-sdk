@@ -15,7 +15,7 @@ Change log entries are to be added to the Unreleased section under the
 appropriate stanza (see below). Each entry should ideally include a tag and
 the Github issue reference in the following format:
 
-* (<tag>) \#<issue-number> message
+* (<tag>) #<issue-number> message
 
 The issue numbers will later be link-ified during the release process so you do
 not have to worry about including a link manually, but you can if you wish.
@@ -69,6 +69,10 @@ longer panics if the store to load contains substores that we didn't explicitly 
 
 ### Bug Fixes
 
+* (baseapp) #4903 Various height query fixes:
+  * Move height with proof check from `CLIContext` to `BaseApp` as the height
+  can automatically be injected there.
+  * Update `handleQueryStore` to resemble `handleQueryCustom`
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
 

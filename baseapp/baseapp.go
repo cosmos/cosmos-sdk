@@ -1,8 +1,9 @@
 package baseapp
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"runtime/debug"
@@ -15,11 +16,12 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,6 +43,12 @@ const (
 	MainStoreKey = "main"
 )
 
+// StoreLoader defines a customizable function to control how we load the CommitMultiStore
+// from disk. This is useful for state migration, when loading a datastore written with
+// an older version of the software. In particular, if a module changed the substore key name
+// (or removed a substore) between two versions of the software.
+type StoreLoader func(ms sdk.CommitMultiStore) error
+
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
@@ -48,6 +56,7 @@ type BaseApp struct {
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
+	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 	router      sdk.Router           // handle any kind of message
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
@@ -106,6 +115,7 @@ func NewBaseApp(
 		name:           name,
 		db:             db,
 		cms:            store.NewCommitMultiStore(db),
+		storeLoader:    DefaultStoreLoader,
 		router:         NewRouter(),
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
@@ -133,12 +143,6 @@ func (app *BaseApp) Logger() log.Logger {
 	return app.logger
 }
 
-// SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
-// CommitMultiStore.
-func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
-}
-
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
@@ -160,6 +164,28 @@ func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 	}
 }
 
+// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
+// multistore.
+func (app *BaseApp) MountKVStores(keys map[string]*sdk.KVStoreKey) {
+	for _, key := range keys {
+		if !app.fauxMerkleMode {
+			app.MountStore(key, sdk.StoreTypeIAVL)
+		} else {
+			// StoreTypeDB doesn't do anything upon commit, and it doesn't
+			// retain history, but it's useful for faster simulation.
+			app.MountStore(key, sdk.StoreTypeDB)
+		}
+	}
+}
+
+// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
+// multistore.
+func (app *BaseApp) MountTransientStores(keys map[string]*sdk.TransientStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeTransient)
+	}
+}
+
 // MountStoreWithDB mounts a store to the provided key in the BaseApp
 // multistore, using a specified DB.
 func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db dbm.DB) {
@@ -175,11 +201,72 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
 func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
-	err := app.cms.LoadLatestVersion()
+	err := app.storeLoader(app.cms)
 	if err != nil {
 		return err
 	}
 	return app.initFromMainStore(baseKey)
+}
+
+// DefaultStoreLoader will be used by default and loads the latest version
+func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
+	return ms.LoadLatestVersion()
+}
+
+// StoreLoaderWithUpgrade is used to prepare baseapp with a fixed StoreLoader
+// pattern. This is useful in test cases, or with custom upgrade loading logic.
+func StoreLoaderWithUpgrade(upgrades *storetypes.StoreUpgrades) StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		return ms.LoadLatestVersionAndUpgrade(upgrades)
+	}
+}
+
+// UpgradeableStoreLoader can be configured by SetStoreLoader() to check for the
+// existence of a given upgrade file - json encoded StoreUpgrades data.
+//
+// If not file is present, it will peform the default load (no upgrades to store).
+//
+// If the file is present, it will parse the file and execute those upgrades
+// (rename or delete stores), while loading the data. It will also delete the
+// upgrade file upon successful load, so that the upgrade is only applied once,
+// and not re-applied on next restart
+//
+// This is useful for in place migrations when a store key is renamed between
+// two versions of the software. (TODO: this code will move to x/upgrades
+// when PR #4233 is merged, here mainly to help test the design)
+func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		_, err := os.Stat(upgradeInfoPath)
+		if os.IsNotExist(err) {
+			return DefaultStoreLoader(ms)
+		} else if err != nil {
+			return err
+		}
+
+		// there is a migration file, let's execute
+		data, err := ioutil.ReadFile(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("Cannot read upgrade file %s: %v", upgradeInfoPath, err)
+		}
+
+		var upgrades storetypes.StoreUpgrades
+		err = json.Unmarshal(data, &upgrades)
+		if err != nil {
+			return fmt.Errorf("Cannot parse upgrade file: %v", err)
+		}
+
+		err = ms.LoadLatestVersionAndUpgrade(&upgrades)
+		if err != nil {
+			return fmt.Errorf("Load and upgrade database: %v", err)
+		}
+
+		// if we have a successful load, we delete the file
+		err = os.Remove(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("deleting upgrade file %s: %v", upgradeInfoPath, err)
+		}
+		return nil
+	}
 }
 
 // LoadVersion loads the BaseApp application version. It will panic if called
@@ -463,6 +550,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
+				Height:    req.Height,
 				Value:     []byte(app.appVersion),
 			}
 
@@ -474,6 +562,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		return abci.ResponseQuery{
 			Code:      uint32(sdk.CodeOK),
 			Codespace: string(sdk.CodespaceRoot),
+			Height:    req.Height,
 			Value:     value,
 		}
 	}
@@ -482,7 +571,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
-func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
+func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
 	queryable, ok := app.cms.(sdk.Queryable)
 	if !ok {
@@ -491,7 +580,11 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 	}
 
 	req.Path = "/" + strings.Join(path[1:], "/")
-	return queryable.Query(req)
+
+	resp := queryable.Query(req)
+	resp.Height = req.Height
+
+	return resp
 }
 
 func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.ResponseQuery) {
@@ -503,9 +596,11 @@ func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.
 			switch typ {
 			case "addr":
 				return app.FilterPeerByAddrPort(arg)
+
 			case "id":
 				return app.FilterPeerByID(arg)
 			}
+
 		default:
 			msg := "Expected second parameter to be filter"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
@@ -531,36 +626,44 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
+	if err != nil {
+		return sdk.ErrInternal(
+			fmt.Sprintf(
+				"failed to load state at height %d; %s (latest height: %d)",
+				req.Height, err, app.LastBlockHeight(),
+			),
+		).QueryResult()
+	}
+
 	// cache wrap the commit-multistore for safety
 	ctx := sdk.NewContext(
-		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
+		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
-
-	if req.Height > 0 {
-		cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)
-		if err != nil {
-			return sdk.ErrInternal(fmt.Sprintf("failed to load state at height %d; %s", req.Height, err)).QueryResult()
-		}
-
-		ctx = ctx.WithMultiStore(cacheMS)
-	}
 
 	// Passes the rest of the path as an argument to the querier.
 	//
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets
 	// []string{"proposal", "test"} as the path.
-	resBytes, err := querier(ctx, path[2:], req)
-	if err != nil {
+	resBytes, queryErr := querier(ctx, path[2:], req)
+	if queryErr != nil {
 		return abci.ResponseQuery{
-			Code:      uint32(err.Code()),
-			Codespace: string(err.Codespace()),
-			Log:       err.ABCILog(),
+			Code:      uint32(queryErr.Code()),
+			Codespace: string(queryErr.Codespace()),
+			Height:    req.Height,
+			Log:       queryErr.ABCILog(),
 		}
 	}
 
 	return abci.ResponseQuery{
-		Code:  uint32(sdk.CodeOK),
-		Value: resBytes,
+		Code:   uint32(sdk.CodeOK),
+		Height: req.Height,
+		Value:  resBytes,
 	}
 }
 
@@ -622,9 +725,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 }
 
 // CheckTx implements the ABCI interface. It runs the "basic checks" to see
-// whether or not a transaction can possibly be executed, first decoding, then
-// the ante handler (which checks signatures/fees/ValidateBasic), then finally
-// the route match to see whether a handler exists.
+// whether or not a transaction can possibly be executed, first decoding and then
+// the ante handler (which checks signatures/fees/ValidateBasic).
 //
 // NOTE:CheckTx does not run the actual Msg handler function(s).
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
@@ -896,17 +998,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	if mode == runTxModeCheck {
-		return result
-	}
-
 	// Create a new context based off of the existing context with a cache wrapped
 	// multi-store in case message processing fails.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
 
-	if mode == runTxModeSimulate {
+	// Safety check: don't write the cache state unless we're in DeliverTx.
+	if mode != runTxModeDeliver {
 		return result
 	}
 

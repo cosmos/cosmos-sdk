@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	amino "github.com/tendermint/go-amino"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/go-amino"
+	cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // amino codec to marshal/unmarshal
@@ -18,7 +19,12 @@ func New() *Codec {
 
 // Register the go-crypto to the codec
 func RegisterCrypto(cdc *Codec) {
-	cryptoAmino.RegisterAmino(cdc)
+	cryptoamino.RegisterAmino(cdc)
+}
+
+// RegisterEvidences registers Tendermint evidence types with the provided codec.
+func RegisterEvidences(cdc *Codec) {
+	tmtypes.RegisterEvidences(cdc)
 }
 
 // attempt to make some pretty json
@@ -54,5 +60,6 @@ var Cdc *Codec
 func init() {
 	cdc := New()
 	RegisterCrypto(cdc)
+	RegisterEvidences(cdc)
 	Cdc = cdc.Seal()
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
 func TestSupply(t *testing.T) {
@@ -15,7 +16,7 @@ func TestSupply(t *testing.T) {
 
 	ctx, _, keeper := createTestInput(t, false, initialPower, nAccs)
 
-	total := keeper.GetSupply(ctx).Total
+	total := keeper.GetSupply(ctx).GetTotal()
 	expectedTotal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens.MulRaw(nAccs)))
 
 	require.Equal(t, expectedTotal, total)
@@ -32,8 +33,8 @@ func TestValidatePermissions(t *testing.T) {
 	err = keeper.ValidatePermissions(randomPermAcc)
 	require.NoError(t, err)
 
-	// add unregistered permissions
-	randomPermAcc.AddPermissions("other")
-	err = keeper.ValidatePermissions(randomPermAcc)
+	// unregistered permissions
+	otherAcc := types.NewEmptyModuleAccount("other", "other")
+	err = keeper.ValidatePermissions(otherAcc)
 	require.Error(t, err)
 }

@@ -118,22 +118,27 @@ func newLocalInfo(name string, pub crypto.PubKey, privArmor string) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i localInfo) GetType() KeyType {
 	return TypeLocal
 }
 
+// GetType implements Info interface
 func (i localInfo) GetName() string {
 	return i.Name
 }
 
+// GetType implements Info interface
 func (i localInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetType implements Info interface
 func (i localInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetType implements Info interface
 func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -153,22 +158,27 @@ func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i ledgerInfo) GetType() KeyType {
 	return TypeLedger
 }
 
+// GetName implements Info interface
 func (i ledgerInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i ledgerInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i ledgerInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
@@ -187,22 +197,27 @@ func newOfflineInfo(name string, pub crypto.PubKey) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i offlineInfo) GetType() KeyType {
 	return TypeOffline
 }
 
+// GetName implements Info interface
 func (i offlineInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i offlineInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -211,6 +226,8 @@ type multisigPubKeyInfo struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 	Weight uint          `json:"weight"`
 }
+
+// multiInfo is the public information about a multisig key
 type multiInfo struct {
 	Name      string               `json:"name"`
 	PubKey    crypto.PubKey        `json:"pubkey"`
@@ -218,6 +235,7 @@ type multiInfo struct {
 	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
+// NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	multiPK := pub.(multisig.PubKeyMultisigThreshold)
 
@@ -235,22 +253,27 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i multiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
+// GetName implements Info interface
 func (i multiInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i multiInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i multiInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }

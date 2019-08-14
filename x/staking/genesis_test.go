@@ -28,13 +28,13 @@ func TestInitGenesis(t *testing.T) {
 	// initialize the validators
 	validators[0].OperatorAddress = sdk.ValAddress(keep.Addrs[0])
 	validators[0].ConsPubKey = keep.PKs[0]
-	validators[0].Description = NewDescription("hoop", "", "", "")
+	validators[0].Description = NewDescription("hoop", "", "", "", "")
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = valTokens
 	validators[0].DelegatorShares = valTokens.ToDec()
 	validators[1].OperatorAddress = sdk.ValAddress(keep.Addrs[1])
 	validators[1].ConsPubKey = keep.PKs[1]
-	validators[1].Description = NewDescription("bloop", "", "", "")
+	validators[1].Description = NewDescription("bloop", "", "", "", "")
 	validators[1].Status = sdk.Bonded
 	validators[1].Tokens = valTokens
 	validators[1].DelegatorShares = valTokens.ToDec()
@@ -76,7 +76,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	for i := range validators {
 		validators[i] = NewValidator(sdk.ValAddress(keep.Addrs[i]),
-			keep.PKs[i], NewDescription(fmt.Sprintf("#%d", i), "", "", ""))
+			keep.PKs[i], NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
 
 		validators[i].Status = sdk.Bonded
 
@@ -102,7 +102,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
-	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", ""))
+	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", "", ""))
 	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 

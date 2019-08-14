@@ -4,18 +4,17 @@ package server
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"io/ioutil"
-
-	dbm "github.com/tendermint/tendermint/libs/db"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -81,7 +80,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 				return err
 			}
 
-			fmt.Println(string(encoded))
+			fmt.Println(string(sdk.MustSortJSON(encoded)))
 			return nil
 		},
 	}

@@ -10,7 +10,6 @@ var (
 	EventTypeProposerReward     = "proposer_reward"
 
 	AttributeKeyWithdrawAddress = "withdraw_address"
-	AttributeKeyAmount          = "amount"
 	AttributeKeyValidator       = "validator"
 
 	AttributeValueCategory = ModuleName

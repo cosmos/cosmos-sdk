@@ -3,12 +3,10 @@
 package rest
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -148,6 +146,7 @@ func TestProcessPostResponse(t *testing.T) {
 	// mock account
 	// PubKey field ensures amino encoding is used first since standard
 	// JSON encoding will panic on crypto.PubKey
+
 	type mockAccount struct {
 		Address       types.AccAddress `json:"address"`
 		Coins         types.Coins      `json:"coins"`
@@ -173,23 +172,17 @@ func TestProcessPostResponse(t *testing.T) {
 	cdc.RegisterConcrete(&mockAccount{}, "cosmos-sdk/mockAccount", nil)
 	ctx = ctx.WithCodec(cdc)
 
-	// setup expected json responses with zero height
-	jsonNoHeight, err := cdc.MarshalJSON(acc)
+	// setup expected results
+	jsonNoIndent, err := ctx.Codec.MarshalJSON(acc)
 	require.Nil(t, err)
-	require.NotNil(t, jsonNoHeight)
-	jsonIndentNoHeight, err := cdc.MarshalJSONIndent(acc, "", "  ")
+	jsonWithIndent, err := ctx.Codec.MarshalJSONIndent(acc, "", "  ")
 	require.Nil(t, err)
-	require.NotNil(t, jsonIndentNoHeight)
-
-	// decode into map to order alphabetically
-	m := make(map[string]interface{})
-	err = json.Unmarshal(jsonNoHeight, &m)
+	respNoIndent := NewResponseWithHeight(height, jsonNoIndent)
+	respWithIndent := NewResponseWithHeight(height, jsonWithIndent)
+	expectedNoIndent, err := ctx.Codec.MarshalJSON(respNoIndent)
 	require.Nil(t, err)
-	jsonMap, err := json.Marshal(m)
+	expectedWithIndent, err := ctx.Codec.MarshalJSONIndent(respWithIndent, "", "  ")
 	require.Nil(t, err)
-	jsonWithHeight := append(append([]byte(`{"height":`), []byte(strconv.Itoa(int(height))+",")...), jsonMap[1:]...)
-	jsonIndentMap, err := json.MarshalIndent(m, "", "  ")
-	jsonIndentWithHeight := append(append([]byte(`{`+"\n "+` "height": `), []byte(strconv.Itoa(int(height))+",")...), jsonIndentMap[1:]...)
 
 	// check that negative height writes an error
 	w := httptest.NewRecorder()
@@ -197,24 +190,17 @@ func TestProcessPostResponse(t *testing.T) {
 	PostProcessResponse(w, ctx, acc)
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 
-	// check that zero height returns expected response
-	ctx = ctx.WithHeight(0)
-	runPostProcessResponse(t, ctx, acc, jsonNoHeight, false)
-	// check zero height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentNoHeight, true)
 	// check that height returns expected response
 	ctx = ctx.WithHeight(height)
-	runPostProcessResponse(t, ctx, acc, jsonWithHeight, false)
+	runPostProcessResponse(t, ctx, acc, expectedNoIndent, false)
 	// check height with indent
-	runPostProcessResponse(t, ctx, acc, jsonIndentWithHeight, true)
+	runPostProcessResponse(t, ctx, acc, expectedWithIndent, true)
 }
 
 // asserts that ResponseRecorder returns the expected code and body
 // runs PostProcessResponse on the objects regular interface and on
 // the marshalled struct.
-func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{},
-	expectedBody []byte, indent bool,
-) {
+func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{}, expectedBody []byte, indent bool) {
 	if indent {
 		ctx.Indent = indent
 	}

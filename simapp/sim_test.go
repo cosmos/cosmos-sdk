@@ -2,14 +2,11 @@ package simapp
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,136 +34,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-func init() {
-	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
-	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
-	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
-	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
-	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
-	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
-	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
-	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
-	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
-	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
-	flag.BoolVar(&lean, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&commit, "Commit", false, "have the simulation commit")
-	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
-	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
-	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
-	flag.Int64Var(&genesisTime, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
-}
-
-// helper function for populating input for SimulateFromSeed
-// TODO: clean up this function along with the simulation refactor
-func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
-	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, int, string,
-	bool, bool, bool, bool, bool, map[string]bool) {
-
-	exportParams := exportParamsPath != ""
-
-	return tb, w, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app), invariants(app),
-		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
-}
-
-func appStateFn(
-	r *rand.Rand, accs []simulation.Account,
-) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
-
-	cdc := MakeCodec()
-
-	if genesisTime == 0 {
-		genesisTimestamp = simulation.RandTimestamp(r)
-	} else {
-		genesisTimestamp = time.Unix(genesisTime, 0)
-	}
-
-	switch {
-	case paramsFile != "" && genesisFile != "":
-		panic("cannot provide both a genesis file and a params file")
-
-	case genesisFile != "":
-		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
-
-	case paramsFile != "":
-		appParams := make(simulation.AppParams)
-		bz, err := ioutil.ReadFile(paramsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		cdc.MustUnmarshalJSON(bz, &appParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-
-	default:
-		appParams := make(simulation.AppParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-	}
-
-	return appState, simAccs, chainID, genesisTimestamp
-}
-
-// TODO refactor out random initialization code to the modules
-func appStateRandomizedFn(
-	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
-
-	cdc := MakeCodec()
-	genesisState := NewDefaultGenesisState()
-
-	var (
-		amount             int64
-		numInitiallyBonded int64
-	)
-
-	appParams.GetOrGenerate(cdc, StakePerAccount, &amount, r,
-		func(r *rand.Rand) { amount = int64(r.Intn(1e12)) })
-	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &amount, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
-
-	numAccs := int64(len(accs))
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%v",
-  initially_bonded_validators: "%v"
-}
-`, amount, numInitiallyBonded,
-	)
-
-	GenGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
-	GenAuthGenesisState(cdc, r, appParams, genesisState)
-	GenBankGenesisState(cdc, r, appParams, genesisState)
-	GenSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
-	GenGovGenesisState(cdc, r, appParams, genesisState)
-	GenMintGenesisState(cdc, r, appParams, genesisState)
-	GenDistrGenesisState(cdc, r, appParams, genesisState)
-	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
-	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
-
-	appState, err := MakeCodec().MarshalJSON(genesisState)
-	if err != nil {
-		panic(err)
-	}
-
-	return appState, accs, "simulation"
-}
-
 // TODO: add description
-func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
+func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
+
 	cdc := MakeCodec()
 	ap := make(simulation.AppParams)
 
-	if paramsFile != "" {
-		bz, err := ioutil.ReadFile(paramsFile)
+	if config.ParamsFile != "" {
+		bz, err := ioutil.ReadFile(config.ParamsFile)
 		if err != nil {
 			panic(err)
 		}
@@ -372,6 +247,8 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
@@ -384,24 +261,28 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
+	_, params, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
+	if config.ExportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
+	if config.ExportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
@@ -409,7 +290,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 			b.Fail()
 		}
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -421,7 +302,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.FailNow()
 	}
 
-	if commit {
+	if config.Commit {
 		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
@@ -434,6 +315,8 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
 
 	if verbose {
 		logger = log.TestingLogger()
@@ -454,31 +337,35 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, params, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
+	if config.ExportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
+	if config.ExportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		fmt.Println(params)
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -493,6 +380,9 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
+
 	if verbose {
 		logger = log.TestingLogger()
 	} else {
@@ -512,30 +402,34 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and simParams before the simulation error is checked
-	if exportStatePath != "" {
+	if config.ExportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
+	if config.ExportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		simParamsBz, err := json.MarshalIndent(simParams, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, simParamsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, simParamsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -616,6 +510,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
+
 	if verbose {
 		logger = log.TestingLogger()
 	} else {
@@ -634,30 +531,34 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	stopEarly, params, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
+	if config.ExportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
+	if config.ExportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -695,7 +596,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
+	_, _, err = simulation.SimulateFromSeed(
+		t, os.Stdout, newApp.BaseApp, AppStateFn,
+		testAndRunTxs(newApp, config), invariants(newApp),
+		newApp.ModuleAccountAddrs(), config,
+	)
+
 	require.Nil(t, err)
 }
 
@@ -705,6 +611,10 @@ func TestAppStateDeterminism(t *testing.T) {
 	if !enabled {
 		t.Skip("Skipping application simulation")
 	}
+
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
+	config.InitialBlockHeight = 1
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -724,10 +634,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
-				blockSize, "", false, commit, lean,
-				false, false, app.ModuleAccountAddrs(),
+				t, os.Stdout, app.BaseApp, AppStateFn,
+				testAndRunTxs(app, config), []sdk.Invariant{},
+				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
 
@@ -746,37 +655,39 @@ func BenchmarkInvariants(b *testing.B) {
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
 
+	config := simulation.Config{}
+	GetSimulatorFlags(config)
+
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
 
 	app := NewSimApp(logger, db, nil, true, 0)
-	exportParams := exportParamsPath != ""
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
+		b, ioutil.Discard, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), []sdk.Invariant{},
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
+	if config.ExportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
+	if config.ExportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
@@ -784,7 +695,7 @@ func BenchmarkInvariants(b *testing.B) {
 			b.Fail()
 		}
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -805,7 +716,7 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, config.NumBlocks, res)
 				b.FailNow()
 			}
 		})

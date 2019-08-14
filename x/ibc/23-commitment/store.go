@@ -42,13 +42,13 @@ type store struct {
 // NewStore constructs a new Store with the root, path, and proofs.
 // The proofs are not proven immediately because proofs require value bytes to verify.
 // If the kinds of the arguments don't match, returns error.
-func NewStore(root Root, path Path, proofs []Proof) (res store, err error) {
+func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
 	if root.CommitmentKind() != path.CommitmentKind() {
 		err = errors.New("path type not matching with root's")
 		return
 	}
 
-	res = store{
+	res = &store{
 		root:     root,
 		path:     path,
 		proofs:   make(map[string]Proof),
@@ -67,13 +67,13 @@ func NewStore(root Root, path Path, proofs []Proof) (res store, err error) {
 }
 
 // Get() returns the value only if it is already proven.
-func (store store) Get(key []byte) ([]byte, bool) {
+func (store *store) Get(key []byte) ([]byte, bool) {
 	res, ok := store.verified[string(key)]
 	return res, ok
 }
 
 // Prove() proves the key-value pair with the stored proof.
-func (store store) Prove(key, value []byte) bool {
+func (store *store) Prove(key, value []byte) bool {
 	stored, ok := store.Get(key)
 	if ok && bytes.Equal(stored, value) {
 		return true
@@ -93,7 +93,7 @@ func (store store) Prove(key, value []byte) bool {
 
 
 // Proven() returns true if the key-value pair is already proven
-func (store store) Proven(key []byte) bool {
+func (store *store) Proven(key []byte) bool {
 	_, ok := store.Get(key)
 	return ok
 }

@@ -4,12 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 func testUpdate(t *testing.T, interval int, ok bool) {
-	node := NewNode(NewMockValidators(100, 10), merkle.NewPath([][]byte{[]byte("f8wib")}, []byte{0x98, 0x78}))
+	node := NewNode(NewMockValidators(100, 10), "f8wib", []byte{0x98, 0x78})
 
 	_ = node.Commit()
 

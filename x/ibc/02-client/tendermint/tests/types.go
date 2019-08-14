@@ -3,6 +3,7 @@ package tendermint
 import (
 	"crypto/rand"
 	"testing"
+	"bytes"
 
 	"github.com/stretchr/testify/require"
 
@@ -50,11 +51,12 @@ type Node struct {
 
 	Commits []tmtypes.SignedHeader
 
-	Path merkle.Path
+	StoreName string
+	Prefix []byte
 }
 
-func NewNode(valset MockValidators, path merkle.Path) *Node {
-	key, ctx, cms, _ := defaultComponents(string(path.KeyPath[0]))
+func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
+	key, ctx, cms, _ := defaultComponents(storeName)
 
 	return &Node{
 		Valset:  valset,
@@ -62,8 +64,13 @@ func NewNode(valset MockValidators, path merkle.Path) *Node {
 		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
-		Path:    path,
+		StoreName: storeName,
+		Prefix: prefix,
 	}
+}
+
+func (node *Node) Path() merkle.Path {
+	return merkle.NewPath([][]byte{[]byte(node.StoreName)}, node.Prefix)
 }
 
 func (node *Node) Last() tmtypes.SignedHeader {
@@ -143,19 +150,22 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 }
 
 
-func (node *Node) Query(t *testing.T, path merkle.Path, k []byte) ([]byte, commitment.Proof) {
-	value, proof, err := merkle.QueryMultiStore(node.Cms, path, k)
+func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
+	if bytes.HasPrefix(k, node.Prefix) {
+		k = bytes.TrimPrefix(k, node.Prefix)
+	}
+	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.Prefix, k)
 	require.NoError(t, err)
 	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(node.Path.Key(k), value)
+	node.Store.Set(join(node.Prefix, k), value)
 }
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), merkle.NewPath([][]byte{[]byte("1")}, []byte{0x00, 0x01}))
+	node := NewNode(NewMockValidators(100, 10), "1", []byte{0x00, 0x01})
 
 	node.Commit()
 
@@ -176,12 +186,12 @@ func testProof(t *testing.T) {
 		proofs := []commitment.Proof{}
 		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, node.Path.Key(kvp.Key))
+			v, p := node.Query(t, kvp.Key)
 
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(root, node.Path, proofs)
+		cstore, err := commitment.NewStore(root, node.Path(), proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

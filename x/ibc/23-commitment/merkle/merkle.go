@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/state"
+//	"github.com/cosmos/cosmos-sdk/store/state"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -57,10 +57,6 @@ func NewPath(keypath [][]byte, keyprefix []byte) Path {
 // Implements commitment.Path
 func (Path) CommitmentKind() string {
 	return merkleKind
-}
-
-func NewPathFromMapping(mapp state.Mapping) Path {
-	return NewPath([][]byte{[]byte(mapp.StoreName())}, mapp.PrefixBytes())
 }
 
 var _ commitment.Proof = Proof{}

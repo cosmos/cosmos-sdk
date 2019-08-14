@@ -1,6 +1,7 @@
 package commitment
 
 import (
+	
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,6 +53,7 @@ func (v Value) Is(ctx sdk.Context, value interface{}) bool {
 
 // IsRaw() proves the proof with the Value's key and the provided raw value bytes.
 func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
+
 	return v.m.store(ctx).Prove(v.key, value)
 }
 
@@ -75,19 +77,19 @@ type String struct {
 	Value
 }
 
-func NewString(v Value) String {
+func (v Value) String() String {
 	return String{v}
 }
 
 func (v String) Is(ctx sdk.Context, value string) bool {
-	return v.Value.Is(ctx, value)
+	return v.Value.IsRaw(ctx, []byte(value))
 }
 
 type Boolean struct {
 	Value
 }
 
-func NewBoolean(v Value) Boolean {
+func (v Value) Boolean() Boolean {
 	return Boolean{v}
 }
 

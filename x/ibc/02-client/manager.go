@@ -17,7 +17,7 @@ type Manager struct {
 
 func NewManager(base state.Mapping) Manager {
 	return Manager{
-		protocol: base.Prefix([]byte("/client")),
+		protocol: base.Prefix(LocalRoot()),
 	}
 }
 
@@ -27,7 +27,7 @@ type CounterpartyManager struct {
 
 func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 	return CounterpartyManager{
-		protocol: commitment.NewMapping(cdc, []byte("/client")),
+		protocol: commitment.NewMapping(cdc, LocalRoot()),
 	}
 }
 

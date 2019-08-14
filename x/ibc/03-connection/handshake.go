@@ -46,41 +46,41 @@ type CounterpartyHandshaker struct {
 type HandshakeObject struct {
 	Object
 
-	state              state.Enum
-	counterpartyClient state.String
-	nextTimeout        state.Integer
+	State              state.Enum
+	CounterpartyClient state.String
+	NextTimeout        state.Integer
 
-	counterparty CounterHandshakeObject
+	Counterparty CounterHandshakeObject
 }
 
 type CounterHandshakeObject struct {
 	CounterObject
 
-	state              commitment.Enum
-	counterpartyClient commitment.String
-	nextTimeout        commitment.Integer
+	State              commitment.Enum
+	CounterpartyClient commitment.String
+	NextTimeout        commitment.Integer
 }
 
 // CONTRACT: client and remote must be filled by the caller
-func (man Handshaker) object(parent Object) HandshakeObject {
+func (man Handshaker) Object(parent Object) HandshakeObject {
 	return HandshakeObject{
 		Object: parent,
 
-		state:              state.NewEnum(man.man.protocol.Value([]byte(parent.id + "/state"))),
-		counterpartyClient: state.NewString(man.man.protocol.Value([]byte(parent.id + "/counterpartyClient"))),
-		nextTimeout:        state.NewInteger(man.man.protocol.Value([]byte(parent.id+"/timeout")), state.Dec),
+		State:              man.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
+		CounterpartyClient: man.man.protocol.Value([]byte(parent.id + "/counterpartyClient")).String(),
+		NextTimeout:        man.man.protocol.Value([]byte(parent.id + "/timeout")).Integer(state.Dec),
 
 		// CONTRACT: counterparty must be filled by the caller
 	}
 }
 
-func (man CounterpartyHandshaker) object(id string) CounterHandshakeObject {
+func (man CounterpartyHandshaker) Object(id string) CounterHandshakeObject {
 	return CounterHandshakeObject{
-		CounterObject: man.man.object(id),
+		CounterObject: man.man.Object(id),
 
-		state:              commitment.NewEnum(man.man.protocol.Value([]byte(id + "/state"))),
-		counterpartyClient: commitment.NewString(man.man.protocol.Value([]byte(id + "/counterpartyClient"))),
-		nextTimeout:        commitment.NewInteger(man.man.protocol.Value([]byte(id+"/timeout")), state.Dec),
+		State:              man.man.protocol.Value([]byte(id + "/state")).Enum(),
+		CounterpartyClient: man.man.protocol.Value([]byte(id + "/counterpartyClient")).String(),
+		NextTimeout:        man.man.protocol.Value([]byte(id + "/timeout")).Integer(state.Dec),
 	}
 }
 
@@ -89,9 +89,9 @@ func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, 
 	if err != nil {
 		return
 	}
-	obj = man.object(cobj)
-	obj.counterpartyClient.Set(ctx, counterpartyClient)
-	obj.counterparty = man.counterparty.object(connection.Counterparty)
+	obj = man.Object(cobj)
+	obj.CounterpartyClient.Set(ctx, counterpartyClient)
+	obj.Counterparty = man.counterparty.Object(connection.Counterparty)
 	return obj, nil
 }
 
@@ -100,32 +100,16 @@ func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, er
 	if err != nil {
 		return
 	}
-	obj = man.object(cobj)
-	obj.counterparty = man.counterparty.object(obj.Connection(ctx).Counterparty)
+	obj = man.Object(cobj)
+	obj.Counterparty = man.counterparty.Object(obj.GetConnection(ctx).Counterparty)
 	return
-}
-
-func (obj HandshakeObject) State(ctx sdk.Context) byte {
-	return obj.state.Get(ctx)
-}
-
-func (obj HandshakeObject) CounterpartyClient(ctx sdk.Context) string {
-	return obj.counterpartyClient.Get(ctx)
-}
-
-func (obj HandshakeObject) Timeout(ctx sdk.Context) uint64 {
-	return obj.nextTimeout.Get(ctx)
-}
-
-func (obj HandshakeObject) NextTimeout(ctx sdk.Context) uint64 {
-	return obj.nextTimeout.Get(ctx)
 }
 
 func (obj HandshakeObject) remove(ctx sdk.Context) {
 	obj.Object.remove(ctx)
-	obj.state.Delete(ctx)
-	obj.counterpartyClient.Delete(ctx)
-	obj.nextTimeout.Delete(ctx)
+	obj.State.Delete(ctx)
+	obj.CounterpartyClient.Delete(ctx)
+	obj.NextTimeout.Delete(ctx)
 }
 
 func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
@@ -148,8 +132,8 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 		return HandshakeObject{}, err
 	}
 
-	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
-	obj.state.Set(ctx, Init)
+	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
+	obj.State.Set(ctx, Init)
 
 	return obj, nil
 }
@@ -174,12 +158,12 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.state.Is(ctx, Init) {
+	if !obj.Counterparty.State.Is(ctx, Init) {
 		err = errors.New("counterparty state not init")
 		return
 	}
 
-	if !obj.counterparty.connection.Is(ctx, Connection{
+	if !obj.Counterparty.Connection.Is(ctx, Connection{
 		Client:       counterpartyClient,
 		Counterparty: id,
 		Path:         obj.path,
@@ -188,12 +172,12 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.counterpartyClient.Is(ctx, connection.Client) {
+	if !obj.Counterparty.CounterpartyClient.Is(ctx, connection.Client) {
 		err = errors.New("counterparty client not match")
 		return
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
+	if !obj.Counterparty.NextTimeout.Is(ctx, timeoutHeight) {
 		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
@@ -214,8 +198,8 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.state.Set(ctx, OpenTry)
-	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
+	obj.State.Set(ctx, OpenTry)
+	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return
 }
@@ -235,7 +219,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	if !obj.state.Transit(ctx, Init, Open) {
+	if !obj.State.Transit(ctx, Init, Open) {
 		err = errors.New("ack on non-init connection")
 		return
 	}
@@ -245,8 +229,8 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.connection.Is(ctx, Connection{
-		Client:       obj.CounterpartyClient(ctx),
+	if !obj.Counterparty.Connection.Is(ctx, Connection{
+		Client:       obj.CounterpartyClient.Get(ctx),
 		Counterparty: obj.ID(),
 		Path:         obj.path,
 	}) {
@@ -254,17 +238,17 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.state.Is(ctx, OpenTry) {
+	if !obj.Counterparty.State.Is(ctx, OpenTry) {
 		err = errors.New("counterparty state not opentry")
 		return
 	}
 
-	if !obj.counterparty.counterpartyClient.Is(ctx, obj.Connection(ctx).Client) {
+	if !obj.Counterparty.CounterpartyClient.Is(ctx, obj.GetConnection(ctx).Client) {
 		err = errors.New("counterparty client not match")
 		return
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
+	if !obj.Counterparty.NextTimeout.Is(ctx, timeoutHeight) {
 		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
@@ -277,8 +261,8 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 			// return errors.New("unexpected counterparty client value")
 		}
 	*/
-	obj.available.Set(ctx, true)
-	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
+	obj.Available.Set(ctx, true)
+	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return
 }
@@ -298,7 +282,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	if !obj.state.Transit(ctx, OpenTry, Open) {
+	if !obj.State.Transit(ctx, OpenTry, Open) {
 		err = errors.New("confirm on non-try connection")
 		return
 	}
@@ -308,40 +292,40 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	if !obj.counterparty.state.Is(ctx, Open) {
+	if !obj.Counterparty.State.Is(ctx, Open) {
 		err = errors.New("counterparty state not open")
 		return
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
+	if !obj.Counterparty.NextTimeout.Is(ctx, timeoutHeight) {
 		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
 
-	obj.available.Set(ctx, true)
-	obj.nextTimeout.Set(ctx, 0)
+	obj.Available.Set(ctx, true)
+	obj.NextTimeout.Set(ctx, 0)
 
 	return
 }
 
 func (obj HandshakeObject) OpenTimeout(ctx sdk.Context) error {
-	if !(obj.client.ConsensusState(ctx).GetHeight() > obj.nextTimeout.Get(ctx)) {
+	if !(obj.Client.GetConsensusState(ctx).GetHeight() > obj.NextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
-	switch obj.state.Get(ctx) {
+	switch obj.State.Get(ctx) {
 	case Init:
-		if !obj.counterparty.connection.Is(ctx, nil) {
+		if !obj.Counterparty.Connection.Is(ctx, nil) {
 			return errors.New("counterparty connection exists")
 		}
 	case OpenTry:
-		if !(obj.counterparty.state.Is(ctx, Init) ||
-			obj.counterparty.connection.Is(ctx, nil)) {
+		if !(obj.Counterparty.State.Is(ctx, Init) ||
+			obj.Counterparty.Connection.Is(ctx, nil)) {
 			return errors.New("counterparty connection state not init")
 		}
 		// XXX: check if we need to verify symmetricity for timeout (already proven in OpenTry)
 	case Open:
-		if obj.counterparty.state.Is(ctx, OpenTry) {
+		if obj.Counterparty.State.Is(ctx, OpenTry) {
 			return errors.New("counterparty connection state not tryopen")
 		}
 	}
@@ -352,17 +336,17 @@ func (obj HandshakeObject) OpenTimeout(ctx sdk.Context) error {
 }
 
 func (obj HandshakeObject) CloseInit(ctx sdk.Context, nextTimeout uint64) error {
-	if !obj.state.Transit(ctx, Open, CloseTry) {
+	if !obj.State.Transit(ctx, Open, CloseTry) {
 		return errors.New("closeinit on non-open connection")
 	}
 
-	obj.nextTimeout.Set(ctx, nextTimeout)
+	obj.NextTimeout.Set(ctx, nextTimeout)
 
 	return nil
 }
 
 func (obj HandshakeObject) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, Open, Closed) {
+	if !obj.State.Transit(ctx, Open, Closed) {
 		return errors.New("closetry on non-open connection")
 	}
 
@@ -371,21 +355,21 @@ func (obj HandshakeObject) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutH
 		return err
 	}
 
-	if !obj.counterparty.state.Is(ctx, CloseTry) {
+	if !obj.Counterparty.State.Is(ctx, CloseTry) {
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
+	if !obj.Counterparty.NextTimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	obj.nextTimeout.Set(ctx, nextTimeoutHeight)
+	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return nil
 }
 
 func (obj HandshakeObject) CloseAck(ctx sdk.Context, timeoutHeight uint64) error {
-	if !obj.state.Transit(ctx, CloseTry, Closed) {
+	if !obj.State.Transit(ctx, CloseTry, Closed) {
 		return errors.New("closeack on non-closetry connection")
 	}
 
@@ -394,38 +378,38 @@ func (obj HandshakeObject) CloseAck(ctx sdk.Context, timeoutHeight uint64) error
 		return err
 	}
 
-	if !obj.counterparty.state.Is(ctx, Closed) {
+	if !obj.Counterparty.State.Is(ctx, Closed) {
 		return errors.New("unexpected counterparty state value")
 	}
 
-	if !obj.counterparty.nextTimeout.Is(ctx, timeoutHeight) {
+	if !obj.Counterparty.NextTimeout.Is(ctx, timeoutHeight) {
 		return errors.New("unexpected counterparty timeout value")
 	}
 
-	obj.nextTimeout.Set(ctx, 0)
+	obj.NextTimeout.Set(ctx, 0)
 
 	return nil
 }
 
 func (obj HandshakeObject) CloseTimeout(ctx sdk.Context) error {
-	if !(obj.client.ConsensusState(ctx).GetHeight() > obj.nextTimeout.Get(ctx)) {
+	if !(obj.Client.GetConsensusState(ctx).GetHeight() > obj.NextTimeout.Get(ctx)) {
 		return errors.New("timeout height not yet reached")
 	}
 
 	// XXX: double check if the user can bypass the verification logic somehow
-	switch obj.state.Get(ctx) {
+	switch obj.State.Get(ctx) {
 	case CloseTry:
-		if !obj.counterparty.state.Is(ctx, Open) {
+		if !obj.Counterparty.State.Is(ctx, Open) {
 			return errors.New("counterparty connection state not open")
 		}
 	case Closed:
-		if !obj.counterparty.state.Is(ctx, CloseTry) {
+		if !obj.Counterparty.State.Is(ctx, CloseTry) {
 			return errors.New("counterparty connection state not closetry")
 		}
 	}
 
-	obj.state.Set(ctx, Open)
-	obj.nextTimeout.Set(ctx, 0)
+	obj.State.Set(ctx, Open)
+	obj.NextTimeout.Set(ctx, 0)
 
 	return nil
 

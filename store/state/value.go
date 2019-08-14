@@ -95,6 +95,18 @@ func (v Value) Delete(ctx Context) {
 	v.store(ctx).Delete(v.KeyBytes())
 }
 
+func (v Value) StoreName() string {
+	return v.m.StoreName()
+}
+
+func (v Value) PrefixBytes() []byte {
+	return v.m.PrefixBytes()
+}
+
+func (v Value) KeyBytesRaw() []byte {
+	return v.key
+}
+
 // KeyBytes() returns the prefixed key that the Value is providing to the KVStore
 func (v Value) KeyBytes() []byte {
 	return v.m.KeyBytes(v.key)

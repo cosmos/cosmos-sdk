@@ -24,13 +24,13 @@ const (
 	FlagProve = "prove"
 )
 
-func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.CLIObject {
+func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.Object {
 	prefix := []byte(strconv.FormatInt(version, 10) + "/")
 	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
-	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
-	return man.CLIQuery(ctx, path, id)
+	return man.Query(ctx, path, id)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {

@@ -22,9 +22,9 @@ type Manager struct {
 	path merkle.Path
 }
 
-func NewManager(protocol state.Base, client client.Manager) Manager {
+func NewManager(protocol state.Mapping, client client.Manager) Manager {
 	return Manager{
-		protocol:     state.NewMapping(protocol, ([]byte("/connection/"))),
+		protocol: protocol.Prefix(LocalRoot()),
 		client:       client,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 		path:         merkle.NewPath([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
@@ -38,12 +38,12 @@ type CounterpartyManager struct {
 }
 
 func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
-	protocol := commitment.NewBase(cdc)
+	protocol := commitment.NewMapping(cdc, nil)
 
 	return CounterpartyManager{
-		protocol: commitment.NewMapping(protocol, []byte("/connection/")),
+		protocol: protocol.Prefix(LocalRoot()),
 
-		client: client.NewCounterpartyManager(protocol),
+		client: client.NewCounterpartyManager(cdc),
 	}
 }
 
@@ -51,25 +51,25 @@ type Object struct {
 	id string
 
 	protocol   state.Mapping
-	connection state.Value
-	available  state.Boolean
+	Connection state.Value
+	Available  state.Boolean
 
-	kind state.String
+	Kind state.String
 
-	client client.Object
+	Client client.Object
 
 	path merkle.Path
 }
 
-func (man Manager) object(id string) Object {
+func (man Manager) Object(id string) Object {
 	return Object{
 		id: id,
 
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
-		connection: man.protocol.Value([]byte(id)),
-		available:  state.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
+		Connection: man.protocol.Value([]byte(id)),
+		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
 
-		kind: state.NewString(man.protocol.Value([]byte(id + "/kind"))),
+		Kind: man.protocol.Value([]byte(id + "/kind")).String(),
 
 		// CONTRACT: client must be filled by the caller
 
@@ -81,22 +81,22 @@ type CounterObject struct {
 	id string
 
 	protocol   commitment.Mapping
-	connection commitment.Value
-	available  commitment.Boolean
+	Connection commitment.Value
+	Available  commitment.Boolean
 
-	kind commitment.String
+	Kind commitment.String
 
-	client client.CounterObject // nolint: unused
+	Client client.CounterObject // nolint: unused
 }
 
-func (man CounterpartyManager) object(id string) CounterObject {
+func (man CounterpartyManager) Object(id string) CounterObject {
 	return CounterObject{
 		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
-		connection: man.protocol.Value([]byte(id)),
-		available:  commitment.NewBoolean(man.protocol.Value([]byte(id + "/available"))),
+		Connection: man.protocol.Value([]byte(id)),
+		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
 
-		kind: commitment.NewString(man.protocol.Value([]byte(id + "/kind"))),
+		Kind: man.protocol.Value([]byte(id + "/kind")).String(),
 
 		// CONTRACT: client should be filled by the caller
 	}
@@ -104,12 +104,12 @@ func (man CounterpartyManager) object(id string) CounterObject {
 
 func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, proofs []commitment.Proof) (sdk.Context, error) {
 	if optpath == nil {
-		optpath = obj.Connection(ctx).Path
+		optpath = obj.GetConnection(ctx).Path
 	}
 
 	store, err := commitment.NewStore(
 		// TODO: proof root should be able to be obtained from the past
-		obj.client.ConsensusState(ctx).GetRoot(),
+		obj.Client.GetConsensusState(ctx).GetRoot(),
 		optpath,
 		proofs,
 	)
@@ -124,35 +124,27 @@ func (obj Object) ID() string {
 	return obj.id
 }
 
-func (obj Object) Connection(ctx sdk.Context) (res Connection) {
-	obj.connection.Get(ctx, &res)
+func (obj Object) GetConnection(ctx sdk.Context) (res Connection) {
+	obj.Connection.Get(ctx, &res)
 	return
 }
 
-func (obj Object) Available(ctx sdk.Context) bool {
-	return obj.available.Get(ctx)
-}
-
-func (obj Object) Client() client.Object {
-	return obj.client
-}
-
 func (obj Object) Sendable(ctx sdk.Context) bool {
-	return kinds[obj.kind.Get(ctx)].Sendable
+	return kinds[obj.Kind.Get(ctx)].Sendable
 }
 
 func (obj Object) Receivble(ctx sdk.Context) bool {
-	return kinds[obj.kind.Get(ctx)].Receivable
+	return kinds[obj.Kind.Get(ctx)].Receivable
 }
 
 func (obj Object) remove(ctx sdk.Context) {
-	obj.connection.Delete(ctx)
-	obj.available.Delete(ctx)
-	obj.kind.Delete(ctx)
+	obj.Connection.Delete(ctx)
+	obj.Available.Delete(ctx)
+	obj.Kind.Delete(ctx)
 }
 
 func (obj Object) exists(ctx sdk.Context) bool {
-	return obj.connection.Exists(ctx)
+	return obj.Connection.Exists(ctx)
 }
 
 func (man Manager) Cdc() *codec.Codec {
@@ -160,33 +152,33 @@ func (man Manager) Cdc() *codec.Codec {
 }
 
 func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (obj Object, err error) {
-	obj = man.object(id)
+	obj = man.Object(id)
 	if obj.exists(ctx) {
 		err = errors.New("Object already exists")
 		return
 	}
-	obj.client, err = man.client.Query(ctx, connection.Client)
+	obj.Client, err = man.client.Query(ctx, connection.Client)
 	if err != nil {
 		return
 	}
-	obj.connection.Set(ctx, connection)
-	obj.kind.Set(ctx, kind)
+	obj.Connection.Set(ctx, connection)
+	obj.Kind.Set(ctx, kind)
 	return
 }
 
 // query() is used internally by the connection creators
 // checks connection kind, doesn't check avilability
 func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, err error) {
-	obj = man.object(id)
+	obj = man.Object(id)
 	if !obj.exists(ctx) {
 		err = errors.New("Object not exists")
 		return
 	}
-	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).Client)
+	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)
 	if err != nil {
 		return
 	}
-	if obj.kind.Get(ctx) != kind {
+	if obj.Kind.Get(ctx) != kind {
 		err = errors.New("kind mismatch")
 		return
 	}
@@ -194,15 +186,15 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, e
 }
 
 func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
-	obj = man.object(id)
+	obj = man.Object(id)
 	if !obj.exists(ctx) {
 		err = errors.New("Object not exists")
 		return
 	}
-	if !obj.Available(ctx) {
+	if !obj.Available.Get(ctx) {
 		err = errors.New("Object not available")
 		return
 	}
-	obj.client, err = man.client.Query(ctx, obj.Connection(ctx).Client)
+	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)
 	return
 }

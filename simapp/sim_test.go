@@ -167,7 +167,7 @@ func testAndRunTxs(app *SimApp, seed int64) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {

@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	querier := keep.NewQuerier(app.MintKeeper)
 
 	query := abci.RequestQuery{
@@ -35,7 +35,7 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	querier := keep.NewQuerier(app.MintKeeper)
 
 	var params types.Params
@@ -50,7 +50,7 @@ func TestQueryParams(t *testing.T) {
 }
 
 func TestQueryInflation(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	querier := keep.NewQuerier(app.MintKeeper)
 
 	var inflation sdk.Dec
@@ -65,7 +65,7 @@ func TestQueryInflation(t *testing.T) {
 }
 
 func TestQueryAnnualProvisions(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	querier := keep.NewQuerier(app.MintKeeper)
 
 	var annualProvisions sdk.Dec

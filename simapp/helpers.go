@@ -6,13 +6,12 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Setup initializes a new SimApp and context. A Nop logger is set in SimApp.
-func Setup(isCheckTx bool) (app *SimApp, ctx sdk.Context) {
+// Setup initializes a new SimApp. A Nop logger is set in SimApp.
+func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app = NewSimApp(log.NewNopLogger(), db, nil, true, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, 0)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -30,6 +29,5 @@ func Setup(isCheckTx bool) (app *SimApp, ctx sdk.Context) {
 		)
 	}
 
-	ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
-	return app, ctx
+	return app
 }

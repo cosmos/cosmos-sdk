@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
@@ -15,7 +17,7 @@ var (
 
 // nolint: deadcode unused
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app, ctx := simapp.Setup(isCheckTx)
+	app := simapp.Setup(isCheckTx)
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -25,6 +27,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
+	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	app.SupplyKeeper = keep.NewKeeper(app.Codec(), app.GetKey(types.StoreKey), app.AccountKeeper, app.BankKeeper, maccPerms)
 	app.SupplyKeeper.SetSupply(ctx, types.NewSupply(sdk.NewCoins()))
 

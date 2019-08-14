@@ -136,7 +136,7 @@ func TestStakingMsgs(t *testing.T) {
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin})
 
 	// create validator
-	description := NewDescription("foo_moniker", "", "", "")
+	description := NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
 	)
@@ -157,7 +157,7 @@ func TestStakingMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// edit the validator
-	description = NewDescription("bar_moniker", "", "", "")
+	description = NewDescription("bar_moniker", "", "", "", "")
 	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	header = abci.Header{Height: mApp.LastBlockHeight() + 1}

@@ -545,7 +545,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 func TestProcessPubKey(t *testing.T) {
 	app, ctx := createTestApp(true)
-	ctx = ctx.WithBlockHeight(1)
 
 	// keys
 	_, _, addr1 := types.KeyTestPubAddr()
@@ -727,7 +726,6 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 func TestEnsureSufficientMempoolFees(t *testing.T) {
 	// setup
 	_, ctx := createTestApp(true)
-
 	ctx = ctx.WithMinGasPrices(
 		sdk.DecCoins{
 			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino

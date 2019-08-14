@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
+	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
 )
 
 // Simulation parameter constants

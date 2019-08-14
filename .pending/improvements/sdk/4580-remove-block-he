@@ -1,1 +1,0 @@
-#4580 Update `Context#BlockHeight` to properly set the block height via `WithBlockHeader`.

@@ -1,7 +1,0 @@
----
-order: false
----
-
-# Encoding
-
-TODO

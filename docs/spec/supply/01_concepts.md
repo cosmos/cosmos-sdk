@@ -2,10 +2,11 @@
 
 ## Supply
 
-The `supply` module: 
- - passively tracks the total supply of coins within a chain, 
- - provides a pattern for modules to hold/interact with `Coins`, and 
- - introduces the invariant check to verify a chain's total supply.
+The `supply` module:
+
+- passively tracks the total supply of coins within a chain,
+- provides a pattern for modules to hold/interact with `Coins`, and
+- introduces the invariant check to verify a chain's total supply.
 
 ### Total Supply
 
@@ -32,10 +33,13 @@ The `ModuleAccount` interface is defined as follows:
 type ModuleAccount interface {
   auth.Account               // same methods as the Account interface
   GetName() string           // name of the module; used to obtain the address
-  GetPermissions() []string  // permissions of module account 
-  HasPermission(string) bool 
+  GetPermissions() []string  // permissions of module account
+  HasPermission(string) bool
 }
 ```
+
+> **WARNING!**
+Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
 The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
 and the bank `Keeper` that are related to `ModuleAccount`s in order to be able

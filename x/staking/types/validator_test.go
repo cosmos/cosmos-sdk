@@ -289,6 +289,7 @@ func TestValidatorMarshalYAML(t *testing.T) {
     moniker: ""
     identity: ""
     website: ""
+    security_contact: ""
     details: ""
   unbondingheight: 0
   unbondingcompletiontime: 1970-01-01T00:00:00Z

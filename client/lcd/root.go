@@ -54,11 +54,10 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	cfg := &rpcserver.Config{
-		MaxOpenConnections: maxOpen,
-		ReadTimeout:        time.Duration(readTimeout) * time.Second,
-		WriteTimeout:       time.Duration(writeTimeout) * time.Second,
-	}
+	cfg := rpcserver.DefaultConfig()
+	cfg.MaxOpenConnections = maxOpen
+	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
+	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
 
 	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {

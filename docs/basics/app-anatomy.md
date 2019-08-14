@@ -116,15 +116,15 @@ The SDK offers developers the possibility to implement automatic execution of co
 
 In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of the `BeginBlock` and `EndBlock` functions of each of the application's modules. This is done by calling the `BeginBlock` and `EndBlock` functions of the module manager, which in turn will call the `BeginBLock` and `EndBlock` functions of each of the modules it contains. Note that the order in which the modules' `BegingBlock` and `EndBlock` functions must be called has to be set in the module manager using the `SetOrderBeginBlock` and `SetOrderEndBlock` methods respectively. This is done in the [application's constructor](#application-constructor), and the `SetOrderBeginBlock` and `SetOrderEndBlock` methods have to be called before the `SetBeginBlocker` and `SetEndBlocker` functions.
 
-As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./accounts-fees-gas.md/gas) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
+As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as gas does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
 You can see an example of `BeginBlocker` and `EndBlocker` functions [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L224-L232).
 
 ### Register Codec
 
-The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a codec `cdc` (e.g. [amino](./amino.md)) initialize the codec of the SDK and each of the application's modules using the `RegisterCodec` function.
+The `MakeCodec` function is the last important function of the `app.go` file. The goal of this function is to instantiate a codec `cdc` (e.g. amino) initialize the codec of the SDK and each of the application's modules using the `RegisterCodec` function.
 
-To register the application's modules, the `MakeCodec` function calls `RegisterCodec` on `ModuleBasics`. `ModuleBasics` is a [basic manager](./modules.md#basic-manager) which lists all of the application's modules. It is instantiated in the `init()` function, and only serves to easily register non-dependent elements of application's modules (such as codec). To learn more about the basic module manager, click [here](./modules.md#basic-manager).
+To register the application's modules, the `MakeCodec` function calls `RegisterCodec` on `ModuleBasics`. `ModuleBasics` is a basic manager which lists all of the application's modules. It is instantiated in the `init()` function, and only serves to easily register non-dependent elements of application's modules (such as codec). To learn more about the basic module manager,.
 
 You can see an example of a `MakeCodec` [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L64-L70)
 
@@ -142,8 +142,7 @@ Modules implement two interfaces defined in the Cosmos SDK, [`AppModuleBasic`](h
 - `NewHandler()` and `NewQuerierHandler()`: These methods return a `handler` and `querierHandler` respectively, in order to process a message or a query once they are routed.
 - `BeginBlock()`, `EndBlock()` and `InitGenesis()`: These methods are executed respectively at the beginning of each block, at the end of each block and at the start of the chain. They implement special logic the module requires to be triggered during those events. For example, the `EndBlock` function is frequently used by modules where voting occurs to tally the result of the votes.
 - `RegisterInvariants()`: This method registers the [invariants](./invariants.md) for the module. Invariants are checked at the end of every block to make sure no unpredicted behaviour is occuring.
-
-`AppModule`'s methods are called from the `module manager`, which manages the application's collection of modules.
+- `AppModule`'s methods are called from the `module manager`, which manages the application's collection of modules.
 
 ### Message Types
 

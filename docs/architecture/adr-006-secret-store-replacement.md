@@ -1,4 +1,4 @@
-# # ADR 006: Replace Keybase with platform specific secret store provided by the Keyring library
+# ADR 006: Replace Keybase with platform specific secret store provided by the Keyring library
 
 ## Changelog
 

@@ -48,7 +48,7 @@ Another interface through which users can make queries is through HTTP Requests 
 GET http://localhost:{PORT}/staking/delegators/{delegatorAddr}/delegations
 ```
 
-To provide values such as `--node` (the full-node the CLI connects to) that are required by [`baseReq`](./rest.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
+To provide values such as `--node` (the full-node the CLI connects to) that are required by [`baseReq`](../building-modules/module-interfaces.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
 
 The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function (to see the handler itself, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/query.go#L103-L106)). Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
 

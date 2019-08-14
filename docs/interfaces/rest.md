@@ -12,7 +12,6 @@ This document describes how to create a REST interface for an SDK application. A
 - [Application REST Interface](#application-rest-interface)
 - [REST Server](#rest-server)
 - [Registering Routes](#registering-routes)
-- [Request Types](#request-types)
 
 ## Application REST Interface
 
@@ -27,7 +26,6 @@ Users can use the application CLI to start a new LCD, a local server through whi
 ```bash
 appcli rest-server --chain-id <chainID> --trust-node
 ```
-
 
 
 ## REST Server
@@ -60,9 +58,3 @@ This function is specific to the application and passed in to the `ServeCommand`
 ```go
 rootCmd.AddCommand(lcd.ServeCommand(cdc, registerRoutes))
 ```
-
-## Request Types
-
-HTTP Request types are defined by the module interfaces for every type of transaction. The structs all include a base request [`baseReq`](../building-modules/module-interfaces.md#basereq), the name of the request, and any arguments for the transaction.
-
-Additionally, each request may contain arguments such as a specific address pertaining to the request.

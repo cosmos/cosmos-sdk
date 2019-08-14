@@ -89,7 +89,6 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		cmn.Exit(err.Error())
 	}
 
-	// wait forever
 	cmn.TrapSignal(ctx.Logger, func() {
 		// cleanup
 		err = svr.Stop()
@@ -97,6 +96,10 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 			cmn.Exit(err.Error())
 		}
 	})
+
+	// run forever (the node will not be returned)
+	select {}
+
 	return nil
 }
 

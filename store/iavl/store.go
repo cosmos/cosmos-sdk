@@ -5,16 +5,17 @@ import (
 	"io"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	serrors "github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/errors"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -113,7 +114,7 @@ func (st *Store) Commit() types.CommitID {
 		toRelease := previous - st.numRecent
 		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
 			err := st.tree.DeleteVersion(toRelease)
-			if err != nil && err.(cmn.Error).Data() != iavl.ErrVersionDoesNotExist {
+			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
 				panic(err)
 			}
 		}
@@ -233,7 +234,7 @@ func getHeight(tree Tree, req abci.RequestQuery) int64 {
 func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return errors.ErrTxDecode(msg).QueryResult()
+		return serrors.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -293,7 +294,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return errors.ErrUnknownRequest(msg).QueryResult()
+		return serrors.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	return

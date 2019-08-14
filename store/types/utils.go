@@ -18,7 +18,7 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvs []cmn.KVPair) {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []cmn.KVPair) {
 	iterA := a.Iterator(nil, nil)
 	iterB := b.Iterator(nil, nil)
 
@@ -36,7 +36,8 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvs []cmn.KVPa
 			iterB.Next()
 		}
 		if !bytes.Equal(kvA.Key, kvB.Key) {
-			kvs = append(kvs, []cmn.KVPair{kvA, kvB}...)
+			kvAs = append(kvAs, kvA)
+			kvBs = append(kvBs, kvB)
 		}
 		compareValue := true
 		for _, prefix := range prefixesToSkip {
@@ -46,7 +47,8 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvs []cmn.KVPa
 			}
 		}
 		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {
-			kvs = append(kvs, []cmn.KVPair{kvA, kvB}...)
+			kvAs = append(kvAs, kvA)
+			kvBs = append(kvBs, kvB)
 		}
 	}
 	return

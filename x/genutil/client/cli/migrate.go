@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
-	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v036"
+	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
 )
 
 var migrationMap = extypes.MigrationMap{

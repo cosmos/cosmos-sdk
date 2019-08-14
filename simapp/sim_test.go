@@ -21,7 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-)
 
 func init() {
 	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
@@ -166,9 +165,9 @@ func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
 	if period == 1 {
-		return app.crisisKeeper.Invariants()
+		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), period, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -362,7 +361,7 @@ func TestAppImportExport(t *testing.T) {
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -374,11 +373,11 @@ func TestAppImportExport(t *testing.T) {
 		panic(err)
 	}
 
-	ctxB := newApp.NewContext(true, abci.Header{})
+	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
-	ctxA := app.NewContext(true, abci.Header{})
+	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
@@ -405,11 +404,15 @@ func TestAppImportExport(t *testing.T) {
 		storeKeyA := storeKeysPrefix.A
 		storeKeyB := storeKeysPrefix.B
 		prefixes := storeKeysPrefix.Prefixes
+
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
-		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
-		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
+		require.Len(t, failedKVAs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 
 }
@@ -489,7 +492,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -516,21 +519,29 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		seed := rand.Int63()
+
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, 0)
 
-			// Run randomized simulation
-			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
-				testAndRunTxs(app), []sdk.Invariant{},
-				1, 50, 100, 0, "",
-				false, true, false, false, false, app.ModuleAccountAddrs(),
+			fmt.Printf(
+				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
+				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
 			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
+				blockSize, "", false, commit, lean,
+				false, false, app.ModuleAccountAddrs(),
+			)
+			require.NoError(t, err)
+
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}
+
 		for k := 1; k < numTimesToRunPerSeed; k++ {
 			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
@@ -598,7 +609,7 @@ func BenchmarkInvariants(b *testing.B) {
 	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.crisisKeeper.Routes() {
+	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
 				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)

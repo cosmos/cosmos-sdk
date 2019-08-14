@@ -402,7 +402,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	if res.Proof == nil || len(res.Proof.Ops) == 0 {
-		return errors.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
+		return errors.ErrInternal("proof is unexpectedly empty; ensure height has not been pruned").QueryResult()
 	}
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)

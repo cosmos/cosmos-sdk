@@ -2,7 +2,6 @@ package cli
 
 import (
 	"io/ioutil"
-	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 /*
@@ -33,13 +31,11 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, id string) connection.CLIHandshakeObject {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
-	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
-	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
+func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeObject, error) {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewHandshaker(connection.NewManager(base, climan))
-	return man.CLIQuery(ctx, path, id)
+	return man.CLIQuery(ctx, connid)
 }
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
@@ -84,7 +80,10 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id)
+			obj1, err := handshake(ctx1, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			if err != nil {
+				return err
+			}
 
 			conn2id := args[2]
 			conn2bz, err := ioutil.ReadFile(args[3])
@@ -96,7 +95,10 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id)
+			obj2, err := handshake(ctx2, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			if err != nil {
+				return err
+			}
 
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
@@ -123,19 +125,19 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err := obj1.Connection(ctx1)
+			_, pconn, err := obj1.ConnectionCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, pstate, err := obj1.State(ctx1)
+			_, pstate, err := obj1.StateCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err := obj1.NextTimeout(ctx1)
+			_, ptimeout, err := obj1.NextTimeoutCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, pcounter, err := obj1.CounterpartyClient(ctx1)
+			_, pcounter, err := obj1.CounterpartyClientCLI(ctx1)
 			if err != nil {
 				return err
 			}
@@ -161,19 +163,19 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err = obj2.Connection(ctx2)
+			_, pconn, err = obj2.ConnectionCLI(ctx2)
 			if err != nil {
 				return err
 			}
-			_, pstate, err = obj2.State(ctx2)
+			_, pstate, err = obj2.StateCLI(ctx2)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err = obj2.NextTimeout(ctx2)
+			_, ptimeout, err = obj2.NextTimeoutCLI(ctx2)
 			if err != nil {
 				return err
 			}
-			_, pcounter, err = obj2.CounterpartyClient(ctx2)
+			_, pcounter, err = obj2.CounterpartyClientCLI(ctx2)
 			if err != nil {
 				return err
 			}
@@ -192,11 +194,11 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 			}
 
 			timeout = nextTimeout
-			_, pstate, err = obj1.State(ctx1)
+			_, pstate, err = obj1.StateCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err = obj1.NextTimeout(ctx1)
+			_, ptimeout, err = obj1.NextTimeoutCLI(ctx1)
 			if err != nil {
 				return err
 			}

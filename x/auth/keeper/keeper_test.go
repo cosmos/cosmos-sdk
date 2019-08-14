@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	addr := sdk.AccAddress([]byte("some-address"))
 
 	// no account before its created
@@ -39,7 +39,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
-	ctx, app := newTestApp(t)
+	app, ctx := createTestApp(true)
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
@@ -69,23 +69,12 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 	require.Equal(t, accSeq2, acc2.GetSequence())
 }
 
-func TestSetParams(t *testing.T) {
-	ctx, app := newTestApp(t)
+func TestGetSetParams(t *testing.T) {
+	app, ctx := createTestApp(true)
 	params := types.DefaultParams()
 
 	app.AccountKeeper.SetParams(ctx, params)
 
-	newParams := types.Params{}
-	app.AccountKeeper.paramSubspace.Get(ctx, types.KeyTxSigLimit, &newParams.TxSigLimit)
-	require.Equal(t, newParams.TxSigLimit, types.DefaultTxSigLimit)
-}
-
-func TestGetParams(t *testing.T) {
-	ctx, app := newTestApp(t)
-	params := types.DefaultParams()
-
-	app.AccountKeeper.SetParams(ctx, params)
-
-	newParams := app.AccountKeeper.GetParams(ctx)
-	require.Equal(t, params, newParams)
+	actualParams := app.AccountKeeper.GetParams(ctx)
+	require.Equal(t, params, actualParams)
 }

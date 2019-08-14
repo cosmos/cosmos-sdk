@@ -211,3 +211,19 @@ workflows:
             - test_cover
       - build_docs:
           context: docs-deployment-master
+          filters:
+            branches:
+              only:
+                - /.*/
+            tags:
+              ignore:
+                - /^v.*/
+      - build_docs:
+          context: docs-deployment-release
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /v.*/

@@ -9,7 +9,6 @@ linters:
     - gochecknoinits
     - govet
     - golint
-    - gofmt
     - gochecknoglobals
     - goconst
     - deadcode

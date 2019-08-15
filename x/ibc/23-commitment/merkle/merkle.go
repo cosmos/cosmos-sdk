@@ -112,7 +112,7 @@ type Value interface {
 	KeyBytes() []byte
 }
 
-func NewProofFromValue(proof *merkle.Proof, path Path, value Value) Proof {
+func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
 	// TODO: check HasPrefix
-	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), path.KeyPrefix)}
+	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

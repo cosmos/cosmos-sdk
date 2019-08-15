@@ -60,7 +60,7 @@ type indexerT struct {
 var _ mapping = indexerT{}
 
 func newIndexer(enc IntEncoding) indexerT {
-	return indexerT{NewIndexer(NewMapping(testkey, testcdc, nil), enc)}
+	return indexerT{NewMapping(testkey, testcdc, nil).Indexer(enc)}
 }
 
 func (m indexerT) Get(ctx Context, key interface{}, ptr interface{}) {

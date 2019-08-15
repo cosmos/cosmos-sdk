@@ -42,9 +42,10 @@ func commit(cms types.CommitMultiStore) Root {
 // Sets/upates key-value pairs and prove with the query result proofs
 func TestStore(t *testing.T) {
 	k, ctx, cms, cdc := defaultComponents()
+	storeName := k.Name()
 	prefix := []byte{0x01, 0x03, 0x05, 0xAA, 0xBB}
 	mapp := state.NewMapping(k, cdc, prefix)
-	path := NewPath([][]byte{[]byte(k.Name())}, prefix)
+	path := NewPath([][]byte{[]byte(storeName)}, prefix)
 
 	m := make(map[string][]byte)
 	kvpn := 10
@@ -67,7 +68,7 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs := make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			v0, p, err := QueryMultiStore(cms, path, []byte(k))
+			v0, p, err := QueryMultiStore(cms, storeName, prefix, []byte(k))
 			require.NoError(t, err)
 			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0, "Queried value different at %d", repeat)
 			proofs = append(proofs, p)
@@ -77,7 +78,7 @@ func TestStore(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			k := make([]byte, 64)
 			rand.Read(k)
-			v, p, err := QueryMultiStore(cms, path, k)
+			v, p, err := QueryMultiStore(cms, storeName, prefix, k)
 			require.NoError(t, err)
 			require.Nil(t, v)
 			proofs = append(proofs, p)
@@ -109,7 +110,7 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs = make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			v0, p, err := QueryMultiStore(cms, path, []byte(k))
+			v0, p, err := QueryMultiStore(cms, storeName, prefix, []byte(k))
 			require.NoError(t, err)
 			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0)
 			proofs = append(proofs, p)

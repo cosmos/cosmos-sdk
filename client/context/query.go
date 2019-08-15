@@ -81,7 +81,7 @@ func (ctx CLIContext) GetFromName() string {
 func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	// When a client did not provide a query height, manually query for it so it can

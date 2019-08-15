@@ -20,6 +20,8 @@ type Manager struct {
 	counterparty CounterpartyManager
 
 	router Router
+
+	ports map[string]struct{}
 }
 
 type CounterpartyManager struct {
@@ -33,6 +35,8 @@ func NewManager(protocol state.Mapping, connection connection.Manager) Manager {
 		protocol:     protocol.Prefix(LocalRoot()),
 		connection:   connection,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
+
+		ports: make(map[string]struct{}),
 	}
 }
 
@@ -250,12 +254,16 @@ func (obj Object) exists(ctx sdk.Context) bool {
 	return obj.Channel.Exists(ctx)
 }
 
-func (obj Object) Send(ctx sdk.Context, packet Packet) error {
+func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) error {
 	/*
 		if !obj.Sendable(ctx) {
 			return errors.New("cannot send Packets on this channel")
 		}
 	*/
+	obj, err := man.Query(ctx, portid, chanid)
+	if err != nil {
+		return err
+	}
 
 	if obj.OriginConnection().Client.GetConsensusState(ctx).GetHeight() >= packet.Timeout() {
 		return errors.New("timeout height higher than the latest known")

@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		encryptPassword = DefaultKeyPass
 	} else {
 		if viper.GetBool(flags.FlagLegacy) {
-			fmt.Println(os.Stderr, "Use at your own risk as support is likely to be removed without warning")
+			fmt.Fprintf(os.Stderr, "Use at your own risk as support is likely to be removed without warning")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {
 				return err

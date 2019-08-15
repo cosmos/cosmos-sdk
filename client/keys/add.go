@@ -295,7 +295,7 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 		}
 		cmd.PrintErrln(string(jsonString))
 	default:
-		return fmt.Errorf("I can't speak: %s", output)
+		return fmt.Errorf("i can't speak: %s", output)
 	}
 
 	return nil

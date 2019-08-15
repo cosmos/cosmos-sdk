@@ -19,7 +19,6 @@ linters:
     - unparam
     - gocritic
     - lll
-    - misspell
     - maligned
     - nakedret
     - ineffassign
@@ -28,5 +27,4 @@ linters:
     - scopelint
     - prealloc
     - varcheck
-    - stylecheck
     - staticcheck

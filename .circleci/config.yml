@@ -40,7 +40,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Build docs"
+          Name : "Build docs"
           command: make build-docs
       - run:
           name: "Upload docs to S3"

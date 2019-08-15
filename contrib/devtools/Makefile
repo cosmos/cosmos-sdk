@@ -42,15 +42,14 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 
-GOLANGCI_LINT   = $(TOOLS_DESTDIR)/golangci-lint
-STATIK          = $(TOOLS_DESTDIR)/statik
-GOIMPORTS       = $(TOOLS_DESTDIR)/goimports
-CLOG            = $(TOOLS_DESTDIR)/clog
-RUNSIM			= $(TOOLS_DESTDIR)/runsim
+GOLANGCI_LINT = $(TOOLS_DESTDIR)/golangci-lint
+STATIK        = $(TOOLS_DESTDIR)/statik
+GOIMPORTS     = $(TOOLS_DESTDIR)/goimports
+RUNSIM			  = $(TOOLS_DESTDIR)/runsim
 
 all: tools
 
-tools: statik clog runsim goimports golangci-lint
+tools: statik runsim goimports golangci-lint
 
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
@@ -66,18 +65,13 @@ $(GOIMPORTS):
 	@echo "Get goimports@v0.0.0-20190628034336-212fb13d595e"
 	@go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
 
-clog: $(CLOG)
-$(CLOG):
-	@echo "Get clog"
-	@go get github.com/cosmos/tools/cmd/clog
-
 runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Get runsim"
 	@go get github.com/cosmos/tools/cmd/runsim
 
 tools-clean:
-	rm -f $(STATIK) $(GOIMPORTS) $(CLOG) $(GOLANGCI_LINT) $(RUNSIM)
+	rm -f $(STATIK) $(GOIMPORTS) $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

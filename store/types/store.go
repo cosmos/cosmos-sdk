@@ -6,7 +6,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 )
 
 type Store interface { //nolint
@@ -37,6 +37,48 @@ type Queryable interface {
 
 //----------------------------------------
 // MultiStore
+
+// StoreUpgrades defines a series of transformations to apply the multistore db upon load
+type StoreUpgrades struct {
+	Renamed []StoreRename `json:"renamed"`
+	Deleted []string      `json:"deleted"`
+}
+
+// StoreRename defines a name change of a sub-store.
+// All data previously under a PrefixStore with OldKey will be copied
+// to a PrefixStore with NewKey, then deleted from OldKey store.
+type StoreRename struct {
+	OldKey string `json:"old_key"`
+	NewKey string `json:"new_key"`
+}
+
+// IsDeleted returns true if the given key should be deleted
+func (s *StoreUpgrades) IsDeleted(key string) bool {
+	if s == nil {
+		return false
+	}
+	for _, d := range s.Deleted {
+		if d == key {
+			return true
+		}
+	}
+	return false
+}
+
+// RenamedFrom returns the oldKey if it was renamed
+// Returns "" if it was not renamed
+func (s *StoreUpgrades) RenamedFrom(key string) string {
+	if s == nil {
+		return ""
+	}
+	for _, re := range s.Renamed {
+		if re.NewKey == key {
+			return re.OldKey
+		}
+	}
+	return ""
+
+}
 
 type MultiStore interface { //nolint
 	Store
@@ -93,6 +135,16 @@ type CommitMultiStore interface {
 	// Load the latest persisted version. Called once after all calls to
 	// Mount*Store() are complete.
 	LoadLatestVersion() error
+
+	// LoadLatestVersionAndUpgrade will load the latest version, but also
+	// rename/delete/create sub-store keys, before registering all the keys
+	// in order to handle breaking formats in migrations
+	LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
+
+	// LoadVersionAndUpgrade will load the named version, but also
+	// rename/delete/create sub-store keys, before registering all the keys
+	// in order to handle breaking formats in migrations
+	LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
 
 	// Load a specific persisted version. When you load an old version, or when
 	// the last commit attempt didn't complete, the next commit after loading

@@ -67,6 +67,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	if cliCtx.Indent {
 		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
+
 	return codec.Cdc.MarshalJSON(res)
 }
 
@@ -76,10 +77,12 @@ func GetChainHeight(cliCtx context.CLIContext) (int64, error) {
 	if err != nil {
 		return -1, err
 	}
+
 	status, err := node.Status()
 	if err != nil {
 		return -1, err
 	}
+
 	height := status.SyncInfo.LatestBlockHeight
 	return height, nil
 }
@@ -104,6 +107,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	fmt.Println(string(output))
 	return nil
 }
@@ -114,27 +118,32 @@ func printBlock(cmd *cobra.Command, args []string) error {
 func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,
 				"couldn't parse block height. Assumed format is '/block/{height}'.")
 			return
 		}
+
 		chainHeight, err := GetChainHeight(cliCtx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, "failed to parse chain height")
 			return
 		}
+
 		if height > chainHeight {
 			rest.WriteErrorResponse(w, http.StatusNotFound, "requested block height is bigger then the chain length")
 			return
 		}
+
 		output, err := getBlock(cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, output)
+
+		rest.PostProcessResponseBare(w, cliCtx, output)
 	}
 }
 
@@ -147,6 +156,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, output)
+		rest.PostProcessResponseBare(w, cliCtx, output)
 	}
 }

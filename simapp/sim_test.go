@@ -14,20 +14,27 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
+	banksimops "github.com/cosmos/cosmos-sdk/x/bank/simulation/operations"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingsimops "github.com/cosmos/cosmos-sdk/x/slashing/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	stakingsimops "github.com/cosmos/cosmos-sdk/x/staking/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 func init() {
@@ -38,7 +45,8 @@ func init() {
 	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
 	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks")
+	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
+	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
 	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
@@ -51,16 +59,17 @@ func init() {
 }
 
 // helper function for populating input for SimulateFromSeed
+// TODO: clean up this function along with the simulation refactor
 func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
 	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, string,
+	simulation.WeightedOperations, sdk.Invariants, int, int, int, int, string,
 	bool, bool, bool, bool, bool, map[string]bool) {
 
 	exportParams := exportParamsPath != ""
 
 	return tb, w, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app), invariants(app),
-		numBlocks, exportParamsHeight, blockSize,
+		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
 }
 
@@ -175,7 +184,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			authsim.SimulateDeductFee(app.accountKeeper, app.supplyKeeper),
+			authsimops.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -186,7 +195,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			bank.SimulateMsgSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -197,7 +206,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			bank.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -208,7 +217,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgSetWithdrawAddress(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -219,7 +228,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawDelegatorReward(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -230,7 +239,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawValidatorCommission(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -241,7 +250,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsim.SimulateTextProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, govsimops.SimulateTextProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -252,7 +261,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.distrKeeper)),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -263,7 +272,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsim.SimulateParamChangeProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -274,7 +283,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			govsim.SimulateMsgDeposit(app.govKeeper),
+			govsimops.SimulateMsgDeposit(app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -285,7 +294,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -296,7 +305,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgEditValidator(app.stakingKeeper),
+			stakingsimops.SimulateMsgEditValidator(app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -307,7 +316,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgDelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -318,7 +327,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgUndelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -329,7 +338,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -340,7 +349,7 @@ func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
 					})
 				return v
 			}(nil),
-			slashingsim.SimulateMsgUnjail(app.slashingKeeper),
+			slashingsimops.SimulateMsgUnjail(app.SlashingKeeper),
 		},
 	}
 }
@@ -349,9 +358,9 @@ func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
 	if period == 1 {
-		return app.crisisKeeper.Invariants()
+		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), period, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -503,9 +512,9 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
 
-	// export state and params before the simulation error is checked
+	// export state and simParams before the simulation error is checked
 	if exportStatePath != "" {
 		fmt.Println("Exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
@@ -517,10 +526,10 @@ func TestAppImportExport(t *testing.T) {
 
 	if exportParamsPath != "" {
 		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
+		simParamsBz, err := json.MarshalIndent(simParams, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(exportParamsPath, simParamsBz, 0644)
 		require.NoError(t, err)
 	}
 
@@ -545,7 +554,7 @@ func TestAppImportExport(t *testing.T) {
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -557,11 +566,11 @@ func TestAppImportExport(t *testing.T) {
 		panic(err)
 	}
 
-	ctxB := newApp.NewContext(true, abci.Header{})
+	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
-	ctxA := app.NewContext(true, abci.Header{})
+	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
@@ -570,27 +579,33 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keyMain, newApp.keyMain, [][]byte{}},
-		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
-			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
-		{app.keySlashing, newApp.keySlashing, [][]byte{}},
-		{app.keyMint, newApp.keyMint, [][]byte{}},
-		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keySupply, newApp.keySupply, [][]byte{}},
-		{app.keyParams, newApp.keyParams, [][]byte{}},
-		{app.keyGov, newApp.keyGov, [][]byte{}},
+		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
+		{app.keys[auth.StoreKey], newApp.keys[auth.StoreKey], [][]byte{}},
+		{app.keys[staking.StoreKey], newApp.keys[staking.StoreKey],
+			[][]byte{
+				staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey,
+			}}, // ordering may change but it doesn't matter
+		{app.keys[slashing.StoreKey], newApp.keys[slashing.StoreKey], [][]byte{}},
+		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
+		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
+		{app.keys[supply.StoreKey], newApp.keys[supply.StoreKey], [][]byte{}},
+		{app.keys[params.StoreKey], newApp.keys[params.StoreKey], [][]byte{}},
+		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {
 		storeKeyA := storeKeysPrefix.A
 		storeKeyB := storeKeysPrefix.B
 		prefixes := storeKeysPrefix.Prefixes
+
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
-		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
-		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
+		require.Len(t, failedKVAs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 
 }
@@ -670,7 +685,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -697,21 +712,29 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i := 0; i < numSeeds; i++ {
 		seed := rand.Int63()
+
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, 0)
 
-			// Run randomized simulation
-			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
-				testAndRunTxs(app), []sdk.Invariant{},
-				50, 100, 0, "",
-				false, true, false, false, false, app.ModuleAccountAddrs(),
+			fmt.Printf(
+				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
+				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
 			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t, os.Stdout, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
+				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
+				blockSize, "", false, commit, lean,
+				false, false, app.ModuleAccountAddrs(),
+			)
+			require.NoError(t, err)
+
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}
+
 		for k := 1; k < numTimesToRunPerSeed; k++ {
 			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
 		}
@@ -734,7 +757,7 @@ func BenchmarkInvariants(b *testing.B) {
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
+		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
 		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
 	)
 
@@ -779,7 +802,7 @@ func BenchmarkInvariants(b *testing.B) {
 	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.crisisKeeper.Routes() {
+	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
 				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)

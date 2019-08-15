@@ -3,6 +3,7 @@ package types
 import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -24,6 +25,10 @@ type (
 	Iterator         = types.Iterator
 )
 
+// StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
+// simulation.
+type StoreDecoderRegistry map[string]func(cdc *codec.Codec, kvA, kvB cmn.KVPair) string
+
 // Iterator over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return types.KVStorePrefixIterator(kvs, prefix)
@@ -36,7 +41,7 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) []cmn.KVPair {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []cmn.KVPair) {
 	return types.DiffKVStores(a, b, prefixesToSkip)
 }
 
@@ -73,10 +78,30 @@ func NewKVStoreKey(name string) *KVStoreKey {
 	return types.NewKVStoreKey(name)
 }
 
+// NewKVStoreKeys returns a map of new  pointers to KVStoreKey's.
+// Uses pointers so keys don't collide.
+func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
+	keys := make(map[string]*KVStoreKey)
+	for _, name := range names {
+		keys[name] = NewKVStoreKey(name)
+	}
+	return keys
+}
+
 // Constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
 func NewTransientStoreKey(name string) *TransientStoreKey {
 	return types.NewTransientStoreKey(name)
+}
+
+// NewTransientStoreKeys constructs a new map of TransientStoreKey's
+// Must return pointers according to the ocap principle
+func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
+	keys := make(map[string]*TransientStoreKey)
+	for _, name := range names {
+		keys[name] = NewTransientStoreKey(name)
+	}
+	return keys
 }
 
 // PrefixEndBytes returns the []byte that would end a

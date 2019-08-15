@@ -145,6 +145,13 @@ $ %s tx distr withdraw-all-rewards --from mykey
 			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
 
 			delAddr := cliCtx.GetFromAddress()
+
+			// The transaction cannot be generated offline since it requires a query
+			// to get all the validators.
+			if cliCtx.GenerateOnly {
+				return fmt.Errorf("command disabled with the provided flag: %s", client.FlagGenerateOnly)
+			}
+
 			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)
 			if err != nil {
 				return err
@@ -154,6 +161,7 @@ $ %s tx distr withdraw-all-rewards --from mykey
 			return splitAndApply(utils.GenerateOrBroadcastMsgs, cliCtx, txBldr, msgs, chunkSize)
 		},
 	}
+
 	cmd.Flags().Int(flagMaxMessagesPerTx, MaxMessagesPerTxDefault, "Limit the number of messages per tx (0 for unlimited)")
 	return cmd
 }

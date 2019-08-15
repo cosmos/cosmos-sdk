@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 	"testing"
 	"time"
@@ -47,7 +46,7 @@ func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64,
 	ops WeightedOperations, invariants sdk.Invariants,
-	numBlocks, exportParamsHeight, blockSize int,
+	initialHeight, numBlocks, exportParamsHeight, blockSize int,
 	exportStatsPath string,
 	exportParams, commit, lean, onOperation, allInvariants bool,
 	blackListedAccs map[string]bool,
@@ -126,23 +125,23 @@ func SimulateFromSeed(
 	if !testingMode {
 		b.ResetTimer()
 	} else {
-		// Recover logs in case of panic
+		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Fprintf(w, "panic with err: %v\n", r)
-				stackTrace := string(debug.Stack())
-				fmt.Println(stackTrace)
+				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d; %v\n", header.Height, r)
 				logWriter.PrintLogs()
-				err = fmt.Errorf("Simulation halted due to panic on block %d", header.Height)
+				panic(r)
 			}
 		}()
 	}
 
 	// set exported params to the initial state
-	exportedParams = params
+	if exportParams && exportParamsHeight == 0 {
+		exportedParams = params
+	}
 
 	// TODO: split up the contents of this for loop into new functions
-	for height := 1; height <= numBlocks && !stopEarly; height++ {
+	for height := initialHeight; height < numBlocks+initialHeight && !stopEarly; height++ {
 
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
@@ -256,22 +255,27 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
 	totalNumBlocks, avgBlockSize int, logWriter LogWriter, lean, onOperation, allInvariants bool) blockSimFn {
 
-	lastBlocksizeState := 0 // state for [4 * uniform distribution]
+	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectOp := ops.getSelectOpFn()
 
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accounts []Account, header abci.Header) (opCount int) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []Account, header abci.Header,
+	) (opCount int) {
 
-		fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
-			header.Height, totalNumBlocks, opCount, blocksize)
-		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
+		_, _ = fmt.Fprintf(
+			w, "\rSimulating... block %d/%d, operation %d/%d.",
+			header.Height, totalNumBlocks, opCount, blocksize,
+		)
+		lastBlockSizeState, blocksize = getBlockSize(r, params, lastBlockSizeState, avgBlockSize)
 
 		type opAndR struct {
 			op   Operation
 			rand *rand.Rand
 		}
+
 		opAndRz := make([]opAndR, 0, blocksize)
+
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
 		for i := 0; i < blocksize; i++ {

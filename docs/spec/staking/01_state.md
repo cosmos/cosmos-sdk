@@ -85,10 +85,11 @@ CommissionRates struct {
 }
 
 type Description struct {
-    Moniker  string // name
-    Identity string // optional identity signature (ex. UPort or Keybase)
-    Website  string // optional website link
-    Details  string // optional details
+    Moniker          string // name
+    Identity         string // optional identity signature (ex. UPort or Keybase)
+    Website          string // optional website link
+    SecurityContact  string // optional email for security contact
+    Details          string // optional details
 }
 ```
 

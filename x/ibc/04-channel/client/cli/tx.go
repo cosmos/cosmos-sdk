@@ -1,28 +1,5 @@
 package cli
 
-import (
-	"io/ioutil"
-	"strconv"
-	"time"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
-)
-
 /*
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
@@ -35,14 +12,14 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIHandshakeObject {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
-	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
-	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
+// TODO
+/*
+func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeObject, error) {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewHandshaker(channel.NewManager(base, connman))
-	return man.CLIQuery(ctx, path, connid, chanid)
+	return man.CLIQuery(ctx, portid, chanid)
 }
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
@@ -88,7 +65,10 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			obj1 := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			obj1, err := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			if err != nil {
+				return err
+			}
 
 			conn2id := args[3]
 			chan2id := args[4]
@@ -101,7 +81,10 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			obj2 := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			obj2, err := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			if err != nil {
+				return err
+			}
 
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
@@ -128,15 +111,15 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err := obj1.Channel(ctx1)
+			_, pconn, err := obj1.ChannelCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, pstate, err := obj1.State(ctx1)
+			_, pstate, err := obj1.StateCLI(ctx1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err := obj1.NextTimeout(ctx1)
+			_, ptimeout, err := obj1.NextTimeoutCLI(ctx1)
 			if err != nil {
 				return err
 			}
@@ -298,3 +281,4 @@ func relay(cdc *codec.Codec, ctxFrom, ctxTo context.CLIContext, objFrom, objTo c
 
 	return nil
 }
+*/

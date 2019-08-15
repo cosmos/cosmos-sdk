@@ -1,38 +1,17 @@
 package cli
 
-import (
-	"fmt"
-	"strconv"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	cli "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
-)
-
 const (
 	FlagProve = "prove"
 )
 
-func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, version int64, connid, chanid string) channel.CLIObject {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
-	path := merkle.NewPath([][]byte{[]byte(storeKey)}, prefix)
-	base := state.NewBase(cdc, sdk.NewKVStoreKey(storeKey), prefix)
+// TODO
+/*
+func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Object {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewManager(base, connman)
-	return man.CLIQuery(ctx, path, connid, chanid)
+	return man.CLIObject(portid, chanid, connids)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -44,17 +23,17 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ibcQueryCmd.AddCommand(cli.GetCommands(
-		GetCmdQueryChannel(storeKey, cdc),
+	//		GetCmdQueryChannel(storeKey, cdc),
 	)...)
 	return ibcQueryCmd
 }
 
-func QueryChannel(ctx context.CLIContext, obj channel.CLIObject, prove bool) (res utils.JSONObject, err error) {
-	conn, connp, err := obj.Channel(ctx)
+func QueryChannel(ctx context.CLIContext, obj channel.Object, prove bool) (res utils.JSONObject, err error) {
+	conn, connp, err := obj.ChannelCLI(ctx)
 	if err != nil {
 		return
 	}
-	avail, availp, err := obj.Available(ctx)
+	avail, availp, err := obj.AvailableCLI(ctx)
 	if err != nil {
 		return
 	}
@@ -63,13 +42,13 @@ func QueryChannel(ctx context.CLIContext, obj channel.CLIObject, prove bool) (re
 		if err != nil {
 			return
 		}
-	*/
-	seqsend, seqsendp, err := obj.SeqSend(ctx)
+
+	seqsend, seqsendp, err := obj.SeqSendCLI(ctx)
 	if err != nil {
 		return
 	}
 
-	seqrecv, seqrecvp, err := obj.SeqRecv(ctx)
+	seqrecv, seqrecvp, err := obj.SeqRecvCLI(ctx)
 	if err != nil {
 		return
 	}
@@ -91,6 +70,7 @@ func QueryChannel(ctx context.CLIContext, obj channel.CLIObject, prove bool) (re
 		seqrecv, nil,
 	), nil
 }
+
 
 func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -115,3 +95,4 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+*/

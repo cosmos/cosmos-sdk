@@ -74,28 +74,28 @@ module.exports = {
           ["Интерфейсы", "interfaces"]
         ])
       }
-      // '/kr/': {
-      //   label: '한국어',
-      //   sidebar: sidebar('kr', [
-      //     ['소개', 'intro'],
-      //     ['기초', 'basics'],
-      //     ['SDK Core', 'core'],
-      //     ['모듈들', 'modules'],
-      //     ['프로그램 사용', 'sdk'],
-      //     ['인터페이스', 'interfaces'],
-      //   ]),
-      // },
-      // '/cn/': {
-      //   label: '中文',
-      //   sidebar: sidebar('cn', [
-      //     ['介绍', 'intro'],
-      //     ['基本', 'basics'],
-      //     ['SDK Core', 'core'],
-      //     ['模块', 'modules'],
-      //     ['使用该程序', 'sdk'],
-      //     ['接口', 'interfaces'],
-      //   ]),
-      // },
+      '/kr/': {
+        label: '한국어',
+        sidebar: sidebar('kr', [
+          ['소개', 'intro'],
+          ['기초', 'basics'],
+          ['SDK Core', 'core'],
+          ['모듈들', 'modules'],
+          ['프로그램 사용', 'sdk'],
+          ['인터페이스', 'interfaces'],
+        ]),
+      },
+      '/cn/': {
+        label: '中文',
+        sidebar: sidebar('cn', [
+          ['介绍', 'intro'],
+          ['基本', 'basics'],
+          ['SDK Core', 'core'],
+          ['模块', 'modules'],
+          ['使用该程序', 'sdk'],
+          ['接口', 'interfaces'],
+        ]),
+      },
     }
   }
 };

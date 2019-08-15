@@ -61,7 +61,7 @@ var (
 // TODO: remove dependency with staking
 var (
 	TestProposal        = types.NewTextProposal("Test", "description")
-	TestDescription     = staking.NewDescription("T", "E", "S", "T")
+	TestDescription     = staking.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates = staking.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 

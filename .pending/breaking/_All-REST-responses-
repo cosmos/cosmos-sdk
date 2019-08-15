@@ -1,2 +1,0 @@
-All REST responses now wrap the original resource/result. The response
-will contain two fields: height and result.

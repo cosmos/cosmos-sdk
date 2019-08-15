@@ -78,9 +78,22 @@ func GetSimulatorFlags() {
 
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags
 func NewConfigFromFlags() simulation.Config {
-	return simulation.NewConfig(genesisFile, paramsFile, exportParamsPath, exportParamsHeight,
-		exportStatePath, exportStatsPath, seed, initialBlockHeight, numBlocks, blockSize,
-		lean, commit, onOperation, allInvariants)
+	return simulation.Config{
+		GenesisFile:        genesisFile,
+		ParamsFile:         paramsFile,
+		ExportParamsPath:   exportParamsPath,
+		ExportParamsHeight: exportParamsHeight,
+		ExportStatePath:    exportStatePath,
+		ExportStatsPath:    exportStatsPath,
+		Seed:               seed,
+		InitialBlockHeight: initialBlockHeight,
+		NumBlocks:          numBlocks,
+		BlockSize:          blockSize,
+		Lean:               lean,
+		Commit:             commit,
+		OnOperation:        onOperation,
+		AllInvariants:      allInvariants,
+	}
 }
 
 // GenAuthGenesisState generates a random GenesisState for auth

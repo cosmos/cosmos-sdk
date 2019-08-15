@@ -21,28 +21,3 @@ type Config struct {
 	OnOperation   bool // run slow invariants every operation
 	AllInvariants bool // print all failed invariants if a broken invariant is found
 }
-
-// NewConfig creates a new simulation config instance
-func NewConfig(genesisFile, paramsFile, exportParamsPath string, exportParamsHeight int,
-	exportStatePath, exportStatsPath string, seed int64,
-	initialBlockHeight, numBlocks, blockSize int,
-	lean, commit, onOperation,
-	allInvariants bool) Config {
-
-	return Config{
-		GenesisFile:        genesisFile,
-		ParamsFile:         paramsFile,
-		ExportParamsPath:   exportParamsPath,
-		ExportParamsHeight: exportParamsHeight,
-		ExportStatePath:    exportStatePath,
-		ExportStatsPath:    exportStatsPath,
-		Seed:               seed,
-		InitialBlockHeight: initialBlockHeight,
-		NumBlocks:          numBlocks,
-		BlockSize:          blockSize,
-		Lean:               lean,
-		Commit:             commit,
-		OnOperation:        onOperation,
-		AllInvariants:      allInvariants,
-	}
-}

@@ -1,13 +1,15 @@
 package merkle
 
 import (
+	"bytes"
 	"errors"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+//	"github.com/cosmos/cosmos-sdk/store/state"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const merkleKind = "merkle"
@@ -91,7 +93,7 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 	for _, key := range path.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
+	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)	
 
 	// TODO: hard coded for now, should be extensible
 	runtime := rootmulti.DefaultProofRuntime()
@@ -100,4 +102,13 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 		return runtime.VerifyValue(proof.Proof, root.Hash, keypath.String(), value)
 	}
 	return runtime.VerifyAbsence(proof.Proof, root.Hash, keypath.String())
+}
+
+type Value interface {
+	KeyBytes() []byte
+}
+
+func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
+	// TODO: check HasPrefix
+	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

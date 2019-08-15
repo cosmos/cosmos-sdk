@@ -34,8 +34,22 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 	}
 }
 
-// Value is for proving commitment proof on a speicifc key-value point in the other state
-// using the already initialized commitment store.
+type Indexer struct {
+	Mapping
+	enc state.IntEncoding
+}
+
+func (m Mapping) Indexer(enc state.IntEncoding) Indexer {
+	return Indexer{
+		Mapping: m,
+		enc:     enc,
+	}
+}
+
+func (ix Indexer) Value(index uint64) Value {
+	return ix.Mapping.Value(state.EncodeInt(index, ix.enc))
+}
+
 type Value struct {
 	m   Mapping
 	key []byte
@@ -52,6 +66,7 @@ func (v Value) Is(ctx sdk.Context, value interface{}) bool {
 
 // IsRaw() proves the proof with the Value's key and the provided raw value bytes.
 func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
+
 	return v.m.store(ctx).Prove(v.key, value)
 }
 
@@ -69,6 +84,30 @@ func (v Value) Enum() Enum {
 // Is() proves the proof with the Enum's key and the provided value
 func (v Enum) Is(ctx sdk.Context, value byte) bool {
 	return v.Value.IsRaw(ctx, []byte{value})
+}
+
+type String struct {
+	Value
+}
+
+func (v Value) String() String {
+	return String{v}
+}
+
+func (v String) Is(ctx sdk.Context, value string) bool {
+	return v.Value.IsRaw(ctx, []byte(value))
+}
+
+type Boolean struct {
+	Value
+}
+
+func (v Value) Boolean() Boolean {
+	return Boolean{v}
+}
+
+func (v Boolean) Is(ctx sdk.Context, value bool) bool {
+	return v.Value.Is(ctx, value)
 }
 
 // Integer is a uint64 types wrapper for Value.

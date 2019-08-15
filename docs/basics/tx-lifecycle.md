@@ -26,7 +26,7 @@ One of the main application interfaces is the command-line interface. The transa
 
 This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node.
 
-There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees-gas.md#accounts) the transaction is orginating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
+There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees-gas.md#accounts) the transaction is originating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
 
 #### Gas and Fees
 

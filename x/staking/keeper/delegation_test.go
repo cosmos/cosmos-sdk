@@ -208,7 +208,6 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	startTokens := sdk.TokensFromConsensusPower(10)
 	bondDenom := keeper.BondDenom(ctx)
 
-	_ = keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	err := notBondedPool.SetCoins(sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens)))
 	require.NoError(t, err)

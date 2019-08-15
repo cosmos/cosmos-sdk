@@ -73,7 +73,7 @@ module.exports = {
           ["Используем SDK", "sdk"],
           ["Интерфейсы", "interfaces"]
         ])
-      }
+      },
       '/kr/': {
         label: '한국어',
         sidebar: sidebar('kr', [

@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -146,7 +147,9 @@ func NewSimApp(
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(app.cdc, keys[auth.StoreKey], authSubspace, auth.ProtoBaseAccount)
+	fmt.Println("BANK")
 	app.BankKeeper = bank.NewBaseKeeper(app.AccountKeeper, bankSubspace, bank.DefaultCodespace, app.ModuleAccountAddrs())
+	fmt.Println("SUPPLY")
 	app.SupplyKeeper = supply.NewKeeper(app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms)
 	stakingKeeper := staking.NewKeeper(app.cdc, keys[staking.StoreKey], tkeys[staking.TStoreKey],
 		app.SupplyKeeper, stakingSubspace, staking.DefaultCodespace)
@@ -253,6 +256,8 @@ func (app *SimApp) LoadHeight(height int64) error {
 func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
+		fmt.Printf("acc: %v\n", acc)
+		fmt.Printf("%v\n", app.SupplyKeeper.GetModuleAddress(acc))
 		modAccAddrs[app.SupplyKeeper.GetModuleAddress(acc).String()] = true
 	}
 

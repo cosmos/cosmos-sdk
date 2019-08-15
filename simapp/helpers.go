@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
@@ -39,6 +41,34 @@ func Setup(isCheckTx bool) *SimApp {
 	return app
 }
 
+// SetupWithGenesisAccounts initializes a new SimApp with the passed in
+// genesis accounts.
+func SetupWithGenesisAccounts(genAccs genaccounts.GenesisAccounts) *SimApp {
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
+
+	// initialize the chain with the passed in genesis accounts
+	genesisState := NewDefaultGenesisState()
+	genesisState = genaccounts.SetGenesisStateInAppState(app.Codec(), genesisState, genaccounts.GenesisState(genAccs))
+	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+	if err != nil {
+		panic(err)
+	}
+
+	// Initialize the chain
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:    []abci.ValidatorUpdate{},
+			AppStateBytes: stateBytes,
+		},
+	)
+
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
+
+	return app
+}
+
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins) {
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -59,7 +89,8 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 	memo := "testmemotestmemo"
 
 	for i, p := range priv {
-		sig, err := p.Sign(auth.StdSignBytes(appName, accnums[i], seq[i], fee, msgs, memo))
+		// use a empty chainID for ease of testing
+		sig, err := p.Sign(auth.StdSignBytes("", accnums[i], seq[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}

@@ -1,21 +1,23 @@
 package bank_test
 
 import (
-	"testing"
+	//	"testing"
 
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
+	//	"github.com/stretchr/testify/require"
+	//	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	//	sdk "github.com/cosmos/cosmos-sdk/types"
+	//	"github.com/cosmos/cosmos-sdk/x/auth"
+	//	"github.com/cosmos/cosmos-sdk/x/bank"
+	//	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
+	//	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-var moduleAccAddr = sdk.AccAddress([]byte("moduleAcc"))
+var moduleAccAddr = supply.GetModuleAddress(staking.BondedPoolName)
 
+/*
 // initialize the mock application for this module
 func getMockApp(t *testing.T) *mock.App {
 	mapp, err := getBenchmarkMockApp()
@@ -57,6 +59,7 @@ func getBenchmarkMockApp() (*mock.App, error) {
 	return mapp, err
 }
 
+/*
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	benchmarkApp, _ := getBenchmarkMockApp()
 
@@ -116,3 +119,4 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		benchmarkApp.Commit()
 	}
 }
+*/

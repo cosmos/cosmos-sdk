@@ -73,7 +73,7 @@ func NewApp() *App {
 		auth.ProtoBaseAccount,
 	)
 
-	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
+	supplyKeeper := NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.

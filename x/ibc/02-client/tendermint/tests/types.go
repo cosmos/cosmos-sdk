@@ -3,6 +3,7 @@ package tendermint
 import (
 	"crypto/rand"
 	"testing"
+	"bytes"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,15 +24,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-// nolint: unused
-func newPath() merkle.Path {
-	return merkle.NewPath([][]byte{[]byte("test")}, []byte{0x12, 0x34})
-}
-
 const chainid = "testchain"
 
-func defaultComponents() (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
-	key := sdk.NewKVStoreKey("test")
+func defaultComponents(storename string) (sdk.StoreKey, sdk.Context, stypes.CommitMultiStore, *codec.Codec) {
+	key := sdk.NewKVStoreKey(storename)
+
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
@@ -54,19 +51,26 @@ type Node struct {
 
 	Commits []tmtypes.SignedHeader
 
-	Path merkle.Path
+	StoreName string
+	Prefix []byte
 }
 
-func NewNode(valset MockValidators, path merkle.Path) *Node {
-	key, ctx, cms, _ := defaultComponents()
+func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
+	key, ctx, cms, _ := defaultComponents(storeName)
+
 	return &Node{
 		Valset:  valset,
 		Cms:     cms,
 		Key:     key,
 		Store:   ctx.KVStore(key),
 		Commits: nil,
-		Path:    path,
+		StoreName: storeName,
+		Prefix: prefix,
 	}
+}
+
+func (node *Node) Path() merkle.Path {
+	return merkle.NewPath([][]byte{[]byte(node.StoreName)}, node.Prefix)
 }
 
 func (node *Node) Last() tmtypes.SignedHeader {
@@ -76,7 +80,7 @@ func (node *Node) Last() tmtypes.SignedHeader {
 	return node.Commits[len(node.Commits)-1]
 }
 
-func (node *Node) Commit() tmtypes.SignedHeader {
+func (node *Node) Commit() tendermint.Header {
 	valsethash := node.Valset.ValidatorSet().Hash()
 	nextvalset := node.Valset.Mutate()
 	nextvalsethash := nextvalset.ValidatorSet().Hash()
@@ -100,11 +104,20 @@ func (node *Node) Commit() tmtypes.SignedHeader {
 	node.Valset = nextvalset
 	node.Commits = append(node.Commits, commit)
 
-	return commit
+	return tendermint.Header{
+		SignedHeader:     commit,
+		ValidatorSet:     node.PrevValset.ValidatorSet(),
+		NextValidatorSet: node.Valset.ValidatorSet(),
+	}
 }
 
-func (node *Node) LastStateVerifier(root merkle.Root) *Verifier {
-	return NewVerifier(node.Last(), node.Valset, root)
+func (node *Node) LastStateVerifier() *Verifier {
+	return NewVerifier(node.Last(), node.Valset, node.Root())
+}
+
+func (node *Node) Root() merkle.Root {
+	return merkle.NewRoot(node.Last().AppHash)
+
 }
 
 func (node *Node) Context() sdk.Context {
@@ -126,14 +139,8 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root me
 	}
 }
 
-func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset MockValidators) error {
-	newcs, err := v.ConsensusState.Validate(
-		tendermint.Header{
-			SignedHeader:     header,
-			ValidatorSet:     valset.ValidatorSet(),
-			NextValidatorSet: nextvalset.ValidatorSet(),
-		},
-	)
+func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockValidators) error {
+	newcs, err := v.ConsensusState.Validate(header)
 	if err != nil {
 		return err
 	}
@@ -142,19 +149,23 @@ func (v *Verifier) Validate(header tmtypes.SignedHeader, valset, nextvalset Mock
 	return nil
 }
 
-func (node *Node) Query(t *testing.T, path merkle.Path, k []byte) ([]byte, commitment.Proof) {
-	value, proof, err := merkle.QueryMultiStore(node.Cms, path, k)
+
+func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
+	if bytes.HasPrefix(k, node.Prefix) {
+		k = bytes.TrimPrefix(k, node.Prefix)
+	}
+	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.Prefix, k)
 	require.NoError(t, err)
 	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(node.Path.Key(k), value)
+	node.Store.Set(join(node.Prefix, k), value)
 }
 
 // nolint:deadcode,unused
 func testProof(t *testing.T) {
-	node := NewNode(NewMockValidators(100, 10), newPath())
+	node := NewNode(NewMockValidators(100, 10), "1", []byte{0x00, 0x01})
 
 	node.Commit()
 
@@ -170,15 +181,17 @@ func testProof(t *testing.T) {
 			kvps = append(kvps, cmn.KVPair{Key: k, Value: v})
 			node.Set(k, v)
 		}
+
 		header := node.Commit()
 		proofs := []commitment.Proof{}
 		root := merkle.NewRoot(header.AppHash)
 		for _, kvp := range kvps {
-			v, p := node.Query(t, node.Path, kvp.Key)
+			v, p := node.Query(t, kvp.Key)
+
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(root, node.Path, proofs)
+		cstore, err := commitment.NewStore(root, node.Path(), proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

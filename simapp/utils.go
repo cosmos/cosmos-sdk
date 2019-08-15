@@ -29,70 +29,70 @@ import (
 
 // List of SimApp flags for the simulator
 var (
-	genesisFile        string
-	paramsFile         string
-	exportParamsPath   string
-	exportParamsHeight int
-	exportStatePath    string
-	exportStatsPath    string
-	seed               int64
-	initialBlockHeight int
-	numBlocks          int
-	blockSize          int
-	lean               bool
-	commit             bool
-	onOperation        bool // TODO: Remove in favor of binary search for invariant violation
-	allInvariants      bool
+	flagGenesisFileValue        string
+	flagParamsFileValue         string
+	flagExportParamsPathValue   string
+	flagExportParamsHeightValue int
+	flagExportStatePathValue    string
+	flagExportStatsPathValue    string
+	flagSeedValue               int64
+	flagInitialBlockHeightValue int
+	flagNumBlocksValue          int
+	flagBlockSizeValue          int
+	flagLeanValue               bool
+	flagCommitValue             bool
+	flagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
+	flagAllInvariantsValue      bool
 
-	enabled     bool
-	verbose     bool
-	period      int
-	genesisTime int64
+	flagEnabledValue     bool
+	flagVerboseValue     bool
+	flagPeriodValue      int
+	flagGenesisTimeValue int64
 )
 
 // GetSimulatorFlags gets the values of all the available simulation flags
 func GetSimulatorFlags() {
 
 	// Config fields
-	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
-	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
-	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
-	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
-	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
-	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
-	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&initialBlockHeight, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
-	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
-	flag.BoolVar(&lean, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&commit, "Commit", false, "have the simulation commit")
-	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
-	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
+	flag.StringVar(&flagGenesisFileValue, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
+	flag.StringVar(&flagParamsFileValue, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
+	flag.StringVar(&flagExportParamsPathValue, "ExportParamsPath", "", "custom file path to save the exported params JSON")
+	flag.IntVar(&flagExportParamsHeightValue, "ExportParamsHeight", 0, "height to which export the randomly generated params")
+	flag.StringVar(&flagExportStatePathValue, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.StringVar(&flagExportStatsPathValue, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
+	flag.Int64Var(&flagSeedValue, "Seed", 42, "simulation random seed")
+	flag.IntVar(&flagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
+	flag.IntVar(&flagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
+	flag.IntVar(&flagBlockSizeValue, "BlockSize", 200, "operations per block")
+	flag.BoolVar(&flagLeanValue, "Lean", false, "lean simulation log output")
+	flag.BoolVar(&flagCommitValue, "Commit", false, "have the simulation commit")
+	flag.BoolVar(&flagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
+	flag.BoolVar(&flagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 
 	// SimApp flags
-	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
-	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
-	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
-	flag.Int64Var(&genesisTime, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
+	flag.BoolVar(&flagEnabledValue, "Enabled", false, "enable the simulation")
+	flag.BoolVar(&flagVerboseValue, "Verbose", false, "verbose log output")
+	flag.IntVar(&flagPeriodValue, "Period", 1, "run slow invariants only once every period assertions")
+	flag.Int64Var(&flagGenesisTimeValue, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
 }
 
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags
 func NewConfigFromFlags() simulation.Config {
 	return simulation.Config{
-		GenesisFile:        genesisFile,
-		ParamsFile:         paramsFile,
-		ExportParamsPath:   exportParamsPath,
-		ExportParamsHeight: exportParamsHeight,
-		ExportStatePath:    exportStatePath,
-		ExportStatsPath:    exportStatsPath,
-		Seed:               seed,
-		InitialBlockHeight: initialBlockHeight,
-		NumBlocks:          numBlocks,
-		BlockSize:          blockSize,
-		Lean:               lean,
-		Commit:             commit,
-		OnOperation:        onOperation,
-		AllInvariants:      allInvariants,
+		GenesisFile:        flagGenesisFileValue,
+		ParamsFile:         flagParamsFileValue,
+		ExportParamsPath:   flagExportParamsPathValue,
+		ExportParamsHeight: flagExportParamsHeightValue,
+		ExportStatePath:    flagExportStatePathValue,
+		ExportStatsPath:    flagExportStatsPathValue,
+		Seed:               flagSeedValue,
+		InitialBlockHeight: flagInitialBlockHeightValue,
+		NumBlocks:          flagNumBlocksValue,
+		BlockSize:          flagBlockSizeValue,
+		Lean:               flagLeanValue,
+		Commit:             flagCommitValue,
+		OnOperation:        flagOnOperationValue,
+		AllInvariants:      flagAllInvariantsValue,
 	}
 }
 

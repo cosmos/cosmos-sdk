@@ -25,10 +25,10 @@ func AppStateFn(
 
 	cdc := MakeCodec()
 
-	if genesisTime == 0 {
+	if flagGenesisTimeValue == 0 {
 		genesisTimestamp = simulation.RandTimestamp(r)
 	} else {
-		genesisTimestamp = time.Unix(genesisTime, 0)
+		genesisTimestamp = time.Unix(flagGenesisTimeValue, 0)
 	}
 
 	switch {

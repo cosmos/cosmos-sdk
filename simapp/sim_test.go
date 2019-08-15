@@ -236,10 +236,10 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
-	if period == 1 {
+	if flagPeriodValue == 1 {
 		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -313,14 +313,14 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !enabled {
+	if !flagEnabledValue {
 		t.Skip("Skipping application simulation")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if verbose {
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -377,14 +377,14 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !enabled {
+	if !flagEnabledValue {
 		t.Skip("Skipping application import/export simulation")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if verbose {
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -504,14 +504,14 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !enabled {
+	if !flagEnabledValue {
 		t.Skip("Skipping application simulation after import")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if verbose {
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -604,18 +604,23 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !enabled {
+	if !flagEnabledValue {
 		t.Skip("Skipping application simulation")
 	}
 
 	config := NewConfigFromFlags()
 	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
 		seed := rand.Int63()
+		config.Seed = seed
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
@@ -636,10 +641,10 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
-		}
 
-		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
+			if j != 0 {
+				require.Equal(t, appHashList[0], appHashList[j], "appHash list: %v", appHashList)
+			}
 		}
 	}
 }

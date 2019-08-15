@@ -14,8 +14,6 @@ func (man Manager) CLIObject(connid, clientid string) Object {
 	return obj
 }
 
-
-
 func (obj Object) prefix() []byte {
 	return bytes.Split(obj.Connection.KeyBytes(), LocalRoot())[0]
 }

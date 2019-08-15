@@ -25,42 +25,5 @@ func TestHandshake(t *testing.T) {
 	registerCodec(cdc)
 
 	node := NewNode(tendermint.NewMockValidators(100, 10), tendermint.NewMockValidators(100, 10), cdc)
-	node.Commit()
-	node.Counterparty.Commit()
-
-	node.CreateClient(t)
-	node.Counterparty.CreateClient(t)
-
-	// self.OpenInit
-	node.OpenInit(t)
-	header := node.Commit()
-
-	// counterparty.OpenTry
-	node.Counterparty.UpdateClient(t, header)
-	cliobj := node.CLIObject()
-	_, pconn := node.QueryValue(t, cliobj.Connection)
-	_, pstate := node.QueryValue(t, cliobj.State)
-	_, ptimeout := node.QueryValue(t, cliobj.NextTimeout)
-	_, pcounterclient := node.QueryValue(t, cliobj.CounterpartyClient)
-	// TODO: implement consensus state checking
-	// _, pclient := node.Query(t, cliobj.Client.ConsensusStateKey)
-	node.Counterparty.OpenTry(t, pconn, pstate, ptimeout, pcounterclient)
-	header = node.Counterparty.Commit()
-
-	// self.OpenAck
-	node.UpdateClient(t, header)
-	cliobj = node.Counterparty.CLIObject()
-	_, pconn = node.Counterparty.QueryValue(t, cliobj.Connection)
-	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
-	_, ptimeout = node.Counterparty.QueryValue(t, cliobj.NextTimeout)
-	_, pcounterclient = node.Counterparty.QueryValue(t, cliobj.CounterpartyClient)
-	node.OpenAck(t, pconn, pstate, ptimeout, pcounterclient)
-	header = node.Commit()
-
-	// counterparty.OpenConfirm
-	node.Counterparty.UpdateClient(t, header)
-	cliobj = node.CLIObject()
-	_, pstate = node.QueryValue(t, cliobj.State)
-	_, ptimeout = node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenConfirm(t, pstate, ptimeout)
+	node.Handshake(t)
 }

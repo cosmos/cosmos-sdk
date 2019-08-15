@@ -10,7 +10,6 @@ linters:
     - govet
     - golint
     - gochecknoglobals
-    - goconst
     - deadcode
     - unused
     - dupl
@@ -27,4 +26,3 @@ linters:
     - scopelint
     - prealloc
     - varcheck
-    - staticcheck

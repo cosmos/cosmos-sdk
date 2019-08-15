@@ -49,6 +49,10 @@ func (m Mapping) Set(ctx Context, key []byte, o interface{}) {
 	m.Value(key).Set(ctx, o)
 }
 
+func (m Mapping) SetRaw(ctx Context, key []byte, value []byte) {
+	m.Value(key).SetRaw(ctx, value)
+}
+
 // Has() returns true if the stored value is not nil
 func (m Mapping) Has(ctx Context, key []byte) bool {
 	return m.Value(key).Exists(ctx)
@@ -92,3 +96,4 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 		prefix:   join(m.prefix, prefix),
 	}
 }
+

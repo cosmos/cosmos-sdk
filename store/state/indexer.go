@@ -31,8 +31,9 @@ type Indexer struct {
 	enc IntEncoding
 }
 
-// NewIndexer() constructs the Indexer with a predetermined prefix and IntEncoding
-func NewIndexer(m Mapping, enc IntEncoding) Indexer {
+
+// Indexer() constructs the Indexer with an IntEncoding
+func (m Mapping) Indexer(enc IntEncoding) Indexer {
 	return Indexer{
 		m:   m,
 		enc: enc,
@@ -92,6 +93,10 @@ func (ix Indexer) GetSafe(ctx Context, index uint64, ptr interface{}) error {
 // Set() marshales and sets the argument to the state.
 func (ix Indexer) Set(ctx Context, index uint64, o interface{}) {
 	ix.Value(index).Set(ctx, o)
+}
+
+func (ix Indexer) SetRaw(ctx Context, index uint64, value []byte) {
+	ix.Value(index).SetRaw(ctx, value)
 }
 
 // Has() returns true if the stored value is not nil

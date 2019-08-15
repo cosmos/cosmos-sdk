@@ -50,7 +50,7 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 
 	return cmd
 }

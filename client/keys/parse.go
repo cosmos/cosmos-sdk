@@ -77,7 +77,7 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 		RunE: parseKey,
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Indent JSON output")
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 
 	return cmd
 }

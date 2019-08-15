@@ -29,7 +29,7 @@ func Test_runUpdateCmd(t *testing.T) {
 		runningOnServer = true
 	}
 
-	viper.Set(flags.FlagSecretStore, true)
+	viper.Set(flags.FlagLegacy, true)
 
 	// fails because it requests a password
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")

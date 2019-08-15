@@ -37,7 +37,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 		"Skip confirmation prompt when deleting offline or ledger key references")
 	cmd.Flags().BoolP(flagForce, "f", false,
 		"Remove the key unconditionally without asking for the passphrase")
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 	return cmd
 }
 
@@ -46,7 +46,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	if viper.GetBool(flags.FlagSecretStore) {
+	if viper.GetBool(flags.FlagLegacy) {
 		os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()
@@ -78,7 +78,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	// skip passphrase check if run with --force
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
-	if !skipPass && viper.GetBool(flags.FlagSecretStore) {
+	if !skipPass && viper.GetBool(flags.FlagLegacy) {
 		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {
 			return err

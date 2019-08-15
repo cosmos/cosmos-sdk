@@ -19,7 +19,7 @@ func updateKeyCommand() *cobra.Command {
 		RunE:  runUpdateCmd,
 		Args:  cobra.ExactArgs(1),
 	}
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 	return cmd
 }
 
@@ -29,7 +29,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	if viper.GetBool(flags.FlagSecretStore) {
+	if viper.GetBool(flags.FlagLegacy) {
 		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()

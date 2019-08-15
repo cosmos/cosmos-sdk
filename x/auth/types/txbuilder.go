@@ -59,7 +59,7 @@ func NewTxBuilder(
 func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 
 	var kb crkeys.Keybase
-	if viper.GetBool(flags.FlagSecretStore) {
+	if viper.GetBool(flags.FlagLegacy) {
 		var err error
 		kb, err = keys.NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -77,7 +77,7 @@ func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
 		simulateAndExecute: flags.GasFlagVar.Simulate,
 		chainID:            viper.GetString(flags.FlagChainID),
 		memo:               viper.GetString(flags.FlagMemo),
-		legacySecretStore:  viper.GetBool(flags.FlagSecretStore),
+		legacySecretStore:  viper.GetBool(flags.FlagLegacy),
 	}
 
 	txbldr = txbldr.WithFees(viper.GetString(flags.FlagFees))

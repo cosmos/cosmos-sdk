@@ -39,7 +39,7 @@ func Test_runMigrateCmd(t *testing.T) {
 
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	viper.Set(flags.FlagSecretStore, true)
+	viper.Set(flags.FlagLegacy, true)
 
 	mockIn.Reset("test1234\ntest1234\n")
 

@@ -18,14 +18,14 @@ along with their associated name and address.`,
 		RunE: runListCmd,
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 	return cmd
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 
-	if viper.GetBool(flags.FlagSecretStore) {
+	if viper.GetBool(flags.FlagLegacy) {
 		os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()

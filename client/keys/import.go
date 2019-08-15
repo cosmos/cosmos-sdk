@@ -20,7 +20,7 @@ func importKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 	return cmd
 }
 
@@ -29,7 +29,7 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 
 	buf := bufio.NewReader(cmd.InOrStdin())
 
-	if viper.GetBool(flags.FlagSecretStore) {
+	if viper.GetBool(flags.FlagLegacy) {
 		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()

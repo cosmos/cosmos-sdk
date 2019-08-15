@@ -1,6 +1,7 @@
 package context
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -63,7 +64,7 @@ func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly, viper.GetBool((flags.FlagSecretStore)), input)
+	fromAddress, fromName, err := GetFromFields(from, genOnly, input)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -100,7 +101,7 @@ func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
 		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
-		SecretStore:   viper.GetBool(flags.FlagSecretStore),
+		SecretStore:   viper.GetBool(flags.FlagLegacy),
 	}
 }
 
@@ -244,6 +245,19 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 	return ctx
 }
 
+// WithInput returns a copy of the context with an updated input.
+func (ctx CLIContext) WithInput(input io.Reader) CLIContext {
+	ctx.Input = bufio.NewReader(input)
+	return ctx
+
+}
+
+// WithSecretStore returns a copy of the context with an updated SecretStore flag.
+func (ctx CLIContext) WithSecretStore(legacy bool) CLIContext {
+	ctx.SecretStore = legacy
+	return ctx
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors
@@ -273,10 +287,12 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(from string, genOnly, legacySecretStore bool, input io.Reader) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, genOnly bool, input io.Reader) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
+
+	legacySecretStore := viper.GetBool(flags.FlagLegacy)
 
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
@@ -297,7 +313,7 @@ func GetFromFields(from string, genOnly, legacySecretStore bool, input io.Reader
 	} else {
 		keybase = keys.NewKeyringKeybase(input) //if flag is set, add flag to struct, then boolean variable.
 	}
-	var info cryptokeys.Info //chedck boolean var if true - do old keyring, else the new one
+	var info cryptokeys.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {

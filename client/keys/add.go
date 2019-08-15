@@ -73,7 +73,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagSecretStore, false, "Use legacy secret store")
+	cmd.Flags().Bool(flags.FlagLegacy, false, "Use legacy secret store")
 	return cmd
 }
 
@@ -103,8 +103,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = DefaultKeyPass
 	} else {
-		if viper.GetBool(flags.FlagSecretStore) {
-			fmt.Println(os.Stderr, "Using deprecated secret store. This will be removed in a future release.")
+		if viper.GetBool(flags.FlagLegacy) {
+			fmt.Println(os.Stderr, "Use at your own risk as support is likely to be removed without warning")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {
 				return err
@@ -116,7 +116,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err == nil {
 			// account exists, ask for user confirmation
 			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf)
-
 			if err2 != nil {
 				return err2
 			}

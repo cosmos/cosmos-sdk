@@ -7,11 +7,8 @@ linters:
     - gosimple
     - gocyclo
     - gochecknoinits
-    - govet
     - golint
     - gochecknoglobals
-    - deadcode
-    - unused
     - dupl
     - interfacer
     - gosec
@@ -22,7 +19,6 @@ linters:
     - nakedret
     - ineffassign
     - errcheck
-    - unconvert
     - scopelint
     - prealloc
     - varcheck

@@ -100,7 +100,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	// run forever (the node will not be returned)
 	select {}
 
-	return nil
+	// return nil unreachable code
 }
 
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {

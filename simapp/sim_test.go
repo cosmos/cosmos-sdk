@@ -619,8 +619,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		seed := rand.Int63()
-		config.Seed = seed
+		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
@@ -629,7 +628,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			fmt.Printf(
 				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
-				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
+				i+1, numSeeds, config.Seed, j+1, numTimesToRunPerSeed,
 			)
 
 			_, _, err := simulation.SimulateFromSeed(

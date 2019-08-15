@@ -3,6 +3,7 @@ package commitment
 import (
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 // Store proves key-value pairs' inclusion or non-inclusion with
@@ -24,7 +25,6 @@ func NewPrefix(store Store, pref []byte) prefix {
 		prefix: pref,
 	}
 }
-
 
 func (prefix prefix) Prove(key, value []byte) bool {
 	return prefix.store.Prove(join(prefix.prefix, key), value)
@@ -80,6 +80,7 @@ func (store *store) Prove(key, value []byte) bool {
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
+		fmt.Println(111, string(key))
 		return false
 	}
 	err := proof.Verify(store.root, store.path, value)
@@ -90,7 +91,6 @@ func (store *store) Prove(key, value []byte) bool {
 
 	return true
 }
-
 
 // Proven() returns true if the key-value pair is already proven
 func (store *store) Proven(key []byte) bool {

@@ -1,7 +1,6 @@
 package commitment
 
 import (
-	
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,7 +39,7 @@ type Indexer struct {
 	enc state.IntEncoding
 }
 
-func NewIndexer(m Mapping, enc state.IntEncoding) Indexer {
+func (m Mapping) Indexer(enc state.IntEncoding) Indexer {
 	return Indexer{
 		Mapping: m,
 		enc:     enc,

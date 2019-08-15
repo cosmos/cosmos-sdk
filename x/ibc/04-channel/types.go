@@ -24,4 +24,13 @@ type Channel struct {
 	Port             string
 	Counterparty     string
 	CounterpartyPort string
+	ConnectionHops   []string
+}
+
+func (ch Channel) CounterpartyHops() (res []string) {
+	res = make([]string, len(ch.ConnectionHops))
+	for i, hop := range ch.ConnectionHops {
+		res[len(res)-(i+1)] = hop
+	}
+	return
 }

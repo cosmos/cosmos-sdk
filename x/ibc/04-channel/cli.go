@@ -1,131 +1,88 @@
 package channel
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/client/context"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-// CLIObject stores the key for each object fields
-type CLIObject struct {
-	ChanID     string
-	ChannelKey []byte
-
-	AvailableKey    []byte
-	SeqSendKey      []byte
-	SeqRecvKey      []byte
-	PacketCommitKey func(index uint64) []byte
-
-	Connection connection.CLIObject
-
-	Path merkle.Path
-	Cdc  *codec.Codec
-}
-
-func (man Manager) cliObject(path merkle.Path, chanid, connid string) CLIObject {
-	obj := man.object(connid, chanid)
-	return CLIObject{
-		ChanID:     chanid,
-		ChannelKey: obj.channel.Key(),
-
-		AvailableKey: obj.available.Key(),
-		SeqSendKey:   obj.seqsend.Key(),
-		SeqRecvKey:   obj.seqrecv.Key(),
-		PacketCommitKey: func(index uint64) []byte {
-			return obj.packets.Value(index).Key()
-		},
-
-		Path: path,
-		Cdc:  obj.channel.Cdc(),
+func (man Manager) CLIObject(portid, chanid string, connids []string) Object {
+	obj := man.object(portid, chanid)
+	for _, connid := range connids {
+		obj.Connections = append(obj.Connections, man.connection.Object(connid))
 	}
-}
-
-func (man Manager) CLIQuery(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIObject {
-	obj := man.cliObject(path, chanid, connid)
-	obj.Connection = man.connection.CLIQuery(ctx, path, connid)
 	return obj
 }
 
-func (man Manager) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIObject {
-	obj := man.cliObject(path, chanid, connid)
-	obj.Connection = man.connection.CLIObject(path, connid, clientid)
-	return obj
-}
-
-func (obj CLIObject) query(ctx context.CLIContext, key []byte, ptr interface{}) (merkle.Proof, error) {
-	resp, err := ctx.QueryABCI(obj.Path.RequestQuery(key))
+func (man Manager) CLIQuery(ctx context.CLIContext, portid, chanid string) (obj Object, err error) {
+	obj = man.object(portid, chanid)
+	channel, _, err := obj.ChannelCLI(ctx)
 	if err != nil {
-		return merkle.Proof{}, err
+		return
 	}
-	proof := merkle.Proof{
-		Key:   key,
-		Proof: resp.Proof,
+	for _, connid := range channel.ConnectionHops {
+		obj.Connections = append(obj.Connections, man.connection.Object(connid))
 	}
-	err = obj.Cdc.UnmarshalBinaryBare(resp.Value, ptr)
-	return proof, err
-
-}
-
-func (obj CLIObject) Channel(ctx context.CLIContext) (res Channel, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.ChannelKey, &res)
 	return
 }
 
-func (obj CLIObject) Available(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.AvailableKey, &res)
+func (obj Object) prefix() []byte {
+	return bytes.Split(obj.Channel.KeyBytes(), LocalRoot())[0]
+}
+
+func (obj Object) ChannelCLI(ctx context.CLIContext) (res Channel, proof merkle.Proof, err error) {
+	tmproof, err := obj.Channel.Query(ctx, &res)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Channel)
 	return
 }
 
-func (obj CLIObject) SeqSend(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.SeqSendKey, &res)
+func (obj Object) AvailableCLI(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Available.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Available)
 	return
 }
 
-func (obj CLIObject) SeqRecv(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.SeqRecvKey, &res)
+func (obj Object) SeqSendCLI(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.SeqSend.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.SeqSend)
 	return
 }
 
-func (obj CLIObject) Packet(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.PacketCommitKey(index), &res)
+func (obj Object) SeqRecvCLI(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.SeqRecv.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.SeqRecv)
 	return
 }
 
-type CLIHandshakeObject struct {
-	CLIObject
-
-	StateKey   []byte
-	TimeoutKey []byte
+func (obj Object) PacketCLI(ctx context.CLIContext, index uint64) (res Packet, proof merkle.Proof, err error) {
+	packet := obj.Packets.Value(index)
+	tmproof, err := packet.Query(ctx, &res)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), packet)
+	return
 }
 
-func (man Handshaker) CLIQuery(ctx context.CLIContext, path merkle.Path, chanid, connid string) CLIHandshakeObject {
-	obj := man.object(man.man.object(connid, chanid))
-	return CLIHandshakeObject{
-		CLIObject: man.man.CLIQuery(ctx, path, chanid, connid),
-
-		StateKey:   obj.state.Key(),
-		TimeoutKey: obj.nextTimeout.Key(),
+func (man Handshaker) CLIQuery(ctx context.CLIContext, portid, chanid string) (HandshakeObject, error) {
+	obj, err := man.man.CLIQuery(ctx, portid, chanid)
+	if err != nil {
+		return HandshakeObject{}, err
 	}
+	return man.object(obj), nil
 }
 
-func (man Handshaker) CLIObject(path merkle.Path, chanid, connid, clientid string) CLIHandshakeObject {
-	obj := man.object(man.man.object(connid, chanid))
-	return CLIHandshakeObject{
-		CLIObject: man.man.CLIObject(path, chanid, connid, clientid),
-
-		StateKey:   obj.state.Key(),
-		TimeoutKey: obj.nextTimeout.Key(),
-	}
+func (man Handshaker) CLIObject(portid, chanid string, connids []string) HandshakeObject {
+	return man.object(man.man.CLIObject(portid, chanid, connids))
 }
 
-func (obj CLIHandshakeObject) State(ctx context.CLIContext) (res State, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.StateKey, &res)
+func (obj HandshakeObject) StateCLI(ctx context.CLIContext) (res State, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.State.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.State)
 	return
 }
 
-func (obj CLIHandshakeObject) NextTimeout(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
-	proof, err = obj.query(ctx, obj.TimeoutKey, &res)
+func (obj HandshakeObject) NextTimeoutCLI(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.NextTimeout.Query(ctx)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.NextTimeout)
 	return
 }

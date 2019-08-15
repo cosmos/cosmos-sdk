@@ -5,11 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -62,6 +62,6 @@ func TestPacket(t *testing.T) {
 
 	node.Counterparty.UpdateClient(t, header)
 	cliobj := node.CLIObject()
-	_, ppacket := node.Query(t, cliobj.PacketCommitKey(1))
+	_, ppacket := node.QueryValue(t, cliobj.Packets.Value(1))
 	node.Counterparty.Receive(t, MyPacket{"ping"}, ppacket)
 }

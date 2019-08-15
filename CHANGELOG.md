@@ -43,6 +43,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Move height with proof check from `CLIContext` to `BaseApp` as the height
   can automatically be injected there.
   * Update `handleQueryStore` to resemble `handleQueryCustom`
+* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs
+to properly return black listed addresses for bank keeper initialization.
 
 ## [v0.36.0] - 2019-08-13
 

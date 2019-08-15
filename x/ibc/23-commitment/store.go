@@ -3,6 +3,7 @@ package commitment
 import (
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 // Store proves key-value pairs' inclusion or non-inclusion with
@@ -80,6 +81,7 @@ func (store *store) Prove(key, value []byte) bool {
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
+		fmt.Println(111, string(key))
 		return false
 	}
 	err := proof.Verify(store.root, store.path, value)

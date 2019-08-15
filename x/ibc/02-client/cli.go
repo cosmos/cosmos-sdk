@@ -23,4 +23,3 @@ func (obj Object) FrozenCLI(ctx context.CLIContext) (res bool, proof merkle.Proo
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Frozen)
 	return
 }
-

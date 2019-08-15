@@ -35,8 +35,22 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 	}
 }
 
-// Value is for proving commitment proof on a speicifc key-value point in the other state
-// using the already initialized commitment store.
+type Indexer struct {
+	Mapping
+	enc state.IntEncoding
+}
+
+func (m Mapping) Indexer(enc state.IntEncoding) Indexer {
+	return Indexer{
+		Mapping: m,
+		enc:     enc,
+	}
+}
+
+func (ix Indexer) Value(index uint64) Value {
+	return ix.Mapping.Value(state.EncodeInt(index, ix.enc))
+}
+
 type Value struct {
 	m   Mapping
 	key []byte

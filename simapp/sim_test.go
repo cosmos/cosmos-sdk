@@ -34,10 +34,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-var config simulation.Config
-
 func init() {
-	GetSimulatorFlags(config)
+	GetSimulatorFlags()
 }
 
 // TODO: add description
@@ -253,6 +251,7 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
+	config := NewConfigFromFlags()
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
@@ -319,6 +318,7 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := NewConfigFromFlags()
 
 	if verbose {
 		logger = log.TestingLogger()
@@ -382,6 +382,7 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := NewConfigFromFlags()
 
 	if verbose {
 		logger = log.TestingLogger()
@@ -508,6 +509,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}
 
 	var logger log.Logger
+	config := NewConfigFromFlags()
 
 	if verbose {
 		logger = log.TestingLogger()
@@ -606,6 +608,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		t.Skip("Skipping application simulation")
 	}
 
+	config := NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -643,6 +646,8 @@ func TestAppStateDeterminism(t *testing.T) {
 
 func BenchmarkInvariants(b *testing.B) {
 	logger := log.NewNopLogger()
+	config := NewConfigFromFlags()
+
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
 

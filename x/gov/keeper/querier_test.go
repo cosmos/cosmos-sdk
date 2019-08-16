@@ -205,11 +205,6 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, deposit2, deposits[0])
 	require.Equal(t, deposit4, deposits[1])
 
-	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[0])
-	require.Equal(t, deposit2, deposits[0])
-	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[1])
-	require.Equal(t, deposit4, deposits[1])
-
 	// check deposits on proposal3 match individual deposits
 	deposits = getQueriedDeposits(t, ctx, keeper.cdc, querier, proposal3.ProposalID)
 	require.Len(t, deposits, 1)

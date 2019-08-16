@@ -423,11 +423,12 @@ func (coins DecCoins) AmountOf(denom string) Dec {
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 
-		if denom < coin.Denom {
+		switch {
+		case denom < coin.Denom:
 			return coins[:midIdx].AmountOf(denom)
-		} else if denom == coin.Denom {
+		case denom == coin.Denom:
 			return coin.Amount
-		} else {
+		default:
 			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}

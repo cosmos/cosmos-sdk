@@ -1,6 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-github.com/99designs/keyring v0.0.0-20190704105226-2c916c935b9f h1:BZDi6cWSf0iJUUCGYVnI54zpLUI4JTcE2b7shi+5aRw=
-github.com/99designs/keyring v0.0.0-20190704105226-2c916c935b9f/go.mod h1:tRnPDCIIH2la+sfbRLCk1Bc03Qbl4J4x0bG24wgeZNw=
+github.com/99designs/keyring v1.1.0 h1:xAQQ87j0WpzZ7AWcTUI5ruH1yB1PchmpchGA8neyu2I=
+github.com/99designs/keyring v1.1.0/go.mod h1:tRnPDCIIH2la+sfbRLCk1Bc03Qbl4J4x0bG24wgeZNw=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=

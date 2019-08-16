@@ -256,9 +256,7 @@ func (app *SimApp) LoadHeight(height int64) error {
 func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		fmt.Printf("acc: %v\n", acc)
-		fmt.Printf("%v\n", app.SupplyKeeper.GetModuleAddress(acc))
-		modAccAddrs[app.SupplyKeeper.GetModuleAddress(acc).String()] = true
+		modAccAddrs[supply.NewModuleAddress(acc).String()] = true
 	}
 
 	return modAccAddrs

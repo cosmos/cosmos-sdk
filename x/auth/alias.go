@@ -40,7 +40,6 @@ var (
 	SetGasMeter                       = ante.SetGasMeter
 	GetSignBytes                      = ante.GetSignBytes
 	NewAccountKeeper                  = keeper.NewAccountKeeper
-	NewDummySupplyKeeper              = keeper.NewDummySupplyKeeper
 	NewQuerier                        = keeper.NewQuerier
 	NewBaseAccount                    = types.NewBaseAccount
 	ProtoBaseAccount                  = types.ProtoBaseAccount

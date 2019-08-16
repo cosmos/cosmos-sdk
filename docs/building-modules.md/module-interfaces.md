@@ -1,5 +1,0 @@
-# Module Interfaces
-
-## CLI
-
-## REST

@@ -68,6 +68,7 @@ func (tr TallyResult) Equals(comp TallyResult) bool {
 		tr.No.Equal(comp.No) &&
 		tr.NoWithVeto.Equal(comp.NoWithVeto)
 }
+
 // String implements stringer interface
 func (tr TallyResult) String() string {
 	return fmt.Sprintf(`Tally Result:

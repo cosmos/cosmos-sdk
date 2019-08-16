@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -36,32 +35,20 @@ import (
 )
 
 // Get flags every time the simulator is run
-func init() { GetSimulatorFlags() }
-
-// helper function for populating input for SimulateFromSeed
-// TODO: clean up this function along with the simulation refactor
-func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
-	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, int, string,
-	bool, bool, bool, bool, bool, map[string]bool) {
-
-	exportParams := exportParamsPath != ""
-
-	return tb, w, app.BaseApp, AppStateFn, seed,
-		testAndRunTxs(app, seed), invariants(app),
-		initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
+func init() {
+	GetSimulatorFlags()
 }
 
 // TODO: add description
-func testAndRunTxs(app *SimApp, seed int64) []simulation.WeightedOperation {
+func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
+
 	cdc := MakeCodec()
 	ap := make(simulation.AppParams)
 
-	app.sm.RandomizedSimParamChanges(cdc, seed)
+	app.sm.RandomizedSimParamChanges(cdc, config.Seed)
 
-	if paramsFile != "" {
-		bz, err := ioutil.ReadFile(paramsFile)
+	if config.ParamsFile != "" {
+		bz, err := ioutil.ReadFile(config.ParamsFile)
 		if err != nil {
 			panic(err)
 		}
@@ -252,10 +239,10 @@ func testAndRunTxs(app *SimApp, seed int64) []simulation.WeightedOperation {
 func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
-	if period == 1 {
+	if flagPeriodValue == 1 {
 		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -267,6 +254,7 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
+	config := NewConfigFromFlags()
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
@@ -279,32 +267,36 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
+	_, params, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -316,7 +308,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.FailNow()
 	}
 
-	if commit {
+	if config.Commit {
 		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
@@ -324,13 +316,14 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation")
 	}
 
 	var logger log.Logger
+	config := NewConfigFromFlags()
 
-	if verbose {
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -349,31 +342,35 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, params, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
 		fmt.Println(params)
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -383,12 +380,14 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application import/export simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application import/export simulation")
 	}
 
 	var logger log.Logger
-	if verbose {
+	config := NewConfigFromFlags()
+
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -407,30 +406,34 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and simParams before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
 		simParamsBz, err := json.MarshalIndent(simParams, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, simParamsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, simParamsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -438,11 +441,11 @@ func TestAppImportExport(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
-	fmt.Printf("Exporting genesis...\n")
+	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
-	fmt.Printf("Importing genesis...\n")
+	fmt.Printf("importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
@@ -497,19 +500,21 @@ func TestAppImportExport(t *testing.T) {
 		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
-		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
+		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
 		require.Len(t, failedKVAs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation after import")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation after import")
 	}
 
 	var logger log.Logger
-	if verbose {
+	config := NewConfigFromFlags()
+
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -527,30 +532,34 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	stopEarly, params, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		require.NoError(t, err)
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -560,16 +569,16 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	if stopEarly {
 		// we can't export or import a zero-validator genesis
-		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
+		fmt.Printf("we can't export or import a zero-validator genesis, exiting test...\n")
 		return
 	}
 
-	fmt.Printf("Exporting genesis...\n")
+	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
 	require.NoError(t, err)
 
-	fmt.Printf("Importing genesis...\n")
+	fmt.Printf("importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
@@ -586,23 +595,34 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
+	_, _, err = simulation.SimulateFromSeed(
+		t, os.Stdout, newApp.BaseApp, AppStateFn,
+		testAndRunTxs(newApp, config), invariants(newApp),
+		newApp.ModuleAccountAddrs(), config,
+	)
+
 	require.NoError(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation")
 	}
+
+	config := NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		seed := rand.Int63()
+		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
@@ -610,27 +630,35 @@ func TestAppStateDeterminism(t *testing.T) {
 			app := NewSimApp(logger, db, nil, true, 0)
 
 			fmt.Printf(
-				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
-				i+1, numSeeds, seed, j+1, numTimesToRunPerSeed,
+				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn, seed, testAndRunTxs(app, seed),
-				[]sdk.Invariant{}, 1, numBlocks, exportParamsHeight,
-				blockSize, "", false, commit, lean,
-				false, false, app.ModuleAccountAddrs(),
+				t, os.Stdout, app.BaseApp, AppStateFn,
+				testAndRunTxs(app, config), []sdk.Invariant{},
+				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
-			require.Equal(t, appHashList[0], appHashList[j], "non-determinism in seed %d: %d/%d, attempt: %d/%d\n", seed, i+1, numSeeds, j+1, numTimesToRunPerSeed)
+
+			if j != 0 {
+				require.Equal(
+					t, appHashList[0], appHashList[j],
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
 		}
 	}
 }
 
 func BenchmarkInvariants(b *testing.B) {
+	config := NewConfigFromFlags()
+	config.AllInvariants = false
 	logger := log.NewNopLogger()
+
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
 
@@ -640,39 +668,38 @@ func BenchmarkInvariants(b *testing.B) {
 	}()
 
 	app := NewSimApp(logger, db, nil, true, 0)
-	exportParams := exportParamsPath != ""
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, AppStateFn, seed, testAndRunTxs(app, seed),
-		[]sdk.Invariant{}, initialBlockHeight, numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
+		b, ioutil.Discard, app.BaseApp, AppStateFn,
+		testAndRunTxs(app, config), []sdk.Invariant{},
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
 		appState, _, err := app.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
 		paramsBz, err := json.MarshalIndent(params, "", " ")
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
 		if err != nil {
 			fmt.Println(err)
 			b.Fail()
@@ -693,7 +720,7 @@ func BenchmarkInvariants(b *testing.B) {
 	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, config.NumBlocks, res)
 				b.FailNow()
 			}
 		})

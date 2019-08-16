@@ -29,27 +29,27 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(
-	r *rand.Rand, accs []simulation.Account,
+	r *rand.Rand, accs []simulation.Account, config simulation.Config,
 ) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
 	cdc := MakeCodec()
 
-	if genesisTime == 0 {
+	if flagGenesisTimeValue == 0 {
 		genesisTimestamp = simulation.RandTimestamp(r)
 	} else {
-		genesisTimestamp = time.Unix(genesisTime, 0)
+		genesisTimestamp = time.Unix(flagGenesisTimeValue, 0)
 	}
 
 	switch {
-	case paramsFile != "" && genesisFile != "":
+	case config.ParamsFile != "" && config.GenesisFile != "":
 		panic("cannot provide both a genesis file and a params file")
 
-	case genesisFile != "":
-		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	case config.GenesisFile != "":
+		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, config)
 
-	case paramsFile != "":
+	case config.ParamsFile != "":
 		appParams := make(simulation.AppParams)
-		bz, err := ioutil.ReadFile(paramsFile)
+		bz, err := ioutil.ReadFile(config.ParamsFile)
 		if err != nil {
 			panic(err)
 		}
@@ -118,14 +118,12 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(
-	r *rand.Rand, _ []simulation.Account, _ time.Time,
-) (json.RawMessage, []simulation.Account, string) {
+func AppStateFromGenesisFileFn(r *rand.Rand, config simulation.Config) (json.RawMessage, []simulation.Account, string) {
 
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
 
-	bytes, err := ioutil.ReadFile(genesisFile)
+	bytes, err := ioutil.ReadFile(config.GenesisFile)
 	if err != nil {
 		panic(err)
 	}

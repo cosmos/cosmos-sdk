@@ -189,7 +189,7 @@ func TestRedact(t *testing.T) {
 
 func TestABCIInfoSerializeErr(t *testing.T) {
 	var (
-		// Create errors with stacktrace for equal comparision.
+		// Create errors with stacktrace for equal comparison.
 		myErrDecode = Wrap(ErrTxDecode, "test")
 		myErrAddr   = Wrap(ErrInvalidAddress, "tester")
 		myPanic     = ErrPanic

@@ -16,8 +16,12 @@ import (
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) govsimops.ContentSimulator {
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) govtypes.Content {
 
-		// TODO: add comment of why is the number of changes capped
-		numChanges := simulation.RandIntBetween(r, 1, len(paramChangePool)/2)
+		lenParamChange := len(paramChangePool)
+		if lenParamChange == 0 {
+			panic("param changes array is empty")
+		}
+
+		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
 		paramChanges := make([]params.ParamChange, numChanges, numChanges)
 		paramChangesKeys := make(map[string]struct{})
 

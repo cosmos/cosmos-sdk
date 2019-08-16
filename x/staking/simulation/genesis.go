@@ -3,7 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -32,10 +32,7 @@ func GenMaxValidators(cdc *codec.Codec, r *rand.Rand) (maxValidators uint16) {
 }
 
 // RandomizedGenState generates a random GenesisState for staking
-func RandomizedGenState(
-	cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage,
-	accs []simulation.Account, amount, numInitiallyBonded int64,
-) types.GenesisState {
+func RandomizedGenState(input *module.GeneratorInput) {
 
 	var (
 		validators  []types.Validator
@@ -43,28 +40,28 @@ func RandomizedGenState(
 	)
 
 	// params
-	ubdTime := GenUnbondingTime(cdc, r)
-	maxValidators := GenMaxValidators(cdc, r)
-	params := types.NewParams(ubdTime, maxValidators, 7, sdk.DefaultBondDenom)
+	// TODO: this could result in a bug if the staking module generator is not called
+	// before the slashing generator !!! 
+	input.UnbondTime = GenUnbondingTime(input.Cdc, input.R)
+	maxValidators := GenMaxValidators(input.Cdc, input.R)
+	params := types.NewParams(input.UnbondTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations
-	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
-	for i := 0; i < int(numInitiallyBonded); i++ {
-		valAddr := sdk.ValAddress(accs[i].Address)
+	valAddrs := make([]sdk.ValAddress, input.NumBonded)
+	for i := 0; i < int(input.NumBonded); i++ {
+		valAddr := sdk.ValAddress(input.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
-		validator := types.NewValidator(valAddr, accs[i].PubKey, types.Description{})
-		validator.Tokens = sdk.NewInt(amount)
-		validator.DelegatorShares = sdk.NewDec(amount)
-		delegation := types.NewDelegation(accs[i].Address, valAddr, sdk.NewDec(amount))
+		validator := types.NewValidator(valAddr, input.Accounts[i].PubKey, types.Description{})
+		validator.Tokens = sdk.NewInt(input.InitialStake)
+		validator.DelegatorShares = sdk.NewDec(input.InitialStake)
+		delegation := types.NewDelegation(input.Accounts[i].Address, valAddr, sdk.NewDec(input.InitialStake))
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, stakingGenesis.Params))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
-
-	return stakingGenesis
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, stakingGenesis.Params))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(stakingGenesis)
 }

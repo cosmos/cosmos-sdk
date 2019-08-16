@@ -3,7 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
@@ -50,19 +50,19 @@ func GenSlashFractionDowntime(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for slashing
-func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage, maxEvidenceAge time.Duration) {
+func RandomizedGenState(input *module.GeneratorInput) {
 
-	signedBlocksWindow := GenSignedBlocksWindow(cdc, r)
-	minSignedPerWindow := GenMinSignedPerWindow(cdc, r)
-	downtimeJailDuration := GenDowntimeJailDuration(cdc, r)
-	slashFractionDoubleSign := GenSlashFractionDoubleSign(cdc, r)
-	slashFractionDowntime := GenSlashFractionDowntime(cdc, r)
+	signedBlocksWindow := GenSignedBlocksWindow(input.Cdc, input.R)
+	minSignedPerWindow := GenMinSignedPerWindow(input.Cdc, input.R)
+	downtimeJailDuration := GenDowntimeJailDuration(input.Cdc, input.R)
+	slashFractionDoubleSign := GenSlashFractionDoubleSign(input.Cdc, input.R)
+	slashFractionDowntime := GenSlashFractionDowntime(input.Cdc, input.R)
 
-	params := types.NewParams(maxEvidenceAge, signedBlocksWindow, minSignedPerWindow,
+	params := types.NewParams(input.UnbondTime, signedBlocksWindow, minSignedPerWindow,
 		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)
 
 	slashingGenesis := types.NewGenesisState(params, nil, nil)
 
-	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, slashingGenesis.Params))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(slashingGenesis)
+	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, slashingGenesis.Params))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(slashingGenesis)
 }

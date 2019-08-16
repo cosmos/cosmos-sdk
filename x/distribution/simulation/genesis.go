@@ -3,13 +3,13 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -36,11 +36,11 @@ func GenBonusProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
-func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+func RandomizedGenState(input *module.GeneratorInput) {
 
-	communityTax := GenCommunityTax(cdc, r)
-	baseProposerReward := GenBaseProposerReward(cdc, r)
-	bonusProposerReward := GenBonusProposerReward(cdc, r)
+	communityTax := GenCommunityTax(input.Cdc, input.R)
+	baseProposerReward := GenBaseProposerReward(input.Cdc, input.R)
+	bonusProposerReward := GenBonusProposerReward(input.Cdc, input.R)
 
 	distrGenesis := types.GenesisState{
 		FeePool:             types.InitialFeePool(),
@@ -49,6 +49,6 @@ func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]
 		BonusProposerReward: bonusProposerReward,
 	}
 
-	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, distrGenesis))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(distrGenesis)
+	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, distrGenesis))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(distrGenesis)
 }

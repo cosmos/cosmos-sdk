@@ -3,7 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -56,15 +56,15 @@ func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for gov
-func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	startingProposalID := uint64(r.Intn(100))
+func RandomizedGenState(input *module.GeneratorInput) {
+	startingProposalID := uint64(input.R.Intn(100))
 
-	minDeposit := GenDepositParamsMinDeposit(cdc, r)
-	depositPeriod := GenDepositParamsDepositPeriod(cdc, r)
-	votingPeriod := GenVotingParamsVotingPeriod(cdc, r)
-	quorum := GenTallyParamsQuorum(cdc, r)
-	threshold := GenTallyParamsThreshold(cdc, r)
-	veto := GenTallyParamsVeto(cdc, r)
+	minDeposit := GenDepositParamsMinDeposit(input.Cdc, input.R)
+	depositPeriod := GenDepositParamsDepositPeriod(input.Cdc, input.R)
+	votingPeriod := GenVotingParamsVotingPeriod(input.Cdc, input.R)
+	quorum := GenTallyParamsQuorum(input.Cdc, input.R)
+	threshold := GenTallyParamsThreshold(input.Cdc, input.R)
+	veto := GenTallyParamsVeto(input.Cdc, input.R)
 
 	govGenesis := types.NewGenesisState(
 		startingProposalID,
@@ -73,6 +73,6 @@ func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]
 		types.NewTallyParams(quorum, threshold, veto),
 	)
 
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, govGenesis))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(govGenesis)
+	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, govGenesis))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(govGenesis)
 }

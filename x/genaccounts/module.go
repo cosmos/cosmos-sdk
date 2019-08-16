@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
-	// "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -86,8 +86,8 @@ type AppModuleSimulation struct{}
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState creates a randomized GenState of the genesis accounts module.
-func (AppModuleSimulation) GenerateGenesisState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	// simulation.RandomizedGenState(cdc, r, genesisState)
+func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
+	simulation.RandomizedGenState(input)
 }
 
 // RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
@@ -108,12 +108,26 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(accountKeeper types.AccountKeeper) module.AppModule {
 
-	return module.NewGenesisOnlyAppModule(AppModule{
+	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
 		accountKeeper:       accountKeeper,
-	})
+	}
 }
+// RegisterInvariants is a placeholder function register no invariants
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// Route empty module message route
+func (AppModule) Route() string { return "" }
+
+// NewHandler returns an empty module handler
+func (AppModule) NewHandler() sdk.Handler { return nil }
+
+// QuerierRoute returns an empty module querier route
+func (AppModule) QuerierRoute() string { return "" }
+
+// NewQuerierHandler returns an empty module querier
+func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
 // InitGenesis performs genesis initialization for the genesis accounts module. It returns
 // no validator updates.
@@ -129,4 +143,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper)
 	return ModuleCdc.MustMarshalJSON(gs)
+}
+
+
+// BeginBlock returns an empty module begin-block
+func (AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+
+// EndBlock returns an empty module end-block
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

@@ -11,23 +11,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
-	genaccsim "github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	mintsim "github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	supplysim "github.com/cosmos/cosmos-sdk/x/supply/simulation"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc *codec.Codec) simulation.AppStateFn {
+func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
 	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
 	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
@@ -52,11 +44,11 @@ func AppStateFn(cdc *codec.Codec) simulation.AppStateFn {
 			}
 
 			cdc.MustUnmarshalJSON(bz, &appParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simulation.AppParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
 		return appState, simAccs, chainID, genesisTimestamp
@@ -66,21 +58,24 @@ func AppStateFn(cdc *codec.Codec) simulation.AppStateFn {
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates
 func AppStateRandomizedFn(
-	r *rand.Rand, cdc *codec.Codec, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
+	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
+	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
 ) (json.RawMessage, []simulation.Account, string) {
 
 	genesisState := NewDefaultGenesisState()
 	numInitiallyBonded, amount := RandomizedSimulationParams(r, int64(len(accs)))
 
-	genaccsim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded, genesisTimestamp)
-	authsim.RandomizedGenState(cdc, r, genesisState)
-	banksim.RandomizedGenState(cdc, r, genesisState)
-	supplysim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded)
-	govsim.RandomizedGenState(cdc, r, genesisState)
-	mintsim.RandomizedGenState(cdc, r, genesisState)
-	distrsim.RandomizedGenState(cdc, r, genesisState)
-	stakingGen := stakingsim.RandomizedGenState(cdc, r, genesisState, accs, amount, numInitiallyBonded)
-	slashingsim.RandomizedGenState(cdc, r, genesisState, stakingGen.Params.UnbondingTime)
+	input := &module.GeneratorInput{
+		Cdc:          cdc,
+		R:            r,
+		GenState:     genesisState,
+		Accounts:     accs,
+		InitialStake: amount,
+		NumBonded:    numInitiallyBonded,
+		GenTimestamp: genesisTimestamp,
+	}
+
+	simManager.GenerateGenesisStates(input)
 
 	appState, err := cdc.MarshalJSON(genesisState)
 	if err != nil {

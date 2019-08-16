@@ -3,12 +3,11 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -48,19 +47,19 @@ func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand) uint64 {
 }
 
 // RandomizedGenState generates a random GenesisState for auth
-func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+func RandomizedGenState(input *module.GeneratorInput) {
 
-	maxMemoChars := GenMaxMemoChars(cdc, r)
-	txSigLimit := GenTxSigLimit(cdc, r)
-	txSizeCostPerByte := GenTxSizeCostPerByte(cdc, r)
-	sigVerifyCostED25519 := GenSigVerifyCostED25519(cdc, r)
-	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(cdc, r)
+	maxMemoChars := GenMaxMemoChars(input.Cdc, input.R)
+	txSigLimit := GenTxSigLimit(input.Cdc, input.R)
+	txSizeCostPerByte := GenTxSizeCostPerByte(input.Cdc, input.R)
+	sigVerifyCostED25519 := GenSigVerifyCostED25519(input.Cdc, input.R)
+	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(input.Cdc, input.R)
 
 	authGenesis := types.NewGenesisState(
 		types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,
 			sigVerifyCostED25519, sigVerifyCostSECP256K1),
 	)
 
-	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, authGenesis.Params))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(authGenesis)
+	fmt.Printf("Selected randomly generated auth parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, authGenesis.Params))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(authGenesis)
 }

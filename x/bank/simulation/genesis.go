@@ -3,12 +3,11 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
@@ -23,11 +22,11 @@ func GenSendEnabled(cdc *codec.Codec, r *rand.Rand) bool {
 }
 
 // RandomizedGenState generates a random GenesisState for bank
-func RandomizedGenState(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
-	sendEnabled := GenSendEnabled(cdc, r)
+func RandomizedGenState(input *module.GeneratorInput) {
+	sendEnabled := GenSendEnabled(input.Cdc, input.R)
 
 	bankGenesis := types.NewGenesisState(sendEnabled)
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(cdc, bankGenesis))
-	genesisState[types.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, bankGenesis))
+	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(bankGenesis)
 }

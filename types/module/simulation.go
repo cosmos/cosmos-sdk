@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,9 +36,9 @@ func (sm *SimulationManager) RegisterStoreDecoders() {
 
 // GenerateGenesisStates generates a randomized GenesisState for each of the
 // registered modules
-func (sm *SimulationManager) GenerateGenesisStates(cdc *codec.Codec, r *rand.Rand, genesisState map[string]json.RawMessage) {
+func (sm *SimulationManager) GenerateGenesisStates(input *GeneratorInput) {
 	for _, module := range sm.Modules {
-		module.GenerateGenesisState(cdc, r, genesisState)
+		module.GenerateGenesisState(input)
 	}
 }
 
@@ -49,4 +50,17 @@ func (sm *SimulationManager) RandomizedSimParamChanges(cdc *codec.Codec, seed in
 	for _, module := range sm.Modules {
 		sm.ParamChanges = append(sm.ParamChanges, module.RandomizedParams(cdc, r)...)
 	}
+}
+
+// GeneratorInput is the input parameters used on each of the module's randomized
+// GenesisState generator function
+type GeneratorInput struct {
+	Cdc          *codec.Codec
+	R            *rand.Rand
+	GenState     map[string]json.RawMessage
+	Accounts     []simulation.Account
+	InitialStake int64
+	NumBonded    int64
+	GenTimestamp time.Time
+	UnbondTime   time.Duration
 }

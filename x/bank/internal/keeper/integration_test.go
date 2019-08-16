@@ -12,9 +12,6 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, abci.Header{})
 
-	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[sdk.AccAddress([]byte("moduleAcc")).String()] = true
-
 	app.AccountKeeper.SetParams(ctx, auth.DefaultParams())
 	app.BankKeeper.SetSendEnabled(ctx, true)
 

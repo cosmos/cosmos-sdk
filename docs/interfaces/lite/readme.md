@@ -33,7 +33,7 @@ combination of module APIs, depending on which modules the state machine uses. T
 initially support [ICS0](https://cosmos.network/rpc/#/ICS0) (TendermintAPI), [ICS1](https://cosmos.network/rpc/#/ICS1) (KeyAPI), [ICS20](https://cosmos.network/rpc/#/ICS20) (TokenAPI), [ICS21](https://cosmos.network/rpc/#/ICS21) (StakingAPI),
 [ICS22](https://cosmos.network/rpc/#/ICS22) (GovernanceAPI) and [ICS23](https://cosmos.network/rpc/#/ICS23) (SlashingAPI).
 
-![high-level](./pics/high-level.png)
+<!-- ![high-level](./pics/high-level.png) -->
 
 All applications are expected to run only against Gaia-lite. Gaia-lite is the only piece of software
 that offers stability guarantees around the zone API.
@@ -69,7 +69,7 @@ The original trusted validator set should be prepositioned into its trust store.
 validator set comes from a genesis file. During runtime, if Gaia-lite detects a different validator set,
 it will verify it and save the new validated validator set to the trust store.
 
-![validator-set-change](./pics/validatorSetChange.png)
+<!-- ![validator-set-change](./pics/validatorSetChange.png) -->
 
 ### Trust Propagation
 

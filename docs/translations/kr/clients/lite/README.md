@@ -19,7 +19,7 @@
 기본적으로 코스모스 허브는 [ICS0](https://cosmos.network/rpc/#/ICS0) (텐더민트API), [ICS1](https://cosmos.network/rpc/#/ICS1) (키API), [ICS20](https://cosmos.network/rpc/#/ICS20) (토큰API), [ICS21](https://cosmos.network/rpc/#/ICS21) (스테이킹API),
 [ICS22](https://cosmos.network/rpc/#/ICS22) (거버넌스API) and [ICS23](https://cosmos.network/rpc/#/ICS23) (슬래싱API)를 도입하고 있습니다.
 
-![high-level](./pics/high-level.png)
+<!-- ![high-level](./pics/high-level.png) -->
 
 모든 애플리케이션은 Gaia-lite 클라이언트를 기반으로 운영되는 것을 원칙으로 삼습니다. Gaia-lite 외의 소프트웨어는 특정 존 API에 대한 안정성을 보장하지 않습니다.
 

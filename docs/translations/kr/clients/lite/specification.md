@@ -6,7 +6,7 @@
 
 코스모스 SDK 기반 애플리케이션은 멀티-서브스토어(multi-substore)를 이용해 저장을 합니다. 각 서브스토어는 IAVL 스토어를 응용합니다. 서브스토어는 단순한 머클 트리(Merkle tree) 형태로 정렬됩니다. 머클 트리를 만들기 위해서는 각 서브스토어의 이름, 블록 높이 그리고 스토어 루트 해시(store root hash) 필요하며, 이를 기반으로 간단한 머클 가지 노드(Merkle leaf node)를 만들 수 있습니다. 이후 가지 노드를 이용해 해시값을 머클 뿌리(Merkle root)까지 연산하게 됩니다. 단순 머클 트리(simple Merkle tree)의 루트 해시(Root hash)는 블록 헤더에 포함되는 앱 해시(AppHash)입니다.
 
-![Simple Merkle Tree](./pics/simpleMerkleTree.png)
+<!-- ![Simple Merkle Tree](./pics/simpleMerkleTree.png) -->
 
 [LCD 신뢰 전파](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation)에서 설명했던바와 같이, 앱해시는 신뢰할 수 있는 검증인 세트의 보팅파워(총 스테이킹 수량)를 검증하는 방식으로 확인할 수 있습니다. 이 절차에는 ABCI 상태에서부터 앱해시 증거를 찾으면 됩니다. 증거에는 다음과 같은 정보가 포함되어있습니다:
 
@@ -55,7 +55,7 @@ type KeyExistsProof struct {
 존재 증거의 데이터 형식은 위와 같이 나열되어 있습니다. 존재 증거를 생성하고 검증하는 방식은 다음과 같습니다:
 
 
-![Exist Proof](./pics/existProof.png)
+<!-- ![Exist Proof](./pics/existProof.png) -->
 
 증거 생성 절차:
 
@@ -79,11 +79,11 @@ type KeyExistsProof struct {
 
 모든 IAVL 리프 노드는 각 리프노드의 키로 정렬되어있습니다. 그렇기 때문에 IAVL 트리의 전체 키 내의 목표 키 위치를 찾을 수 있습니다. 아래와 같이, 키가 좌측 키 또는 우측 키인지 확인이 가능합니다. 만약 우측 키와 좌측 키의 존재를 증명할 수 있을 경우, 인접 노드(adjecent node) 여부를 증명할 수 있는 것이며 타겟 키가 존재하지 않는다는 것을 증명하게 됩니다.
 
-![Absence Proof1](./pics/absence1.png)
+<!-- ![Absence Proof1](./pics/absence1.png) -->
 
 만약 타겟 키가 최우측 리프 노드(right most leaf node) 보다 크거나 또는 최좌측 키(left most key) 보다 작은 경우 타겟 키는 존재하지 않음을 증명합니다.
 
-![Absence Proof2](./pics/absence2.png)![Absence Proof3](./pics/absence3.png)
+<!-- ![Absence Proof2](./pics/absence2.png)![Absence Proof3](./pics/absence3.png) -->
 
 ```go
 type proofLeafNode struct {
@@ -130,7 +130,7 @@ type KeyAbsentProof struct {
 IAVL 증거를 검증했다면 substore 증거와 AppHash를 비교하여 검증할 수 있습니다. 우선 MultiStoreCommitInfo를 반복(iterate)하여 proof StoreName을 이용해 서브스토어의 commitID를 찾을 수 있습니다. 여기에서 commitID의 해시가 RootHash의 proof와 동일하다는 것을 검증합니다. 만약 동일하지 않을 경우, 증거는 유효하지 않습니다. 이후 서브스토어 commitInfo 어레이를 서브스토어 이름의 해시 값으로 정렬합니다. 마지막으로, 모든 서브스토어 commitInfo 어레이를 기반으로 단순 머클 트리(simple Merkle tree)를 빌드하여 머클 루트 해시가 앱 해시와 동일한지 검증합니다.
 
 
-![substore proof](./pics/substoreProof.png)
+<!-- ![substore proof](./pics/substoreProof.png) -->
 
 ```go
 func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {
@@ -168,13 +168,13 @@ func SimpleHashFromHashes(hashes [][]byte) []byte {
 
 위 항목에서는 appHash를 자주 언급합니다. 그렇다면 appHash는 어디에서 존재하는 것일까요? appHash는 블록 헤더에 존재합니다. 그렇기 때문에 특정 블록 높이의 블록헤더를 LCD가 신뢰하는 검증인 세트에 검증해야 합니다. 검증 절차는 다음과 같습니다:
 
-![commit verification](./pics/commitValidation.png)
+<!-- ![commit verification](./pics/commitValidation.png) -->
 
 만약 신뢰 검증인 세트가 블록 헤더와 일치하지 않는 경우, 해당 블록 높이의 검증인 세트로 업데이트를 해야합니다. LCD는 검증인 세트의 변경이 보팅 파워의 1/3을 초과할 수 없다는 규칙을 따릅니다. 만약 타겟 검증인 세트가 현재 신뢰되는 검증인 세트에서 1/3 보팅파워를 초과하는 변화가 있는 경우, 타겟 검증인 세트 전에 숨겨진 검증인 세트 변경이 있었는지 확인해야 합니다. 모든 검증인 세트 변경이 이 규칙을 따를때 검증인 세트 업데이트가 이루어질 수 있습니다.
 
 예를 들어:
 
-![Update validator set to height](./pics/updateValidatorToHeight.png)
+<!-- ![Update validator set to height](./pics/updateValidatorToHeight.png) -->
 
 * Update to 10000, tooMuchChangeErr
 * Update to 5050,  tooMuchChangeErr

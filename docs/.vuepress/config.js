@@ -34,6 +34,7 @@ module.exports = {
           "/intro/sdk-design"
         ]
       },
+      // UNCOMMENT THIS IF YOU WANT TO BUILD DOCS : START
       {
         title: "Tutorial",
         collapsable: true,
@@ -73,6 +74,7 @@ module.exports = {
           "/interfaces/lite/specification"
         ]
       }
+      // UNCOMMENT THIS IF YOU WANT TO BUILD DOCS : END
     ]
   }
 };

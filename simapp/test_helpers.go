@@ -142,3 +142,22 @@ func SignCheckDeliver(
 
 	return res
 }
+
+// GenSequenceOfTxs generates a set of signed transactions of messages, such
+// that they differ only by having the sequence numbers incremented between
+// every transaction.
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
+	txs := make([]auth.StdTx, numToGenerate)
+	for i := 0; i < numToGenerate; i++ {
+		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
+		incrementAllSequenceNumbers(initSeqNums)
+	}
+
+	return txs
+}
+
+func incrementAllSequenceNumbers(initSeqNums []uint64) {
+	for i := 0; i < len(initSeqNums); i++ {
+		initSeqNums[i]++
+	}
+}

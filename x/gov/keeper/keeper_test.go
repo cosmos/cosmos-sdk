@@ -3,9 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIncrementProposalNumber(t *testing.T) {

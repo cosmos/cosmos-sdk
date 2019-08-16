@@ -2,7 +2,6 @@ package genutil
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -14,13 +13,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
 	_ module.AppModuleGenesis    = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
@@ -59,28 +56,12 @@ func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 // GetQueryCmd returns no root query command for the genutil module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-//____________________________________________________________________________
-
-// AppModuleSimulation defines the module simulation functions used by the genutil module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder performs a no-op.
-func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// GenerateGenesisState creates a randomized GenState of the genutil module.
-func (AppModuleSimulation) GenerateGenesisState(_ *module.GeneratorInput) {}
-
-// RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []sim.ParamChange {
-	return nil
-}
 
 //____________________________________________________________________________
 
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	accountKeeper types.AccountKeeper
 	stakingKeeper types.StakingKeeper
@@ -93,7 +74,6 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 
 	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
 		accountKeeper:       accountKeeper,
 		stakingKeeper:       stakingKeeper,
 		deliverTx:           deliverTx,

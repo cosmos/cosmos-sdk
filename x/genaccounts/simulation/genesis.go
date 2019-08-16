@@ -3,8 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"fmt"
-	
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
@@ -18,7 +16,6 @@ func RandomizedGenState(input *module.GeneratorInput) {
 
 	var genesisAccounts []types.GenesisAccount
 	
-	fmt.Println("sup")
 	// randomly generate some genesis accounts
 	for i, acc := range input.Accounts {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(input.InitialStake))}

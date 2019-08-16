@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// nolint
 const (
 	// Minimum time per block
 	minTimePerBlock int64 = 10000 / 2
@@ -17,7 +16,7 @@ const (
 	maxTimePerBlock int64 = 10000
 )
 
-// TODO explain transitional matrix usage
+// TODO: explain transitional matrix usage
 var (
 	// Currently there are 3 different liveness types,
 	// fully online, spotty connection, offline.
@@ -36,15 +35,16 @@ var (
 	})
 )
 
-// TODO: add description
-type (
-	AppParams      map[string]json.RawMessage
-	ParamSimulator func(r *rand.Rand)
-)
+// AppParams defines the set of registered param proposal
+type AppParams map[string]json.RawMessage
+
+// ParamSimulator creates a parameter value from a source of random number
+type ParamSimulator func(r *rand.Rand)
 
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value.
+// TODO: Split or delete this function. It should be declared explicitely
 func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)

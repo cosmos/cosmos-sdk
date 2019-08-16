@@ -267,37 +267,22 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
-	_, params, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn,
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(app, config), invariants(app),
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
-		if err != nil {
+		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-
-		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
-		if err != nil {
+		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
@@ -342,29 +327,20 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn,
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(app, config), invariants(app),
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
-		fmt.Println(params)
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
@@ -407,27 +383,19 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn,
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(app, config), invariants(app),
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and simParams before the simulation error is checked
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
-		simParamsBz, err := json.MarshalIndent(simParams, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportParamsPath, simParamsBz, 0644)
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
@@ -532,28 +500,20 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, params, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn,
+	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(app, config), invariants(app),
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
@@ -596,7 +556,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn,
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(newApp, config), invariants(newApp),
 		newApp.ModuleAccountAddrs(), config,
 	)
@@ -635,7 +595,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn,
+				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec()),
 				testAndRunTxs(app, config), []sdk.Invariant{},
 				app.ModuleAccountAddrs(), config,
 			)
@@ -655,9 +615,10 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 func BenchmarkInvariants(b *testing.B) {
+	logger := log.NewNopLogger()
+
 	config := NewConfigFromFlags()
 	config.AllInvariants = false
-	logger := log.NewNopLogger()
 
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
@@ -670,37 +631,22 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, 0)
 
 	// 2. Run parameterized simulation (w/o invariants)
-	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, AppStateFn,
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, ioutil.Discard, app.BaseApp, AppStateFn(app.Codec()),
 		testAndRunTxs(app, config), []sdk.Invariant{},
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
 	if config.ExportStatePath != "" {
-		fmt.Println("exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-		err = ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644)
-		if err != nil {
+		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
 	if config.ExportParamsPath != "" {
-		fmt.Println("exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-
-		err = ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644)
-		if err != nil {
+		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}

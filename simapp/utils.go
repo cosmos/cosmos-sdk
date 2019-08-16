@@ -1,8 +1,10 @@
 package simapp
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -86,8 +88,27 @@ func NewConfigFromFlags() simulation.Config {
 //---------------------------------------------------------------------
 // Simulation Utils
 
-//---------------------------------------------------------------------
-// Simulation Utils
+// ExportStateToJSON util function to export the app state to JSON
+func ExportStateToJSON(app *SimApp, path string) error {
+	fmt.Println("exporting app state...")
+	appState, _, err := app.ExportAppStateAndValidators(false, nil)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(path, []byte(appState), 0644)
+}
+
+// ExportParamsToJSON util function to export the simulation parameters to JSON
+func ExportParamsToJSON(params simulation.Params, path string) error {
+	fmt.Println("exporting simulation params...")
+	paramsBz, err := json.MarshalIndent(params, "", " ")
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(path, paramsBz, 0644)
+}
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.

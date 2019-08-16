@@ -3,6 +3,7 @@ package simulation
 // DONTCOVER
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +16,7 @@ func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
 		simulation.NewSimParamChange("bank", "sendenabled", "",
 			func(_ *rand.Rand) string {
-				return "true"
+				return fmt.Sprintf("%v", GenSendEnabled(cdc, r))
 			},
 		),
 	}

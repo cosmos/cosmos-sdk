@@ -12,7 +12,7 @@ import (
 
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
-// 3 parameter changes all of which have random, but valid values.
+// the total amount of defined parameters changes, all of which have random valid values.
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) govsimops.ContentSimulator {
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) govtypes.Content {
 
@@ -23,6 +23,9 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 
 		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
 		paramChanges := make([]params.ParamChange, numChanges, numChanges)
+
+		// map from key to empty struct; used only for look-up of the keys of the
+		// parameters that are already in the random set of changes.
 		paramChangesKeys := make(map[string]struct{})
 
 		for i := 0; i < numChanges; i++ {
@@ -35,6 +38,8 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 				_, ok = paramChangesKeys[spc.ComposedKey()]
 			}
 
+			// add a new distinct parameter to the set of changes and register the key
+			// to avoid further duplicates
 			paramChangesKeys[spc.ComposedKey()] = struct{}{}
 			paramChanges[i] = params.NewParamChangeWithSubkey(spc.Subspace, spc.Key, spc.Subkey, spc.SimValue(r))
 		}
@@ -42,7 +47,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		return params.NewParameterChangeProposal(
 			simulation.RandStringOfLength(r, 140),  // title
 			simulation.RandStringOfLength(r, 5000), // description
-			paramChanges,
+			paramChanges,                           // set of changes
 		)
 	}
 }

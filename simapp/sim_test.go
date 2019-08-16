@@ -42,10 +42,9 @@ func init() {
 // TODO: add description
 func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
 
-	cdc := MakeCodec()
 	ap := make(simulation.AppParams)
 
-	app.sm.RandomizedSimParamChanges(cdc, config.Seed)
+	app.sm.RandomizedSimParamChanges(app.cdc, config.Seed)
 
 	if config.ParamsFile != "" {
 		bz, err := ioutil.ReadFile(config.ParamsFile)
@@ -53,14 +52,14 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 			panic(err)
 		}
 
-		cdc.MustUnmarshalJSON(bz, &ap)
+		app.cdc.MustUnmarshalJSON(bz, &ap)
 	}
 
 	return []simulation.WeightedOperation{
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightDeductFee, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightDeductFee, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
@@ -71,7 +70,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -82,7 +81,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 10
 					})
@@ -93,7 +92,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgSetWithdrawAddress, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
@@ -104,7 +103,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgWithdrawDelegationReward, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
@@ -115,7 +114,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgWithdrawValidatorCommission, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
@@ -126,7 +125,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
@@ -137,7 +136,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
@@ -148,7 +147,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
@@ -159,7 +158,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDeposit, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgDeposit, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -170,7 +169,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgCreateValidator, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -181,7 +180,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgEditValidator, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgEditValidator, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
@@ -192,7 +191,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgDelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -203,7 +202,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUndelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgUndelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -214,7 +213,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgBeginRedelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
@@ -225,7 +224,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUnjail, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgUnjail, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})

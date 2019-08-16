@@ -1,7 +1,5 @@
 package operations
 
-// DONTCOVER
-
 import (
 	"fmt"
 	"math/rand"

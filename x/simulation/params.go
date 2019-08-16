@@ -44,7 +44,7 @@ type ParamSimulator func(r *rand.Rand)
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value.
-// TODO: Split or delete this function. It should be declared explicitely
+// TODO: Split or delete this function. It should be declared explicitly
 func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)

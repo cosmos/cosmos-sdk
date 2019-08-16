@@ -445,6 +445,16 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	return nil
 }
 
+// Returns the applications's deliverState if app is in runTxModeDeliver,
+// otherwise it returns the application's checkstate.
+func (app *BaseApp) getState(mode runTxMode) *state {
+	if mode == runTxModeCheck || mode == runTxModeSimulate {
+		return app.checkState
+	}
+
+	return app.deliverState
+}
+
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	ctx = app.getState(mode).ctx.
@@ -459,87 +469,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 	return
 }
 
-// runMsgs iterates through all the messages and executes them.
-// nolint: gocyclo
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
-
-	var (
-		data      []byte
-		code      sdk.CodeType
-		codespace sdk.CodespaceType
-	)
-
-	events := sdk.EmptyEvents()
-
-	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-	for msgIdx, msg := range msgs {
-		// match message route
-		msgRoute := msg.Route()
-		handler := app.router.Route(msgRoute)
-		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
-		}
-
-		var msgResult sdk.Result
-
-		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
-			msgResult = handler(ctx, msg)
-		}
-
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, msgResult.Data...)
-
-		// append events from the message's execution and a message action event
-		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
-		events = events.AppendEvents(msgResult.Events)
-
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
-
-		// stop execution and return on first failed message
-		if !msgResult.IsOK() {
-			idxLog.Success = false
-			idxLogs = append(idxLogs, idxLog)
-
-			code = msgResult.Code
-			codespace = msgResult.Codespace
-			break
-		}
-
-		idxLog.Success = true
-		idxLogs = append(idxLogs, idxLog)
-	}
-
-	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
-	result = sdk.Result{
-		Code:      code,
-		Codespace: codespace,
-		Data:      data,
-		Log:       strings.TrimSpace(string(logJSON)),
-		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Events:    events,
-	}
-
-	return result
-}
-
-// Returns the applications's deliverState if app is in runTxModeDeliver,
-// otherwise it returns the application's checkstate.
-func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		return app.checkState
-	}
-
-	return app.deliverState
-}
-
 // cacheTxContext returns a new context based off of the provided context with
 // a cache wrapped multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
-	sdk.Context, sdk.CacheMultiStore) {
-
+func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
@@ -669,6 +601,72 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// only update state if all messages pass
 	if result.IsOK() {
 		msCache.Write()
+	}
+
+	return result
+}
+
+// runMsgs iterates through all the messages and executes them.
+// nolint: gocyclo
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+
+	var (
+		data      []byte
+		code      sdk.CodeType
+		codespace sdk.CodespaceType
+	)
+
+	events := sdk.EmptyEvents()
+
+	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
+	for msgIdx, msg := range msgs {
+		// match message route
+		msgRoute := msg.Route()
+		handler := app.router.Route(msgRoute)
+		if handler == nil {
+			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
+		}
+
+		var msgResult sdk.Result
+
+		// skip actual execution for CheckTx mode
+		if mode != runTxModeCheck {
+			msgResult = handler(ctx, msg)
+		}
+
+		// Each message result's Data must be length prefixed in order to separate
+		// each result.
+		data = append(data, msgResult.Data...)
+
+		// append events from the message's execution and a message action event
+		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
+		events = events.AppendEvents(msgResult.Events)
+
+		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
+
+		// stop execution and return on first failed message
+		if !msgResult.IsOK() {
+			idxLog.Success = false
+			idxLogs = append(idxLogs, idxLog)
+
+			code = msgResult.Code
+			codespace = msgResult.Codespace
+			break
+		}
+
+		idxLog.Success = true
+		idxLogs = append(idxLogs, idxLog)
+	}
+
+	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
+	result = sdk.Result{
+		Code:      code,
+		Codespace: codespace,
+		Data:      data,
+		Log:       strings.TrimSpace(string(logJSON)),
+		GasUsed:   ctx.GasMeter().GasConsumed(),
+		Events:    events,
 	}
 
 	return result

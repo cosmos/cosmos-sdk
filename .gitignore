@@ -46,3 +46,4 @@ dependency-graph.png
 *.aux
 *.out
 *.synctex.gz
+.clog.yml

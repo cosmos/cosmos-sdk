@@ -52,7 +52,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
@@ -89,7 +89,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			valAddr := cliCtx.GetFromAddress()
 			description := types.NewDescription(
@@ -155,7 +155,7 @@ $ %s tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 10
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			amount, err := sdk.ParseCoin(args[1])
 			if err != nil {
@@ -192,7 +192,7 @@ $ %s tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -234,7 +234,7 @@ $ %s tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(auth.DefaultTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])

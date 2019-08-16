@@ -44,7 +44,7 @@ $ <appcli> tx slashing unjail --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			valAddr := cliCtx.GetFromAddress()
 

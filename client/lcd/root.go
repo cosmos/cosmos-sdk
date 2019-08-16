@@ -38,7 +38,7 @@ type RestServer struct {
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec, input io.Reader) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext(input).WithCodec(cdc)
+	cliCtx := context.NewCLIContext().WithCodec(cdc) //Should not need access to keybase
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{

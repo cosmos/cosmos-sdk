@@ -59,17 +59,11 @@ type CLIContext struct {
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly.
-func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
+func NewCLIContext() CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly, input)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
-		os.Exit(1)
-	}
-
 	if !genOnly {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
@@ -86,7 +80,6 @@ func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
 	return CLIContext{ //assign value to new boolean var based on parsing the flag
 		Client:        rpc,
 		Output:        os.Stdout,
-		Input:         input,
 		NodeURI:       nodeURI,
 		From:          viper.GetString(flags.FlagFrom),
 		OutputFormat:  viper.GetString(cli.OutputFlag),
@@ -97,18 +90,10 @@ func NewCLIContextWithFrom(from string, input io.Reader) CLIContext {
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(flags.FlagDryRun),
 		GenerateOnly:  genOnly,
-		FromAddress:   fromAddress,
-		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 		SecretStore:   viper.GetBool(flags.FlagLegacy),
 	}
-}
-
-// NewCLIContext returns a new initialized CLIContext with parameters from the
-// command line using Viper.
-func NewCLIContext(input io.Reader) CLIContext {
-	return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom), input)
 }
 
 func createVerifier() tmlite.Verifier {
@@ -253,8 +238,18 @@ func (ctx CLIContext) WithInput(input io.Reader) CLIContext {
 }
 
 // WithSecretStore returns a copy of the context with an updated SecretStore flag.
-func (ctx CLIContext) WithSecretStore(legacy bool) CLIContext {
-	ctx.SecretStore = legacy
+func (ctx CLIContext) WithSecretStore() CLIContext {
+	ctx.SecretStore = viper.GetBool(flags.FlagLegacy)
+
+	if ctx.SecretStore {
+		var err error
+		ctx.Keybase, err = keys.NewKeyBaseFromHomeFlag()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		ctx.Keybase = keys.NewKeyringKeybase(ctx.Input) //if flag is set, add flag to struct, then boolean variable.
+	}
 	return ctx
 }
 
@@ -282,6 +277,22 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	fmt.Println(string(out))
 	return
+}
+
+// WithFromFields returns a copy of the context with an updated FromName and FromAddres flag.
+func (ctx CLIContext) WithFromFields() CLIContext {
+	from := viper.GetString(flags.FlagFrom)
+
+	fromAddress, fromName, err := GetFromFields(from, ctx.GenerateOnly, ctx.Input)
+
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.FromAddress = fromAddress
+	ctx.FromName = fromName
+	return ctx
+
 }
 
 // GetFromFields returns a from account address and Keybase name given either

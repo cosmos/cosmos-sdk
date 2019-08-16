@@ -104,7 +104,7 @@ $ %s tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqh
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
@@ -140,9 +140,9 @@ $ %s tx distr withdraw-all-rewards --from mykey
 		),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			delAddr := cliCtx.GetFromAddress()
 
@@ -184,7 +184,7 @@ $ %s tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from m
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
@@ -237,7 +237,7 @@ Where proposal.json contains:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			proposal, err := ParseCommunityPoolSpendProposalJSON(cdc, args[0])
 			if err != nil {

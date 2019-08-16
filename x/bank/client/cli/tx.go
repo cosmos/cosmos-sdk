@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"bufio"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,8 +36,11 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Create and sign a send tx",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI(cmd.InOrStdin()).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0], cmd.InOrStdin()).WithCodec(cdc)
+
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {

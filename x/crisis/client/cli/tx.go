@@ -25,7 +25,7 @@ func GetCmdInvariantBroken(cdc *codec.Codec) *cobra.Command {
 
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(inBuf).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithInput(inBuf).WithSecretStore().WithFromFields()
 
 			senderAddr := cliCtx.GetFromAddress()
 			moduleName, route := args[0], args[1]

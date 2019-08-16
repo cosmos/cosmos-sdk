@@ -103,7 +103,7 @@ func printBlock(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output, err := getBlock(context.NewCLIContext(cmd.InOrStdin()), height)
+	output, err := getBlock(context.NewCLIContext(), height)
 	if err != nil {
 		return err
 	}

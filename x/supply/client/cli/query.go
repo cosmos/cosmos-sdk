@@ -52,7 +52,7 @@ $ %s query %s total stake
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			if len(args) == 0 {
 				return queryTotalSupply(cliCtx, cdc)

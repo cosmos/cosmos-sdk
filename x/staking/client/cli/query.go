@@ -58,7 +58,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			addr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -95,7 +95,7 @@ $ %s query staking validators
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			resKVs, _, err := cliCtx.QuerySubspace(types.ValidatorsKey, storeName)
 			if err != nil {
@@ -128,7 +128,7 @@ $ %s query staking unbonding-delegations-from cosmosvaloper1gghjut3ccd8ay0zduzj6
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -170,7 +170,7 @@ $ %s query staking redelegations-from cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fx
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -214,7 +214,7 @@ $ %s query staking delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosm
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -264,7 +264,7 @@ $ %s query staking delegations cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -309,7 +309,7 @@ $ %s query staking delegations-to cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ld
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -354,7 +354,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -399,7 +399,7 @@ $ %s query staking unbonding-delegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld7
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -444,7 +444,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -499,7 +499,7 @@ $ %s query staking redelegation cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			delAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -543,7 +543,7 @@ $ %s query staking pool
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			bz, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pool", storeName), nil)
 			if err != nil {
@@ -576,7 +576,7 @@ $ %s query staking params
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext(cmd.InOrStdin()).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", storeName, types.QueryParameters)
 			bz, _, err := cliCtx.QueryWithData(route, nil)

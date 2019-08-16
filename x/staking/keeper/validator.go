@@ -370,11 +370,7 @@ func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 // Insert an validator address to the appropriate timeslice in the validator queue
 func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingCompletionTime)
-	if len(timeSlice) == 0 {
-		timeSlice = []sdk.ValAddress{val.OperatorAddress}
-	} else {
-		timeSlice = append(timeSlice, val.OperatorAddress)
-	}
+	timeSlice = append(timeSlice, val.OperatorAddress)
 	k.SetValidatorQueueTimeSlice(ctx, val.UnbondingCompletionTime, timeSlice)
 }
 

@@ -77,6 +77,7 @@ longer panics if the store to load contains substores that we didn't explicitly 
   * Update `handleQueryStore` to resemble `handleQueryCustom`
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs to properly return black listed addresses for bank keeper initialization
 
 ## [v0.36.0] - 2019-08-13
 

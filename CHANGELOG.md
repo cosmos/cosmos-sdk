@@ -50,6 +50,10 @@ longer panics if the store to load contains substores that we didn't explicitly 
 
 ### Improvements
 
+* (rest) [\#4924](https://github.com/cosmos/cosmos-sdk/pull/4924) Return response
+height even upon error as it may be useful for the downstream caller and have
+`/auth/accounts/{address}` return a 200 with an empty account upon error when
+that error is that the account doesn't exist.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
 * (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec.
 * (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description.

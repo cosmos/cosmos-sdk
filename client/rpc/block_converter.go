@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-type CosmosResultBlock struct {
-	BlockMeta CosmosBlockMeta `json:"block_meta"`
-	Block     CosmosBlock     `json:"block"`
+type ResultBlock struct {
+	BlockMeta BlockMeta `json:"block_meta"`
+	Block     Block     `json:"block"`
 }
 
-type CosmosBlockMeta struct {
+type BlockMeta struct {
 	BlockID types.BlockID `json:"block_id"` // the block hash and partsethash
-	Header  CosmosHeader  `json:"header"`   // The block's Header
+	Header  Header        `json:"header"`   // The block's Header
 }
 
-type CosmosHeader struct {
+type Header struct {
 	// basic block info
 	Version  version.Consensus `json:"version"`
 	ChainID  string            `json:"chain_id"`
@@ -47,19 +47,19 @@ type CosmosHeader struct {
 	ProposerAddress sdk.ValAddress `json:"proposer_address"` // original proposer of the block
 }
 
-type CosmosBlock struct {
-	CosmosHeader `json:"header"`
-	types.Data   `json:"data"`
-	Evidence     types.EvidenceData `json:"evidence"`
-	LastCommit   CosmosCommit       `json:"last_commit"`
+type Block struct {
+	Header     `json:"header"`
+	types.Data `json:"data"`
+	Evidence   types.EvidenceData `json:"evidence"`
+	LastCommit Commit             `json:"last_commit"`
 }
 
-type CosmosCommit struct {
-	BlockID    types.BlockID     `json:"block_id"`
-	Precommits []CosmosCommitSig `json:"precommits"`
+type Commit struct {
+	BlockID    types.BlockID `json:"block_id"`
+	Precommits []CommitSig   `json:"precommits"`
 }
 
-type CosmosCommitSig struct {
+type CommitSig struct {
 	Type             types.SignedMsgType `json:"type"`
 	Height           int64               `json:"height"`
 	Round            int                 `json:"round"`
@@ -70,10 +70,10 @@ type CosmosCommitSig struct {
 	Signature        []byte              `json:"signature"`
 }
 
-func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult CosmosResultBlock) {
+func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult ResultBlock) {
 
 	// header
-	header := CosmosHeader{
+	header := Header{
 		Version:  res.BlockMeta.Header.Version,
 		ChainID:  res.BlockMeta.Header.ChainID,
 		Height:   res.BlockMeta.Header.Height,
@@ -97,27 +97,27 @@ func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult CosmosResultBlock)
 	}
 
 	// meta
-	blockMeta := CosmosBlockMeta{
+	blockMeta := BlockMeta{
 		BlockID: res.BlockMeta.BlockID,
 		Header:  header,
 	}
 
 	// commit
-	commit := CosmosCommit{
+	commit := Commit{
 		BlockID:    res.Block.LastCommit.BlockID,
 		Precommits: convertPreCommits(res.Block.LastCommit.Precommits),
 	}
 
 	// block
-	block := CosmosBlock{
-		CosmosHeader: header,
-		Data:         res.Block.Data,
-		Evidence:     res.Block.Evidence,
-		LastCommit:   commit,
+	block := Block{
+		Header:     header,
+		Data:       res.Block.Data,
+		Evidence:   res.Block.Evidence,
+		LastCommit: commit,
 	}
 
 	// blockResult
-	blockResult = CosmosResultBlock{
+	blockResult = ResultBlock{
 		BlockMeta: blockMeta,
 		Block:     block,
 	}
@@ -125,9 +125,9 @@ func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult CosmosResultBlock)
 	return blockResult
 }
 
-func convertPreCommits(preCommits []*types.CommitSig) (sigs []CosmosCommitSig) {
+func convertPreCommits(preCommits []*types.CommitSig) (sigs []CommitSig) {
 	for _, commit := range preCommits {
-		sig := CosmosCommitSig{
+		sig := CommitSig{
 			Type:             commit.Type,
 			Height:           commit.Height,
 			Round:            commit.Round,

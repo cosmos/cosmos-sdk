@@ -21,19 +21,20 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	ctx           context.Context
-	ms            MultiStore
-	header        abci.Header
-	chainID       string
-	txBytes       []byte
-	logger        log.Logger
-	voteInfo      []abci.VoteInfo
-	gasMeter      GasMeter
-	blockGasMeter GasMeter
-	checkTx       bool
-	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
-	eventManager  *EventManager
+	ctx             context.Context
+	ms              MultiStore
+	interBlockCache *StoreCacheManager
+	header          abci.Header
+	chainID         string
+	txBytes         []byte
+	logger          log.Logger
+	voteInfo        []abci.VoteInfo
+	gasMeter        GasMeter
+	blockGasMeter   GasMeter
+	checkTx         bool
+	minGasPrice     DecCoins
+	consParams      *abci.ConsensusParams
+	eventManager    *EventManager
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -88,6 +89,11 @@ func (c Context) WithContext(ctx context.Context) Context {
 
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	c.ms = ms
+	return c
+}
+
+func (c Context) WithInterBlockCache(cacheMngr *StoreCacheManager) Context {
+	c.interBlockCache = cacheMngr
 	return c
 }
 

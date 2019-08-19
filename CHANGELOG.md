@@ -35,7 +35,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.37.0] - 2019-08-16
+## [v0.37.0] - TBD
 
 ### Bug Fixes
 
@@ -47,6 +47,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 to properly return black listed addresses for bank keeper initialization.
 * (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash CLI
 if user doesn't answer y/n confirmation request.
+
+### Improvements
+
+* (rest) [\#4924](https://github.com/cosmos/cosmos-sdk/pull/4924) Return response
+height even upon error as it may be useful for the downstream caller and have
+`/auth/accounts/{address}` return a 200 with an empty account upon error when
+that error is that the account doesn't exist.
 
 ## [v0.36.0] - 2019-08-13
 

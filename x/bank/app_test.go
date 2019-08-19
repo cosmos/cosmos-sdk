@@ -3,16 +3,17 @@ package bank_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 )
 
 type (
@@ -87,17 +88,17 @@ var (
 )
 
 func TestSendNotEnoughBalance(t *testing.T) {
-	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc})
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
-	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
+	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
-	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -105,69 +106,62 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origSeq := res1.GetSequence()
 
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{sendMsg}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
+	simapp.CheckBalance(t, app, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)})
 
-	res2 := mapp.AccountKeeper.GetAccount(mapp.NewContext(true, abci.Header{}), addr1)
+	res2 := app.AccountKeeper.GetAccount(app.NewContext(true, abci.Header{}), addr1)
 	require.NotNil(t, res2)
 
-	require.True(t, res2.GetAccountNumber() == origAccNum)
-	require.True(t, res2.GetSequence() == origSeq+1)
+	require.Equal(t, res2.GetAccountNumber(), origAccNum)
+	require.Equal(t, res2.GetSequence(), origSeq+1)
 }
 
+// A module account cannot be the recipient of bank sends
 func TestSendToModuleAcc(t *testing.T) {
-	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   coins,
 	}
 
-	macc := &auth.BaseAccount{
-		Address: moduleAccAddr,
-	}
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
-	mock.SetGenesis(mapp, []auth.Account{acc, macc})
+	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
-	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-
-	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
 	origAccNum := res1.GetAccountNumber()
 	origSeq := res1.GetSequence()
 
-	header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{sendMsg2}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+	header := abci.Header{Height: app.LastBlockHeight() + 1}
+	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{sendMsg2}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 
-	mock.CheckBalance(t, mapp, addr1, coins)
-	mock.CheckBalance(t, mapp, moduleAccAddr, sdk.Coins(nil))
+	simapp.CheckBalance(t, app, addr1, coins)
+	simapp.CheckBalance(t, app, moduleAccAddr, sdk.Coins(nil))
 
-	res2 := mapp.AccountKeeper.GetAccount(mapp.NewContext(true, abci.Header{}), addr1)
+	res2 := app.AccountKeeper.GetAccount(app.NewContext(true, abci.Header{}), addr1)
 	require.NotNil(t, res2)
 
-	require.True(t, res2.GetAccountNumber() == origAccNum)
-	require.True(t, res2.GetSequence() == origSeq+1)
+	require.Equal(t, res2.GetAccountNumber(), origAccNum)
+	require.Equal(t, res2.GetSequence(), origSeq+1)
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
-	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{
 		Address: addr1,
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	macc := &auth.BaseAccount{
-		Address: moduleAccAddr,
-	}
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
-	mock.SetGenesis(mapp, []auth.Account{acc, macc})
+	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
-	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-
-	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
+	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -203,17 +197,16 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
+		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
-			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
+			simapp.CheckBalance(t, app, eb.addr, eb.coins)
 		}
 	}
 }
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
-	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -224,7 +217,8 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc1, acc2})
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
 		{
@@ -243,17 +237,16 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
+		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
-			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
+			simapp.CheckBalance(t, app, eb.addr, eb.coins)
 		}
 	}
 }
 
 func TestMsgMultiSendMultipleInOut(t *testing.T) {
-	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -268,7 +261,8 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	mock.SetGenesis(mapp, []auth.Account{acc1, acc2, acc4})
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2), genaccounts.NewGenesisAccount(acc4)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
 		{
@@ -288,18 +282,16 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
+		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
-			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
+			simapp.CheckBalance(t, app, eb.addr, eb.coins)
 		}
 	}
 }
 
 func TestMsgMultiSendDependent(t *testing.T) {
-	mapp := getMockApp(t)
-
 	acc1 := auth.NewBaseAccountWithAddress(addr1)
 	acc2 := auth.NewBaseAccountWithAddress(addr2)
 	err := acc1.SetCoins(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42)))
@@ -307,7 +299,8 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	mock.SetGenesis(mapp, []auth.Account{&acc1, &acc2})
+	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(&acc1), genaccounts.NewGenesisAccount(&acc2)}
+	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
 		{
@@ -336,11 +329,11 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := abci.Header{Height: mapp.LastBlockHeight() + 1}
-		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		header := abci.Header{Height: app.LastBlockHeight() + 1}
+		simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
-			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
+			simapp.CheckBalance(t, app, eb.addr, eb.coins)
 		}
 	}
 }

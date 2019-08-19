@@ -378,8 +378,10 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 
 // setDeliverState sets the BaseApp's deliverState with a cache-wrapped multi-store
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
+// and provided header. If an inter-block cache is set on the BaseApp, it will
+// be provided to the context such that whenever a KVStore is retrieived, it'll
+// be wrapped with a persistent write-through cache. It is set on InitChain and
+// BeginBlock and set to nil on Commit.
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{

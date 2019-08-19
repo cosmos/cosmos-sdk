@@ -2,12 +2,11 @@ package rpc
 
 import (
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"net/http"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -68,7 +67,10 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
-	return codec.Cdc.MarshalJSON(res)
+	// convert to new type
+	converted := ConvertBlockResult(res)
+
+	return codec.Cdc.MarshalJSON(converted)
 }
 
 // get the current blockchain height

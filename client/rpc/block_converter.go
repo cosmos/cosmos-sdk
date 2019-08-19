@@ -6,7 +6,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
-	"sync"
 	"time"
 )
 
@@ -49,7 +48,6 @@ type CosmosHeader struct {
 }
 
 type CosmosBlock struct {
-	mtx          sync.Mutex
 	CosmosHeader `json:"header"`
 	types.Data   `json:"data"`
 	Evidence     types.EvidenceData `json:"evidence"`

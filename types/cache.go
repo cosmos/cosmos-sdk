@@ -9,9 +9,9 @@ import (
 var (
 	_ KVStore = (*KVStoreCache)(nil)
 
-	// PersistentStoreCacheSize defines the persistent ARC cache size for each
-	// KVStore.
-	PersistentStoreCacheSize = 1000
+	// DefaultPersistentKVStoreCacheSize defines the persistent ARC cache size for
+	// each KVStore.
+	DefaultPersistentKVStoreCacheSize uint = 1000
 )
 
 type (
@@ -30,14 +30,15 @@ type (
 	// to KVStoreCache references. Each KVStoreCache reference is meant to be
 	// persistent between blocks.
 	StoreCacheManager struct {
-		caches map[StoreKey]*KVStoreCache
+		cacheSize uint
+		caches    map[StoreKey]*KVStoreCache
 	}
 )
 
-func NewStoreCache(store KVStore) *KVStoreCache {
-	cache, err := lru.NewARC(PersistentStoreCacheSize)
+func NewKVStoreCache(store KVStore, size uint) *KVStoreCache {
+	cache, err := lru.NewARC(int(size))
 	if err != nil {
-		panic(fmt.Errorf("failed to create cache: %s", err))
+		panic(fmt.Errorf("failed to create KVStore cache: %s", err))
 	}
 
 	return &KVStoreCache{
@@ -46,9 +47,10 @@ func NewStoreCache(store KVStore) *KVStoreCache {
 	}
 }
 
-func NewStoreCacheManager() *StoreCacheManager {
+func NewStoreCacheManager(size uint) *StoreCacheManager {
 	return &StoreCacheManager{
-		caches: make(map[StoreKey]*KVStoreCache),
+		cacheSize: size,
+		caches:    make(map[StoreKey]*KVStoreCache),
 	}
 }
 
@@ -57,7 +59,7 @@ func NewStoreCacheManager() *StoreCacheManager {
 // store contains a persistent cache through the StoreCache.
 func (cmgr *StoreCacheManager) GetOrSetKVStoreCache(key StoreKey, store KVStore) KVStore {
 	if cmgr.caches[key] == nil {
-		cmgr.caches[key] = NewStoreCache(store)
+		cmgr.caches[key] = NewKVStoreCache(store, cmgr.cacheSize)
 	}
 
 	return cmgr.caches[key]

@@ -14,7 +14,7 @@ import (
 
 func TestGetOrSetStoreCache(t *testing.T) {
 	db := dbm.NewMemDB()
-	mngr := types.NewStoreCacheManager()
+	mngr := types.NewStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
@@ -26,13 +26,13 @@ func TestGetOrSetStoreCache(t *testing.T) {
 
 func TestStoreCache(t *testing.T) {
 	db := dbm.NewMemDB()
-	mngr := types.NewStoreCacheManager()
+	mngr := types.NewStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
 	kvStore := mngr.GetOrSetKVStoreCache(sKey, store)
 
-	for i := 0; i < types.PersistentStoreCacheSize*2; i++ {
+	for i := uint(0); i < types.DefaultPersistentKVStoreCacheSize*2; i++ {
 		key := []byte(fmt.Sprintf("key_%d", i))
 		value := []byte(fmt.Sprintf("value_%d", i))
 
@@ -45,7 +45,7 @@ func TestStoreCache(t *testing.T) {
 		require.Equal(t, res, value)
 	}
 
-	for i := 0; i < types.PersistentStoreCacheSize*2; i++ {
+	for i := uint(0); i < types.DefaultPersistentKVStoreCacheSize*2; i++ {
 		key := []byte(fmt.Sprintf("key_%d", i))
 
 		kvStore.Delete(key)

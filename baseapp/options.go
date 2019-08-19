@@ -8,7 +8,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,7 +36,7 @@ func SetHaltHeight(height uint64) func(*BaseApp) {
 
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
-func SetInterBlockCache(cache *cachemulti.StoreCacheManager) func(*BaseApp) {
+func SetInterBlockCache(cache *sdk.StoreCacheManager) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 

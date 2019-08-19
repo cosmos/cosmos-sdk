@@ -18,7 +18,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -85,7 +84,7 @@ type BaseApp struct {
 	deliverState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache *cachemulti.StoreCacheManager
+	interBlockCache *sdk.StoreCacheManager
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -342,7 +341,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 	app.haltHeight = height
 }
 
-func (app *BaseApp) setInterBlockCache(cache *cachemulti.StoreCacheManager) {
+func (app *BaseApp) setInterBlockCache(cache *sdk.StoreCacheManager) {
 	app.interBlockCache = cache
 }
 

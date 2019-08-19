@@ -203,12 +203,24 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
+	kvStore := c.MultiStore().GetKVStore(key)
+	if c.interBlockCache != nil {
+		// wrap the KVStore in an inter-block write-through cache
+		kvStore = c.interBlockCache.GetOrSetKVStoreCache(key, kvStore)
+	}
+
+	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.KVGasConfig())
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
+	kvStore := c.MultiStore().GetKVStore(key)
+	if c.interBlockCache != nil {
+		// wrap the KVStore in an inter-block write-through cache
+		kvStore = c.interBlockCache.GetOrSetKVStoreCache(key, kvStore)
+	}
+
+	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.TransientGasConfig())
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new

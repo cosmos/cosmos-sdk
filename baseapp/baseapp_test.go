@@ -626,10 +626,6 @@ func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) 
 	}
 }
 
-func i2b(i int64) []byte {
-	return []byte{byte(i)}
-}
-
 func getIntFromStore(store sdk.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {

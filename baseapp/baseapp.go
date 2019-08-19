@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -76,14 +77,18 @@ type BaseApp struct {
 	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
 	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
-	// --------------------
-	// Volatile state
-	// checkState is set on initialization and reset on Commit.
-	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
-	// See methods setCheckState and setDeliverState.
-	checkState   *state          // for CheckTx
-	deliverState *state          // for DeliverTx
-	voteInfos    []abci.VoteInfo // absent validators from begin block
+	// volatile states:
+	//
+	// checkState is set on InitChain and reset on Commit
+	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
+	checkState   *state // for CheckTx
+	deliverState *state // for DeliverTx
+
+	// an inter-block write-through cache provided to the context during deliverState
+	interBlockCache *cachemulti.StoreCacheManager
+
+	// absent validators from begin block
+	voteInfos []abci.VoteInfo
 
 	// consensus params
 	// TODO: Move this in the future to baseapp param store on main store.
@@ -337,6 +342,10 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 	app.haltHeight = height
 }
 
+func (app *BaseApp) setInterBlockCache(cache *cachemulti.StoreCacheManager) {
+	app.interBlockCache = cache
+}
+
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
@@ -356,9 +365,10 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// setCheckState sets checkState with the cached multistore and
-// the context wrapping it.
-// It is called by InitChain() and Commit()
+// setCheckState sets the BaseApp's checkState with a cache-wrapped multi-store
+// (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
+// provided header, and minimum gas prices set. It is set on InitChain and reset
+// on Commit.
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
@@ -367,10 +377,10 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	}
 }
 
-// setCheckState sets checkState with the cached multistore and
-// the context wrapping it.
-// It is called by InitChain() and BeginBlock(),
-// and deliverState is set nil on Commit().
+// setDeliverState sets the BaseApp's deliverState with a cache-wrapped multi-store
+// (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{

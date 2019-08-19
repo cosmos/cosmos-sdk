@@ -25,20 +25,16 @@ type Store struct {
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
-
-	cacheManager *StoreCacheManager
 }
 
 var _ types.CacheMultiStore = Store{}
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
-// is cache-wrapped. In addition, if a StoreCacheManager is provided, then it'll
-// be used to act as a persistent inter-block cache.
+// is cache-wrapped.
 func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
-	cacheMngr *StoreCacheManager,
 ) Store {
 	cms := Store{
 		db:           cachekv.NewStore(store),
@@ -46,7 +42,6 @@ func NewFromKVStore(
 		keys:         keys,
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
-		cacheManager: cacheMngr,
 	}
 
 	for key, store := range stores {
@@ -58,25 +53,20 @@ func NewFromKVStore(
 			cacheWrappedStore = store.CacheWrap()
 		}
 
-		if cacheMngr != nil {
-			cms.stores[key] = cacheMngr.GetOrSetStoreCache(key, cacheWrappedStore)
-		} else {
-			cms.stores[key] = cacheWrappedStore
-		}
+		cms.stores[key] = cacheWrappedStore
 	}
 
 	return cms
 }
 
 // NewStore creates a new Store object from a mapping of store keys to
-// CacheWrapper objects. Each CacheWrapper store is cache-wrapped. In addition,
-// if a StoreCacheManager is provided, then it'll be used to act as a persistent
-// inter-block cache.
+// CacheWrapper objects. Each CacheWrapper store is cache-wrapped.
 func NewStore(
 	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
-	traceWriter io.Writer, traceContext types.TraceContext, cacheMngr *StoreCacheManager,
+	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(dbadapter.Store{db}, stores, keys, traceWriter, traceContext, cacheMngr)
+
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
@@ -85,7 +75,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, cms.cacheManager)
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying

@@ -45,6 +45,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Update `handleQueryStore` to resemble `handleQueryCustom`
 * (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs
 to properly return black listed addresses for bank keeper initialization.
+* (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash CLI
+if user doesn't answer y/n confirmation request.
 
 ## [v0.36.0] - 2019-08-13
 

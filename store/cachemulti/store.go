@@ -45,15 +45,11 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		var cacheWrappedStore types.CacheWrap
-
 		if cms.TracingEnabled() {
-			cacheWrappedStore = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
+			cms.stores[key] = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
 		} else {
-			cacheWrappedStore = store.CacheWrap()
+			cms.stores[key] = store.CacheWrap()
 		}
-
-		cms.stores[key] = cacheWrappedStore
 	}
 
 	return cms

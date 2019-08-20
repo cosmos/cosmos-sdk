@@ -25,38 +25,38 @@ const (
 )
 
 // GenSignedBlocksWindow randomized SignedBlocksWindow
-func GenSignedBlocksWindow(cdc *codec.Codec, r *rand.Rand) int64 {
+func GenSignedBlocksWindow(r *rand.Rand) int64 {
 	return int64(simulation.RandIntBetween(r, 10, 1000))
 }
 
 // GenMinSignedPerWindow randomized MinSignedPerWindow
-func GenMinSignedPerWindow(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenMinSignedPerWindow(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 }
 
 // GenDowntimeJailDuration randomized DowntimeJailDuration
-func GenDowntimeJailDuration(cdc *codec.Codec, r *rand.Rand) time.Duration {
+func GenDowntimeJailDuration(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24)) * time.Second
 }
 
 // GenSlashFractionDoubleSign randomized SlashFractionDoubleSign
-func GenSlashFractionDoubleSign(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenSlashFractionDoubleSign(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
 }
 
 // GenSlashFractionDowntime randomized SlashFractionDowntime
-func GenSlashFractionDowntime(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenSlashFractionDowntime(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
 }
 
 // RandomizedGenState generates a random GenesisState for slashing
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	signedBlocksWindow := GenSignedBlocksWindow(input.Cdc, input.R)
-	minSignedPerWindow := GenMinSignedPerWindow(input.Cdc, input.R)
-	downtimeJailDuration := GenDowntimeJailDuration(input.Cdc, input.R)
-	slashFractionDoubleSign := GenSlashFractionDoubleSign(input.Cdc, input.R)
-	slashFractionDowntime := GenSlashFractionDowntime(input.Cdc, input.R)
+	signedBlocksWindow := GenSignedBlocksWindow(input.R)
+	minSignedPerWindow := GenMinSignedPerWindow(input.R)
+	downtimeJailDuration := GenDowntimeJailDuration(input.R)
+	slashFractionDoubleSign := GenSlashFractionDoubleSign(input.R)
+	slashFractionDowntime := GenSlashFractionDowntime(input.R)
 
 	params := types.NewParams(input.UnbondTime, signedBlocksWindow, minSignedPerWindow,
 		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)

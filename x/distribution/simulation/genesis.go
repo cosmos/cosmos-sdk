@@ -21,26 +21,26 @@ const (
 )
 
 // GenCommunityTax randomized CommunityTax
-func GenCommunityTax(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenCommunityTax(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenBaseProposerReward randomized BaseProposerReward
-func GenBaseProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenBaseProposerReward(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // GenBonusProposerReward randomized BonusProposerReward
-func GenBonusProposerReward(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenBonusProposerReward(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	communityTax := GenCommunityTax(input.Cdc, input.R)
-	baseProposerReward := GenBaseProposerReward(input.Cdc, input.R)
-	bonusProposerReward := GenBonusProposerReward(input.Cdc, input.R)
+	communityTax := GenCommunityTax(input.R)
+	baseProposerReward := GenBaseProposerReward(input.R)
+	bonusProposerReward := GenBonusProposerReward(input.R)
 
 	distrGenesis := types.GenesisState{
 		FeePool:             types.InitialFeePool(),

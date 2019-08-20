@@ -17,13 +17,13 @@ const (
 )
 
 // GenSendEnabled randomized SendEnabled
-func GenSendEnabled(cdc *codec.Codec, r *rand.Rand) bool {
+func GenSendEnabled(r *rand.Rand) bool {
 	return r.Int63n(2) == 0
 }
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(input *module.GeneratorInput) {
-	sendEnabled := GenSendEnabled(input.Cdc, input.R)
+	sendEnabled := GenSendEnabled(input.R)
 
 	bankGenesis := types.NewGenesisState(sendEnabled)
 

@@ -26,32 +26,32 @@ const (
 )
 
 // GenDepositParamsDepositPeriod randomized DepositParamsDepositPeriod
-func GenDepositParamsDepositPeriod(cdc *codec.Codec, r *rand.Rand) time.Duration {
+func GenDepositParamsDepositPeriod(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
 // GenDepositParamsMinDeposit randomized DepositParamsMinDeposit
-func GenDepositParamsMinDeposit(cdc *codec.Codec, r *rand.Rand) sdk.Coins {
+func GenDepositParamsMinDeposit(r *rand.Rand) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
 }
 
 // GenVotingParamsVotingPeriod randomized VotingParamsVotingPeriod
-func GenVotingParamsVotingPeriod(cdc *codec.Codec, r *rand.Rand) time.Duration {
+func GenVotingParamsVotingPeriod(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
 // GenTallyParamsQuorum randomized TallyParamsQuorum
-func GenTallyParamsQuorum(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenTallyParamsQuorum(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
 // GenTallyParamsThreshold randomized TallyParamsThreshold
-func GenTallyParamsThreshold(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenTallyParamsThreshold(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
 }
 
 // GenTallyParamsVeto randomized TallyParamsVeto
-func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
+func GenTallyParamsVeto(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }
 
@@ -59,12 +59,12 @@ func GenTallyParamsVeto(cdc *codec.Codec, r *rand.Rand) sdk.Dec {
 func RandomizedGenState(input *module.GeneratorInput) {
 	startingProposalID := uint64(input.R.Intn(100))
 
-	minDeposit := GenDepositParamsMinDeposit(input.Cdc, input.R)
-	depositPeriod := GenDepositParamsDepositPeriod(input.Cdc, input.R)
-	votingPeriod := GenVotingParamsVotingPeriod(input.Cdc, input.R)
-	quorum := GenTallyParamsQuorum(input.Cdc, input.R)
-	threshold := GenTallyParamsThreshold(input.Cdc, input.R)
-	veto := GenTallyParamsVeto(input.Cdc, input.R)
+	minDeposit := GenDepositParamsMinDeposit(input.R)
+	depositPeriod := GenDepositParamsDepositPeriod(input.R)
+	votingPeriod := GenVotingParamsVotingPeriod(input.R)
+	quorum := GenTallyParamsQuorum(input.R)
+	threshold := GenTallyParamsThreshold(input.R)
+	veto := GenTallyParamsVeto(input.R)
 
 	govGenesis := types.NewGenesisState(
 		startingProposalID,

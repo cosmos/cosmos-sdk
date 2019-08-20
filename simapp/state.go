@@ -56,16 +56,17 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 }
 
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
-// and creates
+// and creates the simulation params
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
 	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
 ) (json.RawMessage, []simulation.Account, string) {
 
 	genesisState := NewDefaultGenesisState()
-	numInitiallyBonded, amount := RandomizedSimulationParams(r, int64(len(accs)))
+	numInitiallyBonded, amount := RandomizedSimulationParams(appParams, cdc, r, int64(len(accs)))
 
 	input := &module.GeneratorInput{
+		AppParams:    appParams,
 		Cdc:          cdc,
 		R:            r,
 		GenState:     genesisState,
@@ -124,9 +125,12 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, config simulation
 
 // RandomizedSimulationParams generate a random amount of initial stake coins
 // and a random initially bonded number of accounts
-func RandomizedSimulationParams(r *rand.Rand, numAccs int64) (numInitiallyBonded, initialStake int64) {
-	initialStake = int64(r.Intn(1e12))
-	numInitiallyBonded = int64(r.Intn(250))
+func RandomizedSimulationParams(appParams simulation.AppParams, cdc *codec.Codec, r *rand.Rand, numAccs int64) (numInitiallyBonded, initialStake int64) {
+
+	appParams.GetOrGenerate(cdc, StakePerAccount, &initialStake, r,
+		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) })
+	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs

@@ -35,7 +35,7 @@ var (
 	})
 )
 
-// AppParams defines the set of registered param proposal
+// AppParams defines the set of registered parameter proposals
 type AppParams map[string]json.RawMessage
 
 // ParamSimulator creates a parameter value from a source of random number

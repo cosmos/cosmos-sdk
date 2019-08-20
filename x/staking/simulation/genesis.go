@@ -22,12 +22,12 @@ const (
 )
 
 // GenUnbondingTime randomized UnbondingTime
-func GenUnbondingTime(cdc *codec.Codec, r *rand.Rand) (ubdTime time.Duration) {
+func GenUnbondingTime(r *rand.Rand) (ubdTime time.Duration) {
 	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 }
 
 // GenMaxValidators randomized MaxValidators
-func GenMaxValidators(cdc *codec.Codec, r *rand.Rand) (maxValidators uint16) {
+func GenMaxValidators(r *rand.Rand) (maxValidators uint16) {
 	return uint16(r.Intn(250) + 1)
 }
 
@@ -41,9 +41,9 @@ func RandomizedGenState(input *module.GeneratorInput) {
 
 	// params
 	// TODO: this could result in a bug if the staking module generator is not called
-	// before the slashing generator !!! 
-	input.UnbondTime = GenUnbondingTime(input.Cdc, input.R)
-	maxValidators := GenMaxValidators(input.Cdc, input.R)
+	// before the slashing generator !!!
+	input.UnbondTime = GenUnbondingTime(input.R)
+	maxValidators := GenMaxValidators(input.R)
 	params := types.NewParams(input.UnbondTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations

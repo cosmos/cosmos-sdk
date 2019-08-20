@@ -22,38 +22,38 @@ const (
 )
 
 // GenMaxMemoChars randomized MaxMemoChars
-func GenMaxMemoChars(cdc *codec.Codec, r *rand.Rand) uint64 {
+func GenMaxMemoChars(r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 100, 200))
 }
 
 // GenTxSigLimit randomized TxSigLimit
-func GenTxSigLimit(cdc *codec.Codec, r *rand.Rand) uint64 {
+func GenTxSigLimit(r *rand.Rand) uint64 {
 	return uint64(r.Intn(7) + 1)
 }
 
 // GenTxSizeCostPerByte randomized TxSizeCostPerByte
-func GenTxSizeCostPerByte(cdc *codec.Codec, r *rand.Rand) uint64 {
+func GenTxSizeCostPerByte(r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 5, 15))
 }
 
 // GenSigVerifyCostED25519 randomized SigVerifyCostED25519
-func GenSigVerifyCostED25519(cdc *codec.Codec, r *rand.Rand) uint64 {
+func GenSigVerifyCostED25519(r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
 // GenSigVerifyCostSECP256K1 randomized SigVerifyCostSECP256K1
-func GenSigVerifyCostSECP256K1(cdc *codec.Codec, r *rand.Rand) uint64 {
+func GenSigVerifyCostSECP256K1(r *rand.Rand) uint64 {
 	return uint64(simulation.RandIntBetween(r, 500, 1000))
 }
 
 // RandomizedGenState generates a random GenesisState for auth
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	maxMemoChars := GenMaxMemoChars(input.Cdc, input.R)
-	txSigLimit := GenTxSigLimit(input.Cdc, input.R)
-	txSizeCostPerByte := GenTxSizeCostPerByte(input.Cdc, input.R)
-	sigVerifyCostED25519 := GenSigVerifyCostED25519(input.Cdc, input.R)
-	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(input.Cdc, input.R)
+	maxMemoChars := GenMaxMemoChars(input.R)
+	txSigLimit := GenTxSigLimit(input.R)
+	txSizeCostPerByte := GenTxSizeCostPerByte(input.R)
+	sigVerifyCostED25519 := GenSigVerifyCostED25519(input.R)
+	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(input.R)
 
 	authGenesis := types.NewGenesisState(
 		types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,

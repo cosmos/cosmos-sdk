@@ -55,12 +55,13 @@ func (sm *SimulationManager) RandomizedSimParamChanges(cdc *codec.Codec, seed in
 // GeneratorInput is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type GeneratorInput struct {
-	Cdc          *codec.Codec
-	R            *rand.Rand
-	GenState     map[string]json.RawMessage
-	Accounts     []simulation.Account
-	InitialStake int64
-	NumBonded    int64
-	GenTimestamp time.Time
-	UnbondTime   time.Duration
+	AppParams    simulation.AppParams
+	Cdc          *codec.Codec               // application codec
+	R            *rand.Rand                 // random number
+	GenState     map[string]json.RawMessage // genesis state
+	Accounts     []simulation.Account       // simulation accounts
+	InitialStake int64                      // initial coins per account
+	NumBonded    int64                      // number of initially bonded acconts
+	GenTimestamp time.Time                  // genesis timestamp
+	UnbondTime   time.Duration              // TODO: consider removing due to non-determinism in map
 }

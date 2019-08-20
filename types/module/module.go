@@ -142,7 +142,7 @@ type AppModuleSimulation interface {
 	GenerateGenesisState(input *GeneratorInput)
 
 	// randomized module parameters for param change proposals
-	RandomizedParams(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange
+	RandomizedParams(r *rand.Rand) []simulation.ParamChange
 }
 
 // AppModule is the standard form for an application module
@@ -189,7 +189,7 @@ func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 func (GenesisOnlyAppModule) GenerateGenesisState(_ *GeneratorInput) {}
 
 // RandomizedParams returns empty params for the simulator.
-func (GenesisOnlyAppModule) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []simulation.ParamChange {
+func (GenesisOnlyAppModule) RandomizedParams(_ *rand.Rand) []simulation.ParamChange {
 	return nil
 }
 

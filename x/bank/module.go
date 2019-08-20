@@ -79,8 +79,8 @@ func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
 }
 
 // RandomizedParams creates randomized bank param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(cdc *codec.Codec, r *rand.Rand) []sim.ParamChange {
-	return simulation.ParamChanges(cdc, r)
+func (AppModuleSimulation) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 //____________________________________________________________________________

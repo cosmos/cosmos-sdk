@@ -6,27 +6,26 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(cdc *codec.Codec, r *rand.Rand) []simulation.ParamChange {
+func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
 		simulation.NewSimParamChange("auth", "MaxMemoCharacters", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(cdc, r))
+				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(r))
 			},
 		),
 		simulation.NewSimParamChange("auth", "TxSigLimit", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenTxSigLimit(cdc, r))
+				return fmt.Sprintf("\"%d\"", GenTxSigLimit(r))
 			},
 		),
 		simulation.NewSimParamChange("auth", "TxSizeCostPerByte", "",
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(cdc, r))
+				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(r))
 			},
 		),
 	}

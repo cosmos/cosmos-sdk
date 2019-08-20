@@ -84,7 +84,7 @@ func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
 }
 
 // RandomizedParams doesn't create any randomized supply param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *codec.Codec, _ *rand.Rand) []sim.ParamChange {
+func (AppModuleSimulation) RandomizedParams( _ *rand.Rand) []sim.ParamChange {
 	return nil
 }
 

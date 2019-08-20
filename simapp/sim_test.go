@@ -44,7 +44,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 
 	ap := make(simulation.AppParams)
 
-	app.sm.RandomizedSimParamChanges(app.cdc, config.Seed)
+	app.sm.RandomizedSimParamChanges(config.Seed)
 
 	if config.ParamsFile != "" {
 		bz, err := ioutil.ReadFile(config.ParamsFile)

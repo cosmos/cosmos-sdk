@@ -14,7 +14,7 @@ between the validators, bug-hunters, developers, and other members of the wider
 community.  During a crisis time, the dCERT group would facilitate and relay
 input from a variety of stakeholders to the developers who are actively
 devising a patch to the software, this way sensitive information does not need
-to be publicly disclosed while as some input from the community can still be
+to be publicly disclosed while some input from the community can still be
 gained. 
 
 Additionally, a special privilege is proposed for the dCERT group:

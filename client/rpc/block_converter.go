@@ -1,12 +1,13 @@
 package rpc
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
-	"time"
 )
 
 type ResultBlock struct {

@@ -2,6 +2,7 @@ package module
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -13,15 +14,25 @@ import (
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type SimulationManager struct {
-	Modules       map[string]AppModule
-	StoreDecoders sdk.StoreDecoderRegistry
-	ParamChanges  []simulation.ParamChange
+	Modules       []AppModule              // array of app modules; we use an array for deterministic simulation tests
+	StoreDecoders sdk.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
+	ParamChanges  []simulation.ParamChange // list of parameters changes transactions run by the simulator
 }
 
 // NewSimulationManager creates a new SimulationManager object
-func NewSimulationManager(moduleMap map[string]AppModule) *SimulationManager {
+func NewSimulationManager(moduleMap map[string]AppModule, moduleNames []string) *SimulationManager {
+	var modules []AppModule
+
+	for _, name := range moduleNames {
+		module, ok := moduleMap[name]
+		if !ok {
+			panic(fmt.Sprintf("module %s is not registered on the module manager", name))
+		}
+		modules = append(modules, module)
+	}
+
 	return &SimulationManager{
-		Modules:       moduleMap,
+		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
 		ParamChanges:  []simulation.ParamChange{},
 	}
@@ -63,5 +74,5 @@ type GeneratorInput struct {
 	InitialStake int64                      // initial coins per account
 	NumBonded    int64                      // number of initially bonded acconts
 	GenTimestamp time.Time                  // genesis timestamp
-	UnbondTime   time.Duration              // TODO: consider removing due to non-determinism in map
+	UnbondTime   time.Duration              // staking unbond time stored to use it as the slashing maximum evidence duration
 }

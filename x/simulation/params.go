@@ -35,7 +35,9 @@ var (
 	})
 )
 
-// AppParams defines the set of registered parameter proposals
+// AppParams defines a flat JSON of key/values for all possible configurable
+// simulation parameters. It might contain: operation weights, simulation parameters
+// and flattened module state parameters (i.e not stored under it's respective module name).
 type AppParams map[string]json.RawMessage
 
 // ParamSimulator creates a parameter value from a source of random number
@@ -44,7 +46,6 @@ type ParamSimulator func(r *rand.Rand)
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value.
-// TODO: Split or delete this function. It should be declared explicitly
 func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)

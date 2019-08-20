@@ -31,9 +31,9 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 
 	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[feeCollector.String()] = true
-	blacklistedAddrs[notBondedPool.String()] = true
-	blacklistedAddrs[bondPool.String()] = true
+	blacklistedAddrs[feeCollector.GetAddress().String()] = true
+	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
+	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
 	maccPerms := map[string][]string{
@@ -41,7 +41,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 		types.NotBondedPoolName: {supply.Burner, supply.Staking},
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
-	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, supply.DefaultCodespace, maccPerms)
+	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, maccPerms)
 	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -136,7 +136,7 @@ func TestStakingMsgs(t *testing.T) {
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin})
 
 	// create validator
-	description := NewDescription("foo_moniker", "", "", "")
+	description := NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(),
 	)
@@ -157,7 +157,7 @@ func TestStakingMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// edit the validator
-	description = NewDescription("bar_moniker", "", "", "")
+	description = NewDescription("bar_moniker", "", "", "", "")
 	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	header = abci.Header{Height: mApp.LastBlockHeight() + 1}

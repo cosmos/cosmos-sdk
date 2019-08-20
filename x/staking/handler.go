@@ -196,10 +196,10 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 
 	if msg.MinSelfDelegation != nil {
-		if !(*msg.MinSelfDelegation).GT(validator.MinSelfDelegation) {
+		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
 			return ErrMinSelfDelegationDecreased(k.Codespace()).Result()
 		}
-		if (*msg.MinSelfDelegation).GT(validator.Tokens) {
+		if msg.MinSelfDelegation.GT(validator.Tokens) {
 			return ErrSelfDelegationBelowMinimum(k.Codespace()).Result()
 		}
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)

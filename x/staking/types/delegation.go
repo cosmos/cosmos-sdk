@@ -352,10 +352,10 @@ func (d Redelegations) String() (out string) {
 // in addition to shares which is more suitable for client responses.
 type DelegationResponse struct {
 	Delegation
-	Balance sdk.Int `json:"balance" yaml:"balance"`
+	Balance sdk.Coin `json:"balance" yaml:"balance"`
 }
 
-func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Int) DelegationResponse {
+func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Coin) DelegationResponse {
 	return DelegationResponse{NewDelegation(d, v, s), b}
 }
 

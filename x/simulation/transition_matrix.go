@@ -24,7 +24,7 @@ func CreateTransitionMatrix(weights [][]int) (TransitionMatrix, error) {
 	for i := 0; i < n; i++ {
 		if len(weights[i]) != n {
 			return TransitionMatrix{},
-				fmt.Errorf("Transition Matrix: Non-square matrix provided, error on row %d", i)
+				fmt.Errorf("transition matrix: non-square matrix provided, error on row %d", i)
 		}
 	}
 	totals := make([]int, n)

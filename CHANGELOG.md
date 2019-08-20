@@ -83,6 +83,8 @@ that error is that the account doesn't exist.
 * (keys) Fix ledger custom coin type support bug
 * (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs to properly return black listed addresses for bank keeper initialization
 * (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash cli if user doesn't answer y/n confirmation request
+* (cli) [\#4927](https://github.com/cosmos/cosmos-sdk/issues/4927) Fix the `q gov vote`
+command to handle empty (pruned) votes correctly.
 
 ## [v0.36.0] - 2019-08-13
 

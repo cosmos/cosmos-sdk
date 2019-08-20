@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
 // RandomValidator returns a random validator given access to the keeper and ctx
 func RandomValidator(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) types.Validator {
 	vals := k.GetAllValidators(ctx)

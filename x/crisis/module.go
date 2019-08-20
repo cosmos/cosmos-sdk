@@ -2,6 +2,7 @@ package crisis
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -69,6 +71,15 @@ type AppModuleSimulation struct{}
 
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState performs a no-op.
+func (AppModuleSimulation) GenerateGenesisState(_ *module.GeneratorInput) {
+}
+
+// RandomizedParams doesn't create any randomized crisis param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
+}
 
 //____________________________________________________________________________
 

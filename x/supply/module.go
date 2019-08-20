@@ -2,6 +2,7 @@ package supply
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/supply/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
@@ -74,6 +76,16 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the supply module.
+func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
+	simulation.RandomizedGenState(input)
+}
+
+// RandomizedParams doesn't create any randomized supply param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
 }
 
 //____________________________________________________________________________

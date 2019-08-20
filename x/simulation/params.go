@@ -2,53 +2,23 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
-	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// nolint
 const (
 	// Minimum time per block
 	minTimePerBlock int64 = 10000 / 2
 
 	// Maximum time per block
 	maxTimePerBlock int64 = 10000
-
-	// Simulation parameter constants
-	SendEnabled              = "send_enabled"
-	MaxMemoChars             = "max_memo_characters"
-	TxSigLimit               = "tx_sig_limit"
-	TxSizeCostPerByte        = "tx_size_cost_per_byte"
-	SigVerifyCostED25519     = "sig_verify_cost_ed25519"
-	SigVerifyCostSECP256K1   = "sig_verify_cost_secp256k1"
-	DepositParamsMinDeposit  = "deposit_params_min_deposit"
-	VotingParamsVotingPeriod = "voting_params_voting_period"
-	TallyParamsQuorum        = "tally_params_quorum"
-	TallyParamsThreshold     = "tally_params_threshold"
-	TallyParamsVeto          = "tally_params_veto"
-	UnbondingTime            = "unbonding_time"
-	MaxValidators            = "max_validators"
-	SignedBlocksWindow       = "signed_blocks_window"
-	MinSignedPerWindow       = "min_signed_per_window"
-	DowntimeJailDuration     = "downtime_jail_duration"
-	SlashFractionDoubleSign  = "slash_fraction_double_sign"
-	SlashFractionDowntime    = "slash_fraction_downtime"
-	InflationRateChange      = "inflation_rate_change"
-	Inflation                = "inflation"
-	InflationMax             = "inflation_max"
-	InflationMin             = "inflation_min"
-	GoalBonded               = "goal_bonded"
-	CommunityTax             = "community_tax"
-	BaseProposerReward       = "base_proposer_reward"
-	BonusProposerReward      = "bonus_proposer_reward"
 )
 
-// TODO explain transitional matrix usage
+// TODO: explain transitional matrix usage
 var (
 	// Currently there are 3 different liveness types,
 	// fully online, spotty connection, offline.
@@ -65,97 +35,15 @@ var (
 		{15, 92, 1},
 		{0, 3, 99},
 	})
-
-	// ModuleParamSimulator defines module parameter value simulators. All
-	// values simulated should be within valid acceptable range for the given
-	// parameter.
-	ModuleParamSimulator = map[string]func(r *rand.Rand) interface{}{
-		SendEnabled: func(r *rand.Rand) interface{} {
-			return r.Int63n(2) == 0
-		},
-		MaxMemoChars: func(r *rand.Rand) interface{} {
-			return uint64(RandIntBetween(r, 100, 200))
-		},
-		TxSigLimit: func(r *rand.Rand) interface{} {
-			return uint64(r.Intn(7) + 1)
-		},
-		TxSizeCostPerByte: func(r *rand.Rand) interface{} {
-			return uint64(RandIntBetween(r, 5, 15))
-		},
-		SigVerifyCostED25519: func(r *rand.Rand) interface{} {
-			return uint64(RandIntBetween(r, 500, 1000))
-		},
-		SigVerifyCostSECP256K1: func(r *rand.Rand) interface{} {
-			return uint64(RandIntBetween(r, 500, 1000))
-		},
-		DepositParamsMinDeposit: func(r *rand.Rand) interface{} {
-			return sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(RandIntBetween(r, 1, 1e3)))}
-		},
-		VotingParamsVotingPeriod: func(r *rand.Rand) interface{} {
-			return time.Duration(RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
-		},
-		TallyParamsQuorum: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 334, 500)), 3)
-		},
-		TallyParamsThreshold: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 450, 550)), 3)
-		},
-		TallyParamsVeto: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(RandIntBetween(r, 250, 334)), 3)
-		},
-		UnbondingTime: func(r *rand.Rand) interface{} {
-			return time.Duration(RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
-		},
-		MaxValidators: func(r *rand.Rand) interface{} {
-			return uint16(r.Intn(250) + 1)
-		},
-		SignedBlocksWindow: func(r *rand.Rand) interface{} {
-			return int64(RandIntBetween(r, 10, 1000))
-		},
-		MinSignedPerWindow: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
-		},
-		DowntimeJailDuration: func(r *rand.Rand) interface{} {
-			return time.Duration(RandIntBetween(r, 60, 60*60*24)) * time.Second
-		},
-		SlashFractionDoubleSign: func(r *rand.Rand) interface{} {
-			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1)))
-		},
-		SlashFractionDowntime: func(r *rand.Rand) interface{} {
-			return sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1)))
-		},
-		InflationRateChange: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
-		},
-		Inflation: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(int64(r.Intn(99)), 2)
-		},
-		InflationMax: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(20, 2)
-		},
-		InflationMin: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(7, 2)
-		},
-		GoalBonded: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(67, 2)
-		},
-		CommunityTax: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		},
-		BaseProposerReward: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		},
-		BonusProposerReward: func(r *rand.Rand) interface{} {
-			return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
-		},
-	}
 )
 
-// TODO add description
-type (
-	AppParams      map[string]json.RawMessage
-	ParamSimulator func(r *rand.Rand)
-)
+// AppParams defines a flat JSON of key/values for all possible configurable
+// simulation parameters. It might contain: operation weights, simulation parameters
+// and flattened module state parameters (i.e not stored under it's respective module name).
+type AppParams map[string]json.RawMessage
+
+// ParamSimulator creates a parameter value from a source of random number
+type ParamSimulator func(r *rand.Rand)
 
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
@@ -169,7 +57,11 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 	ps(r)
 }
 
-// Simulation parameters
+// ContentSimulator defines a function type alias for generating random proposal
+// content.
+type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
+
+// Params define the parameters necessary for running the simulations
 type Params struct {
 	PastEvidenceFraction      float64
 	NumKeys                   int
@@ -191,6 +83,28 @@ func RandomParams(r *rand.Rand) Params {
 	}
 }
 
-// ContentSimulator defines a function type alias for generating random proposal
-// content.
-type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []Account) gov.Content
+//-----------------------------------------------------------------------------
+// Param change proposals
+
+// ParamChange defines the object used for simulating parameter change proposals
+type ParamChange struct {
+	Subspace string
+	Key      string
+	Subkey   string
+	SimValue func(r *rand.Rand) string
+}
+
+// NewSimParamChange creates a new ParamChange instance
+func NewSimParamChange(subspace, key, subkey string, simVal func(r *rand.Rand) string) ParamChange {
+	return ParamChange{
+		Subspace: subspace,
+		Key:      key,
+		Subkey:   subkey,
+		SimValue: simVal,
+	}
+}
+
+// ComposedKey creates a new composed key for the param change proposal
+func (spc ParamChange) ComposedKey() string {
+	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
+}

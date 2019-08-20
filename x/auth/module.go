@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -75,6 +77,16 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder registers a decoder for auth module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the auth module
+func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
+	simulation.RandomizedGenState(input)
+}
+
+// RandomizedParams creates randomized auth param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 //____________________________________________________________________________

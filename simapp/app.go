@@ -205,7 +205,10 @@ func NewSimApp(
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
-	app.sm = module.NewSimulationManager(app.mm.Modules)
+	// create the simulation manager and define the order of the modules for deterministic simulations
+	app.sm = module.NewSimulationManager(app.mm.Modules, []string{genaccounts.ModuleName, auth.ModuleName, bank.ModuleName,
+		supply.ModuleName, gov.ModuleName, mint.ModuleName, distr.ModuleName, staking.ModuleName, slashing.ModuleName})
+
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores

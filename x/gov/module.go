@@ -4,6 +4,7 @@ package gov
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -99,6 +101,16 @@ type AppModuleSimulation struct{}
 // RegisterStoreDecoder performs a no-op.
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the gov module.
+func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
+	simulation.RandomizedGenState(input)
+}
+
+// RandomizedParams creates randomized gov param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(r *rand.Rand) []sim.ParamChange {
+	return simulation.ParamChanges(r)
 }
 
 //____________________________________________________________________________

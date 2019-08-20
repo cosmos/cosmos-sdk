@@ -16,9 +16,8 @@ import (
 )
 
 var (
-	_ module.AppModuleGenesis    = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
@@ -59,18 +58,9 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the auth module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder registers a decoder for genutil module's types
-func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-//____________________________________________________________________________
-
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	accountKeeper types.AccountKeeper
 	stakingKeeper types.StakingKeeper
@@ -82,11 +72,10 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		accountKeeper:       accountKeeper,
-		stakingKeeper:       stakingKeeper,
-		deliverTx:           deliverTx,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  accountKeeper,
+		stakingKeeper:  stakingKeeper,
+		deliverTx:      deliverTx,
 	})
 }
 

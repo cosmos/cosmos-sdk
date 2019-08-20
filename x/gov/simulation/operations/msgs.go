@@ -47,7 +47,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, contentSim sim
 
 		// 1) submit proposal now
 		sender := simulation.RandomAcc(r, accs)
-		content := contentSim(r, app, ctx, accs)
+		content := contentSim(r, ctx, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, content, sender)
 		if err != nil {
 			return simulation.NoOpMsg(gov.ModuleName), nil, err
@@ -103,7 +103,7 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Hand
 }
 
 // SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) gov.Content {
+func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) gov.Content {
 	return gov.NewTextProposal(
 		simulation.RandStringOfLength(r, 140),
 		simulation.RandStringOfLength(r, 5000),

@@ -6,10 +6,10 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // Simulation parameter constants

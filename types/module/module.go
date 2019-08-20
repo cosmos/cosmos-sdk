@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -39,6 +40,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 //__________________________________________________________________________________________
@@ -135,6 +137,12 @@ type AppModuleGenesis interface {
 type AppModuleSimulation interface {
 	// register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
+
+	// randomized genesis states
+	GenerateGenesisState(input *GeneratorInput)
+
+	// randomized module parameters for param change proposals
+	RandomizedParams(r *rand.Rand) []simulation.ParamChange
 }
 
 // AppModule is the standard form for an application module
@@ -161,6 +169,7 @@ type AppModule interface {
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleGenesis
+	AppModuleSimulation
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
@@ -175,6 +184,14 @@ func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // RegisterStoreDecoder empty store decoder registry
 func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState generates a genesis state
+func (GenesisOnlyAppModule) GenerateGenesisState(_ *GeneratorInput) {}
+
+// RandomizedParams returns empty params for the simulator.
+func (GenesisOnlyAppModule) RandomizedParams(_ *rand.Rand) []simulation.ParamChange {
+	return nil
+}
 
 // Route empty module message route
 func (GenesisOnlyAppModule) Route() string { return "" }

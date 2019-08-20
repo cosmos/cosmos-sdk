@@ -114,17 +114,17 @@ func TestValidateGenesis(t *testing.T) {
 		{"default", func(*types.GenesisState) {}, false},
 		// validate genesis validators
 		{"duplicate validator", func(data *types.GenesisState) {
-			(*data).Validators = genValidators1
-			(*data).Validators = append((*data).Validators, genValidators1[0])
+			data.Validators = genValidators1
+			data.Validators = append(data.Validators, genValidators1[0])
 		}, true},
 		{"no delegator shares", func(data *types.GenesisState) {
-			(*data).Validators = genValidators1
-			(*data).Validators[0].DelegatorShares = sdk.ZeroDec()
+			data.Validators = genValidators1
+			data.Validators[0].DelegatorShares = sdk.ZeroDec()
 		}, true},
 		{"jailed and bonded validator", func(data *types.GenesisState) {
-			(*data).Validators = genValidators1
-			(*data).Validators[0].Jailed = true
-			(*data).Validators[0].Status = sdk.Bonded
+			data.Validators = genValidators1
+			data.Validators[0].Jailed = true
+			data.Validators[0].Status = sdk.Bonded
 		}, true},
 	}
 

@@ -246,18 +246,18 @@ func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 		// there is a migration file, let's execute
 		data, err := ioutil.ReadFile(upgradeInfoPath)
 		if err != nil {
-			return fmt.Errorf("Cannot read upgrade file %s: %v", upgradeInfoPath, err)
+			return fmt.Errorf("cannot read upgrade file %s: %v", upgradeInfoPath, err)
 		}
 
 		var upgrades storetypes.StoreUpgrades
 		err = json.Unmarshal(data, &upgrades)
 		if err != nil {
-			return fmt.Errorf("Cannot parse upgrade file: %v", err)
+			return fmt.Errorf("cannot parse upgrade file: %v", err)
 		}
 
 		err = ms.LoadLatestVersionAndUpgrade(&upgrades)
 		if err != nil {
-			return fmt.Errorf("Load and upgrade database: %v", err)
+			return fmt.Errorf("load and upgrade database: %v", err)
 		}
 
 		// if we have a successful load, we delete the file
@@ -581,6 +581,15 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 
 	req.Path = "/" + strings.Join(path[1:], "/")
 
+	// when a client did not provide a query height, manually inject the latest
+	if req.Height == 0 {
+		req.Height = app.LastBlockHeight()
+	}
+
+	if req.Height <= 1 && req.Prove {
+		return sdk.ErrInternal("cannot query with proof when height <= 1; please provide a valid height").QueryResult()
+	}
+
 	resp := queryable.Query(req)
 	resp.Height = req.Height
 
@@ -629,6 +638,10 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	// when a client did not provide a query height, manually inject the latest
 	if req.Height == 0 {
 		req.Height = app.LastBlockHeight()
+	}
+
+	if req.Height <= 1 && req.Prove {
+		return sdk.ErrInternal("cannot query with proof when height <= 1; please provide a valid height").QueryResult()
 	}
 
 	cacheMS, err := app.cms.CacheMultiStoreWithVersion(req.Height)

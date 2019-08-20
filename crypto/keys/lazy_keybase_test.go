@@ -30,7 +30,7 @@ func TestLazyKeyManagement(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
-	p1, p2 := "1234", "really-secure!@#$"
+	p1, p2 := nums, "really-secure!@#$"
 
 	// Check empty state
 	l, err := kb.List()
@@ -113,7 +113,7 @@ func TestLazySignVerify(t *testing.T) {
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
-	p1, p2, p3 := "1234", "foobar", "foobar"
+	p1, p2, p3 := nums, foobar, foobar
 
 	// create two users and get their info
 	i1, _, err := kb.CreateMnemonic(n1, English, p1, algo)
@@ -301,7 +301,7 @@ func TestLazyAdvancedKeyManagement(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
-	p1, p2 := "1234", "foobar"
+	p1, p2 := nums, foobar
 
 	// make sure key works with initial password
 	_, _, err := kb.CreateMnemonic(n1, English, p1, algo)
@@ -349,7 +349,7 @@ func TestLazySeedPhrase(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
-	p1, p2 := "1234", "foobar"
+	p1, p2 := nums, foobar
 
 	// make sure key works with initial password
 	info, mnemonic, err := kb.CreateMnemonic(n1, English, p1, algo)

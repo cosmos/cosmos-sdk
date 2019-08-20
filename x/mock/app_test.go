@@ -14,9 +14,9 @@ import (
 const msgRoute = "testMsg"
 
 var (
-	numAccts                       = 2
-	genCoins                       = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
-	accs, addrs, pubKeys, privKeys = CreateGenAccounts(numAccts, genCoins)
+	numAccts                 = 2
+	genCoins                 = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
+	accs, addrs, _, privKeys = CreateGenAccounts(numAccts, genCoins)
 )
 
 // testMsg is a mock transaction that has a validation which can fail.

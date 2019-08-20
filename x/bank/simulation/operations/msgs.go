@@ -92,7 +92,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("Deliver failed %v", res)
+			return fmt.Errorf("deliver failed %v", res)
 		}
 	}
 
@@ -200,7 +200,7 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper types.AccountKeeper,
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("Deliver failed %v", res)
+			return fmt.Errorf("deliver failed %v", res)
 		}
 	}
 

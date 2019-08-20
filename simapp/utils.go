@@ -3,19 +3,13 @@ package simapp
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math/rand"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -30,73 +24,76 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
-// List of available flags for the simulator
+//---------------------------------------------------------------------
+// Flags
+
+// List of SimApp flags for the simulator
 var (
-	genesisFile        string
-	paramsFile         string
-	exportParamsPath   string
-	exportParamsHeight int
-	exportStatePath    string
-	exportStatsPath    string
-	seed               int64
-	initialBlockHeight int
-	numBlocks          int
-	blockSize          int
-	enabled            bool
-	verbose            bool
-	lean               bool
-	commit             bool
-	period             int
-	onOperation        bool // TODO Remove in favor of binary search for invariant violation
-	allInvariants      bool
-	genesisTime        int64
+	flagGenesisFileValue        string
+	flagParamsFileValue         string
+	flagExportParamsPathValue   string
+	flagExportParamsHeightValue int
+	flagExportStatePathValue    string
+	flagExportStatsPathValue    string
+	flagSeedValue               int64
+	flagInitialBlockHeightValue int
+	flagNumBlocksValue          int
+	flagBlockSizeValue          int
+	flagLeanValue               bool
+	flagCommitValue             bool
+	flagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
+	flagAllInvariantsValue      bool
+
+	flagEnabledValue     bool
+	flagVerboseValue     bool
+	flagPeriodValue      int
+	flagGenesisTimeValue int64
 )
 
-// NewSimAppUNSAFE is used for debugging purposes only.
-//
-// NOTE: to not use this function with non-test code
-func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
-	invCheckPeriod uint, baseAppOptions ...func(*baseapp.BaseApp),
-) (gapp *SimApp, keyMain, keyStaking *sdk.KVStoreKey, stakingKeeper staking.Keeper) {
+// GetSimulatorFlags gets the values of all the available simulation flags
+func GetSimulatorFlags() {
 
-	gapp = NewSimApp(logger, db, traceStore, loadLatest, invCheckPeriod, baseAppOptions...)
-	return gapp, gapp.keys[baseapp.MainStoreKey], gapp.keys[staking.StoreKey], gapp.StakingKeeper
+	// Config fields
+	flag.StringVar(&flagGenesisFileValue, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
+	flag.StringVar(&flagParamsFileValue, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
+	flag.StringVar(&flagExportParamsPathValue, "ExportParamsPath", "", "custom file path to save the exported params JSON")
+	flag.IntVar(&flagExportParamsHeightValue, "ExportParamsHeight", 0, "height to which export the randomly generated params")
+	flag.StringVar(&flagExportStatePathValue, "ExportStatePath", "", "custom file path to save the exported app state JSON")
+	flag.StringVar(&flagExportStatsPathValue, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
+	flag.Int64Var(&flagSeedValue, "Seed", 42, "simulation random seed")
+	flag.IntVar(&flagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
+	flag.IntVar(&flagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
+	flag.IntVar(&flagBlockSizeValue, "BlockSize", 200, "operations per block")
+	flag.BoolVar(&flagLeanValue, "Lean", false, "lean simulation log output")
+	flag.BoolVar(&flagCommitValue, "Commit", false, "have the simulation commit")
+	flag.BoolVar(&flagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
+	flag.BoolVar(&flagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
+
+	// SimApp flags
+	flag.BoolVar(&flagEnabledValue, "Enabled", false, "enable the simulation")
+	flag.BoolVar(&flagVerboseValue, "Verbose", false, "verbose log output")
+	flag.IntVar(&flagPeriodValue, "Period", 1, "run slow invariants only once every period assertions")
+	flag.Int64Var(&flagGenesisTimeValue, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
 }
 
-// AppStateFromGenesisFileFn util function to generate the genesis AppState
-// from a genesis.json file
-func AppStateFromGenesisFileFn(
-	r *rand.Rand, _ []simulation.Account, _ time.Time,
-) (json.RawMessage, []simulation.Account, string) {
-
-	var genesis tmtypes.GenesisDoc
-	cdc := MakeCodec()
-
-	bytes, err := ioutil.ReadFile(genesisFile)
-	if err != nil {
-		panic(err)
+// NewConfigFromFlags creates a simulation from the retrieved values of the flags
+func NewConfigFromFlags() simulation.Config {
+	return simulation.Config{
+		GenesisFile:        flagGenesisFileValue,
+		ParamsFile:         flagParamsFileValue,
+		ExportParamsPath:   flagExportParamsPathValue,
+		ExportParamsHeight: flagExportParamsHeightValue,
+		ExportStatePath:    flagExportStatePathValue,
+		ExportStatsPath:    flagExportStatsPathValue,
+		Seed:               flagSeedValue,
+		InitialBlockHeight: flagInitialBlockHeightValue,
+		NumBlocks:          flagNumBlocksValue,
+		BlockSize:          flagBlockSizeValue,
+		Lean:               flagLeanValue,
+		Commit:             flagCommitValue,
+		OnOperation:        flagOnOperationValue,
+		AllInvariants:      flagAllInvariantsValue,
 	}
-
-	cdc.MustUnmarshalJSON(bytes, &genesis)
-
-	var appState GenesisState
-	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
-
-	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
-
-	var newAccs []simulation.Account
-	for _, acc := range accounts {
-		// Pick a random private key, since we don't know the actual key
-		// This should be fine as it's only used for mock Tendermint validators
-		// and these keys are never actually used to sign by mock Tendermint.
-		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-
-		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
-	}
-
-	return genesis.AppState, newAccs, genesis.ChainID
 }
 
 // GenAuthGenesisState generates a random GenesisState for auth
@@ -494,6 +491,9 @@ func GenStakingGenesisState(
 
 	return stakingGenesis
 }
+
+//---------------------------------------------------------------------
+// Simulation Utils
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.

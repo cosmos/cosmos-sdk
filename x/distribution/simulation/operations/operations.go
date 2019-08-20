@@ -18,39 +18,34 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, k keeper.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, k keeper.Keeper) simulation.WeightedOperations {
+
+	var (
+		weightMsgSetWithdrawAddress          int
+		weightMsgWithdrawDelegationReward    int
+		weightMsgWithdrawValidatorCommission int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
+		func(_ *rand.Rand) { weightMsgSetWithdrawAddress = 50 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
+		func(_ *rand.Rand) { weightMsgWithdrawDelegationReward = 50 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
+		func(_ *rand.Rand) { weightMsgWithdrawValidatorCommission = 50 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &v, nil,
-					func(_ *rand.Rand) {
-						v = 50
-					})
-				return v
-			}(nil),
+			weightMsgSetWithdrawAddress,
 			SimulateMsgSetWithdrawAddress(k),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &v, nil,
-					func(_ *rand.Rand) {
-						v = 50
-					})
-				return v
-			}(nil),
+			weightMsgWithdrawDelegationReward,
 			SimulateMsgWithdrawDelegatorReward(k),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &v, nil,
-					func(_ *rand.Rand) {
-						v = 50
-					})
-				return v
-			}(nil),
+			weightMsgWithdrawValidatorCommission,
 			SimulateMsgWithdrawValidatorCommission(k),
 		),
 	}

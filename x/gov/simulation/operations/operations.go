@@ -21,50 +21,42 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, keeper gov.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, keeper gov.Keeper) simulation.WeightedOperations {
+
+	var (
+		weightSubmitVotingSlashingTextProposal           int
+		weightSubmitVotingSlashingCommunitySpendProposal int
+		weightSubmitVotingSlashingParamChangeProposal    int
+		weightMsgDeposit                                 int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &weightSubmitVotingSlashingTextProposal, nil,
+		func(_ *rand.Rand) { weightSubmitVotingSlashingTextProposal = 5 })
+
+	appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &weightSubmitVotingSlashingCommunitySpendProposal, nil,
+		func(_ *rand.Rand) { weightSubmitVotingSlashingCommunitySpendProposal = 5 })
+
+	appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &weightSubmitVotingSlashingParamChangeProposal, nil,
+		func(_ *rand.Rand) { weightSubmitVotingSlashingParamChangeProposal = 5 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
+		func(_ *rand.Rand) { weightMsgDeposit = 100 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
+			weightSubmitVotingSlashingTextProposal,
 			SimulateSubmittingVotingAndSlashingForProposal(keeper, SimulateTextProposalContent),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
-			SimulateSubmittingVotingAndSlashingForProposal(keeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.distrKeeper)),
+			weightSubmitVotingSlashingCommunitySpendProposal,
+			SimulateSubmittingVotingAndSlashingForProposal(keeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.distrKeeper)),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
-			SimulateSubmittingVotingAndSlashingForProposal(keeper, paramsim.SimulateParamChangeProposalContent),
+			weightSubmitVotingSlashingParamChangeProposal,
+			SimulateSubmittingVotingAndSlashingForProposal(keeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges)),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDeposit, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgDeposit,
 			SimulateMsgDeposit(keeper),
 		),
 	}

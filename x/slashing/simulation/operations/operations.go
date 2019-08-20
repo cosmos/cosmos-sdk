@@ -16,17 +16,15 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, keeper slashing.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, keeper slashing.Keeper) simulation.WeightedOperations {
+	var weightMsgUnjail int
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
+		func(_ *rand.Rand) { weightMsgUnjail = 100 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUnjail, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgUnjail,
 			SimulateMsgUnjail(keeper),
 		),
 	}

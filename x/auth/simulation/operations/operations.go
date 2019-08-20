@@ -17,17 +17,16 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.WeightedOperations {
+
+	var weightDeductFee int
+
+	appParams.GetOrGenerate(cdc, OpWeightDeductFee, &weightDeductFee, nil,
+		func(_ *rand.Rand) { weightDeductFee = 5 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightDeductFee, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
+			weightDeductFee,
 			SimulateDeductFee(ak, supplyKeeper),
 		),
 	}

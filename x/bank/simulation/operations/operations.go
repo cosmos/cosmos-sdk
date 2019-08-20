@@ -18,28 +18,23 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, bk bank.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, bk bank.Keeper) simulation.WeightedOperations {
+
+	var weightMsgSend, weightSingleInputMsgMultiSend int
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
+		func(_ *rand.Rand) { weightMsgSend = 100 })
+
+	appParams.GetOrGenerate(cdc, OpWeightSingleInputMsgMultiSend, &weightSingleInputMsgMultiSend, nil,
+		func(_ *rand.Rand) { weightSingleInputMsgMultiSend = 10 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSend, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgSend,
 			SimulateMsgSend(ak, bk),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
-					func(_ *rand.Rand) {
-						v = 10
-					})
-				return v
-			}(nil),
+			weightSingleInputMsgMultiSend,
 			SimulateSingleInputMsgMultiSend(ak, bk),
 		),
 	}

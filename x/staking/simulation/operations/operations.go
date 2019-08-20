@@ -21,61 +21,50 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(cdc *codec.Codec, ak types.AccountKeeper, keeper staking.Keeper) simulation.WeightedOperations {
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper, keeper staking.Keeper) simulation.WeightedOperations {
+
+	var (
+		weightMsgCreateValidator int
+		weightMsgEditValidator   int
+		weightMsgDelegate        int
+		weightMsgUndelegate      int
+		weightMsgBeginRedelegate int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
+		func(_ *rand.Rand) { weightMsgCreateValidator = 100 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgEditValidator, &weightMsgEditValidator, nil,
+		func(_ *rand.Rand) { weightMsgEditValidator = 5 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgDelegate, &weightMsgDelegate, nil,
+		func(_ *rand.Rand) { weightMsgDelegate = 100 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgUndelegate, &weightMsgUndelegate, nil,
+		func(_ *rand.Rand) { weightMsgUndelegate = 100 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
+		func(_ *rand.Rand) { weightMsgBeginRedelegate = 100 })
+
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgCreateValidator,
 			SimulateMsgCreateValidator(ak, keeper),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgEditValidator, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
+			weightMsgEditValidator,
 			SimulateMsgEditValidator(keeper),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDelegate, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgDelegate,
 			SimulateMsgDelegate(ak, keeper),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUndelegate, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgUndelegate,
 			SimulateMsgUndelegate(ak, keeper),
 		),
 		simulation.NewWeigthedOperation(
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
+			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, keeper),
 		),
 	}

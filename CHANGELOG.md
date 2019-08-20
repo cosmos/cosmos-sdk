@@ -47,6 +47,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 to properly return black listed addresses for bank keeper initialization.
 * (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash CLI
 if user doesn't answer y/n confirmation request.
+* (cli) [\#4927](https://github.com/cosmos/cosmos-sdk/issues/4927) Fix the `q gov vote`
+command to handle empty (pruned) votes correctly.
 
 ### Improvements
 

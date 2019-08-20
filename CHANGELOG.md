@@ -37,6 +37,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (sdk) [\#4754](https://github.com/cosmos/cosmos-sdk/issues/4754) Switching back-end to new secret store using library [Keyring](https://github.com/99designs/keyring)
+  * This is intended to provide stronger security guarantees by using the OS built-in secret store instead of the legacy key database which was designed to single user computers
+  * Security audit recommendation was to use the OS secret store 
+  * Existing users are expected to migrate their keys using the migrate command:
+    * `gaiacli keys migrate`
+  * Support for legacay keystore is available through the secret store flag:
+    * `gaiacli keys add <key_name> --legacy` 
+  * Signing transactions is allowed on the legacy store if you pass in the legacy secret store flag
+  * Running the tests locally may require entering your user password to access your keystore large amount of times (if anyone has a workaround, please leave a comment, thanks) 
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian

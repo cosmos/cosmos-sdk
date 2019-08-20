@@ -2,14 +2,14 @@
 
 ## Changelog
 
-- 2019 Jul 31 : Initial Conception
+- 2019 Jul 31: Initial Draft
 
 ## Context
 
 This idea was first conceived of in order to fulfill the use case of the
 creation of a decentralized Computer Emergency Response Team (dCERT), Whose
 members would be elected by the Cosmos Community and would fulfill the role of
-coordinating the Cosmos community under an emergency situations. This thinking
+coordinating the Cosmos community under emergency situations. This thinking
 can be further abstracted into the conception of "blockchain specialization
 groups". 
 
@@ -25,7 +25,8 @@ governance proposals include a field for issue type.
 ## Decision
 
 A specialization group can be broadly broken down into the following functions
-(herein containing examples): 
+(herein containing examples):
+
  - Membership Admittance
  - Membership Acceptance
  - Membership Revocation
@@ -50,7 +51,7 @@ the entire community, however in certain systems a community may want to allow
 the members already in a specialization group to internally elect new members,
 or maybe the community may assign a permission to a particular specialization
 group to appoint members to other 3rd party groups. The sky is really the limit
-as to how membership admittance can be structured. We attempt to capture these
+as to how membership admittance can be structured. We attempt to capture
 some of these possiblities in a common interface dubbed the `Electionator`. For
 its initial implementation as a part of this ADR we recommend that the general
 election abstraction (`Electionator`) is provided as well as a basic
@@ -113,7 +114,7 @@ type ElectionatorHooks interface {
     AfterMemberRevoked(addr sdk.AccAddress, cause []byte)
 }
 
-// Revoker defines the function required for an membership revocation rule-set
+// Revoker defines the function required for a membership revocation rule-set
 // used by a specialization group. This could be used to create self revoking,
 // and evidence based revoking, etc. Revokers types may be created and
 // reused for different election types. 

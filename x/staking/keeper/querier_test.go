@@ -513,7 +513,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 		Path: "/custom/staking/unbondingDelegation",
 		Data: bz,
 	}
-	res, err = queryUnbondingDelegation(ctx, query, keeper)
+	_, err = queryUnbondingDelegation(ctx, query, keeper)
 	require.NotNil(t, err)
 
 	//

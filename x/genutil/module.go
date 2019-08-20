@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	_ module.AppModuleGenesis    = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleGenesis = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the genutil module.
@@ -56,7 +56,6 @@ func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 // GetQueryCmd returns no root query command for the genutil module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-
 //____________________________________________________________________________
 
 // AppModule implements an application module for the genutil module.
@@ -73,10 +72,10 @@ func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn) module.AppModule {
 
 	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		accountKeeper:       accountKeeper,
-		stakingKeeper:       stakingKeeper,
-		deliverTx:           deliverTx,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  accountKeeper,
+		stakingKeeper:  stakingKeeper,
+		deliverTx:      deliverTx,
 	})
 }
 

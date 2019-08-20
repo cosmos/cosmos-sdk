@@ -49,11 +49,28 @@ func GenSigVerifyCostSECP256K1(r *rand.Rand) uint64 {
 // RandomizedGenState generates a random GenesisState for auth
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	maxMemoChars := GenMaxMemoChars(input.R)
-	txSigLimit := GenTxSigLimit(input.R)
-	txSizeCostPerByte := GenTxSizeCostPerByte(input.R)
-	sigVerifyCostED25519 := GenSigVerifyCostED25519(input.R)
-	sigVerifyCostSECP256K1 := GenSigVerifyCostSECP256K1(input.R)
+	var (
+		maxMemoChars           uint64
+		txSigLimit             uint64
+		txSizeCostPerByte      uint64
+		sigVerifyCostED25519   uint64
+		sigVerifyCostSECP256K1 uint64
+	)
+
+	input.AppParams.GetOrGenerate(input.Cdc, MaxMemoChars, &maxMemoChars, input.R,
+		func(r *rand.Rand) { maxMemoChars = GenMaxMemoChars(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, TxSigLimit, &txSigLimit, input.R,
+		func(r *rand.Rand) { txSigLimit = GenTxSigLimit(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, TxSizeCostPerByte, &txSizeCostPerByte, input.R,
+		func(r *rand.Rand) { txSizeCostPerByte = GenTxSizeCostPerByte(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, SigVerifyCostED25519, &sigVerifyCostED25519, input.R,
+		func(r *rand.Rand) { sigVerifyCostED25519 = GenSigVerifyCostED25519(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, input.R,
+		func(r *rand.Rand) { sigVerifyCostED25519 = GenSigVerifyCostSECP256K1(input.R) })
 
 	authGenesis := types.NewGenesisState(
 		types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,

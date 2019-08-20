@@ -52,11 +52,28 @@ func GenSlashFractionDowntime(r *rand.Rand) sdk.Dec {
 // RandomizedGenState generates a random GenesisState for slashing
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	signedBlocksWindow := GenSignedBlocksWindow(input.R)
-	minSignedPerWindow := GenMinSignedPerWindow(input.R)
-	downtimeJailDuration := GenDowntimeJailDuration(input.R)
-	slashFractionDoubleSign := GenSlashFractionDoubleSign(input.R)
-	slashFractionDowntime := GenSlashFractionDowntime(input.R)
+	var (
+		signedBlocksWindow      int64
+		minSignedPerWindow      sdk.Dec
+		downtimeJailDuration    time.Duration
+		slashFractionDoubleSign sdk.Dec
+		slashFractionDowntime   sdk.Dec
+	)
+
+	input.AppParams.GetOrGenerate(input.Cdc, SignedBlocksWindow, &signedBlocksWindow, input.R,
+		func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, MinSignedPerWindow, &minSignedPerWindow, input.R,
+		func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, DowntimeJailDuration, &downtimeJailDuration, input.R,
+		func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, input.R,
+		func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, SlashFractionDowntime, &slashFractionDowntime, input.R,
+		func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(input.R) })
 
 	params := types.NewParams(input.UnbondTime, signedBlocksWindow, minSignedPerWindow,
 		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)

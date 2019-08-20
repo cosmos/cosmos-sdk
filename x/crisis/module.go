@@ -77,7 +77,7 @@ func (AppModuleSimulation) GenerateGenesisState(_ *module.GeneratorInput) {
 }
 
 // RandomizedParams doesn't create any randomized crisis param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams( _ *rand.Rand) []sim.ParamChange {
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 	return nil
 }
 

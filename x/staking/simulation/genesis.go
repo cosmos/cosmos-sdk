@@ -35,15 +35,23 @@ func GenMaxValidators(r *rand.Rand) (maxValidators uint16) {
 func RandomizedGenState(input *module.GeneratorInput) {
 
 	var (
-		validators  []types.Validator
-		delegations []types.Delegation
+		unbondTime    time.Duration
+		maxValidators uint16
+		validators    []types.Validator
+		delegations   []types.Delegation
 	)
 
 	// params
+	input.AppParams.GetOrGenerate(input.Cdc, UnbondingTime, &unbondTime, input.R,
+		func(r *rand.Rand) { unbondTime = GenUnbondingTime(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, MaxValidators, &maxValidators, input.R,
+		func(r *rand.Rand) { maxValidators = GenMaxValidators(input.R) })
+
 	// TODO: this could result in a bug if the staking module generator is not called
 	// before the slashing generator !!!
-	input.UnbondTime = GenUnbondingTime(input.R)
-	maxValidators := GenMaxValidators(input.R)
+	input.UnbondTime = unbondTime
+
 	params := types.NewParams(input.UnbondTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations

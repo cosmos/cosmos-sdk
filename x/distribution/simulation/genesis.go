@@ -38,9 +38,20 @@ func GenBonusProposerReward(r *rand.Rand) sdk.Dec {
 // RandomizedGenState generates a random GenesisState for distribution
 func RandomizedGenState(input *module.GeneratorInput) {
 
-	communityTax := GenCommunityTax(input.R)
-	baseProposerReward := GenBaseProposerReward(input.R)
-	bonusProposerReward := GenBonusProposerReward(input.R)
+	var (
+		communityTax        sdk.Dec
+		baseProposerReward  sdk.Dec
+		bonusProposerReward sdk.Dec
+	)
+
+	input.AppParams.GetOrGenerate(input.Cdc, CommunityTax, &communityTax, input.R,
+		func(r *rand.Rand) { communityTax = GenCommunityTax(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, BaseProposerReward, &baseProposerReward, input.R,
+		func(r *rand.Rand) { baseProposerReward = GenBaseProposerReward(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, BonusProposerReward, &bonusProposerReward, input.R,
+		func(r *rand.Rand) { bonusProposerReward = GenBonusProposerReward(input.R) })
 
 	distrGenesis := types.GenesisState{
 		FeePool:             types.InitialFeePool(),

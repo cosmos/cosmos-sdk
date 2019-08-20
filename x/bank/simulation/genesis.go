@@ -23,7 +23,11 @@ func GenSendEnabled(r *rand.Rand) bool {
 
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(input *module.GeneratorInput) {
-	sendEnabled := GenSendEnabled(input.R)
+
+	var sendEnabled bool
+
+	input.AppParams.GetOrGenerate(input.Cdc, SendEnabled, &sendEnabled, input.R,
+		func(r *rand.Rand) { sendEnabled = GenSendEnabled(input.R) })
 
 	bankGenesis := types.NewGenesisState(sendEnabled)
 

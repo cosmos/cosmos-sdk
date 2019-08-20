@@ -91,7 +91,7 @@ func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
 }
 
 // RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams( _ *rand.Rand) []sim.ParamChange {
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 	return nil
 }
 
@@ -114,6 +114,7 @@ func NewAppModule(accountKeeper types.AccountKeeper) module.AppModule {
 		accountKeeper:       accountKeeper,
 	}
 }
+
 // RegisterInvariants is a placeholder function register no invariants
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
@@ -144,7 +145,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
-
 
 // BeginBlock returns an empty module begin-block
 func (AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}

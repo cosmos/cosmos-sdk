@@ -15,7 +15,7 @@ import (
 func RandomizedGenState(input *module.GeneratorInput) {
 
 	var genesisAccounts []types.GenesisAccount
-	
+
 	// randomly generate some genesis accounts
 	for i, acc := range input.Accounts {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(input.InitialStake))}

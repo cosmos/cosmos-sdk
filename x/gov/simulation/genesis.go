@@ -17,8 +17,8 @@ import (
 
 // Simulation parameter constants
 const (
-	DepositParamsDepositPeriod = "deposit_params_deposit_period"
 	DepositParamsMinDeposit    = "deposit_params_min_deposit"
+	DepositParamsDepositPeriod = "deposit_params_deposit_period"
 	VotingParamsVotingPeriod   = "voting_params_voting_period"
 	TallyParamsQuorum          = "tally_params_quorum"
 	TallyParamsThreshold       = "tally_params_threshold"
@@ -57,14 +57,35 @@ func GenTallyParamsVeto(r *rand.Rand) sdk.Dec {
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(input *module.GeneratorInput) {
+
+	var (
+		minDeposit    sdk.Coins
+		depositPeriod time.Duration
+		votingPeriod  time.Duration
+		quorum        sdk.Dec
+		threshold     sdk.Dec
+		veto          sdk.Dec
+	)
+
 	startingProposalID := uint64(input.R.Intn(100))
 
-	minDeposit := GenDepositParamsMinDeposit(input.R)
-	depositPeriod := GenDepositParamsDepositPeriod(input.R)
-	votingPeriod := GenVotingParamsVotingPeriod(input.R)
-	quorum := GenTallyParamsQuorum(input.R)
-	threshold := GenTallyParamsThreshold(input.R)
-	veto := GenTallyParamsVeto(input.R)
+	input.AppParams.GetOrGenerate(input.Cdc, DepositParamsMinDeposit, &minDeposit, input.R,
+		func(r *rand.Rand) { minDeposit = GenDepositParamsMinDeposit(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, DepositParamsDepositPeriod, &depositPeriod, input.R,
+		func(r *rand.Rand) { depositPeriod = GenDepositParamsDepositPeriod(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, VotingParamsVotingPeriod, &votingPeriod, input.R,
+		func(r *rand.Rand) { votingPeriod = GenVotingParamsVotingPeriod(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, TallyParamsQuorum, &quorum, input.R,
+		func(r *rand.Rand) { quorum = GenTallyParamsQuorum(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, TallyParamsThreshold, &threshold, input.R,
+		func(r *rand.Rand) { threshold = GenTallyParamsThreshold(input.R) })
+
+	input.AppParams.GetOrGenerate(input.Cdc, TallyParamsVeto, &veto, input.R,
+		func(r *rand.Rand) { veto = GenTallyParamsVeto(input.R) })
 
 	govGenesis := types.NewGenesisState(
 		startingProposalID,

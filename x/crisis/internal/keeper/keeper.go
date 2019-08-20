@@ -23,11 +23,13 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper object
-func NewKeeper(paramSpace params.Subspace, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName string) Keeper {
+func NewKeeper(
+	paramSpace params.Subspace, invCheckPeriod uint, supplyKeeper types.SupplyKeeper,
+	feeCollectorName string,
+) Keeper {
 
 	return Keeper{
-		routes:           []types.InvarRoute{},
+		routes:           make([]types.InvarRoute, 0),
 		paramSpace:       paramSpace.WithKeyTable(types.ParamKeyTable()),
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
@@ -53,27 +55,28 @@ func (k Keeper) Routes() []types.InvarRoute {
 
 // Invariants returns all the registered Crisis keeper invariants.
 func (k Keeper) Invariants() []sdk.Invariant {
-	var invars []sdk.Invariant
-	for _, route := range k.routes {
-		invars = append(invars, route.Invar)
+	invars := make([]sdk.Invariant, len(k.routes))
+	for i, route := range k.routes {
+		invars[i] = route.Invar
 	}
 	return invars
 }
 
-// assert all invariants
+// AssertInvariants asserts all registered invariants. If any invariant fails,
+// the method panics.
 func (k Keeper) AssertInvariants(ctx sdk.Context) {
 	logger := k.Logger(ctx)
 
 	start := time.Now()
 	invarRoutes := k.Routes()
-	for _, ir := range invarRoutes {
-		if err := ir.Invar(ctx); err != nil {
 
+	for _, ir := range invarRoutes {
+		if res, stop := ir.Invar(ctx); stop {
 			// TODO: Include app name as part of context to allow for this to be
 			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t tx crisis invariant-broken %v %v", err, ir.ModuleName, ir.Route))
+				"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route))
 		}
 	}
 
@@ -90,5 +93,3 @@ func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }
-
-// DONTCOVER

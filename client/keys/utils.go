@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -69,7 +69,7 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 
 	passphrase, err := input.GetPassword(prompt, buf)
 	if err != nil {
-		return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
+		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
 	}
 
 	return passphrase, nil

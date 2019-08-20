@@ -51,7 +51,7 @@ var sumValue := externalModule.ComputeSumValue(account)
 var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
-在Cosmos SDK中，你可以看到[gaia app](https://github.com/cosmos/cosmos-sdk/blob/develop/cmd/gaia/app/app.go)中对该原则的实践。
+在Cosmos SDK中，你可以看到[gaia app](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go)中对该原则的实践。
 
 ```go
 // register message routes

@@ -19,6 +19,11 @@ func init() {
 	mintkey.BcryptSecurityParameter = 1
 }
 
+const (
+	nums   = "1234"
+	foobar = "foobar"
+)
+
 func TestLanguage(t *testing.T) {
 	kb := NewInMemory()
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
@@ -68,11 +73,13 @@ func TestCreateLedger(t *testing.T) {
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := kb.Get("some_account")
+	assert.NoError(t, err)
 	assert.NotNil(t, restoredKey)
 	assert.Equal(t, "some_account", restoredKey.GetName())
 	assert.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
 	pk, err = sdk.Bech32ifyAccPub(pubKey)
+	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
 	path, err := restoredKey.GetPath()
@@ -87,7 +94,7 @@ func TestKeyManagement(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
-	p1, p2 := "1234", "really-secure!@#$"
+	p1, p2 := nums, "really-secure!@#$"
 
 	// Check empty state
 	l, err := cstore.List()
@@ -170,7 +177,7 @@ func TestSignVerify(t *testing.T) {
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
-	p1, p2, p3 := "1234", "foobar", "foobar"
+	p1, p2, p3 := nums, foobar, foobar
 
 	// create two users and get their info
 	i1, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
@@ -320,7 +327,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
-	p1, p2 := "1234", "foobar"
+	p1, p2 := nums, foobar
 
 	// make sure key works with initial password
 	_, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
@@ -368,7 +375,7 @@ func TestSeedPhrase(t *testing.T) {
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
-	p1, p2 := "1234", "foobar"
+	p1, p2 := nums, foobar
 
 	// make sure key works with initial password
 	info, mnemonic, err := cstore.CreateMnemonic(n1, English, p1, algo)

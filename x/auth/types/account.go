@@ -22,11 +22,11 @@ var _ exported.Account = (*BaseAccount)(nil)
 // However one doesn't have to use BaseAccount as long as your struct
 // implements Account.
 type BaseAccount struct {
-	Address       sdk.AccAddress `json:"address"`
-	Coins         sdk.Coins      `json:"coins"`
-	PubKey        crypto.PubKey  `json:"public_key"`
-	AccountNumber uint64         `json:"account_number"`
-	Sequence      uint64         `json:"sequence"`
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+	Sequence      uint64         `json:"sequence" yaml:"sequence"`
 }
 
 // NewBaseAccount creates a new BaseAccount object
@@ -371,17 +371,17 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
 func NewContinuousVestingAccount(
-	baseAcc *BaseAccount, StartTime, EndTime int64,
+	baseAcc *BaseAccount, startTime, endTime int64,
 ) *ContinuousVestingAccount {
 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
-		EndTime:         EndTime,
+		EndTime:         endTime,
 	}
 
 	return &ContinuousVestingAccount{
-		StartTime:          StartTime,
+		StartTime:          startTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
 }
@@ -487,11 +487,11 @@ func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount
-func NewDelayedVestingAccount(baseAcc *BaseAccount, EndTime int64) *DelayedVestingAccount {
+func NewDelayedVestingAccount(baseAcc *BaseAccount, endTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
-		EndTime:         EndTime,
+		EndTime:         endTime,
 	}
 
 	return &DelayedVestingAccount{baseVestingAcc}

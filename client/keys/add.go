@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 
+	bip39 "github.com/bartekn/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -14,8 +16,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -215,7 +215,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		mnemonic, err = bip39.NewMnemonic(entropySeed[:])
+		mnemonic, err = bip39.NewMnemonic(entropySeed)
 		if err != nil {
 			return err
 		}
@@ -295,7 +295,7 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 		}
 		cmd.PrintErrln(string(jsonString))
 	default:
-		return fmt.Errorf("I can't speak: %s", output)
+		return fmt.Errorf("invalid output format %s", output)
 	}
 
 	return nil

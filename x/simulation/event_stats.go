@@ -1,33 +1,55 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"io/ioutil"
 )
 
-type eventStats map[string]uint
+// EventStats defines an object that keeps a tally of each event that has occurred
+// during a simulation.
+type EventStats map[string]map[string]map[string]int
 
-func newEventStats() eventStats {
-	events := make(map[string]uint)
-	return events
+// NewEventStats creates a new empty EventStats object
+func NewEventStats() EventStats {
+	return make(EventStats)
 }
 
-func (es eventStats) tally(eventDesc string) {
-	es[eventDesc]++
-}
-
-// Pretty-print events as a table
-func (es eventStats) Print(w io.Writer) {
-	var keys []string
-	for key := range es {
-		keys = append(keys, key)
+// Tally increases the count of a simulation event.
+func (es EventStats) Tally(route, op, evResult string) {
+	_, ok := es[route]
+	if !ok {
+		es[route] = make(map[string]map[string]int)
 	}
 
-	sort.Strings(keys)
-	fmt.Fprintf(w, "Event statistics: \n")
+	_, ok = es[route][op]
+	if !ok {
+		es[route][op] = make(map[string]int)
+	}
 
-	for _, key := range keys {
-		fmt.Fprintf(w, "  % 60s => %d\n", key, es[key])
+	es[route][op][evResult]++
+}
+
+// Print the event stats in JSON format.
+func (es EventStats) Print(w io.Writer) {
+	obj, err := json.MarshalIndent(es, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintln(w, string(obj))
+}
+
+// ExportJSON saves the event stats as a JSON file on a given path
+func (es EventStats) ExportJSON(path string) {
+	bz, err := json.MarshalIndent(es, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(path, bz, 0644)
+	if err != nil {
+		panic(err)
 	}
 }

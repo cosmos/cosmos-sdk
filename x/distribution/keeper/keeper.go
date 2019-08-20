@@ -19,8 +19,9 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	supplyKeeper  types.SupplyKeeper
 
-	// codespace
 	codespace sdk.CodespaceType
+
+	blacklistedAddrs map[string]bool
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -28,7 +29,7 @@ type Keeper struct {
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 	sk types.StakingKeeper, supplyKeeper types.SupplyKeeper, codespace sdk.CodespaceType,
-	feeCollectorName string) Keeper {
+	feeCollectorName string, blacklistedAddrs map[string]bool) Keeper {
 
 	// ensure distribution module account is set
 	if addr := supplyKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -43,6 +44,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
 		supplyKeeper:     supplyKeeper,
 		codespace:        codespace,
 		feeCollectorName: feeCollectorName,
+		blacklistedAddrs: blacklistedAddrs,
 	}
 }
 
@@ -51,8 +53,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// set withdraw address
+// SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) sdk.Error {
+	if k.blacklistedAddrs[withdrawAddr.String()] {
+		return sdk.ErrUnauthorized(fmt.Sprintf("%s is blacklisted from receiving external funds", withdrawAddr))
+	}
+
 	if !k.GetWithdrawAddrEnabled(ctx) {
 		return types.ErrSetWithdrawAddrDisabled(k.codespace)
 	}
@@ -89,7 +95,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(types.AttributeKeyAmount, rewards.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
 		),
 	)
@@ -126,7 +132,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawCommission,
-			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 		),
 	)
 

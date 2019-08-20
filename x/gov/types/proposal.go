@@ -9,23 +9,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DefaultStartingProposalID is 1
+const DefaultStartingProposalID uint64 = 1
+
 // Proposal defines a struct used by the governance module to allow for voting
 // on network changes.
 type Proposal struct {
-	Content `json:"content"` // Proposal content interface
+	Content `json:"content" yaml:"content"` // Proposal content interface
 
-	ProposalID       uint64         `json:"id"`                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status"`    // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result"` // Result of Tallys
+	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
+	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
 
-	SubmitTime     time.Time `json:"submit_time"`      // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit"`    // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
+// NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
 	return Proposal{
 		Content:          content,
@@ -38,7 +42,7 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 	}
 }
 
-// nolint
+// String implements stringer interface
 func (p Proposal) String() string {
 	return fmt.Sprintf(`Proposal %d:
   Title:              %s
@@ -59,7 +63,7 @@ func (p Proposal) String() string {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-// nolint
+// String implements stringer interface
 func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
@@ -71,14 +75,14 @@ func (p Proposals) String() string {
 }
 
 type (
-	// ProposalQueue
+	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
 
 	// ProposalStatus is a type alias that represents a proposal status as a byte
 	ProposalStatus byte
 )
 
-//nolint
+// Valid Proposal statuses
 const (
 	StatusNil           ProposalStatus = 0x00
 	StatusDepositPeriod ProposalStatus = 0x01
@@ -88,7 +92,7 @@ const (
 	StatusFailed        ProposalStatus = 0x05
 )
 
-// ProposalStatusToString turns a string into a ProposalStatus
+// ProposalStatusFromString turns a string into a ProposalStatus
 func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	switch str {
 	case "DepositPeriod":
@@ -138,12 +142,12 @@ func (status *ProposalStatus) Unmarshal(data []byte) error {
 	return nil
 }
 
-// Marshals to JSON using string
+// MarshalJSON Marshals to JSON using string representation of the status
 func (status ProposalStatus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(status.String())
 }
 
-// Unmarshals from JSON assuming Bech32 encoding
+// UnmarshalJSON Unmarshals from JSON assuming Bech32 encoding
 func (status *ProposalStatus) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
@@ -195,84 +199,43 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	}
 }
 
-// Tally Results
-type TallyResult struct {
-	Yes        sdk.Int `json:"yes"`
-	Abstain    sdk.Int `json:"abstain"`
-	No         sdk.Int `json:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto"`
-}
-
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
-	return TallyResult{
-		Yes:        yes,
-		Abstain:    abstain,
-		No:         no,
-		NoWithVeto: noWithVeto,
-	}
-}
-
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
-	return TallyResult{
-		Yes:        results[OptionYes].TruncateInt(),
-		Abstain:    results[OptionAbstain].TruncateInt(),
-		No:         results[OptionNo].TruncateInt(),
-		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
-	}
-}
-
-// EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() TallyResult {
-	return TallyResult{
-		Yes:        sdk.ZeroInt(),
-		Abstain:    sdk.ZeroInt(),
-		No:         sdk.ZeroInt(),
-		NoWithVeto: sdk.ZeroInt(),
-	}
-}
-
-// Equals returns if two proposals are equal.
-func (tr TallyResult) Equals(comp TallyResult) bool {
-	return tr.Yes.Equal(comp.Yes) &&
-		tr.Abstain.Equal(comp.Abstain) &&
-		tr.No.Equal(comp.No) &&
-		tr.NoWithVeto.Equal(comp.NoWithVeto)
-}
-
-func (tr TallyResult) String() string {
-	return fmt.Sprintf(`Tally Result:
-  Yes:        %s
-  Abstain:    %s
-  No:         %s
-  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
-}
-
 // Proposal types
 const (
 	ProposalTypeText            string = "Text"
 	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
 )
 
-// Text Proposal
+// TextProposal defines a standard text proposal whose changes need to be
+// manually updated in case of approval
 type TextProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
+// NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {
 	return TextProposal{title, description}
 }
 
-// Implements Proposal Interface
+// Implements Content Interface
 var _ Content = TextProposal{}
 
-// nolint
-func (tp TextProposal) GetTitle() string         { return tp.Title }
-func (tp TextProposal) GetDescription() string   { return tp.Description }
-func (tp TextProposal) ProposalRoute() string    { return RouterKey }
-func (tp TextProposal) ProposalType() string     { return ProposalTypeText }
+// GetTitle returns the proposal title
+func (tp TextProposal) GetTitle() string { return tp.Title }
+
+// GetDescription returns the proposal description
+func (tp TextProposal) GetDescription() string { return tp.Description }
+
+// ProposalRoute returns the proposal router key
+func (tp TextProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType is "Text"
+func (tp TextProposal) ProposalType() string { return ProposalTypeText }
+
+// ValidateBasic validates the content's title and description of the proposal
 func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
 
+// String implements Stringer interface
 func (tp TextProposal) String() string {
 	return fmt.Sprintf(`Text Proposal:
   Title:       %s
@@ -280,30 +243,42 @@ func (tp TextProposal) String() string {
 `, tp.Title, tp.Description)
 }
 
-// Software Upgrade Proposals
+// SoftwareUpgradeProposal defines a proposal for upgrading the network nodes
+// without the need of manually halting at a given height
+//
 // TODO: We have to add fields for SUP specific arguments e.g. commit hash,
 // upgrade date, etc.
 type SoftwareUpgradeProposal struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
 }
 
+// NewSoftwareUpgradeProposal creates a software upgrade proposal Content
 func NewSoftwareUpgradeProposal(title, description string) Content {
 	return SoftwareUpgradeProposal{title, description}
 }
 
-// Implements Proposal Interface
+// Implements Content Interface
 var _ Content = SoftwareUpgradeProposal{}
 
-// nolint
-func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+// GetTitle returns the proposal title
+func (sup SoftwareUpgradeProposal) GetTitle() string { return sup.Title }
+
+// GetDescription returns the proposal description
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
-func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+
+// ProposalRoute returns the proposal router key
+func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType is "SoftwareUpgrade"
+func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
+
+// ValidateBasic validates the content's title and description of the proposal
 func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
 	return ValidateAbstract(DefaultCodespace, sup)
 }
 
+// String implements Stringer interface
 func (sup SoftwareUpgradeProposal) String() string {
 	return fmt.Sprintf(`Software Upgrade Proposal:
   Title:       %s

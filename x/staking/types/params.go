@@ -10,11 +10,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+// Staking params default values
 const (
 	// DefaultUnbondingTime reflects three weeks in seconds as the default
 	// unbonding time.
 	// TODO: Justify our choice of default here.
-	DefaultUnbondingTime time.Duration = time.Second * 60 * 60 * 24 * 3
+	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
 	// Default maximum number of bonded validators
 	DefaultMaxValidators uint16 = 100
@@ -35,13 +36,14 @@ var _ params.ParamSet = (*Params)(nil)
 
 // Params defines the high level settings for staking
 type Params struct {
-	UnbondingTime time.Duration `json:"unbonding_time"` // time duration of unbonding
-	MaxValidators uint16        `json:"max_validators"` // maximum number of validators (max uint16 = 65535)
-	MaxEntries    uint16        `json:"max_entries"`    // max entries for either unbonding delegation or redelegation (per pair/trio)
+	UnbondingTime time.Duration `json:"unbonding_time" yaml:"unbonding_time"` // time duration of unbonding
+	MaxValidators uint16        `json:"max_validators" yaml:"max_validators"` // maximum number of validators (max uint16 = 65535)
+	MaxEntries    uint16        `json:"max_entries" yaml:"max_entries"`       // max entries for either unbonding delegation or redelegation (per pair/trio)
 	// note: we need to be a bit careful about potential overflow here, since this is user-determined
-	BondDenom string `json:"bond_denom"` // bondable coin denomination
+	BondDenom string `json:"bond_denom" yaml:"bond_denom"` // bondable coin denomination
 }
 
+// NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 	bondDenom string) Params {
 
@@ -56,10 +58,10 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		{KeyUnbondingTime, &p.UnbondingTime},
-		{KeyMaxValidators, &p.MaxValidators},
-		{KeyMaxEntries, &p.MaxEntries},
-		{KeyBondDenom, &p.BondDenom},
+		{Key: KeyUnbondingTime, Value: &p.UnbondingTime},
+		{Key: KeyMaxValidators, Value: &p.MaxValidators},
+		{Key: KeyMaxEntries, Value: &p.MaxEntries},
+		{Key: KeyBondDenom, Value: &p.BondDenom},
 	}
 }
 

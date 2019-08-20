@@ -74,7 +74,9 @@ func (ctx CLIContext) GetFromName() string {
 
 // query performs a query to a Tendermint node with the provided store name
 // and path. It returns the result and height of the query upon success
-// or an error if the query fails.
+// or an error if the query fails. In addition, it will verify the returned
+// proof if TrustNode is disabled. If proof verification fails or the query
+// height is invalid, an error will be returned.
 func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -93,7 +95,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, height, errors.New(resp.Log)
+		return res, resp.Height, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -103,7 +105,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 	err = ctx.verifyProof(path, resp)
 	if err != nil {
-		return res, height, err
+		return res, resp.Height, err
 	}
 
 	return resp.Value, resp.Height, nil

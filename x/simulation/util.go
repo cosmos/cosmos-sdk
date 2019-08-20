@@ -14,16 +14,25 @@ import (
 
 // assertAll asserts the all invariants against application state
 func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
-	event string, logWriter LogWriter) {
+	event string, logWriter LogWriter, allInvariants bool) {
 
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 
+	var invariantResults []string
 	for i := 0; i < len(invs); i++ {
-		if err := invs[i](ctx); err != nil {
-			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
-			logWriter.PrintLogs()
-			t.Fatal()
+		res, stop := invs[i](ctx)
+		if stop {
+			invariantResults = append(invariantResults, res)
 		}
+	}
+
+	if len(invariantResults) > 0 {
+		fmt.Printf("Invariants broken after %s\n\n", event)
+		for _, res := range invariantResults {
+			fmt.Printf("%s\n", res)
+		}
+		logWriter.PrintLogs()
+		t.Fatal()
 	}
 }
 
@@ -44,21 +53,23 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 //  - "over stuffed" blocks with average size of 2 * avgblocksize,
 //  - normal sized blocks, hitting avgBlocksize on average,
 //  - and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(r *rand.Rand, params Params,
-	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
-
+func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
 	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+
 	switch state {
 	case 0:
-		blocksize = r.Intn(avgBlockSize * 4)
+		blockSize = r.Intn(avgBlockSize * 4)
+
 	case 1:
-		blocksize = r.Intn(avgBlockSize * 2)
+		blockSize = r.Intn(avgBlockSize * 2)
+
 	default:
-		blocksize = 0
+		blockSize = 0
 	}
-	return state, blocksize
+
+	return state, blockSize
 }
 
 // PeriodicInvariants  returns an array of wrapped Invariants. Where each
@@ -66,11 +77,11 @@ func getBlockSize(r *rand.Rand, params Params,
 func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
 	var outInvariants []sdk.Invariant
 	for _, invariant := range invariants {
-		outInvariant := func(ctx sdk.Context) error {
+		outInvariant := func(ctx sdk.Context) (string, bool) {
 			if int(ctx.BlockHeight())%period == offset {
 				return invariant(ctx)
 			}
-			return nil
+			return "", false
 		}
 		outInvariants = append(outInvariants, outInvariant)
 	}

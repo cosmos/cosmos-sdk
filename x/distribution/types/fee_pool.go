@@ -8,7 +8,7 @@ import (
 
 // global fee pool for distribution
 type FeePool struct {
-	CommunityPool sdk.DecCoins `json:"community_pool"` // pool for community funds yet to be spent
+	CommunityPool sdk.DecCoins `json:"community_pool" yaml:"community_pool"` // pool for community funds yet to be spent
 }
 
 // zero fee pool

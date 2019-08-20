@@ -3,29 +3,51 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
+
+// Implements Delegation interface
+var _ exported.SupplyI = Supply{}
 
 // Supply represents a struct that passively keeps track of the total supply amounts in the network
 type Supply struct {
-	Total sdk.Coins `json:"total_supply"` // total supply of tokens registered on the chain
+	Total sdk.Coins `json:"total" yaml:"total"` // total supply of tokens registered on the chain
+}
+
+// SetTotal sets the total supply.
+func (supply Supply) SetTotal(total sdk.Coins) exported.SupplyI {
+	supply.Total = total
+	return supply
+}
+
+// GetTotal returns the supply total.
+func (supply Supply) GetTotal() sdk.Coins {
+	return supply.Total
 }
 
 // NewSupply creates a new Supply instance
-func NewSupply(total sdk.Coins) Supply { return Supply{total} }
+func NewSupply(total sdk.Coins) exported.SupplyI {
+	return Supply{total}
+}
 
 // DefaultSupply creates an empty Supply
-func DefaultSupply() Supply { return NewSupply(sdk.NewCoins()) }
+func DefaultSupply() exported.SupplyI {
+	return NewSupply(sdk.NewCoins())
+}
 
 // Inflate adds coins to the total supply
-func (supply *Supply) Inflate(amount sdk.Coins) {
+func (supply Supply) Inflate(amount sdk.Coins) exported.SupplyI {
 	supply.Total = supply.Total.Add(amount)
+	return supply
 }
 
 // Deflate subtracts coins from the total supply
-func (supply *Supply) Deflate(amount sdk.Coins) {
+func (supply Supply) Deflate(amount sdk.Coins) exported.SupplyI {
 	supply.Total = supply.Total.Sub(amount)
+	return supply
 }
 
 // String returns a human readable string representation of a supplier.

@@ -9,8 +9,8 @@ v    If a checkbox is n/a - please still include it but + a little note why
 - [ ] Linked to github-issue with discussion and accepted design OR link to spec that describes this work.
 - [ ] Wrote tests
 - [ ] Updated relevant documentation (`docs/`)
-- [ ] Added a relevant changelog entry: `clog add [section] [stanza] [message]`
-- [ ] rereviewed `Files changed` in the github PR explorer
+- [ ] Added a relevant changelog entry to the `Unreleased` section in `CHANGELOG.md`
+- [ ] Re-reviewed `Files changed` in the github PR explorer
 
 ______
 

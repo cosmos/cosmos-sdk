@@ -25,6 +25,7 @@ const (
 
 var (
 	// functions aliases
+	NewParamSetPair            = subspace.NewParamSetPair
 	NewSubspace                = subspace.NewSubspace
 	NewKeyTable                = subspace.NewKeyTable
 	DefaultTestComponents      = subspace.DefaultTestComponents
@@ -39,6 +40,9 @@ var (
 	NewParamChange             = types.NewParamChange
 	NewParamChangeWithSubkey   = types.NewParamChangeWithSubkey
 	ValidateChanges            = types.ValidateChanges
+
+	// variable aliases
+	ModuleCdc = types.ModuleCdc
 )
 
 type (

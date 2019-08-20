@@ -17,8 +17,8 @@ var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount
-	Name       string `json:"name"`       // name of the module
-	Permission string `json:"permission"` // permission of module account (minter/burner/holder)
+	Name        string   `json:"name" yaml:"name"`               // name of the module
+	Permissions []string `json:"permissions" yaml:"permissions"` // permissions of module account
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name
@@ -26,34 +26,44 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
-func NewEmptyModuleAccount(name, permission string) *ModuleAccount {
+func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
 
-	if err := validatePermissions(permission); err != nil {
+	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
 	}
 
 	return &ModuleAccount{
 		BaseAccount: &baseAcc,
 		Name:        name,
-		Permission:  permission,
+		Permissions: permissions,
 	}
 }
 
 // NewModuleAccount creates a new ModuleAccount instance
 func NewModuleAccount(ba *authtypes.BaseAccount,
-	name, permission string) *ModuleAccount {
+	name string, permissions ...string) *ModuleAccount {
 
-	if err := validatePermissions(permission); err != nil {
+	if err := validatePermissions(permissions...); err != nil {
 		panic(err)
 	}
 
 	return &ModuleAccount{
 		BaseAccount: ba,
 		Name:        name,
-		Permission:  permission,
+		Permissions: permissions,
 	}
+}
+
+// HasPermission returns whether or not the module account has permission.
+func (ma ModuleAccount) HasPermission(permission string) bool {
+	for _, perm := range ma.Permissions {
+		if perm == permission {
+			return true
+		}
+	}
+	return false
 }
 
 // GetName returns the the name of the holder's module
@@ -61,9 +71,9 @@ func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
 
-// GetPermission returns permission granted to the module account (holder/minter/burner)
-func (ma ModuleAccount) GetPermission() string {
-	return ma.Permission
+// GetPermissions returns permissions granted to the module account
+func (ma ModuleAccount) GetPermissions() []string {
+	return ma.Permissions
 }
 
 // SetPubKey - Implements Account
@@ -94,7 +104,7 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 		AccountNumber uint64
 		Sequence      uint64
 		Name          string
-		Permission    string
+		Permissions   []string
 	}{
 		Address:       ma.Address,
 		Coins:         ma.Coins,
@@ -102,7 +112,7 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 		AccountNumber: ma.AccountNumber,
 		Sequence:      ma.Sequence,
 		Name:          ma.Name,
-		Permission:    ma.Permission,
+		Permissions:   ma.Permissions,
 	})
 
 	if err != nil {

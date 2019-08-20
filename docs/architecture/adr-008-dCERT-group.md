@@ -35,6 +35,7 @@ implementation of:
  - continuous voting
  - slashing due to breach of soft contract
  - revoking a member due to breach of soft contract
+ - emergency disband of the entire dCERT group (ex. for colluding maliciously) 
  - compensation stipend from the community pool or other means decided by
    governance
 
@@ -44,6 +45,7 @@ This system necessitates the following new parameters:
  - required staked slashable tokens for each dCERT member (suggested $10K of atoms)
  - unbonding time for dCERT staked token (suggested 3 week)
  - quorum for suspending a particular member (suggested 5/7) 
+ - proposal wager for disbanding the dCERT group (suggested ~$100000 USD worth of atoms)
 
 These parameters are expected to be implemented through the param keeper such 
 that governance may change them at any given point. 
@@ -61,15 +63,25 @@ implemented with the following specifications:
  - In order for a new member to be added to the dCERT group they must 
    send a transaction accepting their admission at which point the validity of
    their admission is to be confirmed. 
+ - If the dCERT group is already full and new member is admitted, the existing
+   dCERT member with the lowest amount of atoms is kicked from the dCERT group. 
 
 ### Staking/Slashing
 
 All members of the dCERT group must stake tokens _specifically_ to maintain
-eligibility as a dCERT member. This staking mechanism must be designed with
-an unbonding period. Slash a particular dCERT member due to soft-contract breach
+eligibility as a dCERT member. This staking mechanism must be designed with an
+unbonding period. Slash a particular dCERT member due to soft-contract breach
 should be performed by governance on a per member basis based on the magnitude
-of the breach. The process flow is anticipated to be that a dCERT member 
-is suspended by the dCERT group prior to being slashed by governance. 
+of the breach.  The process flow is anticipated to be that a dCERT member is
+suspended by the dCERT group prior to being slashed by governance. 
+
+Additionally in the case of an emergency situation of a colluding and malicious
+dCERT group, the community needs the capability to disband the entire dCERT
+group and likely fully slash them. This could be achieved though a special new
+proposal type (general governance) which would halt the functionality of the
+dCERT group until the proposal was concluded. This special proposal type would
+likely need to also have a fairly large wager which could be slashed if the
+proposal creator was malicious. 
 
 ### dCERT membership transactions
 

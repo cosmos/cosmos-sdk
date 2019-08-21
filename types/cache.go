@@ -65,6 +65,11 @@ func (cmgr *KVStoreCacheManager) GetOrSetKVStoreCache(key StoreKey, store KVStor
 	return cmgr.caches[key]
 }
 
+// Reset resets in the internal caches.
+func (cmgr *KVStoreCacheManager) Reset() {
+	cmgr.caches = make(map[StoreKey]*KVStoreCache)
+}
+
 // Get retrieves a value by key. It will first look in the write-through cache.
 // If the value doesn't exist in the write-through cache, the Get call is
 // delegated to the underlying KVStore.

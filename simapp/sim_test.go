@@ -594,6 +594,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
 	require.Equal(t, "SimApp", newApp.Name())
+
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})

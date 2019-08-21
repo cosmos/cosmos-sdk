@@ -39,18 +39,12 @@ module.exports = {
     "/ru/": {
       lang: "ru"
     },
-    // "/kr/": {
-    //   lang: "kr"
-    // },
-    // "/cn/": {
-    //   lang: "cn"
-    // }
   },
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
-    docsBranch: "gamarin/new-docs",
+    docsBranch: "master",
     locales: {
       "/": {
         label: "English",

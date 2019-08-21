@@ -1,26 +1,22 @@
-linters:
-  disable-all: true
-  enable:
-    - errcheck
-    - golint
-    - ineffassign
-    - unconvert
-    - misspell
-    - govet
-    - unused
-    - deadcode
-    - goconst
-    - gosec
-    - staticcheck
-linters-settings:
-  gocyclo:
-    min-complexity: 11
-  errcheck:
-    ignore: fmt:.*,io/ioutil:^Read.*,github.com/spf13/cobra:MarkFlagRequired,github.com/spf13/viper:BindPFlag
-  golint:
-    min-confidence: 1.1
-issues:
-  exclude:
-    - composite
 run:
-  tests: false
+  deadline: 1m
+
+linters:
+  enable-all: true
+  disable:
+    - gosimple
+    - gocyclo
+    - gochecknoinits
+    - golint
+    - gochecknoglobals
+    - dupl
+    - interfacer
+    - gosec
+    - unparam
+    - lll
+    - maligned
+    - nakedret
+    - errcheck
+    - scopelint
+    - prealloc
+    - varcheck

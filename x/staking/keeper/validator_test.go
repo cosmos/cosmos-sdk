@@ -293,7 +293,8 @@ func TestValidatorBasics(t *testing.T) {
 }
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower
-func GetValidatorSortingUnmixed(t *testing.T) {
+func TestGetValidatorSortingUnmixed(t *testing.T) {
+	t.SkipNow()
 	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// initialize some validators into the state
@@ -368,7 +369,8 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	assert.True(ValEq(t, validators[4], resValidators[1]))
 }
 
-func GetValidatorSortingMixed(t *testing.T) {
+func TestGetValidatorSortingMixed(t *testing.T) {
+	t.SkipNow()
 	ctx, _, keeper, _ := CreateTestInput(t, false, 1000)
 
 	// now 2 max resValidators
@@ -401,7 +403,7 @@ func GetValidatorSortingMixed(t *testing.T) {
 	for i := range amts {
 		TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
-	val0, found := keeper.GetValidator(ctx, sdk.ValAddress(sdk.ValAddress(PKs[0].Address().Bytes())))
+	val0, found := keeper.GetValidator(ctx, sdk.ValAddress(PKs[0].Address().Bytes()))
 	require.True(t, found)
 	val1, found := keeper.GetValidator(ctx, sdk.ValAddress(Addrs[1]))
 	require.True(t, found)
@@ -549,7 +551,7 @@ func TestValidatorBondHeight(t *testing.T) {
 
 	// initialize some validators into the state
 	var validators [3]types.Validator
-	validators[0] = types.NewValidator(sdk.ValAddress(sdk.ValAddress(PKs[0].Address().Bytes())), PKs[0], types.Description{})
+	validators[0] = types.NewValidator(sdk.ValAddress(PKs[0].Address().Bytes()), PKs[0], types.Description{})
 	validators[1] = types.NewValidator(sdk.ValAddress(Addrs[1]), PKs[1], types.Description{})
 	validators[2] = types.NewValidator(sdk.ValAddress(Addrs[2]), PKs[2], types.Description{})
 

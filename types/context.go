@@ -92,6 +92,10 @@ func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c
 }
 
+// WithInterBlockCache returns the Context with an inter-block write-through
+// cache.
+//
+// NOTE: This cache is persistent and should only be set on the DeliverTx state.
 func (c Context) WithInterBlockCache(cacheMngr *StoreCacheManager) Context {
 	c.interBlockCache = cacheMngr
 	return c

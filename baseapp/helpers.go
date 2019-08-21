@@ -33,5 +33,6 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 			WithMinGasPrices(app.minGasPrices)
 	}
 
-	return sdk.NewContext(app.deliverState.ms, header, false, app.logger).WithInterBlockCache(app.interBlockCache)
+	return sdk.NewContext(app.deliverState.ms, header, false, app.logger).
+		WithInterBlockCache(app.interBlockCache)
 }

@@ -86,8 +86,8 @@ func (man CounterpartyHandshaker) object(parent CounterObject) CounterHandshakeO
 	}
 }
 
-func (man Handshaker) create(ctx sdk.Context, connid, chanid string, channel Channel) (obj HandshakeObject, err error) {
-	cobj, err := man.man.create(ctx, connid, chanid, channel)
+func (man Handshaker) create(ctx sdk.Context, portid, chanid string, channel Channel) (obj HandshakeObject, err error) {
+	cobj, err := man.man.create(ctx, portid, chanid, channel)
 	if err != nil {
 		return
 	}
@@ -96,8 +96,8 @@ func (man Handshaker) create(ctx sdk.Context, connid, chanid string, channel Cha
 	return obj, nil
 }
 
-func (man Handshaker) query(ctx sdk.Context, connid, chanid string) (obj HandshakeObject, err error) {
-	cobj, err := man.man.query(ctx, connid, chanid)
+func (man Handshaker) query(ctx sdk.Context, portid, chanid string) (obj HandshakeObject, err error) {
+	cobj, err := man.man.query(ctx, portid, chanid)
 	if err != nil {
 		return
 	}
@@ -125,7 +125,7 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 
 // Using proofs: none
 func (man Handshaker) OpenInit(ctx sdk.Context,
-	connid, chanid string, channel Channel, nextTimeoutHeight uint64,
+	portid, chanid string, channel Channel, nextTimeoutHeight uint64,
 ) (HandshakeObject, error) {
 	// man.Create() will ensure
 	// assert(connectionHops.length === 2)
@@ -135,7 +135,7 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 		return HandshakeObject{}, errors.New("ConnectionHops length must be 1")
 	}
 
-	obj, err := man.create(ctx, connid, chanid, channel)
+	obj, err := man.create(ctx, portid, chanid, channel)
 	if err != nil {
 		return HandshakeObject{}, err
 	}
@@ -214,9 +214,9 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 // Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
 	proofs []commitment.Proof,
-	connid, chanid string, timeoutHeight, nextTimeoutHeight uint64,
+	portid, chanid string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
-	obj, err = man.query(ctx, connid, chanid)
+	obj, err = man.query(ctx, portid, chanid)
 	if err != nil {
 		return
 	}
@@ -275,8 +275,8 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
 	proofs []commitment.Proof,
-	connid, chanid string, timeoutHeight uint64) (obj HandshakeObject, err error) {
-	obj, err = man.query(ctx, connid, chanid)
+	portid, chanid string, timeoutHeight uint64) (obj HandshakeObject, err error) {
+	obj, err = man.query(ctx, portid, chanid)
 	if err != nil {
 		return
 	}

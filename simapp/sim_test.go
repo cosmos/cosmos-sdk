@@ -250,7 +250,7 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // interBlockCache returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
 func interBlockCache() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(sdk.NewStoreCacheManager(sdk.DefaultPersistentKVStoreCacheSize))
+	return baseapp.SetInterBlockCache(sdk.NewKVStoreCacheManager(sdk.DefaultPersistentKVStoreCacheSize))
 }
 
 // Profile with:

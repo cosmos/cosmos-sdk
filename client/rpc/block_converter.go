@@ -19,6 +19,7 @@ type BlockMeta struct {
 }
 
 // Header defines a wrapper around Tendermint's Header type overriding various fields.
+// nolint: structtag
 type Header struct {
 	// embed original type
 	types.Header
@@ -48,6 +49,7 @@ type Commit struct {
 	Precommits []CommitSig   `json:"precommits"`
 }
 
+// nolint: structtag
 type CommitSig struct {
 	types.CommitSig
 	ValidatorAddress sdk.ValAddress `json:"validator_address"`

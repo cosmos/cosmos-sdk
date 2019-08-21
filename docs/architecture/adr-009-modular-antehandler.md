@@ -164,3 +164,10 @@ Cons:
 ## Consequences
 
 Since pros and cons are written for each approach, it is omitted from this section
+
+## References
+
+- [#4572](https://github.com/cosmos/cosmos-sdk/issues/4572):  Modular AnteHandler Issue
+- [#4582](https://github.com/cosmos/cosmos-sdk/pull/4583): Initial Implementation of Per-Module AnteHandler Approach
+- [Weave Decorator Code](https://github.com/iov-one/weave/blob/master/handler.go#L35)
+- [Weave Design Videos](https://vimeo.com/showcase/6189877)

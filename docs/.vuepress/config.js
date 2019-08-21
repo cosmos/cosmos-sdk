@@ -39,12 +39,12 @@ module.exports = {
     "/ru/": {
       lang: "ru"
     },
-    "/kr/": {
-      lang: "kr"
-    },
-    "/cn/": {
-      lang: "cn"
-    }
+    // "/kr/": {
+    //   lang: "kr"
+    // },
+    // "/cn/": {
+    //   lang: "cn"
+    // }
   },
   themeConfig: {
     repo: "cosmos/cosmos-sdk",

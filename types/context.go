@@ -23,7 +23,7 @@ and standard additions here would be better just to add to the Context struct
 type Context struct {
 	ctx             context.Context
 	ms              MultiStore
-	interBlockCache *StoreCacheManager
+	interBlockCache *KVStoreCacheManager
 	header          abci.Header
 	chainID         string
 	txBytes         []byte
@@ -96,7 +96,7 @@ func (c Context) WithMultiStore(ms MultiStore) Context {
 // cache.
 //
 // NOTE: This cache is persistent and should only be set on the DeliverTx state.
-func (c Context) WithInterBlockCache(cacheMngr *StoreCacheManager) Context {
+func (c Context) WithInterBlockCache(cacheMngr *KVStoreCacheManager) Context {
 	c.interBlockCache = cacheMngr
 	return c
 }

@@ -14,7 +14,7 @@ import (
 
 func TestGetOrSetStoreCache(t *testing.T) {
 	db := dbm.NewMemDB()
-	mngr := types.NewStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
+	mngr := types.NewKVStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
@@ -26,7 +26,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 
 func TestStoreCache(t *testing.T) {
 	db := dbm.NewMemDB()
-	mngr := types.NewStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
+	mngr := types.NewKVStoreCacheManager(types.DefaultPersistentKVStoreCacheSize)
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)

@@ -84,7 +84,7 @@ type BaseApp struct {
 	deliverState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache *sdk.StoreCacheManager
+	interBlockCache *sdk.KVStoreCacheManager
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -341,7 +341,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 	app.haltHeight = height
 }
 
-func (app *BaseApp) setInterBlockCache(cache *sdk.StoreCacheManager) {
+func (app *BaseApp) setInterBlockCache(cache *sdk.KVStoreCacheManager) {
 	app.interBlockCache = cache
 }
 

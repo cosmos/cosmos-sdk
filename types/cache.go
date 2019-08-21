@@ -26,10 +26,10 @@ type (
 		cache *lru.ARCCache
 	}
 
-	// StoreCacheManager defines a manager that stores a mapping of StoreKeys
+	// KVStoreCacheManager defines a manager that stores a mapping of StoreKeys
 	// to KVStoreCache references. Each KVStoreCache reference is meant to be
 	// persistent between blocks.
-	StoreCacheManager struct {
+	KVStoreCacheManager struct {
 		cacheSize uint
 		caches    map[StoreKey]*KVStoreCache
 	}
@@ -47,17 +47,17 @@ func NewKVStoreCache(store KVStore, size uint) *KVStoreCache {
 	}
 }
 
-func NewStoreCacheManager(size uint) *StoreCacheManager {
-	return &StoreCacheManager{
+func NewKVStoreCacheManager(size uint) *KVStoreCacheManager {
+	return &KVStoreCacheManager{
 		cacheSize: size,
 		caches:    make(map[StoreKey]*KVStoreCache),
 	}
 }
 
-// GetOrSetKVStoreCache attempts to get a CacheWrap store from the StoreCacheManager.
+// GetOrSetKVStoreCache attempts to get a CacheWrap store from the KVStoreCacheManager.
 // If the CacheWrap does not exist in the mapping, it is added. Each CacheWrap
 // store contains a persistent cache through the StoreCache.
-func (cmgr *StoreCacheManager) GetOrSetKVStoreCache(key StoreKey, store KVStore) KVStore {
+func (cmgr *KVStoreCacheManager) GetOrSetKVStoreCache(key StoreKey, store KVStore) KVStore {
 	if cmgr.caches[key] == nil {
 		cmgr.caches[key] = NewKVStoreCache(store, cmgr.cacheSize)
 	}

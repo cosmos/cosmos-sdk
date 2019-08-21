@@ -68,10 +68,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return codec.Cdc.MarshalJSONIndent(res, "", "  ")
 	}
 
-	// convert to new type
-	converted := ConvertBlockResult(res)
-
-	return codec.Cdc.MarshalJSON(converted)
+	return codec.Cdc.MarshalJSON(ConvertBlockResult(res))
 }
 
 // get the current blockchain height

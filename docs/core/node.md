@@ -2,7 +2,7 @@
 
 ## Pre-Requisite Reading
 
-## main function
+## `main` function
 
 TODO
 

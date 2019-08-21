@@ -1,3 +1,0 @@
-# Amnio Encoding
-
-TODO

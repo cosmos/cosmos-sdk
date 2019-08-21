@@ -12,16 +12,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 const (
 	FlagProve = "prove"
 )
-
 
 func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.Object {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
@@ -80,7 +79,7 @@ func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(cdc, storeKey, ibc.VersionPrefix(ibc.Version), args[0], "")
+			obj := object(cdc, storeKey, version.Prefix(version.Version), args[0], "")
 			jsonobj, err := QueryConnection(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

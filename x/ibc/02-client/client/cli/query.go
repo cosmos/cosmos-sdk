@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 func mapping(cdc *codec.Codec, storeKey string, version int64) state.Mapping {
@@ -48,7 +48,7 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			mapp := mapping(cdc, storeKey, ibc.Version)
+			mapp := mapping(cdc, storeKey, version.Version)
 			man := client.NewManager(mapp)
 			id := args[0]
 

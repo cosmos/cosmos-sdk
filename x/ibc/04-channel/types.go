@@ -1,5 +1,9 @@
 package channel
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 /*
 type Packet struct {
 	Sequence      uint64
@@ -15,9 +19,13 @@ type Packet struct {
 */
 
 type Packet interface {
-	Timeout() uint64
-	//	Commit() []byte // Can be a commit message
 	Route() string
+	Type() string
+	ValidateBasic() sdk.Error
+	String() string
+	Timeout() uint64
+	MarshalAmino() (string, error)
+	MarshalJSON() ([]byte, error)
 }
 
 type Channel struct {

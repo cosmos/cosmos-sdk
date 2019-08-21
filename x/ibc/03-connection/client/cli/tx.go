@@ -13,10 +13,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 /*
@@ -80,7 +80,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj1, err := handshake(ctx1, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			obj1, err := handshake(ctx1, cdc, storeKey, version.DefaultPrefix(), conn1id)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj2, err := handshake(ctx2, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			obj2, err := handshake(ctx2, cdc, storeKey, version.DefaultPrefix(), conn1id)
 			if err != nil {
 				return err
 			}

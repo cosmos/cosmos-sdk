@@ -36,11 +36,10 @@ type MyPacket struct {
 	Message string
 }
 
-/*
 func (packet MyPacket) Commit() []byte {
 	return []byte(packet.Message)
 }
-*/
+
 func (packet MyPacket) Timeout() uint64 {
 	return 100 // TODO
 }

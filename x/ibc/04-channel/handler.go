@@ -38,8 +38,8 @@ func HandleMsgOpenConfirm(ctx sdk.Context, msg MsgOpenConfirm, man Handshaker) s
 
 type Handler func(sdk.Context, Packet) sdk.Result
 
-func HandleMsgReceive(ctx sdk.Context, msg MsgReceive, man Manager) sdk.Result {
-	err := man.Receive(ctx, msg.Proofs, msg.ConnectionID, msg.ChannelID, msg.Packet)
+func HandleMsgPacket(ctx sdk.Context, msg MsgPacket, man Manager) sdk.Result {
+	err := man.Receive(ctx, msg.Proofs, msg.PortID, msg.ChannelID, msg.Packet)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), 500, "").Result()
 	}

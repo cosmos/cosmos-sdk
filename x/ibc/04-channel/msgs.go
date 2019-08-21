@@ -2,8 +2,7 @@ package channel
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const Route = "ibc"
@@ -133,32 +132,33 @@ func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-type MsgReceive struct {
-	ConnectionID string
-	ChannelID    string
-	Packet       Packet
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+type MsgPacket struct {
+	Packet `json:"packet" yaml:"packet"`
+	// PortID, ChannelID can be empty if batched & not first MsgPacket
+	PortID    string `json:"port_id,omitempty" yaml:"port_id"`
+	ChannelID string `json:"channel_id,omitempty" yaml:"channel_id"`
+	// Height uint64 // height of the commitment root for the proofs
+	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
+	Signer sdk.AccAddress     `json:"signer,omitempty" yaml:"signer"`
 }
 
-var _ sdk.Msg = MsgReceive{}
+var _ sdk.Msg = MsgPacket{}
 
-func (msg MsgReceive) Route() string {
-	return Route
-}
-
-func (msg MsgReceive) Type() string {
-	return "receive"
-}
-
-func (msg MsgReceive) ValidateBasic() sdk.Error {
+func (msg MsgPacket) ValidateBasic() sdk.Error {
+	// Check PortID ChannelID len
+	// Check packet != nil
+	// Check proofs != nil
+	// Signer can be empty
 	return nil // TODO
 }
 
-func (msg MsgReceive) GetSignBytes() []byte {
-	return nil // TODO
+func (msg MsgPacket) GetSignBytes() []byte {
+	return msgCdc.MustMarshalJSON(msg) // TODO: Sort 
 }
 
-func (msg MsgReceive) GetSigners() []sdk.AccAddress {
+func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+	if msg.Signer.Empty() {
+		return []sdk.AccAddress{}
+	}
 	return []sdk.AccAddress{msg.Signer}
 }

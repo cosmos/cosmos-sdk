@@ -1,4 +1,4 @@
-# ADR 9: Modular AnteHandler
+# ADR 009: Modular AnteHandler
 
 ## Changelog
 

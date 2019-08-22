@@ -19,7 +19,7 @@ Pros:
 2. Utilizes the existing ModuleManager architecture
 
 Cons:
-1. Improves granularity but still cannot get more granular than a per-module basis. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's AnteHandle functionality.
+1. Improves granularity but still cannot get more granular than a per-module basis. e.g. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's `AnteHandle` functionality.
 2. Module AnteHandler are run one after the other. There is no way for one AnteHandler to wrap or "decorate" another.
 
 ### Decorator Pattern

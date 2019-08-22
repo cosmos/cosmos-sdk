@@ -7,26 +7,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
+func SimulateMsgUnjail() simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
-		msg := slashing.NewMsgUnjail(address)
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(slashing.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		msg := types.NewMsgUnjail(address)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
-		ctx, write := ctx.CacheContext()
-		ok := slashing.NewHandler(k)(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

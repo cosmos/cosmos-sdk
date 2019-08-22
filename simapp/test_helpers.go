@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"math/rand"
 	"os"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
@@ -86,7 +88,12 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 	}
 
 	sigs := make([]auth.StdSignature, len(priv))
-	memo := "testmemotestmemo"
+
+	// create a random length memo
+	seed := rand.Int63()
+	r := rand.New(rand.NewSource(seed))
+
+	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 140))
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
@@ -112,7 +119,7 @@ func SignCheckDeliver(
 	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
-
+	
 	tx := GenTx(msgs, accNums, seq, priv...)
 
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

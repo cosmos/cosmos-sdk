@@ -6,21 +6,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
-func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
-	handler := staking.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (
+func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
-		description := staking.NewDescription(
+		description := types.NewDescription(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
@@ -29,7 +26,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		)
 
 		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
-		commission := staking.NewCommissionRates(
+		commission := types.NewCommissionRates(
 			simulation.RandomDecAmount(r, maxCommission),
 			maxCommission,
 			simulation.RandomDecAmount(r, maxCommission),
@@ -37,41 +34,34 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
-		amount := m.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
+		amount := ak.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
 
 		if amount.Equal(sdk.ZeroInt()) {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
-		msg := staking.NewMsgCreateValidator(address, acc.PubKey,
-			selfDelegation, description, commission, sdk.OneInt())
+		msg := types.NewMsgCreateValidator(address, acc.PubKey,
+	 selfDelegation, description, commission, sdk.OneInt())
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, "")
 	}
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
-func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
-	handler := staking.NewHandler(k)
+func SimulateMsgEditValidator(k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		description := staking.NewDescription(
+		description := types.NewDescription(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
@@ -80,68 +70,58 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		)
 
 		if len(k.GetAllValidators(ctx)) == 0 {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
 
-		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
-func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
-	handler := staking.NewHandler(k)
+func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 		val := keeper.RandomValidator(r, k, ctx)
 		validatorAddress := val.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
-		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := staking.NewMsgDelegate(
+		msg := types.NewMsgDelegate(
 			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+
+		return simulation.NewOperationMsg(msg, true, "")
 	}
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
-func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
-	handler := staking.NewHandler(k)
+func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -149,49 +129,42 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		delegatorAddress := delegatorAcc.Address
 		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAddress)
 		if len(delegations) == 0 {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		unbondAmt := simulation.RandomAmount(r, totalBond)
 		if unbondAmt.Equal(sdk.ZeroInt()) {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := staking.NewMsgUndelegate(
+		msg := types.NewMsgUndelegate(
 			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
 		)
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
-				msg.GetSignBytes(), msg.ValidateBasic())
+		
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, "")
 	}
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
-func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
-	handler := staking.NewHandler(k)
+func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 		srcVal := keeper.RandomValidator(r, k, ctx)
 		srcValidatorAddress := srcVal.GetOperator()
@@ -200,28 +173,23 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
 		// TODO
-		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return simulation.NoOpMsg(staking.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := staking.NewMsgBeginRedelegate(
+		msg := types.NewMsgBeginRedelegate(
 			delegatorAddress, srcValidatorAddress, destValidatorAddress, sdk.NewCoin(denom, amount),
 		)
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(staking.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, "")
 	}
 }

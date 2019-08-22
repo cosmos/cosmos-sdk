@@ -1,14 +1,13 @@
 package operations
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -16,17 +15,18 @@ import (
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSend(mapper types.AccountKeeper, bk bank.Keeper) simulation.Operation {
-	handler := bank.NewHandler(bk)
+func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, mapper)
+		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
 		opMsg = simulation.NewOperationMsg(msg, ok, comment)
 		if !ok {
 			return opMsg, nil, nil
 		}
-		err = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
+
+
+		err = sendAndVerifyMsgSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
 		if err != nil {
 			return opMsg, nil, err
 		}
@@ -34,7 +34,7 @@ func SimulateMsgSend(mapper types.AccountKeeper, bk bank.Keeper) simulation.Oper
 	}
 }
 
-func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper types.AccountKeeper) (
+func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper) (
 	fromAcc simulation.Account, comment string, msg types.MsgSend, ok bool) {
 
 	fromAcc = simulation.RandomAcc(r, accs)
@@ -46,15 +46,15 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 		}
 		toAcc = simulation.RandomAcc(r, accs)
 	}
-	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
+	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		return fromAcc, "skipping, no coins at all", msg, false
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
-	if goErr != nil {
+	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
+	if err != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
@@ -64,45 +64,19 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, map
 }
 
 // Sends and verifies the transition of a msg send.
-func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
-	fromAcc := mapper.GetAccount(ctx, msg.FromAddress)
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
+	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
 	AccountNumbers := []uint64{fromAcc.GetAccountNumber()}
 	SequenceNumbers := []uint64{fromAcc.GetSequence()}
-	initialFromAddrCoins := fromAcc.GetCoins()
 
-	toAcc := mapper.GetAccount(ctx, msg.ToAddress)
-	initialToAddrCoins := toAcc.GetCoins()
+	tx := mock.GenTx([]sdk.Msg{msg},
+		AccountNumbers,
+		SequenceNumbers,
+		privkeys...)
 
-	if handler != nil {
-		res := handler(ctx, msg)
-		if !res.IsOK() {
-			if res.Code == types.CodeSendDisabled {
-				return nil
-			}
-			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("handling msg failed %v", res)
-		}
-	} else {
-		tx := mock.GenTx([]sdk.Msg{msg},
-			AccountNumbers,
-			SequenceNumbers,
-			privkeys...)
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("deliver failed %v", res)
-		}
-	}
-
-	fromAcc = mapper.GetAccount(ctx, msg.FromAddress)
-	toAcc = mapper.GetAccount(ctx, msg.ToAddress)
-
-	if !initialFromAddrCoins.Sub(msg.Amount).IsEqual(fromAcc.GetCoins()) {
-		return fmt.Errorf("fromAddress %s had an incorrect amount of coins", fromAcc.GetAddress())
-	}
-
-	if !initialToAddrCoins.Add(msg.Amount).IsEqual(toAcc.GetCoins()) {
-		return fmt.Errorf("toAddress %s had an incorrect amount of coins", toAcc.GetAddress())
+	res := app.Deliver(tx)
+	if !res.IsOK() {
+		return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 	}
 
 	return nil
@@ -110,17 +84,16 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg 
 
 // SimulateSingleInputMsgMultiSend tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
-func SimulateSingleInputMsgMultiSend(mapper types.AccountKeeper, bk bank.Keeper) simulation.Operation {
-	handler := bank.NewHandler(bk)
+func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, mapper)
+		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
 		opMsg = simulation.NewOperationMsg(msg, ok, comment)
 		if !ok {
 			return opMsg, nil, nil
 		}
-		err = sendAndVerifyMsgMultiSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
+		err = sendAndVerifyMsgMultiSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
 		if err != nil {
 			return opMsg, nil, err
 		}
@@ -128,11 +101,12 @@ func SimulateSingleInputMsgMultiSend(mapper types.AccountKeeper, bk bank.Keeper)
 	}
 }
 
-func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper types.AccountKeeper) (
+func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper) (
 	fromAcc simulation.Account, comment string, msg types.MsgMultiSend, ok bool) {
 
 	fromAcc = simulation.RandomAcc(r, accs)
 	toAcc := simulation.RandomAcc(r, accs)
+	
 	// Disallow sending money to yourself
 	for {
 		if !fromAcc.PubKey.Equals(toAcc.PubKey) {
@@ -140,16 +114,17 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 		}
 		toAcc = simulation.RandomAcc(r, accs)
 	}
+
 	toAddr := toAcc.Address
-	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
+	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		return fromAcc, "skipping, no coins at all", msg, false
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
-	amt, goErr := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
-	if goErr != nil {
+	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
+	if err != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
@@ -158,12 +133,13 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 		Inputs:  []types.Input{types.NewInput(fromAcc.Address, coins)},
 		Outputs: []types.Output{types.NewOutput(toAddr, coins)},
 	}
+
 	return fromAcc, "", msg, true
 }
 
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
-func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper types.AccountKeeper, msg types.MsgMultiSend,
+func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgMultiSend,
 	ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
@@ -172,47 +148,26 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, mapper types.AccountKeeper,
 	SequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
-		acc := mapper.GetAccount(ctx, msg.Inputs[i].Address)
+		acc := ak.GetAccount(ctx, msg.Inputs[i].Address)
 		AccountNumbers[i] = acc.GetAccountNumber()
 		SequenceNumbers[i] = acc.GetSequence()
 		initialInputAddrCoins[i] = acc.GetCoins()
 	}
+
 	for i := 0; i < len(msg.Outputs); i++ {
-		acc := mapper.GetAccount(ctx, msg.Outputs[i].Address)
+		acc := ak.GetAccount(ctx, msg.Outputs[i].Address)
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
-	if handler != nil {
-		res := handler(ctx, msg)
-		if !res.IsOK() {
-			if res.Code == types.CodeSendDisabled {
-				return nil
-			}
-			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("handling msg failed %v", res)
-		}
-	} else {
-		tx := mock.GenTx([]sdk.Msg{msg},
-			AccountNumbers,
-			SequenceNumbers,
-			privkeys...)
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			// TODO: Do this in a more 'canonical' way
-			return fmt.Errorf("deliver failed %v", res)
-		}
+	
+	tx := mock.GenTx([]sdk.Msg{msg},
+		AccountNumbers,
+		SequenceNumbers,
+		privkeys...)
+
+	res := app.Deliver(tx)
+	if !res.IsOK() {
+		return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 	}
 
-	for i := 0; i < len(msg.Inputs); i++ {
-		terminalInputCoins := mapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
-		if !initialInputAddrCoins[i].Sub(msg.Inputs[i].Coins).IsEqual(terminalInputCoins) {
-			return fmt.Errorf("input #%d had an incorrect amount of coins", i)
-		}
-	}
-	for i := 0; i < len(msg.Outputs); i++ {
-		terminalOutputCoins := mapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
-		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Add(msg.Outputs[i].Coins)) {
-			return fmt.Errorf("output #%d had an incorrect amount of coins", i)
-		}
-	}
 	return nil
 }

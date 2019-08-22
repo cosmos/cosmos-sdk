@@ -16,6 +16,7 @@ type DistributionKeeper interface {
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
 	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 }
 
 // SupplyKeeper defines the expected supply Keeper (noalias)

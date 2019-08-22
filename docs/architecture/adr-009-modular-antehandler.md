@@ -24,7 +24,7 @@ Cons:
 
 ### Weave Decorators
 
-The Weave approach acheives modularity through the use of Decorators. Weave introduces a new interface:
+The [weave project](https://github.com/iov-one/weave) achieves AnteHandler modularity through the use of a decorator pattern. The interface is designed as follows:
 
 ```golang
 // Decorator wraps a Handler to provide common functionality

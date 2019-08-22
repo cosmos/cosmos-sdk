@@ -59,7 +59,7 @@ Cons:
 
 ### Chained Micro-Functions
 
-The benefit of Weave's approach is that the Decorators can have very narrowly defined functionality, which when chained together allows for maximum customizability. However, the nested structure can get quite complex and thus hard to reason about.
+The benefit of Weave's approach is that the Decorators can be very concise, which when chained together allows for maximum customizability. However, the nested structure can get quite complex and thus hard to reason about.
 
 Our recommended approach is to split the AnteHandler functionality into tightly scoped "micro-functions", while preserving the one-after-the-other ordering that would come from the ModuleManager approach.
 

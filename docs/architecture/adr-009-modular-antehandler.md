@@ -12,7 +12,7 @@ The current AnteHandler design allows users to either use the default AnteHandle
 
 ### Per-Module AnteHandler
 
-One approach is to use the module manager and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's antehandler in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
+One approach is to use the [ModuleManager](https://godoc.org/github.com/cosmos/cosmos-sdk/types/module) and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's `AnteHandle` in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
 
 Pros:
 1. Simple to implement

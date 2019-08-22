@@ -16,7 +16,7 @@ One approach is to use the [ModuleManager](https://godoc.org/github.com/cosmos/c
 
 Pros:
 1. Simple to implement
-2. Can reuse ModuleManager architecture
+2. Utilizes the existing ModuleManager architecture
 
 Cons:
 1. Improves granularity but still cannot get more granular than a per-module basis. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's AnteHandle functionality.

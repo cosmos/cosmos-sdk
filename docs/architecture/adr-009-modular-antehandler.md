@@ -75,26 +75,26 @@ If however, users wish to change the order or add, modify, or delete ante micro-
 
 ```golang
 func Chainer(order []AnteHandler) AnteHandler {
-    return func(ctx Context, tx Tx, simulate bool) (newCtx Context, res Result, abort bool) {
+    return func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
         for _, ante := range order {
-            ctx, res, abort := ante(ctx, tx, simulate)
-            if abort {
-                return ctx, res, abort
+            ctx, err := ante(ctx, tx, simulate)
+            if err != nil {
+                return ctx, err
             }
         }
-        return ctx, res, abort
+        return ctx, err
     }
 }
 ```
 
 ```golang
-func VerifySignatures(ctx Context, tx Tx, simulate bool) (newCtx Context, res Result, abort bool) {
+func VerifySignatures(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // verify signatures
     // Returns InvalidSignature Result and abort=true if sigs invalid
     // Return OK result and abort=false if sigs are valid
 }
 
-func ValidateMemo(ctx Context, tx Tx, simulate bool) (newCtx Context, res Result, abort bool) {
+func ValidateMemo(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // validate memo
 }
 
@@ -102,12 +102,12 @@ AuthModuleAnteHandler := Chainer([]AnteHandler{VerifySignatures, ValidateMemo})
 ```
 
 ```golang
-func DeductFees(ctx Context, tx Tx, simulate bool) (newCtx Context, res Result, abort bool) {
+func DeductFees(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // Deduct fees from tx
     // Abort if insufficient funds in account to pay for fees
 }
 
-func CheckMempoolFees(ctx Context, tx Tx, simulate bool) (newCtx Context, res  Result, abort bool) {
+func CheckMempoolFees(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // If CheckTx: Abort if the fees are less than the mempool's minFee parameter
 }
 
@@ -138,7 +138,7 @@ app.SetAnteHandler(mm.GetAnteHandler())
 ##### User Code
 
 ```golang
-func CustomSigVerify(ctx Context, tx Tx, simulate bool) (newCtx Context, res Result, abort bool) {
+func CustomSigVerify(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // do some custom signature verification logic
 }
 ```

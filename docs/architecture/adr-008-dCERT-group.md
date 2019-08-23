@@ -56,7 +56,7 @@ An `Electionator` object is to be implemented with continuous voting is to be
 implemented with the following specifications:
  - All delegation addresses may submit votes at any point which updates their 
    preferred representation on the dCERT group. 
- - Preferred representation may be arbitrarily split between address (ex. 50%
+ - Preferred representation may be arbitrarily split between addresses (ex. 50%
    to John, 25% to Sally, 25% to Carol) 
  - Addresses which control the greatest amount of preferred-representation are
    eligible to join the dCERT group (up the _maximum number of dCERT members_)

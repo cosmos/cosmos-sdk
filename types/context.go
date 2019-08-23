@@ -210,7 +210,7 @@ func (c Context) KVStore(key StoreKey) KVStore {
 	kvStore := c.MultiStore().GetKVStore(key)
 	if c.interBlockCache != nil {
 		// wrap the KVStore in an inter-block write-through cache
-		kvStore = c.interBlockCache.GetOrSetKVStoreCache(key, kvStore)
+		kvStore = c.interBlockCache.GetKVStoreCache(key, kvStore)
 	}
 
 	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.KVGasConfig())
@@ -221,7 +221,7 @@ func (c Context) TransientStore(key StoreKey) KVStore {
 	kvStore := c.MultiStore().GetKVStore(key)
 	if c.interBlockCache != nil {
 		// wrap the KVStore in an inter-block write-through cache
-		kvStore = c.interBlockCache.GetOrSetKVStoreCache(key, kvStore)
+		kvStore = c.interBlockCache.GetKVStoreCache(key, kvStore)
 	}
 
 	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.TransientGasConfig())

@@ -18,10 +18,10 @@ func TestGetOrSetStoreCache(t *testing.T) {
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
-	store2 := mngr.GetOrSetKVStoreCache(sKey, store)
+	store2 := mngr.GetKVStoreCache(sKey, store)
 
 	require.NotNil(t, store2)
-	require.Equal(t, store2, mngr.GetOrSetKVStoreCache(sKey, store))
+	require.Equal(t, store2, mngr.GetKVStoreCache(sKey, store))
 }
 
 func TestStoreCache(t *testing.T) {
@@ -30,7 +30,7 @@ func TestStoreCache(t *testing.T) {
 
 	sKey := types.NewKVStoreKey("test")
 	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
-	kvStore := mngr.GetOrSetKVStoreCache(sKey, store)
+	kvStore := mngr.GetKVStoreCache(sKey, store)
 
 	for i := uint(0); i < types.DefaultPersistentKVStoreCacheSize*2; i++ {
 		key := []byte(fmt.Sprintf("key_%d", i))

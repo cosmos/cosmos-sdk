@@ -31,7 +31,7 @@ type (
 	// persistent between blocks.
 	KVStoreCacheManager struct {
 		cacheSize uint
-		caches    map[StoreKey]*KVStoreCache
+		caches    map[string]*KVStoreCache
 	}
 )
 
@@ -50,24 +50,27 @@ func NewKVStoreCache(store KVStore, size uint) *KVStoreCache {
 func NewKVStoreCacheManager(size uint) *KVStoreCacheManager {
 	return &KVStoreCacheManager{
 		cacheSize: size,
-		caches:    make(map[StoreKey]*KVStoreCache),
+		caches:    make(map[string]*KVStoreCache),
 	}
 }
 
-// GetOrSetKVStoreCache attempts to get a CacheWrap store from the KVStoreCacheManager.
-// If the CacheWrap does not exist in the mapping, it is added. Each CacheWrap
-// store contains a persistent cache through the StoreCache.
-func (cmgr *KVStoreCacheManager) GetOrSetKVStoreCache(key StoreKey, store KVStore) KVStore {
-	if cmgr.caches[key] == nil {
-		cmgr.caches[key] = NewKVStoreCache(store, cmgr.cacheSize)
+// GetKVStoreCache returns a KVStore from the KVStoreCacheManager which is
+// deceratored with a persistent inter-block cache particular for that store's
+// StoreKey. If the KVStore does not exist in the KVStoreCacheManager, it is
+// added. Otherwise, the KVStore is updated to the provided parameter.
+func (cmgr *KVStoreCacheManager) GetKVStoreCache(key StoreKey, store KVStore) KVStore {
+	if cmgr.caches[key.Name()] == nil {
+		cmgr.caches[key.Name()] = NewKVStoreCache(store, cmgr.cacheSize)
+	} else {
+		cmgr.caches[key.Name()].KVStore = store
 	}
 
-	return cmgr.caches[key]
+	return cmgr.caches[key.Name()].KVStore
 }
 
 // Reset resets in the internal caches.
 func (cmgr *KVStoreCacheManager) Reset() {
-	cmgr.caches = make(map[StoreKey]*KVStoreCache)
+	cmgr.caches = make(map[string]*KVStoreCache)
 }
 
 // Get retrieves a value by key. It will first look in the write-through cache.

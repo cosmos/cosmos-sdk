@@ -19,7 +19,7 @@ type Electionator interface {
 	// and apply the vote information in some arbitrary way. There can be multiple
 	// Electionators within the Cosmos-Hub for multiple specialization groups, votes
 	// would need to be routed to the Electionator upstream of here.
-	Vote(addr sdk.AccAddress, vote []byte)
+	Vote([]byte) error
 
 	// here lies all functionality to authenticate and execute changes for
 	// when a member accepts being elected

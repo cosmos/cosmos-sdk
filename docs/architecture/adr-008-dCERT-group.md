@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 2019 Jul 31 : Initial Conception
+- 2019 Jul 31: Initial Draft
 
 ## Context
 

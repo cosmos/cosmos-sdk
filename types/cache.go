@@ -18,9 +18,10 @@ type (
 	// KVStoreCache defines a cache that is meant to be used in a persistent
 	// (inter-block) fashion and in which it wraps an underlying KVStore. Reads
 	// first hit the ARC (Adaptive Replacement Cache). During a cache miss, the
-	// read is delegated to the underlying KVStore. Deletes and writes always
-	// happen to both the cache and the KVStore in a write-through manner. Caching
-	// performed in the KVStore and below is completely irrelevant to this layer.
+	// read is delegated to the underlying KVStore and cached. Deletes and writes
+	// always happen to both the cache and the KVStore in a write-through manner.
+	// Caching performed in the KVStore and below is completely irrelevant to this
+	// layer.
 	KVStoreCache struct {
 		KVStore
 		cache *lru.ARCCache
@@ -65,7 +66,7 @@ func (cmgr *KVStoreCacheManager) GetKVStoreCache(key StoreKey, store KVStore) KV
 		cmgr.caches[key.Name()].KVStore = store
 	}
 
-	return cmgr.caches[key.Name()].KVStore
+	return cmgr.caches[key.Name()]
 }
 
 // Reset resets in the internal caches.

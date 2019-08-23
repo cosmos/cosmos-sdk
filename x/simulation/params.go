@@ -80,16 +80,19 @@ func RandomParams(r *rand.Rand) Params {
 //-----------------------------------------------------------------------------
 // Param change proposals
 
+// SimValFn function to generate the randomized parameter change value
+type SimValFn func(r *rand.Rand) string
+
 // ParamChange defines the object used for simulating parameter change proposals
 type ParamChange struct {
 	Subspace string
 	Key      string
 	Subkey   string
-	SimValue func(r *rand.Rand) string
+	SimValue SimValFn
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key, subkey string, simVal func(r *rand.Rand) string) ParamChange {
+func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChange {
 	return ParamChange{
 		Subspace: subspace,
 		Key:      key,

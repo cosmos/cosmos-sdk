@@ -22,15 +22,14 @@ func GenSendEnabled(r *rand.Rand) bool {
 }
 
 // RandomizedGenState generates a random GenesisState for bank
-func RandomizedGenState(input *module.GeneratorInput) {
+func RandomizedGenState(simState *module.SimulationState) {
 
 	var sendEnabled bool
-
-	input.AppParams.GetOrGenerate(input.Cdc, SendEnabled, &sendEnabled, input.R,
-		func(r *rand.Rand) { sendEnabled = GenSendEnabled(input.R) })
+	simState.AppParams.GetOrGenerate(simState.Cdc, SendEnabled, &sendEnabled, simState.Rand,
+		func(r *rand.Rand) { sendEnabled = GenSendEnabled(r) })
 
 	bankGenesis := types.NewGenesisState(sendEnabled)
 
-	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, bankGenesis))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(bankGenesis)
+	fmt.Printf("Selected randomly generated bank parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, bankGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(bankGenesis)
 }

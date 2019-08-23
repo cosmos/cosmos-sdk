@@ -65,10 +65,10 @@ func AppStateRandomizedFn(
 	genesisState := NewDefaultGenesisState()
 	numInitiallyBonded, amount := RandomizedSimulationParams(appParams, cdc, r, int64(len(accs)))
 
-	input := &module.GeneratorInput{
+	input := &module.SimulationState{
 		AppParams:    appParams,
 		Cdc:          cdc,
-		R:            r,
+		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,
 		InitialStake: amount,

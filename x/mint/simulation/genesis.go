@@ -48,33 +48,31 @@ func GenGoalBonded(r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for mint
-func RandomizedGenState(input *module.GeneratorInput) {
-	var (
-		inflation           sdk.Dec
-		inflationRateChange sdk.Dec
-		inflationMax        sdk.Dec
-		inflationMin        sdk.Dec
-		goalBonded          sdk.Dec
-	)
+func RandomizedGenState(simState *module.SimulationState) {
 
 	// minter
-	input.AppParams.GetOrGenerate(input.Cdc, Inflation, &inflation, input.R,
-		func(r *rand.Rand) { inflation = GenInflation(input.R) })
+	var inflation sdk.Dec
+	simState.AppParams.GetOrGenerate(simState.Cdc, Inflation, &inflation, simState.Rand,
+		func(r *rand.Rand) { inflation = GenInflation(r) })
 
 	minter := types.InitialMinter(inflation)
 
 	// params
-	input.AppParams.GetOrGenerate(input.Cdc, InflationRateChange, &inflationRateChange, input.R,
-		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(input.R) })
+	var inflationRateChange sdk.Dec
+	simState.AppParams.GetOrGenerate(simState.Cdc, InflationRateChange, &inflationRateChange, simState.Rand,
+		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) })
 
-	input.AppParams.GetOrGenerate(input.Cdc, InflationMax, &inflationMax, input.R,
-		func(r *rand.Rand) { inflationMax = GenInflationMax(input.R) })
+	var inflationMax sdk.Dec
+	simState.AppParams.GetOrGenerate(simState.Cdc, InflationMax, &inflationMax, simState.Rand,
+		func(r *rand.Rand) { inflationMax = GenInflationMax(r) })
 
-	input.AppParams.GetOrGenerate(input.Cdc, InflationMin, &inflationMin, input.R,
-		func(r *rand.Rand) { inflationMin = GenInflationMin(input.R) })
+	var inflationMin sdk.Dec
+	simState.AppParams.GetOrGenerate(simState.Cdc, InflationMin, &inflationMin, simState.Rand,
+		func(r *rand.Rand) { inflationMin = GenInflationMin(r) })
 
-	input.AppParams.GetOrGenerate(input.Cdc, GoalBonded, &goalBonded, input.R,
-		func(r *rand.Rand) { goalBonded = GenGoalBonded(input.R) })
+	var goalBonded sdk.Dec
+	simState.AppParams.GetOrGenerate(simState.Cdc, GoalBonded, &goalBonded, simState.Rand,
+		func(r *rand.Rand) { goalBonded = GenGoalBonded(r) })
 
 	mintDenom := sdk.DefaultBondDenom
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)
@@ -82,6 +80,6 @@ func RandomizedGenState(input *module.GeneratorInput) {
 
 	mintGenesis := types.NewGenesisState(minter, params)
 
-	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, mintGenesis))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(mintGenesis)
+	fmt.Printf("Selected randomly generated minting parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, mintGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }

@@ -73,7 +73,7 @@ type AppModuleSimulation struct{}
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState performs a no-op.
-func (AppModuleSimulation) GenerateGenesisState(_ *module.GeneratorInput) {
+func (AppModuleSimulation) GenerateGenesisState(_ *module.SimulationState) {
 }
 
 // RandomizedParams doesn't create any randomized crisis param changes for the simulator.

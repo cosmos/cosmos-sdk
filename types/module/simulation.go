@@ -47,7 +47,7 @@ func (sm *SimulationManager) RegisterStoreDecoders() {
 
 // GenerateGenesisStates generates a randomized GenesisState for each of the
 // registered modules
-func (sm *SimulationManager) GenerateGenesisStates(input *GeneratorInput) {
+func (sm *SimulationManager) GenerateGenesisStates(input *SimulationState) {
 	for _, module := range sm.Modules {
 		module.GenerateGenesisState(input)
 	}
@@ -63,12 +63,12 @@ func (sm *SimulationManager) RandomizedSimParamChanges(seed int64) {
 	}
 }
 
-// GeneratorInput is the input parameters used on each of the module's randomized
+// SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
-type GeneratorInput struct {
+type SimulationState struct {
 	AppParams    simulation.AppParams
 	Cdc          *codec.Codec               // application codec
-	R            *rand.Rand                 // random number
+	Rand         *rand.Rand                 // random number
 	GenState     map[string]json.RawMessage // genesis state
 	Accounts     []simulation.Account       // simulation accounts
 	InitialStake int64                      // initial coins per account

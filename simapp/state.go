@@ -135,7 +135,7 @@ func AppStateFromGenesisFileFn(r *rand.Rand, config simulation.Config) (json.Raw
 		r.Read(privkeySeed)
 
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+		newAccs = append(newAccs, simulation.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.Address})
 	}
 
 	return genesis.AppState, newAccs, genesis.ChainID

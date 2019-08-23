@@ -18,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-type mockResponseWriter struct{}
-
 func TestBaseReqValidateBasic(t *testing.T) {
 	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")

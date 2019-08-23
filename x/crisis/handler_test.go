@@ -28,7 +28,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, 1)
 	ctx := app.NewContext(true, abci.Header{})
 
-	constantFee := sdk.NewInt64Coin("stake", 10)
+	constantFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
 	app.CrisisKeeper.SetConstantFee(ctx, constantFee)
 	app.StakingKeeper.SetParams(ctx, staking.DefaultParams())
 

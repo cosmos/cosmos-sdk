@@ -7,7 +7,7 @@ The auth module only exposes one keeper, the account keeper, which can be used t
 Presently only one fully-permissioned account keeper is exposed, which has the ability to both read and write
 all fields of all accounts, and to iterate over all stored accounts.
 
-```golang
+```go
 type AccountKeeper interface {
   // Return a new account with the next account number and the specified address. Does not save the new account to the store.
   NewAccountWithAddress(AccAddress) Account

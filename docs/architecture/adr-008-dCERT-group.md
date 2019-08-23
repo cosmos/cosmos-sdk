@@ -116,7 +116,7 @@ they should all be severely slashed.
 ### Positive
 
  - Potential to reduces the number of parties to coordinate with during an emergency 
-   - Reduction in possibility of disclosing sensitive information to malicious parties
+- Reduction in possibility of disclosing sensitive information to malicious parties
 
 ### Negative
 

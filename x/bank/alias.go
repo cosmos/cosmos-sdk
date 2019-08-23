@@ -29,6 +29,8 @@ var (
 	NewBaseKeeper          = keeper.NewBaseKeeper
 	NewInput               = types.NewInput
 	NewOutput              = types.NewOutput
+	NewMsgSend             = types.NewMsgSend
+	NewMsgMultiSend        = types.NewMsgMultiSend
 	ParamKeyTable          = types.ParamKeyTable
 
 	// variable aliases

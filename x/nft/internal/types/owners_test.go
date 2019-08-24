@@ -39,6 +39,7 @@ func TestIDCollectionDeleteIDMethod(t *testing.T) {
 	require.Equal(t, idCollection.String(), newIDCollection.String())
 
 	idCollection, err = idCollection.DeleteID(id2)
+	require.NoError(t, err)
 	require.Equal(t, len(idCollection.IDs), 1)
 }
 

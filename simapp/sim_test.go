@@ -54,6 +54,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		cdc.MustUnmarshalJSON(bz, &ap)
 	}
 
+	// nolint: govet
 	return []simulation.WeightedOperation{
 		{
 			func(_ *rand.Rand) int {

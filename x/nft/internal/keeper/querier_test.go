@@ -59,6 +59,7 @@ func TestQuerySupply(t *testing.T) {
 	query.Data = bz
 
 	res, err = querier(ctx, []string{"supply"}, query)
+	require.NoError(t, err)
 	require.NotNil(t, res)
 
 	supplyResp := binary.LittleEndian.Uint64(res)
@@ -102,6 +103,8 @@ func TestQueryCollection(t *testing.T) {
 
 	query.Data = bz
 	res, err = querier(ctx, []string{"collection"}, query)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	var collections types.Collections
 	types.ModuleCdc.MustUnmarshalJSON(res, &collections)

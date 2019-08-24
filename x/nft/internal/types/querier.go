@@ -1,5 +1,6 @@
-// DONTCOVER
 package types
+
+// DONTCOVER
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,9 +47,9 @@ type QueryNFTParams struct {
 }
 
 // NewQueryNFTParams creates a new instance of QueryNFTParams
-func NewQueryNFTParams(denom, ID string) QueryNFTParams {
+func NewQueryNFTParams(denom, id string) QueryNFTParams {
 	return QueryNFTParams{
 		Denom:   denom,
-		TokenID: ID,
+		TokenID: id,
 	}
 }

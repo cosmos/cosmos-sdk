@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -9,29 +9,29 @@ import (
 )
 
 func TestMintNFT(t *testing.T) {
-	ctx, keeper, _ := Initialize()
+	app, ctx := createTestApp(false)
 
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, tokenURI)
-	err := keeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
 	// MintNFT shouldn't fail when collection exists
 	nft2 := types.NewBaseNFT(id2, address, tokenURI)
-	err = keeper.MintNFT(ctx, denom, &nft2)
+	err = app.NFTKeeper.MintNFT(ctx, denom, &nft2)
 	require.NoError(t, err)
 }
 
 func TestGetNFT(t *testing.T) {
-	ctx, keeper, _ := Initialize()
+	app, ctx := createTestApp(false)
 
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, tokenURI)
-	err := keeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
 	// GetNFT should get the NFT
-	receivedNFT, err := keeper.GetNFT(ctx, denom, id)
+	receivedNFT, err := app.NFTKeeper.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.Equal(t, receivedNFT.GetID(), id)
 	require.True(t, receivedNFT.GetOwner().Equals(address))
@@ -39,11 +39,11 @@ func TestGetNFT(t *testing.T) {
 
 	// MintNFT shouldn't fail when collection exists
 	nft2 := types.NewBaseNFT(id2, address, tokenURI)
-	err = keeper.MintNFT(ctx, denom, &nft2)
+	err = app.NFTKeeper.MintNFT(ctx, denom, &nft2)
 	require.NoError(t, err)
 
 	// GetNFT should get the NFT when collection exists
-	receivedNFT2, err := keeper.GetNFT(ctx, denom, id2)
+	receivedNFT2, err := app.NFTKeeper.GetNFT(ctx, denom, id2)
 	require.NoError(t, err)
 	require.Equal(t, receivedNFT2.GetID(), id2)
 	require.True(t, receivedNFT2.GetOwner().Equals(address))
@@ -52,81 +52,81 @@ func TestGetNFT(t *testing.T) {
 }
 
 func TestUpdateNFT(t *testing.T) {
-	ctx, keeper, _ := Initialize()
+	app, ctx := createTestApp(false)
 
 	nft := types.NewBaseNFT(id, address, tokenURI)
 
 	// UpdateNFT should fail when NFT doesn't exists
-	err := keeper.UpdateNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.UpdateNFT(ctx, denom, &nft)
 	require.Error(t, err)
 
 	// MintNFT shouldn't fail when collection does not exist
-	err = keeper.MintNFT(ctx, denom, &nft)
+	err = app.NFTKeeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
 	nonnft := types.NewBaseNFT(id2, address, tokenURI)
 	// UpdateNFT should fail when NFT doesn't exists
-	err = keeper.UpdateNFT(ctx, denom, &nonnft)
+	err = app.NFTKeeper.UpdateNFT(ctx, denom, &nonnft)
 	require.Error(t, err)
 
 	// UpdateNFT shouldn't fail when NFT exists
 	nft2 := types.NewBaseNFT(id, address, tokenURI2)
-	err = keeper.UpdateNFT(ctx, denom, &nft2)
+	err = app.NFTKeeper.UpdateNFT(ctx, denom, &nft2)
 	require.NoError(t, err)
 
 	// UpdateNFT shouldn't fail when NFT exists
 	nft2 = types.NewBaseNFT(id, address2, tokenURI2)
-	err = keeper.UpdateNFT(ctx, denom, &nft2)
+	err = app.NFTKeeper.UpdateNFT(ctx, denom, &nft2)
 	require.NoError(t, err)
 
 	// GetNFT should get the NFT with new tokenURI
-	receivedNFT, err := keeper.GetNFT(ctx, denom, id)
+	receivedNFT, err := app.NFTKeeper.GetNFT(ctx, denom, id)
 	require.NoError(t, err)
 	require.Equal(t, receivedNFT.GetTokenURI(), tokenURI2)
 
 }
 
 func TestDeleteNFT(t *testing.T) {
-	ctx, keeper, _ := Initialize()
+	app, ctx := createTestApp(false)
 
 	// DeleteNFT should fail when NFT doesn't exist and collection doesn't exist
-	err := keeper.DeleteNFT(ctx, denom, id)
+	err := app.NFTKeeper.DeleteNFT(ctx, denom, id)
 	require.Error(t, err)
 
 	// MintNFT should not fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, tokenURI)
-	err = keeper.MintNFT(ctx, denom, &nft)
+	err = app.NFTKeeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
 	// DeleteNFT should fail when NFT doesn't exist but collection does exist
-	err = keeper.DeleteNFT(ctx, denom, id2)
+	err = app.NFTKeeper.DeleteNFT(ctx, denom, id2)
 	require.Error(t, err)
 
 	// DeleteNFT should not fail when NFT and collection exist
-	err = keeper.DeleteNFT(ctx, denom, id)
+	err = app.NFTKeeper.DeleteNFT(ctx, denom, id)
 	require.NoError(t, err)
 
 	// NFT should no longer exist
-	isNFT := keeper.IsNFT(ctx, denom, id)
+	isNFT := app.NFTKeeper.IsNFT(ctx, denom, id)
 	require.False(t, isNFT)
 
-	owner := keeper.GetOwner(ctx, address)
+	owner := app.NFTKeeper.GetOwner(ctx, address)
 	require.Equal(t, 0, owner.Supply())
 }
 
 func TestIsNFT(t *testing.T) {
-	ctx, keeper, _ := Initialize()
+	app, ctx := createTestApp(false)
 
 	// IsNFT should return false
-	isNFT := keeper.IsNFT(ctx, denom, id)
+	isNFT := app.NFTKeeper.IsNFT(ctx, denom, id)
 	require.False(t, isNFT)
 
 	// MintNFT shouldn't fail when collection does not exist
 	nft := types.NewBaseNFT(id, address, tokenURI)
-	err := keeper.MintNFT(ctx, denom, &nft)
+	err := app.NFTKeeper.MintNFT(ctx, denom, &nft)
 	require.NoError(t, err)
 
 	// IsNFT should return true
-	isNFT = keeper.IsNFT(ctx, denom, id)
+	isNFT = app.NFTKeeper.IsNFT(ctx, denom, id)
 	require.True(t, isNFT)
 }

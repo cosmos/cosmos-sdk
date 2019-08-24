@@ -166,11 +166,13 @@ func (collections Collections) find(denom string) (idx int) {
 
 	midIdx := len(collections) / 2
 	midCollection := collections[midIdx]
-	if strings.Compare(denom, midCollection.Denom) == -1 {
+
+	switch {
+	case strings.Compare(denom, midCollection.Denom) == -1:
 		return collections[:midIdx].find(denom)
-	} else if midCollection.Denom == denom {
+	case midCollection.Denom == denom:
 		return midIdx
-	} else {
+	default:
 		return collections[midIdx+1:].find(denom)
 	}
 }

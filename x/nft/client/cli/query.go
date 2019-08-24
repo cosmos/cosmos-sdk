@@ -68,7 +68,7 @@ $ %s query %s supply crypto-kitties
 			if err != nil {
 				return err
 			}
-			
+
 			return cliCtx.PrintOutput(out)
 		},
 	}

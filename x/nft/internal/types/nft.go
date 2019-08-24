@@ -20,11 +20,9 @@ type BaseNFT struct {
 }
 
 // NewBaseNFT creates a new NFT instance
-func NewBaseNFT(ID string, owner sdk.AccAddress, tokenURI string,
-) BaseNFT {
-
+func NewBaseNFT(id string, owner sdk.AccAddress, tokenURI string) BaseNFT {
 	return BaseNFT{
-		ID:       ID,
+		ID:       id,
 		Owner:    owner,
 		TokenURI: strings.TrimSpace(tokenURI),
 	}
@@ -133,11 +131,12 @@ func (nfts NFTs) find(id string) int {
 	midIdx := len(nfts) / 2
 	nft := nfts[midIdx]
 
-	if strings.Compare(id, nft.GetID()) == -1 {
+	switch {
+	case strings.Compare(id, nft.GetID()) == -1:
 		return nfts[:midIdx].find(id)
-	} else if id == nft.GetID() {
+	case id == nft.GetID():
 		return midIdx
-	} else {
+	default:
 		return nfts[midIdx+1:].find(id)
 	}
 }

@@ -43,8 +43,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 }
 
 func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
 	var params types.QueryCollectionParams
+
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -61,8 +61,8 @@ func querySupply(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 }
 
 func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
 	var params types.QueryBalanceParams
+
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -78,8 +78,8 @@ func queryOwner(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper)
 }
 
 func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
 	var params types.QueryBalanceParams
+
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -87,10 +87,9 @@ func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k 
 
 	var owner types.Owner
 
-	var idCollections []types.IDCollection
 	idCollection, _ := k.GetOwnerByDenom(ctx, params.Owner, params.Denom)
 	owner.Address = params.Owner
-	owner.IDCollections = append(idCollections, idCollection)
+	owner.IDCollections = append(owner.IDCollections, idCollection)
 
 	bz, err := types.ModuleCdc.MarshalJSON(owner)
 	if err != nil {
@@ -101,8 +100,8 @@ func queryOwnerByDenom(ctx sdk.Context, path []string, req abci.RequestQuery, k 
 }
 
 func queryCollection(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
 	var params types.QueryCollectionParams
+
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -135,8 +134,8 @@ func queryDenoms(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 }
 
 func queryNFT(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
 	var params types.QueryNFTParams
+
 	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))

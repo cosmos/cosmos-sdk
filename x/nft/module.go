@@ -20,8 +20,8 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
@@ -83,7 +83,6 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 //____________________________________________________________________________
 
-
 // AppModule supply app module
 type AppModule struct {
 	AppModuleBasic
@@ -96,9 +95,9 @@ type AppModule struct {
 func NewAppModule(keeper Keeper) AppModule {
 
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
-		keeper:         keeper,
+		keeper:              keeper,
 	}
 }
 

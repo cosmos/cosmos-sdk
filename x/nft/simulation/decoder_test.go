@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	delPk1   = ed25519.GenPrivKey().PubKey()
-	addr = sdk.AccAddress(delPk1.Address())
+	delPk1 = ed25519.GenPrivKey().PubKey()
+	addr   = sdk.AccAddress(delPk1.Address())
 )
 
 func makeTestCodec() (cdc *codec.Codec) {

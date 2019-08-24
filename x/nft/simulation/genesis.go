@@ -1,13 +1,13 @@
 package simulation
 
 import (
-"encoding/json"
-"fmt"
-"math/rand"
+	"encoding/json"
+	"fmt"
+	"math/rand"
 
-"github.com/cosmos/cosmos-sdk/codec"
-"github.com/cosmos/cosmos-sdk/x/simulation"
-"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // GenNFTGenesisState generates a random GenesisState for nft

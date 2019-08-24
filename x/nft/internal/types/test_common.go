@@ -1,7 +1,5 @@
 package types
 
-// DONTCOVER
-
 import (
 	"bytes"
 	"strconv"

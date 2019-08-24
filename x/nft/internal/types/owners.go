@@ -94,11 +94,12 @@ func (idCollections IDCollections) find(el string) int {
 	midIdx := len(idCollections) / 2
 	midIDCollection := idCollections[midIdx]
 
-	if strings.Compare(el, midIDCollection.Denom) == -1 {
+	switch {
+	case strings.Compare(el, midIDCollection.Denom) == -1:
 		return idCollections[:midIdx].find(el)
-	} else if midIDCollection.Denom == el {
+	case midIDCollection.Denom == el:
 		return midIdx
-	} else {
+	default:
 		return idCollections[midIdx+1:].find(el)
 	}
 }
@@ -179,79 +180,6 @@ func (owner Owner) String() string {
 	)
 }
 
-// // String follows stringer interface
-// func (balances Owners) String() string {
-// 	if len(balances) == 0 {
-// 		return ""
-// 	}
-
-// 	out := ""
-// 	for _, balance := range balances {
-// 		out += fmt.Sprintf("%v\n", balance.String())
-// 	}
-// 	return out[:len(out)-1]
-// }
-
-// // Empty returns true if there are no balances and false otherwise.
-// func (balances Owners) Empty() bool {
-// 	return len(balances) == 0
-// }
-
-// ----------------------------------------------------------------------------
-// Encoding
-
-// // UnmarshalJSON for Owners
-// func (owner *Owner) UnmarshalJSON(b []byte) error {
-// 	idCollectionJSON := make(IDCollectionJSON)
-
-// 	if err := json.Unmarshal(b, &idCollectionJSON); err != nil {
-// 		return err
-// 	}
-
-// 	var idCollections []IDCollection
-
-// 	for denom, idCollection := range idCollectionJSON {
-// 		*owner.IDCollections = append(*owner.IDCollections, NewIDCollection(denom, idCollection))
-// 	}
-
-// 	return nil
-// }
-
-// // UnmarshalJSON for Collections
-// func (collections *Collections) UnmarshalJSON(b []byte) error {
-// 	collectionJSON := make(CollectionJSON)
-
-// 	if err := json.Unmarshal(b, &collectionJSON); err != nil {
-// 		return err
-// 	}
-
-// 	for denom, collection := range collectionJSON {
-// 		*collections = append(*collections, NewCollection(denom, collection.NFTs))
-// 	}
-
-// 	return nil
-// }
-
-// //-----------------------------------------------------------------------------
-// // Sort interface
-
-// //nolint
-// func (balances Owners) Len() int { return len(balances) }
-// func (balances Owners) Less(i, j int) bool {
-// 	return strings.Compare(balances[i].Denom, balances[j].Denom) == -1
-// }
-// func (balances Owners) Swap(i, j int) {
-// 	balances[i], balances[j] = balances[j], balances[i]
-// }
-
-// var _ sort.Interface = Owners{}
-
-// // Sort is a helper function to sort the set of coins inplace
-// func (balances Owners) Sort() Owners {
-// 	sort.Sort(balances)
-// 	return balances
-// }
-
 // stringArray is an array of strings whose sole purpose is to help with find
 type stringArray []string
 
@@ -259,14 +187,16 @@ func (sa stringArray) find(el string) (idx int) {
 	if len(sa) == 0 {
 		return -1
 	}
+
 	midIdx := len(sa) / 2
 	stringArrayEl := sa[midIdx]
 
-	if strings.Compare(el, stringArrayEl) == -1 {
+	switch {
+	case strings.Compare(el, stringArrayEl) == -1:
 		return sa[:midIdx].find(el)
-	} else if stringArrayEl == el {
+	case stringArrayEl == el:
 		return midIdx
-	} else {
+	default:
 		return sa[midIdx+1:].find(el)
 	}
 }

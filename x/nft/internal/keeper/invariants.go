@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 )
 
@@ -55,6 +54,6 @@ func SupplyInvariant(k Keeper) sdk.Invariant {
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "supply", fmt.Sprintf(
-			"%d NFT supply invariants found\n%s", count, msg), broken)
+			"%d NFT supply invariants found\n%s", count, msg)), broken
 	}
 }

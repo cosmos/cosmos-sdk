@@ -165,7 +165,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			if output.Empty() {
-				return fmt.Errorf("No transaction found with hash %s", args[0])
+				return fmt.Errorf("no transaction found with hash %s", args[0])
 			}
 
 			return cliCtx.PrintOutput(output)

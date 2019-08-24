@@ -11,11 +11,8 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.NFT)(nil), nil)
 	cdc.RegisterConcrete(&BaseNFT{}, "cosmos-sdk/BaseNFT", nil)
-	cdc.RegisterConcrete(NFTs{}, "cosmos-sdk/NFTs", nil)
-	cdc.RegisterConcrete(&IDCollections{}, "cosmos-sdk/IDCollections", nil)
 	cdc.RegisterConcrete(&IDCollection{}, "cosmos-sdk/IDCollection", nil)
 	cdc.RegisterConcrete(&Collection{}, "cosmos-sdk/Collection", nil)
-	cdc.RegisterConcrete(&Collections{}, "cosmos-sdk/Collections", nil)
 	cdc.RegisterConcrete(&Owner{}, "cosmos-sdk/Owner", nil)
 	cdc.RegisterConcrete(MsgTransferNFT{}, "cosmos-sdk/MsgTransferNFT", nil)
 	cdc.RegisterConcrete(MsgEditNFTMetadata{}, "cosmos-sdk/MsgEditNFTMetadata", nil)

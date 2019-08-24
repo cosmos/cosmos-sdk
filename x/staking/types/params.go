@@ -58,10 +58,10 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		{KeyUnbondingTime, &p.UnbondingTime},
-		{KeyMaxValidators, &p.MaxValidators},
-		{KeyMaxEntries, &p.MaxEntries},
-		{KeyBondDenom, &p.BondDenom},
+		{Key: KeyUnbondingTime, Value: &p.UnbondingTime},
+		{Key: KeyMaxValidators, Value: &p.MaxValidators},
+		{Key: KeyMaxEntries, Value: &p.MaxEntries},
+		{Key: KeyBondDenom, Value: &p.BondDenom},
 	}
 }
 

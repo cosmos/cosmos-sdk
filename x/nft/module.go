@@ -16,11 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
 )
 
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
 // AppModuleBasic app module basics object
@@ -69,11 +71,24 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 }
 
-//___________________________
+//____________________________________________________________________________
+
+// AppModuleSimulation defines the module simulation functions used by the gov module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+//____________________________________________________________________________
+
 
 // AppModule supply app module
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
+
 	keeper Keeper
 }
 
@@ -82,6 +97,7 @@ func NewAppModule(keeper Keeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
 		keeper:         keeper,
 	}
 }

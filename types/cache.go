@@ -7,100 +7,98 @@ import (
 )
 
 var (
-	_ KVStore = (*KVStoreCache)(nil)
+	_ CommitKVStore             = (*CommitKVStoreCache)(nil)
+	_ MultiStorePersistentCache = (*CommitKVStoreCacheManager)(nil)
 
-	// DefaultPersistentKVStoreCacheSize defines the persistent ARC cache size for
-	// each KVStore.
-	DefaultPersistentKVStoreCacheSize uint = 1000
+	// DefaultCommitKVStoreCacheSize defines the persistent ARC cache size for a
+	// CommitKVStoreCache.
+	DefaultCommitKVStoreCacheSize uint = 1000
 )
 
 type (
-	// KVStoreCache defines a cache that is meant to be used in a persistent
-	// (inter-block) fashion and in which it wraps an underlying KVStore. Reads
-	// first hit the ARC (Adaptive Replacement Cache). During a cache miss, the
-	// read is delegated to the underlying KVStore and cached. Deletes and writes
-	// always happen to both the cache and the KVStore in a write-through manner.
-	// Caching performed in the KVStore and below is completely irrelevant to this
-	// layer.
-	KVStoreCache struct {
-		KVStore
+	// CommitKVStoreCache implements an inter-block (persistent) cache that wraps a
+	// CommitKVStore. Reads first hit the internal ARC (Adaptive Replacement Cache).
+	// During a cache miss, the read is delegated to the underlying CommitKVStore
+	// and cached. Deletes and writes always happen to both the cache and the
+	// CommitKVStore in a write-through manner. Caching performed in the
+	// CommitKVStore and below is completely irrelevant to this layer.
+	CommitKVStoreCache struct {
+		CommitKVStore
 		cache *lru.ARCCache
 	}
 
-	// KVStoreCacheManager defines a manager that stores a mapping of StoreKeys
-	// to KVStoreCache references. Each KVStoreCache reference is meant to be
-	// persistent between blocks.
-	KVStoreCacheManager struct {
+	// CommitKVStoreCacheManager maintains a mapping from a StoreKey to a
+	// CommitKVStoreCache. Each CommitKVStore, per StoreKey, is meant to be used
+	// in an inter-block (persistent) manner and typically provided by a
+	// CommitMultiStore.
+	CommitKVStoreCacheManager struct {
 		cacheSize uint
-		caches    map[string]*KVStoreCache
+		caches    map[string]CommitKVStore
 	}
 )
 
-func NewKVStoreCache(store KVStore, size uint) *KVStoreCache {
+func NewCommitKVStoreCache(store CommitKVStore, size uint) *CommitKVStoreCache {
 	cache, err := lru.NewARC(int(size))
 	if err != nil {
 		panic(fmt.Errorf("failed to create KVStore cache: %s", err))
 	}
 
-	return &KVStoreCache{
-		KVStore: store,
-		cache:   cache,
+	return &CommitKVStoreCache{
+		CommitKVStore: store,
+		cache:         cache,
 	}
 }
 
-func NewKVStoreCacheManager(size uint) *KVStoreCacheManager {
-	return &KVStoreCacheManager{
+func NewCommitKVStoreCacheManager(size uint) *CommitKVStoreCacheManager {
+	return &CommitKVStoreCacheManager{
 		cacheSize: size,
-		caches:    make(map[string]*KVStoreCache),
+		caches:    make(map[string]CommitKVStore),
 	}
 }
 
-// GetKVStoreCache returns a KVStore from the KVStoreCacheManager which is
-// deceratored with a persistent inter-block cache particular for that store's
-// StoreKey. If the KVStore does not exist in the KVStoreCacheManager, it is
-// added. Otherwise, the KVStore is updated to the provided parameter.
-func (cmgr *KVStoreCacheManager) GetKVStoreCache(key StoreKey, store KVStore) KVStore {
+// GetStoreCache returns a Cache from the CommitStoreCacheManager for a given
+// StoreKey. If no Cache exists for the StoreKey, then one is created and set.
+// The returned Cache is meant to be used in a persistent manner.
+func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore {
 	if cmgr.caches[key.Name()] == nil {
-		cmgr.caches[key.Name()] = NewKVStoreCache(store, cmgr.cacheSize)
-	} else {
-		cmgr.caches[key.Name()].KVStore = store
+		cmgr.caches[key.Name()] = NewCommitKVStoreCache(store, cmgr.cacheSize)
 	}
 
 	return cmgr.caches[key.Name()]
 }
 
 // Reset resets in the internal caches.
-func (cmgr *KVStoreCacheManager) Reset() {
-	cmgr.caches = make(map[string]*KVStoreCache)
+func (cmgr *CommitKVStoreCacheManager) Reset() {
+	cmgr.caches = make(map[string]CommitKVStore)
 }
 
 // Get retrieves a value by key. It will first look in the write-through cache.
-// If the value doesn't exist in the write-through cache, the Get call is
-// delegated to the underlying KVStore.
-func (kvsc *KVStoreCache) Get(key []byte) []byte {
-	val, ok := kvsc.cache.Get(string(key))
+// If the value doesn't exist in the write-through cache, the query is delegated
+// to the underlying CommitKVStore.
+func (ckv *CommitKVStoreCache) Get(key []byte) []byte {
+	valueI, ok := ckv.cache.Get(string(key))
 	if ok {
 		// cache hit
-		return val.([]byte)
+		return valueI.([]byte)
 	}
 
-	// cache miss; add to cache
-	bz := kvsc.KVStore.Get(key)
-	kvsc.cache.Add(string(key), bz)
+	// cache miss; write to cache
+	value := ckv.CommitKVStore.Get(key)
+	ckv.cache.Add(string(key), value)
 
-	return bz
+	return value
 }
 
 // Set inserts a key/value pair into both the write-through cache and the
-// underlying KVStore.
-func (kvsc *KVStoreCache) Set(key, value []byte) {
-	kvsc.cache.Add(string(key), value)
-	kvsc.KVStore.Set(key, value)
+// underlying CommitKVStore.
+func (ckv *CommitKVStoreCache) Set(key, value []byte) {
+	ckv.cache.Add(string(key), value)
+	ckv.CommitKVStore.Set(key, value)
 }
 
 // Delete removes a key/value pair from both the write-through cache and the
-// underlying KVStore.
-func (kvsc *KVStoreCache) Delete(key []byte) {
-	kvsc.cache.Remove(string(key))
-	kvsc.KVStore.Delete(key)
+// underlying CommitKVStore.
+func (ckv *CommitKVStoreCache) Delete(key []byte) {
+	ckv.cache.Remove(string(key))
+	ckv.CommitKVStore.Delete(key)
 }

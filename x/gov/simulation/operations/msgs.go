@@ -52,7 +52,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.Ac
 		// 1) submit proposal now
 		acc := simulation.RandomAcc(r, accs)
 		content := contentSim(r, app, ctx, accs)
-		deposit, err := randomDeposit(r, ctx, keeper, ak, acc.Address)
+		deposit, err := randomDeposit(r, ctx, k, ak, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -64,7 +64,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.Ac
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		proposalID, err := keeper.GetProposalID(ctx)
+		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -81,14 +81,14 @@ func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.Ac
 
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := k.GetVotingParams(ctx).VotingPeriod
 
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simulation.FutureOperation{
 				BlockTime: whenVote,
-				Op: operationSimulateMsgVote(keeper, accs[whoVotes[i]], int64(proposalID)),
+				Op:        operationSimulateMsgVote(k, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
 
@@ -114,12 +114,12 @@ func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
-		proposalID, ok := randomProposalID(r, keeper, ctx)
+		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		deposit, err := randomDeposit(r, ctx, keeper, ak, acc.Address)
+		deposit, err := randomDeposit(r, ctx, k, ak, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -139,9 +139,8 @@ func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 func SimulateMsgVote(k keeper.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, simulation.Account{}, -1)
 }
-	
-	
-func operationSimulateMsgVote(k keeper.Keeper, acc simulation.Account, proposalID int64) simulation.Operation {
+
+func operationSimulateMsgVote(k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -149,17 +148,22 @@ func operationSimulateMsgVote(k keeper.Keeper, acc simulation.Account, proposalI
 			acc = simulation.RandomAcc(r, accs)
 		}
 
-		if proposalID < 0 {
-			proposalID, ok := randomProposalID(r, k, ctx)
+		var proposalID uint64
+
+		switch {
+		case proposalIDInt < 0:
+			var ok bool
+			proposalID, ok = randomProposalID(r, k, ctx)
 			if !ok {
 				return simulation.NoOpMsg(types.ModuleName), nil, nil
 			}
+		default:
+			proposalID = uint64(proposalIDInt)
 		}
-		
 
 		option := randomVotingOption(r)
 
-		msg := types.NewMsgVote(acc.Address, uint64(proposalID), option)
+		msg := types.NewMsgVote(acc.Address, proposalID, option)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -189,18 +193,18 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, ak types.Acco
 	var maxAmt sdk.Int
 	switch {
 	case depositCoins.GT(minDeposit[0].Amount):
-			maxAmt = depositCoins
+		maxAmt = depositCoins
 	case depositCoins.LT(minDeposit[0].Amount):
-			maxAmt = minDeposit[0].Amount
+		maxAmt = minDeposit[0].Amount
 	default:
-			maxAmt = depositCoins
+		maxAmt = depositCoins
 	}
 
 	amount, err := simulation.RandPositiveInt(r, maxAmt)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, nil
 }
 
@@ -227,6 +231,7 @@ func randomVotingOption(r *rand.Rand) types.VoteOption {
 		return types.OptionNo
 	case 3:
 		return types.OptionNoWithVeto
+	default:
+		panic("invalid vote option")
 	}
-	panic("should not happen")
 }

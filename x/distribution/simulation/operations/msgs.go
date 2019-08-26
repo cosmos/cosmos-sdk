@@ -27,8 +27,7 @@ func SimulateMsgSetWithdrawAddress(k distribution.Keeper) simulation.Operation {
 			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, true, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -50,8 +49,7 @@ func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper) simulation.Operat
 			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, true, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -72,25 +70,28 @@ func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Op
 			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, true, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
 func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.ContentSimulator {
 	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
+		var coins sdk.Coins
+
 		recipientAcc := simulation.RandomAcc(r, accs)
-		coins := sdk.Coins{}
 		balance := k.GetFeePool(ctx).CommunityPool
+
 		if len(balance) > 0 {
 			denomIndex := r.Intn(len(balance))
+
 			amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
 			if err == nil {
 				denom := balance[denomIndex].Denom
 				coins = sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
 			}
 		}
+
 		return distribution.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 100),

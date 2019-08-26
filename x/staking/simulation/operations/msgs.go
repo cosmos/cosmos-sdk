@@ -1,14 +1,14 @@
 package operations
 
 import (
-	"fmt"
+	"errors"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
@@ -45,14 +45,14 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 		selfDelegation := sdk.NewCoin(denom, amount)
 		msg := types.NewMsgCreateValidator(address, acc.PubKey,
-	 selfDelegation, description, commission, sdk.OneInt())
+			selfDelegation, description, commission, sdk.OneInt())
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		return simulation.NewOperationMsg(msg, true, "")
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -116,7 +116,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		return simulation.NewOperationMsg(msg, true, "")
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -147,13 +147,13 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		msg := types.NewMsgUndelegate(
 			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
 		)
-		
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		return simulation.NewOperationMsg(msg, true, "")
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -172,7 +172,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		destValidatorAddress := destVal.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
-		// TODO
+
 		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
@@ -184,12 +184,12 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		msg := types.NewMsgBeginRedelegate(
 			delegatorAddress, srcValidatorAddress, destValidatorAddress, sdk.NewCoin(denom, amount),
 		)
-		
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		return simulation.NewOperationMsg(msg, true, "")
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

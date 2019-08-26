@@ -1,7 +1,7 @@
 package operations
 
 import (
-	"fmt"
+	"errors"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

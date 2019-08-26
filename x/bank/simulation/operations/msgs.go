@@ -1,6 +1,7 @@
 package operations
 
 import (
+	"errors"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -20,17 +21,16 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
-		opMsg = simulation.NewOperationMsg(msg, ok, comment)
 		if !ok {
-			return opMsg, nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
-
 
 		err = sendAndVerifyMsgSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
 		if err != nil {
-			return opMsg, nil, err
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
-		return opMsg, nil, nil
+
+		return simulation.NewOperationMsg(msg, true, comment), nil, nil
 	}
 }
 
@@ -64,19 +64,20 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 }
 
 // Sends and verifies the transition of a msg send.
-func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgSend, ctx sdk.Context,
+	privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
-	AccountNumbers := []uint64{fromAcc.GetAccountNumber()}
-	SequenceNumbers := []uint64{fromAcc.GetSequence()}
+	accountNumbers := []uint64{fromAcc.GetAccountNumber()}
+	sequenceNumbers := []uint64{fromAcc.GetSequence()}
 
 	tx := mock.GenTx([]sdk.Msg{msg},
-		AccountNumbers,
-		SequenceNumbers,
+		accountNumbers,
+		sequenceNumbers,
 		privkeys...)
 
 	res := app.Deliver(tx)
 	if !res.IsOK() {
-		return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		return errors.New(res.Log)
 	}
 
 	return nil
@@ -89,15 +90,16 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
-		opMsg = simulation.NewOperationMsg(msg, ok, comment)
 		if !ok {
-			return opMsg, nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
-		err = sendAndVerifyMsgMultiSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
+
+		err = sendAndVerifyMsgMultiSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
-			return opMsg, nil, err
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
-		return opMsg, nil, nil
+
+		return simulation.NewOperationMsg(msg, ok, comment), nil, nil
 	}
 }
 
@@ -106,7 +108,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 
 	fromAcc = simulation.RandomAcc(r, accs)
 	toAcc := simulation.RandomAcc(r, accs)
-	
+
 	// Disallow sending money to yourself
 	for {
 		if !fromAcc.PubKey.Equals(toAcc.PubKey) {
@@ -144,13 +146,13 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
-	AccountNumbers := make([]uint64, len(msg.Inputs))
-	SequenceNumbers := make([]uint64, len(msg.Inputs))
+	accountNumbers := make([]uint64, len(msg.Inputs))
+	sequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		acc := ak.GetAccount(ctx, msg.Inputs[i].Address)
-		AccountNumbers[i] = acc.GetAccountNumber()
-		SequenceNumbers[i] = acc.GetSequence()
+		accountNumbers[i] = acc.GetAccountNumber()
+		sequenceNumbers[i] = acc.GetSequence()
 		initialInputAddrCoins[i] = acc.GetCoins()
 	}
 
@@ -158,15 +160,15 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg
 		acc := ak.GetAccount(ctx, msg.Outputs[i].Address)
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
-	
+
 	tx := mock.GenTx([]sdk.Msg{msg},
-		AccountNumbers,
-		SequenceNumbers,
+		accountNumbers,
+		sequenceNumbers,
 		privkeys...)
 
 	res := app.Deliver(tx)
 	if !res.IsOK() {
-		return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		return errors.New(res.Log)
 	}
 
 	return nil

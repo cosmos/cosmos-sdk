@@ -157,6 +157,94 @@ Pros:
 Cons:
 1. Cannot wrap antehandlers with decorators like you can with Weave.
 
+### Simple Decorators
+
+This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the SDK and maximizing simplicity.
+
+Allow Decorator interface that can be chained together to create an SDK AnteHandler.
+
+This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with SDK provided decorators in the order they wish.
+
+```golang
+// A Decorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler
+type Decorator interface {
+    AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)
+}
+```
+
+```golang
+// ChainDecorators will recursively link all of the Decorators in the chain and return a final AnteHandler function
+// This is done to preserve the ability to set a single AnteHandler function in the baseapp.
+func ChainDecorators(chain ...Decorator) AnteHandler {
+    if len(chain) == 1 {
+        return func(ctx Context, tx Tx, simulate bool) {
+            chain[0].AnteHandle(ctx, tx, simulate, nil)
+        }
+    }
+    return func(ctx Context, tx Tx, simulate bool) {
+        chain[0].AnteHandle(ctx, tx, simulate, ChainDecorators(chain[1:]))
+    }
+}
+```
+
+#### Example Code
+
+```golang
+// Setup GasMeter, catch OutOfGasPanic and handle appropriately
+type SetupDecorator struct{}
+
+func (sud SetupDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+    ctx.GasMeter = NewGasMeter(tx.Gas)
+
+    defer func() {
+        // recover from OutOfGas panic and handle appropriately
+    }
+
+    return next(ctx, tx, simulate)
+}
+
+// Signature Verification decorator. Verify Signatures and move on
+type SigVerifyDecorator struct{}
+
+func (svd SigVerifyDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+    // verify sigs. Return error if invalid
+
+    // call next antehandler if sigs ok
+    return next(ctx, tx, simulate)
+}
+
+// User-defined Decorator. Can choose to pre- and post-process on AnteHandler
+type UserDefinedDecorator struct{
+    // custom fields
+}
+
+func (udd UserDefinedDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+    // pre-processing logic
+
+    ctx, err = next(ctx, tx, simulate)
+
+    // post-processing logic
+}
+```
+
+```golang
+// Create final antehandler by chaining the decorators together
+antehandler := ChainDecorators(NewSetupDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
+
+// Set chained Antehandler in the baseapp
+bapp.SetAnteHandler(antehandler)
+```
+
+Pros:
+
+1. Allows one decorator to pre- and post-process the next AnteHandler, similar to the Weave design.
+2. Do not need to break baseapp API. Users can still set a single AnteHandler if they choose.
+
+Cons:
+
+1. Decorator pattern may have a deeply nested structure that is hard to understand.
+2. Does not make use of the ModuleManager design. Since this is already being used for BeginBlocker/EndBlocker, this proposal seems unaligned with that design pattern.
+
 ## Status
 
 > Proposed

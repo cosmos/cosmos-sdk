@@ -786,7 +786,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
-	if msgs == nil || len(msgs) == 0 {
+	if len(msgs) == 0 {
 		return sdk.ErrUnknownRequest("Tx.GetMsgs() must return at least one message in list")
 	}
 

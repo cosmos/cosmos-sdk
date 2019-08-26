@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
-// Single block (with meta)
+// ResultBlock represents a single block with metadata
 type ResultBlock struct {
 	BlockMeta BlockMeta `json:"block_meta"`
 	Block     Block     `json:"block"`

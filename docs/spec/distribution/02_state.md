@@ -13,7 +13,7 @@ When coins are distributed from the pool they are truncated back to
 
 - FeePool:  `0x00 -> amino(FeePool)`
 
-```golang
+```go
 // coins with decimal
 type DecCoins []DecCoin
 
@@ -41,7 +41,7 @@ Validator distribution information for the relevant validator is updated each ti
 
 - ValidatorDistInfo:  `0x02 | ValOperatorAddr -> amino(validatorDistribution)`
 
-```golang
+```go
 type ValidatorDistInfo struct {
     FeePoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
     Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
@@ -62,7 +62,7 @@ only the height of the last withdrawal and its current properties.
 
 - DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> amino(delegatorDist)`
 
-```golang
+```go
 type DelegationDistInfo struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
 }

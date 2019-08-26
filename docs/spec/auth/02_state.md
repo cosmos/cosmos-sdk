@@ -19,7 +19,7 @@ The account interface exposes methods to read and write standard account informa
 Note that all of these methods operate on an account struct confirming to the interface
 - in order to write the account to the store, the account keeper will need to be used.
 
-```golang
+```go
 type Account interface {
   GetAddress() AccAddress
   SetAddress(AccAddress)
@@ -43,7 +43,7 @@ type Account interface {
 A base account is the simplest and most common account type, which just stores all requisite
 fields directly in a struct.
 
-```golang
+```go
 type BaseAccount struct {
   Address       AccAddress
   Coins         Coins

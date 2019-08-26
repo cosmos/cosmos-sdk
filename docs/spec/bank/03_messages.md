@@ -2,7 +2,7 @@
 
 ## MsgSend
 
-```golang
+```go
 type MsgSend struct {
   Inputs  []Input
   Outputs []Output

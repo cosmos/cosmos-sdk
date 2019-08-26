@@ -23,7 +23,7 @@ message path.
 
 In the future it is foreseeable that the community may wish to expand the roles
 of dCERT with further responsibilities such as the capacity to "pre-approve" a
-security update hard-fork on behalf of the community prior to a full community
+security update on behalf of the community prior to a full community
 wide vote whereby the sensitive information would be revealed prior to a
 vulnerability being patched on the live network.  
 

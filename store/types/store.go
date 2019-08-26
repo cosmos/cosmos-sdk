@@ -339,6 +339,7 @@ type MultiStorePersistentCache interface {
 	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.
 	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
+
 	// Reset the entire set of internal caches.
 	Reset()
 }

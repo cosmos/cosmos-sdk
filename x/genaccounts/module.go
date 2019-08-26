@@ -106,7 +106,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper types.AccountKeeper) module.AppModule {
+func NewAppModule(accountKeeper types.AccountKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},

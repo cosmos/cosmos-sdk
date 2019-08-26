@@ -2,7 +2,6 @@ package crisis
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -16,13 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 // AppModuleBasic defines the basic application module used by the crisis module.
@@ -66,27 +63,9 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the crisis module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder performs a no-op.
-func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// GenerateGenesisState performs a no-op.
-func (AppModuleSimulation) GenerateGenesisState(_ *module.SimulationState) {
-}
-
-// RandomizedParams doesn't create any randomized crisis param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
-}
-
-//____________________________________________________________________________
-
 // AppModule implements an application module for the crisis module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
@@ -97,9 +76,8 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		keeper:              keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 

@@ -188,7 +188,7 @@ func NewSimApp(
 		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-    staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
+		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		nft.NewAppModule(app.NFTKeeper),
 	)
 

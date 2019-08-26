@@ -106,7 +106,7 @@ Flags:
 
 监听入向交易推荐的方法是通过 LCD 的以下端点定期查询区块链：
 
-[`/bank/balance/{address}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
+<!-- [`/bank/balance/{address}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_) -->
 
 ## Rest API
 

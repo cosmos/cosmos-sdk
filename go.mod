@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.3.0
 	github.com/tendermint/btcd v0.1.1
-	github.com/tendermint/crypto v0.0.0-20180820045704-3764759f34a5
+	github.com/tendermint/crypto v0.0.0-20190823183015-45b1026d81ae
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.4
 	github.com/tendermint/tendermint v0.32.2

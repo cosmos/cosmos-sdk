@@ -184,7 +184,7 @@ func NewSimApp(
 		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-		staking.NewAppModule(app.StakingKeeper, app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper),
+		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

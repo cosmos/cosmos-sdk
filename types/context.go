@@ -21,20 +21,19 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	ctx             context.Context
-	ms              MultiStore
-	interBlockCache *KVStoreCacheManager
-	header          abci.Header
-	chainID         string
-	txBytes         []byte
-	logger          log.Logger
-	voteInfo        []abci.VoteInfo
-	gasMeter        GasMeter
-	blockGasMeter   GasMeter
-	checkTx         bool
-	minGasPrice     DecCoins
-	consParams      *abci.ConsensusParams
-	eventManager    *EventManager
+	ctx           context.Context
+	ms            MultiStore
+	header        abci.Header
+	chainID       string
+	txBytes       []byte
+	logger        log.Logger
+	voteInfo      []abci.VoteInfo
+	gasMeter      GasMeter
+	blockGasMeter GasMeter
+	checkTx       bool
+	minGasPrice   DecCoins
+	consParams    *abci.ConsensusParams
+	eventManager  *EventManager
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -89,15 +88,6 @@ func (c Context) WithContext(ctx context.Context) Context {
 
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	c.ms = ms
-	return c
-}
-
-// WithInterBlockCache returns the Context with an inter-block write-through
-// cache.
-//
-// NOTE: This cache is persistent and should only be set on the DeliverTx state.
-func (c Context) WithInterBlockCache(cacheMngr *KVStoreCacheManager) Context {
-	c.interBlockCache = cacheMngr
 	return c
 }
 
@@ -207,24 +197,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	kvStore := c.MultiStore().GetKVStore(key)
-	if c.interBlockCache != nil {
-		// wrap the KVStore in an inter-block write-through cache
-		kvStore = c.interBlockCache.GetKVStoreCache(key, kvStore)
-	}
-
-	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.KVGasConfig())
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	kvStore := c.MultiStore().GetKVStore(key)
-	if c.interBlockCache != nil {
-		// wrap the KVStore in an inter-block write-through cache
-		kvStore = c.interBlockCache.GetKVStoreCache(key, kvStore)
-	}
-
-	return gaskv.NewStore(kvStore, c.GasMeter(), stypes.TransientGasConfig())
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new

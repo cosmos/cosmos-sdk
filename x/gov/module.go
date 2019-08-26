@@ -98,7 +98,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModuleSimulation defines the module simulation functions used by the gov module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder performs a no-op.
+// RegisterStoreDecoder registers a decoder for gov module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
 }

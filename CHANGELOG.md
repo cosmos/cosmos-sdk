@@ -70,22 +70,34 @@ longer panics if the store to load contains substores that we didn't explicitly 
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
-* (rest) [\#4924](https://github.com/cosmos/cosmos-sdk/pull/4924) Return response
-height even upon error as it may be useful for the downstream caller and have
-`/auth/accounts/{address}` return a 200 with an empty account upon error when
-that error is that the account doesn't exist.
 * (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
 
 ### Bug Fixes
 
-* (baseapp) \#4903 Various height query fixes:
+* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
+* (keys) Fix ledger custom coin type support bug
+
+## [v0.37.0] - 2019-08-21
+
+### Bug Fixes
+
+* (baseapp) [\#4903](https://github.com/cosmos/cosmos-sdk/issues/4903) Various height query fixes:
   * Move height with proof check from `CLIContext` to `BaseApp` as the height
   can automatically be injected there.
   * Update `handleQueryStore` to resemble `handleQueryCustom`
-* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
-* (keys) Fix ledger custom coin type support bug
-* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs to properly return black listed addresses for bank keeper initialization
-* (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash cli if user doesn't answer y/n confirmation request
+* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs
+to properly return black listed addresses for bank keeper initialization.
+* (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash CLI
+if user doesn't answer y/n confirmation request.
+* (cli) [\#4927](https://github.com/cosmos/cosmos-sdk/issues/4927) Fix the `q gov vote`
+command to handle empty (pruned) votes correctly.
+
+### Improvements
+
+* (rest) [\#4924](https://github.com/cosmos/cosmos-sdk/pull/4924) Return response
+height even upon error as it may be useful for the downstream caller and have
+`/auth/accounts/{address}` return a 200 with an empty account upon error when
+that error is that the account doesn't exist.
 
 ## [v0.36.0] - 2019-08-13
 
@@ -2565,5 +2577,6 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.0...HEAD
+[v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

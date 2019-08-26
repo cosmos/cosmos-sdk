@@ -36,7 +36,7 @@ func SetHaltHeight(height uint64) func(*BaseApp) {
 
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
-func SetInterBlockCache(cache *sdk.KVStoreCacheManager) func(*BaseApp) {
+func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 

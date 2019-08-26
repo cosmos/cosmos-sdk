@@ -84,7 +84,7 @@ type BaseApp struct {
 	deliverState *state // for DeliverTx
 
 	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache *sdk.KVStoreCacheManager
+	interBlockCache sdk.MultiStorePersistentCache
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -129,6 +129,10 @@ func NewBaseApp(
 	}
 	for _, option := range options {
 		option(app)
+	}
+
+	if app.interBlockCache != nil {
+		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
 	return app
@@ -341,7 +345,7 @@ func (app *BaseApp) setHaltHeight(height uint64) {
 	app.haltHeight = height
 }
 
-func (app *BaseApp) setInterBlockCache(cache *sdk.KVStoreCacheManager) {
+func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
@@ -378,15 +382,13 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 
 // setDeliverState sets the BaseApp's deliverState with a cache-wrapped multi-store
 // (i.e. a CacheMultiStore) and a new Context with the cache-wrapped multi-store,
-// and provided header. If an inter-block cache is set on the BaseApp, it will
-// be provided to the context such that whenever a KVStore is retrieived, it'll
-// be wrapped with a persistent write-through cache. It is set on InitChain and
-// BeginBlock and set to nil on Commit.
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger).WithInterBlockCache(app.interBlockCache),
+		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
 }
 
@@ -598,8 +600,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		msCache.Write()
 	}
 
-	// Create a new context based off of the existing context with a cache wrapped
-	// multi-store in case message processing fails.
+	// Create a new Context based off of the existing Context with a cache-wrapped
+	// MultiStore in case message processing fails. At this point, the MultiStore
+	// is doubly cached-wrapped.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted

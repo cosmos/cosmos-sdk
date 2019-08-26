@@ -8,11 +8,13 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
+// Single block (with meta)
 type ResultBlock struct {
 	BlockMeta BlockMeta `json:"block_meta"`
 	Block     Block     `json:"block"`
 }
 
+// BlockMeta contains meta information about a block - namely, it's ID and Header.
 type BlockMeta struct {
 	BlockID types.BlockID `json:"block_id"` // the block hash and partsethash
 	Header  Header        `json:"header"`   // The block's Header
@@ -37,6 +39,7 @@ func (h Header) MarshalJSON() ([]byte, error) {
 	return json.Marshal(_h)
 }
 
+// Block defines the atomic unit of a Tendermint blockchain.
 type Block struct {
 	Header     `json:"header"`
 	types.Data `json:"data"`
@@ -44,11 +47,14 @@ type Block struct {
 	LastCommit Commit             `json:"last_commit"`
 }
 
+// Commit contains the evidence that a block was committed by a set of validators.
+// NOTE: Commit is empty for height 1, but never nil.
 type Commit struct {
 	BlockID    types.BlockID `json:"block_id"`
 	Precommits []CommitSig   `json:"precommits"`
 }
 
+// CommitSig defines a wrapper around Tendermint's CommitSig type overriding various fields.
 // nolint: structtag
 type CommitSig struct {
 	types.CommitSig
@@ -64,6 +70,8 @@ func (c CommitSig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(_h)
 }
 
+// ConvertBlockResult allows to convert the given standard ResultBlock into a new ResultBlock having all the
+// validator addresses as Bech32 strings instead of HEX ones.
 func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult ResultBlock) {
 
 	header := Header{

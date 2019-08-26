@@ -112,9 +112,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	bondPool := supply.NewEmptyModuleAccount(types.BondedPoolName, supply.Burner, supply.Staking)
 
 	blacklistedAddrs := make(map[string]bool)
-	blacklistedAddrs[feeCollectorAcc.String()] = true
-	blacklistedAddrs[notBondedPool.String()] = true
-	blacklistedAddrs[bondPool.String()] = true
+	blacklistedAddrs[feeCollectorAcc.GetAddress().String()] = true
+	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
+	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 
@@ -174,7 +174,7 @@ func NewPubKey(pk string) (res crypto.PubKey) {
 	}
 	//res, err = crypto.PubKeyFromBytes(pkBytes)
 	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
+	copy(pkEd[:], pkBytes)
 	return pkEd
 }
 

@@ -64,7 +64,9 @@ func printNodeStatus(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-type nodeInfoResponse struct {
+// NodeInfoResponse defines a response type that contains node status and version
+// information.
+type NodeInfoResponse struct {
 	p2p.DefaultNodeInfo `json:"node_info"`
 
 	ApplicationVersion version.Info `json:"application_version"`
@@ -79,7 +81,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		resp := nodeInfoResponse{
+		resp := NodeInfoResponse{
 			DefaultNodeInfo:    status.NodeInfo,
 			ApplicationVersion: version.NewInfo(),
 		}
@@ -87,7 +89,8 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type syncingResponse struct {
+// SyncingResponse defines a response type that contains node syncing information.
+type SyncingResponse struct {
 	Syncing bool `json:"syncing"`
 }
 
@@ -100,6 +103,6 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rest.PostProcessResponseBare(w, cliCtx, syncingResponse{Syncing: status.SyncInfo.CatchingUp})
+		rest.PostProcessResponseBare(w, cliCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
 	}
 }

@@ -156,7 +156,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 	})
 	var lastValidatorPowers []LastValidatorPower
 	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
-		lastValidatorPowers = append(lastValidatorPowers, LastValidatorPower{addr, power})
+		lastValidatorPowers = append(lastValidatorPowers, LastValidatorPower{Address: addr, Power: power})
 		return false
 	})
 

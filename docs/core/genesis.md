@@ -1,3 +1,0 @@
-# Genesis File
-
-TODO

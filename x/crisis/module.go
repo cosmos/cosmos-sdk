@@ -16,31 +16,31 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
-// app module basics object
+// AppModuleBasic defines the basic application module used by the crisis module.
 type AppModuleBasic struct{}
 
-var _ module.AppModuleBasic = AppModuleBasic{}
-
-// module name
+// Name returns the crisis module's name.
 func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// register module codec
+// RegisterCodec registers the crisis module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
 }
 
-// default genesis state
+// DefaultGenesis returns default genesis state as raw bytes for the crisis
+// module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
-// module validate genesis
+// ValidateGenesis performs genesis state validation for the crisis module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	if err := ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
@@ -49,77 +49,95 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// register rest routes
+// RegisterRESTRoutes registers no REST routes for the crisis module.
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
-// get the root tx command of this module
+// GetTxCmd returns the root tx command for the crisis module.
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetTxCmd(cdc)
 }
 
-// get the root query command of this module
+// GetQueryCmd returns no root query command for the crisis module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-//___________________________
-// app module for bank
+//____________________________________________________________________________
+
+// AppModuleSimulation defines the module simulation functions used by the crisis module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+//____________________________________________________________________________
+
+// AppModule implements an application module for the crisis module.
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	AppModuleSimulation
+
+	// NOTE: We store a reference to the keeper here so that after a module
+	// manager is created, the invariants can be properly registered and
+	// executed.
+	keeper *Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(keeper *Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		keeper:         keeper,
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		keeper:              keeper,
 	}
 }
 
-// module name
+// Name returns the crisis module's name.
 func (AppModule) Name() string {
 	return ModuleName
 }
 
-// register invariants
+// RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// module querier route name
+// Route returns the message routing key for the crisis module.
 func (AppModule) Route() string {
 	return RouterKey
 }
 
-// module handler
+// NewHandler returns an sdk.Handler for the crisis module.
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return NewHandler(*am.keeper)
 }
 
-// module querier route name
+// QuerierRoute returns no querier route.
 func (AppModule) QuerierRoute() string { return "" }
 
-// module querier
+// NewQuerierHandler returns no sdk.Querier.
 func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
 
-// module init-genesis
+// InitGenesis performs genesis initialization for the crisis module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, genesisState)
+	InitGenesis(ctx, *am.keeper, genesisState)
 
 	am.keeper.AssertInvariants(ctx)
 	return []abci.ValidatorUpdate{}
 }
 
-// module export genesis
+// ExportGenesis returns the exported genesis state as raw bytes for the crisis
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := ExportGenesis(ctx, *am.keeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 
-// module begin-block
+// BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// module end-block
+// EndBlock returns the end blocker for the crisis module. It returns no validator
+// updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
+	EndBlocker(ctx, *am.keeper)
 	return []abci.ValidatorUpdate{}
 }

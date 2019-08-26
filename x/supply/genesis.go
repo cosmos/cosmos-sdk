@@ -11,7 +11,7 @@ import (
 // CONTRACT: all types of accounts must have been already initialized/created
 func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data GenesisState) {
 	// manually set the total supply based on accounts if not provided
-	if data.Supply.GetTotal().Empty() {
+	if data.Supply.Empty() {
 		var totalSupply sdk.Coins
 		ak.IterateAccounts(ctx,
 			func(acc authexported.Account) (stop bool) {
@@ -20,13 +20,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data Ge
 			},
 		)
 
-		data.Supply = data.Supply.SetTotal(totalSupply)
+		data.Supply = totalSupply
 	}
 
-	keeper.SetSupply(ctx, data.Supply)
+	keeper.SetSupply(ctx, types.NewSupply(data.Supply))
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
-	return NewGenesisState(keeper.GetSupply(ctx))
+	return NewGenesisState(keeper.GetSupply(ctx).GetTotal())
 }

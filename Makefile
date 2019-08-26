@@ -68,6 +68,23 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
+build-docs:
+	@cd docs && \
+	while read p; do \
+		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
+		mkdir -p ~/output/$${p} ; \
+		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
+		echo "<a href='$${p}'>$${p}</a>" >> ~/output/index.html ; \
+	done < versions ;
+
+sync-docs:
+	cd ~/output && \
+	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
+	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
+	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
+	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
+.PHONY: sync_docs
+
 ########################################
 ### Testing
 
@@ -86,8 +103,9 @@ test_race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
 test_sim_nondeterminism:
-	@echo "Running nondeterminism test..."
-	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true -v -timeout 10m
+	@echo "Running non-determinism test..."
+	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+	    -NumBlocks=100 -BlockSize=200 -Commit=true -v -timeout 24h
 
 test_sim_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
@@ -125,7 +143,6 @@ test_sim_benchmark_invariants:
 .PHONY: test \
 test_sim_nondeterminism \
 test_sim_custom_genesis_fast \
-test_sim_fast \
 test_sim_import_export \
 test_sim_after_import \
 test_sim_custom_genesis_multi_seed \

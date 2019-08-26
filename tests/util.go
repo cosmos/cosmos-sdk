@@ -68,10 +68,10 @@ func waitForHeightTM(height int64, url string) {
 			panic(err)
 		}
 
-		if resBlock.Block != nil &&
-			resBlock.Block.Height >= height {
+		if resBlock.Block != nil && resBlock.Block.Height >= height {
 			return
 		}
+
 		time.Sleep(time.Millisecond * 100)
 	}
 }
@@ -96,6 +96,7 @@ func StatusOK(statusCode int) bool {
 func waitForHeight(height int64, url string) {
 	var res *http.Response
 	var err error
+
 	for {
 		// Since this is in a testing file we are accepting nolint to be passed
 		res, err = http.Get(url) //nolint:gosec
@@ -107,21 +108,20 @@ func waitForHeight(height int64, url string) {
 		if err != nil {
 			panic(err)
 		}
-		err = res.Body.Close()
-		if err != nil {
+
+		if err = res.Body.Close(); err != nil {
 			panic(err)
 		}
 
 		var resultBlock ctypes.ResultBlock
-		err = cdc.UnmarshalJSON(body, &resultBlock)
-		if err != nil {
+		if err = cdc.UnmarshalJSON(body, &resultBlock); err != nil {
 			panic(err)
 		}
 
-		if resultBlock.Block != nil &&
-			resultBlock.Block.Height >= height {
+		if resultBlock.Block != nil && resultBlock.Block.Height >= height {
 			return
 		}
+
 		time.Sleep(time.Millisecond * 100)
 	}
 }

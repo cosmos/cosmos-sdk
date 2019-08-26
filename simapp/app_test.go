@@ -35,3 +35,18 @@ func TestSimAppExport(t *testing.T) {
 	_, _, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
+
+// ensure that black listed addresses are properly set in bank keeper
+func TestBlackListedAddrs(t *testing.T) {
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
+
+	for acc := range maccPerms {
+		require.True(t, app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+	}
+}
+
+func TestGetMaccPerms(t *testing.T) {
+	dup := GetMaccPerms()
+	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
+}

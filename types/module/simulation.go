@@ -28,7 +28,6 @@ type AppModuleSimulation interface {
 type SimulationManager struct {
 	Modules       []AppModuleSimulation    // array of app modules; we use an array for deterministic simulation tests
 	StoreDecoders sdk.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
-	ParamChanges  []simulation.ParamChange // list of parameters changes transactions run by the simulator
 }
 
 // NewSimulationManager creates a new SimulationManager object
@@ -38,7 +37,6 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
-		ParamChanges:  []simulation.ParamChange{},
 	}
 }
 
@@ -57,14 +55,16 @@ func (sm *SimulationManager) GenerateGenesisStates(input *SimulationState) {
 	}
 }
 
-// RandomizedSimParamChanges generates randomized contents for creating params change
+// GenerateParamChanges generates randomized contents for creating params change
 // proposal transactions
-func (sm *SimulationManager) RandomizedSimParamChanges(seed int64) {
+func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []simulation.ParamChange){
 	r := rand.New(rand.NewSource(seed))
 
 	for _, module := range sm.Modules {
-		sm.ParamChanges = append(sm.ParamChanges, module.RandomizedParams(r)...)
+		paramChanges = append(paramChanges, module.RandomizedParams(r)...)
 	}
+	 
+	return
 }
 
 // SimulationState is the input parameters used on each of the module's randomized

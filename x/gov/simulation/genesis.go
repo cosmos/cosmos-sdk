@@ -57,32 +57,43 @@ func GenTallyParamsVeto(r *rand.Rand) sdk.Dec {
 
 // RandomizedGenState generates a random GenesisState for gov
 func RandomizedGenState(simState *module.SimulationState) {
-
 	startingProposalID := uint64(simState.Rand.Intn(100))
 
 	var minDeposit sdk.Coins
-	simState.AppParams.GetOrGenerate(simState.Cdc, DepositParamsMinDeposit, &minDeposit, simState.Rand,
-		func(r *rand.Rand) { minDeposit = GenDepositParamsMinDeposit(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, DepositParamsMinDeposit, &minDeposit, simState.Rand,
+		func(r *rand.Rand) { minDeposit = GenDepositParamsMinDeposit(r) },
+	)
 
 	var depositPeriod time.Duration
-	simState.AppParams.GetOrGenerate(simState.Cdc, DepositParamsDepositPeriod, &depositPeriod, simState.Rand,
-		func(r *rand.Rand) { depositPeriod = GenDepositParamsDepositPeriod(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, DepositParamsDepositPeriod, &depositPeriod, simState.Rand,
+		func(r *rand.Rand) { depositPeriod = GenDepositParamsDepositPeriod(r) },
+	)
 
 	var votingPeriod time.Duration
-	simState.AppParams.GetOrGenerate(simState.Cdc, VotingParamsVotingPeriod, &votingPeriod, simState.Rand,
-		func(r *rand.Rand) { votingPeriod = GenVotingParamsVotingPeriod(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, VotingParamsVotingPeriod, &votingPeriod, simState.Rand,
+		func(r *rand.Rand) { votingPeriod = GenVotingParamsVotingPeriod(r) },
+	)
 
 	var quorum sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, TallyParamsQuorum, &quorum, simState.Rand,
-		func(r *rand.Rand) { quorum = GenTallyParamsQuorum(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, TallyParamsQuorum, &quorum, simState.Rand,
+		func(r *rand.Rand) { quorum = GenTallyParamsQuorum(r) },
+	)
 
 	var threshold sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, TallyParamsThreshold, &threshold, simState.Rand,
-		func(r *rand.Rand) { threshold = GenTallyParamsThreshold(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, TallyParamsThreshold, &threshold, simState.Rand,
+		func(r *rand.Rand) { threshold = GenTallyParamsThreshold(r) },
+	)
 
 	var veto sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, TallyParamsVeto, &veto, simState.Rand,
-		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, TallyParamsVeto, &veto, simState.Rand,
+		func(r *rand.Rand) { veto = GenTallyParamsVeto(r) },
+	)
 
 	govGenesis := types.NewGenesisState(
 		startingProposalID,

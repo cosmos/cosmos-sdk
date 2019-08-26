@@ -49,30 +49,39 @@ func GenGoalBonded(r *rand.Rand) sdk.Dec {
 
 // RandomizedGenState generates a random GenesisState for mint
 func RandomizedGenState(simState *module.SimulationState) {
-
 	// minter
 	var inflation sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, Inflation, &inflation, simState.Rand,
-		func(r *rand.Rand) { inflation = GenInflation(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, Inflation, &inflation, simState.Rand,
+		func(r *rand.Rand) { inflation = GenInflation(r) },
+	)
 
 	minter := types.InitialMinter(inflation)
 
 	// params
 	var inflationRateChange sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, InflationRateChange, &inflationRateChange, simState.Rand,
-		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, InflationRateChange, &inflationRateChange, simState.Rand,
+		func(r *rand.Rand) { inflationRateChange = GenInflationRateChange(r) },
+	)
 
 	var inflationMax sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, InflationMax, &inflationMax, simState.Rand,
-		func(r *rand.Rand) { inflationMax = GenInflationMax(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, InflationMax, &inflationMax, simState.Rand,
+		func(r *rand.Rand) { inflationMax = GenInflationMax(r) },
+	)
 
 	var inflationMin sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, InflationMin, &inflationMin, simState.Rand,
-		func(r *rand.Rand) { inflationMin = GenInflationMin(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, InflationMin, &inflationMin, simState.Rand,
+		func(r *rand.Rand) { inflationMin = GenInflationMin(r) },
+	)
 
 	var goalBonded sdk.Dec
-	simState.AppParams.GetOrGenerate(simState.Cdc, GoalBonded, &goalBonded, simState.Rand,
-		func(r *rand.Rand) { goalBonded = GenGoalBonded(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GoalBonded, &goalBonded, simState.Rand,
+		func(r *rand.Rand) { goalBonded = GenGoalBonded(r) },
+	)
 
 	mintDenom := sdk.DefaultBondDenom
 	blocksPerYear := uint64(60 * 60 * 8766 / 5)

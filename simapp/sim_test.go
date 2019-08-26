@@ -42,10 +42,9 @@ func init() {
 
 // TODO: add description
 func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
-
 	ap := make(simulation.AppParams)
 
-	app.sm.RandomizedSimParamChanges(config.Seed)
+	paramChanges := app.sm.GenerateParamChanges(config.Seed)
 
 	if config.ParamsFile != "" {
 		bz, err := ioutil.ReadFile(config.ParamsFile)
@@ -155,7 +154,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(app.sm.ParamChanges)),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(paramChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {

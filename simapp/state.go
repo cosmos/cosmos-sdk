@@ -34,7 +34,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
-			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config)
+			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 		case config.ParamsFile != "":
 			appParams := make(simulation.AppParams)
@@ -61,22 +61,46 @@ func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
 	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
 ) (json.RawMessage, []simulation.Account, string) {
-
+	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()
-	numInitiallyBonded, amount := RandomizedSimulationParams(appParams, cdc, r, int64(len(accs)))
 
-	input := &module.SimulationState{
+	// generate a random amount of initial stake coins and a random initial
+	// number of bonded accounts
+	var initialStake, numInitiallyBonded int64
+	appParams.GetOrGenerate(
+		cdc, StakePerAccount, &initialStake, r,
+		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) },
+	)
+	appParams.GetOrGenerate(
+		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) },
+	)
+
+	if numInitiallyBonded > numAccs {
+		numInitiallyBonded = numAccs
+	}
+
+	fmt.Printf(
+		`Selected randomly generated parameters for simulated genesis:
+{
+  stake_per_account: "%d",
+  initially_bonded_validators: "%d"
+}
+`, initialStake, numInitiallyBonded,
+	)
+
+	simState := &module.SimulationState{
 		AppParams:    appParams,
 		Cdc:          cdc,
 		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,
-		InitialStake: amount,
+		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}
 
-	simManager.GenerateGenesisStates(input)
+	simManager.GenerateGenesisStates(simState)
 
 	appState, err := cdc.MarshalJSON(genesisState)
 	if err != nil {
@@ -88,10 +112,10 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, config simulation.Config) (
+func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (
 	genState json.RawMessage, newAccs []simulation.Account, chainID string) {
 
-	bytes, err := ioutil.ReadFile(config.GenesisFile)
+	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
@@ -121,29 +145,4 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, config simulation
 	}
 
 	return genesis.AppState, newAccs, genesis.ChainID
-}
-
-// RandomizedSimulationParams generate a random amount of initial stake coins
-// and a random initially bonded number of accounts
-func RandomizedSimulationParams(appParams simulation.AppParams, cdc *codec.Codec, r *rand.Rand, numAccs int64) (numInitiallyBonded, initialStake int64) {
-
-	appParams.GetOrGenerate(cdc, StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) })
-	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
-
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%d",
-  initially_bonded_validators: "%d"
-}
-`, initialStake, numInitiallyBonded,
-	)
-
-	return
 }

@@ -33,15 +33,18 @@ func GenMaxValidators(r *rand.Rand) (maxValidators uint16) {
 
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
-
 	// params
 	var unbondTime time.Duration
-	simState.AppParams.GetOrGenerate(simState.Cdc, UnbondingTime, &unbondTime, simState.Rand,
-		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, UnbondingTime, &unbondTime, simState.Rand,
+		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) },
+	)
 
 	var maxValidators uint16
-	simState.AppParams.GetOrGenerate(simState.Cdc, MaxValidators, &maxValidators, simState.Rand,
-		func(r *rand.Rand) { maxValidators = GenMaxValidators(r) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, MaxValidators, &maxValidators, simState.Rand,
+		func(r *rand.Rand) { maxValidators = GenMaxValidators(r) },
+	)
 
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work

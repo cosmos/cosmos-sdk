@@ -66,39 +66,26 @@ func (c CommitSig) MarshalJSON() ([]byte, error) {
 
 func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult ResultBlock) {
 
-	// header
 	header := Header{
 		Header:          res.BlockMeta.Header,
 		ProposerAddress: sdk.ValAddress(res.BlockMeta.Header.ProposerAddress),
 	}
 
-	// meta
-	blockMeta := BlockMeta{
-		BlockID: res.BlockMeta.BlockID,
-		Header:  header,
+	return ResultBlock{
+		BlockMeta: BlockMeta{
+			BlockID: res.BlockMeta.BlockID,
+			Header:  header,
+		},
+		Block: Block{
+			Header:   header,
+			Data:     res.Block.Data,
+			Evidence: res.Block.Evidence,
+			LastCommit: Commit{
+				BlockID:    res.Block.LastCommit.BlockID,
+				Precommits: convertPreCommits(res.Block.LastCommit.Precommits),
+			},
+		},
 	}
-
-	// commit
-	commit := Commit{
-		BlockID:    res.Block.LastCommit.BlockID,
-		Precommits: convertPreCommits(res.Block.LastCommit.Precommits),
-	}
-
-	// block
-	block := Block{
-		Header:     header,
-		Data:       res.Block.Data,
-		Evidence:   res.Block.Evidence,
-		LastCommit: commit,
-	}
-
-	// blockResult
-	blockResult = ResultBlock{
-		BlockMeta: blockMeta,
-		Block:     block,
-	}
-
-	return blockResult
 }
 
 func convertPreCommits(preCommits []*types.CommitSig) (sigs []CommitSig) {

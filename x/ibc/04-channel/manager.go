@@ -2,6 +2,7 @@ package channel
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
@@ -18,8 +19,6 @@ type Manager struct {
 	connection connection.Manager
 
 	counterparty CounterpartyManager
-
-	router Router
 
 	ports map[string]struct{}
 }
@@ -260,6 +259,10 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 			return errors.New("cannot send Packets on this channel")
 		}
 	*/
+	if portid != packet.SenderPort() {
+		return errors.New("Invalid portid")
+	}
+
 	obj, err := man.Query(ctx, portid, chanid)
 	if err != nil {
 		return err
@@ -270,6 +273,16 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 	}
 
 	obj.Packets.Set(ctx, obj.SeqSend.Incr(ctx), packet)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			EventTypeSendPacket,
+			sdk.NewAttribute(AttributeKeySenderPort, packet.SenderPort()),
+			sdk.NewAttribute(AttributeKeyReceiverPort, packet.ReceiverPort()),
+			sdk.NewAttribute(AttributeKeyChannelID, chanid),
+			sdk.NewAttribute(AttributeKeySequence, strconv.FormatUint(obj.SeqSend.Get(ctx), 10)),
+		),
+	})
 
 	return nil
 }

@@ -1,11 +1,11 @@
 package mock
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"strings"
 	"strconv"
-	"bytes"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -34,7 +34,7 @@ func (packet SequencePacket) MarshalJSON() ([]byte, error) {
 }
 
 func (packet *SequencePacket) UnmarshalJSON(bz []byte) (err error) {
-	bz = bz[1:len(bz)-1]
+	bz = bz[1 : len(bz)-1]
 	if !bytes.HasPrefix(bz, []byte("sequence-packet-")) {
 		return errors.New("invalid SequencePacket string")
 	}
@@ -42,7 +42,11 @@ func (packet *SequencePacket) UnmarshalJSON(bz []byte) (err error) {
 	return
 }
 
-func (SequencePacket) Route() string {
+func (SequencePacket) SenderPort() string {
+	return "ibc-mock"
+}
+
+func (SequencePacket) ReceiverPort() string {
 	return "ibc-mock"
 }
 

@@ -134,8 +134,8 @@ func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {
 
 type MsgPacket struct {
 	Packet `json:"packet" yaml:"packet"`
-	// PortID, ChannelID can be empty if batched & not first MsgPacket
-	PortID    string `json:"port_id,omitempty" yaml:"port_id"`
+	// PortID dependent on type
+	// ChannelID can be empty if batched & not first MsgPacket
 	ChannelID string `json:"channel_id,omitempty" yaml:"channel_id"`
 	// Height uint64 // height of the commitment root for the proofs
 	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
@@ -150,6 +150,10 @@ func (msg MsgPacket) ValidateBasic() sdk.Error {
 	// Check proofs != nil
 	// Signer can be empty
 	return nil // TODO
+}
+
+func (msg MsgPacket) Route() string {
+	return msg.ReceiverPort()
 }
 
 func (msg MsgPacket) GetSignBytes() []byte {

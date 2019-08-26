@@ -19,13 +19,13 @@ type Packet struct {
 */
 
 type Packet interface {
-	Route() string
+	SenderPort() string
+	ReceiverPort() string // == Route()
 	Type() string
 	ValidateBasic() sdk.Error
-	String() string
 	Timeout() uint64
-	MarshalAmino() (string, error)
-	MarshalJSON() ([]byte, error)
+	MarshalAmino() (string, error) // Should exclude PortID/ChannelID info
+	MarshalJSON() ([]byte, error) // Should exclude PortID/ChannelID info 
 }
 
 type Channel struct {

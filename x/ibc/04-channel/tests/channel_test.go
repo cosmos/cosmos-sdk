@@ -2,7 +2,9 @@ package channel
 
 import (
 	"testing"
+	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
@@ -44,8 +46,42 @@ func (packet MyPacket) Timeout() uint64 {
 	return 100 // TODO
 }
 
-func (MyPacket) Route() string {
-	return "my"
+func (MyPacket) SenderPort() string {
+	return "channel-test"
+}
+
+func (MyPacket) ReceiverPort() string {
+	return "channel-test"
+}
+
+func (MyPacket) Type() string {
+	return "my-packet"
+}
+
+func (MyPacket) ValidateBasic() sdk.Error {
+	return nil
+}
+
+func (packet MyPacket) MarshalAmino() (string, error) {
+	return "mp-"+packet.Message, nil
+}
+
+func (packet *MyPacket) UnmarshalAmino(text string) error {
+	if text[:3] != "mp-" {
+		return errors.New("Invalid text for MyPacket")
+	}
+	packet.Message = text[3:]
+	return nil
+}
+
+func (packet MyPacket) MarshalJSON() ([]byte, error)  {
+	res, _ := packet.MarshalAmino()
+	return []byte("\""+res+"\""), nil
+}
+
+func (packet *MyPacket) UnmarshalJSON(bz []byte) error {
+	bz = bz[1:len(bz)-1]
+	return packet.UnmarshalAmino(string(bz))
 }
 
 func TestPacket(t *testing.T) {

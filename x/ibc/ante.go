@@ -19,10 +19,6 @@ func ExtractMsgPackets(msgs []sdk.Msg) (res []MsgPacket, abort bool) {
 	if len(res) >= 2 {
 		first := res[0]
 		for _, msg := range res[1:] {
-			if len(msg.PortID) != 0 && msg.PortID != first.PortID {
-				return res, true
-			}
-			msg.PortID = first.PortID
 			if len(msg.ChannelID) != 0 && msg.ChannelID != first.ChannelID {
 				return res, true
 			}
@@ -35,7 +31,7 @@ func ExtractMsgPackets(msgs []sdk.Msg) (res []MsgPacket, abort bool) {
 
 func VerifyMsgPackets(ctx sdk.Context, channel channel.Manager, msgs []MsgPacket) error {
 	for _, msg := range msgs {
-		err := channel.Receive(ctx, msg.Proofs, msg.PortID, msg.ChannelID, msg.Packet)
+		err := channel.Receive(ctx, msg.Proofs, msg.ReceiverPort(), msg.ChannelID, msg.Packet)
 		if err != nil {
 			return err
 		}
@@ -59,6 +55,6 @@ func NewAnteHandler(channel channel.Manager) sdk.AnteHandler {
 			return
 		}
 
-		return ctx, res, false	
+		return ctx, res, false
 	}
 }

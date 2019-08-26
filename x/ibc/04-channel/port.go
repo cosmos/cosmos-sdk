@@ -29,6 +29,9 @@ func (port Port) Release() {
 }
 
 func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
+	if packet.SenderPort() != port.id {
+		panic("Packet sent on wrong port")
+	}
 	return port.channel.Send(ctx, port.id, chanid, packet)
 }
 

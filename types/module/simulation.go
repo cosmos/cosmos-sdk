@@ -57,13 +57,13 @@ func (sm *SimulationManager) GenerateGenesisStates(input *SimulationState) {
 
 // GenerateParamChanges generates randomized contents for creating params change
 // proposal transactions
-func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []simulation.ParamChange){
+func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []simulation.ParamChange) {
 	r := rand.New(rand.NewSource(seed))
 
 	for _, module := range sm.Modules {
 		paramChanges = append(paramChanges, module.RandomizedParams(r)...)
 	}
-	 
+
 	return
 }
 

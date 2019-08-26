@@ -206,9 +206,8 @@ func SetGenesis(app *App, accs []authexported.Account) {
 	app.Commit()
 }
 
-// GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
-	// Make the transaction free
+func GenTxWithChainID(cid string, msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+	// make the transaction free
 	fee := auth.StdFee{
 		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
 		Gas:    100000,
@@ -218,7 +217,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 	memo := "testmemotestmemo"
 
 	for i, p := range priv {
-		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
+		sig, err := p.Sign(auth.StdSignBytes(cid, accnums[i], seq[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}
@@ -230,6 +229,11 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 	}
 
 	return auth.NewStdTx(msgs, fee, sigs, memo)
+}
+
+// GenTx generates a signed mock transaction.
+func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+	return GenTxWithChainID(chainID, msgs, accnums, seq, priv...)
 }
 
 // GeneratePrivKeys generates a total n secp256k1 private keys.

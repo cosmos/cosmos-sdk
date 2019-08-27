@@ -20,8 +20,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var ownerships []types.Owner
 
 	for _, acc := range simState.Accounts {
-		// 50% of accounts own an NFT
-		if simState.Rand.Intn(100) < 50 {
+		// 5% of accounts own an NFT
+		if simState.Rand.Intn(100) < 5 {
 			baseNFT := types.NewBaseNFT(
 				simulation.RandStringOfLength(simState.Rand, 10), // id
 				acc.Address,

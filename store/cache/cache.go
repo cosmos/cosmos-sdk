@@ -1,14 +1,17 @@
-package types
+package cache
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 
 	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
-	_ CommitKVStore             = (*CommitKVStoreCache)(nil)
-	_ MultiStorePersistentCache = (*CommitKVStoreCacheManager)(nil)
+	_ types.CommitKVStore             = (*CommitKVStoreCache)(nil)
+	_ types.MultiStorePersistentCache = (*CommitKVStoreCacheManager)(nil)
 
 	// DefaultCommitKVStoreCacheSize defines the persistent ARC cache size for a
 	// CommitKVStoreCache.
@@ -23,7 +26,7 @@ type (
 	// CommitKVStore in a write-through manner. Caching performed in the
 	// CommitKVStore and below is completely irrelevant to this layer.
 	CommitKVStoreCache struct {
-		CommitKVStore
+		types.CommitKVStore
 		cache *lru.ARCCache
 	}
 
@@ -33,11 +36,11 @@ type (
 	// CommitMultiStore.
 	CommitKVStoreCacheManager struct {
 		cacheSize uint
-		caches    map[string]CommitKVStore
+		caches    map[string]types.CommitKVStore
 	}
 )
 
-func NewCommitKVStoreCache(store CommitKVStore, size uint) *CommitKVStoreCache {
+func NewCommitKVStoreCache(store types.CommitKVStore, size uint) *CommitKVStoreCache {
 	cache, err := lru.NewARC(int(size))
 	if err != nil {
 		panic(fmt.Errorf("failed to create KVStore cache: %s", err))
@@ -52,14 +55,14 @@ func NewCommitKVStoreCache(store CommitKVStore, size uint) *CommitKVStoreCache {
 func NewCommitKVStoreCacheManager(size uint) *CommitKVStoreCacheManager {
 	return &CommitKVStoreCacheManager{
 		cacheSize: size,
-		caches:    make(map[string]CommitKVStore),
+		caches:    make(map[string]types.CommitKVStore),
 	}
 }
 
 // GetStoreCache returns a Cache from the CommitStoreCacheManager for a given
 // StoreKey. If no Cache exists for the StoreKey, then one is created and set.
 // The returned Cache is meant to be used in a persistent manner.
-func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore {
+func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key types.StoreKey, store types.CommitKVStore) types.CommitKVStore {
 	if cmgr.caches[key.Name()] == nil {
 		cmgr.caches[key.Name()] = NewCommitKVStoreCache(store, cmgr.cacheSize)
 	}
@@ -69,7 +72,12 @@ func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key StoreKey, store CommitK
 
 // Reset resets in the internal caches.
 func (cmgr *CommitKVStoreCacheManager) Reset() {
-	cmgr.caches = make(map[string]CommitKVStore)
+	cmgr.caches = make(map[string]types.CommitKVStore)
+}
+
+// CacheWrap returns the inter-block cache as a cache-wrapped CommitKVStore.
+func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(ckv)
 }
 
 // Get retrieves a value by key. It will first look in the write-through cache.

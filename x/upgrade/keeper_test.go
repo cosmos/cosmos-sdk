@@ -89,6 +89,38 @@ func (s *TestSuite) VerifyDoUpgrade() {
 	s.VerifyCleared(newCtx)
 }
 
+func (s *TestSuite) TestHaltIfTooNew() {
+	s.T().Log("Verify that we don't panic with registered plan not in database at all")
+	var called int
+	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan Plan) { called++ })
+
+	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	s.Require().NotPanics(func() {
+		s.keeper.BeginBlocker(newCtx, req)
+	})
+	s.Require().Equal(0, called)
+
+	s.T().Log("Verify we panic if we have a registered handler ahead of time")
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "future", Height: s.ctx.BlockHeight() + 3})
+	s.Require().NoError(err)
+	s.Require().Panics(func() {
+		s.keeper.BeginBlocker(newCtx, req)
+	})
+	s.Require().Equal(0, called)
+
+	s.T().Log("Verify we no longer panic if the plan is on time")
+
+	futCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 3, Time: time.Now()}, false, log.NewNopLogger())
+	req = abci.RequestBeginBlock{Header: futCtx.BlockHeader()}
+	s.Require().NotPanics(func() {
+		s.keeper.BeginBlocker(futCtx, req)
+	})
+	s.Require().Equal(1, called)
+
+	s.VerifyCleared(futCtx)
+}
+
 func (s *TestSuite) VerifyCleared(newCtx sdk.Context) {
 	s.T().Log("Verify that the upgrade plan has been cleared")
 	_, havePlan := s.keeper.GetUpgradePlan(newCtx)

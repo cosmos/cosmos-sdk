@@ -122,7 +122,6 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 	blockHeight := ctx.BlockHeight()
 
 	plan, found := keeper.GetUpgradePlan(ctx)
-
 	if !found {
 		return
 	}
@@ -146,16 +145,14 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 			panic("UPGRADE REQUIRED!")
 		}
 	} else {
-		// enforce that we are not ahead of the game... if we didn't just upgrade, all registered handlers should be in done
-		store := ctx.KVStore(keeper.storeKey)
-		for name := range keeper.upgradeHandlers {
-			if !store.Has(DoneHeightKey(name)) {
-				ctx.Logger().Error(fmt.Sprintf("UNKOWN UPGRADE \"%s\" - in binary but not executed on chain", name))
-				panic("BINARY NEWER THAN CHAIN!")
-			}
+		// if we have a pending upgrade, but it is not yet time, make sure we did not
+		// set the handler already
+		_, ok := keeper.upgradeHandlers[plan.Name]
+		if ok {
+			ctx.Logger().Error(fmt.Sprintf("UNKOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
+			panic("BINARY UPDATED BEFORE TRIGGER!")
 		}
 	}
-
 }
 
 type logWriter struct {

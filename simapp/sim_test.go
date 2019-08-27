@@ -243,14 +243,15 @@ func invariants(app *SimApp) []sdk.Invariant {
 	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
 }
 
-// Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
 }
 
-// interBlockCache returns a BaseApp option function that sets the persistent
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
-func interBlockCache() func(*baseapp.BaseApp) {
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
@@ -268,7 +269,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
@@ -343,7 +344,7 @@ func TestFullAppSimulation(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -407,7 +408,7 @@ func TestAppImportExport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -460,7 +461,7 @@ func TestAppImportExport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
@@ -533,7 +534,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -593,7 +594,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	newApp.InitChain(abci.RequestInitChain{
@@ -634,7 +635,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 
-			app := NewSimApp(logger, db, nil, true, 0, interBlockCache())
+			app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 			fmt.Printf(
 				"Running non-determinism simulation; seed: %d/%d (%d), attempt: %d/%d\n",
@@ -670,7 +671,7 @@ func BenchmarkInvariants(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, params, simErr := simulation.SimulateFromSeed(

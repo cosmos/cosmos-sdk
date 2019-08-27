@@ -72,7 +72,7 @@ func SetupWithGenesisAccounts(genAccs genaccounts.GenesisAccounts) *SimApp {
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balanc of accAmt
+// initial balance of accAmt
 func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, accNum)
 	for i := 0; i < accNum; i++ {
@@ -82,7 +82,8 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+	prevSupply := app.SupplyKeeper.GetSupply(ctx)
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply)))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {

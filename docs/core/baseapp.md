@@ -7,37 +7,50 @@
 
 ## Synopsis
 
-This document describes `baseapp`, the abstraction that implements most of the common functionalities of an SDK application.
+This document describes `baseapp`, the abstraction that implements most of the common
+functionalities of an SDK application.
 
-- [Introduction](#introduction)
-- [Type Definition](#type-definition)
-- [Constructor](#constructor)
-- [States](#states)
-- [Routing](#routing)
-- [Main ABCI Messages](#abci)
-  - [CheckTx](#checktx)
-  - [DeliverTx](#delivertx)
-- [RunTx(), AnteHandler and RunMsgs](<#runtx()-,antehandler-and-runmsgs()>)
-  - [RunTx()](<#runtx()>)
-  - [AnteHandler](#antehandler)
-  - [RunMsgs()](<#runmsgs()>)
-- [Other ABCI Message](#other-abci-message)
-  - [InitChain](#initchain)
-  - [BeginBlock](#beginblock)
-  - [EndBlock](#endblock)
-  - [Commit](#commit)
-  - [Info](#info)
-  - [Query](#query)
+- [BaseApp](#baseapp)
+  - [Pre-requisite Reading](#pre-requisite-reading)
+  - [Synopsis](#synopsis)
+  - [Introduction](#introduction)
+  - [Type Definition](#type-definition)
+  - [Constructor](#constructor)
+  - [States](#states)
+    - [Main State](#main-state)
+    - [Volatile States](#volatile-states)
+  - [Routing](#routing)
+    - [Message Routing](#message-routing)
+    - [Query Routing](#query-routing)
+  - [Main ABCI Messages](#main-abci-messages)
+    - [CheckTx](#checktx)
+    - [DeliverTx](#delivertx)
+  - [RunTx(), AnteHandler and RunMsgs()](#runtx-antehandler-and-runmsgs)
+    - [RunTx()](#runtx)
+    - [AnteHandler](#antehandler)
+    - [RunMsgs()](#runmsgs)
+  - [Other ABCI Messages](#other-abci-messages)
+    - [InitChain](#initchain)
+    - [BeginBlock](#beginblock)
+    - [EndBlock](#endblock)
+    - [Commit](#commit)
+    - [Info](#info)
+    - [Query](#query)
+  - [Next](#next)
 
 ## Introduction
 
-`baseapp` is a base class that implements the core of an SDK application, namely:
+`BaseApp` is a base type that implements the core of an SDK application, namely:
 
-- The [Application-Blockchain Interface](#abci), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint).
+- The [Application-Blockchain Interface](#abci), for the state-machine to communicate with the
+underlying consensus engine (e.g. Tendermint).
 - A [Router](#routing), to route messages and queries to the appropriate module.
-- Different [states](#states), as the state-machine can have different parallel states updated based on the ABCI message received.
+- Different [states](#states), as the state-machine can have different parallel states updated
+based on the ABCI message received.
 
-The goal of `baseapp` is to provide the fundamental layer of an SDK application that developers can easily extend to build their own custom application. Usually, developers will create a custom type for their application, like so:
+The goal of `BaseApp` is to provide the fundamental layer of an SDK application that developers
+can easily extend to build their own custom application. Usually, developers will create a custom
+type for their application, like so:
 
 ```go
 type app struct {
@@ -52,17 +65,26 @@ type app struct {
 }
 ```
 
-Extending the application with `baseapp` gives the former access to all of `baseapp`'s methods. This allows developers to compose their custom application with the modules they want, while not having to concern themselves with the hard work of implementing the ABCI, the routing and state management logic.
+Extending the application with `BaseApp` gives the former access to all of `BaseApp`'s methods.
+This allows developers to compose their custom application with the modules they want, while not
+having to concern themselves with the hard work of implementing the ABCI, the routing and state
+management logic.
 
 ## Type Definition
 
-The [`baseapp` type](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L45-L91) holds many important parameters for any Cosmos SDK based application. Let us go through the most important components.
+The [`BaseApp` type](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L53) holds
+many important parameters for any Cosmos SDK based application. Let us go through the most
+important components.
 
-_Note: Not all parameters are described, only the most important ones. Refer to the [type definition](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L45-L91) for the full list_
+> __Note__: Not all parameters are described, only the most important ones. Refer to the
+[type definition](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L53) for the
+full list.
 
 First, the important parameters that are initialized during the initialization of the application:
 
-- [`CommitMultiStore`](./store.md#commit-multi-store): This is the main store of the application, which holds the canonical state that is committed at the [end of each block](#commit). This store is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
+- [`CommitMultiStore`](./store.md#commit-multi-store): This is the main store of the application,
+which holds the canonical state that is committed at the [end of each block](#commit). This store
+is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
 - Database: The `db` is used by the `CommitMultiStore` to handle data storage.
 - [Router](#message-routing): The `router` facilitates the routing of `messages` to the appropriate module for it to be processed. Here `message` refers to the transaction components that need to be processed by the application in order to update the state, and not to ABCI messages which implement the interface between the application and the underlying consensus engine.
 - [Query Router](#query-routing): The `query router` facilitates the routing of queries to the appropriate module for it to be processed. These `queries` are not ABCI messages themselves, but they are relayed to the application from the underlying consensus engine via the ABCI message [`Query`](#query).

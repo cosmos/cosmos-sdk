@@ -13,6 +13,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	nftsim "github.com/cosmos/cosmos-sdk/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -95,6 +96,7 @@ func AppStateRandomizedFn(
 	GenSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
 	GenGovGenesisState(cdc, r, appParams, genesisState)
 	GenMintGenesisState(cdc, r, appParams, genesisState)
+	nftsim.GenNFTGenesisState(cdc, r, accs, appParams, genesisState)
 	GenDistrGenesisState(cdc, r, appParams, genesisState)
 	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
 	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)

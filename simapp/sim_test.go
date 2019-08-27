@@ -15,6 +15,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
@@ -250,7 +251,7 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // interBlockCache returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
 func interBlockCache() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(sdk.NewKVStoreCacheManager(sdk.DefaultPersistentKVStoreCacheSize))
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // Profile with:
@@ -342,7 +343,7 @@ func TestFullAppSimulation(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt, interBlockCache())
+	app := NewSimApp(logger, db, nil, true, 0, interBlockCache())
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation

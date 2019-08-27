@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func createTestApp() *simapp.SimApp {
@@ -31,12 +30,4 @@ func createTestApp() *simapp.SimApp {
 	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
-}
-
-func testPassingInvariant(_ sdk.Context) (string, bool) {
-	return "", false
-}
-
-func testFailingInvariant(_ sdk.Context) (string, bool) {
-	return "", true
 }

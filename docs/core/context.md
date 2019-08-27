@@ -9,14 +9,15 @@
 
 This document details the SDK `Context` type.
 
-- [Go Context Package](#go-context-package)
 - [SDK Context Type Definition](#context-definition)
+- [Go Context Package](#go-context-package)
+- [Cache Wrapping](#cache-wrapping)
+
 
 
 ## Context Definition
 
-The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the SDK and Tendermint. The `Context` is directly passed between methods and functions as an argument. The `Context` is integral to tx processing in that it allows modules to easily access their
-respective [state](./multistore.md) and retrieve transactional context such as the block header and gas meter.
+The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK and Tendermint. The `Context` is directly passed between methods and functions as an argument. The `Context` is integral to tx processing in that it allows modules to easily access their respective [state](./multistore.md) and retrieve transactional context such as the block header and gas meter.
 
 ```go
 type Context struct {
@@ -36,7 +37,7 @@ type Context struct {
 }
 ```
 
-- **Context:** The base type is a Go [Context](https://golang.org/pkg/context).
+- **Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below. 
 - **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./multistore.md) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their
 respective `KVStore` using their unique `StoreKey`.
 - **ABCI Header:** The [header](https://tendermint.com/docs/spec/abci/abci.html#header) is an ABCI type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
@@ -64,7 +65,7 @@ ctx.EventManager().EmitEvent(sdk.NewEvent(
 
 A basic Context is defined in the [Golang Context Package](https://golang.org/pkg/context). A Context is an immutable data structure that carries request-scoped data across APIs and processes. Contexts are also designed to enable concurrency and to be used in goroutines.
 
-Contexts are intended to be **immutable**. They should never be edited. Instead, the convention is to create a child context from its parent using a `With` function. For example:
+Contexts are intended to be **immutable**; they should never be edited. Instead, the convention is to create a child context from its parent using a `With` function. For example:
 
 ``` go
 childCtx = parentCtx.WithBlockHeader(header)

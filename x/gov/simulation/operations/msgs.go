@@ -26,7 +26,7 @@ type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, 
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.AccountKeeper, contentSim ContentSimulator) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k keeper.Keeper, contentSim ContentSimulator) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -118,7 +118,7 @@ func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
-func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -151,11 +151,11 @@ func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
-func SimulateMsgVote(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(k, ak, simulation.Account{}, -1)
 }
 
-func operationSimulateMsgVote(k keeper.Keeper, ak types.AccountKeeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
+func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -196,7 +196,7 @@ func operationSimulateMsgVote(k keeper.Keeper, ak types.AccountKeeper, acc simul
 }
 
 // Pick a random deposit
-func randomDeposit(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, addr sdk.AccAddress) (sdk.Coins, error) {
+func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress) (sdk.Coins, error) {
 
 	minDeposit := k.GetDepositParams(ctx).MinDeposit
 	denom := minDeposit[0].Denom

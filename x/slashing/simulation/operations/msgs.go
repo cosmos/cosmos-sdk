@@ -17,7 +17,7 @@ import (
 func SimulateMsgUnjail(ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		// TODO: should only use jailed validators for sending transactions
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		msg := types.NewMsgUnjail(address)

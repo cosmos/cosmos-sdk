@@ -18,7 +18,7 @@ import (
 // DONTCOVER
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
-func SimulateMsgTransferNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -55,7 +55,7 @@ func SimulateMsgTransferNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.
 }
 
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
-func SimulateMsgEditNFTMetadata(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -92,7 +92,7 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper, ak types.AccountKeeper) simulat
 }
 
 // SimulateMsgMintNFT simulates a mint of an NFT
-func SimulateMsgMintNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -122,7 +122,7 @@ func SimulateMsgMintNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 }
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
-func SimulateMsgBurnNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 

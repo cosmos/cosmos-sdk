@@ -18,7 +18,7 @@ import (
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -42,7 +42,7 @@ func SimulateMsgSetWithdrawAddress(k distribution.Keeper, ak types.AccountKeeper
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -70,7 +70,7 @@ func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper, ak types.AccountK
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 

@@ -13,7 +13,6 @@ import (
 
 // RandomizedGenState generates a random GenesisState for the genesis accounts
 func RandomizedGenState(simState *module.SimulationState) {
-
 	var genesisAccounts []types.GenesisAccount
 
 	// randomly generate some genesis accounts

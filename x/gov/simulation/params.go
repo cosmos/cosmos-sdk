@@ -8,32 +8,42 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+)
+
+const (
+	keyVotingParams  = "votingparams"
+	keyDepositParams = "depositparams"
+	keyTallyParams   = "tallyparams"
+	subkeyQuorum     = "quorum"
+	subkeyThreshold  = "threshold"
+	subkeyVeto       = "veto"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
 func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange("gov", "votingparams", "",
+		simulation.NewSimParamChange(types.ModuleName, keyVotingParams, "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf(`{"voting_period": "%d"}`, GenVotingParamsVotingPeriod(r))
 			},
 		),
-		simulation.NewSimParamChange("gov", "depositparams", "",
+		simulation.NewSimParamChange(types.ModuleName, keyDepositParams, "",
 			func(r *rand.Rand) string {
 				return fmt.Sprintf(`{"max_deposit_period": "%d"}`, GenDepositParamsDepositPeriod(r))
 			},
 		),
-		simulation.NewSimParamChange("gov", "tallyparams", "",
+		simulation.NewSimParamChange(types.ModuleName, keyTallyParams, "",
 			func(r *rand.Rand) string {
 				changes := []struct {
 					key   string
 					value sdk.Dec
 				}{
-					{"quorum", GenTallyParamsQuorum(r)},
-					{"threshold", GenTallyParamsThreshold(r)},
-					{"veto", GenTallyParamsVeto(r)},
+					{subkeyQuorum, GenTallyParamsQuorum(r)},
+					{subkeyThreshold, GenTallyParamsThreshold(r)},
+					{subkeyVeto, GenTallyParamsVeto(r)},
 				}
 
 				pc := make(map[string]string)

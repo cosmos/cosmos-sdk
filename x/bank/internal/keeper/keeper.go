@@ -216,16 +216,6 @@ func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.In
 
 // SendCoins moves coins from one account to another
 func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	_, err := keeper.SubtractCoins(ctx, fromAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	_, err = keeper.AddCoins(ctx, toAddr, amt)
-	if err != nil {
-		return err
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
@@ -237,6 +227,16 @@ func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress,
 			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 		),
 	})
+
+	_, err := keeper.SubtractCoins(ctx, fromAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	_, err = keeper.AddCoins(ctx, toAddr, amt)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

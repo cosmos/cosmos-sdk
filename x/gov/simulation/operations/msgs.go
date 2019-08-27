@@ -55,7 +55,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		// 1) submit proposal now
 		acc := simulation.RandomAcc(r, accs)
 		content := contentSim(r, app, ctx, accs)
-		deposit, err := randomDeposit(r, ctx, k, ak, acc.Address)
+		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -97,7 +97,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simulation.FutureOperation{
 				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(k, ak, accs[whoVotes[i]], int64(proposalID)),
+				Op:        operationSimulateMsgVote(ak, k, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
 
@@ -128,7 +128,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		deposit, err := randomDeposit(r, ctx, k, ak, acc.Address)
+		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -152,7 +152,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 
 // SimulateMsgVote generates a MsgVote with random values.
 func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return operationSimulateMsgVote(k, ak, simulation.Account{}, -1)
+	return operationSimulateMsgVote(ak, k, simulation.Account{}, -1)
 }
 
 func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {

@@ -1,17 +1,11 @@
 package upgrade
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -36,10 +30,6 @@ type Keeper interface {
 	// upgrade or false if there is none
 	GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 
-	// SetOnShutdowner sets a custom function to be called right before the chain halts and the
-	// upgrade needs to be applied. This can be used to initiate an automatic upgrade process.
-	SetOnShutdowner(OnShutdowner func(ctx sdk.Context, plan Plan))
-
 	// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
 	// plans are cached in memory so the overhead of this method is trivial.
 	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
@@ -50,7 +40,6 @@ type keeper struct {
 	cdc             *codec.Codec
 	upgradeHandlers map[string]Handler
 	haveCache       bool
-	onShutdowner    func(ctx sdk.Context, plan Plan)
 }
 
 const (
@@ -69,10 +58,6 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 
 func (keeper *keeper) SetUpgradeHandler(name string, upgradeHandler Handler) {
 	keeper.upgradeHandlers[name] = upgradeHandler
-}
-
-func (keeper *keeper) SetOnShutdowner(OnShutdowner func(ctx sdk.Context, plan Plan)) {
-	keeper.onShutdowner = OnShutdowner
 }
 
 func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
@@ -158,56 +143,8 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", plan.Name, blockHeight, plan.Info))
-			if keeper.onShutdowner != nil {
-				keeper.onShutdowner(ctx, plan)
-			} else {
-				DefaultOnShutdowner(ctx, plan)
-			}
 			panic("UPGRADE REQUIRED!")
 		}
-	}
-}
-
-// DefaultOnShutdowner synchronously runs a script called do-upgrade from $COSMOS_HOME/config if such a script exists,
-// with plan serialized to JSON as the first argument and the current block height as the second argument.
-// The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
-func DefaultOnShutdowner(ctx sdk.Context, plan Plan) {
-	CallUpgradeScript(ctx, plan, "do-upgrade", false)
-}
-
-// CallUpgradeScript runs a script called script from $COSMOS_HOME/config if such a script exists,
-// with plan serialized to JSON as the first argument and the current block height as the second argument.
-// The environment variable $COSMOS_HOME will be set to the home directory of the daemon.
-// If async is true, the command will be run in a separate go-routine.
-func CallUpgradeScript(ctx sdk.Context, plan Plan, script string, async bool) {
-	f := func() {
-		home := viper.GetString(cli.HomeFlag)
-		file := filepath.Join(home, "config", script)
-		ctx.Logger().Info(fmt.Sprintf("Looking for upgrade script %s", file))
-		if _, err := os.Stat(file); err == nil {
-			ctx.Logger().Info(fmt.Sprintf("Applying upgrade script %s", file))
-			err = os.Setenv("COSMOS_HOME", home)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error setting env var COSMOS_HOME: %v", err))
-			}
-
-			planJson, err := json.Marshal(plan)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error marshaling upgrade plan to JSON: %v", err))
-			}
-			cmd := exec.Command(file, string(planJson), fmt.Sprintf("%d", ctx.BlockHeight()))
-			cmd.Stdout = logWriter{ctx, script, false}
-			cmd.Stderr = logWriter{ctx, script, false}
-			err = cmd.Run()
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Error running script %s: %v", file, err))
-			}
-		}
-	}
-	if async {
-		go f()
-	} else {
-		f()
 	}
 }
 

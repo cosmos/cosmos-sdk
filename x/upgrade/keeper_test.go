@@ -113,34 +113,6 @@ func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
-func (s *TestSuite) TestCustomCallbacks() {
-	s.T().Log("Set custom OnShutdowner")
-	onShutdownerCalled := false
-	s.keeper.SetOnShutdowner(func(ctx sdk.Context, plan Plan) {
-		onShutdownerCalled = true
-	})
-
-	s.T().Log("Run an upgrade and verify that the custom OnShutdowner is called")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 2})
-	s.Require().Nil(err)
-
-	header := abci.Header{Height: s.ctx.BlockHeight() + 1}
-	newCtx := sdk.NewContext(s.cms, header, false, log.NewNopLogger())
-	req := abci.RequestBeginBlock{Header: header}
-	s.Require().NotPanics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
-	})
-	s.Require().False(onShutdownerCalled)
-
-	header = abci.Header{Height: s.ctx.BlockHeight() + 2}
-	newCtx = sdk.NewContext(s.cms, header, false, log.NewNopLogger())
-	req = abci.RequestBeginBlock{Header: header}
-	s.Require().Panics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
-	})
-	s.Require().True(onShutdownerCalled)
-}
-
 func (s *TestSuite) TestNoSpuriousUpgrades() {
 	s.T().Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
 	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}

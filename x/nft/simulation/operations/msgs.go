@@ -1,12 +1,15 @@
 package operations
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -15,8 +18,7 @@ import (
 // DONTCOVER
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
-func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgTransferNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -32,24 +34,28 @@ func SimulateMsgTransferNFT(k keeper.Keeper) simulation.Operation {
 			nftID,
 		)
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		acc, found := simulation.FindAccount(accs, ownerAddr)
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
-func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgEditNFTMetadata(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -65,53 +71,58 @@ func SimulateMsgEditNFTMetadata(k keeper.Keeper) simulation.Operation {
 			simulation.RandStringOfLength(r, 45), // tokenURI
 		)
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		acc, found := simulation.FindAccount(accs, ownerAddr)
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgMintNFT simulates a mint of an NFT
-func SimulateMsgMintNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgMintNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		acc := simulation.RandomAcc(r, accs)
+
 		msg := types.NewMsgMintNFT(
-			simulation.RandomAcc(r, accs).Address, // sender
+			acc.Address,                           // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
 			simulation.RandStringOfLength(r, 10),  // nft ID
 			simulation.RandStringOfLength(r, 10),  // denom
 			simulation.RandStringOfLength(r, 45),  // tokenURI
 		)
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
-		}
-
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
-func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
-	handler := nft.GenericHandler(k)
+func SimulateMsgBurnNFT(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -122,17 +133,22 @@ func SimulateMsgBurnNFT(k keeper.Keeper) simulation.Operation {
 
 		msg := types.NewMsgBurnNFT(ownerAddr, nftID, denom)
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		acc, found := simulation.FindAccount(accs, ownerAddr)
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		ctx, write := ctx.CacheContext()
-		ok := handler(ctx, msg).IsOK()
-		if ok {
-			write()
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, ok, "")
-		return opMsg, nil, nil
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }

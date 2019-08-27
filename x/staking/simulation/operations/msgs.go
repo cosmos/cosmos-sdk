@@ -2,9 +2,13 @@ package operations
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -12,7 +16,7 @@ import (
 )
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
-func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgCreateValidator(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -47,6 +51,12 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 		msg := types.NewMsgCreateValidator(address, acc.PubKey,
 			selfDelegation, description, commission, sdk.OneInt())
 
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
@@ -57,7 +67,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
-func SimulateMsgEditValidator(k keeper.Keeper) simulation.Operation {
+func SimulateMsgEditValidator(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -72,11 +82,23 @@ func SimulateMsgEditValidator(k keeper.Keeper) simulation.Operation {
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
+
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+
+		acc, found := simulation.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+		}
+
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -111,6 +133,12 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		msg := types.NewMsgDelegate(
 			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
 
+		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
@@ -126,8 +154,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAcc := simulation.RandomAcc(r, accs)
-		delegatorAddress := delegatorAcc.Address
-		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAddress)
+		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAcc.Address)
 		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -145,8 +172,14 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		}
 
 		msg := types.NewMsgUndelegate(
-			delegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
+			delegatorAcc.Address, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
 		)
+
+		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -171,9 +204,8 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		destVal := keeper.RandomValidator(r, k, ctx)
 		destValidatorAddress := destVal.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
-		delegatorAddress := delegatorAcc.Address
 
-		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
+		amount := ak.GetAccount(ctx, delegatorAcc.Address).GetCoins().AmountOf(denom)
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
@@ -182,8 +214,15 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		msg := types.NewMsgBeginRedelegate(
-			delegatorAddress, srcValidatorAddress, destValidatorAddress, sdk.NewCoin(denom, amount),
+			delegatorAcc.Address, srcValidatorAddress, destValidatorAddress,
+			sdk.NewCoin(denom, amount),
 		)
+
+		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

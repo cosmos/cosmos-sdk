@@ -7,10 +7,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -25,7 +25,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey}, handler)
+		err = sendAndVerifyMsgSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -67,12 +67,10 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgSend, ctx sdk.Context,
 	privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
-	accountNumbers := []uint64{fromAcc.GetAccountNumber()}
-	sequenceNumbers := []uint64{fromAcc.GetSequence()}
 
-	tx := mock.GenTx([]sdk.Msg{msg},
-		accountNumbers,
-		sequenceNumbers,
+	tx := simapp.GenTx([]sdk.Msg{msg},
+		[]uint64{fromAcc.GetAccountNumber()},
+		[]uint64{fromAcc.GetSequence()},
 		privkeys...)
 
 	res := app.Deliver(tx)
@@ -142,7 +140,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
 func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgMultiSend,
-	ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
+	ctx sdk.Context, privkeys []crypto.PrivKey) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
@@ -161,7 +159,7 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
 
-	tx := mock.GenTx([]sdk.Msg{msg},
+	tx := simapp.GenTx([]sdk.Msg{msg},
 		accountNumbers,
 		sequenceNumbers,
 		privkeys...)

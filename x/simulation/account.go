@@ -19,16 +19,14 @@ type Account struct {
 	Address sdk.AccAddress
 }
 
-// are two accounts equal
+// Equals returns true if two accounts are equal
 func (acc Account) Equals(acc2 Account) bool {
 	return acc.Address.Equals(acc2.Address)
 }
 
 // RandomAcc pick a random account from an array
 func RandomAcc(r *rand.Rand, accs []Account) Account {
-	return accs[r.Intn(
-		len(accs),
-	)]
+	return accs[r.Intn(len(accs))]
 }
 
 // RandomAccounts generates n random accounts
@@ -50,4 +48,16 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 	}
 
 	return accs
+}
+
+// FindAccount iterates over all the simulation accounts to find the one that matchs
+// the given address
+func FindAccount(accs []Account, address sdk.AccAddress) (Account, bool) {
+	for _, acc := range accs {
+		if acc.Address.Equals(address) {
+			return acc, true
+		}
+	}
+
+	return Account{}, false
 }

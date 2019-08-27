@@ -83,7 +83,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
-		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
+		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)), // TODO: this should be the default bond denom
 		Gas:    100000,
 	}
 
@@ -119,7 +119,7 @@ func SignCheckDeliver(
 	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
-	
+
 	tx := GenTx(msgs, accNums, seq, priv...)
 
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

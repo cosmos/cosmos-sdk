@@ -7,7 +7,10 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -59,6 +62,12 @@ func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.Ac
 
 		msg := types.NewMsgSubmitProposal(content, deposit, acc.Address)
 
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
@@ -88,7 +97,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k keeper.Keeper, ak types.Ac
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
 			fops[i] = simulation.FutureOperation{
 				BlockTime: whenVote,
-				Op:        operationSimulateMsgVote(k, accs[whoVotes[i]], int64(proposalID)),
+				Op:        operationSimulateMsgVote(k, ak, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
 
@@ -126,6 +135,12 @@ func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 
 		msg := types.NewMsgDeposit(acc.Address, proposalID, deposit)
 
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
@@ -136,11 +151,11 @@ func SimulateMsgDeposit(k keeper.Keeper, ak types.AccountKeeper) simulation.Oper
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
-func SimulateMsgVote(k keeper.Keeper) simulation.Operation {
-	return operationSimulateMsgVote(k, simulation.Account{}, -1)
+func SimulateMsgVote(k keeper.Keeper, ak types.AccountKeeper) simulation.Operation {
+	return operationSimulateMsgVote(k, ak, simulation.Account{}, -1)
 }
 
-func operationSimulateMsgVote(k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
+func operationSimulateMsgVote(k keeper.Keeper, ak types.AccountKeeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -164,6 +179,12 @@ func operationSimulateMsgVote(k keeper.Keeper, acc simulation.Account, proposalI
 		option := randomVotingOption(r)
 
 		msg := types.NewMsgVote(acc.Address, proposalID, option)
+
+		fromAcc := ak.GetAccount(ctx, acc.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{acc.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

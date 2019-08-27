@@ -5,22 +5,32 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(k distribution.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
 		msg := distribution.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
+
+		fromAcc := ak.GetAccount(ctx, accountOrigin.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{accountOrigin.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -32,7 +42,7 @@ func SimulateMsgSetWithdrawAddress(k distribution.Keeper) simulation.Operation {
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -44,6 +54,12 @@ func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper) simulation.Operat
 			return simulation.NoOpMsg(distribution.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
+		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{delegatorAccount.PrivKey}...)
+
 		res := app.Deliver(tx)
 		if !res.IsOK() {
 			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
@@ -54,7 +70,7 @@ func SimulateMsgWithdrawDelegatorReward(k distribution.Keeper) simulation.Operat
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper, ak types.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
@@ -64,6 +80,12 @@ func SimulateMsgWithdrawValidatorCommission(k distribution.Keeper) simulation.Op
 		if msg.ValidateBasic() != nil {
 			return simulation.NoOpMsg(distribution.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
+		fromAcc := ak.GetAccount(ctx, account.Address)
+		tx := simapp.GenTx([]sdk.Msg{msg},
+			[]uint64{fromAcc.GetAccountNumber()},
+			[]uint64{fromAcc.GetSequence()},
+			[]crypto.PrivKey{account.PrivKey}...)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

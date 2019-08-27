@@ -8,6 +8,8 @@
 
 The current AnteHandler design allows users to either use the default AnteHandler provided in `x/auth` or to build their own AnteHandler from scratch. Ideally AnteHandler functionality is split into multiple, modular functions that can be chained together along with custom ante-functions so that users do not have to rewrite common antehandler logic when they want to implement custom behavior.
 
+For example, let's say a user wants to implement some custom signature verification logic. In the current codebase, the user would have to write their own Antehandler from scratch largely reimplementing much of the same code and then set their own custom, monolithic antehandler in the baseapp. Instead, we would like to allow users to specify custom behavior when necessary and combine them with default ante-handler functionality in a way that is as modular and flexible as possible.
+
 ## Proposals
 
 ### Per-Module AnteHandler
@@ -26,7 +28,7 @@ Cons:
 
 The [weave project](https://github.com/iov-one/weave) achieves AnteHandler modularity through the use of a decorator pattern. The interface is designed as follows:
 
-```golang
+```go
 // Decorator wraps a Handler to provide common functionality
 // like authentication, or fee-handling, to many Handlers
 type Decorator interface {
@@ -39,7 +41,7 @@ Each decorator works like a modularized SDK antehandler function, but it can tak
 
 A key benefit of this approach is that one Decorator can wrap its internal logic around the next Checker/Deliverer. A weave Decorator may do the following:
 
-```golang
+```go
 // Example Decorator's Deliver function
 func (example Decorator) Deliver(ctx Context, store KVStore, tx Tx, next Deliverer) {
     // Do some pre-processing logic
@@ -61,7 +63,7 @@ Cons:
 
 The benefit of Weave's approach is that the Decorators can be very concise, which when chained together allows for maximum customizability. However, the nested structure can get quite complex and thus hard to reason about.
 
-Our recommended approach is to split the AnteHandler functionality into tightly scoped "micro-functions", while preserving the one-after-the-other ordering that would come from the ModuleManager approach.
+Another approach is to split the AnteHandler functionality into tightly scoped "micro-functions", while preserving the one-after-the-other ordering that would come from the ModuleManager approach.
 
 We can then have a way to chain these micro-functions so that they run one after the other. Modules may define multiple ante micro-functions and then also provide a default per-module AnteHandler that implements a default, suggested order for these micro-functions. 
 
@@ -71,9 +73,13 @@ If however, users wish to change the order or add, modify, or delete ante micro-
 
 #### Default Workflow:
 
+This is an example of a user's AnteHandler if they choose not to make any custom micro-functions.
+
 ##### SDK code:
 
-```golang
+```go
+// Chains together a list of AnteHandler micro-functions that get run one after the other.
+// Returned AnteHandler will abort on first error.
 func Chainer(order []AnteHandler) AnteHandler {
     return func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
         for _, ante := range order {
@@ -87,34 +93,40 @@ func Chainer(order []AnteHandler) AnteHandler {
 }
 ```
 
-```golang
+```go
+// AnteHandler micro-function to verify signatures
 func VerifySignatures(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // verify signatures
     // Returns InvalidSignature Result and abort=true if sigs invalid
     // Return OK result and abort=false if sigs are valid
 }
 
+// AnteHandler micro-function to validate memo
 func ValidateMemo(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // validate memo
 }
 
+// Auth defines its own default ante-handler by chaining its micro-functions in a recommended order
 AuthModuleAnteHandler := Chainer([]AnteHandler{VerifySignatures, ValidateMemo})
 ```
 
-```golang
+```go
+// Distribution micro-function to deduct fees from tx
 func DeductFees(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // Deduct fees from tx
     // Abort if insufficient funds in account to pay for fees
 }
 
+// Distribution micro-function to check if fees > mempool parameter
 func CheckMempoolFees(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // If CheckTx: Abort if the fees are less than the mempool's minFee parameter
 }
 
+// Distribution defines its own default ante-handler by chaining its micro-functions in a recommended order
 DistrModuleAnteHandler := Chainer([]AnteHandler{CheckMempoolFees, DeductFees})
 ```
 
-```golang
+```go
 type ModuleManager struct {
     // other fields
     AnteHandlerOrder []AnteHandler
@@ -127,7 +139,8 @@ func (mm ModuleManager) GetAnteHandler() AnteHandler {
 
 ##### User Code:
 
-```golang
+```go
+// Note: Since user is not making any custom modifications, we can just SetAnteHandlerOrder with the default AnteHandlers provided by each module in our preferred order
 moduleManager.SetAnteHandlerOrder([]AnteHandler(AuthModuleAnteHandler, DistrModuleAnteHandler))
 
 app.SetAnteHandler(mm.GetAnteHandler())
@@ -135,15 +148,18 @@ app.SetAnteHandler(mm.GetAnteHandler())
 
 #### Custom Workflow
 
+This is an example workflow for a user that wants to implement custom antehandler logic. In this example, the user wants to implement custom signature verification and change the order of antehandler so that validate memo runs before signature verification.
+
 ##### User Code
 
-```golang
+```go
+// User can implement their own custom signature verification antehandler micro-function
 func CustomSigVerify(ctx Context, tx Tx, simulate bool) (newCtx Context, err error) {
     // do some custom signature verification logic
 }
 ```
 
-```golang
+```go
 // Micro-functions allow users to change order of when they get executed, and swap out default ante-functionality with their own custom logic.
 // Note that users can still chain the default distribution module handler, and auth micro-function along with their custom ante function
 moduleManager.SetAnteHandlerOrder([]AnteHandler(ValidateMemo, CustomSigVerify, DistrModuleAnteHandler))
@@ -159,23 +175,25 @@ Cons:
 
 ### Simple Decorators
 
-This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the SDK and maximizing simplicity.
+This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
+
+In addition, this approach will not break any core SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
 
 Allow Decorator interface that can be chained together to create an SDK AnteHandler.
 
 This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with SDK provided decorators in the order they wish.
 
-```golang
-// A Decorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler
-type Decorator interface {
+```go
+// An AnteDecorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler
+type AnteDecorator interface {
     AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)
 }
 ```
 
-```golang
-// ChainDecorators will recursively link all of the Decorators in the chain and return a final AnteHandler function
+```go
+// ChainDecorators will recursively link all of the AnteDecorators in the chain and return a final AnteHandler function
 // This is done to preserve the ability to set a single AnteHandler function in the baseapp.
-func ChainDecorators(chain ...Decorator) AnteHandler {
+func ChainDecorators(chain ...AnteDecorator) AnteHandler {
     if len(chain) == 1 {
         return func(ctx Context, tx Tx, simulate bool) {
             chain[0].AnteHandle(ctx, tx, simulate, nil)
@@ -189,7 +207,9 @@ func ChainDecorators(chain ...Decorator) AnteHandler {
 
 #### Example Code
 
-```golang
+Define AnteDecorator functions
+
+```go
 // Setup GasMeter, catch OutOfGasPanic and handle appropriately
 type SetupDecorator struct{}
 
@@ -227,7 +247,9 @@ func (udd UserDefinedDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, ne
 }
 ```
 
-```golang
+Link AnteDecorators to create a final AnteHandler. Set this AnteHandler in baseapp.
+
+```go
 // Create final antehandler by chaining the decorators together
 antehandler := ChainDecorators(NewSetupDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
 
@@ -242,12 +264,12 @@ Pros:
 
 Cons:
 
-1. Decorator pattern may have a deeply nested structure that is hard to understand.
+1. Decorator pattern may have a deeply nested structure that is hard to understand, this is mitigated by having the decorator order explicitly listed in the `ChainDecorators` function.
 2. Does not make use of the ModuleManager design. Since this is already being used for BeginBlocker/EndBlocker, this proposal seems unaligned with that design pattern.
 
 ## Status
 
-> Proposed
+> Accepted Simple Decorators approach
 
 ## Consequences
 

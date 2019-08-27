@@ -65,7 +65,7 @@ longer panics if the store to load contains substores that we didn't explicitly 
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
   * Add `RegisterStoreDecoders` to the `SimulationManager` for decoding each module's types
   * Add `GenerateGenesisStates` to the `SimulationManager` to generate a randomized `GenState` for each module
-  * Add `RandomizedSimParamChanges` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
+  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
   `ParamChangeProposal`s
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags

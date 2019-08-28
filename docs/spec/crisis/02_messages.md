@@ -7,7 +7,7 @@ corresponding updates to the state.
 
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message. 
 
-```golang
+```go
 type MsgVerifyInvariant struct {
 	Sender         sdk.AccAddress 
 	InvariantRoute string

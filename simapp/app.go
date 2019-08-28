@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -53,6 +54,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		nft.AppModuleBasic{},
 		supply.AppModuleBasic{},
 	)
 
@@ -100,6 +102,7 @@ type SimApp struct {
 	GovKeeper      gov.Keeper
 	CrisisKeeper   crisis.Keeper
 	ParamsKeeper   params.Keeper
+	NFTKeeper      nft.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -122,7 +125,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey)
+		gov.StoreKey, params.StoreKey, nft.StoreKey)
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
 	app := &SimApp{
@@ -156,6 +159,7 @@ func NewSimApp(
 	app.SlashingKeeper = slashing.NewKeeper(app.cdc, keys[slashing.StoreKey], &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.CrisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName)
+	app.NFTKeeper = nft.NewKeeper(app.cdc, keys[nft.StoreKey])
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -180,11 +184,12 @@ func NewSimApp(
 		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper),
 		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-		staking.NewAppModule(app.StakingKeeper, app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper),
+		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
+		nft.NewAppModule(app.NFTKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -199,13 +204,30 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		genaccounts.ModuleName, distr.ModuleName, staking.ModuleName,
 		auth.ModuleName, bank.ModuleName, slashing.ModuleName, gov.ModuleName,
-		mint.ModuleName, supply.ModuleName, crisis.ModuleName, genutil.ModuleName,
+		mint.ModuleName, supply.ModuleName, crisis.ModuleName, nft.ModuleName,
+		genutil.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter())
 
-	app.sm = module.NewSimulationManager(app.mm.Modules)
+	// create the simulation manager and define the order of the modules for deterministic simulations
+	//
+	// NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// transactions
+	app.sm = module.NewSimulationManager(
+		genaccounts.NewAppModule(app.AccountKeeper),
+		auth.NewAppModule(app.AccountKeeper),
+		bank.NewAppModule(app.BankKeeper, app.AccountKeeper),
+		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
+		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
+		mint.NewAppModule(app.MintKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
+		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
+		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
+		// nft.NewAppModule(app.NFTKeeper),
+	)
+
 	app.sm.RegisterStoreDecoders()
 
 	// initialize stores

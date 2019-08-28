@@ -93,7 +93,7 @@ type Electionator interface {
 
     // query for the current winner(s) of this election based on arbitrary
     // election ruleset
-    QueryWinners() []sdk.AccAddress 
+    QueryElected() []sdk.AccAddress 
 
     // query metadata for an address in the election this 
     // could include for example position that an address
@@ -123,7 +123,7 @@ type ElectionatorHooks interface {
 // memos, etc.
 type Revoker interface {
     RevokeName() string      // identifier for this revoker type 
-    RevokeMember(addr sdk.AccAddress, cause []byte) (successful bool)
+    RevokeMember(addr sdk.AccAddress, cause []byte) error
 }
 ```
 
@@ -175,5 +175,5 @@ type SpecializationGroup interface {
 
 ## References
 
-* (dCERT ADR)[./adr-008-dCERT-group.md]
+ - (dCERT ADR)[./adr-008-dCERT-group.md]
  

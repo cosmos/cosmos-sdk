@@ -6,7 +6,7 @@
 
 ## Synopsis
 
-This document describes how to create a commmand-line interface (CLI) for an application. A separate document for implementing a CLI for an SDK module can be found [here](#../building-modules/interfaces.md#cli).
+This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/interfaces.md#cli).
 
 - [Application CLI Components](#application-cli-components)
 - [Commands](#commands)
@@ -19,7 +19,7 @@ One of the main entrypoints of an application is the command-line interface. Thi
 
 ### Cobra
 
-There is no set way to create a CLI, but SDK modules all use the [Cobra Library](https://github.com/spf13/cobra). Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) understand the actions users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
+There is no set way to create a CLI, but SDK modules typically use the [Cobra Library](https://github.com/spf13/cobra). Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) understand the actions users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
 Here is an example of a command a user might enter to interact with the nameservice CLI `nscli` in order to buy a name:
 
@@ -28,17 +28,17 @@ nscli tx nameservice buy-name <name> <amount> --gas auto --gas-prices <gasPrices
 ```
 The first four strings specify the command: the root command for the entire application `nscli`, the subcommand `tx`, the subcommand `nameservice` to indicate which module to route the command to, and the type of transaction `buy-name`. The next two strings are arguments: the `name` the user wishes to buy and the `amount` they want to pay for it. Finally, the last few strings of the command are flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
 
-The CLI interacts with a node (running `nsd`) to handle this command.
+The CLI interacts with a [node](../core/node.md) (running `nsd`) to handle this command. The interface itself is defined in a `main.go` file.
 
 ### Main Function
 
 The `main.go` file needs to have a `main()` function that does the following to run the command-line interface:
 
-* **Instantiate the `codec`** by calling the application's `MakeCodec()` function. The [`codec`](../core/encoding.md) is used to code and encode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, [Amino](../core/amino.md).
+* **Instantiate the `codec`** by calling the application's `MakeCodec()` function. The [`codec`](../core/encoding.md) is used to code and encode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, [Amino](../core/encoding.md#amino).
 * **Configurations** are set by reading in configuration files (e.g. the sdk config file).
 * **Create the root command** to which all the application commands will be added as subcommands and add any required flags to it, such as `--chain-id`.
 * **Add subcommands** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
-* **Create an Executor** and execute the root command.
+* **Create an Executor** and [execute](https://godoc.org/github.com/spf13/cobra#Command.Execute) the root command.
 
 An example of the `main()` function for the [nameservice tutorial](https://cosmos.network/docs/tutorial) CLI can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go#L26-L67). The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the nameservice CLI `main.go` file.
 
@@ -48,7 +48,7 @@ Every application CLI first constructs a root command, then adds functionality b
 
 ### Root Command
 
-The root command (called `rootCmd`) is what the user first types into the command line to indicate which application they wish to interact with. The string used to invoke the command (the "Use" field) is typically the name of the application suffixed with `-cli`, e.g. `appcli`. The root command must include the following commands to support basic functionality in the application.
+The root command (called `rootCmd`) is what the user first types into the command line to indicate which application they wish to interact with. The string used to invoke the command (the "Use" field) is typically the name of the application suffixed with `-cli`, e.g. `appcli`. The root command typically includes the following commands to support basic functionality in the application.
 
 * **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](,,/core/node.md). The Status of a node includes [`NodeInfo`](https://github.com/tendermint/tendermint/blob/master/p2p/node_info.go#L75-L92), `SyncInfo` and `ValidatorInfo`: this information includes the node ID, latest block hash, and the validator public key and voting power. Here is an example of what the `status command` outputs:
 ```json
@@ -126,9 +126,11 @@ executor := cli.PrepareMainCmd(rootCmd, "NS", defaultCLIHome)
 err := executor.Execute()
 ```
 
+The root-level `status`, `config`, and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually *do* with it - is enabled by its transaction commands.
+
 ### Transaction Commands
 
-[Transactions](#./transactions.md) are objects wrapping [messages](../building-modules/messages-and-queries.md) that trigger state changes. To enable the creation of transactions using the CLI interface, `TxCmd` needs to add the following commands:
+[Transactions](#./transactions.md) are objects wrapping [messages](../building-modules/messages-and-queries.md) that trigger state changes. To enable the creation of transactions using the CLI interface, `TxCmd` typically adds the following commands:
 
 * **Sign** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_sign.go#L30-L83) from the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module, the command that signs messages in a transaction. To enable multisig, add the `auth` module [`MultiSign`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_multisign.go#L26-L151) command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
 * **Broadcast** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/broadcast.go) from the SDK client tools, which broadcasts transactions.
@@ -163,7 +165,7 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 
 ### Query Commands
 
-[**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable basic queries, `QueryCmd` needs to add the following commands:
+[**Queries**](../building-modules/messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable basic queries, `QueryCmd` typically adds the following commands:
 
 * **QueryTx** and/or other transaction [query commands](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/query.go) from the `auth` module which allow the user to search for a transaction by inputting its hash, a list of tags, or a block height. These queries allow users to see if transactions have been included in a block.
 * **Account** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/query.go#L45-L73) from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
@@ -200,27 +202,29 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 
 ## Flags
 
-Flags are used to modify commands. Users can explicitly include them in commands or pre-configure them by entering a command in the format `appcli config <flag> <value>` into their command line. Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
+Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them by entering a command in the format `appcli config <flag> <value>` into their command line. Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
 
 A *persistent* flag (as opposed to a _local_ flag) added to a command transcends all of its children: subcommands will inherit the configured values for these flags. Additionally, all flags have default values when they are added to commands; some toggle an option off but others are empty values that the user needs to override to create valid commands. A flag can be explicitly marked as _required_ so that an error is automatically thrown if the user does not provide a value, but it is also acceptable to handle unexpected missing flags differently.
 
-Every flag has a name the user types to use the flag. For example, the commonly used `--from` flag is declared as a constant in the SDK [flags](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go) file:
+### Creating Flags
+
+Every flag has a name the user types to include the flag. For example, the commonly used `--from` flag is declared as a constant in the SDK [flags](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go) file:
 
 ```go
 const FlagFrom = "from"
 ```
 
-The flag can be added to a command `cmd`, adding a default value and description:
+The flag can be added to a command `cmd` right after the command is created, adding a default value and description:
 
 ```go
 cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 ```
 
-The SDK client package includes a list of [flags](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go) that are commonly used across existing commands.
+The SDK client package includes a list of [flags](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go) that are commonly used across existing commands. Developers are free to create their own custom flags, following this format.
 
 ### Root Command Flags
 
-It is common to add a _persistent_ flag for `--chain-id`, the unique identifier of the blockchain the application pertains to, to the root command. Adding this flag makes sense as the chain ID should not be changing across commands in this application CLI. Here is what that looks like:
+It is common to add a _persistent_ flag for `--chain-id`, the unique identifier of the blockchain the application pertains to, to the root command. Adding this flag can be done in the `main()` function. Adding this flag makes sense as the chain ID should not be changing across commands in this application CLI. Here is what that looks like:
 
 ```go
 rootCmd.PersistentFlags().String(client.FlagChainID, "", "Chain ID of tendermint node")
@@ -228,7 +232,7 @@ rootCmd.PersistentFlags().String(client.FlagChainID, "", "Chain ID of tendermint
 
 ### Transaction and Query Flags
 
-To create a transaction, users enter a `tx` command and provide several flags. The SDK `./client/flags` package [`PostCommands()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function adds a set of basic flags to every transaction command. For queries, the [`GetCommand()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L67-L82) function adds basic flags to query commands, such as the block `--height` to query from. 
+To create a transaction, users enter a `tx` command and provide several flags. The SDK `./client/flags` package [`PostCommands()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function adds a set of basic flags to every transaction command. For queries, the [`GetCommand()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L67-L82) function adds basic flags to query commands, such as the block `--height` to query from.
 
 For example, the following command creates a transaction to send 1000uatom from `sender-address` to `recipient-address`. The user is willing to pay 0.025uatom per unit gas but wants the transaction to be only generated offline (i.e. not broadcasted) and written, in JSON format, to the file `myUnsignedTx.json`.
 
@@ -246,13 +250,13 @@ Here are the flags used:
 
 ## Configurations
 
-The last function to define is, `initConfig`, which does exactly what it sounds like - initial configurations. To call this function, set it as a `PersistentPreRunE` function for the root command, so that it always executes before the main execution of the root command and any of its subcommands. `initConfig()` does the  following:
+The last function to define in `main.go` is `initConfig`, which does exactly what it sounds like - initialize configurations. To call this function, set it as a `PersistentPreRunE` function for the root command, so that it always executes before the main execution of the root command and any of its subcommands. `initConfig()` does the  following:
 
 1. Read in the `config.toml` file. This same file is edited through `config` commands.
 2. Use the [Viper](https://github.com/spf13/viper) to read in configurations from the file and set them.
 3. Set any persistent flags defined by the user: `--chain-id`, `--encoding`, `--output`, etc.
 
-Here is an example of an `initConfig()` function from the nameservice tutorial CLI:
+Here is an example of an `initConfig()` function from the [nameservice tutorial CLI](https://cosmos.network/docs/tutorial/entrypoint.html#nscli):
 
 ```go
 func initConfig(cmd *cobra.Command) error {

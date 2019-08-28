@@ -349,7 +349,7 @@ func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.
 			}
 
 		default:
-			msg := "Expected second parameter to be filter"
+			msg := "expected second parameter to be 'filter'"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 	}

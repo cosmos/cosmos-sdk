@@ -41,20 +41,11 @@ func TestStoreCache(t *testing.T) {
 
 		res := kvStore.Get(key)
 		require.Equal(t, res, value)
-
-		res = store.Get(key)
-		require.Equal(t, res, value)
-	}
-
-	for i := uint(0); i < cache.DefaultCommitKVStoreCacheSize*2; i++ {
-		key := []byte(fmt.Sprintf("key_%d", i))
+		require.Equal(t, res, store.Get(key))
 
 		kvStore.Delete(key)
 
-		res := kvStore.Get(key)
-		require.Nil(t, res)
-
-		res = store.Get(key)
-		require.Nil(t, res)
+		require.Nil(t, kvStore.Get(key))
+		require.Nil(t, store.Get(key))
 	}
 }

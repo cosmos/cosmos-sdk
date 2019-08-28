@@ -28,10 +28,10 @@ functionalities of an SDK application.
   - [Main ABCI Messages](#main-abci-messages)
     - [CheckTx](#checktx-1)
     - [DeliverTx](#delivertx-1)
-  - [RunTx(), AnteHandler and RunMsgs()](#runtx-antehandler-and-runmsgs)
-    - [RunTx()](#runtx)
+  - [RunTx, AnteHandler and RunMsgs](#runtx-antehandler-and-runmsgs)
+    - [RunTx](#runtx)
     - [AnteHandler](#antehandler)
-    - [RunMsgs()](#runmsgs)
+    - [RunMsgs](#runmsgs)
   - [Other ABCI Messages](#other-abci-messages)
     - [InitChain](#initchain-1)
     - [BeginBlock](#beginblock-1)
@@ -39,7 +39,6 @@ functionalities of an SDK application.
     - [Commit](#commit-1)
     - [Info](#info)
     - [Query](#query)
-  - [Next](#next)
 
 ## Introduction
 
@@ -240,7 +239,7 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 
 ### CheckTx
 
-The `CheckTx` ABCI message is sent by the underlying consensus engine when a new unconfirmed (i.e. not yet included in a valid block) transaction is received by a full-node, and it is handled by the `CheckTx(req abci.RequestCheckTx)` method of `baseapp` (abbreviated to `CheckTx()` thereafter). The role of `CheckTx()` is to guard the full-node's mempool (where unconfirmed transactions are stored until they are included in a block) from spam transactions. Unconfirmed transactions are relayed to peers only if they pass `CheckTx()`.
+`CheckTx` is sent by the underlying consensus engine when a new unconfirmed (i.e. not yet included in a valid block) transaction is received by a full-node. The role of `CheckTx` is to guard the full-node's mempool (where unconfirmed transactions are stored until they are included in a block) from spam transactions. Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to make them lightweight. In the Cosmos SDK, after decoding transactions, `CheckTx()` is implemented to do the following checks:
 
@@ -251,7 +250,7 @@ The `CheckTx` ABCI message is sent by the underlying consensus engine when a new
 
 Steps 2. and 3. are performed by the `anteHandler` in the [`RunTx()`](<#runtx()-,antehandler-and-runmsgs()>) function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx()`, the transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is received from the same account before the first is processed, and the account has consumed all its funds in `checkState` during the first transaction, the second transaction will fail `CheckTx`() and be rejected. In any case, the sender's account will not actually pay the fees until the transaction is actually included in a block, because `checkState` never gets committed to the main state. `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx()` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful.
 - `Data ([]byte)`: Result bytes, if any.
@@ -264,18 +263,18 @@ Steps 2. and 3. are performed by the `anteHandler` in the [`RunTx()`](<#runtx()-
 
 ### DeliverTx
 
-When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order. This ABCI message is handled by the `DeliverTx()` method of `baseapp` (abbreviated to `DeliverTx()` thereafter).
+When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order.
 
 Before the first transaction of a given block is processed, a [volatile state](#volatile-states) called `deliverState` is initialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx()`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what is is set to `nil`.
 
-`DeliverTx()` performs the **exact same steps as `CheckTx()`**, with a little caveat at step 3 and the addition of a fifth step:
+`DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 3. The `anteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
 4. For each `message` in the transaction, route to the appropriate module's `handler`. Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation [here](https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L142-L150). At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx()` fails.
 
-`DeliverTx()` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful.
 - `Data ([]byte)`: Result bytes, if any.
@@ -286,19 +285,19 @@ During step 5., each read/write to the store increases the value of `GasConsumed
 - `Tags ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account).
 - `Codespace (string)`: Namespace for the Code.
 
-## RunTx(), AnteHandler and RunMsgs()
+## RunTx, AnteHandler and RunMsgs
 
-### RunTx()
+### RunTx
 
 `RunTx()` is called from `CheckTx()`/`DeliverTx()` to handle the transaction, with `runTxModeCheck` or `runTxModeDeliver` as parameter to differentiate between the two modes of execution. Note that when `RunTx()` receives a transaction, it has already been decoded.
 
 The first thing `RunTx()` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a cached version of the main store instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for `gas` management. They are executed when `RunTx()` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
-After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, which runs prelimary _stateless_ validity checks. If any `message` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
+After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `message` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the [`cacheTxContext()`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L781-L798) function. This allows `RunTx()` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK.
 
-Finally, the [`RunMsgs()`](<#runmsgs()>) function is called to process the `messages`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
+Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `messages`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
 
 ### AnteHandler
 
@@ -312,7 +311,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 
 `baseapp` holds an `anteHandler` as parameter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go).
 
-### RunMsgs()
+### RunMsgs
 
 `RunMsgs()` is called from `RunTx()` with `runTxModeCheck` as parameter to check the existence of a route for each message contained in the transaction, and with `runTxModeDeliver` to actually process the `message`s.
 
@@ -322,7 +321,7 @@ First, it retrieves the `message`'s `route` using the `Msg.Route()` method. Then
 
 ### InitChain
 
-The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#initchain) is sent from the underlying Tendermint engine when the chain is first started, and is handled by the `InitChain(req abci.RequestInitChain)` method of `baseapp`. It is mainly used to **initialize** parameters and state like:
+The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
 - [Consensus Parameters](https://tendermint.com/docs/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
 - [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
@@ -332,7 +331,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls th
 
 ### BeginBlock
 
-The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx()`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
+The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 - Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the [`setDeliverState`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L283-L289) function.
 - Initialize the block gas meter with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
@@ -341,7 +340,7 @@ The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.h
 
 ### EndBlock
 
-The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transactioni n the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`endBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `EndBlocker()` method of each of the application's modules.
+The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction n the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`endBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `EndBlocker()` method of each of the application's modules.
 
 ### Commit
 
@@ -364,8 +363,4 @@ The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a s
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queries are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `baseapp`'s [constructor](#constructor).
-- Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's [`querier`](../building-modules/querier.md).
-
-## Next
-
-Learn more about [stores](./store.md).
+- Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's `querier`.

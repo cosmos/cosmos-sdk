@@ -10,7 +10,7 @@ Note that you should always review the `bank` module code to ensure that permiss
 
 An input of a multiparty transfer
 
-```golang
+```go
 type Input struct {
   Address AccAddress
   Coins   Coins
@@ -21,7 +21,7 @@ type Input struct {
 
 An output of a multiparty transfer.
 
-```golang
+```go
 type Output struct {
   Address AccAddress
   Coins   Coins
@@ -32,7 +32,7 @@ type Output struct {
 
 The base keeper provides full-permission access: the ability to arbitrary modify any account's balance and mint or burn coins.
 
-```golang
+```go
 type BaseKeeper interface {
   SetCoins(addr AccAddress, amt Coins)
   SubtractCoins(addr AccAddress, amt Coins)
@@ -86,7 +86,7 @@ inputOutputCoins(inputs []Input, outputs []Output)
 
 The send keeper provides access to account balances and the ability to transfer coins between accounts, but not to alter the total supply (mint or burn coins).
 
-```golang
+```go
 type SendKeeper interface {
   SendCoins(from AccAddress, to AccAddress, amt Coins)
 }
@@ -104,7 +104,7 @@ sendCoins(from AccAddress, to AccAddress, amt Coins)
 
 The view keeper provides read-only access to account balances but no balance alteration functionality. All balance lookups are `O(1)`.
 
-```golang
+```go
 type ViewKeeper interface {
   GetCoins(addr AccAddress) Coins
   HasCoins(addr AccAddress, amt Coins) bool

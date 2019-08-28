@@ -258,18 +258,18 @@ func UpgradeableStoreLoader(upgradeInfoPath string) StoreLoader {
 		// there is a migration file, let's execute
 		data, err := ioutil.ReadFile(upgradeInfoPath)
 		if err != nil {
-			return fmt.Errorf("Cannot read upgrade file %s: %v", upgradeInfoPath, err)
+			return fmt.Errorf("cannot read upgrade file %s: %v", upgradeInfoPath, err)
 		}
 
 		var upgrades storetypes.StoreUpgrades
 		err = json.Unmarshal(data, &upgrades)
 		if err != nil {
-			return fmt.Errorf("Cannot parse upgrade file: %v", err)
+			return fmt.Errorf("cannot parse upgrade file: %v", err)
 		}
 
 		err = ms.LoadLatestVersionAndUpgrade(&upgrades)
 		if err != nil {
-			return fmt.Errorf("Load and upgrade database: %v", err)
+			return fmt.Errorf("load and upgrade database: %v", err)
 		}
 
 		// if we have a successful load, we delete the file
@@ -443,7 +443,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
-	if msgs == nil || len(msgs) == 0 {
+	if len(msgs) == 0 {
 		return sdk.ErrUnknownRequest("Tx.GetMsgs() must return at least one message in list")
 	}
 

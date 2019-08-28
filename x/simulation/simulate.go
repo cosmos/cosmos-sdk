@@ -98,7 +98,7 @@ func SimulateFromSeed(
 	go func() {
 		receivedSignal := <-c
 		fmt.Fprintf(w, "\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
-		err = fmt.Errorf("Exited due to %s", receivedSignal)
+		err = fmt.Errorf("exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
 

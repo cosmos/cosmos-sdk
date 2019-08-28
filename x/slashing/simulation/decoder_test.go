@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
+// nolint:deadcode unused
 var (
 	delPk1    = ed25519.GenPrivKey().PubKey()
 	delAddr1  = sdk.AccAddress(delPk1.Address())

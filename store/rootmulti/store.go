@@ -482,7 +482,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		return store, err
 
 	case types.StoreTypeDB:
-		return commitDBStoreAdapter{dbadapter.Store{db}}, nil
+		return commitDBStoreAdapter{Store: dbadapter.Store{DB: db}}, nil
 
 	case types.StoreTypeTransient:
 		_, ok := key.(*types.TransientStoreKey)

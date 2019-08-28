@@ -235,11 +235,10 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 
 // get the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
-	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)
 	validators := make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator := k.ValidatorsPowerStoreIterator(ctx)
 	defer iterator.Close()
 
 	i := 0
@@ -259,7 +258,7 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) (iterator sdk.Iterator) {
 	store := ctx.KVStore(k.storeKey)
 	iterator = sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
-	return iterator
+	return
 }
 
 //_______________________________________________________________________

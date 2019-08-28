@@ -35,12 +35,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Breaking Changes
+
+### State Machine Breaking Changes
+
+
+### API Breaking Changes
 
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
+
+### Client Breaking Changes
+
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
+
 
 ### Features
 

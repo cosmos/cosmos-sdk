@@ -417,3 +417,17 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		Value:  resBytes,
 	}
 }
+
+// splitPath splits a string path using the delimiter '/'.
+//
+// e.g. "this/is/funny" becomes []string{"this", "is", "funny"}
+func splitPath(requestPath string) (path []string) {
+	path = strings.Split(requestPath, "/")
+
+	// first element is empty string
+	if len(path) > 0 && path[0] == "" {
+		path = path[1:]
+	}
+
+	return path
+}

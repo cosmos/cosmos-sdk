@@ -657,7 +657,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
+		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(i), Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {

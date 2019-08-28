@@ -61,9 +61,12 @@ longer panics if the store to load contains substores that we didn't explicitly 
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
-* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847) `SimApp` and simulation refactors
+* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) `SimApp` and simulation refactors
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
-  * Add `DecodeStore` to the `SimulationManager` for decoding each module's types
+  * Add `RegisterStoreDecoders` to the `SimulationManager` for decoding each module's types
+  * Add `GenerateGenesisStates` to the `SimulationManager` to generate a randomized `GenState` for each module
+  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
+  `ParamChangeProposal`s
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store

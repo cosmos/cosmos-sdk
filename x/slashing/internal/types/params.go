@@ -52,7 +52,7 @@ type Params struct {
 // NewParams creates a new Params object
 func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 	minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign sdk.Dec, slashFractionDowntime sdk.Dec) Params {
+	slashFractionDoubleSign, slashFractionDowntime sdk.Dec) Params {
 
 	return Params{
 		MaxEvidenceAge:          maxEvidenceAge,

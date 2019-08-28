@@ -13,7 +13,7 @@ import (
 
 // nolint: deadcode unused
 var (
-	denom1     = "test-denom"
+	denom1    = "test-denom"
 	denom2    = "test-denom2"
 	denom3    = "test-denom3"
 	id        = "1"
@@ -22,7 +22,7 @@ var (
 	address   = types.CreateTestAddrs(1)[0]
 	address2  = types.CreateTestAddrs(2)[1]
 	address3  = types.CreateTestAddrs(3)[2]
-	tokenURI1  = "https://google.com/token-1.json"
+	tokenURI1 = "https://google.com/token-1.json"
 	tokenURI2 = "https://google.com/token-2.json"
 )
 

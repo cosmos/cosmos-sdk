@@ -4,6 +4,7 @@ package nft
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
@@ -76,9 +78,19 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModuleSimulation defines the module simulation functions used by the gov module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder performs a no-op.
+// RegisterStoreDecoder registers a decoder for nft module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the nft module.
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RandomizedParams doesn't create randomized nft param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
 }
 
 //____________________________________________________________________________

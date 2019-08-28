@@ -293,7 +293,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			}
 
 		default:
-			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
+			result = sdk.ErrUnknownRequest(fmt.Sprintf("unknown query: %s", path)).Result()
 		}
 
 		value := codec.Cdc.MustMarshalBinaryLengthPrefixed(result)

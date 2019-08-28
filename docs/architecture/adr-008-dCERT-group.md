@@ -10,12 +10,12 @@ In order to reduce the number of parties involved with handling sensitive
 information in an emergency scenario, we propose the creation of a
 specialization group named The Decentralized Computer Emergency Response Team
 (dCERT).  Initially this group's role is intended to serve as coordinators
-between the validators, bug-hunters, developers, and other members of the wider
-community.  During a time of crisis, the dCERT group would aggregate and relay
-input from a variety of stakeholders to the developers who are actively
-devising a patch to the software, this way sensitive information does not need
-to be publicly disclosed while some input from the community can still be
-gained. 
+between various actors within a blockchain community such as validators,
+bug-hunters, developers.  During a time of crisis, the dCERT group would
+aggregate and relay input from a variety of stakeholders to the developers who
+are actively devising a patch to the software, this way sensitive information
+does not need to be publicly disclosed while some input from the community can
+still be gained. 
 
 Additionally, a special privilege is proposed for the dCERT group:
 the capacity to "circuit-break" (aka. temporarily disable)  a particular
@@ -40,12 +40,12 @@ implementation of:
    governance
 
 This system necessitates the following new parameters: 
- - blockly stipend allowance per dCERT member (suggested ~$10K/yr of atoms)
- - maximum number of dCERT members (suggested 7) 
- - required staked slashable tokens for each dCERT member (suggested $10K of atoms)
- - unbonding time for dCERT staked token (suggested 3 week)
- - quorum for suspending a particular member (suggested 5/7) 
- - proposal wager for disbanding the dCERT group (suggested ~$100000 USD worth of atoms)
+ - blockly stipend allowance per dCERT member 
+ - maximum number of dCERT members 
+ - required staked slashable tokens for each dCERT member 
+ - unbonding time for dCERT staked token 
+ - quorum for suspending a particular member 
+ - proposal wager for disbanding the dCERT group 
 
 These parameters are expected to be implemented through the param keeper such 
 that governance may change them at any given point. 
@@ -136,7 +136,7 @@ they should all be severely slashed.
 ### Positive
 
  - Potential to reduces the number of parties to coordinate with during an emergency 
-- Reduction in possibility of disclosing sensitive information to malicious parties
+ - Reduction in possibility of disclosing sensitive information to malicious parties
 
 ### Negative
 

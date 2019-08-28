@@ -237,7 +237,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 		var v int
 		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgTransferNFT, &v, nil,
 		// 			func(_ *rand.Rand) {
-		// 				v = 100
+		// 				v = 33
 		// 			})
 		// 		return v
 		// 	}(nil),
@@ -248,7 +248,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 		var v int
 		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgEditNFTMetadata, &v, nil,
 		// 			func(_ *rand.Rand) {
-		// 				v = 100
+		// 				v = 5
 		// 			})
 		// 		return v
 		// 	}(nil),
@@ -259,7 +259,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 		var v int
 		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgMintNFT, &v, nil,
 		// 			func(_ *rand.Rand) {
-		// 				v = 100
+		// 				v = 10
 		// 			})
 		// 		return v
 		// 	}(nil),
@@ -270,7 +270,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 		var v int
 		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgBurnNFT, &v, nil,
 		// 			func(_ *rand.Rand) {
-		// 				v = 100
+		// 				v = 5
 		// 			})
 		// 		return v
 		// 	}(nil),

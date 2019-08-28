@@ -305,7 +305,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 	}
 
-	msg := "Expected second parameter to be either simulate or version, neither was present"
+	msg := "expected second parameter to be either 'simulate' or 'version', neither was present"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 

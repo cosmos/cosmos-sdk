@@ -639,7 +639,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
+			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result

@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"

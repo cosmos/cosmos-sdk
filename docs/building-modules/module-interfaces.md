@@ -18,11 +18,11 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint created by the application developer will add commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md) and [**queries**](./messages-and-queries.md).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint created by the application developer will add commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. Here is an example from the nameservice tutorial:
+[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. Here is an example from the [nameservice tutorial](https://cosmos.network/docs/tutorial/cli.html#transactions):
 
 ```go
 func GetCmdBuyName(cdc *codec.Codec) *cobra.Command {
@@ -74,9 +74,6 @@ This getter function creates the command for the Buy Name transaction. It does t
   + Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
 - **Flags.** Add any [flags](#flags) to the command. No flags were specified here, but all transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These *persistent* [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
 
-
-#### GetTxCmd
-
 Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) `GetTxCmd()` function, which adds the `Sign` and `MultiSign` commands. An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
 
 ```go
@@ -98,7 +95,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the nameservice module:
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the [nameservice module CLI](https://cosmos.network/docs/tutorial/cli.html#queries):
 
 ```go
 func GetCmdWhois(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -137,9 +134,8 @@ This query returns the address that owns a particular name. The getter function 
   + The `codec` is used to nmarshal the response and the `CLIContext` is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
 
-#### GetQueryCmd
 
-Finally, the module also needs a `GetQueryCmd`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the [`GetTxCmd`](#gettxcmd) command.
+Finally, the module also needs a `GetQueryCmd`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd` command shown above.
 
 ### Flags
 
@@ -167,11 +163,13 @@ Since `PostCommands()` includes all of the basic flags required for a transactio
 
 ## REST
 
-Applications are typically required to support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](lunie.io)). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](lunie.io)). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+
+To support HTTP requests, the module developer needs to define possible request types, how to handle them, and provide a way to register them with a provided router.
 
 ### Request Types
 
-Request types must be defined for all *transaction* requests. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
+Request types, which define structured interactions from users, must be defined for all *transaction* requests. Users using this method to interact with an application will send HTTP Requests with the required fields in order to trigger state changes in the application. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
 
 Here is an example of a request to buy a name from the [nameservice](https://cosmos.network/docs/tutorial/rest.html) module:
 

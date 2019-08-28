@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	nftsimops "github.com/cosmos/cosmos-sdk/x/nft/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -233,50 +232,50 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 			}(nil),
 			slashingsimops.SimulateMsgUnjail(app.SlashingKeeper),
 		},
-		{
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightMsgTransferNFT, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
-			nftsimops.SimulateMsgTransferNFT(app.NFTKeeper),
-		},
-		{
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightMsgEditNFTMetadata, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
-			nftsimops.SimulateMsgEditNFTMetadata(app.NFTKeeper),
-		},
-		{
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightMsgMintNFT, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
-			nftsimops.SimulateMsgMintNFT(app.NFTKeeper),
-		},
-		{
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightMsgBurnNFT, &v, nil,
-					func(_ *rand.Rand) {
-						v = 100
-					})
-				return v
-			}(nil),
-			nftsimops.SimulateMsgBurnNFT(app.NFTKeeper),
-		},
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgTransferNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 100
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgTransferNFT(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgEditNFTMetadata, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 100
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgEditNFTMetadata(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgMintNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 100
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgMintNFT(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgBurnNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 100
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgBurnNFT(app.NFTKeeper),
+		// },
 	}
 }
 

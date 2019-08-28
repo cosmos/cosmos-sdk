@@ -1,4 +1,4 @@
-package operations
+package simulation
 
 import (
 	"errors"
@@ -8,13 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateDeductFee
-func SimulateDeductFee(ak auth.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.Operation {
+// SimulateDeductFee 
+func SimulateDeductFee(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {

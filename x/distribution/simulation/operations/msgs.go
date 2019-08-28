@@ -10,21 +10,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
-func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
-		msg := distribution.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
+		msg := types.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
 
 		fromAcc := ak.GetAccount(ctx, accountOrigin.Address)
 		tx := simapp.GenTx([]sdk.Msg{msg},
@@ -34,7 +34,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k distribution.Keeper
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
-			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -42,16 +42,16 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k distribution.Keeper
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
 		validatorAccount := simulation.RandomAcc(r, accs)
-		msg := distribution.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
+		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(distribution.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
@@ -62,7 +62,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k distribution.K
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
-			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -70,15 +70,15 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k distribution.K
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
-		msg := distribution.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
+		msg := types.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
 
 		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(distribution.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
 
 		fromAcc := ak.GetAccount(ctx, account.Address)
@@ -89,7 +89,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k distributi
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
-			return simulation.NoOpMsg(distribution.ModuleName), nil, errors.New(res.Log)
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -97,8 +97,8 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k distributi
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.ContentSimulator {
-	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) gov.Content {
+func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsimops.ContentSimulator {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		var coins sdk.Coins
 
 		recipientAcc := simulation.RandomAcc(r, accs)
@@ -114,7 +114,7 @@ func SimulateCommunityPoolSpendProposalContent(k distribution.Keeper) govsimops.
 			}
 		}
 
-		return distribution.NewCommunityPoolSpendProposal(
+		return types.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 100),
 			recipientAcc.Address,

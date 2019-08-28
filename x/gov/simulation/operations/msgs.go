@@ -19,7 +19,7 @@ import (
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
-type ContentSimulator func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) types.Content
+type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) types.Content
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
@@ -54,7 +54,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 
 		// 1) submit proposal now
 		acc := simulation.RandomAcc(r, accs)
-		content := contentSim(r, app, ctx, accs)
+		content := contentSim(r, ctx, accs)
 		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
@@ -110,7 +110,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 }
 
 // SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ *baseapp.BaseApp, _ sdk.Context, _ []simulation.Account) types.Content {
+func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
 	return types.NewTextProposal(
 		simulation.RandStringOfLength(r, 140),
 		simulation.RandStringOfLength(r, 5000),

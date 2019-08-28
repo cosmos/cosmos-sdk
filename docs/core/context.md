@@ -1,39 +1,45 @@
 # Context
 
-## Prerequisites
-
-* [Anatomy of an SDK Application](../basics/app-anatomy.md)
-* [Lifecycle of a Transaction](../basics/tx-lifecycle.md)
-
 ## Synopsis
 
 This document details the SDK `Context` type.
 
-- [SDK Context Type Definition](#context-definition)
-- [Go Context Package](#go-context-package)
-- [Cache Wrapping](#cache-wrapping)
+- [Context](#context)
+	- [Synopsis](#synopsis)
+	- [Prerequisites](#prerequisites)
+	- [Context Definition](#context-definition)
+	- [Go Context Package](#go-context-package)
+	- [Cache Wrapping](#cache-wrapping)
+	- [Next](#next)
 
+## Prerequisites
 
+- [Anatomy of an SDK Application](../basics/app-anatomy.md)
+- [Lifecycle of a Transaction](../basics/tx-lifecycle.md)
 
 ## Context Definition
 
-The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK and Tendermint. The `Context` is directly passed between methods and functions as an argument. The `Context` is integral to tx processing in that it allows modules to easily access their respective [state](./multistore.md) and retrieve transactional context such as the block header and gas meter.
+The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context)
+as its base, and has many additional types within its definition that are specific to the Cosmos SDK
+and Tendermint. The `Context` is directly passed between methods and functions as an argument.
+The `Context` is integral to tx processing in that it allows modules to easily access their respective
+[state](./multistore.md) and retrieve transactional context such as the block header and gas meter.
 
 ```go
 type Context struct {
-	ctx           context.Context
-	ms            MultiStore
-	header        abci.Header
-	chainID       string
-	txBytes       []byte
-	logger        log.Logger
-	voteInfo      []abci.VoteInfo
-	gasMeter      GasMeter
-	blockGasMeter GasMeter
-	checkTx       bool
-	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
-	eventManager  *EventManager
+  ctx           context.Context
+  ms            MultiStore
+  header        abci.Header
+  chainID       string
+  txBytes       []byte
+  logger        log.Logger
+  voteInfo      []abci.VoteInfo
+  gasMeter      GasMeter
+  blockGasMeter GasMeter
+  checkTx       bool
+  minGasPrice   DecCoins
+  consParams    *abci.ConsensusParams
+  eventManager  *EventManager
 }
 ```
 
@@ -63,26 +69,39 @@ ctx.EventManager().EmitEvent(sdk.NewEvent(
 
 ## Go Context Package
 
-A basic Context is defined in the [Golang Context Package](https://golang.org/pkg/context). A Context is an immutable data structure that carries request-scoped data across APIs and processes. Contexts are also designed to enable concurrency and to be used in goroutines.
+A basic `Context` is defined in the [Golang Context Package](https://golang.org/pkg/context). A `Context`
+is an immutable data structure that carries request-scoped data across APIs and processes. Contexts
+are also designed to enable concurrency and to be used in goroutines.
 
-Contexts are intended to be **immutable**; they should never be edited. Instead, the convention is to create a child context from its parent using a `With` function. For example:
+Contexts are intended to be **immutable**; they should never be edited. Instead, the convention is
+to create a child context from its parent using a `With` function. For example:
 
 ``` go
 childCtx = parentCtx.WithBlockHeader(header)
 ```
 
-The [Golang Context Package](https://golang.org/pkg/context) documentation instructs developers to explicitly pass a context `ctx` as the first argument of a process.
+The [Golang Context Package](https://golang.org/pkg/context) documentation instructs developers to
+explicitly pass a context `ctx` as the first argument of a process.
 
 ## Cache Wrapping
 
-The `Context` contains a `MultiStore`, which allows for cache-wrapping functionality: a `CacheMultiStore` where each `KVStore` is is wrapped with an ephemeral cache. Processes are free to write changes to the `CacheMultiStore`, then write the changes back to the original state or disregard them if something goes wrong. The pattern of usage for a Context is as follows:
+The `Context` contains a `MultiStore`, which allows for cache-wrapping functionality: a `CacheMultiStore`
+where each `KVStore` is is wrapped with an ephemeral cache. Processes are free to write changes to
+the `CacheMultiStore`, then write the changes back to the original state or disregard them if something
+goes wrong. The pattern of usage for a Context is as follows:
 
-1. A process receives a Context `ctx` from its parent process, which provides information needed to perform the process.
-2. The `ctx.ms` is [**cache wrapped**](./multistore.md), i.e. a cached copy of the [multistore](./multistore.md) is made so that the process can make changes to the state as it executes, without changing the original `ctx.ms` state.
-3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass `ctx` to it as needed.
-4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing needs to be done - the cache wrapped `ctx` is simply discarded. If successful, the changes made to the cache-wrapped `MultiStore` can be committed to the original `ctx.ms` via `Write()`.
+1. A process receives a Context `ctx` from its parent process, which provides information needed to
+   perform the process.
+2. The `ctx.ms` is [**cache wrapped**](./multistore.md), i.e. a cached copy of the [multistore](./multistore.md)
+is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms` state.
+3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass
+`ctx` to it as needed.
+4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing
+needs to be done - the cache wrapped `ctx` is simply discarded. If successful, the changes made to
+the cache-wrapped `MultiStore` can be committed to the original `ctx.ms` via `Write()`.
 
-For example, here is a codeblock from the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in [`baseapp`](./baseapp.md):
+For example, here is a snippet from the [`runTx`](./baseapp.md#runtx-and-runmsgs) function in
+[`baseapp`](./baseapp.md):
 
 ```go
 runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
@@ -97,12 +116,16 @@ if result.IsOK() {
   msCache.Write()
 }
 ```
+
 Here is the process:
 
-1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()` to cache-wrap the context and multistore.
+1. Prior to calling `runMsgs` on the message(s) in the transaction, it uses `app.cacheTxContext()`
+to cache-wrap the context and multistore.
 2. The cache-wrapped context, `runMsgCtx`, is used in `runMsgs` to return a result.
-3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the changes - the result is returned immediately. 
-4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates a successful run over all the messages, the cached multistore is written back to the original.
+3. If the process is running in [`checkTxMode`](./baseapp.md#checktx), there is no need to write the
+changes - the result is returned immediately.
+4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
+a successful run over all the messages, the cached multistore is written back to the original.
 
 ## Next
 

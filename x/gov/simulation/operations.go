@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -63,7 +63,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		msg := types.NewMsgSubmitProposal(content, deposit, acc.Address)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -136,7 +136,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		msg := types.NewMsgDeposit(acc.Address, proposalID, deposit)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -181,7 +181,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 		msg := types.NewMsgVote(acc.Address, proposalID, option)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)

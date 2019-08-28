@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
@@ -23,7 +23,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper) simulation.Operation {
 		msg := types.NewMsgUnjail(address)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)

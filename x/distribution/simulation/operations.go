@@ -8,11 +8,11 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -27,7 +27,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 		msg := types.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
 
 		fromAcc := ak.GetAccount(ctx, accountOrigin.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{accountOrigin.PrivKey}...)
@@ -55,7 +55,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 		}
 
 		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAccount.PrivKey}...)
@@ -82,7 +82,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		}
 
 		fromAcc := ak.GetAccount(ctx, account.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{account.PrivKey}...)
@@ -97,7 +97,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsimops.ContentSimulator {
+func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		var coins sdk.Coins
 

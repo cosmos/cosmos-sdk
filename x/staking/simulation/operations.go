@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -52,7 +52,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			selfDelegation, description, commission, sdk.OneInt())
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -95,7 +95,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -134,7 +134,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
@@ -176,7 +176,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
@@ -219,7 +219,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...)

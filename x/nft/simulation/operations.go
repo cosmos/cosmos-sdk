@@ -8,7 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/types"
@@ -40,7 +40,7 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -77,7 +77,7 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -107,7 +107,7 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)
@@ -139,7 +139,7 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := simapp.GenTx([]sdk.Msg{msg},
+		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...)

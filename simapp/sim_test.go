@@ -17,20 +17,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
-	banksimops "github.com/cosmos/cosmos-sdk/x/bank/simulation/operations"
+	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
+	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingsimops "github.com/cosmos/cosmos-sdk/x/slashing/simulation/operations"
+	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingsimops "github.com/cosmos/cosmos-sdk/x/staking/simulation/operations"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -65,7 +65,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			authsimops.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
+			authsim.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -76,7 +76,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			banksimops.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
+			banksim.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -87,7 +87,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			banksimops.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
+			banksim.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -98,7 +98,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgSetWithdrawAddress(app.AccountKeeper, app.DistrKeeper),
+			distrsim.SimulateMsgSetWithdrawAddress(app.AccountKeeper, app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -109,7 +109,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawDelegatorReward(app.AccountKeeper, app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawDelegatorReward(app.AccountKeeper, app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -120,7 +120,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawValidatorCommission(app.AccountKeeper, app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawValidatorCommission(app.AccountKeeper, app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -131,7 +131,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, govsimops.SimulateTextProposalContent),
+			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, govsim.SimulateTextProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -142,7 +142,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
+			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -153,7 +153,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(paramChanges)),
+			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.AccountKeeper, app.GovKeeper, paramsim.SimulateParamChangeProposalContent(paramChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -164,7 +164,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateMsgDeposit(app.AccountKeeper, app.GovKeeper),
+			govsim.SimulateMsgDeposit(app.AccountKeeper, app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -175,7 +175,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -186,7 +186,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgEditValidator(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgEditValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -197,7 +197,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -208,7 +208,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -219,7 +219,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -230,7 +230,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			slashingsimops.SimulateMsgUnjail(app.AccountKeeper),
+			slashingsim.SimulateMsgUnjail(app.AccountKeeper),
 		},
 		// {
 		// 	func(_ *rand.Rand) int {
@@ -241,7 +241,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 			})
 		// 		return v
 		// 	}(nil),
-		// 	nftsimops.SimulateMsgTransferNFT(app.NFTKeeper),
+		// 	nftsim.SimulateMsgTransferNFT(app.NFTKeeper),
 		// },
 		// {
 		// 	func(_ *rand.Rand) int {
@@ -252,7 +252,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 			})
 		// 		return v
 		// 	}(nil),
-		// 	nftsimops.SimulateMsgEditNFTMetadata(app.NFTKeeper),
+		// 	nftsim.SimulateMsgEditNFTMetadata(app.NFTKeeper),
 		// },
 		// {
 		// 	func(_ *rand.Rand) int {
@@ -263,7 +263,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 			})
 		// 		return v
 		// 	}(nil),
-		// 	nftsimops.SimulateMsgMintNFT(app.NFTKeeper),
+		// 	nftsim.SimulateMsgMintNFT(app.NFTKeeper),
 		// },
 		// {
 		// 	func(_ *rand.Rand) int {
@@ -274,7 +274,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		// 			})
 		// 		return v
 		// 	}(nil),
-		// 	nftsimops.SimulateMsgBurnNFT(app.NFTKeeper),
+		// 	nftsim.SimulateMsgBurnNFT(app.NFTKeeper),
 		// },
 	}
 }

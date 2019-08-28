@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
@@ -68,7 +68,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg type
 	privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
 
-	tx := simapp.GenTx([]sdk.Msg{msg},
+	tx := helpers.GenTx([]sdk.Msg{msg},
 		[]uint64{fromAcc.GetAccountNumber()},
 		[]uint64{fromAcc.GetSequence()},
 		privkeys...)
@@ -159,7 +159,7 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
 
-	tx := simapp.GenTx([]sdk.Msg{msg},
+	tx := helpers.GenTx([]sdk.Msg{msg},
 		accountNumbers,
 		sequenceNumbers,
 		privkeys...)

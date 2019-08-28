@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// SimulateDeductFee 
+// SimulateDeductFee
 func SimulateDeductFee(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account) (

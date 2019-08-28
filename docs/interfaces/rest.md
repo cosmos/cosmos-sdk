@@ -7,7 +7,7 @@
 
 ## Synopsis
 
-This document describes how to create a REST interface for an SDK application. A separate document for creating a module REST interface can be found [here](#../module-interfaces.md#rest).
+This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest).
 
 - [Application REST Interface](#application-rest-interface)
 - [REST Server](#rest-server)
@@ -42,7 +42,7 @@ Of the five, the only attribute that developers will need to configure is the ro
 
 ## Registering Routes
 
-To include routes for each module in an application, the CLI must have some kind of function to Register Routes in its REST Server. This `RegisterRoutes()` function is utilized by the `ServeCommand` and must include routes for each of the application's modules. Since each module used by an SDK application implements a [`RegisterRESTRoutes`](../building-modules.md#rest) function, application developers simply use the Module Manager to call this function for each module.
+To include routes for each module in an application, the CLI must have some kind of function to Register Routes in its REST Server. This `RegisterRoutes()` function is utilized by the `ServeCommand` and must include routes for each of the application's modules. Since each module used by an SDK application implements a [`RegisterRESTRoutes`](../building-modules.md/module-interfaces.md#rest) function, application developers simply use the Module Manager to call this function for each module.
 
 At the bare minimum, a `RegisterRoutes()` function should use the SDK client package `RegisterRoutes()` function to be able to route RPC calls, and instruct the application Module Manager to call `RegisterRESTRoutes()` for all of its modules:
 

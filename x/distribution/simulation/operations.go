@@ -50,10 +50,6 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 		validatorAccount := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
 
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
-		}
-
 		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
 		tx := helpers.GenTx([]sdk.Msg{msg},
 			[]uint64{fromAcc.GetAccountNumber()},
@@ -76,10 +72,6 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 
 		account := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
-
-		if msg.ValidateBasic() != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
-		}
 
 		fromAcc := ak.GetAccount(ctx, account.Address)
 		tx := helpers.GenTx([]sdk.Msg{msg},

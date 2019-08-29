@@ -26,7 +26,9 @@ Types of changes (Stanzas):
 "Improvements" for changes in existing functionality.
 "Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
-"Breaking" for breaking API changes.
+"Client Breaking" for breaking CLI commands and REST routes used by end-users.
+"API Breaking" for breaking exported APIs used by developers building on SDK.
+"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
@@ -34,9 +36,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 # Changelog
 
 ## [Unreleased]
-
-
-### State Machine Breaking Changes
 
 
 ### API Breaking Changes

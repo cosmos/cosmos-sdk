@@ -2,6 +2,8 @@ package server
 
 import (
 	"fmt"
+	"os"
+	"runtime/pprof"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,6 +24,7 @@ const (
 	flagAddress        = "address"
 	flagTraceStore     = "trace-store"
 	flagPruning        = "pruning"
+	flagCPUProfile     = "cpu-profile"
 	FlagMinGasPrices   = "minimum-gas-prices"
 	FlagHaltHeight     = "halt-height"
 )
@@ -36,6 +39,20 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 			if !viper.GetBool(flagWithTendermint) {
 				ctx.Logger.Info("Starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
+			}
+
+			if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
+				f, err := os.Create(cpuProfile)
+				if err != nil {
+					return err
+				}
+
+				ctx.Logger.Info("Starting CPU profiler (%s)\n", cpuProfile)
+				if err := pprof.StartCPUProfile(f); err != nil {
+					return err
+				}
+
+				defer pprof.StopCPUProfile()
 			}
 
 			ctx.Logger.Info("Starting ABCI with Tendermint")
@@ -55,6 +72,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

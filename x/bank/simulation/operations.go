@@ -20,12 +20,16 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		if !bk.GetSendEnabled(ctx) {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -64,7 +68,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 }
 
 // Sends and verifies the transition of a msg send.
-func sendAndVerifyMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
 	fees, err := helpers.RandomFees(r, ctx, fromAcc, msg.Amount)
@@ -95,12 +99,16 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		if !bk.GetSendEnabled(ctx) {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgMultiSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendMsgMultiSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -147,7 +155,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
-func sendAndVerifyMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))

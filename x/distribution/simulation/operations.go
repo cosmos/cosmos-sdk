@@ -21,6 +21,10 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		if !k.GetWithdrawAddrEnabled(ctx) {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)

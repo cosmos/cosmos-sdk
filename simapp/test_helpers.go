@@ -116,7 +116,7 @@ func SignCheckDeliver(
 	tx := helpers.GenTx(
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-		helpers.SimAppChainID,
+		"",
 		accNums,
 		seq,
 		priv...,
@@ -159,7 +159,7 @@ func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, nu
 		txs[i] = helpers.GenTx(
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			helpers.SimAppChainID,
+			"",
 			accNums,
 			initSeqNums,
 			priv...,

@@ -82,12 +82,23 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
+		opMsg = simulation.NewOperationMsg(msg, true, "")
+
+		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		proposalID = uint64(math.Max(float64(proposalID)-1, 0))
+		proposal, found := k.GetProposal(ctx, proposalID)
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("proposal %d wasn't found", proposalID)
+		}
+
+		if proposal.Status != types.StatusVotingPeriod {
+			// continue without voting
+			return opMsg, nil, nil
+		}
 
 		// 2) Schedule operations for votes
 		// 2.1) first pick a number of people to vote.
@@ -132,7 +143,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
-		proposalID, ok := randomProposalID(r, k, ctx)
+		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -186,7 +197,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 		switch {
 		case proposalIDInt < 0:
 			var ok bool
-			proposalID, ok = randomProposalID(r, k, ctx)
+			proposalID, ok = randomProposalID(r, k, ctx, types.StatusVotingPeriod)
 			if !ok {
 				return simulation.NoOpMsg(types.ModuleName), nil, nil
 			}
@@ -256,15 +267,27 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, nil
 }
 
-// Pick a random proposal ID
-func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
-	lastProposalID, _ := k.GetProposalID(ctx)
-	lastProposalID = uint64(math.Max(float64(lastProposalID)-1, 0))
+// Pick a random proposal ID from a proposal with a given status
+func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, ok bool) {
+	proposalID, _ = k.GetProposalID(ctx)
+	checkedIDs := make(map[uint64]bool)
 
-	if lastProposalID < 1 || lastProposalID == (2<<63-1) {
-		return 0, false
+	proposalStatus := types.StatusNil
+	for status != proposalStatus {
+		checkedIDs[proposalID] = true
+		proposal, found := k.GetProposal(ctx, proposalID)
+		if !found {
+			return 0, false
+		}
+
+		proposalStatus = proposal.Status
+
+		proposalID = uint64(r.Intn(1+int(proposalID)) - 1)
+		for checkedIDs[proposalID] {
+			proposalID = uint64(r.Intn(1+int(proposalID)) - 1)
+		}
 	}
-	proposalID = uint64(r.Intn(1+int(lastProposalID)) - 1)
+	
 	return proposalID, true
 }
 

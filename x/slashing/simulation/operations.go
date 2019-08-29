@@ -14,15 +14,26 @@ import (
 )
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-func SimulateMsgUnjail(ak types.AccountKeeper) simulation.Operation {
+func SimulateMsgUnjail(ak types.AccountKeeper, sk types.StakingKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-		// TODO: should only use jailed validators for sending transactions
+		// TODO: create iterator to get all jailed validators and then select a random
+		// from the set
 		acc := simulation.RandomAcc(r, accs)
-		address := sdk.ValAddress(acc.Address)
-		msg := types.NewMsgUnjail(address)
+		validator := sk.Validator(ctx, sdk.ValAddress(acc.Address))
+		if validator == nil {
+			// skip as account is not a validator
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
+		if !validator.IsJailed() {
+			// skip as validator is not jailed
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		msg := types.NewMsgUnjail(validator.GetOperator())
+
+		fromAcc := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err

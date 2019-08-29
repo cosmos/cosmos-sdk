@@ -219,7 +219,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			slashingsim.SimulateMsgUnjail(app.AccountKeeper),
+			slashingsim.SimulateMsgUnjail(app.AccountKeeper, app.StakingKeeper),
 		},
 		// {
 		// 	func(_ *rand.Rand) int {

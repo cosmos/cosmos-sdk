@@ -20,6 +20,15 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		acc := simulation.RandomAcc(r, accs)
+		address := sdk.ValAddress(acc.Address)
+
+		// ensure the validator doesn't exist already
+		_, found := k.GetValidator(ctx, address)
+		if found {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		denom := k.GetParams(ctx).BondDenom
 		description := types.NewDescription(
 			simulation.RandStringOfLength(r, 10),
@@ -36,15 +45,12 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			simulation.RandomDecAmount(r, maxCommission),
 		)
 
-		acc := simulation.RandomAcc(r, accs)
-		address := sdk.ValAddress(acc.Address)
 		amount := ak.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
-		}
-
-		if amount.Equal(sdk.ZeroInt()) {
+		switch {
+		case amount.IsZero():
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case amount.IsPositive():
+			amount = simulation.RandomAmount(r, amount)
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
@@ -52,7 +58,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			selfDelegation, description, commission, sdk.OneInt())
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, sdk.Coins{selfDelegation})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -136,16 +142,18 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
+
 		val := keeper.RandomValidator(r, k, ctx)
 		validatorAddress := val.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
+
 		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
-		}
-		if amount.Equal(sdk.ZeroInt()) {
+		switch {
+		case amount.IsZero():
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case amount.IsPositive():
+			amount = simulation.RandomAmount(r, amount)
 		}
 
 		bondAmt := sdk.NewCoin(denom, amount)
@@ -185,6 +193,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
+
 		delegation := delegations[r.Intn(len(delegations))]
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
@@ -193,13 +202,20 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		}
 
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		switch {
+		case totalBond.IsZero():
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case totalBond.IsPositive():
+			totalBond = simulation.RandomAmount(r, totalBond)
+		}
+		
 		unbondAmt := simulation.RandomAmount(r, totalBond)
-		if unbondAmt.Equal(sdk.ZeroInt()) {
+		if unbondAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.NewMsgUndelegate(
-			delegatorAcc.Address, delegation.ValidatorAddress, sdk.NewCoin(k.GetParams(ctx).BondDenom, unbondAmt),
+			delegatorAcc.Address, delegation.ValidatorAddress, sdk.NewCoin(k.BondDenom(ctx), unbondAmt),
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
@@ -231,27 +247,42 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		denom := k.GetParams(ctx).BondDenom
-		if len(k.GetAllValidators(ctx)) == 0 {
+		delegatorAcc := simulation.RandomAcc(r, accs)
+		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAcc.Address)
+		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
-		srcVal := keeper.RandomValidator(r, k, ctx)
-		srcValidatorAddress := srcVal.GetOperator()
-		destVal := keeper.RandomValidator(r, k, ctx)
-		destValidatorAddress := destVal.GetOperator()
-		delegatorAcc := simulation.RandomAcc(r, accs)
 
-		amount := ak.GetAccount(ctx, delegatorAcc.Address).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+		delegation := delegations[r.Intn(len(delegations))]
+
+		srcVal, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
-		if amount.Equal(sdk.ZeroInt()) {
+
+		destVal := keeper.RandomValidator(r, k, ctx)
+
+		for srcVal.GetOperator().Equals(destVal.GetOperator()) {
+			destVal = keeper.RandomValidator(r, k, ctx)
+		}
+
+		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
+		switch {
+		case totalBond.IsZero():
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case totalBond.IsPositive():
+			totalBond = simulation.RandomAmount(r, totalBond)
+		}
+		
+		
+		redAmt := simulation.RandomAmount(r, totalBond)
+		if redAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.NewMsgBeginRedelegate(
-			delegatorAcc.Address, srcValidatorAddress, destValidatorAddress,
-			sdk.NewCoin(denom, amount),
+			delegatorAcc.Address, srcVal.GetOperator(), destVal.GetOperator(),
+			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)

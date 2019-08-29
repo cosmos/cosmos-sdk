@@ -41,7 +41,6 @@ const (
 	StatusRejected               = types.StatusRejected
 	StatusFailed                 = types.StatusFailed
 	ProposalTypeText             = types.ProposalTypeText
-	ProposalTypeSoftwareUpgrade  = types.ProposalTypeSoftwareUpgrade
 	QueryParams                  = types.QueryParams
 	QueryProposals               = types.QueryProposals
 	QueryProposal                = types.QueryProposal
@@ -111,7 +110,6 @@ var (
 	ProposalStatusFromString      = types.ProposalStatusFromString
 	ValidProposalStatus           = types.ValidProposalStatus
 	NewTextProposal               = types.NewTextProposal
-	NewSoftwareUpgradeProposal    = types.NewSoftwareUpgradeProposal
 	RegisterProposalType          = types.RegisterProposalType
 	ContentFromProposalType       = types.ContentFromProposalType
 	IsValidProposalType           = types.IsValidProposalType
@@ -160,7 +158,6 @@ type (
 	ProposalQueue           = types.ProposalQueue
 	ProposalStatus          = types.ProposalStatus
 	TextProposal            = types.TextProposal
-	SoftwareUpgradeProposal = types.SoftwareUpgradeProposal
 	QueryProposalParams     = types.QueryProposalParams
 	QueryDepositParams      = types.QueryDepositParams
 	QueryVoteParams         = types.QueryVoteParams

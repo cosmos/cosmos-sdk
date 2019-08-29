@@ -43,8 +43,6 @@ func migrateContent(proposalContent v034gov.ProposalContent) (content Content) {
 	switch proposalContent.ProposalType() {
 	case v034gov.ProposalTypeText:
 		return NewTextProposal(proposalContent.GetTitle(), proposalContent.GetDescription())
-	case v034gov.ProposalTypeSoftwareUpgrade:
-		return NewSoftwareUpgradeProposal(proposalContent.GetTitle(), proposalContent.GetDescription())
 	default:
 		return nil
 	}

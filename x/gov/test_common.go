@@ -195,7 +195,7 @@ const contextKeyBadProposal = "contextKeyBadProposal"
 // for the key contextKeyBadProposal or if the value is false.
 func badProposalHandler(ctx sdk.Context, c types.Content) sdk.Error {
 	switch c.ProposalType() {
-	case types.ProposalTypeText, types.ProposalTypeSoftwareUpgrade:
+	case types.ProposalTypeText:
 		v := ctx.Value(contextKeyBadProposal)
 
 		if v == nil || !v.(bool) {

@@ -47,10 +47,13 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 		amount := ak.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
 		switch {
-		case amount.IsZero():
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		case amount.IsPositive():
-			amount = simulation.RandomAmount(r, amount)
+			amount, err = simulation.RandPositiveInt(r, amount)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		default:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
@@ -150,10 +153,10 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 
 		amount := ak.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
 		switch {
-		case amount.IsZero():
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		case amount.IsPositive():
-			amount = simulation.RandomAmount(r, amount)
+			amount, err = simulation.RandPositiveInt(r, amount)
+		default:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		bondAmt := sdk.NewCoin(denom, amount)
@@ -198,18 +201,25 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
 		totalBond := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		switch {
-		case totalBond.IsZero():
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		case totalBond.IsPositive():
-			totalBond = simulation.RandomAmount(r, totalBond)
+			totalBond, err = simulation.RandPositiveInt(r, totalBond)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		default:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		unbondAmt := simulation.RandomAmount(r, totalBond)
+		unbondAmt, err := simulation.RandPositiveInt(r, totalBond)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
 		if unbondAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -257,6 +267,11 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 		srcVal, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", srcVal.GetOperator())
+		}
+
+		if k.HasReceivingRedelegation(ctx, delegatorAcc.Address, srcVal.GetOperator()) {
+			// skip
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
@@ -268,13 +283,20 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
 		switch {
-		case totalBond.IsZero():
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		case totalBond.IsPositive():
-			totalBond = simulation.RandomAmount(r, totalBond)
+			totalBond, err = simulation.RandPositiveInt(r, totalBond)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		default:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		redAmt := simulation.RandomAmount(r, totalBond)
+		redAmt, err := simulation.RandPositiveInt(r, totalBond)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
 		if redAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}

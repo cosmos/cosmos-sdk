@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -14,6 +15,7 @@ import (
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
@@ -54,13 +56,25 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
+	sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
-		validatorAccount := simulation.RandomAcc(r, accs)
-		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
+		delegations := sk.GetAllDelegatorDelegations(ctx, delegatorAccount.Address)
+		if len(delegations) == 0 {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		delegation := delegations[r.Intn(len(delegations))]
+
+		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
+		if validator == nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
+		}
+
+		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, validator.GetOperator())
 
 		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
 		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
@@ -87,12 +101,24 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper,
+	sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		account := simulation.RandomAcc(r, accs)
-		msg := types.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
+		val := stakingkeeper.RandomValidator(r, sk, ctx)
+
+		account, found := simulation.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+		}
+
+		commission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+		if commission.IsZero() {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		msg := types.NewMsgWithdrawValidatorCommission(val.GetOperator())
 
 		fromAcc := ak.GetAccount(ctx, account.Address)
 		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)

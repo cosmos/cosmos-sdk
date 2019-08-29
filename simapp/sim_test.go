@@ -98,7 +98,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawDelegatorReward(app.AccountKeeper, app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawDelegatorReward(app.AccountKeeper, app.DistrKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -109,7 +109,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawValidatorCommission(app.AccountKeeper, app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawValidatorCommission(app.AccountKeeper, app.DistrKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

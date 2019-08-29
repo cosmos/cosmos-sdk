@@ -41,12 +41,14 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns default genesis state as raw bytes for the auth
 // module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+	// Does not need any custom account types registered on ModuleCdc
 	return types.ModuleCdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the auth module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data types.GenesisState
+	// TODO This will need any custom accounts registered on ModuleCdc
 	err := types.ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return err
@@ -136,6 +138,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
+	// TODO this could use am.keeper.cdc to access codec with custom accounts
 	types.ModuleCdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.accountKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
@@ -145,6 +148,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper)
+	// TODO this could use am.keeper.cdc to access codec with custom accounts
 	return types.ModuleCdc.MustMarshalJSON(gs)
 }
 

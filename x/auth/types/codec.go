@@ -23,5 +23,12 @@ func init() {
 	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
 	codec.RegisterCrypto(ModuleCdc)
-	ModuleCdc.Seal()
+	// leave the codec unsealed to allow custom account types to be registered
+}
+
+// RegisterAccountTypeCodec registers an external account type defined
+// in another module for the internal ModuleCdc. This allows account types to be
+// read to/from the genesis file.
+func RegisterAccountTypeCodec(o interface{}, name string) {
+	ModuleCdc.RegisterConcrete(o, name, nil)
 }

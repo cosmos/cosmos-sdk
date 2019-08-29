@@ -14,6 +14,11 @@ import (
 
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
+// Register the module account type with the auth module codec so it can decode module accounts stored in a genesis file
+func init() {
+	authtypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
+}
+
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount

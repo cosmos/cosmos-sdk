@@ -63,10 +63,18 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		msg := types.NewMsgSubmitProposal(content, deposit, acc.Address)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, deposit)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -136,10 +144,18 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		msg := types.NewMsgDeposit(acc.Address, proposalID, deposit)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, deposit)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -181,10 +197,18 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 		msg := types.NewMsgVote(acc.Address, proposalID, option)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

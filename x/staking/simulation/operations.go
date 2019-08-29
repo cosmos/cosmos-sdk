@@ -52,10 +52,18 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			selfDelegation, description, commission, sdk.OneInt())
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -95,10 +103,18 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -130,14 +146,22 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := types.NewMsgDelegate(
-			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
+		bondAmt := sdk.NewCoin(denom, amount)
+		msg := types.NewMsgDelegate(delegatorAddress, validatorAddress, bondAmt)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, sdk.Coins{bondAmt})
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -176,10 +200,18 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -219,10 +251,18 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		)
 
 		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{delegatorAcc.PrivKey}...)
+			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

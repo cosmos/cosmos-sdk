@@ -26,10 +26,18 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 		msg := types.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
 
 		fromAcc := ak.GetAccount(ctx, accountOrigin.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{accountOrigin.PrivKey}...)
+			[]crypto.PrivKey{accountOrigin.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -50,10 +58,18 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
 
 		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{delegatorAccount.PrivKey}...)
+			[]crypto.PrivKey{delegatorAccount.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -73,10 +89,18 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		msg := types.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
 
 		fromAcc := ak.GetAccount(ctx, account.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{account.PrivKey}...)
+			[]crypto.PrivKey{account.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

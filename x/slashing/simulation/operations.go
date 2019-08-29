@@ -23,10 +23,18 @@ func SimulateMsgUnjail(ak types.AccountKeeper) simulation.Operation {
 		msg := types.NewMsgUnjail(address)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -56,17 +55,6 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 
 	// nolint: govet
 	return []simulation.WeightedOperation{
-		{
-			func(_ *rand.Rand) int {
-				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightDeductFee, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
-			authsim.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
-		},
 		{
 			func(_ *rand.Rand) int {
 				var v int

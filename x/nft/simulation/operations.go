@@ -40,10 +40,18 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -77,10 +85,18 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -107,10 +123,18 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		)
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {
@@ -139,10 +163,18 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		}
 
 		fromAcc := ak.GetAccount(ctx, acc.Address)
-		tx := helpers.GenTx([]sdk.Msg{msg},
+		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...)
+			[]crypto.PrivKey{acc.PrivKey}...,
+		)
 
 		res := app.Deliver(tx)
 		if !res.IsOK() {

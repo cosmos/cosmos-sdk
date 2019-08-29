@@ -25,7 +25,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendAndVerifyMsgSend(r, app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -64,14 +64,21 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 }
 
 // Sends and verifies the transition of a msg send.
-func sendAndVerifyMsgSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgSend, ctx sdk.Context,
-	privkeys []crypto.PrivKey) error {
+func sendAndVerifyMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
+	fees, err := helpers.RandomFees(r, ctx, fromAcc, msg.Amount)
+	if err != nil {
+		return err
+	}
 
-	tx := helpers.GenTx([]sdk.Msg{msg},
+	tx := helpers.GenTx(
+		[]sdk.Msg{msg},
+		fees,
 		[]uint64{fromAcc.GetAccountNumber()},
 		[]uint64{fromAcc.GetSequence()},
-		privkeys...)
+		privkeys...,
+	)
 
 	res := app.Deliver(tx)
 	if !res.IsOK() {
@@ -92,7 +99,7 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgMultiSend(app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendAndVerifyMsgMultiSend(r, app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -139,19 +146,36 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
-func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg types.MsgMultiSend,
-	ctx sdk.Context, privkeys []crypto.PrivKey) error {
+func sendAndVerifyMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
+	msg types.MsgMultiSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
 
+	var fees sdk.Coins
 	for i := 0; i < len(msg.Inputs); i++ {
 		acc := ak.GetAccount(ctx, msg.Inputs[i].Address)
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
-		initialInputAddrCoins[i] = acc.GetCoins()
+
+		// select a random amount for the transaciton
+		coins := acc.GetCoins()
+		denomIndex := r.Intn(len(coins))
+		amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)
+		if err != nil {
+			continue
+		}
+
+		msgAmt := sdk.Coins{sdk.NewCoin(coins[denomIndex].Denom, amt)}
+		fee, err := helpers.RandomFees(r, ctx, acc, msgAmt)
+		if err != nil {
+			continue
+		}
+
+		fees = fees.Add(fee)
+		initialInputAddrCoins[i] = msgAmt
 	}
 
 	for i := 0; i < len(msg.Outputs); i++ {
@@ -159,10 +183,13 @@ func sendAndVerifyMsgMultiSend(app *baseapp.BaseApp, ak types.AccountKeeper, msg
 		initialOutputAddrCoins[i] = acc.GetCoins()
 	}
 
-	tx := helpers.GenTx([]sdk.Msg{msg},
+	tx := helpers.GenTx(
+		[]sdk.Msg{msg},
+		fees,
 		accountNumbers,
 		sequenceNumbers,
-		privkeys...)
+		privkeys...,
+	)
 
 	res := app.Deliver(tx)
 	if !res.IsOK() {

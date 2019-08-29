@@ -10,10 +10,11 @@ type Config struct {
 	ExportStatePath    string //custom file path to save the exported app state JSON
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
 
-	Seed               int64 // simulation random seed
-	InitialBlockHeight int   // initial block to start the simulation
-	NumBlocks          int   // number of new blocks to simulate from the initial block height
-	BlockSize          int   // operations per block
+	Seed               int64  // simulation random seed
+	InitialBlockHeight int    // initial block to start the simulation
+	NumBlocks          int    // number of new blocks to simulate from the initial block height
+	BlockSize          int    // operations per block
+	ChainID            string // chain-id used on the simulation
 
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit

@@ -17,7 +17,7 @@ import (
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
@@ -25,7 +25,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgSend(r, app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendAndVerifyMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -65,7 +65,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 
 // Sends and verifies the transition of a msg send.
 func sendAndVerifyMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
-	msg types.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
+	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
 	fees, err := helpers.RandomFees(r, ctx, fromAcc, msg.Amount)
 	if err != nil {
@@ -75,6 +75,7 @@ func sendAndVerifyMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKe
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		chainID,
 		[]uint64{fromAcc.GetAccountNumber()},
 		[]uint64{fromAcc.GetSequence()},
 		privkeys...,
@@ -91,7 +92,7 @@ func sendAndVerifyMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKe
 // SimulateSingleInputMsgMultiSend tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
@@ -99,7 +100,7 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendAndVerifyMsgMultiSend(r, app, ak, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendAndVerifyMsgMultiSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -147,7 +148,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
 func sendAndVerifyMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
-	msg types.MsgMultiSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
+	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
@@ -160,7 +161,7 @@ func sendAndVerifyMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.Acco
 		accountNumbers[i] = acc.GetAccountNumber()
 		sequenceNumbers[i] = acc.GetSequence()
 
-		// select a random amount for the transaciton
+		// select a random amount for the transaction
 		coins := acc.GetCoins()
 		denomIndex := r.Intn(len(coins))
 		amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)
@@ -186,6 +187,7 @@ func sendAndVerifyMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.Acco
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		chainID,
 		accountNumbers,
 		sequenceNumbers,
 		privkeys...,

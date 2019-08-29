@@ -49,7 +49,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 	curNumVotesState := 1
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
@@ -71,6 +71,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...,
@@ -127,8 +128,8 @@ func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Acc
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		acc := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx)
@@ -152,6 +153,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...,
@@ -172,8 +174,8 @@ func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operati
 }
 
 func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		if acc.Equals(simulation.Account{}) {
 			acc = simulation.RandomAcc(r, accs)
@@ -205,6 +207,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...,

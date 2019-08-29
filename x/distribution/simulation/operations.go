@@ -19,7 +19,7 @@ import (
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
@@ -34,6 +34,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{accountOrigin.PrivKey}...,
@@ -51,7 +52,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
 		validatorAccount := simulation.RandomAcc(r, accs)
@@ -66,6 +67,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAccount.PrivKey}...,
@@ -83,7 +85,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper)
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgWithdrawValidatorCommission(sdk.ValAddress(account.Address))
@@ -97,6 +99,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{account.PrivKey}...,

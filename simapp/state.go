@@ -20,8 +20,8 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
-	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
-	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
+	return func(r *rand.Rand, accs []simulation.Account, config *simulation.Config,
+	) (appState json.RawMessage, simAccs []simulation.Account, genesisTimestamp time.Time) {
 
 		if flagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
@@ -34,7 +34,8 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
-			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			// override the default chain-id from simapp
+			appState, simAccs, config.ChainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 		case config.ParamsFile != "":
 			appParams := make(simulation.AppParams)
@@ -44,14 +45,14 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			}
 
 			cdc.MustUnmarshalJSON(bz, &appParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simulation.AppParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		return appState, simAccs, chainID, genesisTimestamp
+		return appState, simAccs, genesisTimestamp
 	}
 }
 
@@ -60,7 +61,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
 	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
+) (json.RawMessage, []simulation.Account) {
 	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()
 
@@ -107,7 +108,7 @@ func AppStateRandomizedFn(
 		panic(err)
 	}
 
-	return appState, accs, "simulation"
+	return appState, accs
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState

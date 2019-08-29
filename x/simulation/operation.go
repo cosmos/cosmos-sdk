@@ -20,7 +20,7 @@ import (
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account) (
+	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
 // entry kinds for use within OperationEntry

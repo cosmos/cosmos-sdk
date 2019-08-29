@@ -17,8 +17,8 @@ import (
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
 func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		description := types.NewDescription(
@@ -60,6 +60,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...,
@@ -76,8 +77,8 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
 func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		description := types.NewDescription(
 			simulation.RandStringOfLength(r, 10),
@@ -111,6 +112,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{acc.PrivKey}...,
@@ -127,8 +129,8 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
 func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -158,6 +160,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
@@ -174,8 +177,8 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
 func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAcc.Address)
@@ -208,6 +211,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
@@ -224,8 +228,8 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -259,6 +263,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			chainID,
 			[]uint64{fromAcc.GetAccountNumber()},
 			[]uint64{fromAcc.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,

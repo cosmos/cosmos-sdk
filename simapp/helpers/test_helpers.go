@@ -12,8 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// SimAppChainID hardcoded chainID for simulation
+const SimAppChainID = "simulation-app"
+
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	fee := auth.StdFee{
 		Amount: feeAmt,
 		Gas:    100000, // TODO: this should be a param
@@ -29,7 +32,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, accnums []uint64, seq []uint64, pri
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
-		sig, err := p.Sign(auth.StdSignBytes("", accnums[i], seq[i], fee, msgs, memo))
+		sig, err := p.Sign(auth.StdSignBytes(chainID, accnums[i], seq[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}
@@ -45,15 +48,24 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, accnums []uint64, seq []uint64, pri
 
 // RandomFees generates a random fee amount for StdTx
 func RandomFees(r *rand.Rand, ctx sdk.Context, acc authexported.Account,
-	msgAmount sdk.Coins) (sdk.Coins, error) {
+	msgAmount sdk.Coins) (fees sdk.Coins, err error) {
 	// subtract the msg amount from the available coins
-	coins, hasNeg := acc.GetCoins().SafeSub(msgAmount)
+	coins, hasNeg := acc.SpendableCoins(ctx.BlockHeader().Time).SafeSub(msgAmount)
 	if hasNeg {
 		return nil, errors.New("not enough funds for transaction")
 	}
 
+	lenCoins := len(coins)
+	if lenCoins == 0 {
+		return
+	}
+
 	denomIndex := r.Intn(len(coins))
 	randCoin := coins[denomIndex]
+
+	if randCoin.Amount.IsZero() {
+		return sdk.Coins{randCoin}, nil
+	}
 
 	amt, err := simulation.RandPositiveInt(r, randCoin.Amount)
 	if err != nil {
@@ -62,13 +74,8 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, acc authexported.Account,
 
 	// Create a random fee and verify the fees are within the account's spendable
 	// balance.
-	fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
-	spendableCoins, hasNeg := acc.SpendableCoins(ctx.BlockHeader().Time).SafeSub(msgAmount)
-	if hasNeg {
-		return nil, errors.New("not enough funds for transaction")
-	}
-
-	if _, hasNeg = spendableCoins.SafeSub(fees); hasNeg {
+	fees = sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
+	if _, hasNeg = coins.SafeSub(fees); hasNeg {
 		return nil, errors.New("not enough funds for fees")
 	}
 

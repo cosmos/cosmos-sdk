@@ -287,7 +287,7 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status typ
 			proposalID = uint64(r.Intn(1+int(proposalID)) - 1)
 		}
 	}
-	
+
 	return proposalID, true
 }
 

@@ -208,7 +208,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		case totalBond.IsPositive():
 			totalBond = simulation.RandomAmount(r, totalBond)
 		}
-		
+
 		unbondAmt := simulation.RandomAmount(r, totalBond)
 		if unbondAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -273,8 +273,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		case totalBond.IsPositive():
 			totalBond = simulation.RandomAmount(r, totalBond)
 		}
-		
-		
+
 		redAmt := simulation.RandomAmount(r, totalBond)
 		if redAmt.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil

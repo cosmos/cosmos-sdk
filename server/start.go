@@ -47,7 +47,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 					return err
 				}
 
-				ctx.Logger.Info("Starting CPU profiler (%s)\n", cpuProfile)
+				ctx.Logger.Info("Starting CPU profiler. Writing results to (%s)\n", cpuProfile)
 				if err := pprof.StartCPUProfile(f); err != nil {
 					return err
 				}

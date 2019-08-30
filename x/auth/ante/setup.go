@@ -2,6 +2,7 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	err "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func SetUpDecorator(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx Context, error) {
@@ -14,7 +15,7 @@ func SetUpDecorator(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHand
 		return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
 	}
 
-	ctx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
+	newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
@@ -28,12 +29,8 @@ func SetUpDecorator(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHand
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, stdTx.Fee.Gas, newCtx.GasMeter().GasConsumed(),
-				)
-				res = sdk.ErrOutOfGas(log).Result()
-
-				res.GasWanted = stdTx.Fee.Gas
-				res.GasUsed = newCtx.GasMeter().GasConsumed()
 				
+				return ctx, err.Wrap(errs.ErrOutOfGas, log)
 				// TODO: figure out how to return Context, error so that baseapp can recover gasWanted/gasUsed
 			default:
 				panic(r)
@@ -41,6 +38,5 @@ func SetUpDecorator(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHand
 		}
 	}()
 
-	newCtx, err = next(ctx, tx, simulate)
-	return
+	return next(newCtx, tx, simulate)
 }

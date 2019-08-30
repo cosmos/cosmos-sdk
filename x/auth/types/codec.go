@@ -9,6 +9,7 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)
+	cdc.RegisterInterface((*ValidatableAccount)(nil), nil) // TODO does this work correctly
 	cdc.RegisterInterface((*exported.VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)

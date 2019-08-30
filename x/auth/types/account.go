@@ -119,7 +119,7 @@ func (acc *BaseAccount) SetAccountNumber(accNumber uint64) error {
 	return nil
 }
 
-// GetSequence - Implements sdk.Account.
+// GetSequence - Implements sdk.Account. // TODO update comments
 func (acc *BaseAccount) GetSequence() uint64 {
 	return acc.Sequence
 }
@@ -134,6 +134,12 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 // this is simply the base coins.
 func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 	return acc.GetCoins()
+}
+
+// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+func (acc BaseAccount) Validate() error {
+	// TODO add more validation?
+	return nil
 }
 
 // MarshalYAML returns the YAML representation of an account.
@@ -467,6 +473,21 @@ func (cva *ContinuousVestingAccount) GetEndTime() int64 {
 	return cva.EndTime
 }
 
+// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+func (cva ContinuousVestingAccount) Validate() error {
+	if cva.EndTime == 0 {
+		return fmt.Errorf("missing end time for vesting account")
+	}
+	if cva.StartTime >= cva.EndTime {
+		return fmt.Errorf(
+			"vesting start time must before end time; start: %s, end: %s",
+			time.Unix(cva.StartTime, 0).UTC().Format(time.RFC3339),
+			time.Unix(cva.EndTime, 0).UTC().Format(time.RFC3339),
+		)
+	}
+	return nil
+}
+
 //-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
@@ -534,4 +555,12 @@ func (dva *DelayedVestingAccount) GetStartTime() int64 {
 // GetEndTime returns the time when vesting ends for a delayed vesting account.
 func (dva *DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
+}
+
+// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+func (dva DelayedVestingAccount) Validate() error {
+	if dva.EndTime == 0 {
+		return fmt.Errorf("missing end time for vesting account")
+	}
+	return nil
 }

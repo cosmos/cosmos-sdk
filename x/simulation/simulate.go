@@ -125,7 +125,7 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d; %v\n", header.Height, r)
+				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", header.Height)
 				logWriter.PrintLogs()
 				panic(r)
 			}

@@ -53,22 +53,22 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
-		acc := simulation.RandomAcc(r, accs)
+		simAccount := simulation.RandomAcc(r, accs)
 		content := contentSim(r, ctx, accs)
 		if content == nil {
 			// skip
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
+		deposit, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		msg := types.NewMsgSubmitProposal(content, deposit, acc.Address)
+		msg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, deposit)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, deposit)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -77,9 +77,9 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -137,21 +137,21 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		acc := simulation.RandomAcc(r, accs)
+		simAccount := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
+		deposit, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		msg := types.NewMsgDeposit(acc.Address, proposalID, deposit)
+		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, deposit)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, deposit)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -160,9 +160,9 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -179,12 +179,12 @@ func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operati
 	return operationSimulateMsgVote(ak, k, simulation.Account{}, -1)
 }
 
-func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simulation.Account, proposalIDInt int64) simulation.Operation {
+func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		if acc.Equals(simulation.Account{}) {
-			acc = simulation.RandomAcc(r, accs)
+		if simAccount.Equals(simulation.Account{}) {
+			simAccount = simulation.RandomAcc(r, accs)
 		}
 
 		var proposalID uint64
@@ -202,10 +202,10 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 
 		option := randomVotingOption(r)
 
-		msg := types.NewMsgVote(acc.Address, proposalID, option)
+		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -214,9 +214,9 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, acc simul
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)

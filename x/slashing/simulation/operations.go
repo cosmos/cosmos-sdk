@@ -23,7 +23,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		// TODO: create iterator to get all jailed validators and then select a random
 		// from the set
 		validator := stakingkeeper.RandomValidator(r, sk, ctx)
-		acc, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
@@ -51,8 +51,8 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
-		fromAcc := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -61,9 +61,9 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)

@@ -25,12 +25,12 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		fromAcc, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
+		simAccount, comment, msg, ok := createMsgSend(r, ctx, accs, ak)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendMsgSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -40,44 +40,50 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 }
 
 func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper) (
-	fromAcc simulation.Account, comment string, msg types.MsgSend, ok bool) {
+	simAccount simulation.Account, comment string, msg types.MsgSend, ok bool) {
 
-	fromAcc = simulation.RandomAcc(r, accs)
-	toAcc := simulation.RandomAcc(r, accs)
+	simAccount = simulation.RandomAcc(r, accs)
+	toSimAcc := simulation.RandomAcc(r, accs)
 	// Disallow sending money to yourself
 	for {
-		if !fromAcc.PubKey.Equals(toAcc.PubKey) {
+		if !simAccount.PubKey.Equals(toSimAcc.PubKey) {
 			break
 		}
-		toAcc = simulation.RandomAcc(r, accs)
+		toSimAcc = simulation.RandomAcc(r, accs)
 	}
-	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
+
+	acc := ak.GetAccount(ctx, simAccount.Address)
+	if acc == nil {
+		return simAccount, fmt.Sprintf("account %s not found", simAccount.Address), msg, false
+	}
+
+	initFromCoins := acc.SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		// skip without returning any error
-		return fromAcc, "skipping, no coins at all", msg, true
+		return simAccount, "skipping, no coins at all", msg, true
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
 	if initFromCoins[denomIndex].Amount.IsZero() {
-		return fromAcc, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
+		return simAccount, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
 	}
 
 	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if err != nil {
-		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
+		return simAccount, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
-	msg = types.NewMsgSend(fromAcc.Address, toAcc.Address, coins)
-	return fromAcc, "", msg, true
+	msg = types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
+	return simAccount, "", msg, true
 }
 
 // Sends and verifies the transition of a msg send.
 func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
-	fromAcc := ak.GetAccount(ctx, msg.FromAddress)
-	fees, err := helpers.RandomFees(r, ctx, fromAcc, msg.Amount)
+	simAccount := ak.GetAccount(ctx, msg.FromAddress)
+	fees, err := helpers.RandomFees(r, ctx, simAccount, msg.Amount)
 	if err != nil {
 		return err
 	}
@@ -86,8 +92,8 @@ func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 		[]sdk.Msg{msg},
 		fees,
 		chainID,
-		[]uint64{fromAcc.GetAccountNumber()},
-		[]uint64{fromAcc.GetSequence()},
+		[]uint64{simAccount.GetAccountNumber()},
+		[]uint64{simAccount.GetSequence()},
 		privkeys...,
 	)
 
@@ -109,12 +115,12 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		fromAcc, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
+		simAccount, comment, msg, ok := createSingleInputMsgMultiSend(r, ctx, accs, ak)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(comment)
 		}
 
-		err = sendMsgMultiSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{fromAcc.PrivKey})
+		err = sendMsgMultiSend(r, app, ak, msg, ctx, chainID, []crypto.PrivKey{simAccount.PrivKey})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -124,44 +130,48 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 }
 
 func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak types.AccountKeeper) (
-	fromAcc simulation.Account, comment string, msg types.MsgMultiSend, ok bool) {
+	simAccount simulation.Account, comment string, msg types.MsgMultiSend, ok bool) {
 
-	fromAcc = simulation.RandomAcc(r, accs)
-	toAcc := simulation.RandomAcc(r, accs)
+	simAccount = simulation.RandomAcc(r, accs)
+	toSimAcc := simulation.RandomAcc(r, accs)
 
 	// Disallow sending money to yourself
 	for {
-		if !fromAcc.PubKey.Equals(toAcc.PubKey) {
+		if !simAccount.PubKey.Equals(toSimAcc.PubKey) {
 			break
 		}
-		toAcc = simulation.RandomAcc(r, accs)
+		toSimAcc = simulation.RandomAcc(r, accs)
 	}
 
-	toAddr := toAcc.Address
-	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
+	acc := ak.GetAccount(ctx, simAccount.Address)
+	if acc == nil {
+		return simAccount, fmt.Sprintf("account %s not found", simAccount.Address), msg, false
+	}
+
+	initFromCoins := acc.SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		// skip without returning any error
-		return fromAcc, "skipping, no coins at all", msg, true
+		return simAccount, "skipping, no coins at all", msg, true
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
 	if initFromCoins[denomIndex].Amount.IsZero() {
-		return fromAcc, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
+		return simAccount, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
 	}
 
 	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if err != nil {
-		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
+		return simAccount, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
 	}
 
 	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
 	msg = types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(fromAcc.Address, coins)},
-		Outputs: []types.Output{types.NewOutput(toAddr, coins)},
+		Inputs:  []types.Input{types.NewInput(simAccount.Address, coins)},
+		Outputs: []types.Output{types.NewOutput(toSimAcc.Address, coins)},
 	}
 
-	return fromAcc, "", msg, true
+	return simAccount, "", msg, true
 }
 
 // Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs

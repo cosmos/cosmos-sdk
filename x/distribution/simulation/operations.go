@@ -20,19 +20,19 @@ import (
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		if !k.GetWithdrawAddrEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		accountOrigin := simulation.RandomAcc(r, accs)
-		accountDestination := simulation.RandomAcc(r, accs)
-		msg := types.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
+		simAccount := simulation.RandomAcc(r, accs)
+		simToAccount := simulation.RandomAcc(r, accs)
+		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		fromAcc := ak.GetAccount(ctx, accountOrigin.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -41,9 +41,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{accountOrigin.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -56,13 +56,12 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
-	sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		delegatorAccount := simulation.RandomAcc(r, accs)
-		delegations := sk.GetAllDelegatorDelegations(ctx, delegatorAccount.Address)
+		simAccount := simulation.RandomAcc(r, accs)
+		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -74,10 +73,10 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
-		msg := types.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, validator.GetOperator())
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		fromAcc := ak.GetAccount(ctx, delegatorAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -86,9 +85,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{delegatorAccount.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -101,27 +100,26 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
-func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper,
-	sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		val := stakingkeeper.RandomValidator(r, sk, ctx)
+		validator := stakingkeeper.RandomValidator(r, sk, ctx)
 
-		account, found := simulation.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
-		commission := k.GetValidatorAccumulatedCommission(ctx, val.GetOperator())
+		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := types.NewMsgWithdrawValidatorCommission(val.GetOperator())
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		fromAcc := ak.GetAccount(ctx, account.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -130,9 +128,9 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{account.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -149,27 +147,25 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSi
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		var coins sdk.Coins
 
-		recipientAcc := simulation.RandomAcc(r, accs)
-		balance := k.GetFeePool(ctx).CommunityPool
+		simAccount := simulation.RandomAcc(r, accs)
 
+		balance := k.GetFeePool(ctx).CommunityPool
 		if len(balance) == 0 {
 			return nil
 		}
 
 		denomIndex := r.Intn(len(balance))
-
 		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
 		if err != nil {
 			return nil
 		}
 
-		denom := balance[denomIndex].Denom
-		coins = sdk.NewCoins(sdk.NewCoin(denom, amount))
+		coins = sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount))
 
 		return types.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 100),
-			recipientAcc.Address,
+			simAccount.Address,
 			coins,
 		)
 	}

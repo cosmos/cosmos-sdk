@@ -19,8 +19,8 @@ import (
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
@@ -34,13 +34,13 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			nftID,
 		)
 
-		acc, found := simulation.FindAccount(accs, ownerAddr)
+		simAccount, found := simulation.FindAccount(accs, ownerAddr)
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -49,9 +49,9 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -65,8 +65,8 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
 func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
@@ -80,13 +80,13 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 			simulation.RandStringOfLength(r, 45), // tokenURI
 		)
 
-		acc, found := simulation.FindAccount(accs, ownerAddr)
+		simAccount, found := simulation.FindAccount(accs, ownerAddr)
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -95,9 +95,9 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -111,21 +111,21 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 // SimulateMsgMintNFT simulates a mint of an NFT
 func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		acc := simulation.RandomAcc(r, accs)
+		simAccount := simulation.RandomAcc(r, accs)
 
 		msg := types.NewMsgMintNFT(
-			acc.Address,                           // sender
+			simAccount.Address,                           // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
 			simulation.RandStringOfLength(r, 10),  // nft ID
 			simulation.RandStringOfLength(r, 10),  // denom
 			simulation.RandStringOfLength(r, 45),  // tokenURI
 		)
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -134,9 +134,9 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -150,8 +150,8 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
 func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		ownerAddr, denom, nftID := getRandomNFTFromOwner(ctx, k, r)
 		if ownerAddr.Empty() {
@@ -160,13 +160,13 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 
 		msg := types.NewMsgBurnNFT(ownerAddr, nftID, denom)
 
-		acc, found := simulation.FindAccount(accs, ownerAddr)
+		simAccount, found := simulation.FindAccount(accs, ownerAddr)
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("account %s not found", ownerAddr)
 		}
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -175,9 +175,9 @@ func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)

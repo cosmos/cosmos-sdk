@@ -46,13 +46,19 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, s
 	return auth.NewStdTx(msgs, fee, sigs, memo)
 }
 
-// RandomFees generates a random fee amount for StdTx
+// RandomFees returns a random fee by selecting a random coin denomination and
+// amount from the account's available balance. If the user doesn't have enough
+// funds for pating fees, it returns a 0stake.
 func RandomFees(r *rand.Rand, ctx sdk.Context, acc authexported.Account,
 	msgAmount sdk.Coins) (fees sdk.Coins, err error) {
+	if acc == nil {
+		panic("account provided is nil")
+	}
 	// subtract the msg amount from the available coins
-	coins, hasNeg := acc.SpendableCoins(ctx.BlockHeader().Time).SafeSub(msgAmount)
+	coins := acc.SpendableCoins(ctx.BlockHeader().Time)
+	coins, hasNeg := coins.SafeSub(msgAmount)
 	if hasNeg {
-		return nil, errors.New("not enough funds for transaction")
+		return sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())}, nil
 	}
 
 	lenCoins := len(coins)

@@ -20,8 +20,8 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		acc := simulation.RandomAcc(r, accs)
-		address := sdk.ValAddress(acc.Address)
+		simAccount := simulation.RandomAcc(r, accs)
+		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator doesn't exist already
 		_, found := k.GetValidator(ctx, address)
@@ -45,7 +45,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			simulation.RandomDecAmount(r, maxCommission),
 		)
 
-		amount := ak.GetAccount(ctx, acc.Address).GetCoins().AmountOf(denom)
+		amount := ak.GetAccount(ctx, simAccount.Address).GetCoins().AmountOf(denom)
 		switch {
 		case amount.IsPositive():
 			amount, err = simulation.RandPositiveInt(r, amount)
@@ -57,11 +57,11 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
-		msg := types.NewMsgCreateValidator(address, acc.PubKey,
+		msg := types.NewMsgCreateValidator(address, simAccount.PubKey,
 			selfDelegation, description, commission, sdk.OneInt())
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, sdk.Coins{selfDelegation})
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, sdk.Coins{selfDelegation})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -70,9 +70,9 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -113,13 +113,13 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
-		acc, found := simulation.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
+		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(val.GetOperator()))
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", val.GetOperator())
 		}
 
-		fromAcc := ak.GetAccount(ctx, acc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -128,9 +128,9 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
-			[]crypto.PrivKey{acc.PrivKey}...,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			[]crypto.PrivKey{simAccount.PrivKey}...,
 		)
 
 		res := app.Deliver(tx)
@@ -171,8 +171,8 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		bondAmt := sdk.NewCoin(denom, amount)
 		msg := types.NewMsgDelegate(delegatorAddress, validatorAddress, bondAmt)
 
-		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, sdk.Coins{bondAmt})
+		account := ak.GetAccount(ctx, delegatorAcc.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, sdk.Coins{bondAmt})
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -181,8 +181,8 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
 		)
 
@@ -237,8 +237,8 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 			delegatorAcc.Address, delegation.ValidatorAddress, sdk.NewCoin(k.BondDenom(ctx), unbondAmt),
 		)
 
-		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, delegatorAcc.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -247,8 +247,8 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
 		)
 
@@ -315,8 +315,8 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)
 
-		fromAcc := ak.GetAccount(ctx, delegatorAcc.Address)
-		fees, err := helpers.RandomFees(r, ctx, fromAcc, nil)
+		account := ak.GetAccount(ctx, delegatorAcc.Address)
+		fees, err := helpers.RandomFees(r, ctx, account, nil)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -325,8 +325,8 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 			[]sdk.Msg{msg},
 			fees,
 			chainID,
-			[]uint64{fromAcc.GetAccountNumber()},
-			[]uint64{fromAcc.GetSequence()},
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
 			[]crypto.PrivKey{delegatorAcc.PrivKey}...,
 		)
 

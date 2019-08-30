@@ -1,5 +1,7 @@
 package server
 
+// DONTCOVER
+
 import (
 	"fmt"
 	"os"
@@ -7,9 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	"github.com/tendermint/tendermint/abci/server"
-
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/node"
@@ -37,25 +37,11 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		Short: "Run the full node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
-				ctx.Logger.Info("Starting ABCI without Tendermint")
+				ctx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
 			}
 
-			if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
-				f, err := os.Create(cpuProfile)
-				if err != nil {
-					return err
-				}
-
-				ctx.Logger.Info("Starting CPU profiler. Writing results to: %s\n", cpuProfile)
-				if err := pprof.StartCPUProfile(f); err != nil {
-					return err
-				}
-
-				defer pprof.StopCPUProfile()
-			}
-
-			ctx.Logger.Info("Starting ABCI with Tendermint")
+			ctx.Logger.Info("starting ABCI with Tendermint")
 
 			_, err := startInProcess(ctx, appCreator)
 			return err
@@ -117,7 +103,6 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	// run forever (the node will not be returned)
 	select {}
-
 }
 
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
@@ -142,6 +127,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	}
 
 	UpgradeOldPrivValFile(cfg)
+
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
@@ -157,19 +143,42 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	err = tmNode.Start()
-	if err != nil {
+	if err := tmNode.Start(); err != nil {
 		return nil, err
+	}
+
+	var cpuProfileCleanup func()
+
+	if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return nil, err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return nil, err
+		}
+
+		cpuProfileCleanup = func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
 	}
 
 	TrapSignal(func() {
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
+
+		if cpuProfileCleanup != nil {
+			cpuProfileCleanup()
+		}
+
+		ctx.Logger.Info("exiting...")
 	})
 
 	// run forever (the node will not be returned)
 	select {}
 }
-
-// DONTCOVER

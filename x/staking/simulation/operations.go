@@ -89,6 +89,20 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		val := keeper.RandomValidator(r, k, ctx)
+		address := val.GetOperator()
+
+		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
+		err = val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time)
+		if err != nil {
+			// skip as the commission is invalid
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		description := types.NewDescription(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
@@ -96,14 +110,6 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 10),
 		)
-
-		if len(k.GetAllValidators(ctx)) == 0 {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
-		}
-
-		val := keeper.RandomValidator(r, k, ctx)
-		address := val.GetOperator()
-		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 

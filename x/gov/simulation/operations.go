@@ -55,6 +55,11 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		// 1) submit proposal now
 		acc := simulation.RandomAcc(r, accs)
 		content := contentSim(r, ctx, accs)
+		if content == nil {
+			// skip
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
 		deposit, err := randomDeposit(r, ctx, ak, k, acc.Address)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
@@ -88,16 +93,6 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
-		}
-
-		proposal, found := k.GetProposal(ctx, proposalID)
-		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("proposal %d wasn't found", proposalID)
-		}
-
-		if proposal.Status != types.StatusVotingPeriod {
-			// continue without voting
-			return opMsg, nil, nil
 		}
 
 		// 2) Schedule operations for votes

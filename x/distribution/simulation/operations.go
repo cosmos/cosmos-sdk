@@ -152,15 +152,19 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSi
 		recipientAcc := simulation.RandomAcc(r, accs)
 		balance := k.GetFeePool(ctx).CommunityPool
 
-		if len(balance) > 0 {
-			denomIndex := r.Intn(len(balance))
-
-			amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
-			if err == nil {
-				denom := balance[denomIndex].Denom
-				coins = sdk.NewCoins(sdk.NewCoin(denom, amount.Mul(sdk.NewInt(2))))
-			}
+		if len(balance) == 0 {
+			return nil
 		}
+
+		denomIndex := r.Intn(len(balance))
+
+		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+		if err != nil {
+			return nil
+		}
+
+		denom := balance[denomIndex].Denom
+		coins = sdk.NewCoins(sdk.NewCoin(denom, amount))
 
 		return types.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),

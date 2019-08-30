@@ -39,7 +39,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 
 // RandPositiveInt get a rand positive sdk.Int
 func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GT(sdk.OneInt()) {
+	if !max.GTE(sdk.OneInt()) {
 		return sdk.Int{}, errors.New("max too small")
 	}
 	max = max.Sub(sdk.OneInt())

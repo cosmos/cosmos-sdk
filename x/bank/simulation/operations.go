@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -53,10 +54,15 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
-		return fromAcc, "skipping, no coins at all", msg, false
+		// skip without returning any error
+		return fromAcc, "skipping, no coins at all", msg, true
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
+	if initFromCoins[denomIndex].Amount.IsZero() {
+		return fromAcc, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
+	}
+
 	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if err != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
@@ -135,10 +141,15 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	initFromCoins := ak.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
-		return fromAcc, "skipping, no coins at all", msg, false
+		// skip without returning any error
+		return fromAcc, "skipping, no coins at all", msg, true
 	}
 
 	denomIndex := r.Intn(len(initFromCoins))
+	if initFromCoins[denomIndex].Amount.IsZero() {
+		return fromAcc, fmt.Sprintf("skipping, %s", initFromCoins[denomIndex]), msg, true
+	}
+
 	amt, err := simulation.RandPositiveInt(r, initFromCoins[denomIndex].Amount)
 	if err != nil {
 		return fromAcc, "skipping bank send due to account having no coins of denomination " + initFromCoins[denomIndex].Denom, msg, false
@@ -170,26 +181,31 @@ func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper
 		sequenceNumbers[i] = acc.GetSequence()
 
 		// select a random amount for the transaction
-		coins := acc.GetCoins()
+		coins := acc.SpendableCoins(ctx.BlockHeader().Time)
 		denomIndex := r.Intn(len(coins))
+		if coins[denomIndex].Amount.IsZero() {
+			// skip
+			continue
+		}
+
 		amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)
 		if err != nil {
-			continue
+			return err
 		}
 
-		msgAmt := sdk.Coins{sdk.NewCoin(coins[denomIndex].Denom, amt)}
-		fee, err := helpers.RandomFees(r, ctx, acc, msgAmt)
-		if err != nil {
-			continue
-		}
-
-		fees = fees.Add(fee)
-		initialInputAddrCoins[i] = msgAmt
+		initialInputAddrCoins[i] = sdk.Coins{sdk.NewCoin(coins[denomIndex].Denom, amt)}
 	}
 
 	for i := 0; i < len(msg.Outputs); i++ {
 		acc := ak.GetAccount(ctx, msg.Outputs[i].Address)
-		initialOutputAddrCoins[i] = acc.GetCoins()
+		initialOutputAddrCoins[i] = acc.SpendableCoins(ctx.BlockHeader().Time)
+		if i == 0 {
+			var err error
+			fees, err = helpers.RandomFees(r, ctx, acc, initialOutputAddrCoins[i])
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	tx := helpers.GenTx(

@@ -296,8 +296,10 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			}
 			if err != nil {
 				logWriter.PrintLogs()
-				tb.Fatalf("error on operation %d within block %d, %v",
-					opCount, header.Height, err)
+				tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+%v
+Comment: %s`,
+					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)

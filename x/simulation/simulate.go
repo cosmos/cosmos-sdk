@@ -51,7 +51,7 @@ func SimulateFromSeed(
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with config.Seed %d\n", int(config.Seed))
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
 	params := RandomParams(r)

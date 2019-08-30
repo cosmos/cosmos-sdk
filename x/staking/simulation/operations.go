@@ -207,6 +207,11 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
+
+		if k.HasMaxUnbondingDelegationEntries(ctx, simAccount.Address, delegation.GetValidatorAddr()) {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
@@ -278,12 +283,13 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		if k.HasReceivingRedelegation(ctx, simAccount.Address, srcVal.GetOperator()) {
-			// skip
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		destVal := keeper.RandomValidator(r, k, ctx)
-		for srcVal.GetOperator().Equals(destVal.GetOperator()) || destVal.InvalidExRate() {
+		for srcVal.GetOperator().Equals(destVal.GetOperator()) ||
+			destVal.InvalidExRate() ||
+			k.HasMaxRedelegationEntries(ctx, simAccount.Address, srcVal.GetOperator(), destVal.GetOperator()) {
 			destVal = keeper.RandomValidator(r, k, ctx)
 		}
 

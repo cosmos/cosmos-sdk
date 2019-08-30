@@ -262,13 +262,15 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, nil
 }
 
-// Pick a random proposal ID from a proposal with a given status
-func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, ok bool) {
+// Pick a random proposal ID from a proposal with a given status.
+// It does not provide a default proposal ID.
+func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
 	checkedIDs := make(map[uint64]bool)
+	maxProposalID := int(proposalID)
 
 	proposalStatus := types.StatusNil
-	for status != proposalStatus {
+	for status != proposalStatus || len(checkedIDs) < maxProposalID {
 		checkedIDs[proposalID] = true
 		proposal, found := k.GetProposal(ctx, proposalID)
 		if !found {
@@ -283,7 +285,7 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status typ
 		}
 	}
 
-	return proposalID, true
+	return proposalID, found
 }
 
 // Pick a random voting option

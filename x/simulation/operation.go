@@ -82,8 +82,8 @@ func (oe OperationEntry) MustMarshal() json.RawMessage {
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`     // route (msg type or module name)
-	Name    string          `json:"name" yaml:"name"`       // operation name
+	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
 	Comment string          `json:"comment" yaml:"comment"` // additional comment
 	OK      bool            `json:"ok" yaml:"ok"`           // success
 	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg

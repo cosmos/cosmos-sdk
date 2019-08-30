@@ -117,7 +117,7 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		simAccount := simulation.RandomAcc(r, accs)
 
 		msg := types.NewMsgMintNFT(
-			simAccount.Address,                           // sender
+			simAccount.Address,                    // sender
 			simulation.RandomAcc(r, accs).Address, // recipient
 			simulation.RandStringOfLength(r, 10),  // nft ID
 			simulation.RandStringOfLength(r, 10),  // denom

@@ -145,8 +145,6 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
 func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
-		var coins sdk.Coins
-
 		simAccount := simulation.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool
@@ -160,13 +158,11 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSi
 			return nil
 		}
 
-		coins = sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount))
-
 		return types.NewCommunityPoolSpendProposal(
 			simulation.RandStringOfLength(r, 10),
 			simulation.RandStringOfLength(r, 100),
 			simAccount.Address,
-			coins,
+			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
 		)
 	}
 }

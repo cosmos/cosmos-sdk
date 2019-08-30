@@ -18,8 +18,8 @@ import (
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
+		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 		// TODO: create iterator to get all jailed validators and then select a random
 		// from the set
 		validator := stakingkeeper.RandomValidator(r, sk, ctx)

@@ -28,7 +28,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, s
 	seed := rand.Int63()
 	r := rand.New(rand.NewSource(seed))
 
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 140))
+	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
@@ -52,7 +52,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, s
 func RandomFees(r *rand.Rand, ctx sdk.Context, acc authexported.Account,
 	msgAmount sdk.Coins) (fees sdk.Coins, err error) {
 	if acc == nil {
-		panic("account provided is nil")
+		return nil, errors.New("account provided is nil")
 	}
 	// subtract the msg amount from the available coins
 	coins := acc.SpendableCoins(ctx.BlockHeader().Time)

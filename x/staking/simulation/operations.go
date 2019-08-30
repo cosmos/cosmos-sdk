@@ -152,7 +152,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		}
 
 		simAccount := simulation.RandomAcc(r, accs)
-		
+
 		val := keeper.RandomValidator(r, k, ctx)
 		for val.InvalidExRate() {
 			val = keeper.RandomValidator(r, k, ctx)

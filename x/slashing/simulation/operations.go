@@ -40,11 +40,11 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		}
 
 		switch {
-		case validator.IsJailed() && info.Tombstoned:
+		case info.Tombstoned:
 			// skip as validator cannot be unjailed due to tombstone
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 
-		case validator.IsJailed() && ctx.BlockHeader().Time.Before(info.JailedUntil):
+		case ctx.BlockHeader().Time.Before(info.JailedUntil):
 			// skip as validator is still in jailed period
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}

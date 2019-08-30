@@ -233,10 +233,10 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 
 	minDeposit := k.GetDepositParams(ctx).MinDeposit
 	denom := minDeposit[0].Denom
-	coins := ak.GetAccount(ctx, addr).SpendableCoins(ctx.BlockHeader().Time)
-
+	account := ak.GetAccount(ctx, addr)
+	coins := account.SpendableCoins(ctx.BlockHeader().Time)
 	if coins.Empty() {
-		return nil, errors.New("no coins")
+		return nil, nil // skip
 	}
 
 	depositCoins := coins.AmountOf(denom)

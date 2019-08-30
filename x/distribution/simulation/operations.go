@@ -150,7 +150,7 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSi
 		simAccount := simulation.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool
-		if len(balance) == 0 {
+		if balance.Empty() {
 			return nil
 		}
 

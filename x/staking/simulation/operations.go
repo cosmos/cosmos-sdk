@@ -161,6 +161,9 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		switch {
 		case amount.IsPositive():
 			amount, err = simulation.RandPositiveInt(r, amount)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
 		default:
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}

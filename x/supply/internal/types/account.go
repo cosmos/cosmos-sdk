@@ -91,7 +91,7 @@ func (ma ModuleAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
-// Validate - Implements auth.ValidatableAccount. This is called on accounts after loading from a genesis file.
+// Validate is called on accounts after loading from a genesis file.
 func (ma ModuleAccount) Validate() error {
 	// TODO add more validation?
 	return nil

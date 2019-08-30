@@ -36,6 +36,9 @@ type Account interface {
 
 	// Ensure that account implements stringer
 	String() string
+
+	// Basic validation for loading accounts from genesis.
+	Validate() error
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.

@@ -136,7 +136,7 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 	return acc.GetCoins()
 }
 
-// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+// Validate is called on accounts after loading from a genesis file.
 func (acc BaseAccount) Validate() error {
 	// TODO add more validation?
 	return nil
@@ -557,7 +557,7 @@ func (dva *DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
 }
 
-// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+// Validate is called on accounts after loading from a genesis file.
 func (dva DelayedVestingAccount) Validate() error {
 	if dva.EndTime == 0 {
 		return fmt.Errorf("missing end time for vesting account")

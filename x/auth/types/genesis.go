@@ -8,26 +8,19 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params   Params               `json:"params" yaml:"params"`
-	Accounts []ValidatableAccount `json:"accounts" yaml:"accounts"`
+	Params   Params             `json:"params" yaml:"params"`
+	Accounts []exported.Account `json:"accounts" yaml:"accounts"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts []ValidatableAccount) GenesisState {
+func NewGenesisState(params Params, accounts []exported.Account) GenesisState {
 	return GenesisState{params, accounts}
 }
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams(), []ValidatableAccount{}) // TODO could just create the struct and not initialize the account field.
+	return NewGenesisState(DefaultParams(), []exported.Account{})
 
-}
-
-// ValidatableAccount is an interface that accounts are unmarshalled into when the genesis file is read for the purpose of validating.
-// It exists to avoid having to add a Validate method to the Account interface.
-type ValidatableAccount interface {
-	exported.Account // TODO Is this even needed? Could almost create a generic Validatable interface
-	Validate() error
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an
@@ -55,7 +48,7 @@ func ValidateGenesis(data GenesisState) error {
 	for _, acc := range data.Accounts {
 
 		// check for duplicated accounts
-		addrStr := acc.GetAddress().String() // TODO why string?
+		addrStr := acc.GetAddress().String()
 		if _, ok := addrMap[addrStr]; ok {
 			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
 		}

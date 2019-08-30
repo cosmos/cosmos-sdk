@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (cli) [\#4973](https://github.com/cosmos/cosmos-sdk/pull/4973) Enable application CPU profiling
+via the `--cpu-profile` flag.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.

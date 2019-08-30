@@ -473,10 +473,10 @@ func (cva *ContinuousVestingAccount) GetEndTime() int64 {
 	return cva.EndTime
 }
 
-// Validate - Implements ValidatableAccount. This is called on accounts after loading from a genesis file.
+// Validate is called on accounts after loading from a genesis file.
 func (cva ContinuousVestingAccount) Validate() error {
 	if cva.EndTime == 0 {
-		return fmt.Errorf("missing end time for vesting account")
+		return errors.New("missing end time for vesting account")
 	}
 	if cva.StartTime >= cva.EndTime {
 		return fmt.Errorf(
@@ -560,7 +560,7 @@ func (dva *DelayedVestingAccount) GetEndTime() int64 {
 // Validate is called on accounts after loading from a genesis file.
 func (dva DelayedVestingAccount) Validate() error {
 	if dva.EndTime == 0 {
-		return fmt.Errorf("missing end time for vesting account")
+		return errors.New("missing end time for vesting account")
 	}
 	return nil
 }

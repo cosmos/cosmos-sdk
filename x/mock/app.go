@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -73,7 +73,7 @@ func NewApp() *App {
 		auth.ProtoBaseAccount,
 	)
 
-	supplyKeeper := auth.NewDummySupplyKeeper(app.AccountKeeper)
+	supplyKeeper := NewDummySupplyKeeper(app.AccountKeeper)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
@@ -308,25 +308,6 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 		accts[i] = &baseAcc
 	}
 	app.GenesisAccounts = accts
-}
-
-// GenSequenceOfTxs generates a set of signed transactions of messages, such
-// that they differ only by having the sequence numbers incremented between
-// every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
-	txs := make([]auth.StdTx, numToGenerate)
-	for i := 0; i < numToGenerate; i++ {
-		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
-		incrementAllSequenceNumbers(initSeqNums)
-	}
-
-	return txs
-}
-
-func incrementAllSequenceNumbers(initSeqNums []uint64) {
-	for i := 0; i < len(initSeqNums); i++ {
-		initSeqNums[i]++
-	}
 }
 
 func createCodec() *codec.Codec {

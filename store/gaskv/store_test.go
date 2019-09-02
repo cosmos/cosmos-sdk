@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
@@ -12,12 +12,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
-
-func newGasKVStore() types.KVStore {
-	meter := types.NewGasMeter(10000)
-	mem := dbadapter.Store{dbm.NewMemDB()}
-	return gaskv.NewStore(mem, meter, types.KVGasConfig())
-}
 
 func bz(s string) []byte { return []byte(s) }
 

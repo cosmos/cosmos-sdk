@@ -1,7 +1,7 @@
 package transient
 
 import (
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 
@@ -18,13 +18,13 @@ type Store struct {
 
 // Constructs new MemDB adapter
 func NewStore() *Store {
-	return &Store{dbadapter.Store{dbm.NewMemDB()}}
+	return &Store{Store: dbadapter.Store{DB: dbm.NewMemDB()}}
 }
 
 // Implements CommitStore
 // Commit cleans up Store.
 func (ts *Store) Commit() (id types.CommitID) {
-	ts.Store = dbadapter.Store{dbm.NewMemDB()}
+	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
 	return
 }
 

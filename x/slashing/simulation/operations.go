@@ -39,13 +39,15 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("slashing info not found for validator %s", consAddr)
 		}
 
-		switch {
-		case info.Tombstoned:
-			// skip as validator cannot be unjailed due to tombstone
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
 
-		case ctx.BlockHeader().Time.Before(info.JailedUntil):
-			// skip as validator is still in jailed period
+		// skip if:
+		// - validator cannot be unjailed due to tombstone
+		// - validator is still in jailed period
+		// - self delegation too low
+		if info.Tombstoned ||
+			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
+			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 

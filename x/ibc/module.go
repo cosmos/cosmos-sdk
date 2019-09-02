@@ -92,9 +92,13 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 type AppModule struct {
 	AppModuleBasic
-	client     client.Manager
-	connection connection.Handshaker
-	channel    channel.Handshaker
+	Keeper
+}
+
+func NewAppModule(k Keeper) AppModule {
+	return AppModule{
+		Keeper: k,
+	}
 }
 
 func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {

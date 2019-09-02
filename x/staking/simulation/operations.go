@@ -20,7 +20,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
 		// ensure the validator doesn't exist already
@@ -151,11 +151,11 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount := simulation.RandomAcc(r, accs)
-
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		val := keeper.RandomValidator(r, k, ctx)
-		for val.InvalidExRate() {
-			val = keeper.RandomValidator(r, k, ctx)
+
+		if val.InvalidExRate() {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		amount := ak.GetAccount(ctx, simAccount.Address).GetCoins().AmountOf(denom)
@@ -200,10 +200,13 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
-		if len(delegations) == 0 {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+
+		for len(delegations) == 0 {
+			accs = append(accs[:idx], accs[idx+1:]...)
+			simAccount, idx = simulation.RandomAcc(r, accs)
+			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
@@ -264,10 +267,13 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
-		if len(delegations) == 0 {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
+
+		for len(delegations) == 0 {
+			accs = append(accs[:idx], accs[idx+1:]...)
+			simAccount, idx = simulation.RandomAcc(r, accs)
+			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
@@ -282,10 +288,12 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 
 		destVal := keeper.RandomValidator(r, k, ctx)
-		for srcVal.GetOperator().Equals(destVal.GetOperator()) ||
+
+		if srcVal.GetOperator().Equals(destVal.GetOperator()) ||
 			destVal.InvalidExRate() ||
 			k.HasMaxRedelegationEntries(ctx, simAccount.Address, srcVal.GetOperator(), destVal.GetOperator()) {
-			destVal = keeper.RandomValidator(r, k, ctx)
+
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()

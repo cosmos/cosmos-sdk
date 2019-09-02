@@ -52,13 +52,13 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		// 1) submit proposal now
-		simAccount := simulation.RandomAcc(r, accs)
 		content := contentSim(r, ctx, accs)
 		if content == nil {
 			// skip
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		deposit, skip, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
 		switch {
 		case skip:
@@ -139,7 +139,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -189,7 +189,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccoun
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
 		if simAccount.Equals(simulation.Account{}) {
-			simAccount = simulation.RandomAcc(r, accs)
+			simAccount, _ = simulation.RandomAcc(r, accs)
 		}
 
 		var proposalID uint64

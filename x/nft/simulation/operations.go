@@ -27,9 +27,11 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
+		recipientAccount, _ := simulation.RandomAcc(r, accs)
+
 		msg := types.NewMsgTransferNFT(
-			ownerAddr,                             // sender
-			simulation.RandomAcc(r, accs).Address, // recipient
+			ownerAddr, // sender
+			recipientAccount.Address,
 			denom,
 			nftID,
 		)
@@ -114,14 +116,15 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
+		recipientAccount, _ := simulation.RandomAcc(r, accs)
 
 		msg := types.NewMsgMintNFT(
-			simAccount.Address,                    // sender
-			simulation.RandomAcc(r, accs).Address, // recipient
-			simulation.RandStringOfLength(r, 10),  // nft ID
-			simulation.RandStringOfLength(r, 10),  // denom
-			simulation.RandStringOfLength(r, 45),  // tokenURI
+			simAccount.Address,                   // sender
+			recipientAccount.Address,             // recipient
+			simulation.RandStringOfLength(r, 10), // nft ID
+			simulation.RandStringOfLength(r, 10), // denom
+			simulation.RandStringOfLength(r, 45), // tokenURI
 		)
 
 		account := ak.GetAccount(ctx, simAccount.Address)

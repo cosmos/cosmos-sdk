@@ -23,9 +23,11 @@ func (acc Account) Equals(acc2 Account) bool {
 	return acc.Address.Equals(acc2.Address)
 }
 
-// RandomAcc pick a random account from an array
-func RandomAcc(r *rand.Rand, accs []Account) Account {
-	return accs[r.Intn(len(accs))]
+// RandomAcc picks and returns a random account from an array and returs its
+// position on the array
+func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
+	idx := r.Intn(len(accs))
+	return accs[idx], idx
 }
 
 // RandomAccounts generates a given number of random accounts

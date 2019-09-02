@@ -27,8 +27,8 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount := simulation.RandomAcc(r, accs)
-		simToAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
+		simToAccount, _ := simulation.RandomAcc(r, accs)
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -60,7 +60,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -145,7 +145,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
 func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
-		simAccount := simulation.RandomAcc(r, accs)
+		simAccount, _ := simulation.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool
 		if balance.Empty() {

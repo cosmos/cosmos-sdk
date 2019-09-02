@@ -365,30 +365,30 @@ V' = 0
 ```
 
 1. Immediately receives 1 coin
-    ```text
+    ```
     BC = 11
     ```
 2. Time passes, 2 coins vest
-    ```text
+    ```
     V = 8
     V' = 2
     ```
 3. Delegates 4 coins to validator A
-    ```text
+    ```
     DV = 4
     BC = 7
     ```
 4. Sends 3 coins
-    ```text
+    ```
     BC = 4
     ```
 5. More time passes, 2 more coins vest
-    ```text
+    ```
     V = 6
     V' = 4
     ```
 6. Sends 2 coins. At this point the account cannot send anymore until further coins vest or it receives additional coins. It can still however, delegate.
-    ```text
+    ```
     BC = 2
     ```
 
@@ -397,28 +397,28 @@ V' = 0
 Same initial starting conditions as the simple example.
 
 1. Time passes, 5 coins vest
-    ```text
+    ```
     V = 5
     V' = 5
     ```
 2. Delegate 5 coins to validator A
-    ```text
+    ```
     DV = 5
     BC = 5
     ```
 3. Delegate 5 coins to validator B
-    ```text
+    ```
     DF = 5
     BC = 0
     ```
 4. Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
 5. Undelegate from validator A (2.5 coins)
-    ```text
+    ```
     DF = 5 - 2.5 = 2.5
     BC = 0 + 2.5 = 2.5
     ```
 6. Undelegate from validator B (5 coins). The account at this point can only send 2.5 coins unless it receives more coins or until more coins vest. It can still however, delegate.
-    ```text
+    ```
     DV = 5 - 2.5 = 2.5
     DF = 2.5 - 2.5 = 0
     BC = 2.5 + 5 = 7.5

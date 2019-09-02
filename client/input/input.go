@@ -74,7 +74,12 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 		return false, err
 	}
 
-	response = strings.ToLower(strings.TrimSpace(response))
+	response = strings.TrimSpace(response)
+	if len(response) == 0 {
+		return false, nil
+	}
+
+	response = strings.ToLower(response)
 	if response[0] == 'y' {
 		return true, nil
 	}

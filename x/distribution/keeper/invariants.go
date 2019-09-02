@@ -57,7 +57,7 @@ func NonNegativeOutstandingInvariant(k Keeper) sdk.Invariant {
 		broken := count != 0
 
 		return sdk.FormatInvariant(types.ModuleName, "nonnegative outstanding",
-			fmt.Sprintf("found %d validators with negative outstanding rewards\n%s", count, msg), broken)
+			fmt.Sprintf("found %d validators with negative outstanding rewards\n%s", count, msg)), broken
 	}
 }
 
@@ -99,7 +99,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 
 		broken := len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec())
 		return sdk.FormatInvariant(types.ModuleName, "can withdraw",
-			fmt.Sprintf("remaining coins: %v\n", remaining), broken)
+			fmt.Sprintf("remaining coins: %v\n", remaining)), broken
 	}
 }
 
@@ -129,7 +129,7 @@ func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(types.ModuleName, "reference count",
 			fmt.Sprintf("expected historical reference count: %d = %v validators + %v delegations + %v slashes\n"+
 				"total validator historical reference count: %d\n",
-				expected, valCount, len(dels), slashCount, count), broken)
+				expected, valCount, len(dels), slashCount, count)), broken
 	}
 }
 
@@ -153,6 +153,6 @@ func ModuleAccountInvariant(k Keeper) sdk.Invariant {
 		return sdk.FormatInvariant(types.ModuleName, "ModuleAccount coins",
 			fmt.Sprintf("\texpected ModuleAccount coins:     %s\n"+
 				"\tdistribution ModuleAccount coins: %s\n",
-				expectedInt, macc.GetCoins()), broken)
+				expectedInt, macc.GetCoins())), broken
 	}
 }

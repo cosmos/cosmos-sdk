@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 07/26/2019: First draft
+- July 26, 2019: Initial draft
 
 ## Context
 
@@ -24,10 +24,10 @@ start a chain. The rest is loaded directly from the mandatory genesis parameters
 2. **Restarted chain**: the user provides all the fields from genesis.
 
 If an empty chain from `1.` recives _any_ field that should be populated, the initialization
-of the app should `panic`. Same applies for `2.` if a single field is missing.
+of the app should `panic`.  Similarly, for `2.` if any field is missing the chain should panic.
 
-The fields that are not required are the ones in general are checked with simulation
-invariants.
+In general, the genesis fields that are populated with `1` are the ones checked by the
+simulation invariants.
 
 ## Decision
 
@@ -108,10 +108,16 @@ Proposed
 
 ### Positive
 
-- Reduce confusion when initialize genesis as now there're two clearly distinct
-modes for it
+- Reduce confusion when initializing genesis as now there are two clearly distinct
 
 ### Negative
+
+- The chain now only starts if all the fields of the genesis file are populated.
+- Remove the current single option to partially fill in the genesis on the initialization.
+This can be replaced by the following flow:
+
+  1. Use the new empty chain option to auto-generate the genesis fields
+  2. Modify the fields desired before starting the chain
 
 ### Neutral
 

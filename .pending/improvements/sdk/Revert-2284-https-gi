@@ -1,1 +1,0 @@
-Revert (#2284)[https://github.com/cosmos/cosmos-sdk/pull/2284] to allow create_empty_blocks in the config

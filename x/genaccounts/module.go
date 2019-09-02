@@ -2,6 +2,7 @@ package genaccounts
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -14,30 +15,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts/simulation"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (
-	_ module.AppModuleGenesis = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.AppModuleGenesis    = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModuleSimulation{}
 )
 
-// app module basics object
+// AppModuleBasic defines the basic application module used by the genesis accounts module.
 type AppModuleBasic struct{}
 
-// module name
+// Name returns the genesis accounts module's name.
 func (AppModuleBasic) Name() string {
 	return ModuleName
 }
 
-// register module codec
+// RegisterCodec performs a no-op.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {}
 
-// default genesis state
+// DefaultGenesis returns default genesis state as raw bytes for the genesis accounts
+// module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	return ModuleCdc.MustMarshalJSON(GenesisState{})
 }
 
-// module validate genesis
+// ValidateGenesis performs genesis state validation for the genesis accounts module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	var data GenesisState
 	err := ModuleCdc.UnmarshalJSON(bz, &data)
@@ -47,17 +52,18 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 	return ValidateGenesis(data)
 }
 
-// register rest routes
+// RegisterRESTRoutes registers no REST routes for the genesis accounts module.
 func (AppModuleBasic) RegisterRESTRoutes(_ context.CLIContext, _ *mux.Router) {}
 
-// get the root tx command of this module
+// GetTxCmd returns no root tx command for the genesis accounts module.
 func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command { return nil }
 
-// get the root query command of this module
+// GetQueryCmd returns no root query command for the genesis accounts module.
 func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 
 // extra function from sdk.AppModuleBasic
-// iterate the genesis accounts and perform an operation at each of them
+
+// IterateGenesisAccounts iterates over the genesis accounts and perform an operation at each of them
 // - to used by other modules
 func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[string]json.RawMessage,
 	iterateFn func(exported.Account) (stop bool)) {
@@ -71,23 +77,61 @@ func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[st
 	}
 }
 
-//___________________________
-// app module
+//____________________________________________________________________________
+
+// AppModuleSimulation defines the module simulation functions used by the genesis accounts module.
+type AppModuleSimulation struct{}
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState creates a randomized GenState of the genesis accounts module.
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
+}
+
+//____________________________________________________________________________
+
+// AppModule implements an application module for the genesis accounts module.
 type AppModule struct {
 	AppModuleBasic
+	AppModuleSimulation
+
 	accountKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(accountKeeper types.AccountKeeper) module.AppModule {
+func NewAppModule(accountKeeper types.AccountKeeper) AppModule {
 
-	return module.NewGenesisOnlyAppModule(AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		accountKeeper:  accountKeeper,
-	})
+	return AppModule{
+		AppModuleBasic:      AppModuleBasic{},
+		AppModuleSimulation: AppModuleSimulation{},
+		accountKeeper:       accountKeeper,
+	}
 }
 
-// module init-genesis
+// RegisterInvariants is a placeholder function register no invariants
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// Route empty module message route
+func (AppModule) Route() string { return "" }
+
+// NewHandler returns an empty module handler
+func (AppModule) NewHandler() sdk.Handler { return nil }
+
+// QuerierRoute returns an empty module querier route
+func (AppModule) QuerierRoute() string { return "" }
+
+// NewQuerierHandler returns an empty module querier
+func (AppModule) NewQuerierHandler() sdk.Querier { return nil }
+
+// InitGenesis performs genesis initialization for the genesis accounts module. It returns
+// no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
@@ -95,8 +139,17 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 	return []abci.ValidatorUpdate{}
 }
 
-// module export genesis
+// ExportGenesis returns the exported genesis state as raw bytes for the genesis accounts
+// module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	gs := ExportGenesis(ctx, am.accountKeeper)
 	return ModuleCdc.MustMarshalJSON(gs)
+}
+
+// BeginBlock returns an empty module begin-block
+func (AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
+
+// EndBlock returns an empty module end-block
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

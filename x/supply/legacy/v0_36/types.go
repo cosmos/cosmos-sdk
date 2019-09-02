@@ -9,19 +9,13 @@ import (
 const ModuleName = "supply"
 
 type (
-	Supply struct {
-		Total sdk.Coins `json:"total"`
-	}
-
 	GenesisState struct {
-		Supply Supply `json:"supply"`
+		Supply sdk.Coins `json:"supply" yaml:"supply"`
 	}
 )
 
 func EmptyGenesisState() GenesisState {
 	return GenesisState{
-		Supply: Supply{
-			Total: sdk.NewCoins(), // leave this empty as it's filled on initialization
-		},
+		Supply: sdk.NewCoins(), // leave this empty as it's filled on initialization
 	}
 }

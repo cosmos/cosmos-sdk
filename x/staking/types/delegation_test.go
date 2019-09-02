@@ -80,8 +80,10 @@ func TestRedelegationString(t *testing.T) {
 
 func TestDelegationResponses(t *testing.T) {
 	cdc := codec.New()
-	dr1 := NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(5), sdk.NewInt(5))
-	dr2 := NewDelegationResp(sdk.AccAddress(valAddr1), valAddr3, sdk.NewDec(5), sdk.NewInt(5))
+	dr1 := NewDelegationResp(sdk.AccAddress(valAddr1), valAddr2, sdk.NewDec(5),
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))
+	dr2 := NewDelegationResp(sdk.AccAddress(valAddr1), valAddr3, sdk.NewDec(5),
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))
 	drs := DelegationResponses{dr1, dr2}
 
 	bz1, err := json.Marshal(dr1)

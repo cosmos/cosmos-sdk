@@ -1,0 +1,21 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "## Get Started",
+  "main": "index.js",
+  "scripts": {
+    "serve": "vuepress dev",
+    "build": "vuepress build"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lodash": "^4.17.11",
+    "markdown-it": "^8.4.2",
+    "markdown-it-meta": "0.0.1",
+    "vuepress": "^1.0.2"
+  },
+  "dependencies": {
+    "axios": "^0.19.0"
+  }
+}

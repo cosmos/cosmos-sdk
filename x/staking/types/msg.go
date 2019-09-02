@@ -198,7 +198,7 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 
-	if msg.MinSelfDelegation != nil && !(*msg.MinSelfDelegation).GT(sdk.ZeroInt()) {
+	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 

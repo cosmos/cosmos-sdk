@@ -8,12 +8,12 @@
 
 ### Problem
 
-Currently, each some of the modules `GenesisState` are populated if the corresponding
+Currently, some of the modules `GenesisState` are populated only if the corresponding
 object passed through the Genesis JSON is empty (_i.e_ as an empty array) or if it's
 undefined or the value is zero.
 
-This leads to confussion as you migh pass a valid genesis file which contains zero/empty
-values and have `InitGenenesis` perform this uncessesary check.
+This leads to confusion as you might pass a valid genesis file which contains zero/empty
+values and have `InitGenenesis` perform this unnecessary check.
 
 ### Proposed Solution
 
@@ -40,7 +40,7 @@ app := NewSimApp(logger, db, nil, true, 0, SetPopulateGenesis(populate))
 ```
 
 Additionally, a new option function needs to be passed as parameter to the `BaseApp` during its
-initiallization:
+initialization:
 
 ```go
 // ./baseapp/options.go
@@ -108,7 +108,8 @@ Proposed
 
 ### Positive
 
-- Reduce confusion when initializing genesis as now there are two clearly distinct
+- Reduce confusion when initializing genesis as now there are two clearly
+  distinct modes for it
 
 ### Negative
 

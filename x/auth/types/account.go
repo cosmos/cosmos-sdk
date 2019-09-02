@@ -371,17 +371,17 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
 func NewContinuousVestingAccount(
-	baseAcc *BaseAccount, StartTime, EndTime int64,
+	baseAcc *BaseAccount, startTime, endTime int64,
 ) *ContinuousVestingAccount {
 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
-		EndTime:         EndTime,
+		EndTime:         endTime,
 	}
 
 	return &ContinuousVestingAccount{
-		StartTime:          StartTime,
+		StartTime:          startTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
 }
@@ -487,11 +487,11 @@ func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount
-func NewDelayedVestingAccount(baseAcc *BaseAccount, EndTime int64) *DelayedVestingAccount {
+func NewDelayedVestingAccount(baseAcc *BaseAccount, endTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
-		EndTime:         EndTime,
+		EndTime:         endTime,
 	}
 
 	return &DelayedVestingAccount{baseVestingAcc}

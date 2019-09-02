@@ -302,6 +302,16 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
+		// check if the shares truncate to zero
+		shares, err := srcVal.SharesFromTokens(redAmt)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		if srcVal.TokensFromShares(shares).TruncateInt().IsZero() {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
+		}
+
 		msg := types.NewMsgBeginRedelegate(
 			simAccount.Address, srcVal.GetOperator(), destVal.GetOperator(),
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),

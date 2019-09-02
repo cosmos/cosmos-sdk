@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -60,8 +59,11 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
-		deposit, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
-		if err != nil {
+		deposit, skip, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
+		switch {
+		case skip:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case err != nil:
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
@@ -143,8 +145,11 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		deposit, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
-		if err != nil {
+		deposit, skip, err := randomDeposit(r, ctx, ak, k, simAccount.Address)
+		switch {
+		case skip:
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		case err != nil:
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
@@ -229,26 +234,27 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccoun
 }
 
 // Pick a random deposit
-func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress) (sdk.Coins, error) {
+func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
+) (deposit sdk.Coins, skip bool, err error) {
 
-	minDeposit := k.GetDepositParams(ctx).MinDeposit
-	denom := minDeposit[0].Denom
 	account := ak.GetAccount(ctx, addr)
 	coins := account.SpendableCoins(ctx.BlockHeader().Time)
 	if coins.Empty() {
-		return nil, nil // skip
+		return nil, true, nil // skip
 	}
+
+	minDeposit := k.GetDepositParams(ctx).MinDeposit
+	denomIndex := r.Intn(len(minDeposit))
+	denom := minDeposit[denomIndex].Denom
 
 	depositCoins := coins.AmountOf(denom)
 	if depositCoins.IsZero() {
-		return nil, fmt.Errorf("doesn't have any %s", denom)
+		return nil, true, nil
 	}
 
 	var maxAmt sdk.Int
 	switch {
 	case depositCoins.GT(minDeposit[0].Amount):
-		maxAmt = depositCoins
-	case depositCoins.LT(minDeposit[0].Amount):
 		maxAmt = minDeposit[0].Amount
 	default:
 		maxAmt = depositCoins
@@ -256,10 +262,10 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 
 	amount, err := simulation.RandPositiveInt(r, maxAmt)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return sdk.Coins{sdk.NewCoin(denom, amount)}, nil
+	return sdk.Coins{sdk.NewCoin(denom, amount)}, false, nil
 }
 
 // Pick a random proposal ID from a proposal with a given status.

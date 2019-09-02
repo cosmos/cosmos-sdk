@@ -48,16 +48,18 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 	toSimAcc, idx := simulation.RandomAcc(r, accs)
 
 	// Disallow sending money to yourself
-	for len(accs) > 1 {
+	var accsCopy []simulation.Account
+	accsCopy = append(accsCopy, accs...)
+	for len(accsCopy) > 0 {
 		if !simAccount.PubKey.Equals(toSimAcc.PubKey) {
 			break
 		}
 
-		accs = append(accs[:idx], accs[idx+1:]...)
-		toSimAcc, idx = simulation.RandomAcc(r, accs)
+		accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
+		toSimAcc, idx = simulation.RandomAcc(r, accsCopy)
 	}
 
-	if len(accs) == 0 {
+	if len(accsCopy) == 0 {
 		return simAccount, msg, false, errors.New("all accounts are equal")
 	}
 
@@ -146,16 +148,18 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	toSimAcc, idx := simulation.RandomAcc(r, accs)
 
 	// Disallow sending money to yourself
-	for len(accs) > 1 {
+	var accsCopy []simulation.Account
+	accsCopy = append(accsCopy, accs...)
+	for len(accsCopy) > 0 {
 		if !simAccount.PubKey.Equals(toSimAcc.PubKey) {
 			break
 		}
 
-		accs = append(accs[:idx], accs[idx+1:]...)
-		toSimAcc, idx = simulation.RandomAcc(r, accs)
+		accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
+		toSimAcc, idx = simulation.RandomAcc(r, accsCopy)
 	}
 
-	if len(accs) == 0 {
+	if len(accsCopy) == 0 {
 		return simAccount, msg, false, errors.New("all accounts are equal")
 	}
 

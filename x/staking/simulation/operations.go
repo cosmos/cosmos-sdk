@@ -203,10 +203,16 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 
-		for len(delegations) == 0 {
-			accs = append(accs[:idx], accs[idx+1:]...)
-			simAccount, idx = simulation.RandomAcc(r, accs)
+		var accsCopy []simulation.Account
+		accsCopy = append(accsCopy, accs...)
+		for len(accsCopy) > 0 && len(delegations) == 0 {
+			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
+			simAccount, idx = simulation.RandomAcc(r, accsCopy)
 			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		}
+
+		if len(accsCopy) == 0 {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
@@ -270,10 +276,16 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 
-		for len(delegations) == 0 {
-			accs = append(accs[:idx], accs[idx+1:]...)
-			simAccount, idx = simulation.RandomAcc(r, accs)
+		var accsCopy []simulation.Account
+		accsCopy = append(accsCopy, accs...)
+		for len(accsCopy) > 0 && len(delegations) == 0 {
+			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
+			simAccount, idx = simulation.RandomAcc(r, accsCopy)
 			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
+		}
+
+		if len(accsCopy) == 0 {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]

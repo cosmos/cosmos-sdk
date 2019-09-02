@@ -33,33 +33,23 @@ var (
 	Version = ""
 	// commit
 	Commit = ""
-	// hash of the go.sum file
-	GoSumHash = ""
 	// build tags
 	BuildTags = ""
 )
 
-type versionInfo struct {
-	Name       string `json:"name"`
-	ServerName string `json:"server_name"`
-	ClientName string `json:"client_name"`
-	Version    string `json:"version"`
-	GitCommit  string `json:"commit"`
-	BuildTags  string `json:"build_tags"`
-	GoVersion  string `json:"go"`
+// Info defines the application version information.
+type Info struct {
+	Name       string `json:"name" yaml:"name"`
+	ServerName string `json:"server_name" yaml:"server_name"`
+	ClientName string `json:"client_name" yaml:"client_name"`
+	Version    string `json:"version" yaml:"version"`
+	GitCommit  string `json:"commit" yaml:"commit"`
+	BuildTags  string `json:"build_tags" yaml:"build_tags"`
+	GoVersion  string `json:"go" yaml:"go"`
 }
 
-func (v versionInfo) String() string {
-	return fmt.Sprintf(`%s: %s
-git commit: %s
-build tags: %s
-%s`,
-		v.Name, v.Version, v.GitCommit, v.BuildTags, v.GoVersion,
-	)
-}
-
-func newVersionInfo() versionInfo {
-	return versionInfo{
+func NewInfo() Info {
+	return Info{
 		Name:       Name,
 		ServerName: ServerName,
 		ClientName: ClientName,
@@ -68,4 +58,13 @@ func newVersionInfo() versionInfo {
 		BuildTags:  BuildTags,
 		GoVersion:  fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
 	}
+}
+
+func (vi Info) String() string {
+	return fmt.Sprintf(`%s: %s
+git commit: %s
+build tags: %s
+%s`,
+		vi.Name, vi.Version, vi.GitCommit, vi.BuildTags, vi.GoVersion,
+	)
 }

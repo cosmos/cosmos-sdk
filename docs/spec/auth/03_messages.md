@@ -12,7 +12,7 @@ to include in their proposed block transactions which fail `CheckTx`.
 
 ### Ante Handler
 
-```golang
+```go
 anteHandler(ak AccountKeeper, fck FeeCollectionKeeper, tx sdk.Tx)
   if !tx.(StdTx)
     fail with "not a StdTx"

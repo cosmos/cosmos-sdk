@@ -10,9 +10,7 @@ The documentation for the Cosmos SDK is hosted at:
 - https://cosmos-staging.interblock.io/docs/
 
 built from the files in this (`/docs`) directory for
-[master](https://github.com/cosmos/cosmos-sdk/tree/master/docs)
-and [develop](https://github.com/cosmos/cosmos-sdk/tree/develop/docs),
-respectively.
+[master](https://github.com/cosmos/cosmos-sdk/tree/master/docs).
 
 ### How It Works
 
@@ -97,7 +95,7 @@ then navigate to localhost:8080 in your browser.
 
 First, run `make tools` from the root of repo, to install the swagger-ui tool.
 
-Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/develop/client/lcd/swagger-ui/swagger.yaml)
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml)
 
 Finally, run `make update_gaia_lite_docs` from the root of the repo.
 
@@ -108,7 +106,7 @@ We are using [Algolia](https://www.algolia.com) to power full-text search. This 
 ## Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
-much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/develop/docs/DOCS_README.md).
+much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/master/docs/DOCS_README.md).
 
 ### Update and Build the RPC docs
 

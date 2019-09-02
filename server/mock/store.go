@@ -3,8 +3,9 @@ package mock
 import (
 	"io"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -68,6 +69,14 @@ func (ms multiStore) MountStoreWithDB(key sdk.StoreKey, typ sdk.StoreType, db db
 
 func (ms multiStore) LoadLatestVersion() error {
 	return nil
+}
+
+func (ms multiStore) LoadLatestVersionAndUpgrade(upgrades *store.StoreUpgrades) error {
+	return nil
+}
+
+func (ms multiStore) LoadVersionAndUpgrade(ver int64, upgrades *store.StoreUpgrades) error {
+	panic("not implemented")
 }
 
 func (ms multiStore) LoadVersion(ver int64) error {

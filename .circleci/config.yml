@@ -26,15 +26,26 @@ commands:
             - go-src-v1-{{ .Revision }}
       - checkout
       - restore_cache:
-            name: "Restore go modules cache"
-            keys:
-              - go-mod-v2-{{ checksum "go.sum" }}
+          name: "Restore go modules cache"
+          keys:
+            - go-mod-v2-{{ checksum "go.sum" }}
       - run:
           name: << parameters.description >>
           command: |
             make << parameters.target >>
 
 jobs:
+  build_docs:
+    executor: docs
+    steps:
+      - checkout
+      - run:
+          name: "Build docs"
+          command: make build-docs
+      - run:
+          name: "Upload docs to S3"
+          command: make sync-docs
+
   setup_dependencies:
     executor: golang
     steps:
@@ -141,10 +152,11 @@ jobs:
       - run:
           name: filter out DONTCOVER
           command: |
-            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
+            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
             for filename in ${excludelist}; do
-              echo "Excluding ${filename} ..."
-              sed -i "\%${filename}:%d" coverage.txt
+              filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
+              echo "Excluding ${filename} from coverage report..."
+              sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
             done
       - run:
           name: upload
@@ -198,3 +210,21 @@ workflows:
       - upload_coverage:
           requires:
             - test_cover
+      - build_docs:
+          context: docs-deployment-master
+          filters:
+            branches:
+              only:
+                - /.*/
+            tags:
+              ignore:
+                - /^v.*/
+      - build_docs:
+          context: docs-deployment-release
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /v.*/

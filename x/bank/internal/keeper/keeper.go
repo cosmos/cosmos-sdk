@@ -34,11 +34,11 @@ type BaseKeeper struct {
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(ak types.AccountKeeper,
 	paramSpace params.Subspace,
-	codespace sdk.CodespaceType) BaseKeeper {
+	codespace sdk.CodespaceType, blacklistedAddrs map[string]bool) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
+		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace, blacklistedAddrs),
 		ak:             ak,
 		paramSpace:     ps,
 	}
@@ -145,6 +145,8 @@ type SendKeeper interface {
 
 	GetSendEnabled(ctx sdk.Context) bool
 	SetSendEnabled(ctx sdk.Context, enabled bool)
+
+	BlacklistedAddr(addr sdk.AccAddress) bool
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -156,16 +158,20 @@ type BaseSendKeeper struct {
 
 	ak         types.AccountKeeper
 	paramSpace params.Subspace
+
+	// list of addresses that are restricted from receiving transactions
+	blacklistedAddrs map[string]bool
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(ak types.AccountKeeper,
-	paramSpace params.Subspace, codespace sdk.CodespaceType) BaseSendKeeper {
+	paramSpace params.Subspace, codespace sdk.CodespaceType, blacklistedAddrs map[string]bool) BaseSendKeeper {
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
-		ak:             ak,
-		paramSpace:     paramSpace,
+		BaseViewKeeper:   NewBaseViewKeeper(ak, codespace),
+		ak:               ak,
+		paramSpace:       paramSpace,
+		blacklistedAddrs: blacklistedAddrs,
 	}
 }
 
@@ -210,16 +216,6 @@ func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.In
 
 // SendCoins moves coins from one account to another
 func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	_, err := keeper.SubtractCoins(ctx, fromAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	_, err = keeper.AddCoins(ctx, toAddr, amt)
-	if err != nil {
-		return err
-	}
-
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
@@ -231,6 +227,16 @@ func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress,
 			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 		),
 	})
+
+	_, err := keeper.SubtractCoins(ctx, fromAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	_, err = keeper.AddCoins(ctx, toAddr, amt)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -319,6 +325,12 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 // SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, types.ParamStoreKeySendEnabled, &enabled)
+}
+
+// BlacklistedAddr checks if a given address is blacklisted (i.e restricted from
+// receiving funds)
+func (keeper BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
+	return keeper.blacklistedAddrs[addr.String()]
 }
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)

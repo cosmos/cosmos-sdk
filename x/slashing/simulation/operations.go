@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -22,10 +21,14 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 		// TODO: create iterator to get all jailed validators and then select a random
 		// from the set
-		validator := stakingkeeper.RandomValidator(r, sk, ctx)
+		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
+		} 
+
 		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		if !validator.IsJailed() {
@@ -36,10 +39,13 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		consAddr := sdk.ConsAddress(validator.GetConsPubKey().Address())
 		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("slashing info not found for validator %s", consAddr)
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
 		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
+		if selfDel == nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
+		}
 
 		// skip if:
 		// - validator cannot be unjailed due to tombstone

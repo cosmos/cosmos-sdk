@@ -92,7 +92,11 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		val := keeper.RandomValidator(r, k, ctx)
+		val, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
 		address := val.GetOperator()
 
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
@@ -152,7 +156,10 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 		}
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
-		val := keeper.RandomValidator(r, k, ctx)
+		val, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
 
 		if val.InvalidExRate() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -205,10 +212,11 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 
 		var accsCopy []simulation.Account
 		accsCopy = append(accsCopy, accs...)
+		accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 		for len(accsCopy) > 0 && len(delegations) == 0 {
-			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 			simAccount, idx = simulation.RandomAcc(r, accsCopy)
 			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
+			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 		}
 
 		if len(accsCopy) == 0 {
@@ -278,10 +286,11 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 
 		var accsCopy []simulation.Account
 		accsCopy = append(accsCopy, accs...)
+		accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 		for len(accsCopy) > 0 && len(delegations) == 0 {
-			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 			simAccount, idx = simulation.RandomAcc(r, accsCopy)
 			delegations = k.GetAllDelegatorDelegations(ctx, simAccount.Address)
+			accsCopy = append(accsCopy[:idx], accsCopy[idx+1:]...)
 		}
 
 		if len(accsCopy) == 0 {
@@ -299,7 +308,10 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
-		destVal := keeper.RandomValidator(r, k, ctx)
+		destVal, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
 
 		if srcVal.GetOperator().Equals(destVal.GetOperator()) ||
 			destVal.InvalidExRate() ||

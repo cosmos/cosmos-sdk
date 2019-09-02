@@ -104,7 +104,10 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 
-		validator := stakingkeeper.RandomValidator(r, sk, ctx)
+		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
+		if !ok {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
 
 		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {

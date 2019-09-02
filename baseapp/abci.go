@@ -46,7 +46,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		if len(req.Validators) != len(res.Validators) {
 			panic(
 				fmt.Errorf(
-					"len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+					"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
 					len(req.Validators), len(res.Validators),
 				),
 			)

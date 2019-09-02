@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/ibc/mock/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
@@ -11,7 +12,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case ibc.MsgPacket:
 			switch packet := msg.Packet.(type) {
-			case SequencePacket:
+			case types.PacketSequence:
 				return handleMyPacket(ctx, k, packet, msg.ChannelID)
 			}
 		}
@@ -19,7 +20,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMyPacket(ctx sdk.Context, k Keeper, packet SequencePacket, chanid string) (res sdk.Result) {
+func handleMyPacket(ctx sdk.Context, k Keeper, packet types.PacketSequence, chanid string) (res sdk.Result) {
 	err := k.CheckAndSetSequence(ctx, chanid, packet.Sequence)
 	if err != nil {
 		res.Log = "Invalid sequence" // should not return error, set only log

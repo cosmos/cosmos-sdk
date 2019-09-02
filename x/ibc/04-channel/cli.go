@@ -64,7 +64,7 @@ func (obj Object) PacketCLI(ctx context.CLIContext, index uint64) (res Packet, p
 }
 
 func (man Handshaker) CLIQuery(ctx context.CLIContext, portid, chanid string) (HandshakeObject, error) {
-	obj, err := man.man.CLIQuery(ctx, portid, chanid)
+	obj, err := man.Manager.CLIQuery(ctx, portid, chanid)
 	if err != nil {
 		return HandshakeObject{}, err
 	}
@@ -72,7 +72,7 @@ func (man Handshaker) CLIQuery(ctx context.CLIContext, portid, chanid string) (H
 }
 
 func (man Handshaker) CLIObject(portid, chanid string, connids []string) HandshakeObject {
-	return man.object(man.man.CLIObject(portid, chanid, connids))
+	return man.object(man.Manager.CLIObject(portid, chanid, connids))
 }
 
 func (obj HandshakeObject) StateCLI(ctx context.CLIContext) (res State, proof merkle.Proof, err error) {

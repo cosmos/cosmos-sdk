@@ -6,9 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/ibc/mock/types"
 )
-
-var sequence = []byte("sequence")
 
 type Keeper struct {
 	cdc  *codec.Codec
@@ -26,8 +25,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, port ibc.Port) Keeper {
 
 func (k Keeper) GetSequence(ctx sdk.Context, chanid string) (res uint64) {
 	store := ctx.KVStore(k.key)
-	if store.Has(sequence) {
-		k.cdc.MustUnmarshalBinaryBare(store.Get(sequence), &res)
+	if store.Has(types.SequenceKey) {
+		k.cdc.MustUnmarshalBinaryBare(store.Get(types.SequenceKey), &res)
 	} else {
 		res = 0
 	}
@@ -37,7 +36,7 @@ func (k Keeper) GetSequence(ctx sdk.Context, chanid string) (res uint64) {
 
 func (k Keeper) SetSequence(ctx sdk.Context, chanid string, seq uint64) {
 	store := ctx.KVStore(k.key)
-	store.Set(sequence, k.cdc.MustMarshalBinaryBare(seq))
+	store.Set(types.SequenceKey, k.cdc.MustMarshalBinaryBare(seq))
 }
 
 func (k Keeper) CheckAndSetSequence(ctx sdk.Context, chanid string, seq uint64) error {

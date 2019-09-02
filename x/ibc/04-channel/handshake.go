@@ -21,7 +21,7 @@ const (
 )
 
 type Handshaker struct {
-	man Manager
+	Manager
 
 	counterparty CounterpartyHandshaker
 }
@@ -35,7 +35,7 @@ func (man Handshaker) Kind() string {
 // or add Seal() method to Manager?
 func NewHandshaker(man Manager) Handshaker {
 	return Handshaker{
-		man: man,
+		Manager: man,
 
 		counterparty: CounterpartyHandshaker{man.counterparty},
 	}
@@ -68,8 +68,8 @@ func (man Handshaker) object(parent Object) HandshakeObject {
 	return HandshakeObject{
 		Object: parent,
 
-		State:       man.man.protocol.Value([]byte(prefix + "/state")).Enum(),
-		NextTimeout: man.man.protocol.Value([]byte(prefix + "/timeout")).Integer(state.Dec),
+		State:       man.protocol.Value([]byte(prefix + "/state")).Enum(),
+		NextTimeout: man.protocol.Value([]byte(prefix + "/timeout")).Integer(state.Dec),
 
 		counterparty: man.counterparty.object(parent.counterparty),
 	}
@@ -87,7 +87,7 @@ func (man CounterpartyHandshaker) object(parent CounterObject) CounterHandshakeO
 }
 
 func (man Handshaker) create(ctx sdk.Context, connid, chanid string, channel Channel) (obj HandshakeObject, err error) {
-	cobj, err := man.man.create(ctx, connid, chanid, channel)
+	cobj, err := man.Manager.create(ctx, connid, chanid, channel)
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (man Handshaker) create(ctx sdk.Context, connid, chanid string, channel Cha
 }
 
 func (man Handshaker) query(ctx sdk.Context, connid, chanid string) (obj HandshakeObject, err error) {
-	cobj, err := man.man.query(ctx, connid, chanid)
+	cobj, err := man.Manager.query(ctx, connid, chanid)
 	if err != nil {
 		return
 	}

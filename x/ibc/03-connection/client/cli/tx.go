@@ -52,7 +52,20 @@ func lastheight(ctx context.CLIContext) (uint64, error) {
 	return uint64(info.Response.LastBlockHeight), nil
 }
 
-func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "connection",
+		Short: "IBC connection transaction subcommands",
+	}
+
+	cmd.AddCommand(
+		GetCmdHandshake(storeKey, cdc),
+	)
+
+	return cmd
+}
+
+func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
 		Short: "initiate connection handshake between two chains",

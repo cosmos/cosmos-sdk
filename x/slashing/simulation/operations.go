@@ -24,7 +24,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
-		} 
+		}
 
 		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {

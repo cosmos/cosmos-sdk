@@ -222,11 +222,6 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		totalBond, err = simulation.RandPositiveInt(r, totalBond)
-		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
-		}
-
 		unbondAmt, err := simulation.RandPositiveInt(r, totalBond)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
@@ -296,11 +291,6 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		totalBond := srcVal.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if !totalBond.IsPositive() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
-		}
-
-		totalBond, err = simulation.RandPositiveInt(r, totalBond)
-		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		redAmt, err := simulation.RandPositiveInt(r, totalBond)

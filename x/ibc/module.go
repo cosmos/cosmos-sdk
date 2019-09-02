@@ -25,6 +25,7 @@ import (
 
 const (
 	ModuleName = "ibc"
+	StoreKey   = ModuleName
 )
 
 var (

@@ -57,7 +57,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 		for i, val := range res.Validators {
 			if !val.Equal(req.Validators[i]) {
-				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+				panic(fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i))
 			}
 		}
 	}

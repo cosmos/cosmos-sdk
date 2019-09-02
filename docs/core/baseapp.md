@@ -113,7 +113,7 @@ Then, parameters used to define [volatile states](#volatile-states) (i.e. cached
 
 - `checkState`: This state is updated during [`CheckTx`](#checktx-1), and reset on [`Commit`](#commit-1).
 - `deliverState`: This state is updated during [`DeliverTx`](#delivertx-1), and set to `nil` on
-[`Commit`](#commit-1).
+[`Commit`](#commit-1). `deliverState` gets re-initialized on BeginBlock.
 
 Finally, a few more important parameters:
 

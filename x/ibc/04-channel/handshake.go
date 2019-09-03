@@ -86,13 +86,8 @@ func (man CounterpartyHandshaker) object(parent CounterObject) CounterHandshakeO
 	}
 }
 
-<<<<<<< HEAD
-func (man Handshaker) create(ctx sdk.Context, connid, chanid string, channel Channel) (obj HandshakeObject, err error) {
-	cobj, err := man.Manager.create(ctx, connid, chanid, channel)
-=======
 func (man Handshaker) create(ctx sdk.Context, portid, chanid string, channel Channel) (obj HandshakeObject, err error) {
-	cobj, err := man.man.create(ctx, portid, chanid, channel)
->>>>>>> joon/ics-04-implementation
+	cobj, err := man.Manager.create(ctx, portid, chanid, channel)
 	if err != nil {
 		return
 	}
@@ -101,13 +96,8 @@ func (man Handshaker) create(ctx sdk.Context, portid, chanid string, channel Cha
 	return obj, nil
 }
 
-<<<<<<< HEAD
-func (man Handshaker) query(ctx sdk.Context, connid, chanid string) (obj HandshakeObject, err error) {
-	cobj, err := man.Manager.query(ctx, connid, chanid)
-=======
 func (man Handshaker) query(ctx sdk.Context, portid, chanid string) (obj HandshakeObject, err error) {
-	cobj, err := man.man.query(ctx, portid, chanid)
->>>>>>> joon/ics-04-implementation
+	cobj, err := man.Manager.query(ctx, portid, chanid)
 	if err != nil {
 		return
 	}

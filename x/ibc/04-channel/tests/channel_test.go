@@ -1,11 +1,11 @@
 package channel
 
 import (
-	"testing"
 	"errors"
+	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
@@ -47,11 +47,11 @@ func (packet MyPacket) Timeout() uint64 {
 }
 
 func (MyPacket) SenderPort() string {
-	return "channel-test"
+	return PortName
 }
 
 func (MyPacket) ReceiverPort() string {
-	return "channel-test"
+	return PortName
 }
 
 func (MyPacket) Type() string {
@@ -63,7 +63,7 @@ func (MyPacket) ValidateBasic() sdk.Error {
 }
 
 func (packet MyPacket) MarshalAmino() (string, error) {
-	return "mp-"+packet.Message, nil
+	return "mp-" + packet.Message, nil
 }
 
 func (packet *MyPacket) UnmarshalAmino(text string) error {
@@ -74,13 +74,13 @@ func (packet *MyPacket) UnmarshalAmino(text string) error {
 	return nil
 }
 
-func (packet MyPacket) MarshalJSON() ([]byte, error)  {
+func (packet MyPacket) MarshalJSON() ([]byte, error) {
 	res, _ := packet.MarshalAmino()
-	return []byte("\""+res+"\""), nil
+	return []byte("\"" + res + "\""), nil
 }
 
 func (packet *MyPacket) UnmarshalJSON(bz []byte) error {
-	bz = bz[1:len(bz)-1]
+	bz = bz[1 : len(bz)-1]
 	return packet.UnmarshalAmino(string(bz))
 }
 

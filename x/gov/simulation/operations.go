@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// Simulation parameter constants
+// Simulation operation weights constants
 const (
 	OpWeightSubmitVotingSlashingTextProposal           = "op_weight_submit_voting_slashing_text_proposal"
 	OpWeightSubmitVotingSlashingCommunitySpendProposal = "op_weight_submit_voting_slashing_community_spend_proposal"
@@ -30,7 +30,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	dk distrkeeper.Keeper, k keeper.Keeper, paramChanges simulation.ParamChanges) simulation.WeightedOperations {
+	dk distrkeeper.Keeper, k keeper.Keeper, paramChanges []simulation.ParamChange) simulation.WeightedOperations {
 
 	var (
 		weightSubmitVotingSlashingTextProposal           int

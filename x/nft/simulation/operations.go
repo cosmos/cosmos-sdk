@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/nft/internal/keeper"
@@ -15,7 +16,56 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// DONTCOVER
+// Simulation operation weights constants
+const (
+	OpWeightMsgTransferNFT     = "op_weight_msg_transfer_nft"
+	OpWeightMsgEditNFTMetadata = "op_weight_msg_edit_nft_metadata"
+	OpWeightMsgMintNFT         = "op_weight_msg_mint_nft"
+	OpWeightMsgBurnNFT         = "op_weight_msg_burn_nft"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	k keeper.Keeper) simulation.WeightedOperations {
+
+	var (
+		weightMsgTransferNFT     int
+		weightMsgEditNFTMetadata int
+		weightMsgMintNFT         int
+		weightMsgBurnNFT         int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgTransferNFT, &weightMsgTransferNFT, nil,
+		func(_ *rand.Rand) { weightMsgTransferNFT = 33 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgEditNFTMetadata, &weightMsgEditNFTMetadata, nil,
+		func(_ *rand.Rand) { weightMsgTransferNFT = 5 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgMintNFT, &weightMsgMintNFT, nil,
+		func(_ *rand.Rand) { weightMsgMintNFT = 10 })
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgBurnNFT, &weightMsgBurnNFT, nil,
+		func(_ *rand.Rand) { weightMsgBurnNFT = 5 })
+
+	return simulation.WeightedOperations{
+		simulation.NewWeigthedOperation(
+			weightMsgTransferNFT,
+			SimulateMsgTransferNFT(ak, k),
+		),
+		simulation.NewWeigthedOperation(
+			weightMsgEditNFTMetadata,
+			SimulateMsgEditNFTMetadata(ak, k),
+		),
+		simulation.NewWeigthedOperation(
+			weightMsgMintNFT,
+			SimulateMsgMintNFT(ak, k),
+		),
+		simulation.NewWeigthedOperation(
+			weightMsgBurnNFT,
+			SimulateMsgBurnNFT(ak, k),
+		),
+	}
+}
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {

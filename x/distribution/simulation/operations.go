@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -186,7 +185,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
+func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 

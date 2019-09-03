@@ -38,7 +38,6 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
-		ParamChanges:  []simulation.ParamChange{},
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -22,7 +23,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	k keeper.Keeper) simulation.WeightedOperations {
+	k keeper.Keeper, sk stakingkeeper.Keeper) simulation.WeightedOperations {
 
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
@@ -31,7 +32,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
 			weightMsgUnjail,
-			SimulateMsgUnjail(ak, k),
+			SimulateMsgUnjail(ak, k, sk),
 		),
 	}
 }

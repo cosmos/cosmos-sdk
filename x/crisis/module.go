@@ -2,7 +2,6 @@ package crisis
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -16,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
 var (

@@ -3,6 +3,7 @@ package keeper // noalias
 import (
 	"bytes"
 	"encoding/hex"
+	"math/rand"
 	"strconv"
 	"testing"
 

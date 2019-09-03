@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -13,7 +12,7 @@ import (
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
-func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) govsim.ContentSimulator {
+func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulator {
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) govtypes.Content {
 
 		lenParamChange := len(paramChangePool)

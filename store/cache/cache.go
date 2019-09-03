@@ -84,6 +84,8 @@ func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
 // If the value doesn't exist in the write-through cache, the query is delegated
 // to the underlying CommitKVStore.
 func (ckv *CommitKVStoreCache) Get(key []byte) []byte {
+	types.AssertValidKey(key)
+
 	valueI, ok := ckv.cache.Get(string(key))
 	if ok {
 		// cache hit
@@ -100,6 +102,9 @@ func (ckv *CommitKVStoreCache) Get(key []byte) []byte {
 // Set inserts a key/value pair into both the write-through cache and the
 // underlying CommitKVStore.
 func (ckv *CommitKVStoreCache) Set(key, value []byte) {
+	types.AssertValidKey(key)
+	types.AssertValidValue(value)
+
 	ckv.cache.Add(string(key), value)
 	ckv.CommitKVStore.Set(key, value)
 }

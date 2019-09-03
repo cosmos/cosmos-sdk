@@ -195,7 +195,8 @@ Note, the `deliverState` is set to `nil` on [`Commit`](#commit-1).
 The state flow for `DeliverTx` is nearly identical to `CheckTx` except state transitions occur on
 the `deliverState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
 occur on a doubly cache-wrapped state -- `deliverState`. Successful message execution results in
-writes being committed to `deliverState`.
+writes being committed to `deliverState`. Note, if message execution fails, state transitions from
+the AnteHandler are persisted.
 
 ![DeliverTx](./baseapp_state-deliver_tx.png)
 

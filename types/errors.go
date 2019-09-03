@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	cmn "github.com/tendermint/tendermint/libs/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // CodeType - ABCI code identifier within codespace
@@ -248,10 +250,14 @@ func (err *sdkError) Code() CodeType {
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
 	errMsg := err.cmnError.Error()
+	return encodeErrorLog(err.codespace, err.code, errMsg)
+}
+
+func encodeErrorLog(codespace CodespaceType, code CodeType, msg string) string {
 	jsonErr := humanReadableError{
-		Codespace: err.codespace,
-		Code:      err.code,
-		Message:   errMsg,
+		Codespace: codespace,
+		Code:      code,
+		Message:   msg,
 	}
 
 	var buff bytes.Buffer
@@ -279,6 +285,24 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 		Code:      uint32(err.Code()),
 		Codespace: string(err.Codespace()),
 		Log:       err.ABCILog(),
+	}
+}
+
+// ResultFromError will return err.Result() if it implements sdk.Error
+// Otherwise, it will use the reflecton from types/error to determine
+// the code, codespace, and log.
+//
+// This is intended to provide a bridge to allow both error types
+// to live side-by-side.
+func ResultFromError(err error) Result {
+	if sdk, ok := err.(Error); ok {
+		return sdk.Result()
+	}
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	return Result{
+		Codespace: CodespaceType(space),
+		Code:      CodeType(code),
+		Log:       encodeErrorLog(CodespaceType(space), CodeType(code), log),
 	}
 }
 

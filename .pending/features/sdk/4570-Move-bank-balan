@@ -1,1 +1,0 @@
-#4570 Move /bank/balances/{address} REST handler to x/bank/client/rest. The exposed interface is unchanged.

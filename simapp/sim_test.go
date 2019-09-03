@@ -2,356 +2,290 @@ package simapp
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
+	banksimops "github.com/cosmos/cosmos-sdk/x/bank/simulation/operations"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingsimops "github.com/cosmos/cosmos-sdk/x/slashing/simulation/operations"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	stakingsimops "github.com/cosmos/cosmos-sdk/x/staking/simulation/operations"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
+// Get flags every time the simulator is run
 func init() {
-	flag.StringVar(&genesisFile, "Genesis", "", "custom simulation genesis file; cannot be used with params file")
-	flag.StringVar(&paramsFile, "Params", "", "custom simulation params file which overrides any random params; cannot be used with genesis")
-	flag.StringVar(&exportParamsPath, "ExportParamsPath", "", "custom file path to save the exported params JSON")
-	flag.IntVar(&exportParamsHeight, "ExportParamsHeight", 0, "height to which export the randomly generated params")
-	flag.StringVar(&exportStatePath, "ExportStatePath", "", "custom file path to save the exported app state JSON")
-	flag.StringVar(&exportStatsPath, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
-	flag.Int64Var(&seed, "Seed", 42, "simulation random seed")
-	flag.IntVar(&numBlocks, "NumBlocks", 500, "number of blocks")
-	flag.IntVar(&blockSize, "BlockSize", 200, "operations per block")
-	flag.BoolVar(&enabled, "Enabled", false, "enable the simulation")
-	flag.BoolVar(&verbose, "Verbose", false, "verbose log output")
-	flag.BoolVar(&lean, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&commit, "Commit", false, "have the simulation commit")
-	flag.IntVar(&period, "Period", 1, "run slow invariants only once every period assertions")
-	flag.BoolVar(&onOperation, "SimulateEveryOperation", false, "run slow invariants every operation")
-	flag.BoolVar(&allInvariants, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
-	flag.Int64Var(&genesisTime, "GenesisTime", 0, "override genesis UNIX time instead of using a random UNIX time")
-}
-
-// helper function for populating input for SimulateFromSeed
-func getSimulateFromSeedInput(tb testing.TB, w io.Writer, app *SimApp) (
-	testing.TB, io.Writer, *baseapp.BaseApp, simulation.AppStateFn, int64,
-	simulation.WeightedOperations, sdk.Invariants, int, int, int, string,
-	bool, bool, bool, bool, bool, map[string]bool) {
-
-	exportParams := exportParamsPath != ""
-
-	return tb, w, app.BaseApp, appStateFn, seed,
-		testAndRunTxs(app), invariants(app),
-		numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, allInvariants, app.ModuleAccountAddrs()
-}
-
-func appStateFn(
-	r *rand.Rand, accs []simulation.Account,
-) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
-
-	cdc := MakeCodec()
-
-	if genesisTime == 0 {
-		genesisTimestamp = simulation.RandTimestamp(r)
-	} else {
-		genesisTimestamp = time.Unix(genesisTime, 0)
-	}
-
-	switch {
-	case paramsFile != "" && genesisFile != "":
-		panic("cannot provide both a genesis file and a params file")
-
-	case genesisFile != "":
-		appState, simAccs, chainID = AppStateFromGenesisFileFn(r, accs, genesisTimestamp)
-
-	case paramsFile != "":
-		appParams := make(simulation.AppParams)
-		bz, err := ioutil.ReadFile(paramsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		cdc.MustUnmarshalJSON(bz, &appParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-
-	default:
-		appParams := make(simulation.AppParams)
-		appState, simAccs, chainID = appStateRandomizedFn(r, accs, genesisTimestamp, appParams)
-	}
-
-	return appState, simAccs, chainID, genesisTimestamp
-}
-
-// TODO refactor out random initialization code to the modules
-func appStateRandomizedFn(
-	r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
-
-	cdc := MakeCodec()
-	genesisState := NewDefaultGenesisState()
-
-	var (
-		amount             int64
-		numInitiallyBonded int64
-	)
-
-	appParams.GetOrGenerate(cdc, StakePerAccount, &amount, r,
-		func(r *rand.Rand) { amount = int64(r.Intn(1e12)) })
-	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &amount, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
-
-	numAccs := int64(len(accs))
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%v",
-  initially_bonded_validators: "%v"
-}
-`, amount, numInitiallyBonded,
-	)
-
-	GenGenesisAccounts(cdc, r, accs, genesisTimestamp, amount, numInitiallyBonded, genesisState)
-	GenAuthGenesisState(cdc, r, appParams, genesisState)
-	GenBankGenesisState(cdc, r, appParams, genesisState)
-	GenSupplyGenesisState(cdc, amount, numInitiallyBonded, int64(len(accs)), genesisState)
-	GenGovGenesisState(cdc, r, appParams, genesisState)
-	GenMintGenesisState(cdc, r, appParams, genesisState)
-	GenDistrGenesisState(cdc, r, appParams, genesisState)
-	stakingGen := GenStakingGenesisState(cdc, r, accs, amount, numAccs, numInitiallyBonded, appParams, genesisState)
-	GenSlashingGenesisState(cdc, r, stakingGen, appParams, genesisState)
-
-	appState, err := MakeCodec().MarshalJSON(genesisState)
-	if err != nil {
-		panic(err)
-	}
-
-	return appState, accs, "simulation"
+	GetSimulatorFlags()
 }
 
 // TODO: add description
-func testAndRunTxs(app *SimApp) []simulation.WeightedOperation {
-	cdc := MakeCodec()
+func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
 	ap := make(simulation.AppParams)
 
-	if paramsFile != "" {
-		bz, err := ioutil.ReadFile(paramsFile)
+	paramChanges := app.sm.GenerateParamChanges(config.Seed)
+
+	if config.ParamsFile != "" {
+		bz, err := ioutil.ReadFile(config.ParamsFile)
 		if err != nil {
 			panic(err)
 		}
 
-		cdc.MustUnmarshalJSON(bz, &ap)
+		app.cdc.MustUnmarshalJSON(bz, &ap)
 	}
 
+	// nolint: govet
 	return []simulation.WeightedOperation{
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightDeductFee, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightDeductFee, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
 				return v
 			}(nil),
-			authsim.SimulateDeductFee(app.accountKeeper, app.supplyKeeper),
+			authsimops.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			bank.SimulateMsgSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 10
 					})
 				return v
 			}(nil),
-			bank.SimulateSingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper),
+			banksimops.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgSetWithdrawAddress, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgSetWithdrawAddress(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgWithdrawDelegationReward, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawDelegatorReward(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgWithdrawValidatorCommission, &v, nil,
 					func(_ *rand.Rand) {
 						v = 50
 					})
 				return v
 			}(nil),
-			distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper),
+			distrsimops.SimulateMsgWithdrawValidatorCommission(app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, govsim.SimulateTextProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, govsimops.SimulateTextProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.distrKeeper)),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
 				return v
 			}(nil),
-			govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, paramsim.SimulateParamChangeProposalContent),
+			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(paramChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDeposit, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgDeposit, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			govsim.SimulateMsgDeposit(app.govKeeper),
+			govsimops.SimulateMsgDeposit(app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgCreateValidator, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgEditValidator, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgEditValidator, &v, nil,
 					func(_ *rand.Rand) {
 						v = 5
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgEditValidator(app.stakingKeeper),
+			stakingsimops.SimulateMsgEditValidator(app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgDelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgDelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgDelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUndelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgUndelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgUndelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgBeginRedelegate, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			stakingsim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakingKeeper),
+			stakingsimops.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(cdc, OpWeightMsgUnjail, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgUnjail, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			slashingsim.SimulateMsgUnjail(app.slashingKeeper),
+			slashingsimops.SimulateMsgUnjail(app.SlashingKeeper),
 		},
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgTransferNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 33
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgTransferNFT(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgEditNFTMetadata, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 5
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgEditNFTMetadata(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgMintNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 10
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgMintNFT(app.NFTKeeper),
+		// },
+		// {
+		// 	func(_ *rand.Rand) int {
+		// 		var v int
+		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgBurnNFT, &v, nil,
+		// 			func(_ *rand.Rand) {
+		// 				v = 5
+		// 			})
+		// 		return v
+		// 	}(nil),
+		// 	nftsimops.SimulateMsgBurnNFT(app.NFTKeeper),
+		// },
 	}
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
 	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
-	if period == 1 {
-		return app.crisisKeeper.Invariants()
+	if flagPeriodValue == 1 {
+		return app.CrisisKeeper.Invariants()
 	}
-	return simulation.PeriodicInvariants(app.crisisKeeper.Invariants(), period, 0)
+	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
@@ -363,6 +297,7 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
+	config := NewConfigFromFlags()
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
@@ -375,33 +310,22 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(b, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
-		if err != nil {
+	if config.ExportStatePath != "" {
+		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
-		if err != nil {
+	if config.ExportParamsPath != "" {
+		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
@@ -412,7 +336,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.FailNow()
 	}
 
-	if commit {
+	if config.Commit {
 		fmt.Println("\nGoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
@@ -420,13 +344,14 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation")
 	}
 
 	var logger log.Logger
+	config := NewConfigFromFlags()
 
-	if verbose {
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -445,31 +370,26 @@ func TestFullAppSimulation(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+	if config.ExportStatePath != "" {
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
-		fmt.Println(params)
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+	if config.ExportParamsPath != "" {
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -479,12 +399,14 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application import/export simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application import/export simulation")
 	}
 
 	var logger log.Logger
-	if verbose {
+	config := NewConfigFromFlags()
+
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -503,30 +425,26 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	_, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
-	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+	// export state and simParams before the simulation error is checked
+	if config.ExportStatePath != "" {
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+	if config.ExportParamsPath != "" {
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -534,18 +452,18 @@ func TestAppImportExport(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 
-	fmt.Printf("Exporting genesis...\n")
+	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
-	fmt.Printf("Importing genesis...\n")
+	fmt.Printf("importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -553,15 +471,13 @@ func TestAppImportExport(t *testing.T) {
 
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	ctxB := newApp.NewContext(true, abci.Header{})
+	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
-	fmt.Printf("Comparing stores...\n")
-	ctxA := app.NewContext(true, abci.Header{})
+	fmt.Printf("comparing stores...\n")
+	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
@@ -570,38 +486,46 @@ func TestAppImportExport(t *testing.T) {
 	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keyMain, newApp.keyMain, [][]byte{}},
-		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey,
-			staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
-		{app.keySlashing, newApp.keySlashing, [][]byte{}},
-		{app.keyMint, newApp.keyMint, [][]byte{}},
-		{app.keyDistr, newApp.keyDistr, [][]byte{}},
-		{app.keySupply, newApp.keySupply, [][]byte{}},
-		{app.keyParams, newApp.keyParams, [][]byte{}},
-		{app.keyGov, newApp.keyGov, [][]byte{}},
+		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
+		{app.keys[auth.StoreKey], newApp.keys[auth.StoreKey], [][]byte{}},
+		{app.keys[staking.StoreKey], newApp.keys[staking.StoreKey],
+			[][]byte{
+				staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey,
+			}}, // ordering may change but it doesn't matter
+		{app.keys[slashing.StoreKey], newApp.keys[slashing.StoreKey], [][]byte{}},
+		{app.keys[mint.StoreKey], newApp.keys[mint.StoreKey], [][]byte{}},
+		{app.keys[distr.StoreKey], newApp.keys[distr.StoreKey], [][]byte{}},
+		{app.keys[supply.StoreKey], newApp.keys[supply.StoreKey], [][]byte{}},
+		{app.keys[params.StoreKey], newApp.keys[params.StoreKey], [][]byte{}},
+		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
 	for _, storeKeysPrefix := range storeKeysPrefixes {
 		storeKeyA := storeKeysPrefix.A
 		storeKeyB := storeKeysPrefix.B
 		prefixes := storeKeysPrefix.Prefixes
+
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
-		failedKVs := sdk.DiffKVStores(storeA, storeB, prefixes)
-		fmt.Printf("Compared %d key/value pairs between %s and %s\n", len(failedKVs)/2, storeKeyA, storeKeyB)
-		require.Len(t, failedKVs, 0, GetSimulationLog(storeKeyA.Name(), app.cdc, newApp.cdc, failedKVs))
+
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
+		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+
+		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
+		require.Len(t, failedKVAs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation after import")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation after import")
 	}
 
 	var logger log.Logger
-	if verbose {
+	config := NewConfigFromFlags()
+
+	if flagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -619,30 +543,26 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
-	stopEarly, params, simErr := simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, app))
+	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(app, config), invariants(app),
+		app.ModuleAccountAddrs(), config,
+	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
+	if config.ExportStatePath != "" {
+		err := ExportStateToJSON(app, config.ExportStatePath)
 		require.NoError(t, err)
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		require.NoError(t, err)
-
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
+	if config.ExportParamsPath != "" {
+		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
 		require.NoError(t, err)
 	}
 
 	require.NoError(t, simErr)
 
-	if commit {
+	if config.Commit {
 		// for memdb:
 		// fmt.Println("Database Size", db.Stats()["database.size"])
 		fmt.Println("\nGoLevelDB Stats")
@@ -652,25 +572,23 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	if stopEarly {
 		// we can't export or import a zero-validator genesis
-		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
+		fmt.Printf("we can't export or import a zero-validator genesis, exiting test...\n")
 		return
 	}
 
-	fmt.Printf("Exporting genesis...\n")
+	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	fmt.Printf("Importing genesis...\n")
+	fmt.Printf("importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
 	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
 
 	defer func() {
 		newDB.Close()
-		os.RemoveAll(newDir)
+		_ = os.RemoveAll(newDir)
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
@@ -680,46 +598,71 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	_, _, err = simulation.SimulateFromSeed(getSimulateFromSeedInput(t, os.Stdout, newApp))
-	require.Nil(t, err)
+	_, _, err = simulation.SimulateFromSeed(
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(newApp, config), invariants(newApp),
+		newApp.ModuleAccountAddrs(), config,
+	)
+
+	require.NoError(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !enabled {
-		t.Skip("Skipping application simulation")
+	if !flagEnabledValue {
+		t.Skip("skipping application simulation")
 	}
+
+	config := NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		seed := rand.Int63()
+		config.Seed = rand.Int63()
+
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
 			app := NewSimApp(logger, db, nil, true, 0)
 
-			// Run randomized simulation
-			simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, appStateFn, seed,
-				testAndRunTxs(app), []sdk.Invariant{},
-				50, 100, 0, "",
-				false, true, false, false, false, app.ModuleAccountAddrs(),
+			fmt.Printf(
+				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+				testAndRunTxs(app, config), []sdk.Invariant{},
+				app.ModuleAccountAddrs(), config,
+			)
+			require.NoError(t, err)
+
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
-		}
-		for k := 1; k < numTimesToRunPerSeed; k++ {
-			require.Equal(t, appHashList[0], appHashList[k], "appHash list: %v", appHashList)
+
+			if j != 0 {
+				require.Equal(
+					t, appHashList[0], appHashList[j],
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
 		}
 	}
 }
 
 func BenchmarkInvariants(b *testing.B) {
 	logger := log.NewNopLogger()
+
+	config := NewConfigFromFlags()
+	config.AllInvariants = false
+
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)
 
@@ -729,40 +672,24 @@ func BenchmarkInvariants(b *testing.B) {
 	}()
 
 	app := NewSimApp(logger, db, nil, true, 0)
-	exportParams := exportParamsPath != ""
 
 	// 2. Run parameterized simulation (w/o invariants)
-	_, params, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, appStateFn, seed, testAndRunTxs(app),
-		[]sdk.Invariant{}, numBlocks, exportParamsHeight, blockSize,
-		exportStatsPath, exportParams, commit, lean, onOperation, false, app.ModuleAccountAddrs(),
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, ioutil.Discard, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		testAndRunTxs(app, config), []sdk.Invariant{},
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
-	if exportStatePath != "" {
-		fmt.Println("Exporting app state...")
-		appState, _, err := app.ExportAppStateAndValidators(false, nil)
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-		err = ioutil.WriteFile(exportStatePath, []byte(appState), 0644)
-		if err != nil {
+	if config.ExportStatePath != "" {
+		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
 	}
 
-	if exportParamsPath != "" {
-		fmt.Println("Exporting simulation params...")
-		paramsBz, err := json.MarshalIndent(params, "", " ")
-		if err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-
-		err = ioutil.WriteFile(exportParamsPath, paramsBz, 0644)
-		if err != nil {
+	if config.ExportParamsPath != "" {
+		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
 			fmt.Println(err)
 			b.Fail()
 		}
@@ -779,10 +706,10 @@ func BenchmarkInvariants(b *testing.B) {
 	//
 	// NOTE: We use the crisis keeper as it has all the invariants registered with
 	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.crisisKeeper.Routes() {
+	for _, cr := range app.CrisisKeeper.Routes() {
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, numBlocks, res)
+				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, config.NumBlocks, res)
 				b.FailNow()
 			}
 		})

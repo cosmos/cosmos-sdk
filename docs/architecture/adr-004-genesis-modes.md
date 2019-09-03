@@ -17,7 +17,7 @@ values and have `InitGenenesis` perform this unnecessary check.
 
 ### Proposed Solution
 
-The proposed solution is to add a command to update a genesis file with the
+We propose to add a command to update a genesis file with the
 missing values/field.
 
 With this command, the user provides a `genesis.json` file with the minimum amount

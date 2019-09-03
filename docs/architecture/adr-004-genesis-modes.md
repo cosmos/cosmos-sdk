@@ -1,4 +1,4 @@
-# ADR 4: Multiple Genesis modes
+# ADR 004: Multiple Genesis modes
 
 ## Changelog
 
@@ -6,7 +6,7 @@
 
 ## Context
 
-In the current SDK, when the `GenesisState` is initialized through a `InitGenesis` call, some of the `GenesisState` fields are loaded from a `genesis.json` file, whereas in other cases they are initialized (_i.e_ populated) if the corresponding object value from JSON is empty, undefined or its value is zero.
+In the SDK, when the `GenesisState` is initialized through a `InitGenesis` call, some of the `GenesisState` fields are loaded from a `genesis.json` file, whereas in other cases they are initialized (_i.e_ populated) if the corresponding object value from JSON is empty, undefined or its value is zero.
 
 This may lead to confusion because as is currently programmed, `InitGenesis`
 initializes _and_ loads the values at the same time. When in reallity they should be

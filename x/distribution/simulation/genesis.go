@@ -36,22 +36,24 @@ func GenBonusProposerReward(r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
-func RandomizedGenState(input *module.GeneratorInput) {
-
-	var (
-		communityTax        sdk.Dec
-		baseProposerReward  sdk.Dec
-		bonusProposerReward sdk.Dec
+func RandomizedGenState(simState *module.SimulationState) {
+	var communityTax sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, CommunityTax, &communityTax, simState.Rand,
+		func(r *rand.Rand) { communityTax = GenCommunityTax(r) },
 	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, CommunityTax, &communityTax, input.R,
-		func(r *rand.Rand) { communityTax = GenCommunityTax(input.R) })
+	var baseProposerReward sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, BaseProposerReward, &baseProposerReward, simState.Rand,
+		func(r *rand.Rand) { baseProposerReward = GenBaseProposerReward(r) },
+	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, BaseProposerReward, &baseProposerReward, input.R,
-		func(r *rand.Rand) { baseProposerReward = GenBaseProposerReward(input.R) })
-
-	input.AppParams.GetOrGenerate(input.Cdc, BonusProposerReward, &bonusProposerReward, input.R,
-		func(r *rand.Rand) { bonusProposerReward = GenBonusProposerReward(input.R) })
+	var bonusProposerReward sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, BonusProposerReward, &bonusProposerReward, simState.Rand,
+		func(r *rand.Rand) { bonusProposerReward = GenBonusProposerReward(r) },
+	)
 
 	distrGenesis := types.GenesisState{
 		FeePool:             types.InitialFeePool(),
@@ -60,6 +62,6 @@ func RandomizedGenState(input *module.GeneratorInput) {
 		BonusProposerReward: bonusProposerReward,
 	}
 
-	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, distrGenesis))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(distrGenesis)
+	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, distrGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(distrGenesis)
 }

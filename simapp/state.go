@@ -20,8 +20,8 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
-	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
-	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
+	return func(r *rand.Rand, accs []simulation.Account, config *simulation.Config,
+	) (appState json.RawMessage, simAccs []simulation.Account, genesisTimestamp time.Time) {
 
 		if flagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
@@ -34,7 +34,8 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
-			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config)
+			// override the default chain-id from simapp
+			appState, simAccs, config.ChainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 		case config.ParamsFile != "":
 			appParams := make(simulation.AppParams)
@@ -44,14 +45,14 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			}
 
 			cdc.MustUnmarshalJSON(bz, &appParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simulation.AppParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		return appState, simAccs, chainID, genesisTimestamp
+		return appState, simAccs, genesisTimestamp
 	}
 }
 
@@ -60,38 +61,62 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
 	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
-
+) (json.RawMessage, []simulation.Account) {
+	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()
-	numInitiallyBonded, amount := RandomizedSimulationParams(appParams, cdc, r, int64(len(accs)))
 
-	input := &module.GeneratorInput{
+	// generate a random amount of initial stake coins and a random initial
+	// number of bonded accounts
+	var initialStake, numInitiallyBonded int64
+	appParams.GetOrGenerate(
+		cdc, StakePerAccount, &initialStake, r,
+		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) },
+	)
+	appParams.GetOrGenerate(
+		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) },
+	)
+
+	if numInitiallyBonded > numAccs {
+		numInitiallyBonded = numAccs
+	}
+
+	fmt.Printf(
+		`Selected randomly generated parameters for simulated genesis:
+{
+  stake_per_account: "%d",
+  initially_bonded_validators: "%d"
+}
+`, initialStake, numInitiallyBonded,
+	)
+
+	simState := &module.SimulationState{
 		AppParams:    appParams,
 		Cdc:          cdc,
-		R:            r,
+		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,
-		InitialStake: amount,
+		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}
 
-	simManager.GenerateGenesisStates(input)
+	simManager.GenerateGenesisStates(simState)
 
 	appState, err := cdc.MarshalJSON(genesisState)
 	if err != nil {
 		panic(err)
 	}
 
-	return appState, accs, "simulation"
+	return appState, accs
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, config simulation.Config) (
+func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (
 	genState json.RawMessage, newAccs []simulation.Account, chainID string) {
 
-	bytes, err := ioutil.ReadFile(config.GenesisFile)
+	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}

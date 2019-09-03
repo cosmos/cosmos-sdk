@@ -81,8 +81,8 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // GenerateGenesisState creates a randomized GenState of the distribution module.
-func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
-	simulation.RandomizedGenState(input)
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.

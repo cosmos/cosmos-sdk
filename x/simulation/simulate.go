@@ -17,9 +17,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
-type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
-	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
+// AppStateFn returns the app state json bytes and the genesis accounts
+type AppStateFn func(r *rand.Rand, accs []Account, config *Config) (
+	appState json.RawMessage, accounts []Account, genesisTimestamp time.Time,
 )
 
 // initialize the chain for the simulation
@@ -28,11 +28,11 @@ func initChain(
 	appStateFn AppStateFn, config Config,
 ) (mockValidators, time.Time, []Account) {
 
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
+	appState, accounts, genesisTimestamp := appStateFn(r, accounts, &config)
 
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
-		ChainId:       chainID,
+		ChainId:       config.ChainID,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
@@ -51,7 +51,7 @@ func SimulateFromSeed(
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with config.Seed %d\n", int(config.Seed))
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
 	params := RandomParams(r)
@@ -86,6 +86,7 @@ func SimulateFromSeed(
 	nextValidators := validators
 
 	header := abci.Header{
+		ChainID:         config.ChainID,
 		Height:          1,
 		Time:            genesisTimestamp,
 		ProposerAddress: validators.randomProposer(r),
@@ -124,7 +125,7 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d; %v\n", header.Height, r)
+				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", header.Height)
 				logWriter.PrintLogs()
 				panic(r)
 			}
@@ -155,12 +156,15 @@ func SimulateFromSeed(
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		numQueuedOpsRan := runQueuedOperations(
-			operationQueue, int(header.Height),
-			tb, r, app, ctx, accs, logWriter, eventStats.Tally, config.Lean)
+			operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter,
+			eventStats.Tally, config.Lean, config.ChainID,
+		)
 
 		numQueuedTimeOpsRan := runQueuedTimeOperations(
 			timeOperationQueue, int(header.Height), header.Time,
-			tb, r, app, ctx, accs, logWriter, eventStats.Tally, config.Lean)
+			tb, r, app, ctx, accs, logWriter, eventStats.Tally,
+			config.Lean, config.ChainID,
+		)
 
 		if testingMode && config.OnOperation {
 			assertAllInvariants(t, app, invariants, "QueuedOperations", logWriter, config.AllInvariants)
@@ -285,15 +289,17 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-			opMsg, futureOps, err := op(r2, app, ctx, accounts)
+			opMsg, futureOps, err := op(r2, app, ctx, accounts, config.ChainID)
 			opMsg.LogEvent(event)
 			if !config.Lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
 			if err != nil {
 				logWriter.PrintLogs()
-				tb.Fatalf("error on operation %d within block %d, %v",
-					header.Height, opCount, err)
+				tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+%v
+Comment: %s`,
+					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
@@ -317,7 +323,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 // nolint: errcheck
 func runQueuedOperations(queueOps map[int][]Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account, logWriter LogWriter, event func(route, op, evResult string), lean bool) (numOpsRan int) {
+	ctx sdk.Context, accounts []Account, logWriter LogWriter,
+	event func(route, op, evResult string), lean bool, chainID string) (numOpsRan int) {
 
 	queuedOp, ok := queueOps[height]
 	if !ok {
@@ -330,7 +337,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, app, ctx, accounts)
+		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
@@ -347,7 +354,8 @@ func runQueuedOperations(queueOps map[int][]Operation,
 func runQueuedTimeOperations(queueOps []FutureOperation,
 	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []Account,
-	logWriter LogWriter, event func(route, op, evResult string), lean bool) (numOpsRan int) {
+	logWriter LogWriter, event func(route, op, evResult string),
+	lean bool, chainID string) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
@@ -355,7 +363,7 @@ func runQueuedTimeOperations(queueOps []FutureOperation,
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts)
+		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
 		opMsg.LogEvent(event)
 		if !lean || opMsg.OK {
 			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))

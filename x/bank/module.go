@@ -74,8 +74,8 @@ type AppModuleSimulation struct{}
 func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
-func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
-	simulation.RandomizedGenState(input)
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // RandomizedParams creates randomized bank param changes for the simulator.

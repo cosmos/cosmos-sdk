@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,6 +17,7 @@ import (
 // GenesisAccount is a struct for account initialization used exclusively during genesis
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
 	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
 	Sequence      uint64         `json:"sequence_number" yaml:"sequence_number"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
@@ -51,12 +54,13 @@ func (ga GenesisAccount) Validate() error {
 }
 
 // NewGenesisAccountRaw creates a new GenesisAccount object
-func NewGenesisAccountRaw(address sdk.AccAddress, coins,
+func NewGenesisAccountRaw(address sdk.AccAddress, pubkey crypto.PubKey, coins,
 	vestingAmount sdk.Coins, vestingStartTime, vestingEndTime int64,
 	module string, permissions ...string) GenesisAccount {
 
 	return GenesisAccount{
 		Address:           address,
+		PubKey:            pubkey,
 		Coins:             coins,
 		Sequence:          0,
 		AccountNumber:     0, // ignored set by the account keeper during InitGenesis
@@ -74,6 +78,7 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 func NewGenesisAccount(acc *authtypes.BaseAccount) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.Address,
+		PubKey:        acc.PubKey,
 		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
 		Sequence:      acc.Sequence,
@@ -84,6 +89,7 @@ func NewGenesisAccount(acc *authtypes.BaseAccount) GenesisAccount {
 func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
+		PubKey:        acc.GetPubKey(),
 		Coins:         acc.GetCoins(),
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
@@ -110,7 +116,7 @@ func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 
 // ToAccount converts a GenesisAccount to an Account interface
 func (ga *GenesisAccount) ToAccount() authexported.Account {
-	bacc := authtypes.NewBaseAccount(ga.Address, ga.Coins.Sort(), nil, ga.AccountNumber, ga.Sequence)
+	bacc := authtypes.NewBaseAccount(ga.Address, ga.Coins.Sort(), ga.PubKey, ga.AccountNumber, ga.Sequence)
 
 	// vesting accounts
 	if !ga.OriginalVesting.IsZero() {

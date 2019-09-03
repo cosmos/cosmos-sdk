@@ -108,8 +108,8 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // GenerateGenesisState creates a randomized GenState of the staking module.
-func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
-	simulation.RandomizedGenState(input)
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // RandomizedParams creates randomized staking param changes for the simulator.
@@ -124,22 +124,19 @@ type AppModule struct {
 	AppModuleBasic
 	AppModuleSimulation
 
-	keeper       Keeper
-	distrKeeper  types.DistributionKeeper
-	accKeeper    types.AccountKeeper
-	supplyKeeper types.SupplyKeeper
+	keeper        Keeper
+	accountKeeper types.AccountKeeper
+	supplyKeeper  types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, distrKeeper types.DistributionKeeper, accKeeper types.AccountKeeper,
-	supplyKeeper types.SupplyKeeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper, supplyKeeper types.SupplyKeeper) AppModule {
 
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
 		keeper:              keeper,
-		distrKeeper:         distrKeeper,
-		accKeeper:           accKeeper,
+		accountKeeper:       accountKeeper,
 		supplyKeeper:        supplyKeeper,
 	}
 }
@@ -179,7 +176,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	return InitGenesis(ctx, am.keeper, am.accKeeper, am.supplyKeeper, genesisState)
+	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.supplyKeeper, genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking

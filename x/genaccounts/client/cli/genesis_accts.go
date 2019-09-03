@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -33,6 +35,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
+			var pubkey crypto.PubKey
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
@@ -46,6 +49,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 				}
 
 				addr = info.GetAddress()
+				pubkey = info.GetPubKey()
 			}
 
 			coins, err := sdk.ParseCoins(args[1])
@@ -60,7 +64,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 				return err
 			}
 
-			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "", "")
+			genAcc := genaccounts.NewGenesisAccountRaw(addr, pubkey, coins, vestingAmt, vestingStart, vestingEnd, "", "")
 			if err := genAcc.Validate(); err != nil {
 				return err
 			}

@@ -20,7 +20,7 @@ import (
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account) (
+	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
 // entry kinds for use within OperationEntry
@@ -82,11 +82,11 @@ func (oe OperationEntry) MustMarshal() json.RawMessage {
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`
-	Name    string          `json:"name" yaml:"name"`
-	Comment string          `json:"comment" yaml:"comment"`
-	OK      bool            `json:"ok" yaml:"ok"`
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`
+	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string          `json:"comment" yaml:"comment"` // additional comment
+	OK      bool            `json:"ok" yaml:"ok"`           // success
+	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.

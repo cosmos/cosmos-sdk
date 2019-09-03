@@ -32,44 +32,47 @@ func GenMaxValidators(r *rand.Rand) (maxValidators uint16) {
 }
 
 // RandomizedGenState generates a random GenesisState for staking
-func RandomizedGenState(input *module.GeneratorInput) {
-
-	var (
-		unbondTime    time.Duration
-		maxValidators uint16
-		validators    []types.Validator
-		delegations   []types.Delegation
+func RandomizedGenState(simState *module.SimulationState) {
+	// params
+	var unbondTime time.Duration
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, UnbondingTime, &unbondTime, simState.Rand,
+		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) },
 	)
 
-	// params
-	input.AppParams.GetOrGenerate(input.Cdc, UnbondingTime, &unbondTime, input.R,
-		func(r *rand.Rand) { unbondTime = GenUnbondingTime(input.R) })
-
-	input.AppParams.GetOrGenerate(input.Cdc, MaxValidators, &maxValidators, input.R,
-		func(r *rand.Rand) { maxValidators = GenMaxValidators(input.R) })
+	var maxValidators uint16
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, MaxValidators, &maxValidators, simState.Rand,
+		func(r *rand.Rand) { maxValidators = GenMaxValidators(r) },
+	)
 
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
-	input.UnbondTime = unbondTime
+	simState.UnbondTime = unbondTime
 
-	params := types.NewParams(input.UnbondTime, maxValidators, 7, sdk.DefaultBondDenom)
+	params := types.NewParams(simState.UnbondTime, maxValidators, 7, sdk.DefaultBondDenom)
 
 	// validators & delegations
-	valAddrs := make([]sdk.ValAddress, input.NumBonded)
-	for i := 0; i < int(input.NumBonded); i++ {
-		valAddr := sdk.ValAddress(input.Accounts[i].Address)
+	var (
+		validators  []types.Validator
+		delegations []types.Delegation
+	)
+
+	valAddrs := make([]sdk.ValAddress, simState.NumBonded)
+	for i := 0; i < int(simState.NumBonded); i++ {
+		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
-		validator := types.NewValidator(valAddr, input.Accounts[i].PubKey, types.Description{})
-		validator.Tokens = sdk.NewInt(input.InitialStake)
-		validator.DelegatorShares = sdk.NewDec(input.InitialStake)
-		delegation := types.NewDelegation(input.Accounts[i].Address, valAddr, sdk.NewDec(input.InitialStake))
+		validator := types.NewValidator(valAddr, simState.Accounts[i].PubKey, types.Description{})
+		validator.Tokens = sdk.NewInt(simState.InitialStake)
+		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
+		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDec(simState.InitialStake))
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
 
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, stakingGenesis.Params))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(stakingGenesis)
+	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, stakingGenesis.Params))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

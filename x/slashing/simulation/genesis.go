@@ -50,36 +50,44 @@ func GenSlashFractionDowntime(r *rand.Rand) sdk.Dec {
 }
 
 // RandomizedGenState generates a random GenesisState for slashing
-func RandomizedGenState(input *module.GeneratorInput) {
-
-	var (
-		signedBlocksWindow      int64
-		minSignedPerWindow      sdk.Dec
-		downtimeJailDuration    time.Duration
-		slashFractionDoubleSign sdk.Dec
-		slashFractionDowntime   sdk.Dec
+func RandomizedGenState(simState *module.SimulationState) {
+	var signedBlocksWindow int64
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, SignedBlocksWindow, &signedBlocksWindow, simState.Rand,
+		func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(r) },
 	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, SignedBlocksWindow, &signedBlocksWindow, input.R,
-		func(r *rand.Rand) { signedBlocksWindow = GenSignedBlocksWindow(input.R) })
+	var minSignedPerWindow sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, MinSignedPerWindow, &minSignedPerWindow, simState.Rand,
+		func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(r) },
+	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, MinSignedPerWindow, &minSignedPerWindow, input.R,
-		func(r *rand.Rand) { minSignedPerWindow = GenMinSignedPerWindow(input.R) })
+	var downtimeJailDuration time.Duration
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, DowntimeJailDuration, &downtimeJailDuration, simState.Rand,
+		func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(r) },
+	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, DowntimeJailDuration, &downtimeJailDuration, input.R,
-		func(r *rand.Rand) { downtimeJailDuration = GenDowntimeJailDuration(input.R) })
+	var slashFractionDoubleSign sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, simState.Rand,
+		func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(r) },
+	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, SlashFractionDoubleSign, &slashFractionDoubleSign, input.R,
-		func(r *rand.Rand) { slashFractionDoubleSign = GenSlashFractionDoubleSign(input.R) })
+	var slashFractionDowntime sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, SlashFractionDowntime, &slashFractionDowntime, simState.Rand,
+		func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(r) },
+	)
 
-	input.AppParams.GetOrGenerate(input.Cdc, SlashFractionDowntime, &slashFractionDowntime, input.R,
-		func(r *rand.Rand) { slashFractionDowntime = GenSlashFractionDowntime(input.R) })
-
-	params := types.NewParams(input.UnbondTime, signedBlocksWindow, minSignedPerWindow,
-		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime)
+	params := types.NewParams(
+		simState.UnbondTime, signedBlocksWindow, minSignedPerWindow,
+		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime,
+	)
 
 	slashingGenesis := types.NewGenesisState(params, nil, nil)
 
-	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, slashingGenesis.Params))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(slashingGenesis)
+	fmt.Printf("Selected randomly generated slashing parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, slashingGenesis.Params))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(slashingGenesis)
 }

@@ -6,8 +6,6 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -71,7 +69,7 @@ type Params struct {
 	BlockSizeTransitionMatrix TransitionMatrix
 }
 
-// RandomParams return random simulation parameters
+// RandomParams returns random simulation parameters
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
@@ -86,16 +84,19 @@ func RandomParams(r *rand.Rand) Params {
 //-----------------------------------------------------------------------------
 // Param change proposals
 
+// SimValFn function to generate the randomized parameter change value
+type SimValFn func(r *rand.Rand) string
+
 // ParamChange defines the object used for simulating parameter change proposals
 type ParamChange struct {
 	Subspace string
 	Key      string
 	Subkey   string
-	SimValue func(r *rand.Rand) string
+	SimValue SimValFn
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key, subkey string, simVal func(r *rand.Rand) string) ParamChange {
+func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChange {
 	return ParamChange{
 		Subspace: subspace,
 		Key:      key,

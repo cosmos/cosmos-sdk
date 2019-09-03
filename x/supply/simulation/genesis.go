@@ -13,12 +13,11 @@ import (
 )
 
 // RandomizedGenState generates a random GenesisState for supply
-func RandomizedGenState(input *module.GeneratorInput) {
-
-	numAccs := int64(len(input.Accounts))
-	totalSupply := sdk.NewInt(input.InitialStake * (numAccs + input.NumBonded))
+func RandomizedGenState(simState *module.SimulationState) {
+	numAccs := int64(len(simState.Accounts))
+	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
 	supplyGenesis := types.NewGenesisState(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply)))
 
-	fmt.Printf("Generated supply parameters:\n%s\n", codec.MustMarshalJSONIndent(input.Cdc, supplyGenesis))
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(supplyGenesis)
+	fmt.Printf("Generated supply parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, supplyGenesis))
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(supplyGenesis)
 }

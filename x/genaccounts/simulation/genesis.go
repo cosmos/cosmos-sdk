@@ -12,13 +12,12 @@ import (
 )
 
 // RandomizedGenState generates a random GenesisState for the genesis accounts
-func RandomizedGenState(input *module.GeneratorInput) {
-
+func RandomizedGenState(simState *module.SimulationState) {
 	var genesisAccounts []types.GenesisAccount
 
 	// randomly generate some genesis accounts
-	for i, acc := range input.Accounts {
-		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(input.InitialStake))}
+	for i, acc := range simState.Accounts {
+		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))}
 		bacc := authtypes.NewBaseAccountWithAddress(acc.Address)
 		if err := bacc.SetCoins(coins); err != nil {
 			panic(err)
@@ -28,26 +27,26 @@ func RandomizedGenState(input *module.GeneratorInput) {
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.
-		if int64(i) > input.NumBonded && input.R.Intn(100) < 50 {
+		if int64(i) > simState.NumBonded && simState.Rand.Intn(100) < 50 {
 			var (
 				vacc    authexported.VestingAccount
 				endTime int64
 			)
 
-			startTime := input.GenTimestamp.Unix()
+			startTime := simState.GenTimestamp.Unix()
 
 			// Allow for some vesting accounts to vest very quickly while others very slowly.
-			if input.R.Intn(100) < 50 {
-				endTime = int64(simulation.RandIntBetween(input.R, int(startTime), int(startTime+(60*60*24*30))))
+			if simState.Rand.Intn(100) < 50 {
+				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime), int(startTime+(60*60*24*30))))
 			} else {
-				endTime = int64(simulation.RandIntBetween(input.R, int(startTime), int(startTime+(60*60*12))))
+				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime), int(startTime+(60*60*12))))
 			}
 
 			if startTime == endTime {
 				endTime++
 			}
 
-			if input.R.Intn(100) < 50 {
+			if simState.Rand.Intn(100) < 50 {
 				vacc = authtypes.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
 				vacc = authtypes.NewDelayedVestingAccount(&bacc, endTime)
@@ -65,5 +64,5 @@ func RandomizedGenState(input *module.GeneratorInput) {
 		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
-	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(genesisAccounts)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(genesisAccounts)
 }

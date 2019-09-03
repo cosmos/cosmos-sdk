@@ -15,7 +15,8 @@ import (
 )
 
 func TestGenesisAccountValidate(t *testing.T) {
-	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	pk := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pk.Address())
 	tests := []struct {
 		name   string
 		acc    GenesisAccount
@@ -23,23 +24,23 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}{
 		{
 			"valid account",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "", ""),
+			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "", ""),
 			nil,
 		},
 		{
 			"valid module account",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "mint", supply.Minter),
+			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "mint", supply.Minter),
 			nil,
 		},
 		{
 			"invalid vesting amount",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), 0, 0, "", ""),
 			errors.New("vesting amount cannot be greater than total amount"),
 		},
 		{
 			"invalid vesting amount with multi coins",
-			NewGenesisAccountRaw(addr,
+			NewGenesisAccountRaw(addr, pk,
 				sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)),
 				0, 0, "", ""),
@@ -47,13 +48,13 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"invalid vesting times",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)), 1654668078, 1554668078, "", ""),
 			errors.New("vesting start-time cannot be before end-time"),
 		},
 		{
 			"invalid module account name",
-			NewGenesisAccountRaw(addr, sdk.NewCoins(), sdk.NewCoins(), 0, 0, " ", ""),
+			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(), sdk.NewCoins(), 0, 0, " ", ""),
 			errors.New("module account name cannot be blank"),
 		},
 	}

@@ -1,3 +1,7 @@
+---
+order: false
+---
+
 # BaseApp
 
 The BaseApp defines the foundational implementation for a basic ABCI application

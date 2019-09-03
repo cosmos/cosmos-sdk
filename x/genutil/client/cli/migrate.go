@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
@@ -40,7 +42,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			genDoc, err := types.GenesisDocFromFile(importGenesis)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
 			}
 
 			var initialState extypes.AppMap
@@ -59,7 +61,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 				err := t.UnmarshalText([]byte(genesisTime))
 				if err != nil {
-					return err
+					return errors.Wrap(err, "failed to unmarshal genesis time")
 				}
 
 				genDoc.GenesisTime = t
@@ -72,7 +74,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to marshal genesis doc")
 			}
 
 			fmt.Println(string(sdk.MustSortJSON(out)))

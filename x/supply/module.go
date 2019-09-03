@@ -23,7 +23,7 @@ import (
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the supply module.
@@ -79,8 +79,8 @@ func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
 // GenerateGenesisState creates a randomized GenState of the supply module.
-func (AppModuleSimulation) GenerateGenesisState(input *module.GeneratorInput) {
-	simulation.RandomizedGenState(input)
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // RandomizedParams doesn't create any randomized supply param changes for the simulator.

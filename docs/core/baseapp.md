@@ -188,7 +188,7 @@ During `BeginBlock`, the `deliverState` is set for use in subsequent `DeliverTx`
 `deliverState` is based off of the last committed state from the root store and is cache-wrapped.
 Note, the `deliverState` is set to `nil` on [`Commit`](#commit-1).
 
-![CheckTx](./baseapp_state-begin_block.png)
+![BeginBlock](./baseapp_state-begin_block.png)
 
 ### DeliverTx
 

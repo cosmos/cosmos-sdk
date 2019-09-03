@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Simulation parameter constants
+// Simulation operation weights constants
 const (
 	OpWeightMsgCreateValidator = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator   = "op_weight_msg_edit_validator"

@@ -22,6 +22,9 @@ type AppModuleSimulation interface {
 
 	// randomized module parameters for param change proposals
 	RandomizedParams(r *rand.Rand) []simulation.ParamChange
+
+	// simulation operations (i.e msgs) with their respective weight
+	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -63,6 +66,15 @@ func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []si
 
 	for _, module := range sm.Modules {
 		paramChanges = append(paramChanges, module.RandomizedParams(r)...)
+	}
+
+	return
+}
+
+// WeightedOperations returns all the modules' weighted operations of an application
+func (sm *SimulationManager) WeightedOperations(simState SimulationState) (wOps []simulation.WeightedOperation) {
+	for _, module := range sm.Modules {
+		wOps = append(wOps, module.WeightedOperations(simState)...)
 	}
 
 	return

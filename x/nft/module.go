@@ -24,7 +24,7 @@ import (
 var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic app module basics object
@@ -75,30 +75,9 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the gov module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder registers a decoder for nft module's types
-func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
-}
-
-// GenerateGenesisState creates a randomized GenState of the nft module.
-func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RandomizedParams doesn't create randomized nft param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
-}
-
-//____________________________________________________________________________
-
 // AppModule supply app module
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	keeper Keeper
 }
@@ -107,9 +86,8 @@ type AppModule struct {
 func NewAppModule(keeper Keeper) AppModule {
 
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		keeper:              keeper,
+		AppModuleBasic: AppModuleBasic{},
+		keeper:         keeper,
 	}
 }
 
@@ -163,4 +141,29 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock module end-block
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, am.keeper)
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// RegisterStoreDecoder registers a decoder for nft module's types
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the nft module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RandomizedParams doesn't create randomized nft param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
+}
+
+// WeightedOperations returns the all the nft module operations with their respective weights.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+	// TODO: fix performance https://github.com/cosmos/cosmos-sdk/issues/4963
+	return nil
 }

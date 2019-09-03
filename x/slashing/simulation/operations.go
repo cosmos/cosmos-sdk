@@ -16,14 +16,14 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-// Simulation parameter constants
+// Simulation operation weights constants
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	k keeper.Keeper, sk stakingkeeper.Keeper) simulation.WeightedOperations {
+	k keeper.Keeper, sk types.StakingKeeper) simulation.WeightedOperations {
 
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
@@ -38,11 +38,17 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 }
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, stakingKeeper types.StakingKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
 		// TODO: create iterator to get all jailed validators and then select a random
 		// from the set
+
+		sk, ok := stakingKeeper.(stakingkeeper.Keeper)
+		if !ok {
+			panic("invalid staking keeper")
+		}
+
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip

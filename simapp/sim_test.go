@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -34,10 +35,8 @@ func init() {
 }
 
 // TODO: add description
-func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
+func testAndRunTxs(app *SimApp, config simulation.Config, simState module.SimulationState) []simulation.WeightedOperation {
 	ap := make(simulation.AppParams)
-
-	paramChanges := app.sm.GenerateParamChanges(config.Seed)
 
 	if config.ParamsFile != "" {
 		bz, err := ioutil.ReadFile(config.ParamsFile)
@@ -48,8 +47,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		app.cdc.MustUnmarshalJSON(bz, &ap)
 	}
 
-	// TODO: return module WeightedOperations
-	return []simulation.WeightedOperation{}
+	return app.sm.WeightedOperations(simState)
 }
 
 func invariants(app *SimApp) []sdk.Invariant {

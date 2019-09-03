@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// Simulation parameter constants
+// Simulation operation weights constants
 const (
 	OpWeightMsgSend                 = "op_weight_msg_send"
 	OpWeightSingleInputMsgMultiSend = "op_weight_single_input_msg_multisend"

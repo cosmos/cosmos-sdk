@@ -22,7 +22,7 @@ import (
 var (
 	_ module.AppModuleGenesis    = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModuleSimulation{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the genesis accounts module.
@@ -79,28 +79,9 @@ func (AppModuleBasic) IterateGenesisAccounts(cdc *codec.Codec, appGenesis map[st
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the genesis accounts module.
-type AppModuleSimulation struct{}
-
-// RegisterStoreDecoder performs a no-op.
-func (AppModuleSimulation) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
-// GenerateGenesisState creates a randomized GenState of the genesis accounts module.
-func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
-}
-
-// RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
-func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
-	return nil
-}
-
-//____________________________________________________________________________
-
 // AppModule implements an application module for the genesis accounts module.
 type AppModule struct {
 	AppModuleBasic
-	AppModuleSimulation
 
 	accountKeeper types.AccountKeeper
 }
@@ -109,9 +90,8 @@ type AppModule struct {
 func NewAppModule(accountKeeper types.AccountKeeper) AppModule {
 
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{},
-		AppModuleSimulation: AppModuleSimulation{},
-		accountKeeper:       accountKeeper,
+		AppModuleBasic: AppModuleBasic{},
+		accountKeeper:  accountKeeper,
 	}
 }
 
@@ -152,4 +132,26 @@ func (AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 // EndBlock returns an empty module end-block
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+//____________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+
+// GenerateGenesisState creates a randomized GenState of the genesis accounts module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
+}
+
+// WeightedOperations doesn't return any auth module operation.
+func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
+	return nil
 }

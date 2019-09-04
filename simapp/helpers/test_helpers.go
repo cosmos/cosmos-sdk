@@ -48,7 +48,7 @@ func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, s
 
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
-// funds for pating fees, it returns a 0stake.
+// funds for paying fees, it returns a 0stake.
 func RandomFees(r *rand.Rand, ctx sdk.Context, acc authexported.Account,
 	msgAmount sdk.Coins) (fees sdk.Coins, err error) {
 	if acc == nil {

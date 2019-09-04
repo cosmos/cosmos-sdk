@@ -37,7 +37,7 @@ type GenesisAccount struct {
 
 // Validate checks for errors on the vesting and module account parameters
 func (ga GenesisAccount) Validate() error {
-	if !bytes.Equal(ga.PubKey.Address().Bytes(), ga.Address.Bytes()) {
+	if ga.PubKey != nil && ga.Address != nil && !bytes.Equal(ga.PubKey.Address().Bytes(), ga.Address.Bytes()) {
 		return errors.New("pubkey and address pair is invalid")
 	}
 

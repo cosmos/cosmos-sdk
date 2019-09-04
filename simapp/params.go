@@ -14,6 +14,7 @@ const (
 	OpWeightSubmitVotingSlashingCommunitySpendProposal = "op_weight_submit_voting_slashing_community_spend_proposal"
 	OpWeightSubmitVotingSlashingParamChangeProposal    = "op_weight_submit_voting_slashing_param_change_proposal"
 	OpWeightMsgDeposit                                 = "op_weight_msg_deposit"
+	OpWeightMsgVote                                    = "op_weight_msg_vote"
 	OpWeightMsgCreateValidator                         = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator                           = "op_weight_msg_edit_validator"
 	OpWeightMsgDelegate                                = "op_weight_msg_delegate"

@@ -88,7 +88,7 @@ func createMsgSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, ak 
 	return simAccount, msg, false, nil
 }
 
-// Sends and verifies the transition of a msg send.
+// sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 	simAccount := ak.GetAccount(ctx, msg.FromAddress)
@@ -192,8 +192,8 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 	return simAccount, msg, false, nil
 }
 
-// Sends and verifies the transition of a msg multisend. This fails if there are repeated inputs or outputs
-// pass in handler as nil to handle txs, otherwise handle msgs
+// sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
+// account.
 func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) error {
 
@@ -212,8 +212,7 @@ func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper
 		coins := acc.SpendableCoins(ctx.BlockHeader().Time)
 		denomIndex := r.Intn(len(coins))
 		if coins[denomIndex].Amount.IsZero() {
-			// skip
-			continue
+			continue // skip
 		}
 
 		amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)

@@ -39,7 +39,6 @@ func init() {
 	GetSimulatorFlags()
 }
 
-// TODO: add description
 func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
 	ap := make(simulation.AppParams)
 
@@ -154,6 +153,17 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				return v
 			}(nil),
 			govsim.SimulateMsgDeposit(app.AccountKeeper, app.GovKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(app.cdc, OpWeightMsgVote, &v, nil,
+					func(_ *rand.Rand) {
+						v = 67
+					})
+				return v
+			}(nil),
+			govsim.SimulateMsgVote(app.AccountKeeper, app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

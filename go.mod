@@ -28,6 +28,7 @@ require (
 	github.com/tendermint/iavl v0.12.4
 	github.com/tendermint/tendermint v0.32.3
 	github.com/tendermint/tm-db v0.1.1
+	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 	gopkg.in/yaml.v2 v2.2.2
 )
 

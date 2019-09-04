@@ -3,6 +3,11 @@ package context
 import (
 	"fmt"
 
+	"golang.org/x/xerrors"
+
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/tendermint/tendermint/mempool"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,6 +34,37 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error
 	return res, err
 }
 
+// CheckTendermintError checks if the error returned from BroadcastTx
+// is a Tendermint error that is returned before the tx is submitted
+// due to precondition checks that failed. If an Tendermint error is detected,
+// this function returns the correct code back in TxResponse.
+func CheckTendermintError(err error, txBytes []byte) *sdk.TxResponse {
+	switch {
+	case xerrors.Is(err, mempool.ErrTxInCache):
+		return &sdk.TxResponse{
+			Code:   uint32(sdk.CodeTxInMempoolCache),
+			TxHash: string(tmhash.Sum(txBytes)),
+		}
+	case xerrors.As(err, &mempool.ErrMempoolIsFull{}):
+		return &sdk.TxResponse{
+			Code:   uint32(sdk.CodeMempoolIsFull),
+			TxHash: string(tmhash.Sum(txBytes)),
+		}
+	case xerrors.As(err, &mempool.ErrPreCheck{}):
+		return &sdk.TxResponse{
+			Code:   uint32(sdk.CodeFailedPreCheck),
+			TxHash: string(tmhash.Sum(txBytes)),
+		}
+	case xerrors.As(err, &mempool.ErrTxTooLarge{}):
+		return &sdk.TxResponse{
+			Code:   uint32(sdk.CodeTxTooLarge),
+			TxHash: string(tmhash.Sum(txBytes)),
+		}
+	default:
+		return nil
+	}
+}
+
 // BroadcastTxCommit broadcasts transaction bytes to a Tendermint node and
 // waits for a commit. An error is only returned if there is no RPC node
 // connection or if broadcasting fails.
@@ -44,6 +80,10 @@ func (ctx CLIContext) BroadcastTxCommit(txBytes []byte) (sdk.TxResponse, error) 
 
 	res, err := node.BroadcastTxCommit(txBytes)
 	if err != nil {
+		if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+			return *errRes, nil
+		}
+
 		return sdk.NewResponseFormatBroadcastTxCommit(res), err
 	}
 
@@ -67,6 +107,10 @@ func (ctx CLIContext) BroadcastTxSync(txBytes []byte) (sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxSync(txBytes)
+	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+		return *errRes, nil
+	}
+
 	return sdk.NewResponseFormatBroadcastTx(res), err
 }
 
@@ -79,5 +123,9 @@ func (ctx CLIContext) BroadcastTxAsync(txBytes []byte) (sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxAsync(txBytes)
+	if errRes := CheckTendermintError(err, txBytes); errRes != nil {
+		return *errRes, nil
+	}
+
 	return sdk.NewResponseFormatBroadcastTx(res), err
 }

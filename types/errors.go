@@ -46,6 +46,10 @@ const (
 	CodeTooManySignatures CodeType = 15
 	CodeGasOverflow       CodeType = 16
 	CodeNoSignatures      CodeType = 17
+	CodeTxInMempoolCache  CodeType = 18
+	CodeMempoolIsFull     CodeType = 19
+	CodeFailedPreCheck    CodeType = 20
+	CodeTxTooLarge        CodeType = 21
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with

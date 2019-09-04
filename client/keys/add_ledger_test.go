@@ -89,7 +89,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb := NewKeyringKeybase()
+	kb := NewKeyringKeybase(mockIn)
 	defer func() {
 		kb.Delete("keyname1", "", false)
 	}()

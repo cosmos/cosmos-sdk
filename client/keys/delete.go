@@ -47,7 +47,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
 	if viper.GetBool(flags.FlagLegacy) {
-		os.Stderr.WriteString("Using deprecated secret store. This will be removed in a future release.")
+		os.Stderr.WriteString("IMPORTANT: using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -78,6 +78,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	// skip passphrase check if run with --force
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
+	//you don't need a passphrase in the new keystore, the keyring is already unlocked
 	if !skipPass && viper.GetBool(flags.FlagLegacy) {
 		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {

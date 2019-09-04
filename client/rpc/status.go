@@ -41,7 +41,7 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 	return node.Status()
 }
 
-func printNodeStatus(cmd *cobra.Command, _ []string) error {
+func printNodeStatus(_ *cobra.Command, _ []string) error {
 	// No need to verify proof in getting node status
 	viper.Set(flags.FlagTrustNode, true)
 	cliCtx := context.NewCLIContext()

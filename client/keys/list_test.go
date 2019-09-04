@@ -45,7 +45,6 @@ func Test_runListCmd(t *testing.T) {
 	}
 
 	_, err := kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
-
 	assert.NoError(t, err)
 
 	defer func() {
@@ -66,7 +65,6 @@ func Test_runListCmd(t *testing.T) {
 
 			if runningOnServer {
 				mockIn.Reset("testpass1\ntestpass1\n")
-			} else {
 			}
 			viper.Set(flags.FlagHome, tt.kbDir)
 			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {

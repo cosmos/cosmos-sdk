@@ -281,7 +281,6 @@ func (lkb lazyKeybaseKeyring) ImportPubKey(name string, armor string) (err error
 
 func (lkb lazyKeybaseKeyring) Export(name string) (armor string, err error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return "", err
 	}

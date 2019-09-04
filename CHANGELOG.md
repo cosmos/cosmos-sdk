@@ -42,7 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Security audit recommendation was to use the OS secret store 
   * Existing users are expected to migrate their keys using the migrate command:
     * `gaiacli keys migrate`
-  * Support for legacay keystore is available through the secret store flag:
+  * Support for legacy keystore is available through the secret store flag:
     * `gaiacli keys add <key_name> --legacy` 
   * Signing transactions is allowed on the legacy store if you pass in the legacy secret store flag
   * Running the tests locally may require entering your user password to access your keystore large amount of times (if anyone has a workaround, please leave a comment, thanks) 

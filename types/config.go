@@ -154,17 +154,17 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
 }
 
-// Get the BIP-0044 CoinType code on the config
+// GetCoinType gets the BIP-0044 CoinType code on the config
 func (config *Config) GetCoinType() uint32 {
 	return config.coinType
 }
 
-// Get the FullFundraiserPath (BIP44Prefix) on the config
+// GetFullFundraiserPath (BIP44Prefix) on the config
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
 }
 
-// Get the keyringServiceName on the config
+// GetKeyringServiceName gets the keyring service name from the config
 func (config *Config) GetKeyringServiceName() string {
 	return config.keyringServiceName
 }

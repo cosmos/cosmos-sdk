@@ -40,7 +40,6 @@ func newKeyringKeybase(db keyring.Keyring) Keybase {
 // It returns an error if it fails to
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
-
 func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
@@ -213,7 +212,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 
 		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
-			return nil, nil, err
+			return
 		}
 
 	case ledgerInfo:
@@ -257,6 +256,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	return sig, pub, nil
 }
 
+//ExportPrivateKeyObject exports an armored private key object to the terminal
 func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
@@ -285,6 +285,7 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 	return priv, nil
 }
 
+//Export exports armored private key to the caller
 func (kb keyringKeybase) Export(name string) (armor string, err error) {
 	bz, err := kb.db.Get(string(infoKey(name)))
 	if err != nil {
@@ -312,10 +313,12 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes()), nil
 }
 
+//Import imports armored private key
 func (kb keyringKeybase) Import(name string, armor string) (err error) {
-	bz, err := kb.Get(name)
+	//err is purposefully discarded
+	bz, _ := kb.Get(name)
 
-	if err == nil {
+	if bz != nil {
 		pubkey := bz.GetPubKey()
 
 		if len(pubkey.Bytes()) > 0 {
@@ -327,7 +330,6 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-
 	info, err := readInfo(infoBytes)
 
 	if err != nil {
@@ -364,8 +366,8 @@ func (kb keyringKeybase) ExportPrivKey(name string, decryptPassphrase string,
 // It returns an error if a key with the same name exists or a wrong encryption passphrase is
 // supplied.
 func (kb keyringKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
-	if _, err := kb.Get(name); err == nil {
-		return errors.New("Cannot overwrite key " + name)
+	if kb.HasKey(name) {
+		return errors.New("cannot overwrite key " + name)
 	}
 
 	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
@@ -377,17 +379,26 @@ func (kb keyringKeybase) ImportPrivKey(name string, armor string, passphrase str
 	return nil
 }
 
+//HasKey is checking if the key exists in the keyring
+func (kb keyringKeybase) HasKey(name string) bool {
+	bz, _ := kb.Get(name)
+	if bz != nil {
+		return true
+	}
+	return false
+}
+
 // ImportPubKey imports ASCII-armored public keys.
 // Store a new Info object holding a public key only, i.e. it will
 // not be possible to sign with it as it lacks the secret key.
 //ImportPubKey for keyring
 func (kb keyringKeybase) ImportPubKey(name string, armor string) (err error) {
-	bz, err := kb.Get(name)
-	if err == nil {
+	bz, _ := kb.Get(name)
+	if bz != nil {
 		pubkey := bz.GetPubKey()
 
 		if len(pubkey.Bytes()) > 0 {
-			return errors.New("Cannot overwrite data for name " + name)
+			return errors.New("cannot overwrite data for name " + name)
 		}
 
 	}

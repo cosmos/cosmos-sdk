@@ -19,7 +19,7 @@ func migrateKeyCommand() *cobra.Command {
 		Long: `This command migrates key information from the legacy secret store to the OS secret store. The command asks for every passphrase. 
 		If passphrase is incorrect, it skips the key. 
 
-		Previous versions of Gaia used a custom secret store. On version xxx, Gaia CLI was updated to use a library Keyring (https://github.com/99designs/keyring) to 
+		Previous versions of Cosmos SDK used a custom secret store. On version xxx, Cosmos SDK CLI was updated to use a library Keyring (https://github.com/99designs/keyring) to 
 		preferentially store secrets in the secret manager of many Operating Systems. This is intended to provide stronger security guarantees than the 
 		custom secret store is provided. 
 `,
@@ -63,9 +63,8 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		switch key.GetType() {
 		case keys.TypeLocal:
-			fmt.Printf(" Migrating %s \n", key.GetName())
+			fmt.Printf("Migrating %s \n", key.GetName())
 			decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
-
 			if err != nil {
 				return err
 			}

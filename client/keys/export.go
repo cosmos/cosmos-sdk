@@ -30,7 +30,7 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 
 	if viper.GetBool(flags.FlagLegacy) {
-		fmt.Println("Using deprecated secret store. This will be removed in a future release.")
+		fmt.Println("IMPORTANT: using deprecated secret store. This will be removed in a future release.")
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
@@ -48,7 +48,7 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	armored, err := kb.ExportPrivKey(args[0], decryptPassword, encryptPassword)
 	if err != nil {
 		return err

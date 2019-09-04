@@ -35,6 +35,7 @@ func GetKeyInfoLegacy(name string) (keys.Info, error) {
 	return keybase.Get(name)
 }
 
+// GetKeyInfo returns metadata for a given key
 func GetKeyInfo(name string, input io.Reader) (keys.Info, error) {
 	keybase := NewKeyringKeybase(input)
 	return keybase.Get(name)

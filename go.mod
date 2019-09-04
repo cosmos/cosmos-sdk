@@ -10,7 +10,7 @@ require (
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/gorilla/mux v1.7.0
-	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/mattn/go-isatty v0.0.6
 	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
@@ -33,3 +33,5 @@ require (
 	github.com/tendermint/tm-db v0.1.1
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+go 1.13

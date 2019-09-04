@@ -3,7 +3,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: circleci/golang:1.12.7
+      - image: circleci/golang:1.13
   docs:
     docker:
       - image: tendermintdev/docker-website-deployment

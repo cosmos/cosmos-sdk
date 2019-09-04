@@ -340,6 +340,9 @@ type MultiStorePersistentCache interface {
 	// cache.
 	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
 
+	// Return the underlying CommitKVStore for a StoreKey.
+	Unwrap(key StoreKey) CommitKVStore
+
 	// Reset the entire set of internal caches.
 	Reset()
 }

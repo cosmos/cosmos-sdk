@@ -17,6 +17,7 @@ import (
 func TestGenesisAccountValidate(t *testing.T) {
 	pk := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pk.Address())
+	pk1 := secp256k1.GenPrivKey().PubKey()
 	tests := []struct {
 		name   string
 		acc    GenesisAccount
@@ -31,6 +32,11 @@ func TestGenesisAccountValidate(t *testing.T) {
 			"valid module account",
 			NewGenesisAccountRaw(addr, pk, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "mint", supply.Minter),
 			nil,
+		},
+		{
+			"invalid account pubkey/address pair",
+			NewGenesisAccountRaw(addr, pk1, sdk.NewCoins(), sdk.NewCoins(), 0, 0, "", ""),
+			errors.New("pubkey and address pair is invalid"),
 		},
 		{
 			"invalid vesting amount",

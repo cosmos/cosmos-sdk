@@ -4,19 +4,16 @@ If you want to open a PR on the Cosmos SDK to update the documentation, please f
 
 ## Docs Build Workflow
 
-The documentation for the Cosmos SDK is hosted at:
-
-- https://cosmos.network/docs/ and
-- https://cosmos-staging.interblock.io/docs/
+The documentation for the Cosmos SDK is hosted at https://cosmos.network/docs/
 
 built from the files in this (`/docs`) directory for
 [master](https://github.com/cosmos/cosmos-sdk/tree/master/docs).
 
 ### How It Works
 
-There is a CircleCI job listening for changes in the `/docs` directory, on both
-the  `master` and `develop` branches. Any updates to files in this directory
-on those branches will automatically trigger a website deployment. Under the hood,
+There is a CircleCI job listening for changes in the `/docs` directory, on
+the `master` branch. Any updates to files in this directory
+on that branch will automatically trigger a website deployment. Under the hood,
 the private website repository has a `make build-docs` target consumed by a CircleCI job in that repo.
 
 ## README
@@ -111,14 +108,14 @@ much as possible with its [counterpart in the Tendermint Core repo](https://gith
 ### Update and Build the RPC docs
 
 1. Execute the following command at the root directory to install the swagger-ui generate tool.
-    ```bash
-    make tools
-    ```
+   ```bash
+   make tools
+   ```
 2. Edit API docs
-    1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
-    2. Edit API docs within the [Swagger Editor](https://editor.swagger.io/). Please refer to this [document](https://swagger.io/docs/specification/2-0/basic-structure/) for the correct structure in `.yaml`.
+   1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
+   2. Edit API docs within the [Swagger Editor](https://editor.swagger.io/). Please refer to this [document](https://swagger.io/docs/specification/2-0/basic-structure/) for the correct structure in `.yaml`.
 3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
 4. Compile gaiacli
-    ```bash
-    make install
-    ```
+   ```bash
+   make install
+   ```

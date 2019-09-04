@@ -324,7 +324,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			if rs.interBlockCache != nil {
-				store = rs.interBlockCache.Unwrap(key)
+				if ckvs := rs.interBlockCache.Unwrap(key); ckvs != nil {
+					store = ckvs
+				}
 			}
 
 			// Attempt to lazy-load an already saved IAVL store version. If the

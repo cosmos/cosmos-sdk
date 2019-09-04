@@ -19,7 +19,7 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightSubmitVotingSlashingTextProposal = "op_weight_submit_voting_slashing_text_proposal"
+	// OpWeightSubmitVotingSlashingTextProposal = "op_weight_submit_voting_slashing_text_proposal"
 	// OpWeightSubmitVotingSlashingCommunitySpendProposal = "op_weight_submit_voting_slashing_community_spend_proposal"
 	// OpWeightSubmitVotingSlashingParamChangeProposal    = "op_weight_submit_voting_slashing_param_change_proposal"
 	OpWeightMsgDeposit = "op_weight_msg_deposit"
@@ -29,8 +29,9 @@ const (
 // ExternalProposalOperation defines a common struct for proposal contents defined by
 // external modules (i.e outside gov)
 type ExternalProposalOperation struct {
-	DefaultWeight    int                         // default weigth
-	ContentSimulator simulation.ContentSimulator // content simulator function
+	AppParamsKey       string                        // key used to retrieve the value of the weigth from the simulation application params
+	DefaultWeight      int                           // default weigth
+	ContentSimulatorFn simulation.ContentSimulatorFn // content simulator function
 }
 
 // OpWeightProposalContent defiens
@@ -41,15 +42,15 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	k keeper.Keeper, contents OpWeightProposalContent) simulation.WeightedOperations {
 
 	var (
-		weightSubmitVotingSlashingTextProposal int
+		// weightSubmitVotingSlashingTextProposal int
 		// weightSubmitVotingSlashingCommunitySpendProposal int
 		// weightSubmitVotingSlashingParamChangeProposal    int
 		weightMsgDeposit int
 		weightMsgVote    int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &weightSubmitVotingSlashingTextProposal, nil,
-		func(_ *rand.Rand) { weightSubmitVotingSlashingTextProposal = 5 })
+	// appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingTextProposal, &weightSubmitVotingSlashingTextProposal, nil,
+	// 	func(_ *rand.Rand) { weightSubmitVotingSlashingTextProposal = 5 })
 
 	// appParams.GetOrGenerate(cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &weightSubmitVotingSlashingCommunitySpendProposal, nil,
 	// 	func(_ *rand.Rand) { weightSubmitVotingSlashingCommunitySpendProposal = 5 })
@@ -63,26 +64,27 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	appParams.GetOrGenerate(cdc, OpWeightMsgVote, &weightMsgVote, nil,
 		func(_ *rand.Rand) { weightMsgVote = 50 })
 
-	var wExtOps simulation.WeightedOperations
+	// generate the weighted operations for the proposal contents
+	var wProposalOps simulation.WeightedOperations
 	for op, contentOp := range contents {
 		var weight int
 		appParams.GetOrGenerate(cdc, op, &weight, nil,
 			func(_ *rand.Rand) { weight = contentOp.DefaultWeight })
 
-		wExtOps = append(
-			wExtOps,
+		wProposalOps = append(
+			wProposalOps,
 			simulation.NewWeigthedOperation(
 				weight,
-				SimulateSubmittingVotingAndSlashingForProposal(ak, k, contentOp.ContentSimulator),
+				SimulateSubmittingVotingAndSlashingForProposal(ak, k, contentOp.ContentSimulatorFn),
 			),
 		)
 	}
 
 	wGovOps := simulation.WeightedOperations{
-		simulation.NewWeigthedOperation(
-			weightSubmitVotingSlashingTextProposal,
-			SimulateSubmittingVotingAndSlashingForProposal(ak, k, SimulateTextProposalContent),
-		),
+		// simulation.NewWeigthedOperation(
+		// 	weightSubmitVotingSlashingTextProposal,
+		// 	SimulateSubmittingVotingAndSlashingForProposal(ak, k, SimulateTextProposalContent),
+		// ),
 		// simulation.NewWeigthedOperation(
 		// 	weightSubmitVotingSlashingCommunitySpendProposal,
 		// 	SimulateSubmittingVotingAndSlashingForProposal(ak, k, distrsim.SimulateCommunityPoolSpendProposalContent(ak, dk)),
@@ -101,7 +103,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 		),
 	}
 
-	return append(wGovOps, wExtOps...)
+	return append(wProposalOps, wGovOps...)
 }
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
@@ -109,7 +111,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulator) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -208,14 +210,6 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 
 		return opMsg, fops, nil
 	}
-}
-
-// SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
-	return types.NewTextProposal(
-		simulation.RandStringOfLength(r, 140),
-		simulation.RandStringOfLength(r, 5000),
-	)
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.

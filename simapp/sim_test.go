@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -32,22 +31,6 @@ import (
 // Get flags every time the simulator is run
 func init() {
 	GetSimulatorFlags()
-}
-
-// TODO: add description
-func testAndRunTxs(app *SimApp, config simulation.Config, simState module.SimulationState) []simulation.WeightedOperation {
-	ap := make(simulation.AppParams)
-
-	if config.ParamsFile != "" {
-		bz, err := ioutil.ReadFile(config.ParamsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		app.cdc.MustUnmarshalJSON(bz, &ap)
-	}
-
-	return app.sm.WeightedOperations(simState)
 }
 
 func invariants(app *SimApp) []sdk.Invariant {
@@ -84,8 +67,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	// TODO: parameterize numbers, save for a later PR
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		SimulationOperations(app, app.Codec(), config),
+		invariants(app), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -145,8 +128,8 @@ func TestFullAppSimulation(t *testing.T) {
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		SimulationOperations(app, app.Codec(), config),
+		invariants(app), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -201,8 +184,8 @@ func TestAppImportExport(t *testing.T) {
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		SimulationOperations(app, app.Codec(), config),
+		invariants(app), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -319,8 +302,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		SimulationOperations(app, app.Codec(), config),
+		invariants(app), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -374,8 +357,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(
 		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(newApp, config), invariants(newApp),
-		newApp.ModuleAccountAddrs(), config,
+		SimulationOperations(newApp, newApp.Codec(), config),
+		invariants(newApp), newApp.ModuleAccountAddrs(), config,
 	)
 
 	require.NoError(t, err)
@@ -414,7 +397,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			_, _, err := simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-				testAndRunTxs(app, config), []sdk.Invariant{},
+				SimulationOperations(app, app.Codec(), config), []sdk.Invariant{},
 				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
@@ -452,8 +435,8 @@ func BenchmarkInvariants(b *testing.B) {
 	// 2. Run parameterized simulation (w/o invariants)
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), []sdk.Invariant{},
-		app.ModuleAccountAddrs(), config,
+		SimulationOperations(app, app.Codec(), config),
+		[]sdk.Invariant{}, app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked

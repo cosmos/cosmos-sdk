@@ -138,18 +138,23 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // AppModuleSimulation functions
 
-// RegisterStoreDecoder performs a no-op.
-func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
-
 // GenerateGenesisState creates a randomized GenState of the genesis accounts module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents() []sim.ContentSimulatorFn {
+	return nil
 }
 
 // RandomizedParams doesn't create randomized genaccounts param changes for the simulator.
 func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 	return nil
 }
+
+// RegisterStoreDecoder performs a no-op.
+func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // WeightedOperations doesn't return any auth module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {

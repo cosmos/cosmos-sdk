@@ -14,14 +14,17 @@ import (
 // AppModuleSimulation defines the standard functions that every module should expose
 // for the SDK blockchain simulator
 type AppModuleSimulation interface {
-	// register a func to decode the each module's defined types from their corresponding store key
-	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
-
 	// randomized genesis states
 	GenerateGenesisState(input *SimulationState)
 
+	// content functions used to simulate governance proposals
+	ProposalContents() []simulation.ContentSimulatorFn
+
 	// randomized module parameters for param change proposals
 	RandomizedParams(r *rand.Rand) []simulation.ParamChange
+
+	// register a func to decode the each module's defined types from their corresponding store key
+	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
 
 	// simulation operations (i.e msgs) with their respective weight
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation

@@ -57,9 +57,9 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 	ps(r)
 }
 
-// ContentSimulator defines a function type alias for generating random proposal
+// ContentSimulatorFn defines a function type alias for generating random proposal
 // content.
-type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
+type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {

@@ -147,19 +147,24 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // AppModuleSimulation functions
 
-// RegisterStoreDecoder registers a decoder for nft module's types
-func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[StoreKey] = simulation.DecodeStore
-}
-
 // GenerateGenesisState creates a randomized GenState of the nft module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents() []sim.ContentSimulatorFn {
+	return nil
+}
+
 // RandomizedParams doesn't create randomized nft param changes for the simulator.
 func (AppModule) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
 	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for nft module's types
+func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[StoreKey] = simulation.DecodeStore
 }
 
 // WeightedOperations returns the all the nft module operations with their respective weights.

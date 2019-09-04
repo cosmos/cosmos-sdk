@@ -180,7 +180,7 @@ func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulat
 
 	amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)
 	if err != nil {
-		return simAccount, msg, false, nil
+		return simAccount, msg, false, err
 	}
 
 	coins = sdk.Coins{sdk.NewCoin(coins[denomIndex].Denom, amt)}

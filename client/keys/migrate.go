@@ -37,12 +37,11 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	var err error
 
 	//instantiating variables
+	rootDir := viper.GetString(flags.FlagHome)
 	legacykb, err = NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
-
-	rootDir := viper.GetString(flags.FlagHome)
 
 	buf := bufio.NewReader(cmd.InOrStdin())
 
@@ -52,11 +51,6 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	for _, key := range legacyKeyList {
 
 		legKeyInfo, err := legacykb.Export(key.GetName())
-		if err != nil {
-			return err
-		}
-
-		err = keyringkb.Import(key.GetName(), legKeyInfo)
 		if err != nil {
 			return err
 		}
@@ -80,7 +74,10 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			}
 
 		case keys.TypeOffline, keys.TypeMulti, keys.TypeLedger:
-			continue
+			err = keyringkb.Import(key.GetName(), legKeyInfo)
+			if err != nil {
+				return err
+			}
 
 		}
 	}

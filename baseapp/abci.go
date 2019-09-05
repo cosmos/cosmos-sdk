@@ -231,14 +231,38 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.deliverState = nil
 
 	defer func() {
-		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
-			app.logger.Info("halting node per configuration", "height", app.haltHeight)
-			os.Exit(0)
+		var halt bool
+
+		switch {
+		case app.haltHeight > 0 && uint64(header.Height) == app.haltHeight:
+			halt = true
+
+		case app.haltTime > 0 && header.Time.UnixNano() >= int64(app.haltTime):
+			halt = true
+		}
+
+		if halt {
+			app.halt()
 		}
 	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
+	}
+}
+
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err != nil {
+		app.logger.Info("failed to find calling process; exiting...")
+		os.Exit(0)
+	}
+
+	if err := p.Signal(os.Interrupt); err != nil {
+		app.logger.Info("failed to signal SIGINT; exiting...")
+		os.Exit(0)
 	}
 }
 

@@ -12,19 +12,19 @@ Projects desiring to use custom accounts (say custom vesting accounts) need to f
 
 ## Decision
 
-In summary, we will (Un)Marshal all accounts (interface types) directly using amino, rather than converting to `genaccounts`’s `GenesisAccount` type. Since doing this removes the majority of `genaccounts`'s code, we will merge `genaccounts` into `auth`. Marshalled accounts will be stored in `auth`'s genesis state.
+In summary, we will (un)marshal all accounts (interface types) directly using amino, rather than converting to `genaccounts`’s `GenesisAccount` type. Since doing this removes the majority of `genaccounts`'s code, we will merge `genaccounts` into `auth`. Marshalled accounts will be stored in `auth`'s genesis state.
 
 Detailed changes:
 
 ### 1) (Un)Marshal accounts directly using amino
 
-`auth`'s `GenesisState` gains a new field `Accounts`.
+The `auth` module's `GenesisState` gains a new field `Accounts`. Note these aren't of type `exported.Account` for reasons outlined in section 3.
 
 ```go
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-    Params   Params             `json:"params" yaml:"params"`
-    Accounts []exported.Account `json:"accounts" yaml:"accounts"`
+    Params   Params           `json:"params" yaml:"params"`
+    Accounts []GenesisAccount `json:"accounts" yaml:"accounts"`
 }
 ```
 
@@ -44,7 +44,15 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
     params := ak.GetParams(ctx)
+
     accounts := ak.GetAllAccounts(ctx)
+    // convert accounts to []GenesisAccounts type
+    genAccounts := make([]GenesisAccounts, len(accounts))
+    for i := range accounts {
+        ga := accounts[i].(GenesisAccount) // will panic if an account doesn't implement GenesisAccount
+        genAccounts[i] = ga
+    }
+
     return NewGenesisState(params, accounts)
 }
 ```
@@ -89,7 +97,14 @@ func RegisterAccountTypeCodec(o interface{}, name string) {
 
 Modules implement a `ValidateGenesis` method. As `auth` does not know of account implementations, accounts will need to validate themselves.
 
-We will add a `Validate` method to the `Account` interface.
+We will unmarshal accounts into a `GenesisAccount` interface that includes a `Validate` method.
+
+```go
+type GenesisAccount interface {
+    exported.Account
+    Validate() error
+}
+```
 
 Then the `auth` `ValidateGenesis` function becomes:
 
@@ -146,8 +161,6 @@ Proposed
 - reduction in lines of code
 
 ### Negative
-
-- expansion of Account interface
 
 ### Neutral
 

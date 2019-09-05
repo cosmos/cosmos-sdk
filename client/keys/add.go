@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 
 	bip39 "github.com/bartekn/go-bip39"
@@ -104,7 +103,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		encryptPassword = DefaultKeyPass
 	} else {
 		if viper.GetBool(flags.FlagLegacy) {
-			cmd.PrintErrf(os.Stderr, "IMPORTANT: using deprecated secret store. This will be removed in a future release.")
+			cmd.PrintErrf("IMPORTANT: using deprecated secret store. This will be removed in a future release.")
 			kb, err = NewKeyBaseFromHomeFlag()
 			if err != nil {
 				return err

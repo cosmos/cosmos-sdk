@@ -235,6 +235,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		}
 
 		// Will block until user inputs the signature
+		var signed string
 		signed, err = buf.ReadString('\n')
 		if err != nil {
 			return 

@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bufio"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"

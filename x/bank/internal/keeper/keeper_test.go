@@ -1,81 +1,84 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	keep "github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
 
 func TestKeeper(t *testing.T) {
-	input := setupTestInput()
-	ctx := input.ctx
+	app, ctx := createTestApp(false)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	addr3 := sdk.AccAddress([]byte("addr3"))
-	acc := input.ak.NewAccountWithAddress(ctx, addr)
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	input.ak.SetAccount(ctx, acc)
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
+	app.AccountKeeper.SetAccount(ctx, acc)
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
 
-	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 
 	// Test HasCoins
-	require.True(t, input.k.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, input.k.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
-	require.False(t, input.k.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
-	require.False(t, input.k.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5))))
+	require.True(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
+	require.True(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
+	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
+	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5))))
 
 	// Test AddCoins
-	input.k.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 25))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 25))))
 
-	input.k.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15), sdk.NewInt64Coin("foocoin", 25))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 15), sdk.NewInt64Coin("foocoin", 25))))
 
 	// Test SubtractCoins
-	input.k.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
-	input.k.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
 
-	input.k.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 11)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 11)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 15))))
 
-	input.k.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
-	require.False(t, input.k.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))))
+	app.BankKeeper.SubtractCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
+	require.False(t, app.BankKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))))
 
 	// Test SendCoins
-	input.k.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, input.k.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
+	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
 
-	err2 := input.k.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	err2 := app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
 	require.Implements(t, (*sdk.Error)(nil), err2)
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
-	require.True(t, input.k.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
 
-	input.k.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 30)))
-	input.k.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 5)))
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 5))))
-	require.True(t, input.k.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10))))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 30)))
+	app.BankKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 5)))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 5))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10))))
 
 	// Test InputOutputCoins
 	input1 := types.NewInput(addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
 	output1 := types.NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 2)))
-	input.k.InputOutputCoins(ctx, []types.Input{input1}, []types.Output{output1})
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 7))))
-	require.True(t, input.k.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8))))
+	app.BankKeeper.InputOutputCoins(ctx, []types.Input{input1}, []types.Output{output1})
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 7))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8))))
 
 	inputs := []types.Input{
 		types.NewInput(addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 3))),
@@ -86,31 +89,35 @@ func TestKeeper(t *testing.T) {
 		types.NewOutput(addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 1))),
 		types.NewOutput(addr3, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))),
 	}
-	input.k.InputOutputCoins(ctx, inputs, outputs)
-	require.True(t, input.k.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 21), sdk.NewInt64Coin("foocoin", 4))))
-	require.True(t, input.k.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 7), sdk.NewInt64Coin("foocoin", 6))))
-	require.True(t, input.k.GetCoins(ctx, addr3).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))))
+	app.BankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 21), sdk.NewInt64Coin("foocoin", 4))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 7), sdk.NewInt64Coin("foocoin", 6))))
+	require.True(t, app.BankKeeper.GetCoins(ctx, addr3).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5))))
+
+	// Test retrieving black listed accounts
+	for acc := range simapp.GetMaccPerms() {
+		require.True(t, app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+	}
 }
 
 func TestSendKeeper(t *testing.T) {
-	input := setupTestInput()
-	ctx := input.ctx
+	app, ctx := createTestApp(false)
 
 	blacklistedAddrs := make(map[string]bool)
 
-	paramSpace := input.pk.Subspace("newspace")
-	sendKeeper := NewBaseSendKeeper(input.ak, paramSpace, types.DefaultCodespace, blacklistedAddrs)
-	input.k.SetSendEnabled(ctx, true)
+	paramSpace := app.ParamsKeeper.Subspace("newspace")
+	sendKeeper := keep.NewBaseSendKeeper(app.AccountKeeper, paramSpace, types.DefaultCodespace, blacklistedAddrs)
+	app.BankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
-	acc := input.ak.NewAccountWithAddress(ctx, addr)
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	input.ak.SetAccount(ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, acc)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
 
-	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 
 	// Test HasCoins
@@ -119,7 +126,7 @@ func TestSendKeeper(t *testing.T) {
 	require.False(t, sendKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15))))
 	require.False(t, sendKeeper.HasCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 5))))
 
-	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15)))
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 15)))
 
 	// Test SendCoins
 	sendKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5)))
@@ -131,7 +138,7 @@ func TestSendKeeper(t *testing.T) {
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 5))))
 
-	input.k.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 30)))
+	app.BankKeeper.AddCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 30)))
 	sendKeeper.SendCoins(ctx, addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 5)))
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 5))))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10))))
@@ -143,20 +150,65 @@ func TestSendKeeper(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestViewKeeper(t *testing.T) {
-	input := setupTestInput()
-	ctx := input.ctx
-	//paramSpace := input.pk.Subspace(types.DefaultParamspace)
-	viewKeeper := NewBaseViewKeeper(input.ak, types.DefaultCodespace)
+func TestMsgSendEvents(t *testing.T) {
+	app, ctx := createTestApp(false)
+
+	app.BankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
-	acc := input.ak.NewAccountWithAddress(ctx, addr)
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	err := app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins)
+	require.Error(t, err)
+	events := ctx.EventManager().Events()
+	require.Equal(t, 2, len(events))
+	event1 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []common.KVPair{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		common.KVPair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())})
+	event1.Attributes = append(
+		event1.Attributes,
+		common.KVPair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+	event2 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []common.KVPair{},
+	}
+	event2.Attributes = append(
+		event2.Attributes,
+		common.KVPair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())})
+	require.Equal(t, event1, events[0])
+	require.Equal(t, event2, events[1])
+
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	newCoins = sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	err = app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins)
+	require.NoError(t, err)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 4, len(events))
+	require.Equal(t, event1, events[2])
+	require.Equal(t, event2, events[3])
+}
+
+func TestViewKeeper(t *testing.T) {
+	app, ctx := createTestApp(false)
+
+	//paramSpace := app.ParamsKeeper.Subspace(types.DefaultParamspace)
+	viewKeeper := keep.NewBaseViewKeeper(app.AccountKeeper, types.DefaultCodespace)
+
+	addr := sdk.AccAddress([]byte("addr1"))
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	input.ak.SetAccount(ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, acc)
 	require.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins()))
 
-	input.k.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10)))
 	require.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("foocoin", 10))))
 
 	// Test HasCoins
@@ -167,9 +219,9 @@ func TestViewKeeper(t *testing.T) {
 }
 
 func TestVestingAccountSend(t *testing.T) {
-	input := setupTestInput()
+	app, ctx := createTestApp(false)
 	now := tmtime.Now()
-	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -180,28 +232,28 @@ func TestVestingAccountSend(t *testing.T) {
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	input.ak.SetAccount(ctx, vacc)
+	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	err := input.k.SendCoins(ctx, addr1, addr2, sendCoins)
+	err := app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
 	require.Error(t, err)
 
 	// receive some coins
 	vacc.SetCoins(origCoins.Add(sendCoins))
-	input.ak.SetAccount(ctx, vacc)
+	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	err = input.k.SendCoins(ctx, addr1, addr2, sendCoins)
-	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	err = app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, origCoins, vacc.GetCoins())
 }
 
 func TestVestingAccountReceive(t *testing.T) {
-	input := setupTestInput()
+	app, ctx := createTestApp(false)
 	now := tmtime.Now()
-	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -213,16 +265,16 @@ func TestVestingAccountReceive(t *testing.T) {
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := input.ak.NewAccountWithAddress(ctx, addr2)
-	input.ak.SetAccount(ctx, vacc)
-	input.ak.SetAccount(ctx, acc)
-	input.k.SetCoins(ctx, addr2, origCoins)
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	app.AccountKeeper.SetAccount(ctx, vacc)
+	app.AccountKeeper.SetAccount(ctx, acc)
+	app.BankKeeper.SetCoins(ctx, addr2, origCoins)
 
 	// send some coins to the vesting account
-	input.k.SendCoins(ctx, addr2, addr1, sendCoins)
+	app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins)
 
 	// require the coins are spendable
-	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
@@ -231,10 +283,11 @@ func TestVestingAccountReceive(t *testing.T) {
 }
 
 func TestDelegateCoins(t *testing.T) {
-	input := setupTestInput()
+	app, ctx := createTestApp(false)
 	now := tmtime.Now()
-	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
+	ak := app.AccountKeeper
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -245,36 +298,37 @@ func TestDelegateCoins(t *testing.T) {
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	macc := input.ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	macc := ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := input.ak.NewAccountWithAddress(ctx, addr2)
-	input.ak.SetAccount(ctx, vacc)
-	input.ak.SetAccount(ctx, acc)
-	input.ak.SetAccount(ctx, macc)
-	input.k.SetCoins(ctx, addr2, origCoins)
+	acc := ak.NewAccountWithAddress(ctx, addr2)
+	ak.SetAccount(ctx, vacc)
+	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, macc)
+	app.BankKeeper.SetCoins(ctx, addr2, origCoins)
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
-	acc = input.ak.GetAccount(ctx, addr2)
-	macc = input.ak.GetAccount(ctx, addrModule)
+	err := app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
+	acc = ak.GetAccount(ctx, addr2)
+	macc = ak.GetAccount(ctx, addrModule)
 	require.NoError(t, err)
 	require.Equal(t, origCoins.Sub(delCoins), acc.GetCoins())
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a vesting account to delegate
-	err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
-	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	err = app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
+	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, vacc.GetCoins())
 }
 
 func TestUndelegateCoins(t *testing.T) {
-	input := setupTestInput()
+	app, ctx := createTestApp(false)
 	now := tmtime.Now()
-	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
+	ak := app.AccountKeeper
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	delCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -285,49 +339,49 @@ func TestUndelegateCoins(t *testing.T) {
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	macc := input.ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	macc := ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := input.ak.NewAccountWithAddress(ctx, addr2)
-	input.ak.SetAccount(ctx, vacc)
-	input.ak.SetAccount(ctx, acc)
-	input.ak.SetAccount(ctx, macc)
-	input.k.SetCoins(ctx, addr2, origCoins)
+	acc := ak.NewAccountWithAddress(ctx, addr2)
+	ak.SetAccount(ctx, vacc)
+	ak.SetAccount(ctx, acc)
+	ak.SetAccount(ctx, macc)
+	app.BankKeeper.SetCoins(ctx, addr2, origCoins)
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	err := input.k.DelegateCoins(ctx, addr2, addrModule, delCoins)
+	err := app.BankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
 	require.NoError(t, err)
 
-	acc = input.ak.GetAccount(ctx, addr2)
-	macc = input.ak.GetAccount(ctx, addrModule)
+	acc = ak.GetAccount(ctx, addr2)
+	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins.Sub(delCoins), acc.GetCoins())
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a non-vesting account to undelegate
-	err = input.k.UndelegateCoins(ctx, addrModule, addr2, delCoins)
+	err = app.BankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins)
 	require.NoError(t, err)
 
-	acc = input.ak.GetAccount(ctx, addr2)
-	macc = input.ak.GetAccount(ctx, addrModule)
+	acc = ak.GetAccount(ctx, addr2)
+	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins, acc.GetCoins())
 	require.True(t, macc.GetCoins().Empty())
 
 	// require the ability for a vesting account to delegate
-	err = input.k.DelegateCoins(ctx, addr1, addrModule, delCoins)
+	err = app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	require.NoError(t, err)
 
-	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-	macc = input.ak.GetAccount(ctx, addrModule)
+	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins.Sub(delCoins), vacc.GetCoins())
 	require.Equal(t, delCoins, macc.GetCoins())
 
 	// require the ability for a vesting account to undelegate
-	err = input.k.UndelegateCoins(ctx, addrModule, addr1, delCoins)
+	err = app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins)
 	require.NoError(t, err)
 
-	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-	macc = input.ak.GetAccount(ctx, addrModule)
+	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins, vacc.GetCoins())
 	require.True(t, macc.GetCoins().Empty())
 }

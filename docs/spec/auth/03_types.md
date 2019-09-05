@@ -11,7 +11,7 @@ a struct which implements the `sdk.Tx` interface using `StdFee` and `StdSignatur
 A `StdFee` is simply the combination of a fee amount, in any number of denominations,
 and a gas limit (where dividing the amount by the gas limit gives a "gas price").
 
-```golang
+```go
 type StdFee struct {
   Amount Coins
   Gas    uint64
@@ -24,7 +24,7 @@ A `StdSignature` is the combination of an optional public key and a cryptographi
 as a byte array. The SDK is agnostic to particular key or signature formats and supports any
 supported by the `PubKey` interface.
 
-```golang
+```go
 type StdSignature struct {
   PubKey    PubKey
   Signature []byte
@@ -36,7 +36,7 @@ type StdSignature struct {
 A `StdTx` is a struct which implements the `sdk.Tx` interface, and is likely to be generic
 enough to serve the purposes of many Cosmos SDK blockchains.
 
-```golang
+```go
 type StdTx struct {
   Msgs        []sdk.Msg
   Fee         StdFee  
@@ -53,7 +53,7 @@ will only be executable once on a particular blockchain.
 
 `json.RawMessage` is preferred over using the SDK types for future compatibility.
 
-```golang
+```go
 type StdSignDoc struct {
   AccountNumber uint64
   ChainID       string

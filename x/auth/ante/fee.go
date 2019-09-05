@@ -11,10 +11,20 @@ import (
 	errs "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func MempoolFeeDecorator(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+// MempoolFeeDecorator will check if the transaction's fee is at least as large the local validator's minimum gasFee (defined in validator config).
+// If fee is too low, decorator returns error and tx is rejected from mempool.
+// Note this only applies when ctx.CheckTx = true
+// If fee is high enough or not CheckTx, then call next AnteHandler
+type MempoolFeeDecorator struct{}
+
+func NewMempoolFeeDecorator() MempoolFeeDecorator {
+	return MempoolFeeDecorator{}
+}
+
+func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrInternal, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
 	}
 	stdFee := stdTx.Fee
 
@@ -41,37 +51,50 @@ func MempoolFeeDecorator(ctx Context, tx Tx, simulate bool, next AnteHandler) (n
 	return next(ctx, tx, simulate)
 }
 
-func NewDeductFeeDecorator(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper) {
-	return func(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
-		stdTx, ok := tx.(types.StdTx)
-		if !ok {
-			return ctx, errs.Wrap(errs.ErrInternal, "Tx must be a StdTx")
-		}
+// DeductFeeDecorator deducts fees from the first signer of the tx
+// If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
+// Call next AnteHandler if fees successfully deducted
+type DeductFeeDecorator struct {
+	ak           keeper.AccountKeeper
+	supplyKeeper types.SupplyKeeper
+}
 
-		if addr := supplyKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-			panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
-		}
+func NewDeductFeeDecorator(ak keeper.AccountKeeper, sk types.SupplyKeeper) DeductFeeDecorator {
+	return DeductFeeDecorator{
+		ak:           ak,
+		supplyKeeper: sk,
+	}
+}
 
-		// stdSigs contains the sequence number, account number, and signatures.
-		// When simulating, this would just be a 0-length slice.
-		signerAddrs := stdTx.GetSigners()
+func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	stdTx, ok := tx.(types.StdTx)
+	if !ok {
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+	}
 
-		// fetch first signer, who's going to pay the fees
-		feePayer, err = GetSignerAcc(newCtx, ak, signerAddrs[0])
+	if addr := dfd.supplyKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
+	}
+
+	// stdSigs contains the sequence number, account number, and signatures.
+	// When simulating, this would just be a 0-length slice.
+	signerAddrs := stdTx.GetSigners()
+
+	// fetch first signer, who's going to pay the fees
+	feePayer, err := GetSignerAcc(newCtx, dfd.ak, signerAddrs[0])
+	if err != nil {
+		return ctx, err
+	}
+
+	// deduct the fees
+	if !stdTx.Fee.Amount.IsZero() {
+		err = DeductFees(dfd.supplyKeeper, ctx, feePayer, stdTx.Fee.Amount)
 		if err != nil {
 			return ctx, err
 		}
-
-		// deduct the fees
-		if !stdTx.Fee.Amount.IsZero() {
-			err = DeductFees(supplyKeeper, newCtx, feePayer, stdTx.Fee.Amount)
-			if err != nil {
-				return ctx, err
-			}
-		}
-
-		return next(ctx, tx, simulate)
 	}
+
+	return next(ctx, tx, simulate)
 }
 
 // DeductFees deducts fees from the given account.
@@ -103,8 +126,8 @@ func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc exported.A
 
 	err := supplyKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
 	if err != nil {
-		return err.Result()
+		return err
 	}
 
-	return sdk.Result{}
+	return nil
 }

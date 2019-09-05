@@ -202,9 +202,8 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 
 	var priv tmcrypto.PrivKey
 
-	switch info.(type) {
+	switch linfo := info.(type) {
 	case localInfo:
-		linfo := info.(localInfo)
 		if linfo.PrivKeyArmor == "" {
 			err = fmt.Errorf("private key not available")
 			return
@@ -216,7 +215,6 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		}
 
 	case ledgerInfo:
-		linfo := info.(ledgerInfo)
 		priv, err = crypto.NewPrivKeyLedgerSecp256k1Unsafe(linfo.Path)
 		if err != nil {
 			return
@@ -266,9 +264,8 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 
 	var priv tmcrypto.PrivKey
 
-	switch info.(type) {
+	switch linfo := info.(type) {
 	case localInfo:
-		linfo := info.(localInfo)
 		if linfo.PrivKeyArmor == "" {
 			err = fmt.Errorf("private key not available")
 			return nil, err

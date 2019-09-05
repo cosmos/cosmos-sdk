@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
@@ -287,9 +288,16 @@ func invariants(app *SimApp) []sdk.Invariant {
 	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
 }
 
-// Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // Profile with:
@@ -306,7 +314,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewSimApp(logger, db, nil, true, 0)
+
+	app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
@@ -596,6 +605,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
+
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})
@@ -634,7 +644,8 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, 0)
+
+			app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -676,7 +687,7 @@ func BenchmarkInvariants(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0)
+	app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, simParams, simErr := simulation.SimulateFromSeed(

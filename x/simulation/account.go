@@ -38,6 +38,7 @@ func RandomAccounts(r *rand.Rand, nAccounts int) []Account {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
+
 		accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		accs[i].PubKey = accs[i].PrivKey.PubKey()
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())

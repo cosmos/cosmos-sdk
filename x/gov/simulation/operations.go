@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -15,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
+
+var minProposalID uint64 = 100000000000000
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
@@ -70,9 +73,15 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 		msg := types.NewMsgSubmitProposal(content, deposit, simAccount.Address)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, deposit)
-		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+		coins := account.SpendableCoins(ctx.BlockTime())
+
+		var fees sdk.Coins
+		coins, hasNeg := coins.SafeSub(deposit)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
 		}
 
 		tx := helpers.GenTx(
@@ -156,9 +165,15 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		msg := types.NewMsgDeposit(simAccount.Address, proposalID, deposit)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, deposit)
-		if err != nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+		coins := account.SpendableCoins(ctx.BlockTime())
+
+		var fees sdk.Coins
+		coins, hasNeg := coins.SafeSub(deposit)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
 		}
 
 		tx := helpers.GenTx(
@@ -210,7 +225,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccoun
 		msg := types.NewMsgVote(simAccount.Address, proposalID, option)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, nil)
+		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -252,12 +267,9 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 		return nil, true, nil
 	}
 
-	var maxAmt sdk.Int
-	switch {
-	case depositCoins.GT(minDeposit[0].Amount):
+	maxAmt := depositCoins
+	if maxAmt.GT(minDeposit[0].Amount) {
 		maxAmt = minDeposit[0].Amount
-	default:
-		maxAmt = depositCoins
 	}
 
 	amount, err := simulation.RandPositiveInt(r, maxAmt)
@@ -271,27 +283,28 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 // Pick a random proposal ID from a proposal with a given status.
 // It does not provide a default proposal ID.
 func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
-	proposalID, _ = k.GetProposalID(ctx)
 	checkedIDs := make(map[uint64]bool)
+	proposalID, _ = k.GetProposalID(ctx)
+	minProposalID = uint64(math.Min(float64(minProposalID), float64(proposalID)))
 	maxProposalID := int(proposalID)
 
 	proposalStatus := types.StatusNil
-	for status != proposalStatus || len(checkedIDs) < maxProposalID {
+	for status != proposalStatus || len(checkedIDs) < (maxProposalID-int(minProposalID)) {
 		checkedIDs[proposalID] = true
-		proposal, found := k.GetProposal(ctx, proposalID)
-		if !found {
-			return 0, false
+	
+		if minProposalID != proposalID {
+			proposalID = uint64(simulation.RandIntBetween(r, int(minProposalID), int(proposalID)))
 		}
 
+		proposal, ok := k.GetProposal(ctx, proposalID)
+		if !ok {
+			fmt.Println("not ok")
+			return proposalID, false
+		}
 		proposalStatus = proposal.Status
-
-		proposalID = uint64(r.Intn(1+int(proposalID)) - 1)
-		for checkedIDs[proposalID] {
-			proposalID = uint64(r.Intn(1+int(proposalID)) - 1)
-		}
 	}
 
-	return proposalID, found
+	return proposalID, true
 }
 
 // Pick a random voting option

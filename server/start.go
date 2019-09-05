@@ -27,6 +27,7 @@ const (
 	flagCPUProfile      = "cpu-profile"
 	FlagMinGasPrices    = "minimum-gas-prices"
 	FlagHaltHeight      = "halt-height"
+	FlagHaltTime        = "halt-time"
 	FlagInterBlockCache = "inter-block-cache"
 )
 
@@ -58,7 +59,8 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
-	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 

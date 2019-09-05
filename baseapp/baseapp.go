@@ -100,8 +100,11 @@ type BaseApp struct {
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
-	// height at which to halt the chain and gracefully shutdown
+	// block height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// minimum block time at which to halt the chain and gracefully shutdown
+	haltTime uint64
 
 	// application's version string
 	appVersion string
@@ -341,8 +344,12 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
-func (app *BaseApp) setHaltHeight(height uint64) {
-	app.haltHeight = height
+func (app *BaseApp) setHaltHeight(haltHeight uint64) {
+	app.haltHeight = haltHeight
+}
+
+func (app *BaseApp) setHaltTime(haltTime uint64) {
+	app.haltTime = haltTime
 }
 
 func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {

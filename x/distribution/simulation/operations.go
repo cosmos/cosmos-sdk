@@ -29,13 +29,14 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		simToAccount, _ := simulation.RandomAcc(r, accs)
-		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
-
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, nil)
+
+		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
+
+		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
@@ -73,13 +74,13 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
-		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
-
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, nil)
+		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
+
+		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
@@ -119,13 +120,13 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
-
 		account := ak.GetAccount(ctx, simAccount.Address)
-		fees, err := helpers.RandomFees(r, ctx, account, nil)
+		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
+
+		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},

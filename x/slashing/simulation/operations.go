@@ -57,13 +57,13 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		msg := types.NewMsgUnjail(validator.GetOperator())
-
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
-		fees, err := helpers.RandomFees(r, ctx, account, nil)
+		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
+
+		msg := types.NewMsgUnjail(validator.GetOperator())
 
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},

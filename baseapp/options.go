@@ -34,6 +34,12 @@ func SetHaltHeight(height uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setHaltHeight(height) }
 }
 
+// SetInterBlockCache provides a BaseApp option function that sets the
+// inter-block cache.
+func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
+	return func(app *BaseApp) { app.setInterBlockCache(cache) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

@@ -1,13 +1,15 @@
 package server
 
+// DONTCOVER
+
 import (
 	"fmt"
+	"os"
+	"runtime/pprof"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	"github.com/tendermint/tendermint/abci/server"
-
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/node"
@@ -18,12 +20,14 @@ import (
 
 // Tendermint full-node start flags
 const (
-	flagWithTendermint = "with-tendermint"
-	flagAddress        = "address"
-	flagTraceStore     = "trace-store"
-	flagPruning        = "pruning"
-	FlagMinGasPrices   = "minimum-gas-prices"
-	FlagHaltHeight     = "halt-height"
+	flagWithTendermint  = "with-tendermint"
+	flagAddress         = "address"
+	flagTraceStore      = "trace-store"
+	flagPruning         = "pruning"
+	flagCPUProfile      = "cpu-profile"
+	FlagMinGasPrices    = "minimum-gas-prices"
+	FlagHaltHeight      = "halt-height"
+	FlagInterBlockCache = "inter-block-cache"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -34,11 +38,11 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		Short: "Run the full node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
-				ctx.Logger.Info("Starting ABCI without Tendermint")
+				ctx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(ctx, appCreator)
 			}
 
-			ctx.Logger.Info("Starting ABCI with Tendermint")
+			ctx.Logger.Info("starting ABCI with Tendermint")
 
 			_, err := startInProcess(ctx, appCreator)
 			return err
@@ -55,6 +59,8 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
+	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -99,7 +105,6 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	// run forever (the node will not be returned)
 	select {}
-
 }
 
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
@@ -124,6 +129,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	}
 
 	UpgradeOldPrivValFile(cfg)
+
 	// create & start tendermint node
 	tmNode, err := node.NewNode(
 		cfg,
@@ -139,19 +145,42 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	err = tmNode.Start()
-	if err != nil {
+	if err := tmNode.Start(); err != nil {
 		return nil, err
+	}
+
+	var cpuProfileCleanup func()
+
+	if cpuProfile := viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return nil, err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return nil, err
+		}
+
+		cpuProfileCleanup = func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			f.Close()
+		}
 	}
 
 	TrapSignal(func() {
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
 		}
+
+		if cpuProfileCleanup != nil {
+			cpuProfileCleanup()
+		}
+
+		ctx.Logger.Info("exiting...")
 	})
 
 	// run forever (the node will not be returned)
 	select {}
 }
-
-// DONTCOVER

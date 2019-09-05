@@ -70,6 +70,15 @@ func (cmgr *CommitKVStoreCacheManager) GetStoreCache(key types.StoreKey, store t
 	return cmgr.caches[key.Name()]
 }
 
+// Unwrap returns the underlying CommitKVStore for a given StoreKey.
+func (cmgr *CommitKVStoreCacheManager) Unwrap(key types.StoreKey) types.CommitKVStore {
+	if ckv, ok := cmgr.caches[key.Name()]; ok {
+		return ckv.(*CommitKVStoreCache).CommitKVStore
+	}
+
+	return nil
+}
+
 // Reset resets in the internal caches.
 func (cmgr *CommitKVStoreCacheManager) Reset() {
 	cmgr.caches = make(map[string]types.CommitKVStore)

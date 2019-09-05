@@ -25,6 +25,18 @@ func TestGetOrSetStoreCache(t *testing.T) {
 	require.Equal(t, store2, mngr.GetStoreCache(sKey, store))
 }
 
+func TestUnwrap(t *testing.T) {
+	db := dbm.NewMemDB()
+	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
+
+	sKey := types.NewKVStoreKey("test")
+	store := iavlstore.UnsafeNewStore(iavl.NewMutableTree(db, 100), 10, 10)
+	_ = mngr.GetStoreCache(sKey, store)
+
+	require.Equal(t, store, mngr.Unwrap(sKey))
+	require.Nil(t, mngr.Unwrap(types.NewKVStoreKey("test2")))
+}
+
 func TestStoreCache(t *testing.T) {
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)

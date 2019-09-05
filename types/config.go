@@ -3,6 +3,8 @@ package types
 import (
 	"sync"
 )
+//DefaultKeyringServiceName is defining keyringServiceName
+const DefaultKeyringServiceName = "cosmos"
 
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
@@ -32,7 +34,7 @@ var (
 		coinType:           CoinType,
 		fullFundraiserPath: FullFundraiserPath,
 		txEncoder:          nil,
-		keyringServiceName: "gaia",
+		keyringServiceName: DefaultKeyringServiceName,
 	}
 )
 

@@ -57,7 +57,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 
 		switch key.GetType() {
 		case keys.TypeLocal:
-			fmt.Printf("Migrating %s \n", key.GetName())
+			cmd.PrintErrf("Migrating %s \n", key.GetName())
 			decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 			if err != nil {
 				return err

@@ -223,21 +223,21 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		}
 
 	case offlineInfo, multiInfo:
-		_, err := fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
+		_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
 		if err != nil {
-			return nil, nil, err
+			return 
 		}
 
 		buf := bufio.NewReader(os.Stdin)
 		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
 		if err != nil {
-			return nil, nil, err
+			return 
 		}
 
 		// Will block until user inputs the signature
-		signed, err := buf.ReadString('\n')
+		signed, err = buf.ReadString('\n')
 		if err != nil {
-			return nil, nil, err
+			return 
 		}
 
 		if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {

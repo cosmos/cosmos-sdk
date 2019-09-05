@@ -447,9 +447,8 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 	if err != nil {
 		return err
 	}
-	switch info.(type) {
+	switch linfo := info.(type) {
 	case localInfo:
-		linfo := info.(localInfo)
 		key, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
 		if err != nil {
 			return err

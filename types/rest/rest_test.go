@@ -155,7 +155,7 @@ func TestProcessPostResponse(t *testing.T) {
 	}
 
 	// setup
-	ctx := context.NewCLIContext(os.Stdin)
+	ctx := context.NewCLIContext()
 	height := int64(194423)
 
 	privKey := secp256k1.GenPrivKey()

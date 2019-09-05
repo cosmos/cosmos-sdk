@@ -12,7 +12,7 @@ import (
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	cdc := codec.New()
-	ctx := context.NewCLIContext(os.Stdin).WithCodec(cdc)
+	ctx := context.NewCLIContext().WithCodec(cdc)
 	type args struct {
 		delAddr string
 		valAddr string

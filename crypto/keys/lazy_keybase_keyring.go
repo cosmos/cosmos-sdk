@@ -73,7 +73,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 			failureCounter++
 
 			if failureCounter > 10 {
-				return "", fmt.Errorf("Too Many Failed Passphrase attempts")
+				return "", fmt.Errorf("too many failed passphrase attempts")
 			}
 
 			pass, err := input.GetPassword("Enter keyring files passphrase for your keys:", buf)

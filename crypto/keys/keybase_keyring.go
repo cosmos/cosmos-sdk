@@ -223,7 +223,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	case offlineInfo, multiInfo:
 		_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
 		if err != nil {
-			return 
+			return
 		}
 
 		buf := bufio.NewReader(os.Stdin)

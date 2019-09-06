@@ -46,7 +46,7 @@ func NewSigGasConsumeDecorator(ak keeper.AccountKeeper, sigGasConsumer Signature
 	}
 }
 
-func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
 		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
@@ -62,7 +62,17 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	signerAccs := make([]exported.Account, len(signerAddrs))
 
 	for i, sig := range stdSigs {
+		signerAccs[i], err = GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
+		if err != nil {
+			return ctx, err
+		}
+
+		// TODO
+
 		pubKey := signerAccs[i].GetPubKey()
+		if pubKey == nil {
+			pubKey = sig.PubKey
+		}
 		if simulate {
 			// Simulated txs should not contain a signature and are not required to
 			// contain a pubkey, so we must account for tx size of including a

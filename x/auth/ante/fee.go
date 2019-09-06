@@ -81,7 +81,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	signerAddrs := stdTx.GetSigners()
 
 	// fetch first signer, who's going to pay the fees
-	feePayer, err := GetSignerAcc(newCtx, dfd.ak, signerAddrs[0])
+	feePayer, err := GetSignerAcc(ctx, dfd.ak, signerAddrs[0])
 	if err != nil {
 		return ctx, err
 	}

@@ -20,8 +20,9 @@ import (
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
-	return func(r *rand.Rand, accs []simulation.Account, config *simulation.Config,
-	) (appState json.RawMessage, simAccs []simulation.Account, genesisTimestamp time.Time) {
+	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
+	) (appState json.RawMessage, simAccs []simulation.Account, genesisTimestamp time.Time,
+		chainID string) {
 
 		if flagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
@@ -29,13 +30,14 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			genesisTimestamp = time.Unix(flagGenesisTimeValue, 0)
 		}
 
+		chainID = config.ChainID
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
-			// override the default chain-id from simapp
-			appState, simAccs, config.ChainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			// override the default chain-id from simapp to set it later to the config
+			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 		case config.ParamsFile != "":
 			appParams := make(simulation.AppParams)
@@ -52,7 +54,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		return appState, simAccs, genesisTimestamp
+		return appState, simAccs, genesisTimestamp, chainID
 	}
 }
 

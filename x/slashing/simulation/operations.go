@@ -16,6 +16,7 @@ import (
 )
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
+// TODO: this message is almost, if not always, skipped !
 func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {

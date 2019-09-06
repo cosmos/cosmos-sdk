@@ -19,8 +19,7 @@ import (
 
 // AppStateFn returns the app state json bytes and the genesis accounts
 type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
-	appState json.RawMessage, accounts []Account, genesisTimestamp time.Time,
-	chainID string,
+	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
 )
 
 // initialize the chain for the simulation
@@ -29,7 +28,7 @@ func initChain(
 	appStateFn AppStateFn, config Config,
 ) (mockValidators, time.Time, []Account, string) {
 
-	appState, accounts, genesisTimestamp, chainID := appStateFn(r, accounts, config)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,

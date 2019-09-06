@@ -21,8 +21,7 @@ import (
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulation.AppStateFn {
 	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
-	) (appState json.RawMessage, simAccs []simulation.Account, genesisTimestamp time.Time,
-		chainID string) {
+	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
 		if flagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
@@ -54,7 +53,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
-		return appState, simAccs, genesisTimestamp, chainID
+		return appState, simAccs, chainID, genesisTimestamp
 	}
 }
 

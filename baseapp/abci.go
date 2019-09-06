@@ -230,7 +230,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 		// Note: State is not actually committed when halted. Logs from Tendermint
 		// can be ignored.
-		return
+		return abci.ResponseCommit{}
 	}
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.

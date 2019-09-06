@@ -17,7 +17,7 @@ import (
 type (
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB, io.Writer) abci.Application
+	AppCreator func(log.Logger, dbm.DB, io.Writer, chan<- interface{}) abci.Application
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.

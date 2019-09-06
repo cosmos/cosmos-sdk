@@ -83,7 +83,8 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	cancel := make(chan interface{})
+	app := appCreator(ctx.Logger, db, traceWriter, cancel)
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
@@ -106,7 +107,8 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 	})
 
 	// run forever (the node will not be returned)
-	select {}
+	<-cancel
+	return nil
 }
 
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
@@ -123,7 +125,8 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	cancel := make(chan interface{})
+	app := appCreator(ctx.Logger, db, traceWriter, cancel)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
@@ -184,5 +187,6 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	})
 
 	// run forever (the node will not be returned)
-	select {}
+	<-cancel
+	return tmNode, nil
 }

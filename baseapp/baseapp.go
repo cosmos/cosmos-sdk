@@ -65,6 +65,8 @@ type BaseApp struct {
 	queryRouter sdk.QueryRouter      // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
+	cancel chan<- interface{} // cancellation channel
+
 	// set upon LoadVersion or LoadLatestVersion.
 	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
@@ -115,9 +117,7 @@ type BaseApp struct {
 // configuration choices.
 //
 // NOTE: The db is used to store the version number for now.
-func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
-) *BaseApp {
+func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, cancel chan<- interface{}, options ...func(*BaseApp)) *BaseApp {
 
 	app := &BaseApp{
 		logger:         logger,
@@ -128,6 +128,7 @@ func NewBaseApp(
 		router:         NewRouter(),
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
+		cancel:         cancel,
 		fauxMerkleMode: false,
 	}
 	for _, option := range options {

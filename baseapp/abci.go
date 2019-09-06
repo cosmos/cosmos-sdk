@@ -2,10 +2,8 @@ package baseapp
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
-	"syscall"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -256,22 +254,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 func (app *BaseApp) halt() {
 	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
-
-	p, err := os.FindProcess(os.Getpid())
-	if err == nil {
-		// attempt cascading signals in case SIGINT fails (os dependent)
-		sigIntErr := p.Signal(syscall.SIGINT)
-		sigTermErr := p.Signal(syscall.SIGTERM)
-
-		if sigIntErr == nil || sigTermErr == nil {
-			return
-		}
-	}
-
-	// Resort to exiting immediately if the process could not be found or killed
-	// via SIGINT/SIGTERM signals.
-	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
-	os.Exit(0)
+	app.cancel <- struct{}{}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it

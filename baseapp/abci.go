@@ -215,6 +215,24 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.UnixNano() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		app.halt()
+
+		// Note: State is not actually committed when halted. Logs from Tendermint
+		// can be ignored.
+		return
+	}
+
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
@@ -230,22 +248,6 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// empty/reset the deliver state
 	app.deliverState = nil
-
-	defer func() {
-		var halt bool
-
-		switch {
-		case app.haltHeight > 0 && uint64(header.Height) == app.haltHeight:
-			halt = true
-
-		case app.haltTime > 0 && header.Time.UnixNano() >= int64(app.haltTime):
-			halt = true
-		}
-
-		if halt {
-			app.halt()
-		}
-	}()
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,

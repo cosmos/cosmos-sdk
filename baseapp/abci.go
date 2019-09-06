@@ -221,7 +221,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
 		halt = true
 
-	case app.haltTime > 0 && header.Time.UnixNano() >= int64(app.haltTime):
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
 		halt = true
 	}
 

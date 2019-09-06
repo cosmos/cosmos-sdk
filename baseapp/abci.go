@@ -256,12 +256,12 @@ func (app *BaseApp) halt() {
 
 	p, err := os.FindProcess(os.Getpid())
 	if err != nil {
-		app.logger.Info("failed to find calling process; exiting...")
+		app.logger.Info("failed to find calling process")
 		os.Exit(0)
 	}
 
 	if err := p.Signal(os.Interrupt); err != nil {
-		app.logger.Info("failed to signal SIGINT; exiting...")
+		app.logger.Info("failed to signal SIGINT")
 		os.Exit(0)
 	}
 }

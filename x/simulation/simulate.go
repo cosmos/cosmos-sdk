@@ -273,9 +273,11 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			op, r2 := opAndR.op, opAndR.rand
 			opMsg, futureOps, err := op(r2, app, ctx, accounts)
 			opMsg.LogEvent(event)
+
 			if !config.Lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
+
 			if err != nil {
 				logWriter.PrintLogs()
 				tb.Fatalf("error on operation %d within block %d, %v",
@@ -283,10 +285,12 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
-			if testingMode {
+
+			if testingMode && opCount%50 == 0 {
 				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
 					header.Height, config.NumBlocks, opCount, blocksize)
 			}
+
 			opCount++
 		}
 		return opCount

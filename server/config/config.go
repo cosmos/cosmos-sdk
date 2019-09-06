@@ -20,10 +20,16 @@ type BaseConfig struct {
 
 	// HaltHeight contains a non-zero block height at which a node will gracefully
 	// halt and shutdown that can be used to assist upgrades and testing.
+	//
+	// Note: State will not be committed on the corresponding height and any logs
+	// indicating such can be safely ignored.
 	HaltHeight uint64 `mapstructure:"halt-height"`
 
 	// HaltTime contains a non-zero minimum block time at which a node will
 	// gracefully halt and shutdown that can be used to assist upgrades and testing.
+	//
+	// Note: State will not be committed on the corresponding height and any logs
+	// indicating such can be safely ignored.
 	HaltTime uint64 `mapstructure:"halt-time"`
 
 	// InterBlockCache enables inter-block caching.

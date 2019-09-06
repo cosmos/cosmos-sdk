@@ -35,7 +35,7 @@ func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	db := dbm.NewMemDB()
 	codec := codec.New()
 	registerTestCodec(codec)
-	return NewBaseApp(name, logger, db, testTxDecoder(codec), nil, options)
+	return NewBaseApp(name, logger, db, testTxDecoder(codec), nil, options...)
 }
 
 func registerTestCodec(cdc *codec.Codec) {
@@ -245,7 +245,7 @@ func TestSetLoader(t *testing.T) {
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
-			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, nil, opts)
+			app := NewBaseApp(t.Name(), defaultLogger(), db, nil, nil, opts...)
 			capKey := sdk.NewKVStoreKey(MainStoreKey)
 			app.MountStores(capKey)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))

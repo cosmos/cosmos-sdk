@@ -254,6 +254,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	}
 }
 
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
 func (app *BaseApp) halt() {
 	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
 

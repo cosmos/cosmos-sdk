@@ -257,16 +257,11 @@ func (app *BaseApp) halt() {
 
 	p, err := os.FindProcess(os.Getpid())
 	if err == nil {
-		var sigErr error
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
 
-		// attempt cascading signals in case SIGINT fails
-		app.logger.Info("sending SIGINT")
-		if sigErr = p.Signal(syscall.SIGINT); sigErr != nil {
-			app.logger.Info("failed to send SIGINT; sending SIGTERM", "error", sigErr)
-			sigErr = p.Signal(syscall.SIGTERM)
-		}
-
-		if sigErr == nil {
+		if sigIntErr == nil || sigTermErr == nil {
 			return
 		}
 	}

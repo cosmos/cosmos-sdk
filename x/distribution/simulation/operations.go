@@ -110,14 +110,15 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
-		if !found {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
-		}
-
+		// FIXME: this msg is not simulated because the commission is always 0!
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		simAccount, found := simulation.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
+		if !found {
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)

@@ -24,9 +24,13 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, toSimAcc, coins, err := randomSendFields(r, ctx, accs, ak)
+		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, ak)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		if skip {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
@@ -43,6 +47,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) (err error) {
+
 	account := ak.GetAccount(ctx, msg.FromAddress)
 	coins := account.SpendableCoins(ctx.BlockTime())
 
@@ -82,9 +87,13 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		simAccount, toSimAcc, coins, err := randomSendFields(r, ctx, accs, ak)
+		simAccount, toSimAcc, coins, skip, err := randomSendFields(r, ctx, accs, ak)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
+		}
+
+		if skip {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		msg := types.MsgMultiSend{
@@ -156,7 +165,7 @@ func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper
 // randomSendFields returns the sender and recipient simulation accounts as well
 // as the transferred amount.
 func randomSendFields(r *rand.Rand, ctx sdk.Context, accs []simulation.Account,
-	ak types.AccountKeeper) (simulation.Account, simulation.Account, sdk.Coins, error) {
+	ak types.AccountKeeper) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
 
 	simAccount, _ := simulation.RandomAcc(r, accs)
 	toSimAcc, _ := simulation.RandomAcc(r, accs)
@@ -168,24 +177,24 @@ func randomSendFields(r *rand.Rand, ctx sdk.Context, accs []simulation.Account,
 
 	acc := ak.GetAccount(ctx, simAccount.Address)
 	if acc == nil {
-		return simAccount, toSimAcc, nil, nil // skip error
+		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
 	coins := acc.SpendableCoins(ctx.BlockHeader().Time)
 	if coins.Empty() {
-		return simAccount, toSimAcc, nil, nil // skip error
+		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
 	denomIndex := r.Intn(len(coins))
 	if coins[denomIndex].Amount.IsZero() {
-		return simAccount, toSimAcc, nil, nil // skip error
+		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 
 	amt, err := simulation.RandPositiveInt(r, coins[denomIndex].Amount)
 	if err != nil {
-		return simAccount, toSimAcc, nil, err
+		return simAccount, toSimAcc, nil, false, err
 	}
 
 	coins = sdk.Coins{sdk.NewCoin(coins[denomIndex].Denom, amt)}
-	return simAccount, toSimAcc, coins, nil
+	return simAccount, toSimAcc, coins, false, nil
 }

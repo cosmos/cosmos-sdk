@@ -642,7 +642,13 @@ func TestAppStateDeterminism(t *testing.T) {
 		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			logger := log.NewNopLogger()
+			var logger log.Logger
+			if flagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
+			}
+
 			db := dbm.NewMemDB()
 
 			app := NewSimApp(logger, db, nil, true, 0, interBlockCacheOpt())

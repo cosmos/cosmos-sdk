@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -17,7 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-var minProposalID uint64 = 100000000000000
+const defaultMinProposalID = 100000000000000
+
+var minProposalID = defaultMinProposalID
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
@@ -283,25 +284,18 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 // Pick a random proposal ID from a proposal with a given status.
 // It does not provide a default proposal ID.
 func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
-	checkedIDs := make(map[uint64]bool)
 	proposalID, _ = k.GetProposalID(ctx)
-	minProposalID = uint64(math.Min(float64(minProposalID), float64(proposalID)))
-	maxProposalID := int(proposalID)
+	if minProposalID == defaultMinProposalID {
+		minProposalID = int(math.Min(float64(minProposalID), float64(proposalID)))
+	}
 
-	proposalStatus := types.StatusNil
-	for status != proposalStatus || len(checkedIDs) < (maxProposalID-int(minProposalID)) {
-		checkedIDs[proposalID] = true
-	
-		if minProposalID != proposalID {
-			proposalID = uint64(simulation.RandIntBetween(r, int(minProposalID), int(proposalID)))
-		}
+	if minProposalID < int(proposalID) {
+		proposalID = uint64(simulation.RandIntBetween(r, minProposalID, int(proposalID)))
+	}
 
-		proposal, ok := k.GetProposal(ctx, proposalID)
-		if !ok {
-			fmt.Println("not ok")
-			return proposalID, false
-		}
-		proposalStatus = proposal.Status
+	proposal, ok := k.GetProposal(ctx, proposalID)
+	if !ok || proposal.Status != status {
+		return proposalID, false
 	}
 
 	return proposalID, true

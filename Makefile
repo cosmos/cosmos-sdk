@@ -138,7 +138,7 @@ test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Commit=true -Seed=57 -v -timeout 24h
+	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 .PHONY: test \
 test_sim_nondeterminism \

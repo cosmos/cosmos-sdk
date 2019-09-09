@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"syscall"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -214,6 +215,24 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		app.halt()
+
+		// Note: State is not actually committed when halted. Logs from Tendermint
+		// can be ignored.
+		return abci.ResponseCommit{}
+	}
+
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
@@ -230,16 +249,31 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
-	defer func() {
-		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
-			app.logger.Info("halting node per configuration", "height", app.haltHeight)
-			os.Exit(0)
-		}
-	}()
-
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
+}
+
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
+
+		if sigIntErr == nil || sigTermErr == nil {
+			return
+		}
+	}
+
+	// Resort to exiting immediately if the process could not be found or killed
+	// via SIGINT/SIGTERM signals.
+	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
+	os.Exit(0)
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it

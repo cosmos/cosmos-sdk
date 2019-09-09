@@ -28,6 +28,8 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
+"Genesis Breaking" for breaking changes that require changes on the genesis 
+file through a migration script.
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 
 Ref: https://keepachangelog.com/en/1.0.0/
@@ -45,6 +47,11 @@ have this method perform a no-op.
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
+
+### Genesis Changes
+
+* (sdk) [\#4946](https://github.com/cosmos/cosmos-sdk/pull/4946) Add `PubKey` field
+to `GenesisAccount`
 
 ### Client Breaking Changes
 

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var (
@@ -78,16 +79,19 @@ type AppModule struct {
 
 	keeper        Keeper
 	accountKeeper types.AccountKeeper
-	stakingKeeper types.StakingKeeper
+	stakingKeeper stakingkeeper.Keeper
 	supplyKeeper  types.SupplyKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
+func NewAppModule(keeper Keeper, accountKeeper types.AccountKeeper,
+	supplyKeeper types.SupplyKeeper, stakingKeeper stakingkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
+		accountKeeper:  accountKeeper,
 		supplyKeeper:   supplyKeeper,
+		stakingKeeper:  stakingKeeper,
 	}
 }
 
@@ -159,7 +163,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the distribution content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents() []sim.ContentSimulatorFn {
+func (am AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
 	return simulation.ProposalContents(am.keeper)
 }
 

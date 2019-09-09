@@ -8,10 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// OpWeightSubmitTextProposal app params key for text proposal
+const OpWeightSubmitTextProposal = "op_weight_submit_text_proposal"
+
 // ProposalContents
-func ProposalContents() []simulation.ContentSimulatorFn {
-	return []simulation.ContentSimulatorFn{
-		SimulateTextProposalContent,
+func ProposalContents() []simulation.WeightedProposalContent {
+	return []simulation.WeightedProposalContent{
+		{
+			AppParamsKey:       OpWeightSubmitTextProposal,
+			DefaultWeight:      5,
+			ContentSimulatorFn: SimulateTextProposalContent,
+		},
 	}
 }
 

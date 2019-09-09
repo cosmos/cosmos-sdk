@@ -111,3 +111,14 @@ func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChang
 func (spc ParamChange) ComposedKey() string {
 	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
 }
+
+//-----------------------------------------------------------------------------
+// Proposal Contents
+
+// WeightedProposalContent defines a common struct for proposal contents defined by
+// external modules (i.e outside gov)
+type WeightedProposalContent struct {
+	AppParamsKey       string             // key used to retrieve the value of the weigth from the simulation application params
+	DefaultWeight      int                // default weigth
+	ContentSimulatorFn ContentSimulatorFn // content simulator function
+}

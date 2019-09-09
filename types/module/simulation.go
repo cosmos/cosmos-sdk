@@ -18,7 +18,7 @@ type AppModuleSimulation interface {
 	GenerateGenesisState(input *SimulationState)
 
 	// content functions used to simulate governance proposals
-	ProposalContents() []simulation.ContentSimulatorFn
+	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
 
 	// randomized module parameters for param change proposals
 	RandomizedParams(r *rand.Rand) []simulation.ParamChange
@@ -45,6 +45,16 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 		Modules:       modules,
 		StoreDecoders: make(sdk.StoreDecoderRegistry),
 	}
+}
+
+// GetProposalContents returns each module's proposal content generator function
+// with their default operation weight and key.
+func (sm *SimulationManager) GetProposalContents(simState SimulationState) (wContents []simulation.WeightedProposalContent) {
+	for _, module := range sm.Modules {
+		wContents = append(wContents, module.ProposalContents(simState)...)
+	}
+
+	return
 }
 
 // RegisterStoreDecoders registers each of the modules' store decoders into a map
@@ -87,12 +97,14 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) (wOps 
 // GenesisState generator function
 type SimulationState struct {
 	AppParams    simulation.AppParams
-	Cdc          *codec.Codec               // application codec
-	Rand         *rand.Rand                 // random number
-	GenState     map[string]json.RawMessage // genesis state
-	Accounts     []simulation.Account       // simulation accounts
-	InitialStake int64                      // initial coins per account
-	NumBonded    int64                      // number of initially bonded acconts
-	GenTimestamp time.Time                  // genesis timestamp
-	UnbondTime   time.Duration              // staking unbond time stored to use it as the slashing maximum evidence duration
+	Cdc          *codec.Codec                         // application codec
+	Rand         *rand.Rand                           // random number
+	GenState     map[string]json.RawMessage           // genesis state
+	Accounts     []simulation.Account                 // simulation accounts
+	InitialStake int64                                // initial coins per account
+	NumBonded    int64                                // number of initially bonded acconts
+	GenTimestamp time.Time                            // genesis timestamp
+	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
+	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
+	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
 }

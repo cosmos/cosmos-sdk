@@ -103,9 +103,8 @@ func SimulationOperations(app *SimApp, cdc *codec.Codec, config simulation.Confi
 		app.cdc.MustUnmarshalJSON(bz, &simState.AppParams)
 	}
 
-	// paramChanges := app.sm.GenerateParamChanges(config.Seed)
-	// TODO: generate proposal contentSimulator
-
+	simState.ParamChanges = app.sm.GenerateParamChanges(config.Seed)
+	simState.Contents = app.sm.GetProposalContents(simState)
 	return app.sm.WeightedOperations(simState)
 }
 

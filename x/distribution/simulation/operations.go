@@ -26,7 +26,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
-	k keeper.Keeper, sk types.StakingKeeper) simulation.WeightedOperations {
+	k keeper.Keeper, sk stakingkeeper.Keeper) simulation.WeightedOperations {
 
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
@@ -95,14 +95,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
-	stakingKeeper types.StakingKeeper) simulation.Operation {
+	sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
-		sk, ok := stakingKeeper.(stakingkeeper.Keeper)
-		if !ok {
-			panic("invalid staking keeper")
-		}
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
@@ -145,14 +140,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper,
-	stakingKeeper types.StakingKeeper) simulation.Operation {
+	sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
-		sk, ok := stakingKeeper.(stakingkeeper.Keeper)
-		if !ok {
-			panic("invalid staking keeper")
-		}
 
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {

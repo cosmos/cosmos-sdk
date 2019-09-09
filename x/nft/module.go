@@ -153,7 +153,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents() []sim.ContentSimulatorFn {
+func (AppModule) ProposalContents(_ module.SimulationState) []sim.WeightedProposalContent {
 	return nil
 }
 

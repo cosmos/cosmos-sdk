@@ -55,15 +55,12 @@ func (AppModuleBasic) GetQueryCmd(_ *codec.Codec) *cobra.Command { return nil }
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
 	AppModuleBasic
-
-	paramChangePool []sim.ParamChange
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(paramChangePool []sim.ParamChange) AppModule {
+func NewAppModule() AppModule {
 	return AppModule{
-		AppModuleBasic:  AppModuleBasic{},
-		paramChangePool: paramChangePool,
+		AppModuleBasic: AppModuleBasic{},
 	}
 }
 
@@ -77,8 +74,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns all the params content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents() []sim.ContentSimulatorFn {
-	return simulation.ProposalContents(am.paramChangePool)
+func (am AppModule) ProposalContents(simState module.SimulationState) []sim.WeightedProposalContent {
+	return simulation.ProposalContents(simState.ParamChanges)
 }
 
 // RandomizedParams creates randomized distribution param changes for the simulator.
@@ -90,6 +87,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
 func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
+func (am AppModule) WeightedOperations(_ module.SimulationState) []sim.WeightedOperation {
 	return nil
 }

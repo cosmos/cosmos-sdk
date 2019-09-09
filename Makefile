@@ -8,8 +8,11 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
+GOPROXY ?= direct
+goproxy := $(GOPROXY)
 
 export GO111MODULE = on
+export GOPROXY = $(goproxy)
 
 all: tools build lint test
 

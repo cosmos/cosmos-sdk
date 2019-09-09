@@ -9,7 +9,7 @@
 In the SDK, when the `GenesisState` is initialized through a `InitGenesis` call, some of the `GenesisState` fields are loaded from a `genesis.json` file, whereas in other cases they are initialized (_i.e_ populated) if the corresponding object value from JSON is empty, undefined or its value is zero.
 
 This may lead to confusion because as is currently programmed, `InitGenesis`
-initializes _and_ loads the values at the same time. When in reallity they should be
+initializes _and_ loads the values at the same time. When in reality they should be
 two separated disctinct processes.
 
 A recurring case of this problem is to check if a balance is empty and initialize it

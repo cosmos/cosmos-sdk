@@ -127,11 +127,11 @@ test_sim_custom_genesis_multi_seed: runsim
 	@$(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
 test_sim_multi_seed_long: runsim
-	@echo "Running multi-seed application simulation. This may take awhile!"
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP)500 50 TestFullAppSimulation
+	@echo "Running long multi-seed application simulation. This may take awhile!"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
 
 test_sim_multi_seed_short: runsim
-	@echo "Running multi-seed application simulation. This may take awhile!"
+	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
 
 test_sim_benchmark_invariants:

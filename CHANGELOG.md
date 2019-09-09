@@ -28,6 +28,8 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
+"Genesis Breaking" for breaking changes that require changes on the genesis 
+file through a migration script.
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 
 Ref: https://keepachangelog.com/en/1.0.0/
@@ -46,6 +48,11 @@ have this method perform a no-op.
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
 
+### Genesis Changes
+
+* (sdk) [\#4946](https://github.com/cosmos/cosmos-sdk/pull/4946) Add `PubKey` field
+to `GenesisAccount`
+
 ### Client Breaking Changes
 
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
@@ -57,6 +64,9 @@ via the `--cpu-profile` flag.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
+CLI option to the `start` command. When provided, an application will halt during `Commit` when the
+block time is >= the `halt-time`.
 
 ### Improvements
 
@@ -91,6 +101,8 @@ to detail this new feature and how state transitions occur.
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
+`os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
 
 ## [v0.37.0] - 2019-08-21
 

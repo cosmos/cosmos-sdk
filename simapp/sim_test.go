@@ -61,7 +61,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
@@ -99,7 +99,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
@@ -107,7 +107,7 @@ func TestFullAppSimulation(t *testing.T) {
 	config := NewConfigFromFlags()
 	config.ChainID = helpers.SimAppChainID
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -122,7 +122,7 @@ func TestFullAppSimulation(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -155,7 +155,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application import/export simulation")
 	}
 
@@ -163,7 +163,7 @@ func TestAppImportExport(t *testing.T) {
 	config := NewConfigFromFlags()
 	config.ChainID = helpers.SimAppChainID
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -178,7 +178,7 @@ func TestAppImportExport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -223,7 +223,7 @@ func TestAppImportExport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, flagPeriodValue, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
@@ -274,7 +274,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation after import")
 	}
 
@@ -282,7 +282,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	config := NewConfigFromFlags()
 	config.ChainID = helpers.SimAppChainID
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -296,7 +296,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
@@ -348,7 +348,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, flagPeriodValue, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	newApp.InitChain(abci.RequestInitChain{
@@ -368,7 +368,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
@@ -388,7 +388,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if flagVerboseValue {
+			if FlagVerboseValue {
 				logger = log.TestingLogger()
 			} else {
 				logger = log.NewNopLogger()
@@ -396,7 +396,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 
-			app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
+			app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -438,7 +438,7 @@ func BenchmarkInvariants(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, simParams, simErr := simulation.SimulateFromSeed(

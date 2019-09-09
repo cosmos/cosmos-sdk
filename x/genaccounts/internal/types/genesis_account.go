@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -36,6 +37,10 @@ type GenesisAccount struct {
 
 // Validate checks for errors on the vesting and module account parameters
 func (ga GenesisAccount) Validate() error {
+	if ga.PubKey != nil && ga.Address != nil && !bytes.Equal(ga.PubKey.Address().Bytes(), ga.Address.Bytes()) {
+		return errors.New("pubkey and address pair is invalid")
+	}
+
 	if !ga.OriginalVesting.IsZero() {
 		if ga.OriginalVesting.IsAnyGT(ga.Coins) {
 			return errors.New("vesting amount cannot be greater than total amount")

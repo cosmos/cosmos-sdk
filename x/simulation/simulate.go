@@ -18,26 +18,26 @@ import (
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts
-type AppStateFn func(r *rand.Rand, accs []Account, config *Config) (
-	appState json.RawMessage, accounts []Account, genesisTimestamp time.Time,
+type AppStateFn func(r *rand.Rand, accs []Account, config Config) (
+	appState json.RawMessage, accounts []Account, chainId string, genesisTimestamp time.Time,
 )
 
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []Account, app *baseapp.BaseApp,
 	appStateFn AppStateFn, config Config,
-) (mockValidators, time.Time, []Account) {
+) (mockValidators, time.Time, []Account, string) {
 
-	appState, accounts, genesisTimestamp := appStateFn(r, accounts, &config)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
-		ChainId:       config.ChainID,
+		ChainId:       chainID,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators, genesisTimestamp, accounts
+	return validators, genesisTimestamp, accounts, chainID
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -63,10 +63,12 @@ func SimulateFromSeed(
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators, genesisTimestamp, accs := initChain(r, params, accs, app, appStateFn, config)
+	validators, genesisTimestamp, accs, chainID := initChain(r, params, accs, app, appStateFn, config)
 	if len(accs) == 0 {
 		return true, params, fmt.Errorf("must have greater than zero genesis accounts")
 	}
+
+	config.ChainID = chainID
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",

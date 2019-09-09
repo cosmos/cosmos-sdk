@@ -41,12 +41,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [\#4973](https://github.com/cosmos/cosmos-sdk/pull/4973) Enable application CPU profiling
 via the `--cpu-profile` flag.
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
+CLI option to the `start` command. When provided, an application will halt during `Commit` when the
+block time is >= the `halt-time`.
 
 ### Improvements
 
 * [\#4990](https://github.com/cosmos/cosmos-sdk/issues/4990) Add `Events` to the `ABCIMessageLog` to
 provide context and grouping of events based on the messages they correspond to. The `Events` field
 in `TxResponse` is deprecated and will be removed in the next major release.
+
+### Bug Fixes
+
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
+`os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
 
 ## [v0.37.0] - 2019-08-21
 

@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"syscall"
 
 	"errors"
 
@@ -83,8 +84,11 @@ type BaseApp struct {
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
-	// height at which to halt the chain and gracefully shutdown
+	// block height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// minimum block time (in Unix seconds) at which to halt the chain and gracefully shutdown
+	haltTime uint64
 
 	// application's version string
 	appVersion string
@@ -264,8 +268,12 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
-func (app *BaseApp) setHaltHeight(height uint64) {
-	app.haltHeight = height
+func (app *BaseApp) setHaltHeight(haltHeight uint64) {
+	app.haltHeight = haltHeight
+}
+
+func (app *BaseApp) setHaltTime(haltTime uint64) {
+	app.haltTime = haltTime
 }
 
 // Router returns the router of the BaseApp.
@@ -983,7 +991,27 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
-	// write the Deliver state and commit the MultiStore
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		app.halt()
+
+		// Note: State is not actually committed when halted. Logs from Tendermint
+		// can be ignored.
+		return abci.ResponseCommit{}
+	}
+
+	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
@@ -997,16 +1025,31 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
-	defer func() {
-		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
-			app.logger.Info("halting node per configuration", "height", app.haltHeight)
-			os.Exit(0)
-		}
-	}()
-
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
+}
+
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
+
+		if sigIntErr == nil || sigTermErr == nil {
+			return
+		}
+	}
+
+	// Resort to exiting immediately if the process could not be found or killed
+	// via SIGINT/SIGTERM signals.
+	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
+	os.Exit(0)
 }
 
 // ----------------------------------------------------------------------------

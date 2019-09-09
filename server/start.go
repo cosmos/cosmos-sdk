@@ -27,6 +27,7 @@ const (
 	flagCPUProfile     = "cpu-profile"
 	FlagMinGasPrices   = "minimum-gas-prices"
 	FlagHaltHeight     = "halt-height"
+	FlagHaltTime       = "halt-time"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -35,6 +36,24 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
+		Long: `Run the full node application with Tendermint in or out of process. By
+default, the application will run with Tendermint in process.
+
+Pruning options can be provided via the '--pruning' flag. The options are as follows:
+
+syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+everything: all saved states will be deleted, storing only the current state
+
+Node halting configurations exist in the form of two flags: '--halt-height' and '--halt-time'. During
+the ABCI Commit phase, the node will check if the current block height is greater than or equal to
+the halt-height or if the current block time is greater than or equal to the halt-time. If so, the
+node will attempt to gracefully shutdown and the block will not be committed. In addition, the node
+will not be able to commit subsequent blocks.
+
+For profiling and benchmarking purposes, CPU profiling can be enabled via the '--cpu-profile' flag
+which accepts a path for the resulting pprof file.
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !viper.GetBool(flagWithTendermint) {
 				ctx.Logger.Info("starting ABCI without Tendermint")
@@ -58,6 +77,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Height at which to gracefully halt the chain and shutdown the node")
+	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().String(flagCPUProfile, "", "Enable CPU profiling and write to the provided file")
 
 	// add support for all Tendermint-specific command line options

@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -33,18 +34,16 @@ func init() {
 	GetSimulatorFlags()
 }
 
-func invariants(app *SimApp) []sdk.Invariant {
-	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
-	if flagPeriodValue == 1 {
-		return app.CrisisKeeper.Invariants()
-	}
-	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
-}
-
-// Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // Profile with:
@@ -61,14 +60,15 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewSimApp(logger, db, nil, true, 0)
+
+	app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
 
 	// Run randomized simulation
 	// TODO: parameterize numbers, save for a later PR
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(app, app.Codec(), config),
-		invariants(app), app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -122,14 +122,14 @@ func TestFullAppSimulation(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(app, app.Codec(), config),
-		invariants(app), app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -178,14 +178,14 @@ func TestAppImportExport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(app, app.Codec(), config),
-		invariants(app), app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -223,7 +223,7 @@ func TestAppImportExport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, flagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
@@ -296,14 +296,14 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, flagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(app, app.Codec(), config),
-		invariants(app), app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -348,8 +348,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, flagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
+
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})
@@ -358,7 +359,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	_, _, err = simulation.SimulateFromSeed(
 		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(newApp, newApp.Codec(), config),
-		invariants(newApp), newApp.ModuleAccountAddrs(), config,
+		newApp.ModuleAccountAddrs(), config,
 	)
 
 	require.NoError(t, err)
@@ -388,7 +389,8 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, 0)
+
+			app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -397,7 +399,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			_, _, err := simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-				SimulationOperations(app, app.Codec(), config), []sdk.Invariant{},
+				SimulationOperations(app, app.Codec(), config),
 				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
@@ -430,13 +432,13 @@ func BenchmarkInvariants(b *testing.B) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0)
+	app := NewSimApp(logger, db, nil, true, flagPeriodValue, interBlockCacheOpt())
 
 	// 2. Run parameterized simulation (w/o invariants)
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b, ioutil.Discard, app.BaseApp, AppStateFn(app.Codec(), app.sm),
 		SimulationOperations(app, app.Codec(), config),
-		[]sdk.Invariant{}, app.ModuleAccountAddrs(), config,
+		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked

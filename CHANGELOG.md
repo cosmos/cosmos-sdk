@@ -57,6 +57,9 @@ via the `--cpu-profile` flag.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
+CLI option to the `start` command. When provided, an application will halt during `Commit` when the
+block time is >= the `halt-time`.
 
 ### Improvements
 
@@ -91,6 +94,8 @@ to detail this new feature and how state transitions occur.
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
+`os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
 
 ## [v0.37.0] - 2019-08-21
 

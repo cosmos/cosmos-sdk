@@ -105,7 +105,7 @@ test_race:
 test_sim_nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-	    -NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
 test_sim_custom_genesis_fast:
 	@echo "Running custom genesis simulation..."
@@ -115,30 +115,30 @@ test_sim_custom_genesis_fast:
 
 test_sim_import_export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 5 TestAppImportExport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppImportExport
 
 test_sim_after_import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 5 TestAppSimulationAfterImport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppSimulationAfterImport
 
 test_sim_custom_genesis_multi_seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json $(SIMAPP) 400 5 TestFullAppSimulation
+	@$(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
 test_sim_multi_seed_long: runsim
-	@echo "Running multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -j 4 $(SIMAPP) 500 50 TestFullAppSimulation
+	@echo "Running long multi-seed application simulation. This may take awhile!"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
 
 test_sim_multi_seed_short: runsim
-	@echo "Running multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim -j 4 $(SIMAPP) 50 10 TestFullAppSimulation
+	@echo "Running short multi-seed application simulation. This may take awhile!"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
 
 test_sim_benchmark_invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Commit=true -Seed=57 -v -timeout 24h
+	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 .PHONY: test \
 test_sim_nondeterminism \

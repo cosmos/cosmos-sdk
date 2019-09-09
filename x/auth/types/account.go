@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"time"
@@ -16,6 +17,7 @@ import (
 // BaseAccount
 
 var _ exported.Account = (*BaseAccount)(nil)
+var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
 // BaseAccount - a base account structure.
 // This can be extended by embedding within in your AppAccount.
@@ -167,6 +169,16 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bs), err
+}
+
+// Validate checks for errors on the account fields
+func (acc BaseAccount) Validate() error {
+	if acc.PubKey != nil && acc.Address != nil &&
+		!bytes.Equal(acc.PubKey.Address().Bytes(), acc.Address.Bytes()) {
+		return errors.New("pubkey and address pair is invalid")
+	}
+
+	return nil
 }
 
 //-----------------------------------------------------------------------------
@@ -346,10 +358,19 @@ func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
 	return bva.DelegatedVesting
 }
 
+// Validate checks for errors on the account fields
+func (bva BaseVestingAccount) Validate() error {
+	if bva.GetOriginalVesting().IsAnyGT(bva.Coins) {
+		return errors.New("vesting amount cannot be greater than total amount")
+	}
+	return bva.BaseAccount.Validate()
+}
+
 //-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
 var _ exported.VestingAccount = (*ContinuousVestingAccount)(nil)
+var _ exported.GenesisAccount = (*ContinuousVestingAccount)(nil)
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
@@ -467,10 +488,20 @@ func (cva *ContinuousVestingAccount) GetEndTime() int64 {
 	return cva.EndTime
 }
 
+// Validate checks for errors on the account fields
+func (cva ContinuousVestingAccount) Validate() error {
+	if cva.GetStartTime() >= cva.GetEndTime() {
+		return errors.New("vesting start-time cannot be before end-time")
+	}
+
+	return cva.BaseVestingAccount.Validate()
+}
+
 //-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
 var _ exported.VestingAccount = (*DelayedVestingAccount)(nil)
+var _ exported.GenesisAccount = (*DelayedVestingAccount)(nil)
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
 // coins after a specific time, but non prior. In other words, it keeps them
@@ -534,4 +565,9 @@ func (dva *DelayedVestingAccount) GetStartTime() int64 {
 // GetEndTime returns the time when vesting ends for a delayed vesting account.
 func (dva *DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
+}
+
+// Validate checks for errors on the account fields
+func (dva DelayedVestingAccount) Validate() error {
+	return dva.BaseVestingAccount.Validate()
 }

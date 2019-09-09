@@ -47,13 +47,13 @@ func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 
     accounts := ak.GetAllAccounts(ctx)
     // convert accounts to []GenesisAccounts type
-    genAccounts := make([]GenesisAccounts, len(accounts))
+    genAccounts := make([]GenesisAccount, len(accounts))
     for i := range accounts {
         ga := accounts[i].(GenesisAccount) // will panic if an account doesn't implement GenesisAccount
         genAccounts[i] = ga
     }
 
-    return NewGenesisState(params, accounts)
+    return NewGenesisState(params, genAccounts)
 }
 ```
 

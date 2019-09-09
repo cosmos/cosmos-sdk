@@ -8,10 +8,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
+var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
 // ModuleAccount defines an account for modules that holds coins on a pool
@@ -26,6 +28,7 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
+// NewEmptyModuleAccount creates a empty ModuleAccount from a string
 func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
@@ -93,6 +96,15 @@ func (ma ModuleAccount) String() string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// Validate checks for errors on the account fields
+func (ma ModuleAccount) Validate() error {
+	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
+		return fmt.Errorf("address %s cannot be derived from the module name %s", ma.Address, ma.Name)
+	}
+
+	return ma.BaseAccount.Validate()
 }
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.

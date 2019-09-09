@@ -2,6 +2,7 @@ package auth
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // InitGenesis - Init store state from genesis data
@@ -10,10 +11,23 @@ import (
 // a genesis port script to the new fee collector account
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
+	// load the accounts
+	for _, a := range data.Accounts {
+		acc := ak.NewAccount(ctx, a) // set account number
+		ak.SetAccount(ctx, acc)
+	}
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
-	return NewGenesisState(params)
+	accounts := ak.GetAllAccounts(ctx)
+	// convert each Account to []GenesisAccount type
+	genAccounts := make([]exported.GenesisAccount, len(accounts))
+	for i := range accounts {
+		ga := accounts[i].(exported.GenesisAccount) // will panic if an account doesn't implement GenesisAccount
+		genAccounts[i] = ga
+	}
+
+	return NewGenesisState(params, genAccounts)
 }

@@ -2,26 +2,33 @@ package types
 
 import (
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params Params `json:"params" yaml:"params"`
+	Params   Params                    `json:"params" yaml:"params"`
+	Accounts []exported.GenesisAccount `json:"accounts" yaml:"accounts"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params) GenesisState {
-	return GenesisState{params}
+func NewGenesisState(params Params, accounts []exported.GenesisAccount) GenesisState {
+	return GenesisState{
+		Params:   params,
+		Accounts: accounts,
+	}
 }
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams())
+	return NewGenesisState(DefaultParams(), nil)
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an
 // error for any failed validation criteria.
 func ValidateGenesis(data GenesisState) error {
+	// Validate params
 	if data.Params.TxSigLimit == 0 {
 		return fmt.Errorf("invalid tx signature limit: %d", data.Params.TxSigLimit)
 	}
@@ -36,6 +43,24 @@ func ValidateGenesis(data GenesisState) error {
 	}
 	if data.Params.TxSizeCostPerByte == 0 {
 		return fmt.Errorf("invalid tx size cost per byte: %d", data.Params.TxSizeCostPerByte)
+	}
+
+	// Validate accounts
+	addrMap := make(map[string]bool, len(data.Accounts))
+	for _, acc := range data.Accounts {
+
+		// check for duplicated accounts
+		addrStr := acc.GetAddress().String()
+		if _, ok := addrMap[addrStr]; ok {
+			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
+		}
+
+		addrMap[addrStr] = true
+
+		// check account specific validation
+		if err := acc.Validate(); err != nil {
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
+		}
 	}
 	return nil
 }

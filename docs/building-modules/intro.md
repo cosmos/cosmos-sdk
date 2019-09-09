@@ -11,8 +11,7 @@ Modules define most of the logic of any SDK application. Developers compose modu
 
 - [Role of Modules in an SDK application](#role-of-modules-in-an-sdk-application)
 - [How to Approach Building Modules as a Developer](#how-to-approach-building-modules-as-a-developer)
-- [Application Module Interface](#application-module-interface)
-- [Module Manager](#module-manager)
+- [Main Components of SDK Modules](#main-components-of-sdk-modules)
 
 ## Role of Modules in an SDK Application
 
@@ -77,7 +76,7 @@ While there is no definitive guidelines for writing modules, here are some impor
 - **Specialization**: A direct consequence of the **composability** feature is that modules should be **specialized**. Developers should carefully establish the scope of their module and not batch multiple functionalities into the same module. This separation of concern enables modules to be re-used in other projects and improves the upgradability of the application. **Specialization** also plays an important role in the [object-capabilities model](../core/ocap.md) of the Cosmos SDK. 
 - **Capabilities**: Most modules need to read and/or write to the store(s) of other modules. However, in an open-source environment, it is possible for some module to be malicious. That is why module developers need to carefully think not only about how their module interracts with other modules, and how to give access to the module's store(s). The Cosmos SDK takes a capabilities-oriented approach to inter-module security. This means that each store defined by a module is accessed by a `key`, which is held by the module's [`keeper`](./keeper.md). This `keeper` defines how to access the store(s) and under what conditions. Access to the module's store(s) is done by passing a reference to the module's `keeper`. 
 
-## Main Components of SDK Module
+## Main Components of SDK Modules
 
 Modules are by convention defined in the `.x/` subfolder (e.g. the `bank` module will be defined in the `./x/bank` folder). They generally share the same core components:
 

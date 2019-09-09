@@ -2,4 +2,8 @@
 
 ## `GenesisState`
 
+## `DefaultGenesis`
+
+## `InitGenesis`
+
 ## `ValidateGenesis`

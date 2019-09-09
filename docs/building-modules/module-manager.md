@@ -8,6 +8,15 @@
 
 Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../core/baseapp.md#routing), and allows the application developer to set the order of execution of a variety of functions like [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#begingblocker-and-endblocker). 
 
+- [Application Module Interfaces](#application-module-interfaces)
+	+ [`AppModuleBasic`](#appmodulebasic)
+	+ [`AppModuleGenesis`](#appmodulegenesis)
+	+ [`AppModule`](#appmodule)
+	+ [Implementing the Application Module Interfaces](#implementing-the-application-module-interfaces)
+- [Module Managers](#module-managers)
+	+ [`BasicManager`](#basicmanager)
+	+ [`Manager`](#manager)
+
 ## Application Module Interfaces
 
 [Application module interfaces](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go) exist to facilitate the composition of modules together to form a functional SDK application. There are 3 main application module interfaces: 
@@ -145,8 +154,42 @@ type BasicManager map[string]AppModuleBasic
 It implements the following methods:
 
 - `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../basics/app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/master/app/app.go#L59-L74) to see an example).
-- `RegisterCodec(cdc *codec.Codec)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually early on in the [application's construction](../basics/app-anatomy.md#constructor)
+- `RegisterCodec(cdc *codec.Codec)`: Registers the [`codec`s](../core/encoding.md) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../basics/app-anatomy.md#constructor).
+- `DefaultGenesis()`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis()`](./genesis.md#defaultgenesis) function of each module. It is used to construct a default genesis file for the application.
+- `ValidateGenesis(genesis map[string]json.RawMessage)`: Validates the genesis information modules by calling the [`ValidateGenesis()`](./genesis.md#validategenesis) function of each module.
+- `RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router)`: Registers REST routes for modules by calling the [`RegisterRESTRoutes`](./module-interfaces.md#register-routes) function of each module. This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
+- `AddTxCommands(rootTxCmd *cobra.Command, cdc *codec.Codec)`: Adds modules' transaction commands to the application's [`rootTxCommand`](../interfaces/cli.md#transaction-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
+- `AddQueryCommands(rootQueryCmd *cobra.Command, cdc *codec.Codec)`: Adds modules' query commands to the application's [`rootQueryCommand`](../interfaces/cli.md#query-commands). This function is usually called function from the `main.go` function of the [application's command-line interface](../interfaces/cli.md).
 
 
 ### `Manager`
 
+The [`Manager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209) is a structure that lists all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
+
+```go
+type Manager struct {
+	Modules            map[string]AppModule
+	OrderInitGenesis   []string
+	OrderExportGenesis []string
+	OrderBeginBlockers []string
+	OrderEndBlockers   []string
+}
+```
+
+The module manager is used throughout the application whenever an action on a collection of module is required. It implements the following methods:
+
+- `NewManager(modules ...AppModule)`: Constructor function. It takes a list of the application's `AppModule`s and builds a new `Manager`. It is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `SetOrderInitGenesis(moduleNames ...string)`: Sets the order in which the [`InitGenesis`](./genesis.md#initgenesis) function of each module will be called when the application is first started. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `SetOrderExportGenesis(moduleNames ...string)`: Sets the order in which the [`ExportGenesis`](./genesis.md#exportgenesis) function of each module will be called in case of an export. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `SetOrderBeginBlockers(moduleNames ...string)`: Sets the order in which the `BeginBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `SetOrderEndBlockers(moduleNames ...string)`: Sets the order in which the `EndBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./invariants.md) of each module.
+- `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter)`: Registers module routes to the application's `router`, in order to route [`message`s](./messages-and-queries.md#messages) to the appropriate [`handler`](./handler.md), and module query routes to the application's `queryRouter`, in order to route [`queries`](./messages-and-queries.md#queries) to the appropriate [`querier`](./querier.md).
+- `InitGenesis(ctx sdk.Context, genesisData map[string]json.RawMessage)`: Calls the [`InitGenesis`](./genesis.md#initgenesis) function of each module when the application is first started, in the order defined in `OrderInitGenesis`. Returns an `abci.ResponseInitChain` to the underlying consensus engine, which can contain validator updates. 
+- `ExportGenesis(ctx sdk.Context)`: Calls the [`ExportGenesis`](./genesis.md#exportgenesis) function of each module, in the order defined in `OrderExportGenesis`. The export constructs a genesis file from a previously existing state, and is mainly used when a hard-fork upgrade of the chain is required. 
+- `BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock)`: At the beginning of each block, this function calls the [`BeginBlock`] function of each module, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](./events.md) emitted from all modules. The function returns an `abci.ResponseBeginBlock` which contains the aforementioned events. 
+- `EndBlock(ctx sdk.Context, req abci.RequestEndBlock)`: At the end of each block, this function calls the [`EndBlock`] function of each module, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](./events.md) emitted from all modules. The function returns an `abci.ResponseEndBlock` which contains the aforementioned events, as well as validator set updates (if any).
+
+## Next
+
+Learn more about [`message`s and `queries`](./messages-and-queries.md).

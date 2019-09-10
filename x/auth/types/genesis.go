@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -16,7 +17,7 @@ type GenesisState struct {
 func NewGenesisState(params Params, accounts []exported.GenesisAccount) GenesisState {
 	return GenesisState{
 		Params:   params,
-		Accounts: accounts,
+		Accounts: Sanitize(accounts),
 	}
 }
 
@@ -28,26 +29,32 @@ func DefaultGenesisState() GenesisState {
 // ValidateGenesis performs basic validation of auth genesis data returning an
 // error for any failed validation criteria.
 func ValidateGenesis(data GenesisState) error {
-	// Validate params
-	if data.Params.TxSigLimit == 0 {
-		return fmt.Errorf("invalid tx signature limit: %d", data.Params.TxSigLimit)
-	}
-	if data.Params.SigVerifyCostED25519 == 0 {
-		return fmt.Errorf("invalid ED25519 signature verification cost: %d", data.Params.SigVerifyCostED25519)
-	}
-	if data.Params.SigVerifyCostSecp256k1 == 0 {
-		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", data.Params.SigVerifyCostSecp256k1)
-	}
-	if data.Params.MaxMemoCharacters == 0 {
-		return fmt.Errorf("invalid max memo characters: %d", data.Params.MaxMemoCharacters)
-	}
-	if data.Params.TxSizeCostPerByte == 0 {
-		return fmt.Errorf("invalid tx size cost per byte: %d", data.Params.TxSizeCostPerByte)
+	if err := data.Params.Validate(); err != nil {
+		return err
 	}
 
-	// Validate accounts
-	addrMap := make(map[string]bool, len(data.Accounts))
-	for _, acc := range data.Accounts {
+	return validateGenAccounts(data.Accounts)
+}
+
+// Sanitize sorts accounts and coin sets.
+func Sanitize(genAccs []exported.GenesisAccount) []exported.GenesisAccount {
+	sort.Slice(genAccs, func(i, j int) bool {
+		return genAccs[i].GetAccountNumber() < genAccs[j].GetAccountNumber()
+	})
+
+	for _, acc := range genAccs {
+		if err := acc.SetCoins(acc.GetCoins().Sort()); err != nil {
+			panic(err)
+		}
+	}
+
+	return genAccs
+}
+
+
+func validateGenAccounts(accounts []exported.GenesisAccount) error {
+	addrMap := make(map[string]bool, len(accounts))
+	for _, acc := range accounts {
 
 		// check for duplicated accounts
 		addrStr := acc.GetAddress().String()

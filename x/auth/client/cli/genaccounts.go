@@ -5,13 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -33,6 +36,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
+			var pubkey crypto.PubKey
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
@@ -45,6 +49,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 					return err
 				}
 
+				pubkey = info.GetPubKey()
 				addr = info.GetAddress()
 			}
 
@@ -60,8 +65,27 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 				return err
 			}
 
-			genAcc := genaccounts.NewGenesisAccountRaw(addr, coins, vestingAmt, vestingStart, vestingEnd, "", "")
-			if err := genAcc.Validate(); err != nil {
+			var genesisAcc exported.GenesisAccount
+			baseAcc := types.NewBaseAccount(addr, coins.Sort(), pubkey, 0, 0)
+			if !vestingAmt.IsZero() {
+				baseVestingAcc := types.NewBaseVestingAccount(
+					baseAcc, vestingAmt.Sort(), sdk.Coins{},
+					sdk.Coins{}, vestingEnd,
+				)
+
+				switch {
+				case vestingStart != 0 && vestingEnd != 0:
+					genesisAcc = types.NewContinuousVestingAccountRaw(baseVestingAcc, vestingStart)
+				case vestingEnd != 0:
+					genesisAcc = types.NewDelayedVestingAccountRaw(baseVestingAcc)
+				default:
+					panic(fmt.Sprintf("invalid genesis vesting account: %+v", baseVestingAcc))
+				}
+			} else {
+				genesisAcc = baseAcc
+			}
+
+			if err := genesisAcc.Validate(); err != nil {
 				return err
 			}
 
@@ -73,18 +97,19 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec,
 			}
 
 			// add genesis account to the app state
-			var genesisAccounts genaccounts.GenesisAccounts
+			var authGenesis types.GenesisState
+			cdc.MustUnmarshalJSON(appState[types.ModuleName], &authGenesis)
 
-			cdc.MustUnmarshalJSON(appState[genaccounts.ModuleName], &genesisAccounts)
-
-			if genesisAccounts.Contains(addr) {
-				return fmt.Errorf("cannot add account at existing address %v", addr)
+			for _, acc := range authGenesis.Accounts {
+				if acc.GetAddress().Equals(addr) {
+					return fmt.Errorf("cannot add account at existing address %s", addr)
+				}
 			}
 
-			genesisAccounts = append(genesisAccounts, genAcc)
+			authGenesis.Accounts = append(authGenesis.Accounts, genesisAcc)
 
-			genesisStateBz := cdc.MustMarshalJSON(genaccounts.GenesisState(genesisAccounts))
-			appState[genaccounts.ModuleName] = genesisStateBz
+			genesisStateBz := cdc.MustMarshalJSON(authGenesis)
+			appState[types.ModuleName] = genesisStateBz
 
 			appStateJSON, err := cdc.MarshalJSON(appState)
 			if err != nil {

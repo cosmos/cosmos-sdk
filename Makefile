@@ -11,7 +11,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
-all: tools build lint test
+all: tools build lint check
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -83,89 +83,95 @@ sync-docs:
 	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
 	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
 	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync_docs
+.PHONY: sync-docs
 
 ########################################
 ### Testing
 
-test: test_unit
+check: check-unit
+check-all: check-unit check-ledger-mock check-race check-cover
 
-test_ledger_mock:
+check-ledger-mock:
 	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
 
-test_ledger: test_ledger_mock
+check-ledger: check-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test_unit:
+check-unit:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
-test_race:
+check-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test_sim_nondeterminism:
+.PHONY: check check-all check-ledger-mock check-ledger check-unit check-race
+
+check-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
-test_sim_custom_genesis_fast:
+check-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
 	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
-test_sim_import_export: runsim
+check-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppImportExport
 
-test_sim_after_import: runsim
+check-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppSimulationAfterImport
 
-test_sim_custom_genesis_multi_seed: runsim
+check-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
 	@$(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
-test_sim_multi_seed_long: runsim
+check-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
 
-test_sim_multi_seed_short: runsim
+check-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
 
-test_sim_benchmark_invariants:
+check-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-.PHONY: test \
-test_sim_nondeterminism \
-test_sim_custom_genesis_fast \
-test_sim_import_export \
-test_sim_after_import \
-test_sim_custom_genesis_multi_seed \
-test_sim_multi_seed \
-test_sim_multi_seed_short \
-test_sim_benchmark_invariants
+.PHONY: \
+check-sim-nondeterminism \
+check-sim-custom-genesis-fast \
+check-sim-import-export \
+check-sim-after-import \
+check-sim-custom-genesis-multi-seed \
+check-sim-multi-seed-short \
+check-sim-multi-seed-long \
+check-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
-test_sim_benchmark:
+check-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
 
-test_sim_profile:
+check-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
-test_cover:
+.PHONY: check-sim-profile check-sim-benchmark
+
+check-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+.PHONY: check-cover
 
 lint: golangci-lint
 	$(BINDIR)/golangci-lint run
@@ -188,7 +194,7 @@ benchmark:
 
 DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
-devdoc_init:
+devdoc-init:
 	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
 	# TODO make this safer
 	$(call DEVDOC_SAVE)
@@ -196,14 +202,14 @@ devdoc_init:
 devdoc:
 	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
 
-devdoc_save:
+devdoc-save:
 	# TODO make this safer
 	$(call DEVDOC_SAVE)
 
-devdoc_clean:
+devdoc-clean:
 	docker rmi -f $$(docker images -f "dangling=true" -q)
 
-devdoc_update:
+devdoc-update:
 	docker pull tendermint/devdoc
 
-.PHONY: devdoc devdoc_clean devdoc_init devdoc_save devdoc_update
+.PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update

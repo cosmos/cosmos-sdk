@@ -355,7 +355,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // Implements MultiStore.
 // If the store does not exist, panics.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.GetCommitKVStore(key)
+	store := rs.stores[key]
 	if store == nil {
 		panic("Could not load store " + key.String())
 	}
@@ -368,7 +368,7 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // tracer, otherwise, the original KVStore will be returned.
 // If the store does not exist, panics.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store := rs.GetCommitKVStore(key).(types.KVStore)
+	store := rs.stores[key].(types.KVStore)
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)

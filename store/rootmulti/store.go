@@ -356,6 +356,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
 // not exist, it will panic. If the Store is wrapped in an inter-block cache, it
 // will be unwrapped prior to being returned.
+//
+// TODO: This isn't used directly upstream. Consider returning the Store as-is
+// instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	store := rs.GetCommitKVStore(key)
 	if store == nil {

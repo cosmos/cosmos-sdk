@@ -92,7 +92,8 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// Implements CommitMultiStore.
+// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 	return rs.GetCommitKVStore(key)
 }
@@ -352,9 +353,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
-// GetStore returns a Store for a given StoreKey. If the StoreKey does not exist,
-// it will panic. If the Store is wrapped in an inter-block cache, it will be
-// unwrapped prior to being returned.
+// GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
+// not exist, it will panic. If the Store is wrapped in an inter-block cache, it
+// will be unwrapped prior to being returned.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	store := rs.GetCommitKVStore(key)
 	if store == nil {
@@ -364,10 +365,12 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	return store
 }
 
-// GetKVStore implements the MultiStore interface. If tracing is enabled on the
-// Store, a wrapped TraceKVStore will be returned with the given
-// tracer, otherwise, the original KVStore will be returned.
-// If the store does not exist, panics.
+// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
+// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
+// store's tracer, otherwise, the original KVStore will be returned.
+//
+// NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
+// set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := rs.stores[key].(types.KVStore)
 

@@ -7,11 +7,13 @@ This document describes the state transition operations pertaining to:
 3. [Slashing](./02_state_transitions.md#slashing)
 
 ## Validators
-State transitions in validators are performed on every [`EndBlock`](./04_end_block.md#validator-set-changes) in order to check for changes in the active `ValidatorSet`.
+State transitions in validators are performed on every [`EndBlock`](./04_end_block.md#validator-set-changes) 
+in order to check for changes in the active `ValidatorSet`.
 
-### Non-Bonded to Bonded
+### UnBonded to Bonded
 
-When a validator is bonded from any other state the following operations occur:
+The following transition occurs when a validator's ranking in the `ValidatorPowerIndex` surpasses 
+that of the `LastValidator`.
 
 - set `validator.Status` to `Bonded`
 - send the `validator.Tokens` from the `NotBondedTokens` to the `BondedPool` `ModuleAccount`

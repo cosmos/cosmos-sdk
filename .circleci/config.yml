@@ -78,35 +78,35 @@ jobs:
     executor: golang
     steps:
       - make:
-          target: test_sim_nondeterminism
+          target: test-sim-nondeterminism
           description: "Test individual module simulations"
 
   test_sim_import_export:
     executor: golang
     steps:
       - make:
-          target: test_sim_import_export
+          target: test-sim-import-export
           description: "Test application import/export simulation"
 
   test_sim_after_import:
     executor: golang
     steps:
       - make:
-          target: test_sim_after_import
+          target: test-sim-after-import
           description: "Test simulation after import"
 
   test_sim_multi_seed_long:
     executor: golang
     steps:
       - make:
-          target: test_sim_multi_seed_long
+          target: test-sim-multi-seed-long
           description: "Test multi-seed simulation (long)"
 
   test_sim_multi_seed_short:
     executor: golang
     steps:
       - make:
-          target: test_sim_multi_seed_short
+          target: test-sim-multi-seed-short
           description: "Test multi-seed simulation (short)"
 
   test_cover:

@@ -64,7 +64,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 	baseVestingAcc := NewBaseVestingAccount(&acc1, acc1.Coins.Add(acc1.Coins), nil, nil, 1548775410)
-	
+
 	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 

@@ -1,7 +1,9 @@
 package types
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -100,8 +102,11 @@ func (ma ModuleAccount) String() string {
 
 // Validate checks for errors on the account fields
 func (ma ModuleAccount) Validate() error {
+	if strings.TrimSpace(ma.Name) == "" {
+		return errors.New("module account name cannot be blank")
+	}
 	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
-		return fmt.Errorf("address %s cannot be derived from the module name %s", ma.Address, ma.Name)
+		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
 	}
 
 	return ma.BaseAccount.Validate()

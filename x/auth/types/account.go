@@ -360,7 +360,8 @@ func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
 
 // Validate checks for errors on the account fields
 func (bva BaseVestingAccount) Validate() error {
-	if bva.GetOriginalVesting().IsAnyGT(bva.Coins) {
+	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
+		bva.OriginalVesting.IsAnyGT(bva.Coins) {
 		return errors.New("vesting amount cannot be greater than total amount")
 	}
 	return bva.BaseAccount.Validate()

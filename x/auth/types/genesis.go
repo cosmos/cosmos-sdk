@@ -51,7 +51,6 @@ func Sanitize(genAccs []exported.GenesisAccount) []exported.GenesisAccount {
 	return genAccs
 }
 
-
 func validateGenAccounts(accounts []exported.GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accounts))
 	for _, acc := range accounts {

@@ -7,12 +7,11 @@ This document describes the state transition operations pertaining to:
 3. [Slashing](./02_state_transitions.md#slashing)
 
 ## Validators
-
 State transitions in validators are performed on every [`EndBlock`](./04_end_block.md#validator-set-changes) in order to check for changes in the active `ValidatorSet`.
 
 ### Non-Bonded to Bonded
 
-When a validator is bonded from any other state the following operations occur:  
+When a validator is bonded from any other state the following operations occur:
 
 - set `validator.Status` to `Bonded`
 - send the `validator.Tokens` from the `NotBondedTokens` to the `BondedPool` `ModuleAccount`
@@ -53,13 +52,13 @@ this process may be also be reversed. the following operations occur:
 
 ### Delegate
 
-When a delegation occurs both the validator and the delegation objects are affected  
+When a delegation occurs both the validator and the delegation objects are affected
 
 - determine the delegators shares based on tokens delegated and the validator's exchange rate
 - remove tokens from the sending account
 - add shares the delegation object or add them to a created validator object
 - add new delegator shares and update the `Validator` object
-- transfer the `delegation.Amount`  from the delegator's account to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
+- transfer the `delegation.Amount` from the delegator's account to the `BondedPool` or the `NotBondedPool` `ModuleAccount` depending if the `validator.Status` is `Bonded` or not
 - delete the existing record from `ValidatorByPowerIndex`
 - add an new updated record to the `ValidatorByPowerIndex`
 
@@ -76,7 +75,7 @@ Delegation may be called.
 - if the delegation is the operator of the validator and no more shares exist then trigger a jail validator
 - update the validator with removed the delegator shares and associated coins
 - if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
-shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
+  shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
 - remove the validator if it is unbonded and there are no more delegation shares.
 
 ### Complete Unbonding
@@ -107,6 +106,22 @@ When a redelegations complete the following occurs:
 
 ### Slash Validator
 
+When a Validator is slashed, the following occurs:
+
+- The total `slashAmount` is calculated as the `slashFactor` (a chain parameter) * `TokensFromConsensusPower`, the total number of tokens bonded to the validator at the time of the infraction.
+- Every unbonding delegation and redelegation from the validator are slashed by the `slashFactor` percentage of the initialBalance. 
+- Each amount slashed from redelegations and unbonding delegations is subtracted from the total slash amount.
+- The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+
+
 ### Slash Unbonding Delegation
 
+When a validator is slashed, so are those unbonding delegations from the validator that began unbonding after the time of the infraction. Every entry in every unbonding delegation from the validator is slashed by `slashFactor`. The amount slashed is calculated from the `InitialBalance` of the delegation and is capped to prevent a resulting negative balance. Completed (or mature) unbondings are not slashed.
+
+
 ### Slash Redelegation
+
+When a validator is slashed, so are the redelegations from the validator that began after of the infraction. Every entry in every thr reelegation from the validator is slashed by `slashFactor`. The amount slashed is calculated from the `InitialBalance` of the delegation and is capped to prevent a resulting negative balance. Mature redelegations are not slashed.
+
+
+

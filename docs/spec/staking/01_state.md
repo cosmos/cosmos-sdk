@@ -24,6 +24,13 @@ type Params struct {
 
 ## Validator
 
+Validators can have one of three statuses
+
+- `unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn rewards. They can receive delegations. Unbonding from an `unbonded` validator is immediate.
+- `bonded`": The validator has sufficient bonded tokens to join the active set. They are signing blocks and receiving rewards. They can receive further delegations. They can be slashed for misbehavior. Delegators to this validator who unbond their delegation must wait the duration of the UnbondingTime, a chain-specific param. 
+- `unbonding`: The validator has initiated an unbonding of their self delegation. They must wait the UnbondingTime before moving receiving their tokens to their account from the Bonded Pool.
+
+
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
 additional indices are maintained per validator object in order to fulfill
@@ -113,6 +120,18 @@ type Delegation struct {
 }
 ```
 
+### Delegator Shares
+
+When one Delegates tokens to a Validator they are issued a number of delegator shares based on a dynamic exchange rate, 
+calculated as follows from the total number of tokens delegated to the validator and the number of shares issued so far:
+`Shares per Token = validator.TotalShares() / validator.Tokens()`
+
+Only the number of shares is receveived is stored on the DelegationEntry.
+When a delegator then Undelegates, the token amount they receive is calculated from the number of shares they currently hold and the inverse exchange rate
+`Tokens per Share = validator.Tokens() / validatorShares()`
+
+These `Shares` are simply an accounting mechanism. They are not a fungible asset. The reason for this mechanism is to simplify the accounting around slashing. Rather than iteratively slashing the tokens of every delegation entry, instead the Validators total bonded tokens can be slashed, effectively reducing the value of each issued delegator share.
+
 ## UnbondingDelegation
 
 Shares in a `Delegation` can be unbonded, but they must for some time exist as
@@ -167,9 +186,9 @@ delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
 
 A redelegation object is created every time a redelegation occurs.  To prevent
-"redelegation hopping" redelegations may not occure under the situation that:
+"redelegation hopping" redelegations may not occur under the situation that:
 
-- the (re)delegator already has another unmature redelegation in progress
+- the (re)delegator already has another immature redelegation in progress
 with a destination to a validator (let's call it `Validator X`)
 - and, the (re)delegator is attempting to create a _new_ redelegation
 where the source validator for this new redelegation is `Validator-X`.

@@ -352,8 +352,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
-// Implements MultiStore.
-// If the store does not exist, panics.
+// GetStore returns a Store for a given StoreKey. If the StoreKey does not exist,
+// it will panic. If the Store is wrapped in an inter-block cache, it will be
+// unwrapped prior to being returned.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	store := rs.GetCommitKVStore(key)
 	if store == nil {
@@ -377,13 +378,10 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-// Implements MultiStore
-
-// getStoreByName will first convert the original name to
-// a special key, before looking up the CommitStore.
-// This is not exposed to the extensions (which will need the
-// StoreKey), but is useful in main, and particularly app.Query,
-// in order to convert human strings into CommitStores.
+// getStoreByName performs a lookup of a StoreKey given a store name typically
+// provided in a path. The StoreKey is then used to perform a lookup and return
+// a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
+// prior to being returned. If the StoreKey does not exist, nil is returned.
 func (rs *Store) getStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {

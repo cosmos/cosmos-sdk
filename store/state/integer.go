@@ -45,8 +45,8 @@ func (v Integer) Set(ctx Context, value uint64) {
 	v.Value.SetRaw(ctx, EncodeInt(value, v.enc))
 }
 
-// Incr() increments the stored value, and returns the updated value.
-func (v Integer) Incr(ctx Context) (res uint64) {
+// Increment increments the stored value and returns it.
+func (v Integer) Increment(ctx Context) (res uint64) {
 	res = v.Get(ctx) + 1
 	v.Set(ctx, res)
 	return

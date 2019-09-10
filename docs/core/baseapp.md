@@ -175,7 +175,7 @@ When messages and queries are received by the application, they must be routed t
 
 [`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](./handler.md). Usually, the `path` is the name of the module.
 
-The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
+The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 
 ### Query Routing
 
@@ -209,7 +209,7 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 
 Steps 2. and 3. are  performed by the [`anteHandler`](./accounts-fees-gas.md#antehandler) in the [`RunTx`](#runtx-antehandler-and-runmsgs) function, which `CheckTx` calls with the `runTxModeCheck` mode. During each step of `CheckTx`, a special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep track of the temporary changes triggered by the `CheckTx` calls of each transaction without modifying the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx`, the transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is received from the same account before the first is processed, and the account has consumed all its funds in `checkState` during the first transaction, the second transaction will fail `CheckTx` and be rejected. In any case, the sender's account will not actually pay the fees until the transaction is actually included in a block, because `checkState` never gets committed to the main state. `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#checktx). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful. 
 - `Data ([]byte)`: Result bytes, if any.
@@ -233,7 +233,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation [here](https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L142-L150). At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails. 
 
-`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://tendermint.com/docs/spec/abci/abci.html#delivertx). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful. 
 - `Data ([]byte)`: Result bytes, if any.

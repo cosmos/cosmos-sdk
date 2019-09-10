@@ -23,10 +23,10 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 	return func(r *rand.Rand, accs []simulation.Account, config simulation.Config,
 	) (appState json.RawMessage, simAccs []simulation.Account, chainID string, genesisTimestamp time.Time) {
 
-		if flagGenesisTimeValue == 0 {
+		if FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simulation.RandTimestamp(r)
 		} else {
-			genesisTimestamp = time.Unix(flagGenesisTimeValue, 0)
+			genesisTimestamp = time.Unix(FlagGenesisTimeValue, 0)
 		}
 
 		switch {

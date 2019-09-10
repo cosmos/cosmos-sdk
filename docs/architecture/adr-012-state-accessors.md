@@ -43,27 +43,27 @@ The `Mapping` works as a reference for a key-value space in the state, where `Ma
 We will give `Value` the following core methods:
 
 ```go
-func (Value) Get(ctx Context, ptr interface{}) // Get and unmarshal stored data, noop if not exists, panic if cannot unmarshal
-func (Value) GetSafe(ctx Context, ptr interface{}) // Get and unmarshal stored data, return error if not exists or cannot unmarshal
-func (Value) GetRaw(ctx Context) []byte // Get stored data as raw byteslice
-func (Value) Set(ctx Context, o interface{}) // Marshal and set argument
-func (Value) Exists(ctx Context) bool // Check if value exists
-func (Value) Delete(ctx Context) // Delete value
+func (Value) Get(ctx Context, ptr interface{}) {} // Get and unmarshal stored data, noop if not exists, panic if cannot unmarshal
+func (Value) GetSafe(ctx Context, ptr interface{}) {} // Get and unmarshal stored data, return error if not exists or cannot unmarshal
+func (Value) GetRaw(ctx Context) []byte {} // Get stored data as raw byteslice
+func (Value) Set(ctx Context, o interface{}) {} // Marshal and set argument
+func (Value) Exists(ctx Context) bool {} // Check if value exists
+func (Value) Delete(ctx Context) {} // Delete value
 ```
 
 We will give `Mapping` the following core methods:
 
 ```go
-func (Mapping) Value(key []byte) Value // Constructs key-value pair reference corresponding to the key argument in the Mapping space
-func (Mapping) Get(ctx Context, key []byte, ptr interface{}) // Get and unmarshal stored data, noop if not exists, panic if cannot unmarshal
-func (Mapping) GetSafe(ctx Context, key []byte, ptr interface{}) // Get and unmarshal stored data, return error if not exists or cannot unmarshal
-func (Mapping) GetRaw(ctx Context, key []byte) []byte // Get stored data as raw byteslice
-func (Mapping) Set(ctx Context, key []byte, o interface{}) // Marshal and set argument
-func (Mapping) Has(ctx Context, key []byte) bool // Check if value exists
-func (Mapping) Delete(ctx Context, key []byte) // Delete value
+func (Mapping) Value(key []byte) Value {} // Constructs key-value pair reference corresponding to the key argument in the Mapping space
+func (Mapping) Get(ctx Context, key []byte, ptr interface{}) {} // Get and unmarshal stored data, noop if not exists, panic if cannot unmarshal
+func (Mapping) GetSafe(ctx Context, key []byte, ptr interface{}) {} // Get and unmarshal stored data, return error if not exists or cannot unmarshal
+func (Mapping) GetRaw(ctx Context, key []byte) []byte {} // Get stored data as raw byteslice
+func (Mapping) Set(ctx Context, key []byte, o interface{}) {} // Marshal and set argument
+func (Mapping) Has(ctx Context, key []byte) bool {} // Check if value exists
+func (Mapping) Delete(ctx Context, key []byte) {} // Delete value
 ```
 
-where `Mapping.{Get, GetSafe, Set, Has, Delete}(ctx, key, args...)` are defined as `Mapping.Value(key).{Get, GetSafe, Set, Exists, Delete}(ctx, args...)`
+where `Mapping.{Get, GetSafe, GetRaw, Set, Has, Delete}(ctx, key, args...)` are defined as `Mapping.Value(key).{Get, GetSafe, GetRaw, Set, Exists, Delete}(ctx, args...)`
 
 We will define a family of types derived from `Value`:
 

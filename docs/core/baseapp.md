@@ -179,7 +179,7 @@ The application's `router` is initilalized with all the routes using the applica
 
 ### Query Routing
 
-Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps `paths` (`string`) to the appropriate module `querier`. Usually, the `path` is the name of the module. 
+Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps module names to module `querier`s. The `queryRouter` is called during the initial stages of `query` processing, which is done via the [`Query` ABCI message](#query). 
 
 Just like the `router`, the `query router` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 
@@ -317,12 +317,12 @@ The [`Info` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#inf
 
 The [`Query` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#query) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It is the main entrypoint to build interfaces with the application. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://tendermint.com/docs/app-dev/abci-spec.html#query). 
 
-The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving 4 main categories of queries:
+Each `query` comes with a `path`, which contains multiple `string`s. By convention, the first element of the `path` (`path[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom`). The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers. 
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `baseapp`'s [constructor](#constructor).
-- Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's [`querier`](../building-modules/querier.md). 
+- Custom queries, which encompass most [module queries](../building-modules/messages-and-queries.md#queries), are served via the [`handleQueryCustom`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/abci.go#L395-L453) method. The `handleQueryCustom` first cache-wraps the multistore. Then, it uses the second component of the path (`path[1]`) to retrieve the `queryRoute` from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's [`querier`](../building-modules/querier.md). The following elements of the `path` (`path[2:]`) are passed to the `querier` to properly process the query. Finally, the result of the `querier`'s execution is returned via `abci.ResponseQuery`.   
 
 ## Next
 

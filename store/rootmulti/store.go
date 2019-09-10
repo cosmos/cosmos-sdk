@@ -94,12 +94,22 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 
 // Implements CommitMultiStore.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.stores[key]
+	return rs.GetCommitKVStore(key)
 }
 
-// Implements CommitMultiStore.
+// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	return rs.stores[key].(types.CommitKVStore)
+	// If the Store has an inter-block cache, first attempt to lookup and unwrap
+	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
+	// the main mapping of CommitKVStores.
+	if rs.interBlockCache != nil {
+		if store := rs.interBlockCache.Unwrap(key); store != nil {
+			return store
+		}
+	}
+
+	return rs.stores[key]
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
@@ -323,11 +333,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			if rs.interBlockCache != nil {
-				if ckvs := rs.interBlockCache.Unwrap(key); ckvs != nil {
-					store = ckvs
-				}
-			}
+			store = rs.GetCommitKVStore(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -349,10 +355,11 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // Implements MultiStore.
 // If the store does not exist, panics.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.stores[key]
+	store := rs.GetCommitKVStore(key)
 	if store == nil {
 		panic("Could not load store " + key.String())
 	}
+
 	return store
 }
 
@@ -361,7 +368,7 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // tracer, otherwise, the original KVStore will be returned.
 // If the store does not exist, panics.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store := rs.stores[key].(types.KVStore)
+	store := rs.GetCommitKVStore(key).(types.KVStore)
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
@@ -382,7 +389,8 @@ func (rs *Store) getStoreByName(name string) types.Store {
 	if key == nil {
 		return nil
 	}
-	return rs.stores[key]
+
+	return rs.GetCommitKVStore(key)
 }
 
 //---------------------- Query ------------------
@@ -407,7 +415,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
+		msg := fmt.Sprintf("store %s (type %T) doesn't support queries", storeName, store)
 		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 

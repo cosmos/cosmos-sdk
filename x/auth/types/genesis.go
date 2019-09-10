@@ -17,7 +17,7 @@ type GenesisState struct {
 func NewGenesisState(params Params, accounts []exported.GenesisAccount) GenesisState {
 	return GenesisState{
 		Params:   params,
-		Accounts: Sanitize(accounts),
+		Accounts: accounts,
 	}
 }
 

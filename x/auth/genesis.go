@@ -12,6 +12,8 @@ import (
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 	// load the accounts
+	data.Accounts = Sanitize(data.Accounts)
+	
 	for _, a := range data.Accounts {
 		acc := ak.NewAccount(ctx, a) // set account number
 		ak.SetAccount(ctx, acc)

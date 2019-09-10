@@ -11,7 +11,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
-all: tools build lint check
+all: tools build lint test
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -88,90 +88,90 @@ sync-docs:
 ########################################
 ### Testing
 
-check: check-unit
-check-all: check-unit check-ledger-mock check-race check-cover
+test: test-unit
+test-all: test-unit test-ledger-mock test-race test-cover
 
-check-ledger-mock:
+test-ledger-mock:
 	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
 
-check-ledger: check-ledger-mock
+test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-check-unit:
+test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
-check-race:
+test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-.PHONY: check check-all check-ledger-mock check-ledger check-unit check-race
+.PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 
-check-sim-nondeterminism:
+test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
-check-sim-custom-genesis-fast:
+test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
 	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
-check-sim-import-export: runsim
+test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppImportExport
 
-check-sim-after-import: runsim
+test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppSimulationAfterImport
 
-check-sim-custom-genesis-multi-seed: runsim
+test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
 	@$(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
-check-sim-multi-seed-long: runsim
+test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
 
-check-sim-multi-seed-short: runsim
+test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
 	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
 
-check-sim-benchmark-invariants:
+test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
 .PHONY: \
-check-sim-nondeterminism \
-check-sim-custom-genesis-fast \
-check-sim-import-export \
-check-sim-after-import \
-check-sim-custom-genesis-multi-seed \
-check-sim-multi-seed-short \
-check-sim-multi-seed-long \
-check-sim-benchmark-invariants
+test-sim-nondeterminism \
+test-sim-custom-genesis-fast \
+test-sim-import-export \
+test-sim-after-import \
+test-sim-custom-genesis-multi-seed \
+test-sim-multi-seed-short \
+test-sim-multi-seed-long \
+test-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
-check-sim-benchmark:
+test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
 
-check-sim-profile:
+test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
-.PHONY: check-sim-profile check-sim-benchmark
+.PHONY: test-sim-profile test-sim-benchmark
 
-check-cover:
+test-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
-.PHONY: check-cover
+.PHONY: test-cover
 
 lint: golangci-lint
 	$(BINDIR)/golangci-lint run

@@ -15,8 +15,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
+const (
+	// ModuleAccountType defines the type for a ModuleAccount
+	ModuleAccountType = "ModuleAccount"
+)
+
 var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
+
+func init() {
+	authtypes.RegisterAccountType(ModuleAccountType)
+	authtypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
+}
 
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {

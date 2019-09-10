@@ -52,6 +52,7 @@ var (
 	NewAccountRetriever               = types.NewAccountRetriever
 	RegisterCodec                     = types.RegisterCodec
 	RegisterAccountTypeCodec          = types.RegisterAccountTypeCodec
+	RegisterAccountType               = types.RegisterAccountType
 	NewGenesisState                   = types.NewGenesisState
 	DefaultGenesisState               = types.DefaultGenesisState
 	ValidateGenesis                   = types.ValidateGenesis

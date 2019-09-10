@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -26,8 +28,24 @@ func RegisterAccountTypeCodec(o interface{}, name string) {
 	ModuleCdc.RegisterConcrete(o, name, nil)
 }
 
+var validAccountTypes = map[string]struct{}{
+	"BaseAccount":              {},
+	"BaseVestingAccount":       {},
+	"ContinuousVestingAccount": {},
+	"DelayedVestingAccount":    {},
+}
+
+// RegisterAccountType registers a account type. It will panic if the type is
+// already registered.
+func RegisterAccountType(ty string) {
+	if _, ok := validAccountTypes[ty]; ok {
+		panic(fmt.Sprintf("already registered proposal type: %s", ty))
+	}
+
+	validAccountTypes[ty] = struct{}{}
+}
+
 func init() {
-	ModuleCdc = codec.New()
 	RegisterCodec(ModuleCdc)
 	codec.RegisterCrypto(ModuleCdc)
 }

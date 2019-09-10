@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -126,9 +126,12 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile strin
 	var appState GenesisState
 	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
 
-	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
+	var authGenesis auth.GenesisState
+	if appState[auth.ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authGenesis)
+	}
 
-	for _, acc := range accounts {
+	for _, acc := range authGenesis.Accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
@@ -140,7 +143,7 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile strin
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 
 		// create simulator accounts
-		simAcc := simulation.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.Address}
+		simAcc := simulation.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.GetAddress()}
 		newAccs = append(newAccs, simAcc)
 	}
 

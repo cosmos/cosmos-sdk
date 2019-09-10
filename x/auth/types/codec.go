@@ -5,6 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
+// ModuleCdc auth module wide codec
+var ModuleCdc = codec.New()
+
 // RegisterCodec registers concrete types on the codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.GenesisAccount)(nil), nil)
@@ -22,9 +25,6 @@ func RegisterCodec(cdc *codec.Codec) {
 func RegisterAccountTypeCodec(o interface{}, name string) {
 	ModuleCdc.RegisterConcrete(o, name, nil)
 }
-
-// ModuleCdc auth module wide codec
-var ModuleCdc *codec.Codec
 
 func init() {
 	ModuleCdc = codec.New()

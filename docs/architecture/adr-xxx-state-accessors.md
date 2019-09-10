@@ -1,4 +1,4 @@
-# ADR XXX: State Accessors
+# ADR 012: State Accessors
 
 ## Changelog
 

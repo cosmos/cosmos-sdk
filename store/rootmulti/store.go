@@ -355,9 +355,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 // Implements MultiStore.
 // If the store does not exist, panics.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.stores[key]
+	store := rs.GetCommitKVStore(key)
 	if store == nil {
-		panic("Could not load store " + key.String())
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
 
 	return store

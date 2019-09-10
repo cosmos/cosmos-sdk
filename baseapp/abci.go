@@ -32,11 +32,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
-	// reset the inter-block cache in case successive InitChain calls are made
-	if app.interBlockCache != nil {
-		app.interBlockCache.Reset()
-	}
-
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 

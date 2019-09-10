@@ -54,7 +54,7 @@ where:
 - `queryCategory` is the category of the `query`, typically `custom` for module queries. It is used to differentiate between different kinds of queries within `baseapp`'s [`Query` method](../core/baseapp.md#query).
 - `queryRoute` is used by `baseapp`'s [`queryRouter`](../core/baseapp.md#query-routing) to map the `query` to its module. Usually, `queryRoute` should be the name of the module.
 - `queryType` is used by the module's [`querier`](./querier.md) to map the `query` to the appropriate `querier function` within the module. 
-- `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. 
+- `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`. 
 
 The `path` for each `query` must be defined by the module developer in the module's [command-line interface file](./module-interfaces.md#query-commands).Overall, there are 3 mains components module developers need to implement in order to make the subset of the state defined by their module queryable:
 

@@ -36,13 +36,18 @@ x/{module}
 │       ├── params.go
 │       ├── ...
 │       └── querier.go
+├── simulation
+│   ├── decoder.go
+│   ├── genesis.go
+│   ├── operations.go
+│   ├── params.go
+│   └── proposals.go
 ├── abci.go
 ├── alias.go
 ├── genesis.go
 ├── handler.go
-├── module.go
 ├── ...
-└── simulation.go
+└── module.go
 ```
 
 - `abci.go`: The module's `BeginBlocker` and `EndBlocker` implementations (if any).
@@ -52,7 +57,7 @@ there is nothing preventing developers from importing other packages from the mo
 (excluding`internal/`) but it is recommended that `alias.go` have everything
 exposed that other modules may need. The majority of the exported values here will
 typically come from `internal/` (see below).
-- `client/`: The module's CLI and REST client functionality implementation and 
+- `client/`: The module's CLI and REST client functionality implementation and
 testing.
 - `exported/`: The module's exported types -- typically type interfaces. If a module
 relies on other module keepers, it is expected to receive them as interface
@@ -78,4 +83,6 @@ allows for greater freedom of development while maintaining API stability.
   implementations such as the querier and invariants.
 - `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
 interfaces.
-- `simulation.go`: The module's simulation messages and related types (if any).
+- `simulation/`: The module's simulation package defines all the required functions
+used on the blockchain simulator: randomized genesis state, parameters, weigthed
+operations, proposal contents and types decoders.

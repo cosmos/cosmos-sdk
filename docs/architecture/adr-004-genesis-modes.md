@@ -1,4 +1,4 @@
-# ADR 004: Multiple Genesis modes
+# ADR 004: Genesis Modes
 
 ## Changelog
 
@@ -6,19 +6,23 @@
 
 ## Context
 
-In the SDK, when the `GenesisState` is initialized through a `InitGenesis` call, some of the `GenesisState` fields are loaded from a `genesis.json` file, whereas in other cases they are initialized (_i.e_ populated) if the corresponding object value from JSON is empty, undefined or its value is zero.
+In the SDK, providing an existing `genesis.json` to initialize the app will populate
+existing fields even if they were accidentally left out (_i.e_ undefined or with
+empty/zero value). This can be problematic because the application should only be
+initialized with all the genesis fields already pre-filled.
 
-This may lead to confusion because as is currently programmed, `InitGenesis`
-initializes _and_ loads the values at the same time. When in reality they should be
-two separated distinct processes.
+The values that are currently being populated are either calculated by iterating
+the state or set to a default.
 
-A recurring case of this problem is to check if a balance is empty and initialize it
-if not (by iterating the state). This affects mostly the total [`Supply`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L14-L24) and[`ModuleAccounts`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/gov/genesis.go#L44-L50)
-within each module.
+A recurring case of this problem is to check if a balance is empty and initialize
+it if not (by iterating the state). This affects mostly the total [`Supply`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L14-L24) and
+[`ModuleAccounts`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/gov/genesis.go#L44-L50) within each module.
 
 ## Decision
 
-We propose to add a separate command to update a genesis file with the missing values/fields for each module `GenesisState`.
+We propose separate the initialialization from the population of the genesis
+values into two separated distinct processes by adding a separate command to
+update a genesis file with the missing values/fields for each module `GenesisState`.
 
 With this command, the user provides a `genesis.json` file with the minimum amount
 of genesis fields required to start a chain. The rest is loaded directly from the
@@ -32,12 +36,12 @@ execution should `panic` and exit. Similarly, the initialization of the app (_i.
 The flow of this process can be summarized in 3 steps:
 
   1. Import genesis file with missing fields
-  2. Populate the missing genesis values according to application/module logic. 
-  3. Export updated genesis file intended to be used for further usage with the `<app>d init` command
+  2. Populate the missing genesis values according to application/module logic.
+  3. Export updated genesis file intended to be used for further usage with the
+  `<app>d init` command
 
-To archieve this, every module needs to be able to generate the missing fields from
-the existing state. For example, on `x/supply/genesis.go`,
-[`InitGenesis`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L12)
+To archieve this, every module needs to be able to generate the missing fields
+from the existing state. For example, on `x/supply/genesis.go`, [`InitGenesis`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L12)
 needs to be modified to the following:
 
 ```go
@@ -231,10 +235,10 @@ Proposed
 
 - Reduce confusion when initializing the app, as now you can only provide a genesis file with all its fields defined.
 - Add a command to populate a genesis file from the mandatory values.
+- Prevent accidental startups as the chain now only starts if all the fields of the genesis file are populated.
 
 ### Negative
 
-- The chain now only starts if all the fields of the genesis file are populated.
 - Remove the current single option to partially fill in the genesis on the initialization (_i.e_ only with a few non-mandatory fields missing).
 This can be replaced by the following flow:
 

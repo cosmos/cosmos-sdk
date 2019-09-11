@@ -1,13 +1,19 @@
+---
+layout: index
+title: Cosmos SDK Documentation
+description: The Cosmos-SDK is a framework for building blockchain applications in Golang. It is being used to build Gaia, the first implementation of the Cosmos Hub.
+---
+
 # Cosmos SDK Documentation
 
 ## Get Started
 
--  **[SDK Intro](./intro/README.md)**: High-level overview of the Cosmos SDK.
--  **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial to learn the SDK. It showcases how to build an SDK-based blockchain from scratch, and explains the basic principles of the SDK in the process.
+- **[SDK Intro](./intro/README.md)**: High-level overview of the Cosmos SDK.
+- **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial to learn the SDK. It showcases how to build an SDK-based blockchain from scratch, and explains the basic principles of the SDK in the process.
 
 ## Resources
 
-- [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK. 
+- [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK.
 - [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.
 - [REST API spec](https://cosmos.network/rpc/): List of endpoints to interact with a `gaia` full-node through REST.
 
@@ -15,10 +21,10 @@
 
 To create a new project, you can either:
 
-- Fork [this repo](https://github.com/cosmos/sdk-application-tutorial/). Do not forget to remove the `nameservice` module from the various files if you don't need it. 
+- Fork [this repo](https://github.com/cosmos/sdk-application-tutorial/). Do not forget to remove the `nameservice` module from the various files if you don't need it.
 - Use community tools like [chainkit](https://github.com/blocklayerhq/chainkit).
 
-## Cosmos Hub 
+## Cosmos Hub
 
 The Cosmos Hub (`gaia`) docs have moved [here](https://github.com/cosmos/gaia/tree/master/docs).
 
@@ -35,4 +41,4 @@ considerations when making changes.
 
 ## Version
 
- This documentation is built from the following commit:
+This documentation is built from the following commit:

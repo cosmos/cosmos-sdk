@@ -19,9 +19,7 @@ const sidebar = (directory, array) => {
         })
         .filter(f => f.order !== false),
       ["order", "path"]
-    )
-      .map(f => f.path)
-      .filter(f => !f.match("readme"));
+    ).map(f => f.path);
     return {
       title: i[0],
       children
@@ -32,13 +30,34 @@ const sidebar = (directory, array) => {
 module.exports = {
   title: "Cosmos SDK",
   base: process.env.VUEPRESS_BASE || "/",
+  plugins: [
+    [
+      "@vuepress/search",
+      {
+        searchMaxSuggestions: 10
+      }
+    ]
+    // [
+    //   "@vuepress/active-header-links",
+    //   {
+    //     // sidebarLinkSelector: ".sidebar__link__href",
+    //     headerAnchorSelector: ".header-anchor",
+    //     headerTopOffset: 120
+    //   }
+    // ]
+  ],
+  markdown: {
+    anchor: {
+      permalinkSymbol: ""
+    }
+  },
   locales: {
     "/": {
       lang: "en-US"
     },
     "/ru/": {
       lang: "ru"
-    },
+    }
   },
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
@@ -68,28 +87,28 @@ module.exports = {
           ["Интерфейсы", "interfaces"]
         ])
       },
-      '/kr/': {
-        label: '한국어',
-        sidebar: sidebar('kr', [
-          ['소개', 'intro'],
-          ['기초', 'basics'],
-          ['SDK Core', 'core'],
-          ['모듈들', 'modules'],
-          ['프로그램 사용', 'sdk'],
-          ['인터페이스', 'interfaces'],
-        ]),
+      "/kr/": {
+        label: "한국어",
+        sidebar: sidebar("kr", [
+          ["소개", "intro"],
+          ["기초", "basics"],
+          ["SDK Core", "core"],
+          ["모듈들", "modules"],
+          ["프로그램 사용", "sdk"],
+          ["인터페이스", "interfaces"]
+        ])
       },
-      '/cn/': {
-        label: '中文',
-        sidebar: sidebar('cn', [
-          ['介绍', 'intro'],
-          ['基本', 'basics'],
-          ['SDK Core', 'core'],
-          ['模块', 'modules'],
-          ['使用该程序', 'sdk'],
-          ['接口', 'interfaces'],
-        ]),
-      },
+      "/cn/": {
+        label: "中文",
+        sidebar: sidebar("cn", [
+          ["介绍", "intro"],
+          ["基本", "basics"],
+          ["SDK Core", "core"],
+          ["模块", "modules"],
+          ["使用该程序", "sdk"],
+          ["接口", "interfaces"]
+        ])
+      }
     }
   }
 };

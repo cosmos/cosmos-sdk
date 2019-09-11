@@ -1,0 +1,42 @@
+<template lang="pug">
+  div
+    div
+      a(href="https://hackathon.sfblockchainweek.io" target="_blank" rel="noreferrer noopener")
+        img(src="/banner-hackathon.svg").sidebar__image
+    .sidebar__title On this page
+    .sidebar__link(v-for="link in $page.headers")
+      a(:href="`${$page.regularPath}#${link.slug}`").sidebar__link__href.header-anchor {{link.title}}
+</template>
+
+<style lang="stylus" scoped>
+.sidebar
+  width 100%
+  max-width var(--sidebar-width)
+  position absolute
+  right 0
+  top 0
+  bottom 0
+
+  &__image
+    width 100%
+
+  &__container
+    position fixed
+    padding-right 2rem
+
+  &__title
+    font-size 0.75rem
+    text-transform uppercase
+    letter-spacing 0.2em
+    color #666
+    margin-top 3rem
+
+  &__link
+    color rgba(22, 25, 49, 0.65)
+    margin-top 0.75rem
+    margin-bottom 0.75rem
+    font-size 0.875rem
+
+    &__href
+      color rgba(22, 25, 49, 0.65)
+</style>

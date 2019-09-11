@@ -13,6 +13,12 @@
             .features__item__desc {{feature.desc}}
             .features__item__label
               .features__item__label__text {{feature.label}}
+        .h2 Explore the SDK
+        div Get familiar with the SDK and explore its main concepts:
+        .sections
+          .sections__item(v-for="section in $frontmatter.sections")
+            .sections__item__title {{section.title}}
+            .sections__item__desc {{section.desc}}
 </template>
 
 <style lang="stylus" scoped>
@@ -79,4 +85,16 @@
 .dark
   background rgba(22, 25, 49, 0.9)
   color white
+
+.sections
+  display grid
+  margin-top 2rem
+  margin-bottom 4rem
+  grid-template-columns repeat(auto-fit, minmax(300px, 1fr))
+  gap 1.5rem
+
+  &__item
+    &__title
+      font-weight 600
+      margin-bottom 0.5rem
 </style>

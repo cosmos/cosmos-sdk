@@ -19,6 +19,19 @@ features:
     desc: Build a complete blockchain application from scratch.
     label: 30-40 min
     url: https://github.com/cosmos/sdk-application-tutorial
+sections:
+  - title: Introduction
+    desc: Short sentence describing this section.
+  - title: Basics
+    desc: Short sentence describing this section.
+  - title: SDK Core
+    desc: Short sentence describing this section.
+  - title: Building Modules
+    desc: Short sentence describing this section.
+  - title: Using SDK
+    desc: Short sentence describing this section.
+  - title: Interfaces
+    desc: Short sentence describing this section.
 ---
 
 # Cosmos SDK Documentation

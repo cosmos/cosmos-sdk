@@ -629,7 +629,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 // runMsgs iterates through all the messages and executes them.
 // nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
 	var (
 		data      []byte
@@ -665,25 +665,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			idxLogs = append(idxLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		idxLogs = append(idxLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
 	}
 
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.TrimSpace(idxLogs.String()),
+		Log:       strings.TrimSpace(msgLogs.String()),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-
-		// DEPRECATED: Remove in next major release.
-		Events: events,
+		Events:    events,
 	}
 
 	return result

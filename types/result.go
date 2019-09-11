@@ -34,6 +34,9 @@ type Result struct {
 
 	// Events contains a slice of Event objects that were emitted during some
 	// execution.
+	//
+	// DEPRECATED: Remove in the next next major release in favor of using the
+	// ABCIMessageLog.Events field.
 	Events Events
 }
 
@@ -50,6 +53,10 @@ type ABCIMessageLog struct {
 	MsgIndex uint16 `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
+
+	// Events contains a slice of Event objects that were emitted during some
+	// execution.
+	Events Events `json:"events"`
 }
 
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.

@@ -664,7 +664,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(i), Log: msgResult.Log}
+		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(i), Log: msgResult.Log, Events: events}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
@@ -680,14 +680,15 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		idxLogs = append(idxLogs, idxLog)
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.TrimSpace(string(logJSON)),
+		Log:       strings.TrimSpace(string(codec.Cdc.MustMarshalJSON(idxLogs))),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Events:    events,
+
+		// DEPRECATED: Remove in next major release.
+		Events: events,
 	}
 
 	return result

@@ -15,11 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-const (
-	// ModuleAccountType defines the type for a ModuleAccount
-	ModuleAccountType = "ModuleAccount"
-)
-
 var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 

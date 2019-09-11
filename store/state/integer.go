@@ -52,6 +52,7 @@ func (v Integer) Incr(ctx Context) (res uint64) {
 	return
 }
 
+// Query() retrives state value and proof from a queryable reference
 func (v Integer) Query(ctx CLIContext) (res uint64, proof *Proof, err error) {
 	value, proof, err := v.Value.QueryRaw(ctx)
 	if err != nil {

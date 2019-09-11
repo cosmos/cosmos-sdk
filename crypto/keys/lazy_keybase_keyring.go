@@ -57,15 +57,17 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 		keyhashFilePath := filepath.Join(lkb.dir, "keyhash")
 
 		var keyhash []byte
-		if _, err := os.Stat(keyhashFilePath); err == nil {
+		_, err := os.Stat(keyhashFilePath)
+		switch {
+		case err == nil:
 			keyhash, err = ioutil.ReadFile(keyhashFilePath)
 			if err != nil {
 				return "", fmt.Errorf("couldn't read %s: %v", keyhashFilePath, err)
 			}
 			keyhashStored = true
-		} else if os.IsNotExist(err) {
+		case os.IsNotExist(err):
 			keyhashStored = false
-		} else {
+		default:
 			return "", fmt.Errorf("couldn't open %s: %v", keyhashFilePath, err)
 		}
 

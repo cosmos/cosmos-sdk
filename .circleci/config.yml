@@ -162,7 +162,7 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
-  check_statik:
+  update-swagger-docs:
     executor: golang
     steps:
       - make:
@@ -173,7 +173,7 @@ workflows:
   version: 2
   test-suite:
     jobs:
-      - check_statik:
+      - update-swagger-docs:
           requires:
             - setup-dependencies
       - setup-dependencies:

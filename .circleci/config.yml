@@ -185,7 +185,7 @@ workflows:
       - test-sim-nondeterminism:
           requires:
             - setup-dependencies
-      - test-sim-import_export:
+      - test-sim-import-export:
           requires:
             - setup-dependencies
       - test-sim-after-import:

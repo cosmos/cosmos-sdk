@@ -1,6 +1,7 @@
 package context
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -54,7 +55,7 @@ func TestBroadcastError(t *testing.T) {
 	}
 
 	txBytes := []byte{0xA, 0xB}
-	txHash := string(tmhash.Sum(txBytes))
+	txHash := fmt.Sprintf("%X", tmhash.Sum(txBytes))
 
 	for _, mode := range modes {
 		for err, code := range errors {

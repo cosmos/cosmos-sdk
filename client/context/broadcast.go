@@ -33,27 +33,41 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error
 	return res, err
 }
 
-// CheckTendermintError checks if the error returned from BroadcastTx
-// is a Tendermint error that is returned before the tx is submitted
-// due to precondition checks that failed. If an Tendermint error is detected,
-// this function returns the correct code back in TxResponse.
+// CheckTendermintError checks if the error returned from BroadcastTx is a
+// Tendermint error that is returned before the tx is submitted due to
+// precondition checks that failed. If an Tendermint error is detected, this
+// function returns the correct code back in TxResponse.
+//
+// TODO: Avoid brittle string matching in favor of error matching. This requires
+// a change to Tendermint's RPCError type to allow retrieval or matching against
+// a concrete error type.
 func CheckTendermintError(err error, txBytes []byte) *sdk.TxResponse {
+	if err == nil {
+		return nil
+	}
+
+	errStr := strings.ToLower(err.Error())
+	txHash := fmt.Sprintf("%X", tmhash.Sum(txBytes))
+
 	switch {
-	case strings.Contains(err.Error(), mempool.ErrTxInCache.Error()):
+	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeTxInMempoolCache),
-			TxHash: string(tmhash.Sum(txBytes)),
+			TxHash: txHash,
 		}
-	case strings.Contains(err.Error(), "mempool is full"):
+
+	case strings.Contains(errStr, "mempool is full"):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeMempoolIsFull),
-			TxHash: string(tmhash.Sum(txBytes)),
+			TxHash: txHash,
 		}
-	case strings.Contains(err.Error(), "Tx too large"):
+
+	case strings.Contains(errStr, "tx too large"):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeTxTooLarge),
-			TxHash: string(tmhash.Sum(txBytes)),
+			TxHash: txHash,
 		}
+
 	default:
 		return nil
 	}

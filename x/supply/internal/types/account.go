@@ -24,7 +24,6 @@ var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
 func init() {
-	authtypes.RegisterAccountType(ModuleAccountType)
 	authtypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
 }
 

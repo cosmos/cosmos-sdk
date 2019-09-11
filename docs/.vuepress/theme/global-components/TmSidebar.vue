@@ -41,11 +41,22 @@
 
   &__title
     font-weight 500
+    position relative
+
+    &:before
+      content ''
+      position absolute
+      top 0.15rem
+      left 0
+      height 1rem
+      width 1rem
+      background url('/circle.svg') no-repeat top left
 
 .link
   margin-top 0.5rem
   margin-bottom 0.5rem
   cursor pointer
+  padding-left 1.5rem
 </style>
 
 <script>

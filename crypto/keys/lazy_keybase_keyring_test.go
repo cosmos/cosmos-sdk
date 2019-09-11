@@ -15,22 +15,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNewKeybaseKeyringFileOnly(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
-	lazykb, ok := kb.(lazyKeybaseKeyring)
-	require.True(t, ok)
-	require.Equal(t, lazykb.name, "keybasename")
-}
-
 // New creates a new instance of a lazy keybase.
-func NewKeybaseKeyringFileOnly(name string, dir string) Keybase {
+func newTestKeybaseKeyring(name string, dir string) Keybase {
 	if _, err := keyring.Open(keyring.Config{
 		AllowedBackends: []keyring.BackendType{"file"},
-		//Keyring with encrypted application data
-		ServiceName: name,
-		FileDir:     dir,
+		ServiceName:     name,
+		FileDir:         dir,
 	}); err != nil {
 		panic(err)
 	}
@@ -38,10 +28,19 @@ func NewKeybaseKeyringFileOnly(name string, dir string) Keybase {
 	return lazyKeybaseKeyring{name: name, dir: dir, test: true}
 }
 
+func TestNewTestKeybaseKeyring(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	kb := newTestKeybaseKeyring("keybasename", dir)
+	lazykb, ok := kb.(lazyKeybaseKeyring)
+	require.True(t, ok)
+	require.Equal(t, lazykb.name, "keybasename")
+}
+
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -124,7 +123,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -199,7 +198,7 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 func TestLazyExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -227,7 +226,7 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
@@ -266,7 +265,7 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -281,7 +280,7 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
@@ -314,7 +313,7 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 func TestLazySeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewKeybaseKeyringFileOnly("keybasename", dir)
+	kb := newTestKeybaseKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"

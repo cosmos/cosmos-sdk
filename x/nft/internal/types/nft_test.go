@@ -70,13 +70,38 @@ func TestNFTsAddMethod(t *testing.T) {
 func TestNFTsFindMethod(t *testing.T) {
 	testNFT := NewBaseNFT(id, address, tokenURI)
 	testNFT2 := NewBaseNFT(id2, address, tokenURI)
-	nfts := NewNFTs(&testNFT, &testNFT2)
+
+	var id3 = string('3')
+	var id4 = string('4')
+	var id5 = string('5')
+	testNFT3 := NewBaseNFT(id3, address, tokenURI)
+	testNFT4 := NewBaseNFT(id4, address, tokenURI)
+	testNFT5 := NewBaseNFT(id5, address, tokenURI)
+
+	nfts := NewNFTs(&testNFT, &testNFT2, &testNFT3, &testNFT4, &testNFT5)
 
 	nft, found := nfts.Find(id)
 	require.True(t, found)
 	require.Equal(t, nft.String(), testNFT.String())
 
+	nft, found = nfts.Find(id2)
+	require.True(t, found)
+	require.Equal(t, nft.String(), testNFT2.String())
+
 	nft, found = nfts.Find(id3)
+	require.True(t, found)
+	require.Equal(t, nft.String(), testNFT3.String())
+
+	nft, found = nfts.Find(id4)
+	require.True(t, found)
+	require.Equal(t, nft.String(), testNFT4.String())
+
+	nft, found = nfts.Find(id5)
+	require.True(t, found)
+	require.Equal(t, nft.String(), testNFT5.String())
+
+	var id6 = string('6')
+	nft, found = nfts.Find(id6)
 	require.False(t, found)
 	require.Nil(t, nft)
 }

@@ -26,15 +26,17 @@ type Params struct {
 
 Validators can have one of three statuses
 
-
-- `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn 
-  rewards. They can receive delegations. Unbonding from an `Unbonded` validator is immediate.
-- `Bonded`": Once the validator receives sufficient bonded tokens they join the active set and 
-  their status is updated to `Bonded`. They are signing blocks and receiving rewards. They can 
-  receive further delegations. They can be slashed for misbehavior. Delegators to this validator 
-  who unbond their delegation must wait the duration of the UnbondingTime, a chain-specific param. 
-- `Unbonding`: When a validator leaves the active set, either by choice or due to slashing or 
-  tombstoning, an unbonding of their delegations begins. They and their must wait the UnbondingTime 
+- `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
+  rewards. They can receive delegations.
+- `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
+  active set during [`EndBlock`](./04_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  They are signing blocks and receiving rewards. They can receive further delegations.
+  They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
+  must wait the duration of the UnbondingTime, a chain-specific param. during which time
+  they are still slashable for offences of the source validator if those offences were committed 
+  during the period of time that the tokens were bonded. 
+- `Unbonding`: When a validator leaves the active set, either by choice or due to slashing or
+  tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
   before moving receiving their tokens to their accounts from the `BondedPool`.
 
 Validators objects should be primarily stored and accessed by the
@@ -134,7 +136,7 @@ validator and the number of shares issued so far:
 
 `Shares per Token = validator.TotalShares() / validator.Tokens()`
 
-Only the number of shares is received is stored on the DelegationEntry. When a delegator then
+Only the number of shares received is stored on the DelegationEntry. When a delegator then
 Undelegates, the token amount they receive is calculated from the number of shares they currently
 hold and the inverse exchange rate:
 

@@ -6,7 +6,7 @@ import (
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v034distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_34"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v0_36"
-	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"	
+	v034genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_34"
 	v036genAccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v0_34"
@@ -26,33 +26,32 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v034gov.RegisterCodec(v034Codec)
 	v036gov.RegisterCodec(v036Codec)
 
-		// migrate genesis accounts state	
-		if appState[v034genAccounts.ModuleName] != nil {	
-					var genAccs v034genAccounts.GenesisState	
-					v034Codec.MustUnmarshalJSON(appState[v034genAccounts.ModuleName], &genAccs)	
-			
-					var authGenState v034auth.GenesisState	
-					v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)	
-			
-					var govGenState v034gov.GenesisState	
-					v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govGenState)	
-			
-					var distrGenState v034distr.GenesisState	
-					v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &distrGenState)	
-			
-					var stakingGenState v034staking.GenesisState	
-					v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)	
-			
-					delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed	
-					appState[v036genAccounts.ModuleName] = v036Codec.MustMarshalJSON(	
-						v036genAccounts.Migrate(	
-							genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool, govGenState.Deposits,	
-							stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,	
-							stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,	
-						),	
-					)	
-				}	
-			
+	// migrate genesis accounts state
+	if appState[v034genAccounts.ModuleName] != nil {
+		var genAccs v034genAccounts.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034genAccounts.ModuleName], &genAccs)
+
+		var authGenState v034auth.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034auth.ModuleName], &authGenState)
+
+		var govGenState v034gov.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034gov.ModuleName], &govGenState)
+
+		var distrGenState v034distr.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034distr.ModuleName], &distrGenState)
+
+		var stakingGenState v034staking.GenesisState
+		v034Codec.MustUnmarshalJSON(appState[v034staking.ModuleName], &stakingGenState)
+
+		delete(appState, v034genAccounts.ModuleName) // delete old key in case the name changed
+		appState[v036genAccounts.ModuleName] = v036Codec.MustMarshalJSON(
+			v036genAccounts.Migrate(
+				genAccs, authGenState.CollectedFees, distrGenState.FeePool.CommunityPool, govGenState.Deposits,
+				stakingGenState.Validators, stakingGenState.UnbondingDelegations, distrGenState.OutstandingRewards,
+				stakingGenState.Params.BondDenom, v036distr.ModuleName, v036gov.ModuleName,
+			),
+		)
+	}
 
 	// migrate auth state
 	if appState[v034auth.ModuleName] != nil {

@@ -35,7 +35,7 @@ func NewKeybaseKeyringFileOnly(name string, dir string) Keybase {
 		panic(err)
 	}
 
-	return lazyKeybaseKeyring{name: name, dir: dir}
+	return lazyKeybaseKeyring{name: name, dir: dir, test: true}
 }
 
 func TestLazyKeyManagementKeyRing(t *testing.T) {

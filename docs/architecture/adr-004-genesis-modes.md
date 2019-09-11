@@ -10,7 +10,7 @@ In the SDK, when the `GenesisState` is initialized through a `InitGenesis` call,
 
 This may lead to confusion because as is currently programmed, `InitGenesis`
 initializes _and_ loads the values at the same time. When in reality they should be
-two separated disctinct processes.
+two separated distinct processes.
 
 A recurring case of this problem is to check if a balance is empty and initialize it
 if not (by iterating the state). This affects mostly the total [`Supply`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L14-L24) and[`ModuleAccounts`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/gov/genesis.go#L44-L50)
@@ -32,8 +32,8 @@ execution should `panic` and exit. Similarly, the initialization of the app (_i.
 The flow of this process can be summarized in 3 steps:
 
   1. Import genesis file with missing fields
-  2. Create the app and initialize genesis with flag to fill the missing values
-  3. Export updated genesis file
+  2. Populate the missing genesis values according to application/module logic. 
+  3. Export updated genesis file intended to be used for further usage with the `<app>d init` command
 
 To archieve this, every module needs to be able to generate the missing fields from
 the existing state. For example, on `x/supply/genesis.go`,
@@ -132,14 +132,14 @@ func (app *BaseApp) setPopulateGenesis(pupulateGenesis bool) {
 }
 ```
 
-Finally, the `pupulate-genesis` command imports the provided genesis dile and passes
+Finally, the `populate-genesis` command imports the provided genesis file and passes
 the parameter to the module `Manager` call to update the state and then export it:
 
 ```go
 // TODO: params
 func PopulateCmd(ctx *Context, appCreator server.AppCreator, appExporter server.AppExporter) *cobra.Command {
     cmd := &cobra.Command{
-    Use:   "pupulate-genesis [path/to/genesis.json]",
+    Use:   "populate-genesis [path/to/genesis.json]",
     Short: "Fill the missing non-mandatory values from the genesis file",
     Long:  `Fill the missing non-mandatory values from the genesis file by
     iterating the state`,

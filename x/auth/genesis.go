@@ -14,7 +14,7 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	data.Accounts = Sanitize(data.Accounts)
 
 	for _, a := range data.Accounts {
-		acc := ak.NewAccount(ctx, a) // set account number
+		acc := ak.NewAccount(ctx, a)
 		ak.SetAccount(ctx, acc)
 	}
 }
@@ -23,10 +23,9 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
 	accounts := ak.GetAllAccounts(ctx)
-	// convert each Account to []GenesisAccount type
 	genAccounts := make([]exported.GenesisAccount, len(accounts))
 	for i := range accounts {
-		ga := accounts[i].(exported.GenesisAccount) // will panic if an account doesn't implement GenesisAccount
+		ga := accounts[i].(exported.GenesisAccount)
 		genAccounts[i] = ga
 	}
 

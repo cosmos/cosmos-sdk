@@ -23,7 +23,7 @@ func NewGenesisState(params Params, accounts []exported.GenesisAccount) GenesisS
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams(), nil)
+	return NewGenesisState(DefaultParams(), []exported.GenesisAccount{})
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an

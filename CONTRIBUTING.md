@@ -232,3 +232,39 @@ releases will be based off of that release.
 - delete the `pre-rc/vX.X.X` and `RC` branches
 - create a PR into `master` containing ONLY the CHANGELOG.md updates
 - tag and release `release/vX.XX.X`
+
+## Code Owner Membership 
+
+In the ethos of open source projects, and out of necessity to keep the code
+alive, the core contributor team will strive to permit special repo privileges
+to developers who show an aptitude towards developing with this code base. 
+
+Several different kinds of privileges may be granted however most common
+privileges to be granted are merge rights to either part of, or the entire the
+code base (though the github `CODEOWNERS` file). The on-boarding process for
+new code owners is as follows: On a bi-monthly basis (or more frequently if
+agreeable) all the existing code owners will privately convene to discuss
+potential new candidates as well as the potential for existing code-owners to
+exit or "pass on the torch". 
+
+Only if consensus is reached among all the existing code-owners will an
+invitation be extended to a new potential-member. Likewise, when an existing
+member is suggested to be removed/or have their privileges reduced, the member
+in question must agree on the decision for their removal or else no action
+should be taken. If however, a code-owner is verifiably shown to intentionally
+have had acted maliciously or grossly negligent, code-owner privileges may be
+stripped with no prior warned or consent from the member in question. 
+
+Earning this privilege should be considered to be no small feat and is by no
+means guaranteed by any quantifiable metric. It is a symbol of great trust of
+the community of this project.  
+
+
+
+
+
+
+ 
+
+
+

@@ -88,6 +88,9 @@ block time is >= the `halt-time`.
 caching through `CommitKVStoreCacheManager`. Any application wishing to utilize an inter-block cache
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
+* [\#4990](https://github.com/cosmos/cosmos-sdk/issues/4990) Add `Events` to the `ABCIMessageLog` to
+provide context and grouping of events based on the messages they correspond to. The `Events` field
+in `TxResponse` is deprecated and will be removed in the next major release.
 
 ### Bug Fixes
 

@@ -71,9 +71,19 @@
     line-height 1.5
 
   li
-    margin-left 2rem
+    padding-left 2rem
     list-style none
     margin-bottom 1rem
+    position relative
+
+    &:before
+      content ''
+      width 1rem
+      height 1rem
+      background url('/bullet.svg') no-repeat top left
+      position absolute
+      top 0.35rem
+      left 0
 
 @media screen and (max-width: 1024px)
   .content

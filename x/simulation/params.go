@@ -119,6 +119,6 @@ func (spc ParamChange) ComposedKey() string {
 // external modules (i.e outside gov)
 type WeightedProposalContent struct {
 	AppParamsKey       string             // key used to retrieve the value of the weight from the simulation application params
-	DefaultWeight      int                // default weigth
+	DefaultWeight      int                // default weight
 	ContentSimulatorFn ContentSimulatorFn // content simulator function
 }

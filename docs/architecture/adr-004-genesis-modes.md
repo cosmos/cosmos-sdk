@@ -140,7 +140,7 @@ Finally, the `populate-genesis` command imports the provided genesis file and pa
 the parameter to the module `Manager` call to update the state and then export it:
 
 ```go
-// TODO: params
+// ./x/genutil/client/cli/populate.go
 func PopulateCmd(ctx *Context, appCreator server.AppCreator, appExporter server.AppExporter) *cobra.Command {
     cmd := &cobra.Command{
     Use:   "populate-genesis [path/to/genesis.json]",
@@ -164,7 +164,7 @@ func PopulateCmd(ctx *Context, appCreator server.AppCreator, appExporter server.
       // 1. Import genesis file with missing fields
       appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
       if err != nil {
-        return errors.Wrap(err, "Failed to marshall default genesis state")
+        return errors.Wrap(err, "failed to marshall default genesis state")
       }
 
       genDoc := &types.GenesisDoc{}
@@ -175,11 +175,11 @@ func PopulateCmd(ctx *Context, appCreator server.AppCreator, appExporter server.
       } else {
         genDoc, err = types.GenesisDocFromFile(genFile)
         if err != nil {
-          return errors.Wrap(err, "Failed to read genesis doc from file")
+          return errors.Wrap(err, "failed to read genesis doc from file")
         }
       }
 
-      // 2. Create the app and initialize genesis with flag to fill missing values
+      // 2. Populate the missing genesis values according to application/module logic.
       cfg := ctx.Config
       home := cfg.RootDir
       traceWriterFile := viper.GetString(flagTraceStore)
@@ -194,11 +194,16 @@ func PopulateCmd(ctx *Context, appCreator server.AppCreator, appExporter server.
         return nil, err
       }
 
-      // CONTRACT: baseapp must have the option to populate the genesis
+      // Create a temporary abci.Application that calls the application's ModuleManager
+      // InitGenesis with the pupulateGenesis flag. This populates the missing
+      // GenesisState values from each module.
+      //
+      // CONTRACT: Baseapp must have the option to populate the genesis enabled
       app := appCreator(ctx.Logger, db, traceWriter)
 
-
       // 3. Export updated genesis file
+
+      // export the app state by calling the AppExporter
       appState, validators, err := appExporter(ctx.Logger, db, traceWriter, -1, false, []string{})
       if err != nil {
         return fmt.Errorf("error exporting state: %v", err)

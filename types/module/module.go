@@ -153,7 +153,6 @@ type AppModule interface {
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleGenesis
-	AppModuleSimulation
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object

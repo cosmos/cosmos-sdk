@@ -2,6 +2,23 @@
 layout: index
 title: Cosmos SDK Documentation
 description: The Cosmos-SDK is a framework for building blockchain applications in Golang. It is being used to build Gaia, the first implementation of the Cosmos Hub.
+features:
+  - cta: Use
+    title: HelloChain
+    desc: Quickly create your first “hello chain” application using the SDK.
+    label: 15-20 min
+    special: dark
+    url: https://github.com/cosmos/hellochain
+  - cta: Read
+    title: Introduction to Cosmos SDK
+    desc: Learn about all the parts of the Cosmos SDK.
+    label: 5 min
+    url: /intro/
+  - cta: Learn
+    title: SDK Tutorial
+    desc: Build a complete blockchain application from scratch.
+    label: 30-40 min
+    url: https://github.com/cosmos/sdk-application-tutorial
 ---
 
 # Cosmos SDK Documentation

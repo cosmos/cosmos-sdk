@@ -2,8 +2,7 @@ package context
 
 import (
 	"fmt"
-
-	"golang.org/x/xerrors"
+	"strings"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/mempool"
@@ -40,22 +39,17 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.TxResponse, err error
 // this function returns the correct code back in TxResponse.
 func CheckTendermintError(err error, txBytes []byte) *sdk.TxResponse {
 	switch {
-	case xerrors.Is(err, mempool.ErrTxInCache):
+	case strings.Contains(err.Error(), mempool.ErrTxInCache.Error()):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeTxInMempoolCache),
 			TxHash: string(tmhash.Sum(txBytes)),
 		}
-	case xerrors.As(err, &mempool.ErrMempoolIsFull{}):
+	case strings.Contains(err.Error(), "mempool is full"):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeMempoolIsFull),
 			TxHash: string(tmhash.Sum(txBytes)),
 		}
-	case xerrors.As(err, &mempool.ErrPreCheck{}):
-		return &sdk.TxResponse{
-			Code:   uint32(sdk.CodeFailedPreCheck),
-			TxHash: string(tmhash.Sum(txBytes)),
-		}
-	case xerrors.As(err, &mempool.ErrTxTooLarge{}):
+	case strings.Contains(err.Error(), "Tx too large"):
 		return &sdk.TxResponse{
 			Code:   uint32(sdk.CodeTxTooLarge),
 			TxHash: string(tmhash.Sum(txBytes)),

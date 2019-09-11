@@ -44,7 +44,6 @@ func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
 		mempool.ErrTxInCache:       uint32(types.CodeTxInMempoolCache),
 		mempool.ErrTxTooLarge{}:    uint32(types.CodeTxTooLarge),
-		mempool.ErrPreCheck{}:      uint32(types.CodeFailedPreCheck),
 		mempool.ErrMempoolIsFull{}: uint32(types.CodeMempoolIsFull),
 	}
 

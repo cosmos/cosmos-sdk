@@ -60,6 +60,8 @@ longer panics if the store to load contains substores that we didn't explicitly 
 * [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
 CLI option to the `start` command. When provided, an application will halt during `Commit` when the
 block time is >= the `halt-time`.
+* (keys) [\#4754](https://github.com/cosmos/cosmos-sdk/pull/4754) Introduce new Keybase implementation that can
+leverage operating systems' built-in functionalities to securely store secrets.
 
 ### Improvements
 

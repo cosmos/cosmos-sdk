@@ -53,8 +53,8 @@ func (v Integer) Increment(ctx Context) (res uint64) {
 }
 
 // Query() retrives state value and proof from a queryable reference
-func (v Integer) Query(ctx CLIContext) (res uint64, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+func (v Integer) Query(q ABCIQuerier) (res uint64, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	if err != nil {
 		return
 	}

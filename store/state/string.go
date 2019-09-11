@@ -32,7 +32,7 @@ func (v String) Set(ctx Context, value string) {
 }
 
 // Query() retrives state value and proof from a queryable reference
-func (v String) Query(ctx CLIContext) (res string, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+func (v String) Query(q ABCIQuerier) (res string, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	return string(value), proof, err
 }

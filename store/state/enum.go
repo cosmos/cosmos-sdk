@@ -53,7 +53,8 @@ func (v Enum) Transit(ctx Context, from, to byte) bool {
 	return true
 }
 
-func (v Enum) Query(ctx CLIContext) (res byte, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+// Query() retrives state value and proof from a queryable reference
+func (v Enum) Query(q ABCIQuerier) (res byte, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	return value[0], proof, err
 }

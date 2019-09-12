@@ -67,23 +67,21 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 			return ctx, err
 		}
 
-		// TODO
-
-		pubKey := signerAccs[i].GetPubKey()
-		if pubKey == nil {
-			pubKey = sig.PubKey
+		pubKey, err := ProcessPubKey(signerAccs[i], sig, simulate)
+		if err != nil {
+			return ctx, err
 		}
+
 		if simulate {
 			// Simulated txs should not contain a signature and are not required to
 			// contain a pubkey, so we must account for tx size of including a
 			// StdSignature (Amino encoding) and simulate gas consumption
 			// (assuming a SECP256k1 simulation key).
 			consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
-		} else {
-			err := sgcd.sigGasConsumer(ctx.GasMeter(), sig.Signature, pubKey, params)
-			if err != nil {
-				return ctx, err
-			}
+		}
+		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig.Signature, pubKey, params)
+		if err != nil {
+			return ctx, err
 		}
 	}
 
@@ -127,8 +125,8 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// check signature, return account with incremented nonce
-		signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
-		signerAccs[i], err = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate)
+		signBytes := GetSignBytes(ctx.ChainID(), stdTx, signerAccs[i], isGenesis)
+		signerAccs[i], err = processSig(ctx, signerAccs[i], stdSigs[i], signBytes, simulate)
 		if err != nil {
 			return ctx, err
 		}
@@ -167,6 +165,50 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		if uint64(sigCount) > params.TxSigLimit {
 			return ctx, errs.Wrapf(errs.ErrTooManySignatures,
 				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+		}
+	}
+
+	return next(ctx, tx, simulate)
+}
+
+type SetPubKeyDecorator struct {
+	ak keeper.AccountKeeper
+}
+
+func NewSetPubKeyDecorator(ak keeper.AccountKeeper) SetPubKeyDecorator {
+	return SetPubKeyDecorator{
+		ak: ak,
+	}
+}
+
+func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	if simulate {
+		return next(ctx, tx, simulate)
+	}
+	stdTx, ok := tx.(types.StdTx)
+	if !ok {
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+	}
+
+	stdSigs := stdTx.GetSignatures()
+	signers := stdTx.GetSigners()
+
+	for i, sig := range stdSigs {
+		if sig.PubKey != nil {
+			if !bytes.Equal(sig.PubKey.Address(), signers[i]) {
+				return ctx, errs.Wrapf(errs.ErrInvalidPubKey,
+					"PubKey does not match Signer address %s", signers[i])
+			}
+
+			acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+			if err != nil {
+				return ctx, err
+			}
+			err = acc.SetPubKey(sig.PubKey)
+			if err != nil {
+				return ctx, errs.Wrap(errs.ErrInvalidPubKey, err.Error())
+			}
+			spkd.ak.SetAccount(ctx, acc)
 		}
 	}
 
@@ -271,14 +313,9 @@ func processSig(
 	ctx sdk.Context, acc exported.Account, sig types.StdSignature, signBytes []byte, simulate bool,
 ) (updatedAcc exported.Account, err error) {
 
-	pubKey, err := ProcessPubKey(acc, sig, simulate)
-	if err != nil {
-		return nil, err
-	}
-
-	err = acc.SetPubKey(pubKey)
-	if err != nil {
-		return nil, errs.Wrap(errs.ErrTxDecode, "setting PubKey on signer's account")
+	pubKey := acc.GetPubKey()
+	if pubKey == nil {
+		return nil, errs.Wrap(errs.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {

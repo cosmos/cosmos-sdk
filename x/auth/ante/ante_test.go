@@ -344,12 +344,12 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
@@ -471,7 +471,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// test wrong signer if public key exist
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{0}, []uint64{1}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	// test wrong signer if public doesn't exist
 	msg = types.NewTestMsg(addr2)
@@ -692,14 +692,15 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	priv7, _, addr7 := types.KeyTestPubAddr()
 	priv8, _, addr8 := types.KeyTestPubAddr()
 
+	addrs := []sdk.AccAddress{addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8}
+
 	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
+	for i, addr := range addrs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		acc.SetCoins(types.NewTestCoins())
+		acc.SetAccountNumber(uint64(i))
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
 
 	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
@@ -708,7 +709,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 
 	// test rejection logic
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
-		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
+		[]uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }

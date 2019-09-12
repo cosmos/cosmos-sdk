@@ -16,6 +16,7 @@ func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, si
 		NewValidateBasicDecorator(),
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
+		NewSetPubKeyDecorator(ak),
 		NewValidateSigCountDecorator(ak),
 		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),

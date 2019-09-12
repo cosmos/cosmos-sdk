@@ -44,28 +44,11 @@ func newKeyringKeybase(db keyring.Keyring) Keybase {
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	if language != English {
-		return nil, "", ErrUnsupportedLanguage
-	}
-	if algo != Secp256k1 {
-		err = ErrUnsupportedSigningAlgo
-		return
-	}
-
-	// default number of words (24):
-	// this generates a mnemonic directly from the number of words by reading system entropy.
-	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	seed, fullFundraiserPath, mnemonic, err := createMnemonic(language, algo)
 	if err != nil {
 		return
 	}
-
-	mnemonic, err = bip39.NewMnemonic(entropy)
-	if err != nil {
-		return
-	}
-
-	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	info, err = kb.persistDerivedKey(seed, passwd, name, types.GetConfig().GetFullFundraiserPath())
+	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
 	return
 }
 

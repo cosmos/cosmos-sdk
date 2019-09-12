@@ -95,27 +95,10 @@ func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	if language != English {
-		return nil, "", ErrUnsupportedLanguage
-	}
-	if algo != Secp256k1 {
-		err = ErrUnsupportedSigningAlgo
-		return
-	}
-
-	// default number of words (24):
-	// this generates a mnemonic directly from the number of words by reading system entropy.
-	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	seed, fullFundraiserPath, mnemonic, err := createMnemonic(language, algo)
 	if err != nil {
 		return
 	}
-	mnemonic, err = bip39.NewMnemonic(entropy)
-	if err != nil {
-		return
-	}
-
-	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	fullFundraiserPath := types.GetConfig().GetFullFundraiserPath()
 	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
 	return
 }
@@ -498,4 +481,30 @@ func addrKey(address types.AccAddress) []byte {
 
 func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
+}
+
+func createMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mnemonic string, err error) {
+	if language != English {
+		err = ErrUnsupportedLanguage
+		return
+	}
+	if algo != Secp256k1 {
+		err = ErrUnsupportedSigningAlgo
+		return
+	}
+
+	// default number of words (24):
+	// this generates a mnemonic directly from the number of words by reading system entropy.
+	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	if err != nil {
+		return
+	}
+	mnemonic, err = bip39.NewMnemonic(entropy)
+	if err != nil {
+		return
+	}
+
+	seed = bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
+	path = types.GetConfig().GetFullFundraiserPath()
+	return
 }

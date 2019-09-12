@@ -18,6 +18,21 @@ type BroadcastReq struct {
 // BroadcastTxRequest implements a tx broadcasting handler that is responsible
 // for broadcasting a valid and signed tx to a full node. The tx can be
 // broadcasted via a sync|async|block mechanism.
+//
+// @Summary Broadcast a signed transaction
+// @Description Broadcast a signed transaction with the broadcasting mode. The
+// @Description mode must either be sync, async, or block. The use of block mode
+// @Description is not advised. The sync mode will broadcast and wait for a
+// @Description CheckTx response, whereas async mode will broadcast and return
+// @Description immediately.
+// @Tags transactions
+// @Accept  json
+// @Produce  json
+// @Param tx body rest.BroadcastReq true "Signed transaction along with the broadcasting mode"
+// @Success 200 {object} types.TxResponse
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned if the transaction cannot be decoded."
+// @Router /txs [post]
 func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req BroadcastReq

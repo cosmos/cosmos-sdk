@@ -4,7 +4,6 @@
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/context
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/flags
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/keys
-// ALIASGEN: github.com/cosmos/cosmos-sdk/client/lcd
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/rest
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/rpc
 // ALIASGEN: github.com/cosmos/cosmos-sdk/client/tx
@@ -17,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/lcd"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 )
 
@@ -87,8 +86,8 @@ var (
 	NewKeyBaseFromHomeFlag             = keys.NewKeyBaseFromHomeFlag
 	NewKeyBaseFromDir                  = keys.NewKeyBaseFromDir
 	NewInMemoryKeyBase                 = keys.NewInMemoryKeyBase
-	NewRestServer                      = lcd.NewRestServer
-	ServeCommand                       = lcd.ServeCommand
+	NewRestServer                      = rest.NewRestServer
+	ServeCommand                       = rest.ServeCommand
 	BlockCommand                       = rpc.BlockCommand
 	GetChainHeight                     = rpc.GetChainHeight
 	BlockRequestHandlerFn              = rpc.BlockRequestHandlerFn
@@ -119,7 +118,7 @@ type (
 	RecoverKey             = keys.RecoverKey
 	UpdateKeyReq           = keys.UpdateKeyReq
 	DeleteKeyReq           = keys.DeleteKeyReq
-	RestServer             = lcd.RestServer
+	RestServer             = rest.RestServer
 	ValidatorOutput        = rpc.ValidatorOutput
 	ResultValidatorsOutput = rpc.ResultValidatorsOutput
 )

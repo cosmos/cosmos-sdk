@@ -1,16 +1,15 @@
-package lcd
+package rest
 
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
@@ -20,8 +19,7 @@ import (
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 
-	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
+	_ "github.com/cosmos/cosmos-sdk/client/rest/docs"
 )
 
 // RestServer represents the Light Client Rest server
@@ -79,12 +77,19 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
-		Short: "Start LCD (light-client daemon), a local REST server",
+		Short: "Start a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
-			rs.registerSwaggerUI()
+
+			// TODO:
+			//
+			// 1. Build swagger docs are runtime
+			// 2. Allow user/client to specify main API description
+
+			// mount REST (Swagger) documentation
+			rs.Mux.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(
@@ -99,13 +104,4 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 	}
 
 	return flags.RegisterRestServerFlags(cmd)
-}
-
-func (rs *RestServer) registerSwaggerUI() {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-	staticServer := http.FileServer(statikFS)
-	rs.Mux.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }

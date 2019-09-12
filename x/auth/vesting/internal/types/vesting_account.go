@@ -468,9 +468,9 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount,
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
 func NewPeriodicVestingAccount(
-	baseAcc *auth.BaseAccount, StartTime int64, periods VestingPeriods) *PeriodicVestingAccount {
+	baseAcc *auth.BaseAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
 
-	endTime := StartTime
+	endTime := startTime
 	for _, p := range periods {
 		endTime += p.PeriodLength
 	}
@@ -481,7 +481,7 @@ func NewPeriodicVestingAccount(
 	}
 
 	cva := &ContinuousVestingAccount{
-		StartTime:          StartTime,
+		StartTime:          startTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
 

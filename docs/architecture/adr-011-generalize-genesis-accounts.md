@@ -45,13 +45,12 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
     params := ak.GetParams(ctx)
 
-    accounts := ak.GetAllAccounts(ctx)
-    // convert accounts to []GenesisAccounts type
-    genAccounts := make([]GenesisAccount, len(accounts))
-    for i := range accounts {
-        ga := accounts[i].(GenesisAccount) // will panic if an account doesn't implement GenesisAccount
-        genAccounts[i] = ga
-    }
+    var genAccounts []exported.GenesisAccount
+    ak.IterateAccounts(ctx, func(account exported.Account) bool {
+        genAccount := account.(exported.GenesisAccount)
+        genAccounts = append(genAccounts, genAccount)
+        return false
+    })
 
     return NewGenesisState(params, genAccounts)
 }

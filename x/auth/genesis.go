@@ -22,12 +22,13 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
-	accounts := ak.GetAllAccounts(ctx)
-	genAccounts := make([]exported.GenesisAccount, len(accounts))
-	for i := range accounts {
-		ga := accounts[i].(exported.GenesisAccount)
-		genAccounts[i] = ga
-	}
+
+	var genAccounts []exported.GenesisAccount
+	ak.IterateAccounts(ctx, func(account exported.Account) bool {
+		genAccount := account.(exported.GenesisAccount)
+		genAccounts = append(genAccounts, genAccount)
+		return false
+	})
 
 	return NewGenesisState(params, genAccounts)
 }

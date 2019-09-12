@@ -56,10 +56,6 @@ func GetAccountCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			if err := accGetter.EnsureExists(key); err != nil {
-				return err
-			}
-
 			acc, err := accGetter.GetAccount(key)
 			if err != nil {
 				return err

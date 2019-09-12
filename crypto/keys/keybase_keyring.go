@@ -1,9 +1,7 @@
 package keys
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -185,60 +183,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	if err != nil {
 		return
 	}
-
-	var priv tmcrypto.PrivKey
-
-	switch linfo := info.(type) {
-	case localInfo:
-		if linfo.PrivKeyArmor == "" {
-			err = fmt.Errorf("private key not available")
-			return
-		}
-
-		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
-		if err != nil {
-			return
-		}
-
-	case ledgerInfo:
-		priv, err = crypto.NewPrivKeyLedgerSecp256k1Unsafe(linfo.Path)
-		if err != nil {
-			return
-		}
-
-	case offlineInfo, multiInfo:
-		_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
-		if err != nil {
-			return
-		}
-
-		buf := bufio.NewReader(os.Stdin)
-		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
-		if err != nil {
-			return
-		}
-
-		// Will block until user inputs the signature
-		var signed string
-		signed, err = buf.ReadString('\n')
-		if err != nil {
-			return
-		}
-
-		if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to decode signature")
-		}
-
-		return sig, info.GetPubKey(), nil
-	}
-
-	sig, err = priv.Sign(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pub = priv.PubKey()
-	return sig, pub, nil
+	return sign(info, passphrase, msg)
 }
 
 //ExportPrivateKeyObject exports an armored private key object to the terminal

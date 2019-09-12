@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
@@ -67,6 +69,30 @@ func SetupWithGenesisAccounts(genAccs genaccounts.GenesisAccounts) *SimApp {
 	app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: app.LastBlockHeight() + 1}})
 
 	return app
+}
+
+// AddTestAddrs constructs and returns accNum amount of accounts with an
+// initial balance of accAmt
+func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, accNum)
+	for i := 0; i < accNum; i++ {
+		pk := ed25519.GenPrivKey().PubKey()
+		testAddrs[i] = sdk.AccAddress(pk.Address())
+	}
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
+	prevSupply := app.SupplyKeeper.GetSupply(ctx)
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply)))
+
+	// fill all the addresses with some coins, set the loose pool tokens simultaneously
+	for _, addr := range testAddrs {
+		_, err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return testAddrs
 }
 
 // CheckBalance checks the balance of an account.

@@ -1,9 +1,11 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
@@ -24,6 +26,17 @@ func NewGenesisState(params Params, accounts []exported.GenesisAccount) GenesisS
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
 	return NewGenesisState(DefaultParams(), []exported.GenesisAccount{})
+}
+
+// GetGenesisStateFromAppState returns x/auth GenesisState given raw application
+// genesis state.
+func GetGenesisStateFromAppState(cdc *codec.Codec, appState map[string]json.RawMessage) GenesisState {
+	var genesisState GenesisState
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
+
+	return genesisState
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an
@@ -69,4 +82,21 @@ func validateGenAccounts(accounts []exported.GenesisAccount) error {
 		}
 	}
 	return nil
+}
+
+// GenesisAccountIterator implements genesis account iteration.
+type GenesisAccountIterator struct{}
+
+// IterateGenesisAccounts iterates over all the genesis accounts found in
+// appGenesis and invokes the iterateFn on each genesis account. If any call
+// returns true, iteration stops.
+func (GenesisAccountIterator) IterateGenesisAccounts(
+	cdc *codec.Codec, appGenesis map[string]json.RawMessage, iterateFn func(exported.Account) (stop bool),
+) {
+
+	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
+		if iterateFn(genAcc) {
+			break
+		}
+	}
 }

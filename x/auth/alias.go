@@ -70,6 +70,7 @@ var (
 	NewTxBuilder                      = types.NewTxBuilder
 	NewTxBuilderFromCLI               = types.NewTxBuilderFromCLI
 	MakeSignature                     = types.MakeSignature
+	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -102,4 +103,5 @@ type (
 	StdSignDoc                       = types.StdSignDoc
 	StdSignature                     = types.StdSignature
 	TxBuilder                        = types.TxBuilder
+	GenesisAccountIterator           = types.GenesisAccountIterator
 )

@@ -2,7 +2,7 @@
 
 ## Pre-requisite Reading
 
-- [Module Manager](./module-manager.md).
+- [Module Manager](./module-manager.md)
 - [Messages and Queries](./messages-and-queries.md)
 
 ## Synopsis

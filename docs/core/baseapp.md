@@ -286,7 +286,7 @@ The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.htm
 - [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
 - The [block gas meter](../basics/accounts-fees-gas.md#block-gas-meter), with infinite gas to process genesis transactions. 
 
-Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the [`genesis file`](./genesis.md) and, if defined, call the `InitGenesis` function of each of the application's modules.
+Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the [`genesis file`](./genesis.md) and, if defined, call the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules.
 
 ### BeginBlock
 

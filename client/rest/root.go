@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	httpSwagger "github.com/swaggo/http-swagger"
+	httpswagger "github.com/swaggo/http-swagger"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
@@ -85,11 +85,11 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 
 			// TODO:
 			//
-			// 1. Build swagger docs are runtime
-			// 2. Allow user/client to specify main API description
+			// 1. Build swagger docs at runtime as to allow user/client to specify
+			// general API description.
 
 			// mount REST (Swagger) documentation
-			rs.Mux.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+			rs.Mux.PathPrefix("/swagger/").Handler(httpswagger.WrapHandler)
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(

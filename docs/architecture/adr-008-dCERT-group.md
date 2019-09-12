@@ -11,7 +11,7 @@ information in an emergency scenario, we propose the creation of a
 specialization group named The Decentralized Computer Emergency Response Team
 (dCERT).  Initially this group's role is intended to serve as coordinators
 between various actors within a blockchain community such as validators,
-bug-hunters, developers.  During a time of crisis, the dCERT group would
+bug-hunters, and developers.  During a time of crisis, the dCERT group would
 aggregate and relay input from a variety of stakeholders to the developers who
 are actively devising a patch to the software, this way sensitive information
 does not need to be publicly disclosed while some input from the community can

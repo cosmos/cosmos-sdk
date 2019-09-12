@@ -7,9 +7,9 @@
 ## Context
 
 This idea was first conceived of in order to fulfill the use case of the
-creation of a decentralized Computer Emergency Response Team (dCERT), Whose
-members would be elected by the Cosmos Community and would fulfill the role of
-coordinating the Cosmos community under emergency situations. This thinking
+creation of a decentralized Computer Emergency Response Team (dCERT), whose
+members would be elected by a governing community and would fulfill the role of
+coordinating the community under emergency situations. This thinking
 can be further abstracted into the conception of "blockchain specialization
 groups". 
 

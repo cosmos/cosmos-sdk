@@ -45,13 +45,13 @@ type BaseVestingAccount struct {
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
 func NewBaseVestingAccount(baseAccount *auth.BaseAccount, originalVesting sdk.Coins,
-	delegatedFree sdk.Coins, delegatedVesting sdk.Coins, endTime int64) *BaseVestingAccount {
+	endTime int64) *BaseVestingAccount {
 
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
-		DelegatedFree:    delegatedFree,
-		DelegatedVesting: delegatedVesting,
+		DelegatedFree:    sdk.NewCoins(),
+		DelegatedVesting: sdk.NewCoins(),
 		EndTime:          endTime,
 	}
 }
@@ -107,8 +107,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 }
 
 // trackDelegation tracks a delegation amount for any given vesting account type
-// given the amount of coins currently vesting. It returns the resulting base
-// coins.
+// given the amount of coins currently vesting.
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
@@ -150,8 +149,7 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
 // values by which delegated vesting and delegated vesting need to decrease and
-// by which amount the base coins need to increase. The resulting base coins are
-// returned.
+// by which amount the base coins need to increase.
 //
 // NOTE: The undelegation (bond refund) amount may exceed the delegated
 // vesting (bond) amount due to the way undelegation truncates the bond refund,
@@ -220,6 +218,9 @@ func (bva BaseVestingAccount) Validate() error {
 	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
 		bva.OriginalVesting.IsAnyGT(bva.Coins) {
 		return errors.New("vesting amount cannot be greater than total amount")
+	}
+	if !(bva.DelegatedVesting.IsAllLTE(bva.OriginalVesting)) {
+		return errors.New("delegated vesting amount cannot be greater than original vesting amount")
 	}
 	return bva.BaseAccount.Validate()
 }
@@ -589,11 +590,16 @@ func (pva PeriodicVestingAccount) Validate() error {
 		return errors.New("vesting start-time cannot be before end-time")
 	}
 	endTime := pva.StartTime
+	originalVesting := sdk.NewCoins()
 	for _, p := range pva.VestingPeriods {
 		endTime += p.PeriodLength
+		originalVesting.Add(p.VestingAmount)
 	}
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")
+	}
+	if !originalVesting.IsEqual(pva.OriginalVesting) {
+		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
 	}
 
 	return pva.BaseVestingAccount.Validate()

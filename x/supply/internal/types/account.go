@@ -21,9 +21,9 @@ var (
 )
 
 func init() {
-	// Register the ModuleAccount type as a genesis account so that when no
-	// concrete GenesisAccount types exist, default genesis state will serialize
-	// correctly.
+	// Register the ModuleAccount type as a GenesisAccount so that when no
+	// concrete GenesisAccount types exist and **default** genesis state is used,
+	// the genesis state will serialize correctly.
 	authtypes.RegisterAccountTypeCodec(&ModuleAccount{}, "cosmos-sdk/ModuleAccount")
 }
 

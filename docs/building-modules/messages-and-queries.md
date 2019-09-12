@@ -17,7 +17,7 @@
 
 When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../basics/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md). 
 
-Defining `message`s is the responsibility of module developers. Typically, they are defined in a `types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+Defining `message`s is the responsibility of module developers. Typically, they are defined in a `internal/types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
 ```go
 // Example of a message type definition
@@ -60,7 +60,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 - A [`querier`](./querier.md), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing). 
 - [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified. 
-- `query` return types. Typically defined in a file `types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). See an example of `query` return types from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/internal/types/querier.go). 
+- `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). See an example of `query` return types from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/internal/types/querier.go). 
 
 ## Next
 

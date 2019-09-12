@@ -29,7 +29,7 @@ Let us break it down:
 
 ## Implementation of a module `querier`s
 
-Module `querier`s are typically implemented in a `querier.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `querier`s to the [application's `queryRouter`](../core/baseapp.md#query-routing) via the `NewQuerier()` method. Typically, the manager's `NewQuerier()` method simply calls a `NewQuerier()` method defined in `keeper/querier.go`, which looks like the following:
+Module `querier`s are typically implemented in a `internal/keeper/querier.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `querier`s to the [application's `queryRouter`](../core/baseapp.md#query-routing) via the `NewQuerier()` method. Typically, the manager's `NewQuerier()` method simply calls a `NewQuerier()` method defined in `keeper/querier.go`, which looks like the following:
 
 ```go
 func NewQuerier(keeper Keeper) sdk.Querier {

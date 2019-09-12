@@ -15,8 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
-var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
+var (
+	_ authexported.GenesisAccount = (*ModuleAccount)(nil)
+	_ exported.ModuleAccountI     = (*ModuleAccount)(nil)
+)
+
+func init() {
+	// Register the ModuleAccount type as a genesis account so that when no
+	// concrete GenesisAccount types exist, default genesis state will serialize
+	// correctly.
+	authtypes.RegisterAccountTypeCodec(&ModuleAccount{}, "cosmos-sdk/ModuleAccount")
+}
 
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {

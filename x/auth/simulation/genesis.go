@@ -111,13 +111,9 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs []expo
 
 			// Allow for some vesting accounts to vest very quickly while others very slowly.
 			if simState.Rand.Intn(100) < 50 {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime), int(startTime+(60*60*24*30))))
+				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*24*30))))
 			} else {
-				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime), int(startTime+(60*60*12))))
-			}
-
-			if startTime == endTime {
-				endTime++
+				endTime = int64(simulation.RandIntBetween(simState.Rand, int(startTime)+1, int(startTime+(60*60*12))))
 			}
 
 			if simState.Rand.Intn(100) < 50 {

@@ -45,15 +45,14 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
     params := ak.GetParams(ctx)
 
-    accounts := ak.GetAllAccounts(ctx)
-    // convert accounts to []GenesisAccounts type
-    genAccounts := make([]GenesisAccounts, len(accounts))
-    for i := range accounts {
-        ga := accounts[i].(GenesisAccount) // will panic if an account doesn't implement GenesisAccount
-        genAccounts[i] = ga
-    }
+    var genAccounts []exported.GenesisAccount
+    ak.IterateAccounts(ctx, func(account exported.Account) bool {
+        genAccount := account.(exported.GenesisAccount)
+        genAccounts = append(genAccounts, genAccount)
+        return false
+    })
 
-    return NewGenesisState(params, accounts)
+    return NewGenesisState(params, genAccounts)
 }
 ```
 
@@ -64,11 +63,11 @@ The `auth` codec must have all custom account types registered to marshal them. 
 An example custom account definition:
 
 ```go
-import authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+import authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 // Register the module account type with the auth module codec so it can decode module accounts stored in a genesis file
 func init() {
-    authTypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
+    authtypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
 }
 
 type ModuleAccount struct {

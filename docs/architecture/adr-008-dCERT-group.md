@@ -17,9 +17,11 @@ are actively devising a patch to the software, this way sensitive information
 does not need to be publicly disclosed while some input from the community can
 still be gained. 
 
-Additionally, a special privilege is proposed for the dCERT group:
-the capacity to "circuit-break" (aka. temporarily disable)  a particular
-message path. 
+Additionally, a special privilege is proposed for the dCERT group: the capacity
+to "circuit-break" (aka. temporarily disable)  a particular message path. Note
+that this privilege should be enabled/disabled globally with a governance
+parameter such that this privilege could start disabled and later be enabled
+through a parameter change proposal, once a dCERT group has been established. 
 
 In the future it is foreseeable that the community may wish to expand the roles
 of dCERT with further responsibilities such as the capacity to "pre-approve" a
@@ -43,7 +45,6 @@ This system necessitates the following new parameters:
  - blockly stipend allowance per dCERT member 
  - maximum number of dCERT members 
  - required staked slashable tokens for each dCERT member 
- - unbonding time for dCERT staked token 
  - quorum for suspending a particular member 
  - proposal wager for disbanding the dCERT group 
 
@@ -52,37 +53,42 @@ that governance may change them at any given point.
 
 ### Continuous Voting Electionator
 
-An `Electionator` object is to be implemented with continuous voting is to be
-implemented with the following specifications:
+An `Electionator` object is to be implemented as continuous voting and with the
+following specifications:
  - All delegation addresses may submit votes at any point which updates their 
    preferred representation on the dCERT group. 
  - Preferred representation may be arbitrarily split between addresses (ex. 50%
    to John, 25% to Sally, 25% to Carol) 
- - Addresses which control the greatest amount of preferred-representation are
-   eligible to join the dCERT group (up the _maximum number of dCERT members_)
-   - In the split situation where the dCERT group is full but a vying candidate 
-     has the same amount of vote as an existing dCERT member, the existing 
-     member should maintain its position. 
  - In order for a new member to be added to the dCERT group they must 
    send a transaction accepting their admission at which point the validity of
    their admission is to be confirmed. 
    - A sequence number is assigned when a member is added to dCERT group. 
      If a member leaves the dCERT group and then enters back, a new sequence number
      is assigned.  
- - If the dCERT group is already full and new member is admitted, the existing
+ - Addresses which control the greatest amount of preferred-representation are
+   eligible to join the dCERT group (up the _maximum number of dCERT members_). 
+   If the dCERT group is already full and new member is admitted, the existing
    dCERT member with the lowest amount of votes is kicked from the dCERT group.
-   - In the split situation where two addresses with the smallest number of
-     votes have the same number of votes, the address with the smallest sequence 
-     number maintains its position.  
+   - In the split situation where the dCERT group is full but a vying candidate 
+     has the same amount of vote as an existing dCERT member, the existing 
+     member should maintain its position. 
+   - In the split situation where somebody must be kicked out but the two
+     addresses with the smallest number of votes have the same number of votes,
+     the address with the smallest sequence number maintains its position.  
 
 ### Staking/Slashing
 
 All members of the dCERT group must stake tokens _specifically_ to maintain
-eligibility as a dCERT member. This staking mechanism must be designed with an
-unbonding period. Slash a particular dCERT member due to soft-contract breach
-should be performed by governance on a per member basis based on the magnitude
-of the breach.  The process flow is anticipated to be that a dCERT member is
-suspended by the dCERT group prior to being slashed by governance.  
+eligibility as a dCERT member. This staking mechanism should use the existing
+global unbonding time of tokens staked for network validator security. A dCERT
+member can _only be_ a member if it has the required tokens staked under this
+mechanism. If those tokens are unbonded then the dCERT member must be
+automatically kicked from the group.  
+
+Slashing of a particular dCERT member due to soft-contract breach should be
+performed by governance on a per member basis based on the magnitude of the
+breach.  The process flow is anticipated to be that a dCERT member is suspended
+by the dCERT group prior to being slashed by governance.  
 
 Membership suspension by the dCERT group takes place through a voting procedure
 by the dCERT group members. After this suspension has taken place, a governance

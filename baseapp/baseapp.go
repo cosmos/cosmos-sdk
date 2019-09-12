@@ -753,7 +753,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 // runMsgs iterates through all the messages and executes them.
 // nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
 	var (
 		data      []byte
@@ -764,12 +764,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	events := sdk.EmptyEvents()
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-	for msgIdx, msg := range msgs {
+	for i, msg := range msgs {
 		// match message route
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
+			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result
@@ -787,28 +787,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
-
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			idxLog.Success = false
-			idxLogs = append(idxLogs, idxLog)
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		idxLog.Success = true
-		idxLogs = append(idxLogs, idxLog)
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.TrimSpace(string(logJSON)),
+		Log:       strings.TrimSpace(msgLogs.String()),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
 		Events:    events,
 	}

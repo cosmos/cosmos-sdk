@@ -51,6 +51,7 @@ func Sanitize(genAccs []exported.GenesisAccount) []exported.GenesisAccount {
 	return genAccs
 }
 
+// ValidateGenAccounts validates an array of GenesisAccounts and checks for duplicates
 func ValidateGenAccounts(accounts []exported.GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accounts))
 	for _, acc := range accounts {

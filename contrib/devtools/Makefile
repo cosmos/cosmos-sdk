@@ -44,12 +44,11 @@ TOOLS_DESTDIR  ?= $(GOPATH)/bin
 
 GOLANGCI_LINT = $(TOOLS_DESTDIR)/golangci-lint
 STATIK        = $(TOOLS_DESTDIR)/statik
-GOIMPORTS     = $(TOOLS_DESTDIR)/goimports
 RUNSIM			  = $(TOOLS_DESTDIR)/runsim
 
 all: tools
 
-tools: statik runsim goimports golangci-lint
+tools: statik runsim golangci-lint
 
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
@@ -60,18 +59,13 @@ $(STATIK):
 	@echo "Get statik"
 	@go get github.com/rakyll/statik
 
-goimports: $(GOIMPORTS)
-$(GOIMPORTS):
-	@echo "Get goimports@v0.0.0-20190628034336-212fb13d595e"
-	@go get golang.org/x/tools/cmd/goimports@v0.0.0-20190628034336-212fb13d595e
-
 runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Get runsim"
 	@go get github.com/cosmos/tools/cmd/runsim
 
 tools-clean:
-	rm -f $(STATIK) $(GOIMPORTS) $(GOLANGCI_LINT) $(RUNSIM)
+	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

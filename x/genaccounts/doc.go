@@ -1,15 +1,15 @@
 /*
-Package genaccounts is now deprecated
+Package genaccounts is now deprecated.
 
-IMPORTANT: This module has been replaced by ADR 11:
-Generalize Module Accounts, which is available at https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-011-generalize-genesis-accounts.md.
-For an example implementation of the `add-genesis-account` command please refer to https://github.com/cosmos/gaia/pull/122.
+IMPORTANT: This module has been replaced by ADR 011: Generalize Module Accounts.
+The ADR can be found here: https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-011-generalize-genesis-accounts.md.
 
-Package genaccounts contains specialized functionality for initializing
-accounts from genesis including:
- - genesis account validation,
- - initchain processing of genesis accounts,
- - export processing (to genesis) of accounts,
- - server command for adding accounts to the genesis file.
+Genesis accounts that existed in the genesis application state under `genaccounts`
+now exists under the x/auth module's genesis state under the `accounts` key. Migration
+can be performed via x/auth/legacy/v0_38/migrate.go. In addition, because genesis
+accounts are now generalized via an interface, it is now up to the application to
+define the concrete types and the respective client logic to add them to a genesis
+state/file. For an example implementation of the `add-genesis-account` command please
+refer to https://github.com/cosmos/gaia/pull/122.
 */
 package genaccounts

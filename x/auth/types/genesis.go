@@ -33,7 +33,7 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return validateGenAccounts(data.Accounts)
+	return ValidateGenAccounts(data.Accounts)
 }
 
 // Sanitize sorts accounts and coin sets.
@@ -51,7 +51,7 @@ func Sanitize(genAccs []exported.GenesisAccount) []exported.GenesisAccount {
 	return genAccs
 }
 
-func validateGenAccounts(accounts []exported.GenesisAccount) error {
+func ValidateGenAccounts(accounts []exported.GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accounts))
 	for _, acc := range accounts {
 

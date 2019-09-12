@@ -79,12 +79,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	case infractionHeight < ctx.BlockHeight():
 
 		// cannot decrease balance below zero
-		tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Weight)
-		tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
+		weightRemoval := sdk.MinInt(remainingSlashAmount, validator.Weight)
+		weightRemoval = sdk.MaxInt(weightRemoval, sdk.ZeroInt()) // defensive.
 
 		// we need to calculate the *effective* slash fraction for distribution
 		if validator.Weight.GT(sdk.ZeroInt()) {
-			effectiveFraction := tokensToBurn.ToDec().QuoRoundUp(validator.Weight.ToDec())
+			effectiveFraction := weightRemoval.ToDec().QuoRoundUp(validator.Weight.ToDec())
 			// possible if power has changed
 			if effectiveFraction.GT(sdk.OneDec()) {
 				effectiveFraction = sdk.OneDec()
@@ -109,9 +109,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		// Log that a slash occurred!
 		logger.Info(fmt.Sprintf(
 			"validator %s slashed by slash factor of %s; burned %v tokens",
-			validator.GetOperator(), slashFactor.String(), tokensToBurn))
+			validator.GetOperator(), slashFactor.String(), weightRemoval))
 
-		// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 		return
 	}
 }
@@ -123,7 +122,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
-	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }
 
@@ -133,6 +131,5 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.unjailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
-	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
 }

@@ -25,7 +25,7 @@ func NewPOAProposalHandler(k Keeper) govtypes.Handler {
 	}
 }
 
-func handleMsgProposeCreateValidatorl(ctx sdk.Context, k Keeper, c MsgProposeCreateValidator) sdk.Error {
+func handleMsgProposeCreateValidator(ctx sdk.Context, k Keeper, c MsgProposeCreateValidator) sdk.Error {
 	val := c.Validator
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, val.ValidatorAddress); found {
@@ -72,3 +72,7 @@ func handleMsgProposeCreateValidatorl(ctx sdk.Context, k Keeper, c MsgProposeCre
 	// sdk.Result{Events: ctx.EventManager().Events()}
 	return nil
 }
+
+// func handleMsgIncreaseWeight(ctx sdk.Context, k Keeper, c MsgProposeIncreaseWeight) sdk.Error {
+
+// }

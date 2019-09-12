@@ -57,6 +57,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 // RegisterRESTRoutes registers the REST routes for the auth module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	rest.RegisterRoutes(ctx, rtr, types.StoreKey)
+	rest.RegisterTxRoutes(ctx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the auth module.

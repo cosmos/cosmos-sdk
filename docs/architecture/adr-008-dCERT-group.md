@@ -47,6 +47,8 @@ This system necessitates the following new parameters:
  - required staked slashable tokens for each dCERT member 
  - quorum for suspending a particular member 
  - proposal wager for disbanding the dCERT group 
+ - stabilization period for dCERT member transition
+ - circuit break dCERT privileges enabled 
 
 These parameters are expected to be implemented through the param keeper such 
 that governance may change them at any given point. 
@@ -75,13 +77,23 @@ following specifications:
    - In the split situation where somebody must be kicked out but the two
      addresses with the smallest number of votes have the same number of votes,
      the address with the smallest sequence number maintains its position.  
+ - A stabilization period can be optionally included to reduce the
+   "flip-flopping" of the dCERT membership tail members. If a stabilization
+   period is provided which is greater than 0, when members are kicked due to
+   insufficient support, a queue entry is created which documents which member is
+   to replace which other member. While this entry is in the queue, no new entries
+   to kick that same dCERT member can be made. When the entry matures at the
+   duration of the  stabilization period, the new member is instantiated, and old
+   member kicked.
 
 ### Staking/Slashing
 
 All members of the dCERT group must stake tokens _specifically_ to maintain
-eligibility as a dCERT member. This staking mechanism should use the existing
-global unbonding time of tokens staked for network validator security. A dCERT
-member can _only be_ a member if it has the required tokens staked under this
+eligibility as a dCERT member. These tokens can be staked directly by the vying
+dCERT member or out of the good will of a 3rd party (who shall gain no on-chain
+benefits for doing so). This staking mechanism should use the existing global
+unbonding time of tokens staked for network validator security. A dCERT member
+can _only be_ a member if it has the required tokens staked under this
 mechanism. If those tokens are unbonded then the dCERT member must be
 automatically kicked from the group.  
 

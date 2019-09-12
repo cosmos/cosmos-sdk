@@ -37,14 +37,6 @@ module.exports = {
         searchMaxSuggestions: 10
       }
     ]
-    // [
-    //   "@vuepress/active-header-links",
-    //   {
-    //     // sidebarLinkSelector: ".sidebar__link__href",
-    //     headerAnchorSelector: ".header-anchor",
-    //     headerTopOffset: 120
-    //   }
-    // ]
   ],
   markdown: {
     anchor: {
@@ -57,12 +49,17 @@ module.exports = {
     },
     "/ru/": {
       lang: "ru"
+    },
+    "/kr/": {
+      lang: "kr"
+    },
+    "/cn/": {
+      lang: "cn"
     }
   },
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsDir: "docs",
-    editLinks: true,
     docsBranch: "master",
     locales: {
       "/": {

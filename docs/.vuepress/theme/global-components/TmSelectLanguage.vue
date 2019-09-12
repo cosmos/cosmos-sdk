@@ -2,7 +2,7 @@
   div
     .select
       select(v-model="language" @input="select")
-        option(v-for="(value, key) in $site.themeConfig.locales" :value="key") {{value.label}}
+        option(v-for="(value, key) in languageList" :value="key") {{value.label}}
 </template>
 
 <style lang="stylus" scoped>
@@ -25,11 +25,13 @@ select
 export default {
   data: function() {
     return {
-      language: null
+      language: null,
+      languageList: null
     };
   },
   created() {
     this.language = this.$localeConfig.path;
+    this.languageList = this.$site.themeConfig.locales;
   },
   methods: {
     select(e) {

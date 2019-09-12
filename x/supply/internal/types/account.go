@@ -18,10 +18,6 @@ import (
 var _ authexported.GenesisAccount = (*ModuleAccount)(nil)
 var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
 
-func init() {
-	authtypes.RegisterAccountTypeCodec(ModuleAccount{}, "cosmos-sdk/ModuleAccount")
-}
-
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount

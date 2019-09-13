@@ -54,4 +54,4 @@ For a deeper look at `querier`s, see this [example implementation of a `querier`
 
 ## Next
 
-Learn about [`keeper`s](./keeper.md).
+Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md).

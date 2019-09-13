@@ -51,6 +51,21 @@ This simple switch returns a `handler` function specific to the type of the rece
 - First, they perform *stateful* checks to make sure the `message` is valid. At this stage, the `message`'s `ValidateBasic()` method has already been called, meaning *stateless* checks on the message (like making sure parameters are correctly formatted) have already been performed. Checks performed in the `handler` can be more expensive and require access to the state. For example, a `handler` for a `transfer` message might check that the sending account has enough funds to actually perform the transfer. To access the state, the `handler` needs to call the [`keeper`'s](./keeper.md) getter functions. 
 - Then, if the checks are successfull, the `handler` calls the [`keeper`'s](./keeper.md) setter functions to actually perform the state transition. 
 
+Before returning, `handler` functions generally emit one or multiple [`events`](../core/events.md) via the `EventManager` held in the `ctx`:
+
+```go
+ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			eventType,  // e.g. sdk.EventTypeMessage for a message, types.CustomEventType for a custom event defined in the module
+			sdk.NewAttribute(attributeKey, attributeValue),
+		),
+    )
+```
+
+These `events` are relayed back to the underlying consensus engine and can be used by service providers to implement services around the application. Click [here](../core/events.md) to learn more about `events`. 
+
+Finally, the `handler` function returns a [`sdk.Result`](https://github.com/tendermint/tendermint/blob/master/abci/types/result.go) which contains the aforementioned `events` and an optional `Data` field. 
+
 For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/handler.go) from the nameservice tutorial. 
 
 ## Next

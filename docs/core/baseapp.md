@@ -294,12 +294,12 @@ The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.h
 
 - Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the [`setDeliverState`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L283-L289) function. 
 - Initialize the [block gas meter](../basics/accounts-fees-gas.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters. 
-- Run the application's [`begingBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `BeginBlocker()` method of each of the application's modules.
+- Run the application's [`begingBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
 - Set the [`VoteInfos`](https://tendermint.com/docs/app-dev/abci-spec.html#voteinfo) of the application, i.e. the list of validators whose *precommit* for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./context.md) so that it can be used during `DeliverTx` and `EndBlock`.
 
 ### EndBlock
 
-The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transactioni n the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`endBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `EndBlocker()` method of each of the application's modules. 
+The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transactioni n the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules. 
 
 ### Commit
 

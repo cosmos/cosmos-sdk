@@ -12,7 +12,7 @@
         tm-content(:sidebar="sidebar")
           template(v-slot:content)
             slot(name="content")
-      .aside__container
+      .aside__container(v-if="sidebar")
         .aside
           tm-aside
 </template>

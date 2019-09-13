@@ -88,14 +88,14 @@ func validateGenAccounts(accounts exported.GenesisAccounts) error {
 type GenesisAccountIterator struct{}
 
 // IterateGenesisAccounts iterates over all the genesis accounts found in
-// appGenesis and invokes the iterateFn on each genesis account. If any call
+// appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisAccountIterator) IterateGenesisAccounts(
-	cdc *codec.Codec, appGenesis map[string]json.RawMessage, iterateFn func(exported.Account) (stop bool),
+	cdc *codec.Codec, appGenesis map[string]json.RawMessage, cb func(exported.Account) (stop bool),
 ) {
 
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
-		if iterateFn(genAcc) {
+		if cb(genAcc) {
 			break
 		}
 	}

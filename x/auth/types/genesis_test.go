@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -79,4 +80,35 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 
 	genAccs[0] = NewContinuousVestingAccountRaw(baseVestingAcc, 1548888000)
 	require.Error(t, validateGenAccounts(genAccs))
+}
+
+func TestGenesisAccountIterator(t *testing.T) {
+	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
+
+	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
+	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
+
+	genAccounts := exported.GenesisAccounts{&acc1, &acc2}
+
+	authGenState := DefaultGenesisState()
+	authGenState.Accounts = genAccounts
+
+	appGenesis := make(map[string]json.RawMessage)
+	authGenStateBz, err := ModuleCdc.MarshalJSON(authGenState)
+	require.NoError(t, err)
+
+	appGenesis[ModuleName] = authGenStateBz
+
+	var addresses []sdk.AccAddress
+	GenesisAccountIterator{}.IterateGenesisAccounts(
+		ModuleCdc, appGenesis, func(acc exported.Account) (stop bool) {
+			addresses = append(addresses, acc.GetAddress())
+			return false
+		},
+	)
+
+	require.Len(t, addresses, 2)
+	require.Equal(t, addresses[0], acc1.GetAddress())
+	require.Equal(t, addresses[1], acc2.GetAddress())
 }

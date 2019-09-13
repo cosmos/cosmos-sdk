@@ -26,7 +26,7 @@ func TestSanitize(t *testing.T) {
 		sdk.NewInt64Coin("bcoin", 150),
 	})
 
-	genAccs := []exported.GenesisAccount{&authAcc1, &authAcc2}
+	genAccs := exported.GenesisAccounts{&authAcc1, &authAcc2}
 
 	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[0].GetCoins()[0].Denom, "bcoin")
@@ -52,7 +52,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
-	genAccs := make([]exported.GenesisAccount, 2)
+	genAccs := make(exported.GenesisAccounts, 2)
 	genAccs[0] = &acc1
 	genAccs[1] = &acc1
 
@@ -68,7 +68,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
-	genAccs := make([]exported.GenesisAccount, 2)
+	genAccs := make(exported.GenesisAccounts, 2)
 	genAccs[0] = baseVestingAcc
 	genAccs[1] = &acc2
 

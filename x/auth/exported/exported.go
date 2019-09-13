@@ -57,3 +57,9 @@ type VestingAccount interface {
 	GetDelegatedFree() sdk.Coins
 	GetDelegatedVesting() sdk.Coins
 }
+
+// GenesisAccount defines a genesis account that embeds an Account with validation capabilities.
+type GenesisAccount interface {
+	Account
+	Validate() error
+}

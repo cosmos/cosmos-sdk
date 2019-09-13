@@ -55,7 +55,7 @@ var (
 	NewGenesisState                   = types.NewGenesisState
 	DefaultGenesisState               = types.DefaultGenesisState
 	ValidateGenesis                   = types.ValidateGenesis
-	Sanitize                          = types.Sanitize
+	SanitizeGenesisAccounts           = types.SanitizeGenesisAccounts
 	AddressStoreKey                   = types.AddressStoreKey
 	NewParams                         = types.NewParams
 	ParamKeyTable                     = types.ParamKeyTable

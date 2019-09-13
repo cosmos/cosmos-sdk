@@ -33,7 +33,7 @@ func TestSanitize(t *testing.T) {
 	require.Equal(t, genAccs[0].GetCoins()[0].Denom, "bcoin")
 	require.Equal(t, genAccs[0].GetCoins()[1].Denom, "acoin")
 	require.Equal(t, genAccs[1].GetAddress(), addr2)
-	genAccs = Sanitize(genAccs)
+	genAccs = SanitizeGenesisAccounts(genAccs)
 
 	require.False(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr1)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,13 +27,13 @@ func TestSanitize(t *testing.T) {
 		sdk.NewInt64Coin("bcoin", 150),
 	})
 
-	genAccs := []exported.GenesisAccount{&authAcc1, &authAcc2}
+	genAccs := exported.GenesisAccounts{&authAcc1, &authAcc2}
 
 	require.True(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[0].GetCoins()[0].Denom, "bcoin")
 	require.Equal(t, genAccs[0].GetCoins()[1].Denom, "acoin")
 	require.Equal(t, genAccs[1].GetAddress(), addr2)
-	genAccs = Sanitize(genAccs)
+	genAccs = SanitizeGenesisAccounts(genAccs)
 
 	require.False(t, genAccs[0].GetAccountNumber() > genAccs[1].GetAccountNumber())
 	require.Equal(t, genAccs[1].GetAddress(), addr1)
@@ -52,7 +53,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
-	genAccs := make([]exported.GenesisAccount, 2)
+	genAccs := make(exported.GenesisAccounts, 2)
 	genAccs[0] = &acc1
 	genAccs[1] = &acc1
 
@@ -68,7 +69,7 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
-	genAccs := make([]exported.GenesisAccount, 2)
+	genAccs := make(exported.GenesisAccounts, 2)
 	genAccs[0] = baseVestingAcc
 	genAccs[1] = &acc2
 
@@ -79,4 +80,35 @@ func TestValidateGenesisInvalidAccounts(t *testing.T) {
 
 	genAccs[0] = NewContinuousVestingAccountRaw(baseVestingAcc, 1548888000)
 	require.Error(t, validateGenAccounts(genAccs))
+}
+
+func TestGenesisAccountIterator(t *testing.T) {
+	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
+
+	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
+	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
+
+	genAccounts := exported.GenesisAccounts{&acc1, &acc2}
+
+	authGenState := DefaultGenesisState()
+	authGenState.Accounts = genAccounts
+
+	appGenesis := make(map[string]json.RawMessage)
+	authGenStateBz, err := ModuleCdc.MarshalJSON(authGenState)
+	require.NoError(t, err)
+
+	appGenesis[ModuleName] = authGenStateBz
+
+	var addresses []sdk.AccAddress
+	GenesisAccountIterator{}.IterateGenesisAccounts(
+		ModuleCdc, appGenesis, func(acc exported.Account) (stop bool) {
+			addresses = append(addresses, acc.GetAddress())
+			return false
+		},
+	)
+
+	require.Len(t, addresses, 2)
+	require.Equal(t, addresses[0], acc1.GetAddress())
+	require.Equal(t, addresses[1], acc2.GetAddress())
 }

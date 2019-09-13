@@ -4,9 +4,6 @@
       .content(:class="{noSidebar}")
         .content__container(:class="{noSidebar}")
           slot(name="content")
-      .sidebar(:class="{noSidebar}")
-        .sidebar__container
-          slot(name="sidebar")
 </template>
 
 <style lang="stylus" scoped>
@@ -30,21 +27,6 @@
 
     &.noSidebar
       max-width initial
-
-.sidebar
-  width 100%
-  max-width var(--sidebar-width)
-  position absolute
-  right 0
-  top 0
-  bottom 0
-
-  &.noSidebar
-    display none
-
-  &__container
-    position fixed
-    padding-right 2rem
 
 /deep/
   a
@@ -91,9 +73,6 @@
 
     &__container
       padding-left 2rem
-
-  .sidebar
-    display none
 </style>
 
 <script>

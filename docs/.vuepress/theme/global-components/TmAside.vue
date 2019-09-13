@@ -10,19 +10,8 @@
 
 <style lang="stylus" scoped>
 .sidebar
-  width 100%
-  max-width var(--sidebar-width)
-  position absolute
-  right 0
-  top 0
-  bottom 0
-
   &__image
     width 100%
-
-  &__container
-    position fixed
-    padding-right 2rem
 
   &__title
     font-size 0.75rem

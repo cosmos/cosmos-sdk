@@ -12,8 +12,9 @@
         tm-content(:sidebar="sidebar")
           template(v-slot:content)
             slot(name="content")
-          template(v-slot:sidebar)
-            slot(name="sidebar")
+      .aside__container
+        .aside
+          tm-aside
 </template>
 
 <style lang="stylus" scoped>
@@ -39,7 +40,6 @@
 
 .content
   margin-left var(--sidebar-width)
-  padding-top 2rem
   position absolute
   right 0
   left 0
@@ -52,12 +52,37 @@
   margin-right 2rem
   margin-bottom 2rem
   display flex
+  height var(--topbar-height)
   justify-content flex-end
   align-items center
 
   &__menu
     &__button
       margin-right auto
+      display none
+
+.aside
+  margin-top var(--topbar-height)
+  pointer-events initial
+  background white
+  padding-left 1rem
+  padding-right 1rem
+
+  &__container
+    pointer-events none
+    width 100%
+    max-width var(--sidebar-width)
+    position absolute
+    right 0
+    top 0
+    bottom 0
+    overflow-y scroll
+    overflow-x hidden
+    z-index 1000
+
+@media screen and (max-width: 1024px)
+  .aside
+    &__container
       display none
 
 @media screen and (max-width: 768px)

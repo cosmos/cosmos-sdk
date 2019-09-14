@@ -9,3 +9,4 @@ The POA module contains the following parameters:
 | KeyMaxEntries       | uint16           | 7                 |
 | AcceptAllValidators | bool             | false             |
 | IncreaseWeight      | bool             | false             |
+| DefaultWeight       | uint16           | 10                |

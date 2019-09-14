@@ -987,7 +987,6 @@ func TestTxGasLimits(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-			// Decorator will catch an OutOfGasPanic caused in the next antehandler
 			// AnteHandlers must have their own defer/recover in order for the BaseApp
 			// to know how much gas was used! This is because the GasMeter is created in
 			// the AnteHandler, but if it panics the context won't be set properly in

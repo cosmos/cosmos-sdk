@@ -2,7 +2,13 @@
 
 ## Overview
 
-The POA module described here is meant to be used as an alternative and less complex module then the original staking located [here](../staking). In this system full nodes can become validators with out having a token at stake. The security model of a public blockchain using the POA should be based on reputation. If you would like to accept all applications to be a validator then you can turn `acceptAllValidators` to true.
+The POA module described here is meant to be used as an alternative and less complex module then the original staking located [here](../staking). In this system full nodes can become validators with out having a token at stake. The security model of a public blockchain using the POA should be based on the governance curated registry that defines validator set and assigns corresponding voting power to each individual validator.
+
+## Validator Set Curation
+
+The validator set currently has two options on how its curated, currently this module is built with reliance on the [governance module](../governance/README.md). By default `AcceptAllValidators` is set to false, meaning a validator needs to make a governance proposal to request to be added to the validator set. If `AcceptAllValidators` is set to true then a validator request will not go through governance and the validator will become one instantly. All validators are defaulted to a weight of 10 on creation.
+
+If a validator would like to increase his weight then `IncreaseWeight` must be set to true and the proposal to increase the weight will always have to go through governance, but if a validator would like to decrease their weight then they can do this without a governance proposal.
 
 ## Contents
 

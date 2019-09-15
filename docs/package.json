@@ -4,7 +4,7 @@
   "description": "## Get Started",
   "main": "index.js",
   "scripts": {
-    "serve": "SVGBOB_PATH=/Users/denis/.cargo/bin/svgbob vuepress dev",
+    "serve": "vuepress dev",
     "build": "vuepress build"
   },
   "author": "",

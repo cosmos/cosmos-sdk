@@ -43,11 +43,10 @@ module.exports = {
   markdown: {
     anchor: {
       permalinkSymbol: ""
-    },
-    // svgBobPath: "/Users/denis/.cargo/bin/svgbob",
-    extendMarkdown: md => {
-      md.use(ascii);
     }
+    // extendMarkdown: md => {
+    //   md.use(ascii);
+    // }
   },
   locales: {
     "/": {

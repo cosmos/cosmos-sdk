@@ -9,6 +9,7 @@
 <style lang="stylus" scoped>
 .container
   position relative
+  min-height 100vh
 
 .content
   padding-right var(--sidebar-width)

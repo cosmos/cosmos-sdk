@@ -12,12 +12,17 @@
         tm-content(:sidebar="sidebar")
           template(v-slot:content)
             slot(name="content")
+        tm-footer.footer
       .aside__container(v-if="sidebar")
         .aside
           tm-aside
 </template>
 
 <style lang="stylus" scoped>
+.footer
+  z-index 1000
+  position relative
+
 .sidebar__container
   overflow-y scroll
   z-index 10000
@@ -78,7 +83,7 @@
     bottom 0
     overflow-y scroll
     overflow-x hidden
-    z-index 1000
+    z-index 500
 
 @media screen and (max-width: 1024px)
   .aside

@@ -1,8 +1,10 @@
 const glob = require("glob");
 const markdownIt = require("markdown-it");
 const meta = require("markdown-it-meta");
+const ascii = require("./markdown-it-ascii.js");
 const fs = require("fs");
 const _ = require("lodash");
+var path = require("path");
 
 const sidebar = (directory, array) => {
   return array.map(i => {
@@ -41,6 +43,10 @@ module.exports = {
   markdown: {
     anchor: {
       permalinkSymbol: ""
+    },
+    // svgBobPath: "/Users/denis/.cargo/bin/svgbob",
+    extendMarkdown: md => {
+      md.use(ascii);
     }
   },
   locales: {

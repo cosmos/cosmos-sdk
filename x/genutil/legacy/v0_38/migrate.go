@@ -20,8 +20,11 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 		var authGenState v036auth.GenesisState
 		v036Codec.MustUnmarshalJSON(appState[v036auth.ModuleName], &authGenState)
 
+		var genAccountsGenState v036genaccounts.GenesisState
+		v036Codec.MustUnmarshalJSON(appState[v036genaccounts.ModuleName], &genAccountsGenState)
+
 		appState[v038auth.ModuleName] = v038Codec.MustMarshalJSON(
-			v038auth.Migrate(authGenState, appState[v036genaccounts.ModuleName]),
+			v038auth.Migrate(authGenState, genAccountsGenState),
 		)
 
 		// delete deprecated genaccounts genesis state

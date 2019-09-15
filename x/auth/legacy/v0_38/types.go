@@ -1,24 +1,23 @@
 package v038
 
-import (
-	"encoding/json"
+// DONTCOVER
+// nolint
 
+import (
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_34"
 )
 
-// DONTCOVER
-
-// nolint
 const (
 	ModuleName = "auth"
 )
 
 type GenesisState struct {
-	Params   v034auth.Params `json:"params"`
-	Accounts json.RawMessage `json:"accounts"`
+	Params   v034auth.Params          `json:"params" yaml:"params"`
+	Accounts exported.GenesisAccounts `json:"accounts" yaml:"accounts"`
 }
 
-func NewGenesisState(params v034auth.Params, accounts json.RawMessage) GenesisState {
+func NewGenesisState(params v034auth.Params, accounts exported.GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,

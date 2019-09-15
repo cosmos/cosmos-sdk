@@ -11,7 +11,25 @@ import (
 func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genaccounts.GenesisState) GenesisState {
 	accounts := make(exported.GenesisAccounts, len(genAccountsGenState))
 
-	// TODO: migrate and convert accounts
+	for i, acc := range genAccountsGenState {
+		var genAccount exported.GenesisAccount
+
+		switch {
+		case acc.StartTime != 0 && acc.EndTime != 0:
+			// continuous vesting account type
+
+		case acc.EndTime != 0:
+			// delayed vesting account type
+
+		case acc.ModuleName != "":
+			// module account type
+
+		default:
+			// standard account type
+		}
+
+		accounts[i] = genAccount
+	}
 
 	return NewGenesisState(authGenState.Params, accounts)
 }

@@ -15,14 +15,18 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 	v038Codec := codec.New()
 	codec.RegisterCrypto(v038Codec)
+	v038auth.RegisterCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
+		// unmarshal relative source genesis application state
 		var authGenState v036auth.GenesisState
 		v036Codec.MustUnmarshalJSON(appState[v036auth.ModuleName], &authGenState)
 
 		var genAccountsGenState v036genaccounts.GenesisState
 		v036Codec.MustUnmarshalJSON(appState[v036genaccounts.ModuleName], &genAccountsGenState)
 
+		// Migrate relative source genesis application state and marshal it into
+		// the respective key.
 		appState[v038auth.ModuleName] = v038Codec.MustMarshalJSON(
 			v038auth.Migrate(authGenState, genAccountsGenState),
 		)

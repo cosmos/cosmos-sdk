@@ -215,7 +215,34 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 	if err != nil {
 		return
 	}
-	return sign(info, passphrase, msg)
+
+	var priv tmcrypto.PrivKey
+
+	switch i := info.(type) {
+	case localInfo:
+		if i.PrivKeyArmor == "" {
+			err = fmt.Errorf("private key not available")
+			return
+		}
+
+		priv, err = mintkey.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
+		if err != nil {
+			return nil, nil, err
+		}
+
+	case ledgerInfo:
+		return signWithLedger(info, msg)
+
+	case offlineInfo, multiInfo:
+		return decodeSignature(info, msg)
+	}
+
+	sig, err = priv.Sign(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sig, priv.PubKey(), nil
 }
 
 func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
@@ -457,50 +484,11 @@ func createMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mne
 	return
 }
 
-func sign(info Info, passphrase string, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
-	var priv tmcrypto.PrivKey
-
-	switch i := info.(type) {
-	case localInfo:
-		if i.PrivKeyArmor == "" {
-			err = fmt.Errorf("private key not available")
-			return
-		}
-
-		priv, err = mintkey.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
-		if err != nil {
-			return nil, nil, err
-		}
-
-	case ledgerInfo:
-		priv, err = crypto.NewPrivKeyLedgerSecp256k1Unsafe(i.Path)
-		if err != nil {
-			return
-		}
-
-	case offlineInfo, multiInfo:
-		_, err := fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		buf := bufio.NewReader(os.Stdin)
-		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
-		if err != nil {
-			return nil, nil, err
-		}
-
-		// Will block until user inputs the signature
-		signed, err := buf.ReadString('\n')
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
-			return nil, nil, errors.Wrap(err, "failed to decode signature")
-		}
-
-		return sig, info.GetPubKey(), nil
+func signWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+	i := info.(ledgerInfo)
+	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(i.Path)
+	if err != nil {
+		return
 	}
 
 	sig, err = priv.Sign(msg)
@@ -509,4 +497,29 @@ func sign(info Info, passphrase string, msg []byte) (sig []byte, pub tmcrypto.Pu
 	}
 
 	return sig, priv.PubKey(), nil
+}
+
+func decodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+	_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	buf := bufio.NewReader(os.Stdin)
+	_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Will block until user inputs the signature
+	signed, err := buf.ReadString('\n')
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to decode signature")
+	}
+
+	return sig, info.GetPubKey(), nil
 }

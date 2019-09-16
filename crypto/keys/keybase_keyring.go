@@ -183,7 +183,34 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	if err != nil {
 		return
 	}
-	return sign(info, passphrase, msg)
+
+	var priv tmcrypto.PrivKey
+
+	switch i := info.(type) {
+	case localInfo:
+		if i.PrivKeyArmor == "" {
+			err = fmt.Errorf("private key not available")
+			return
+		}
+
+		priv, err = cryptoAmino.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
+		if err != nil {
+			return nil, nil, err
+		}
+
+	case ledgerInfo:
+		return signWithLedger(info, msg)
+
+	case offlineInfo, multiInfo:
+		return decodeSignature(info, msg)
+	}
+
+	sig, err = priv.Sign(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sig, priv.PubKey(), nil
 }
 
 //ExportPrivateKeyObject exports an armored private key object to the terminal

@@ -33,7 +33,7 @@ The `Msg` is typically accompagnied by a standard constructor function, that is 
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
 - `Type() string`: Type of the message, used primarly in [events](./events.md). This should return a message-specific `string`, typically the denomination of the message itself.
-- `ValidateBasic() Error`: This method is called by `baseapp` very early in the processing of the `message`, in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
+- `ValidateBasic() Error`: This method is called by `baseapp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
 - `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature. 
 - `GetSigners() []AccAddress`: Return the list of signers. The SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method. 
 

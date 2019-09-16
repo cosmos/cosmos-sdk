@@ -69,7 +69,9 @@ For more, see an example of [`Invariant`s implementation from the `staking` modu
 
 ## Invariant Registry
 
-The `InvariantRegistry` is a registry where the `Invariant`s of all the modules of an application are registered. Typically, it is implemented as a specific module. The module must implement an object that follow the [`sdk.InvariantRegistry` interface](https://github.com/cosmos/cosmos-sdk/blob/master/types/invariant.go#L14-L17). 
+The `InvariantRegistry` is a registry where the `Invariant`s of all the modules of an application are registered. There is only one `InvariantRegistry` per **application**, meaning module developers need not implement their own `InvariantRegistry` when building a module. All module developers need to do is to register their modules' invariants in the `InvariantRegistry`, as explained in the section above. 
+
+Typically, the `InvariantRegistry` is implemented as a specific module (the most used implementation is that of the [`crisis` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/)). This module must implement an object that follow the [`sdk.InvariantRegistry` interface](https://github.com/cosmos/cosmos-sdk/blob/master/types/invariant.go#L14-L17). 
 
 ```go
 type InvariantRegistry interface {

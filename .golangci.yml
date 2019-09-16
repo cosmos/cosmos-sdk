@@ -18,5 +18,4 @@ linters:
     - errcheck
     - scopelint
     - prealloc
-    - funlen
     - varcheck

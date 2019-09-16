@@ -138,7 +138,7 @@ func TestMigrateInvalid(t *testing.T) {
 			},
 		},
 		{
-			"module account with permissions name",
+			"module account with invalid permissions",
 			v036genaccounts.GenesisAccount{
 				Address:           accAddressFromBech32(t, "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"),
 				Coins:             sdk.NewCoins(sdk.NewInt64Coin("stake", 400000000)),

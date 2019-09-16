@@ -10,7 +10,6 @@ import (
 
 	"github.com/99designs/keyring"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -70,18 +69,10 @@ func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd s
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb keyringKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
-	if algo != Secp256k1 {
-		return nil, ErrUnsupportedSigningAlgo
-	}
-
-	coinType := types.GetConfig().GetCoinType()
-	hdPath := hd.NewFundraiserParams(account, coinType, index)
-	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
+	pub, hdPath, err := createLedger(algo, hrp, account, index)
 	if err != nil {
 		return nil, err
 	}
-	pub := priv.PubKey()
-
 	return kb.writeLedgerKey(name, pub, *hdPath), nil
 }
 

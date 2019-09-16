@@ -24,6 +24,7 @@ const (
 type (
 	// partial interface needed only for amino encoding and sanitization
 	Account interface {
+		GetAddress() sdk.AccAddress
 		GetAccountNumber() uint64
 		GetCoins() sdk.Coins
 		SetCoins(sdk.Coins) error
@@ -102,6 +103,10 @@ func NewBaseAccount(
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
+}
+
+func (acc BaseAccount) GetAddress() sdk.AccAddress {
+	return acc.Address
 }
 
 func (acc *BaseAccount) GetAccountNumber() uint64 {
@@ -223,6 +228,27 @@ func sanitizeGenesisAccounts(genAccounts GenesisAccounts) GenesisAccounts {
 	}
 
 	return genAccounts
+}
+
+func validateGenAccounts(genAccounts GenesisAccounts) error {
+	addrMap := make(map[string]bool, len(genAccounts))
+	for _, acc := range genAccounts {
+
+		// check for duplicated accounts
+		addrStr := acc.GetAddress().String()
+		if _, ok := addrMap[addrStr]; ok {
+			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
+		}
+
+		addrMap[addrStr] = true
+
+		// check account specific validation
+		if err := acc.Validate(); err != nil {
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
+		}
+	}
+
+	return nil
 }
 
 func RegisterCodec(cdc *codec.Codec) {

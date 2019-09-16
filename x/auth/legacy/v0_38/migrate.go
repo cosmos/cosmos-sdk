@@ -43,5 +43,10 @@ func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genacco
 	}
 
 	accounts = sanitizeGenesisAccounts(accounts)
+
+	if err := validateGenAccounts(accounts); err != nil {
+		panic(err)
+	}
+
 	return NewGenesisState(authGenState.Params, accounts)
 }

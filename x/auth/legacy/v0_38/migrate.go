@@ -13,7 +13,7 @@ func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genacco
 	for i, acc := range genAccountsGenState {
 		var genAccount GenesisAccount
 
-		baseAccount := NewBaseAccount(acc.Address, acc.Coins.Sort(), nil, acc.AccountNumber, acc.Sequence)
+		baseAccount := NewBaseAccount(acc.Address, acc.Coins.Sort(), acc.AccountNumber, acc.Sequence)
 
 		switch {
 		case !acc.OriginalVesting.IsZero():

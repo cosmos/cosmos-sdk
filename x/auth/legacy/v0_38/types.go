@@ -93,13 +93,13 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 }
 
 func NewBaseAccount(
-	address sdk.AccAddress, coins sdk.Coins, pubKey crypto.PubKey, accountNumber, sequence uint64,
+	address sdk.AccAddress, coins sdk.Coins, accountNumber, sequence uint64,
 ) *BaseAccount {
 
 	return &BaseAccount{
 		Address:       address,
 		Coins:         coins,
-		PubKey:        pubKey,
+		PubKey:        nil,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}

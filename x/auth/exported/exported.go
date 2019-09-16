@@ -38,7 +38,22 @@ type Account interface {
 	String() string
 }
 
-// GenesisAccount defines an Account with a validation function.
+// GenesisAccounts defines a slice of GenesisAccount objects
+type GenesisAccounts []GenesisAccount
+
+// Contains returns true if the given address exists in a slice of GenesisAccount
+// objects.
+func (ga GenesisAccounts) Contains(addr sdk.AccAddress) bool {
+	for _, acc := range ga {
+		if acc.GetAddress().Equals(addr) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GenesisAccount defines a genesis account that embeds an Account with validation capabilities.
 type GenesisAccount interface {
 	Account
 	Validate() error

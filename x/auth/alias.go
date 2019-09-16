@@ -50,7 +50,7 @@ var (
 	NewGenesisState                   = types.NewGenesisState
 	DefaultGenesisState               = types.DefaultGenesisState
 	ValidateGenesis                   = types.ValidateGenesis
-	Sanitize                          = types.Sanitize
+	SanitizeGenesisAccounts           = types.SanitizeGenesisAccounts
 	AddressStoreKey                   = types.AddressStoreKey
 	NewParams                         = types.NewParams
 	ParamKeyTable                     = types.ParamKeyTable
@@ -66,6 +66,7 @@ var (
 	NewTxBuilderFromCLI               = types.NewTxBuilderFromCLI
 	MakeSignature                     = types.MakeSignature
 	ValidateGenAccounts               = types.ValidateGenAccounts
+	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -94,4 +95,5 @@ type (
 	StdSignDoc                       = types.StdSignDoc
 	StdSignature                     = types.StdSignature
 	TxBuilder                        = types.TxBuilder
+	GenesisAccountIterator           = types.GenesisAccountIterator
 )

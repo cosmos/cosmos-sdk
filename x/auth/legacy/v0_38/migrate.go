@@ -18,7 +18,8 @@ func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genacco
 		switch {
 		case !acc.OriginalVesting.IsZero():
 			baseVestingAccount := NewBaseVestingAccount(
-				baseAccount, acc.OriginalVesting.Sort(), acc.DelegatedFree.Sort(), acc.DelegatedVesting.Sort(), acc.EndTime,
+				baseAccount, acc.OriginalVesting.Sort(), acc.DelegatedFree.Sort(),
+				acc.DelegatedVesting.Sort(), acc.EndTime,
 			)
 
 			if acc.StartTime != 0 && acc.EndTime != 0 {

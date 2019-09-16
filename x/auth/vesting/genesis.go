@@ -6,7 +6,6 @@ import (
 
 // InitGenesis - Init store state from genesis data
 func InitGenesis(ctx sdk.Context, data GenesisState) {
-	return
 }
 
 // ExportGenesis returns a GenesisState for a given context

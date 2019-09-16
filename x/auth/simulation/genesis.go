@@ -99,8 +99,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs []expo
 			panic(err)
 		}
 
-		var gacc exported.GenesisAccount
-		gacc = &bacc
+		gacc := &bacc
 		genesisAccs = append(genesisAccs, gacc)
 	}
 

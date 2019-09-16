@@ -16,8 +16,8 @@ func TestVotes(t *testing.T) {
 	require.NoError(t, err)
 	proposalID := proposal.ProposalID
 
-	var invalidOption types.VoteOption
-	invalidOption = 0x10
+	var invalidOption types.VoteOption = 0x10
+	// invalidOption := 0x10
 
 	require.Error(t, keeper.AddVote(ctx, proposalID, TestAddrs[0], types.OptionYes), "proposal not on voting period")
 	require.Error(t, keeper.AddVote(ctx, 10, TestAddrs[0], types.OptionYes), "invalid proposal ID")

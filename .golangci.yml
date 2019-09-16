@@ -4,7 +4,6 @@ run:
 linters:
   enable-all: true
   disable:
-    - gosimple
     - gocyclo
     - gochecknoinits
     - golint
@@ -19,4 +18,5 @@ linters:
     - errcheck
     - scopelint
     - prealloc
+    - funlen
     - varcheck

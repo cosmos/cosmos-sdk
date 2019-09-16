@@ -99,8 +99,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs export
 			panic(err)
 		}
 
-		var gacc exported.GenesisAccount
-		gacc = &bacc
+		var gacc exported.GenesisAccount = &bacc
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.

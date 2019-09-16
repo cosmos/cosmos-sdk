@@ -76,7 +76,7 @@ func waitForHeightTM(height int64, url string) {
 	}
 }
 
-// Wait for height from the LCD API on localhost
+// WaitForHeight waits for height from the REST server API on localhost.
 func WaitForHeight(height int64, port string) {
 	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
 	waitForHeight(height, url)
@@ -126,8 +126,9 @@ func waitForHeight(height int64, url string) {
 	}
 }
 
-// wait for tendermint to start by querying the LCD
-func WaitForLCDStart(port string) {
+// WaitForRESTServerStart waits for tendermint to start by querying the REST
+// server.
+func WaitForRESTServerStart(port string) {
 	url := fmt.Sprintf("http://localhost:%v/blocks/latest", port)
 	WaitForStart(url)
 }

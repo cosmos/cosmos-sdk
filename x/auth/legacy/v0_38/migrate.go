@@ -1,7 +1,6 @@
 package v038
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_36"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 )
@@ -19,7 +18,7 @@ func Migrate(authGenState v036auth.GenesisState, genAccountsGenState v036genacco
 		switch {
 		case !acc.OriginalVesting.IsZero():
 			baseVestingAccount := NewBaseVestingAccount(
-				baseAccount, acc.OriginalVesting.Sort(), sdk.Coins{}, sdk.Coins{}, acc.EndTime,
+				baseAccount, acc.OriginalVesting.Sort(), acc.DelegatedFree.Sort(), acc.DelegatedVesting.Sort(), acc.EndTime,
 			)
 
 			if acc.StartTime != 0 && acc.EndTime != 0 {

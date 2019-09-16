@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/spf13/cobra"
@@ -69,9 +70,10 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
 		Short: "initiate connection handshake between two chains",
-		Args:  cobra.ExactArgs(4),
-		// Args: []string{connid1, connfilepath1, connid2, connfilepath2}
+		Args:  cobra.ExactArgs(6),
+		// Args: []string{connid1, clientid1, path1, connid2, clientid2, connfilepath2}
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(0000)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContext().
 				WithCodec(cdc).
@@ -83,36 +85,53 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithNodeURI(viper.GetString(FlagNode2)).
 				WithFrom(viper.GetString(FlagFrom2))
 
-			conn1id := args[0]
-			conn1bz, err := ioutil.ReadFile(args[1])
+			fmt.Println(3333)
+			connid1 := args[0]
+			clientid1 := args[1]
+			connid2 := args[3]
+			clientid2 := args[4]
+
+			var path1 commitment.Path
+			path1bz, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
 			}
-			var conn1 connection.Connection
-			if err := cdc.UnmarshalJSON(conn1bz, &conn1); err != nil {
+			if err = cdc.UnmarshalJSON(path1bz, &path1); err != nil {
 				return err
+			}
+			conn1 := connection.Connection{
+				Client:       clientid1,
+				Counterparty: connid2,
+				Path:         path1,
 			}
 
-			obj1, err := handshake(ctx1, cdc, storeKey, version.DefaultPrefix(), conn1id)
-			if err != nil {
-				return err
-			}
-
-			conn2id := args[2]
-			conn2bz, err := ioutil.ReadFile(args[3])
-			if err != nil {
-				return err
-			}
-			var conn2 connection.Connection
-			if err := cdc.UnmarshalJSON(conn2bz, &conn2); err != nil {
-				return err
-			}
-
-			obj2, err := handshake(ctx2, cdc, storeKey, version.DefaultPrefix(), conn1id)
+			fmt.Println(1111)
+			obj1, err := handshake(ctx1, cdc, storeKey, version.DefaultPrefix(), connid1)
 			if err != nil {
 				return err
 			}
 
+			var path2 commitment.Path
+			path2bz, err := ioutil.ReadFile(args[5])
+			if err != nil {
+				return err
+			}
+			if err = cdc.UnmarshalJSON(path2bz, &path2); err != nil {
+				return err
+			}
+			conn2 := connection.Connection{
+				Client:       clientid2,
+				Counterparty: connid1,
+				Path:         path2,
+			}
+
+			fmt.Println(2222)
+			obj2, err := handshake(ctx2, cdc, storeKey, version.DefaultPrefix(), connid2)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(111)
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
 			if err != nil {
@@ -120,7 +139,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 			nextTimeout := height + 1000 // TODO: parameterize
 			msginit := connection.MsgOpenInit{
-				ConnectionID:       conn1id,
+				ConnectionID:       connid1,
 				Connection:         conn1,
 				CounterpartyClient: conn2.Client,
 				NextTimeout:        nextTimeout,
@@ -132,6 +151,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			fmt.Println(222)
 			timeout := nextTimeout
 			height, err = lastheight(ctx1)
 			if err != nil {
@@ -146,6 +166,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Println(333)
 			_, ptimeout, err := obj1.NextTimeoutCLI(ctx1)
 			if err != nil {
 				return err
@@ -156,7 +177,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			msgtry := connection.MsgOpenTry{
-				ConnectionID:       conn2id,
+				ConnectionID:       connid2,
 				Connection:         conn2,
 				CounterpartyClient: conn1.Client,
 				Timeout:            timeout,
@@ -165,6 +186,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:             ctx2.GetFromAddress(),
 			}
 
+			fmt.Println(444)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
 			if err != nil {
 				return err
@@ -194,7 +216,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			msgack := connection.MsgOpenAck{
-				ConnectionID: conn1id,
+				ConnectionID: connid1,
 				Timeout:      timeout,
 				NextTimeout:  nextTimeout,
 				Proofs:       []commitment.Proof{pconn, pstate, ptimeout, pcounter},
@@ -217,7 +239,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			msgconfirm := connection.MsgOpenConfirm{
-				ConnectionID: conn2id,
+				ConnectionID: connid2,
 				Timeout:      timeout,
 				Proofs:       []commitment.Proof{pstate, ptimeout},
 				Signer:       ctx2.GetFromAddress(),
@@ -231,6 +253,14 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagFrom1, "", "")
+	cmd.Flags().String(FlagFrom2, "", "")
+
+	cmd.MarkFlagRequired(FlagFrom1)
+	cmd.MarkFlagRequired(FlagFrom2)
 
 	return cmd
 }

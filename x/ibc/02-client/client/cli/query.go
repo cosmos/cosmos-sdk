@@ -35,6 +35,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ibcQueryCmd.AddCommand(cli.GetCommands(
 		GetCmdQueryConsensusState(storeKey, cdc),
+		GetCmdQueryPath(storeKey, cdc),
 		GetCmdQueryHeader(cdc),
 		GetCmdQueryClient(storeKey, cdc),
 	)...)
@@ -103,6 +104,19 @@ func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command
 
 			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
 
+			return nil
+		},
+	}
+}
+
+func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "path",
+		Short: "Query the commitment path of the running chain",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mapp := mapping(cdc, storeName, version.Version)
+			path := merkle.NewPath([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
 			return nil
 		},
 	}

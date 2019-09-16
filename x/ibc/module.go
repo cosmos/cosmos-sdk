@@ -47,6 +47,9 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
 	tendermint.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
+
+	client.SetMsgCodec(cdc)
+	channel.SetMsgCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {

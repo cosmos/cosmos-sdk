@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -24,7 +24,7 @@ type Manager struct {
 
 func NewManager(protocol state.Mapping, client client.Manager) Manager {
 	return Manager{
-		protocol: protocol.Prefix(LocalRoot()),
+		protocol:     protocol.Prefix(LocalRoot()),
 		client:       client,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 		path:         merkle.NewPath([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),

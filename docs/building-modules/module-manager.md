@@ -164,7 +164,7 @@ It implements the following methods:
 
 ### `Manager`
 
-The [`Manager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209) is a structure that lists all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
+The [`Manager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209) is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
 
 ```go
 type Manager struct {
@@ -176,7 +176,7 @@ type Manager struct {
 }
 ```
 
-The module manager is used throughout the application whenever an action on a collection of module is required. It implements the following methods:
+The module manager is used throughout the application whenever an action on a collection of modules is required. It implements the following methods:
 
 - `NewManager(modules ...AppModule)`: Constructor function. It takes a list of the application's `AppModule`s and builds a new `Manager`. It is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 - `SetOrderInitGenesis(moduleNames ...string)`: Sets the order in which the [`InitGenesis`](./genesis.md#initgenesis) function of each module will be called when the application is first started. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).

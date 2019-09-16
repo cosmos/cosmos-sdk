@@ -22,7 +22,7 @@ The actual implementation of `BeginBlocker` and `EndBlocker` are very similar to
 
 A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). 
 
-For more, see an [example implementation of `BeginBlocker` from the `distr` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/abci.go). 
+For more, see an [example implementation of `BeginBlocker` from the `distr` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/abci.go) and an [example implementation of `EndBlocker`]( https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/handler.go#L44)
 
 ## Next
 

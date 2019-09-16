@@ -77,9 +77,9 @@ type InvariantRegistry interface {
 }
 ```
 
-Typically, this interface is implemented in the module's `keeper`. You can see an example implementation of an `InvariantRegistry` from the `crisis` module [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/internal/keeper/keeper.go). s
+Typically, this interface is implemented in the module's `keeper`. You can see an example implementation of an `InvariantRegistry` from the `crisis` module [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/internal/keeper/keeper.go).
 
-`Invariant`s can be triggered manually via [`message`s](./messages-and-queries), but most often they are triggered automatically at the end of each block (see an example [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/abci.go)). In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry` can trigger special logic (e.g. have the application panic and print the `Invariant`s message in the log).
+`Invariant`s can be checked manually via [`message`s](./messages-and-queries), but most often they are checked automatically at the end of each block (see an example [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/abci.go)). In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry` can trigger special logic (e.g. have the application panic and print the `Invariant`s message in the log).
 
 ## Next
 

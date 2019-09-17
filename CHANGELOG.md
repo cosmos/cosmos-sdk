@@ -75,7 +75,7 @@ and tx hash will be returned for specific Tendermint errors:
   * `CodeTxInMempoolCache`
   * `CodeMempoolIsFull`
   * `CodeTxTooLarge`
-* (cli) [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode txs via `POST /txs/decode`
+* [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode transactions.
 
 ### Improvements
 

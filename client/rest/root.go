@@ -15,11 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	_ "github.com/cosmos/cosmos-sdk/client/rest/docs"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
-
-	_ "github.com/cosmos/cosmos-sdk/client/rest/docs"
 )
 
 // RestServer represents the Light Client Rest server
@@ -82,11 +81,6 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			rs := NewRestServer(cdc)
 
 			registerRoutesFn(rs)
-
-			// TODO:
-			//
-			// 1. Build swagger docs at runtime as to allow user/client to specify
-			// general API description.
 
 			// mount REST (Swagger) documentation
 			rs.Mux.PathPrefix("/swagger/").Handler(httpswagger.WrapHandler)

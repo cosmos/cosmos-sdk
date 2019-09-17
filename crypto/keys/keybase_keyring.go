@@ -92,7 +92,7 @@ func (kb keyringKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, er
 }
 
 func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
-	//create master key and derive first key for keyring:
+	// create master key and derive first key for keyring
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
 	if err != nil {

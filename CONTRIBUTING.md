@@ -245,10 +245,13 @@ code base (though the github `CODEOWNERS` file). The on-boarding process for
 new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss
 potential new candidates as well as the potential for existing code-owners to
-exit or "pass on the torch". 
+exit or "pass on the torch". This private meeting is to be a held as a
+phone/video meeting. Subsequently at the end of the meeting, one of the existing
+code owners should open a PR modifying the `CODEOWNERS` file. The other code
+owners should then all approve this PR to publicly display their support. 
 
-Only if consensus is reached among all the existing code-owners will an
-invitation be extended to a new potential-member. Likewise, when an existing
+Only if unanimous consensus is reached among all the existing code-owners will
+an invitation be extended to a new potential-member. Likewise, when an existing
 member is suggested to be removed/or have their privileges reduced, the member
 in question must agree on the decision for their removal or else no action
 should be taken. If however, a code-owner is verifiably shown to intentionally
@@ -258,13 +261,4 @@ stripped with no prior warning or consent from the member in question.
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.  
-
-
-
-
-
-
- 
-
-
 

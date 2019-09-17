@@ -540,7 +540,7 @@ func (msg msgCounter) ValidateBasic() sdk.Error {
 }
 
 func newTxCounter(txInt int64, msgInts ...int64) *txTest {
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, 0, len(msgInts))
 	for _, msgInt := range msgInts {
 		msgs = append(msgs, msgCounter{msgInt, false})
 	}

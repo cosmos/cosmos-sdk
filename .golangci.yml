@@ -6,16 +6,26 @@ linters:
   disable:
     - gocyclo
     - gochecknoinits
-    - golint
     - gochecknoglobals
     - dupl
     - interfacer
-    - gosec
     - unparam
     - lll
     - maligned
     - nakedret
     - errcheck
     - scopelint
-    - prealloc
     - varcheck
+    - funlen
+
+issues:
+  exclude-rules:
+    - text: "Use of weak random number generator"
+      linters:
+        - gosec
+    - text: "comment on exported var"
+      linters:
+        - golint
+    - text: "don't use an underscore in package name"
+      linters:
+        - golint

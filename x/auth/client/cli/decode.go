@@ -18,8 +18,8 @@ func (tx txDecodeRespTx) String() string {
 	return tx.String()
 }
 
-// GetDecodeCommand returns the decode command to take Amino-serialized bytes and turn it into
-// a JSONified transaction
+// GetDecodeCommand returns the decode command to take Amino-serialized bytes
+// and turn it into a JSONified transaction.
 func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decode [amino-byte-string]",
@@ -28,9 +28,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(codec)
 
-			txBytesBase64 := args[0]
-
-			txBytes, err := base64.StdEncoding.DecodeString(txBytesBase64)
+			txBytes, err := base64.StdEncoding.DecodeString(args[0])
 			if err != nil {
 				return err
 			}
@@ -41,10 +39,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 				return err
 			}
 
-			response := txDecodeRespTx(stdTx)
-			_ = cliCtx.PrintOutput(response)
-
-			return nil
+			return cliCtx.PrintOutput(txDecodeRespTx(stdTx))
 		},
 	}
 

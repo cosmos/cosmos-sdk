@@ -11,7 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// txDecodeRespStr implements a simple Stringer wrapper for a decoded tx.
+// txDecodeRespTx implements a simple Stringer wrapper for a decoded StdTx.
 type txDecodeRespTx authtypes.StdTx
 
 func (tx txDecodeRespTx) String() string {

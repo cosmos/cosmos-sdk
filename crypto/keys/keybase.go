@@ -107,7 +107,7 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := kb.base.CreateAccount(account, index)
+	hdPath := kb.base.CreateHDPath(account, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -123,8 +123,8 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 	return
 }
 
-// CreateLedger creates a new locally-stored reference to a Ledger keypair
-// It returns the created key info and an error if the Ledger could not be queried
+// CreateLedger creates a new locally-stored reference to a Ledger keypair.
+// It returns the created key info and an error if the Ledger could not be queried.
 func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (Info, error) {
 	pub, hdPath, err := kb.base.CreateLedger(algo, hrp, account, index)
 	if err != nil {
@@ -456,6 +456,9 @@ func infoKey(name string) []byte {
 
 type baseKeybase struct{}
 
+// SignWithLedger signs a binary message with the ledger device referenced by an Info object
+// and returns the signed bytes and the public key. It returns an error if the device could
+// not be queried or it returned an error.
 func (kb baseKeybase) SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	i := info.(ledgerInfo)
 	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(i.Path)
@@ -471,6 +474,8 @@ func (kb baseKeybase) SignWithLedger(info Info, msg []byte) (sig []byte, pub tmc
 	return sig, priv.PubKey(), nil
 }
 
+// DecodeSignature decodes a an length-prefixed binary signature from standard input
+// and return it as a byte slice.
 func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
 	if err != nil {
@@ -496,8 +501,11 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 	return sig, info.GetPubKey(), nil
 }
 
+// CreateLedger creates a new reference to a Ledger key pair.
+// It returns a public key and a derivation path; it returns an error if the device
+// could not be querier.
 func (kb baseKeybase) CreateLedger(algo SigningAlgo, hrp string, account, index uint32) (tmcrypto.PubKey, *hd.BIP44Params, error) {
-	if algo != Secp256k1 {
+	if !kb.IsAlgoSupported(algo) {
 		return nil, nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -510,17 +518,18 @@ func (kb baseKeybase) CreateLedger(algo SigningAlgo, hrp string, account, index 
 	return priv.PubKey(), hdPath, nil
 }
 
-// CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
-func (kb baseKeybase) CreateAccount(account uint32, index uint32) *hd.BIP44Params {
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func (kb baseKeybase) CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
+// CreateMnemonic generates a new key with the given algorithm and language pair.
 func (kb baseKeybase) CreateMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mnemonic string, err error) {
 	if language != English {
 		err = ErrUnsupportedLanguage
 		return
 	}
-	if algo != Secp256k1 {
+	if !kb.IsAlgoSupported(algo) {
 		err = ErrUnsupportedSigningAlgo
 		return
 	}
@@ -541,7 +550,11 @@ func (kb baseKeybase) CreateMnemonic(language Language, algo SigningAlgo) (seed 
 	return
 }
 
+// // ComputeDerivedKey derives and returns the private key for the given seed and HD path.
 func (kb baseKeybase) ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
 }
+
+// IsAlgoSupported returns whether the signing algorithm is supported.
+func (kb baseKeybase) IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }

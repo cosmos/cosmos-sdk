@@ -22,20 +22,17 @@
 
 ## Intro and Requirements
 
-This specification describes the vesting account implementation for the Cosmos Hub.
-The requirements for this vesting account is that it should be initialized
-during genesis with a starting balance `X` and a vesting end time `T`.
+This specification defines the vesting account implementation that is used by the Cosmos Hub. The requirements for this vesting account is that it should be initialized during genesis with a starting balance `X` and a vesting end time `T`. A vesting account may be initialized with a vesting start time `T'` and a number of vesting periods `P`. If a vesting start time is included, the vesting period will not begin until start time is reached. If vesting periods are included, the vesting will occur over the specified number of periods.
 
-The owner of this account should be able to delegate to and undelegate from
-validators, however they cannot send locked coins to other accounts until those
-coins have been fully vested.
+For all vesting accounts, the owner of the vesting account is able to delegate and undelegate from validators, however they cannot transfer coins to another account until those coins are vested. This specification allows for three different kinds of vesting:
+* Delayed vesting, where all coins are vested once `T` is reached.
+* Continous vesting, where coins begin to vest at `T'` and vest linearly with respect to time until `T` is reached
+* Periodic vesting, where coins begin to vest at `T'` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable.
 
-In addition, a vesting account vests all of its coin denominations at the same
-rate. This may be subject to change.
-
-**Note**: A vesting account could have some vesting and non-vesting coins. To
-support such a feature, the `GenesisAccount` type will need to be updated in
-order to make such a distinction.
+## Note
+Vesting accounts can be initialized with some vesting and non-vesting coins. The non-vesting coins would be immediately transferable.
+The current specification does not allow for vesting accounts to be created with normal messages after genesis. All vesting accounts must be created at genesis, or as part of a manual network upgrade.
+The current specification only allows for _unconditional_ vesting (ie. there is no possibility of reaching `T` and having coins fail to vest).
 
 ## Vesting Account Types
 
@@ -82,6 +79,22 @@ type ContinuousVestingAccount struct {
 // locked until a specified time.
 type DelayedVestingAccount struct {
     BaseVestingAccount
+}
+
+// VestingPeriod defines a length of time and amount of coins that will vest
+type VestingPeriod struct {
+  PeriodLength int64 // length of the period, in seconds
+  VestingAmount Coins // amount of coins vesting during this period
+}
+
+// Stores all vesting periods passed as part of a PeriodicVestingAccount
+type VestingPeriods []VestingPeriod
+
+// PeriodicVestingAccount implements the VestingAccount interface. It
+// periodically vests by unlocking coins during each specified period
+type PeriodicVestingAccount struct {
+  ContinuousVestingAccount
+  VestingPeriods VestingPeriods // the vesting schedule
 }
 ```
 
@@ -147,6 +160,42 @@ func (cva ContinuousVestingAccount) GetVestedCoins(t Time) Coins {
 
 func (cva ContinuousVestingAccount) GetVestingCoins(t Time) Coins {
     return cva.OriginalVesting - cva.GetVestedCoins(t)
+}
+```
+
+### Periodic Vesting Accounts
+Periodic vesting accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calculating GetVestedCoins, so we must iterate over each period until the end of that period is after `T`.
+
+Set `CT := StartTime`
+Set `V' := 0`
+For each Period P:
+  1. Compute `X := T - CT`
+  2. IF `X >= P.Length`
+    a. Compute `V' += P.Amount`
+    b. Compute `CT += P.Length`
+    ELSE break
+  3. Compute `V := OV = V'`
+
+```go
+func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
+  if t < pva.StartTime {
+    return ZeroCoins
+  }
+  ct := pva.StartTime // The time of the current period start
+  vested := 0
+  periods = pva.GetPeriods()
+  for i := 0; i < len(periods); i++ {
+    x := t - ct
+    if x>= periods[i].Length {
+      vested += periods[i].Amount
+      ct += periods[i].Length
+    } else {break}
+  }
+  return vested
+}
+
+func (pva PeriodicVestingAccount) GetVestingCoins(t Time) Coins {
+    return pva.OriginalVesting - cva.GetVestedCoins(t)
 }
 ```
 
@@ -435,3 +484,4 @@ Same initial starting conditions as the simple example.
 - DelegatedVesting: The tracked amount of coins (per denomination) that are delegated from a vesting account that were vesting at time of delegation.
 - ContinuousVestingAccount: A vesting account implementation that vests coins linearly over time.
 - DelayedVestingAccount: A vesting account implementation that only fully vests all coins at a given time.
+- PeriodicVestingAccount: A vesting account implementation that vests coins according to a custom vesting schedule.

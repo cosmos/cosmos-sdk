@@ -23,7 +23,6 @@ var _ types.DelegationSet = Keeper{}
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
-	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.StakingHooks
@@ -36,7 +35,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new staking Keeper instance
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.SupplyKeeper,
+func NewKeeper(cdc *codec.Codec, key, supplyKeeper types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
 	// ensure bonded and not bonded module accounts are set
@@ -50,7 +49,6 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.Supp
 
 	return Keeper{
 		storeKey:           key,
-		storeTKey:          tkey,
 		cdc:                cdc,
 		supplyKeeper:       supplyKeeper,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),

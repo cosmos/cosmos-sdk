@@ -97,20 +97,6 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	}
 }
 
-func TestSigGasConsumerSecp56k1(t *testing.T) {
-	// generate private keys
-	privs := []crypto.PrivKey{secp256k1.GenPrivKey(), secp256k1.GenPrivKey(), secp256k1.GenPrivKey()}
-
-	params := types.DefaultParams()
-	initialSigCost := params.SigVerifyCostSecp256k1
-	initialCost := benchmarkGasSigDecorator(t, params, false, privs...)
-
-	params.SigVerifyCostSecp256k1 = params.SigVerifyCostSecp256k1 * 2
-	doubleCost := benchmarkGasSigDecorator(t, params, false, privs...)
-
-	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
-}
-
 func TestSigVerification(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
@@ -144,9 +130,27 @@ func TestSigVerification(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func benchmarkGasSigDecorator(t *testing.T, params types.Params, multisig bool, privs ...crypto.PrivKey) sdk.Gas {
+func TestSigIntegration(t *testing.T) {
+	// generate private keys
+	privs := []crypto.PrivKey{secp256k1.GenPrivKey(), secp256k1.GenPrivKey(), secp256k1.GenPrivKey()}
+
+	params := types.DefaultParams()
+	initialSigCost := params.SigVerifyCostSecp256k1
+	initialCost, err := runSigDecorators(t, params, false, privs...)
+	require.Nil(t, err)
+
+	params.SigVerifyCostSecp256k1 = params.SigVerifyCostSecp256k1 * 2
+	doubleCost, err := runSigDecorators(t, params, false, privs...)
+	require.Nil(t, err)
+
+	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
+}
+
+func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
 	// setup
 	app, ctx := createTestApp(true)
+	// Make block-height non-zero to include accNum in SignBytes
+	ctx = ctx.WithBlockHeight(1)
 	app.AccountKeeper.SetParams(ctx, params)
 
 	var msgs []sdk.Msg
@@ -169,13 +173,13 @@ func benchmarkGasSigDecorator(t *testing.T, params types.Params, multisig bool, 
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
-	antehandler := sdk.ChainDecorators(spkd, svgc)
+	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
+	antehandler := sdk.ChainDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
 	before := ctx.GasMeter().GasConsumed()
 	ctx, err := antehandler(ctx, tx, false)
-	require.Nil(t, err)
 	after := ctx.GasMeter().GasConsumed()
 
-	return sdk.Gas(after - before)
+	return sdk.Gas(after - before), err
 }

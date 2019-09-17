@@ -31,7 +31,8 @@ func (v String) Set(ctx Context, value string) {
 	v.Value.SetRaw(ctx, []byte(value))
 }
 
-func (v String) Query(ctx CLIContext) (res string, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+// Query() retrives state value and proof from a queryable reference
+func (v String) Query(q ABCIQuerier) (res string, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	return string(value), proof, err
 }

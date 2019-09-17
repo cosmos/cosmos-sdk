@@ -45,15 +45,16 @@ func (v Integer) Set(ctx Context, value uint64) {
 	v.Value.SetRaw(ctx, EncodeInt(value, v.enc))
 }
 
-// Incr() increments the stored value, and returns the updated value.
-func (v Integer) Incr(ctx Context) (res uint64) {
+// Increment increments the stored value and returns it.
+func (v Integer) Increment(ctx Context) (res uint64) {
 	res = v.Get(ctx) + 1
 	v.Set(ctx, res)
 	return
 }
 
-func (v Integer) Query(ctx CLIContext) (res uint64, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+// Query() retrives state value and proof from a queryable reference
+func (v Integer) Query(q ABCIQuerier) (res uint64, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	if err != nil {
 		return
 	}

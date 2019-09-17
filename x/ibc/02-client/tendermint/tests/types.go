@@ -1,26 +1,26 @@
 package tendermint
 
 import (
+	"bytes"
 	"crypto/rand"
 	"testing"
-	"bytes"
 
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -52,20 +52,20 @@ type Node struct {
 	Commits []tmtypes.SignedHeader
 
 	StoreName string
-	Prefix []byte
+	Prefix    []byte
 }
 
 func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
 	key, ctx, cms, _ := defaultComponents(storeName)
 
 	return &Node{
-		Valset:  valset,
-		Cms:     cms,
-		Key:     key,
-		Store:   ctx.KVStore(key),
-		Commits: nil,
+		Valset:    valset,
+		Cms:       cms,
+		Key:       key,
+		Store:     ctx.KVStore(key),
+		Commits:   nil,
 		StoreName: storeName,
-		Prefix: prefix,
+		Prefix:    prefix,
 	}
 }
 
@@ -148,7 +148,6 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 
 	return nil
 }
-
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
 	if bytes.HasPrefix(k, node.Prefix) {

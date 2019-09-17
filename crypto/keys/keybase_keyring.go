@@ -264,7 +264,6 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 
 //Import imports armored private key
 func (kb keyringKeybase) Import(name string, armor string) (err error) {
-	//err is purposefully discarded
 	bz, _ := kb.Get(name)
 
 	if bz != nil {

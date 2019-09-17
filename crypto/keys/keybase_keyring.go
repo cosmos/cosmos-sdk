@@ -25,12 +25,14 @@ import (
 var _ Keybase = keyringKeybase{}
 
 type keyringKeybase struct {
-	db keyring.Keyring
+	db   keyring.Keyring
+	base baseKeybase
 }
 
 func newKeyringKeybase(db keyring.Keyring) Keybase {
 	return keyringKeybase{
-		db: db,
+		db:   db,
+		base: baseKeybase{},
 	}
 }
 
@@ -41,7 +43,7 @@ func newKeyringKeybase(db keyring.Keyring) Keybase {
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	seed, fullFundraiserPath, mnemonic, err := createMnemonic(language, algo)
+	seed, fullFundraiserPath, mnemonic, err := kb.base.CreateMnemonic(language, algo)
 	if err != nil {
 		return
 	}
@@ -51,8 +53,7 @@ func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd s
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	coinType := types.GetConfig().GetCoinType()
-	hdPath := hd.NewFundraiserParams(account, coinType, index)
+	hdPath := kb.base.CreateAccount(account, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -71,7 +72,7 @@ func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd s
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb keyringKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
-	pub, hdPath, err := createLedger(algo, hrp, account, index)
+	pub, hdPath, err := kb.base.CreateLedger(algo, hrp, account, index)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +94,7 @@ func (kb keyringKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, er
 
 func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
 	// create master key and derive first key for keyring
-	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-	derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+	derivedPriv, err := kb.base.ComputeDerivedKey(seed, fullHdPath)
 	if err != nil {
 		return
 	}

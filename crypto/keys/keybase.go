@@ -74,19 +74,21 @@ var (
 // dbKeybase combines encryption and storage implementation to provide
 // a full-featured key manager
 type dbKeybase struct {
-	db dbm.DB
+	db   dbm.DB
+	base baseKeybase
 }
 
 // newDbKeybase creates a new keybase instance using the passed DB for reading and writing keys.
 func newDbKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
-		db: db,
+		db:   db,
+		base: baseKeybase{},
 	}
 }
 
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
-func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
+func NewInMemory() Keybase { return newDbKeybase(dbm.NewMemDB()) }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password.
@@ -95,7 +97,7 @@ func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	seed, fullFundraiserPath, mnemonic, err := createMnemonic(language, algo)
+	seed, fullFundraiserPath, mnemonic, err := kb.base.CreateMnemonic(language, algo)
 	if err != nil {
 		return
 	}
@@ -105,8 +107,7 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	coinType := types.GetConfig().GetCoinType()
-	hdPath := hd.NewFundraiserParams(account, coinType, index)
+	hdPath := kb.base.CreateAccount(account, index)
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -122,10 +123,12 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 	return
 }
 
+type baseKeybase struct{}
+
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (Info, error) {
-	pub, hdPath, err := createLedger(algo, hrp, account, index)
+	pub, hdPath, err := kb.base.CreateLedger(algo, hrp, account, index)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +150,7 @@ func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) 
 
 func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
 	// create master key and derive first key:
-	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-	derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+	derivedPriv, err := kb.base.ComputeDerivedKey(seed, fullHdPath)
 	if err != nil {
 		return
 	}
@@ -452,32 +454,6 @@ func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }
 
-func createMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mnemonic string, err error) {
-	if language != English {
-		err = ErrUnsupportedLanguage
-		return
-	}
-	if algo != Secp256k1 {
-		err = ErrUnsupportedSigningAlgo
-		return
-	}
-
-	// default number of words (24):
-	// this generates a mnemonic directly from the number of words by reading system entropy.
-	entropy, err := bip39.NewEntropy(defaultEntropySize)
-	if err != nil {
-		return
-	}
-	mnemonic, err = bip39.NewMnemonic(entropy)
-	if err != nil {
-		return
-	}
-
-	seed = bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	path = types.GetConfig().GetFullFundraiserPath()
-	return
-}
-
 func signWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	i := info.(ledgerInfo)
 	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(i.Path)
@@ -518,7 +494,7 @@ func decodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, er
 	return sig, info.GetPubKey(), nil
 }
 
-func createLedger(algo SigningAlgo, hrp string, account, index uint32) (tmcrypto.PubKey, *hd.BIP44Params, error) {
+func (kb baseKeybase) CreateLedger(algo SigningAlgo, hrp string, account, index uint32) (tmcrypto.PubKey, *hd.BIP44Params, error) {
 	if algo != Secp256k1 {
 		return nil, nil, ErrUnsupportedSigningAlgo
 	}
@@ -530,4 +506,40 @@ func createLedger(algo SigningAlgo, hrp string, account, index uint32) (tmcrypto
 		return nil, nil, err
 	}
 	return priv.PubKey(), hdPath, nil
+}
+
+// CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
+func (kb baseKeybase) CreateAccount(account uint32, index uint32) *hd.BIP44Params {
+	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
+}
+
+func (kb baseKeybase) CreateMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mnemonic string, err error) {
+	if language != English {
+		err = ErrUnsupportedLanguage
+		return
+	}
+	if algo != Secp256k1 {
+		err = ErrUnsupportedSigningAlgo
+		return
+	}
+
+	// default number of words (24):
+	// this generates a mnemonic directly from the number of words by reading system entropy.
+	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	if err != nil {
+		return
+	}
+	mnemonic, err = bip39.NewMnemonic(entropy)
+	if err != nil {
+		return
+	}
+
+	seed = bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
+	path = types.GetConfig().GetFullFundraiserPath()
+	return
+}
+
+func (kb baseKeybase) ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
+	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
 }

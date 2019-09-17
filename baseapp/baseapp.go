@@ -16,7 +16,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -630,10 +629,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 // runMsgs iterates through all the messages and executes them.
 // nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
+	data := make([]byte, 0, len(msgs))
 	var (
-		data      []byte
 		code      sdk.CodeType
 		codespace sdk.CodespaceType
 	)
@@ -664,28 +663,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(i), Log: msgResult.Log}
-
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			idxLog.Success = false
-			idxLogs = append(idxLogs, idxLog)
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		idxLog.Success = true
-		idxLogs = append(idxLogs, idxLog)
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.TrimSpace(string(logJSON)),
+		Log:       strings.TrimSpace(msgLogs.String()),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
 		Events:    events,
 	}

@@ -22,7 +22,7 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]jso
 
 	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
 	// convert all the GenTxs to JSON
-	var genTxsBz []json.RawMessage
+	genTxsBz := make([]json.RawMessage, 0, len(genTxs))
 	for _, genTx := range genTxs {
 		txBz, err := cdc.MarshalJSON(genTx)
 		if err != nil {

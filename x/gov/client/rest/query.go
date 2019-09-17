@@ -504,7 +504,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 //
 // @Summary Query for the list of governance proposals.
 // @Tags queries
-// @Description Query the list of goverance proposals with optional filters for
+// @Description Query the list of governance proposals with optional filters for
 // @Description proposal status, depositor, and/or voter.
 // @Produce json
 // @Param height query string false "block height to execute query, defaults to chain tip."

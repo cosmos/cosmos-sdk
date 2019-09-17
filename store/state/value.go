@@ -107,14 +107,14 @@ func (v Value) KeyBytes() []byte {
 	return v.m.KeyBytes(v.key)
 }
 
-func (v Value) QueryRaw(ctx CLIContext) ([]byte, *Proof, error) {
+func (v Value) QueryRaw(q ABCIQuerier) ([]byte, *Proof, error) {
 	req := abci.RequestQuery{
 		Path:  "/store" + v.m.StoreName() + "/key",
 		Data:  v.KeyBytes(),
 		Prove: true,
 	}
 
-	resp, err := ctx.QueryABCI(req)
+	resp, err := q.QueryABCI(req)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -126,8 +126,8 @@ func (v Value) QueryRaw(ctx CLIContext) ([]byte, *Proof, error) {
 	return resp.Value, resp.Proof, nil
 }
 
-func (v Value) Query(ctx CLIContext, ptr interface{}) (*Proof, error) {
-	value, proof, err := v.QueryRaw(ctx)
+func (v Value) Query(q ABCIQuerier, ptr interface{}) (*Proof, error) {
+	value, proof, err := v.QueryRaw(q)
 	if err != nil {
 		return nil, err
 	}

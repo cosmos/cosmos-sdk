@@ -15,10 +15,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
+	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
 )
 
+// Allow applications to extend and modify the migration process.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = extypes.MigrationMap{
 	"v0.36": v036.Migrate,
+	"v0.38": v038.Migrate,
 }
 
 const (

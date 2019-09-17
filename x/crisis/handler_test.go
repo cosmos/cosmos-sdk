@@ -21,7 +21,6 @@ var (
 	testModuleName        = "dummy"
 	dummyRouteWhichPasses = crisis.NewInvarRoute(testModuleName, "which-passes", func(_ sdk.Context) (string, bool) { return "", false })
 	dummyRouteWhichFails  = crisis.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
-	addrs                 = distr.TestAddrs
 )
 
 func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {

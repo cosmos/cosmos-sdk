@@ -234,7 +234,7 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 	return priv, nil
 }
 
-// Export exports armored private key to the caller
+// Export exports armored private key to the caller.
 func (kb keyringKeybase) Export(name string) (armor string, err error) {
 	bz, err := kb.db.Get(string(infoKey(name)))
 	if err != nil {
@@ -262,7 +262,7 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes()), nil
 }
 
-//Import imports armored private key
+// Import imports armored private key
 func (kb keyringKeybase) Import(name string, armor string) (err error) {
 	bz, _ := kb.Get(name)
 

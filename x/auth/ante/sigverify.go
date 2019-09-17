@@ -59,17 +59,15 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signerAddrs := stdTx.GetSigners()
-	signerAccs := make([]exported.Account, len(signerAddrs))
 
 	for i, sig := range stdSigs {
-		signerAccs[i], err = GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
-		if err != nil {
-			return ctx, err
-		}
-
-		pubKey, err := ProcessPubKey(signerAccs[i], sig, simulate)
-		if err != nil {
-			return ctx, err
+		pubKey := sig.PubKey
+		if pubKey == nil {
+			signerAcc, err := GetSignerAcc(ctx, sgcd.ak, signerAddrs[i])
+			if err != nil {
+				return ctx, err
+			}
+			pubKey = signerAcc.GetPubKey()
 		}
 
 		if simulate {
@@ -197,7 +195,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if sig.PubKey != nil {
 			if !bytes.Equal(sig.PubKey.Address(), signers[i]) {
 				return ctx, errs.Wrapf(errs.ErrInvalidPubKey,
-					"PubKey does not match Signer address %s", signers[i])
+					"PubKey does not match Signer address %s with signer index: %d", signers[i], i)
 			}
 
 			acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])

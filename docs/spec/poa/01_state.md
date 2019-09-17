@@ -80,8 +80,6 @@ type Description struct {
 }
 ```
 
-// TODO: add in section for unbonding from validator set
-
 ## Queues
 
 All queues objects are sorted by timestamp. The time used within any queue is

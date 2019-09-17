@@ -192,10 +192,10 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 		}
 
 	case ledgerInfo:
-		return signWithLedger(info, msg)
+		return kb.base.SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return decodeSignature(info, msg)
+		return kb.base.DecodeSignature(info, msg)
 	}
 
 	sig, err = priv.Sign(msg)

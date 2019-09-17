@@ -123,8 +123,6 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 	return
 }
 
-type baseKeybase struct{}
-
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (Info, error) {
@@ -227,10 +225,10 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		}
 
 	case ledgerInfo:
-		return signWithLedger(info, msg)
+		return kb.base.SignWithLedger(info, msg)
 
 	case offlineInfo, multiInfo:
-		return decodeSignature(info, msg)
+		return kb.base.DecodeSignature(info, msg)
 	}
 
 	sig, err = priv.Sign(msg)
@@ -454,7 +452,11 @@ func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }
 
-func signWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+// Auxiliary type that groups storage agnostic features together.
+
+type baseKeybase struct{}
+
+func (kb baseKeybase) SignWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	i := info.(ledgerInfo)
 	priv, err := crypto.NewPrivKeyLedgerSecp256k1Unsafe(i.Path)
 	if err != nil {
@@ -469,7 +471,7 @@ func signWithLedger(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err
 	return sig, priv.PubKey(), nil
 }
 
-func decodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
 	_, err = fmt.Fprintf(os.Stderr, "Message to sign:\n\n%s\n", msg)
 	if err != nil {
 		return nil, nil, err

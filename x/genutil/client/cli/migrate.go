@@ -28,7 +28,7 @@ var migrationMap = extypes.MigrationMap{
 
 const (
 	flagGenesisTime = "genesis-time"
-	flagChainId     = "chain-id"
+	flagChainID     = "chain-id"
 )
 
 func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
@@ -72,9 +72,9 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.GenesisTime = t
 			}
 
-			chainId := cmd.Flag(flagChainId).Value.String()
-			if chainId != "" {
-				genDoc.ChainID = chainId
+			chainID := cmd.Flag(flagChainID).Value.String()
+			if chainID != "" {
+				genDoc.ChainID = chainID
 			}
 
 			out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
@@ -88,7 +88,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	}
 
 	cmd.Flags().String(flagGenesisTime, "", "Override genesis_time with this flag")
-	cmd.Flags().String(flagChainId, "", "Override chain_id with this flag")
+	cmd.Flags().String(flagChainID, "", "Override chain_id with this flag")
 
 	return cmd
 }

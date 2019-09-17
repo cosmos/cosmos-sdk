@@ -91,7 +91,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 }
 
 // RandomGenesisAccounts returns randomly generated genesis accounts
-func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs []exported.GenesisAccount) {
+func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs exported.GenesisAccounts) {
 	for i, acc := range simState.Accounts {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))}
 		bacc := types.NewBaseAccountWithAddress(acc.Address)
@@ -99,8 +99,7 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs []expo
 			panic(err)
 		}
 
-		var gacc exported.GenesisAccount
-		gacc = &bacc
+		var gacc exported.GenesisAccount = &bacc
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.

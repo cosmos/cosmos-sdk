@@ -11,7 +11,7 @@ import (
 // a genesis port script to the new fee collector account
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
-	data.Accounts = Sanitize(data.Accounts)
+	data.Accounts = SanitizeGenesisAccounts(data.Accounts)
 
 	for _, a := range data.Accounts {
 		acc := ak.NewAccount(ctx, a)
@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper) GenesisState {
 	params := ak.GetParams(ctx)
 
-	var genAccounts []exported.GenesisAccount
+	var genAccounts exported.GenesisAccounts
 	ak.IterateAccounts(ctx, func(account exported.Account) bool {
 		genAccount := account.(exported.GenesisAccount)
 		genAccounts = append(genAccounts, genAccount)

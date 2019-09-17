@@ -32,9 +32,6 @@ halt-height = {{ .BaseConfig.HaltHeight }}
 # Note: State will not be committed on the corresponding height and any logs
 # indicating such can be safely ignored.
 halt-time = {{ .BaseConfig.HaltTime }}
-
-# InterBlockCache enables inter-block caching.
-inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 `
 
 var configTemplate *template.Template

@@ -32,9 +32,6 @@ type BaseConfig struct {
 	// Note: State will not be committed on the corresponding height and any logs
 	// indicating such can be safely ignored.
 	HaltTime uint64 `mapstructure:"halt-time"`
-
-	// InterBlockCache enables inter-block caching.
-	InterBlockCache bool `mapstructure:"inter-block-cache"`
 }
 
 // Config defines the server's top level configuration
@@ -73,8 +70,7 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig{
-			MinGasPrices:    defaultMinGasPrices,
-			InterBlockCache: true,
+			MinGasPrices: defaultMinGasPrices,
 		},
 	}
 }

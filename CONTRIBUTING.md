@@ -253,7 +253,7 @@ member is suggested to be removed/or have their privileges reduced, the member
 in question must agree on the decision for their removal or else no action
 should be taken. If however, a code-owner is verifiably shown to intentionally
 have had acted maliciously or grossly negligent, code-owner privileges may be
-stripped with no prior warned or consent from the member in question. 
+stripped with no prior warning or consent from the member in question. 
 
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of

@@ -196,9 +196,10 @@ type BaseVestingAccount struct {
 	EndTime int64 `json:"end_time"` // when the coins become unlocked
 }
 
-// NewBaseVestingAccount creates a new BaseVestingAccount object
-func NewBaseVestingAccount(baseAccount *BaseAccount, originalVesting sdk.Coins,
-	delegatedFree sdk.Coins, delegatedVesting sdk.Coins, endTime int64) *BaseVestingAccount {
+// NewBaseVestingAccount creates a new BaseVestingAccount object.
+func NewBaseVestingAccount(
+	baseAccount *BaseAccount, originalVesting, delegatedFree, delegatedVesting sdk.Coins, endTime int64,
+) *BaseVestingAccount {
 
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
@@ -382,9 +383,7 @@ type ContinuousVestingAccount struct {
 }
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
-func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
-	startTime int64) *ContinuousVestingAccount {
-
+func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
 	return &ContinuousVestingAccount{
 		BaseVestingAccount: bva,
 		StartTime:          startTime,

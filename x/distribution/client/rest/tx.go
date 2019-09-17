@@ -52,7 +52,22 @@ type (
 	}
 )
 
-// Withdraw delegator rewards
+// withdrawDelegatorRewardsHandlerFn implements a withdraw rewards handler that is responsible
+// for constructing a properly formatted delegator withdraw transaction for signing.
+//
+// @Summary Generate a withdraw delegator rewards transaction.
+// @Description Generate a withdraw delegator rewards transaction that is ready for signing.
+// @Tags distribution transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param tx body withdrawRewardsReq true "The data required to withdraw rewards."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /distribution/delegators/{delegatorAddr}/rewards [post]
 func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
@@ -81,7 +96,23 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 	}
 }
 
-// Withdraw delegation rewards
+// withdrawDelegationRewardsHandlerFn implements a withdraw rewards handler that is responsible
+// for constructing a properly formatted delegation withdraw transaction for signing.
+//
+// @Summary Generate a withdraw delegation rewards transaction.
+// @Description Generate a withdraw delegation rewards transaction that is ready for signing.
+// @Tags distribution transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param validatorAddr path string true "delegator validator."
+// @Param tx body withdrawRewardsReq true "The data required to withdraw rewards."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr} [post]
 func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
@@ -116,7 +147,22 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 	}
 }
 
-// Replace the rewards withdrawal address
+// setDelegatorWithdrawalAddrHandlerFn implements a set withdraw address handler that is responsible
+// for constructing a properly formatted withdraw address change transaction for signing.
+//
+// @Summary Generate a withdraw address change transaction.
+// @Description Generate a withdraw address change transaction that is ready for signing.
+// @Tags distribution transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param tx body setWithdrawalAddrReq true "The data required to set withdraw address."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /distribution/delegators/{delegatorAddr}/withdraw_address [post]
 func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req setWithdrawalAddrReq
@@ -146,7 +192,22 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 	}
 }
 
-// Withdraw validator rewards and commission
+// withdrawDelegationRewardsHandlerFn implements a withdraw rewards handler that is responsible
+// for constructing a properly formatted validator withdraw transaction for signing.
+//
+// @Summary Generate a withdraw validator rewards transaction.
+// @Description Generate a withdraw validator rewards transaction that is ready for signing.
+// @Tags distribution transactions
+// @Accept  json
+// @Produce  json
+// @Param validatorAddr path string true "delegator validator."
+// @Param tx body withdrawRewardsReq true "The data required to withdraw rewards."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /distribution/validators/{validatorAddr}/rewards [post]
 func withdrawValidatorRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq

@@ -234,7 +234,7 @@ func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) 
 	return priv, nil
 }
 
-//Export exports armored private key to the caller
+// Export exports armored private key to the caller
 func (kb keyringKeybase) Export(name string) (armor string, err error) {
 	bz, err := kb.db.Get(string(infoKey(name)))
 	if err != nil {

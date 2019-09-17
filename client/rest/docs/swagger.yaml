@@ -1,0 +1,189 @@
+basePath: '{{.BasePath}}'
+definitions:
+  rest.BroadcastReq:
+    properties:
+      mode:
+        type: string
+      tx:
+        $ref: '#/definitions/types.StdTx'
+        type: object
+    type: object
+  rest.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+    type: object
+  types.ABCIMessageLog:
+    properties:
+      events:
+        $ref: '#/definitions/types.StringEvents'
+        description: |-
+          Events contains a slice of Event objects that were emitted during some
+          execution.
+        type: object
+      log:
+        type: string
+      msg_index:
+        type: integer
+      success:
+        type: boolean
+    type: object
+  types.ABCIMessageLogs:
+    items:
+      properties:
+        events:
+          $ref: '#/definitions/types.StringEvents'
+          description: |-
+            Events contains a slice of Event objects that were emitted during some
+            execution.
+          type: object
+        log:
+          type: string
+        msg_index:
+          type: integer
+        success:
+          type: boolean
+      type: object
+    type: array
+  types.Attribute:
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+    type: object
+  types.StdFee:
+    properties:
+      amount:
+        type: string
+      gas:
+        type: integer
+    type: object
+  types.StdSignature:
+    properties:
+      signature:
+        example: U3dhZ2dlciByb2Nrcw==
+        format: base64
+        type: string
+    type: object
+  types.StdTx:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        type: string
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
+  types.StringEvent:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/types.Attribute'
+        type: array
+      type:
+        type: string
+    type: object
+  types.StringEvents:
+    items:
+      properties:
+        attributes:
+          items:
+            $ref: '#/definitions/types.Attribute'
+          type: array
+        type:
+          type: string
+      type: object
+    type: array
+  types.Tx:
+    type: object
+  types.TxResponse:
+    properties:
+      code:
+        type: integer
+      codespace:
+        type: string
+      data:
+        type: string
+      events:
+        $ref: '#/definitions/types.StringEvents'
+        description: |-
+          DEPRECATED: Remove in the next next major release in favor of using the
+          ABCIMessageLog.Events field.
+        type: object
+      gas_used:
+        type: integer
+      gas_wanted:
+        type: integer
+      height:
+        type: integer
+      info:
+        type: string
+      logs:
+        $ref: '#/definitions/types.ABCIMessageLogs'
+        type: object
+      raw_log:
+        type: string
+      timestamp:
+        type: string
+      tx:
+        $ref: '#/definitions/types.Tx'
+        type: object
+      txhash:
+        type: string
+    type: object
+host: '{{.Host}}'
+info:
+  contact: {}
+  description: '{{.Description}}'
+  license: {}
+  title: '{{.Title}}'
+  version: '{{.Version}}'
+paths:
+  /txs:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Broadcast a signed transaction with the broadcasting mode. The
+        mode must either be sync, async, or block. The use of block mode
+        is not advised. The sync mode will broadcast and wait for a
+        CheckTx response, whereas async mode will broadcast and return
+        immediately.
+      parameters:
+      - description: Signed transaction along with the broadcasting mode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/rest.BroadcastReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.TxResponse'
+            type: object
+        "400":
+          description: Returned if the request is invalid.
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+            type: object
+        "500":
+          description: Returned if the transaction cannot be decoded.
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+            type: object
+      summary: Broadcast a signed transaction
+      tags:
+      - transactions
+swagger: "2.0"

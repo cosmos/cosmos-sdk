@@ -327,19 +327,15 @@ func (kb keyringKeybase) ImportPrivKey(name string, armor string, passphrase str
 	return nil
 }
 
-//HasKey is checking if the key exists in the keyring
+// HasKey returns whether the key exists in the keyring.
 func (kb keyringKeybase) HasKey(name string) bool {
 	bz, _ := kb.Get(name)
-	if bz != nil {
-		return true
-	}
-	return false
+	return bz != nil
 }
 
 // ImportPubKey imports ASCII-armored public keys.
 // Store a new Info object holding a public key only, i.e. it will
 // not be possible to sign with it as it lacks the secret key.
-//ImportPubKey for keyring
 func (kb keyringKeybase) ImportPubKey(name string, armor string) (err error) {
 	bz, _ := kb.Get(name)
 	if bz != nil {

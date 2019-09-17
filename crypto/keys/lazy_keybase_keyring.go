@@ -83,37 +83,37 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 				continue
 			}
 
-			if !keyhashStored {
-				reEnteredPass, err := input.GetPassword("Re-enter keyring files passphrase for your keys:", buf)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
-					continue
-				}
-
-				if pass != reEnteredPass {
-					fmt.Fprintln(os.Stderr, "Passwords do not match")
-					continue
-				}
-
-				saltBytes := crypto.CRandBytes(16)
-				passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
-					continue
-				}
-
-				if err := ioutil.WriteFile(lkb.dir+"/keyhash", passwordHash, 0555); err != nil {
-					return "", err
-				}
-
-				return pass, nil
-			} else {
+			if keyhashStored {
 				if err := bcrypt.CompareHashAndPassword(keyhash, []byte(pass)); err != nil {
 					fmt.Fprintln(os.Stderr, "incorrect password")
 					continue
 				}
 				return pass, nil
 			}
+
+			reEnteredPass, err := input.GetPassword("Re-enter keyring files passphrase for your keys:", buf)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				continue
+			}
+
+			if pass != reEnteredPass {
+				fmt.Fprintln(os.Stderr, "Passwords do not match")
+				continue
+			}
+
+			saltBytes := crypto.CRandBytes(16)
+			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				continue
+			}
+
+			if err := ioutil.WriteFile(lkb.dir+"/keyhash", passwordHash, 0555); err != nil {
+				return "", err
+			}
+
+			return pass, nil
 		}
 
 	}

@@ -297,7 +297,7 @@ func ProcessPubKey(acc exported.Account, sig types.StdSignature, simulate bool) 
 		}
 
 		if !bytes.Equal(pubKey.Address(), acc.GetAddress()) {
-			return nil, errs.Wrapf(errs.ErrInvalidPubKey,
+			return nil, errs.Wrapf(errs.ErrUnauthorized,
 				"PubKey does not match Signer address %s", acc.GetAddress())
 		}
 	}
@@ -312,7 +312,7 @@ func processSig(
 ) (updatedAcc exported.Account, err error) {
 
 	pubKey := acc.GetPubKey()
-	if pubKey == nil {
+	if !simulate && &pubKey == nil {
 		return nil, errs.Wrap(errs.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 

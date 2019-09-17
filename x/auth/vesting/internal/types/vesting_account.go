@@ -32,14 +32,12 @@ func init() {
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
 	*auth.BaseAccount
-
-	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
-	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
-	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
-
-	EndTime        int64 `json:"end_time" yaml:"end_time"` // when the coins become unlocked
-	StartTime      int64 `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	VestingPeriods VestingPeriods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
+	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
+	DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
+	DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
+	EndTime          int64          `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
+	StartTime        int64          `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+	VestingPeriods   VestingPeriods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
@@ -233,8 +231,8 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-		StartTime: bva.StartTime,
-		VestingPeriods: bva.VestingPeriods,
+		StartTime:        bva.StartTime,
+		VestingPeriods:   bva.VestingPeriods,
 	})
 	if err != nil {
 		return nil, err

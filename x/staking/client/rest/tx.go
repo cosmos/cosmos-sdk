@@ -55,6 +55,22 @@ type (
 	}
 )
 
+// postDelegationsHandlerFn implements a delegation handler that is responsible
+// for constructing a properly formatted delegation transaction for signing.
+//
+// @Summary Generate a delegation transaction.
+// @Description Generate a delegation transaction that is ready for signing.
+// @Tags staking transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param tx body DelegateRequest true "The data required to delegate."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /staking/delegators/{delegatorAddr}/delegations [post]
 func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req DelegateRequest
@@ -89,6 +105,22 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// postRedelegationsHandlerFn implements a redelegation handler that is responsible
+// for constructing a properly formatted redelegation transaction for signing.
+//
+// @Summary Generate a redelegation transaction.
+// @Description Generate a redelegation transaction that is ready for signing.
+// @Tags staking transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param tx body RedelegateRequest true "The data required to delegate."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /staking/delegators/{delegatorAddr}/delegations [post]
 func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RedelegateRequest
@@ -123,6 +155,22 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// postUnbondingDelegationsHandlerFn implements an unbonding_delegation handler that is responsible
+// for constructing a properly formatted unbonding_delegation transaction for signing.
+//
+// @Summary Generate an unbonding_delegation transaction.
+// @Description Generate an unbonding_delegation transaction that is ready for signing.
+// @Tags staking transactions
+// @Accept  json
+// @Produce  json
+// @Param delegatorAddr path string true "delegator address."
+// @Param tx body UndelegateRequest true "The data required to undelegate."
+// @Success 200 {object} types.StdTx
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Router /staking/delegators/{delegatorAddr}/unbonding_delegations [post]
 func postUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UndelegateRequest

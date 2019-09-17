@@ -64,5 +64,4 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cliCtx context.CLIContext
 		log.Printf("could not write response: %v", err)
 	}
 
-	return
 }

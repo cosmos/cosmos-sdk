@@ -124,9 +124,9 @@ The default implementation of `Keybase` of the Cosmos SDK is [`dbKeybase`](https
 
 - `Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)` strictly deals with the signature of the `message` bytes. Some preliminary work should be done beforehand to prepare and encode the `message`  into a canonical `[]byte` form. See an example of `message` preparation from the `auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/txbuilder.go#L177-L207).
 - `CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)` creates a new mnemonic and prints it in the logs, but it **does not persist it on disk**. 
-- `CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk (note that the `PrivKey` is [encrypted with a passphrase before being persisted](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/mintkey/mintkey.go), it is **never stored unencrypted**). In the context of this method, the `account` parameter refers to the derivation path (e.g. `0`, `1`, `2`, ...) used to derive the `PrivKey` from the mnemonic (note that given the same mnemonic and `account`, `CreateAccount` will always return the same `PrivKey`). As for the `address`  parameter, it refers to the derivation path used to derive `Addresses` from the `PubKey`. Any number of `Addresses` can be derived from the same `PubKey`, giving the possibility to developers to make use of single-use addresses for accounts. Finally, note that the `CreateAccount` method derives keys and addresses using `secp256k1` as implemented in the [Tendermint library](https://github.com/tendermint/tendermint/blob/master/crypto/secp256k1). As a result, it only works for creating account keys and addresses, not consensus keys. See [`Addresses`](#addresses) for more.
+- `CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk (note that the `PrivKey` is [encrypted with a passphrase before being persisted](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/mintkey/mintkey.go), it is **never stored unencrypted**). In the context of this method, the `account` and `address` parameters refer to the segment of the BIP44 derivation path (e.g. `0`, `1`, `2`, ...) used to derive the `PrivKey` and `PubKey` from the mnemonic (note that given the same mnemonic and `account`, the same `PrivKey` will be generated, and given the same `account` and `address`, the same `PubKey` and `Address` will be generated). Finally, note that the `CreateAccount` method derives keys and addresses using `secp256k1` as implemented in the [Tendermint library](https://github.com/tendermint/tendermint/blob/master/crypto/secp256k1). As a result, it only works for creating account keys and addresses, not consensus keys. See [`Addresses`](#addresses) for more.
 
-The current implementation of `dbKeybase` is basic and does not offer on-demand locking. If an instance of `dbKeybase` is created, the underlying `db` is locked meaning no other process can access it besides the one in which it was instantiated. This is the reason why the default SDK client uses another implementation of the `Keybase` interface called [`lazyKeybase`](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/lazy_keybase.go). `lazyKeybase` is simple wrapper around `dbKeybase` which locks the database only when operations are to be performed and unlocks it immediately after:
+The current implementation of `dbKeybase` is basic and does not offer on-demand locking. If an instance of `dbKeybase` is created, the underlying `db` is locked meaning no other process can access it besides the one in which it was instantiated. This is the reason why the [default SDK client](https://github.com/cosmos/cosmos-sdk/tree/master/client/keys) uses another implementation of the `Keybase` interface called [`lazyKeybase`](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/lazy_keybase.go). `lazyKeybase` is simple wrapper around `dbKeybase` which locks the database only when operations are to be performed and unlocks it immediately after:
 
 ```go
 // Example Get method of lazyKeybase
@@ -144,11 +144,13 @@ func (lkb lazyKeybase) Get(name string) (Info, error) {
 
 With the `lazyKeybase`, it is possible for the [command-line interface](../interfaces/cli.md) to create a new account while the [rest server](../interfaces/rest.md) is running. It is also possible to pipe multiple CLI commands. 
 
-The `lazyKeybase` is typically used from 
+### Addresses and PubKeys
 
-### Addresses
+`Addresses` and `PubKey`s are both public information that identify actors in the application. There are 3 main types of `Addresses`/`PubKeys` available by default in the Cosmos SDK:
 
-
+- Addresses and Keys for **accounts**, which identify users (e.g. the sender of a `message`). They are derived using the **`secp256k1`** curve. 
+- Addresses and Keys for **validator operators**, which identify the operators of validators. They are derived using the **`secp256k1`** curve. 
+- Addresses and Keys for **consensus nodes**, which identify the validator nodes participating in consensus. They are derived using the **`ed25519`** curve. 
 
 ### Signatures
 

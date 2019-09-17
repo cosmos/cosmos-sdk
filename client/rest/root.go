@@ -15,10 +15,20 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	_ "github.com/cosmos/cosmos-sdk/client/rest/docs"
+	"github.com/cosmos/cosmos-sdk/client/rest/docs"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+)
+
+// Swagger main API variables set at build-time. Applications may choose to
+// populate these values via ldflags or manually setting them.
+var (
+	SwaggerHost        string
+	SwaggerVersion     string
+	SwaggerBasePath    string
+	SwaggerTitle       string
+	SwaggerDescription string
 )
 
 // RestServer represents the Light Client Rest server
@@ -70,6 +80,17 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 	return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log, cfg)
 }
 
+func (rs *RestServer) registerSwaggerDocs() {
+	// set Swagger main API values from build variables
+	docs.SwaggerInfo.Host = SwaggerHost
+	docs.SwaggerInfo.Version = SwaggerVersion
+	docs.SwaggerInfo.BasePath = SwaggerBasePath
+	docs.SwaggerInfo.Title = SwaggerTitle
+	docs.SwaggerInfo.Description = SwaggerDescription
+
+	rs.Mux.PathPrefix("/swagger/").Handler(httpswagger.WrapHandler)
+}
+
 // ServeCommand will start the application REST service as a blocking process. It
 // takes a codec to create a RestServer object and a function to register all
 // necessary routes.
@@ -80,10 +101,11 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 
+			// mount client provided handlers
 			registerRoutesFn(rs)
 
-			// mount REST (Swagger) documentation
-			rs.Mux.PathPrefix("/swagger/").Handler(httpswagger.WrapHandler)
+			// mount pre-compiled REST (Swagger) documentation
+			rs.registerSwaggerDocs()
 
 			// Start the rest server and return error if one exists
 			err = rs.Start(

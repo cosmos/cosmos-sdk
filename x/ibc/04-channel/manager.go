@@ -269,7 +269,7 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.Packets.Set(ctx, obj.SeqSend.Incr(ctx), packet)
+	obj.Packets.Set(ctx, obj.SeqSend.Increment(ctx), packet)
 
 	return nil
 }
@@ -298,7 +298,7 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, portid, c
 
 	// XXX: increment should happen before verification, reflect on the spec
 	// TODO: packet should be custom marshalled
-	if !obj.counterparty.Packets.Value(obj.SeqRecv.Incr(ctx)).Is(ctx, packet) {
+	if !obj.counterparty.Packets.Value(obj.SeqRecv.Increment(ctx)).Is(ctx, packet) {
 		return errors.New("verification failed")
 	}
 

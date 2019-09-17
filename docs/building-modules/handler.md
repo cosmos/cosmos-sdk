@@ -66,6 +66,15 @@ These `events` are relayed back to the underlying consensus engine and can be us
 
 Finally, the `handler` function returns a [`sdk.Result`](https://github.com/tendermint/tendermint/blob/master/abci/types/result.go) which contains the aforementioned `events` and an optional `Data` field. 
 
+```go
+// Example handler result
+
+return sdk.Result{
+		Data:   GetProposalIDBytes(proposal.ProposalID),
+		Events: ctx.EventManager().Events(),
+	}
+```
+
 For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/handler.go) from the nameservice tutorial. 
 
 ## Next

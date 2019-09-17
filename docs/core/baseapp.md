@@ -217,8 +217,9 @@ Steps 2. and 3. are  performed by the [`anteHandler`](./accounts-fees-gas.md#ant
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
 - `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go#L101) for an example). 
-- `Tags ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account).
+- `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
+
 
 ### DeliverTx
 
@@ -241,7 +242,7 @@ During step 5., each read/write to the store increases the value of `GasConsumed
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
 - `GasUsed (int64)`: Amount of gas consumed by transaction. During `DeliverTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go#L101) for an example), and by adding gas each time a read/write to the store occurs. 
-- `Tags ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account).
+- `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
 ## RunTx, AnteHandler and RunMsgs

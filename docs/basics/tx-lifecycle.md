@@ -2,17 +2,17 @@
 
 ## Prerequisite Reading
 
-* [Anatomy of an SDK Application](./app-anatomy.md)
+- [Anatomy of an SDK Application](./app-anatomy.md)
 
 ## Synopsis
 
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/tx-msgs.md#transactions). The transaction will be referred to as `Tx`.
 
-1. [Creation](#creation)
-2. [Addition to Mempool](#addition-to-mempool)
-3. [Inclusion in a Block](#inclusion-in-a-block)
-4. [State Changes](#state-changes)
-5. [Consensus and Commit](#consensus-and-commit)
+- [Creation](#creation)
+- [Addition to Mempool](#addition-to-mempool)
+- [Inclusion in a Block](#inclusion-in-a-block)
+- [State Changes](#state-changes)
+- [Consensus and Commit](#consensus-and-commit)
 
 ## Creation
 

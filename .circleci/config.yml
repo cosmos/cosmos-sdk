@@ -167,7 +167,7 @@ jobs:
     steps:
       - make:
           target: update-swagger-docs
-          description: "Check if statik.go is up-to-date"
+          description: "Check if Swagger docs are up-to-date"
 
 workflows:
   version: 2

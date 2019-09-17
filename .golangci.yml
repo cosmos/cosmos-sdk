@@ -16,7 +16,6 @@ linters:
     - errcheck
     - scopelint
     - varcheck
-    - funlen
 
 issues:
   exclude-rules:

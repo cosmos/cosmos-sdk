@@ -56,6 +56,8 @@ func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPassw
 	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
+// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
+// Derive private key from the seed using the BIP44 params.
 func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {

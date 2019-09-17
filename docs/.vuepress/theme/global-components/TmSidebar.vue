@@ -75,11 +75,11 @@
       &:before
         content ''
         position absolute
-        top 0.55rem
+        top 0.25rem
         left 0
         height 1rem
         width 1rem
-        background url('/bullet-dash.svg') no-repeat top left
+        background url('/bullet-hex-blue.svg') no-repeat top left
 </style>
 
 <script>

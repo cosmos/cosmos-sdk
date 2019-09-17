@@ -31,7 +31,8 @@ func (v Boolean) Set(ctx Context, value bool) {
 	v.Value.Set(ctx, value)
 }
 
-func (v Boolean) Query(ctx CLIContext) (res bool, proof *Proof, err error) {
-	proof, err = v.Value.Query(ctx, &res)
+// Query() retrives state value and proof from a queryable reference
+func (v Boolean) Query(q ABCIQuerier) (res bool, proof *Proof, err error) {
+	proof, err = v.Value.Query(q, &res)
 	return
 }

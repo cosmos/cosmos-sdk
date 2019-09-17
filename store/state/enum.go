@@ -1,5 +1,7 @@
 package state
 
+import "errors"
+
 // Enum is a byte typed wrapper for Value.
 // x <-> []byte{x}
 type Enum struct {
@@ -23,7 +25,10 @@ func (v Enum) GetSafe(ctx Context) (res byte, err error) {
 	if bz == nil {
 		return res, ErrEmptyValue()
 	}
-	return bz[0], nil // TODO: check length
+	if len(bz) != 1 {
+		return res, ErrUnmarshal(errors.New("stored byte slice length is not 1"))
+	}
+	return bz[0], nil
 }
 
 // Set encodes and sets the byte argument to the state.
@@ -48,7 +53,8 @@ func (v Enum) Transit(ctx Context, from, to byte) bool {
 	return true
 }
 
-func (v Enum) Query(ctx CLIContext) (res byte, proof *Proof, err error) {
-	value, proof, err := v.Value.QueryRaw(ctx)
+// Query() retrives state value and proof from a queryable reference
+func (v Enum) Query(q ABCIQuerier) (res byte, proof *Proof, err error) {
+	value, proof, err := v.Value.QueryRaw(q)
 	return value[0], proof, err
 }

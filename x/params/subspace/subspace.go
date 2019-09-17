@@ -195,6 +195,8 @@ func (s Subspace) Update(ctx sdk.Context, key []byte, param []byte) error {
 	}
 
 	s.Set(ctx, key, dest)
+
+	// TODO: Remove; seems redundant as Set already does this.
 	tStore := s.transientStore(ctx)
 	tStore.Set(key, []byte{})
 

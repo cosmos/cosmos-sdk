@@ -251,7 +251,7 @@ paths:
         - in: query
           name: message.action
           type: string
-          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'"
+          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'. note that each module documents its own events. look for xx_events.md in the corresponding cosmos-sdk/docs/spec directory"
           x-example: "send"
         - in: query
           name: message.sender

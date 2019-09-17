@@ -3,7 +3,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: circleci/golang:1.12.7
+      - image: circleci/golang:1.13
   docs:
     docker:
       - image: tendermintdev/docker-website-deployment
@@ -35,7 +35,7 @@ commands:
             make << parameters.target >>
 
 jobs:
-  build_docs:
+  build-docs:
     executor: docs
     steps:
       - checkout
@@ -46,7 +46,7 @@ jobs:
           name: "Upload docs to S3"
           command: make sync-docs
 
-  setup_dependencies:
+  setup-dependencies:
     executor: golang
     steps:
       - checkout
@@ -74,42 +74,42 @@ jobs:
           paths:
             - ".git"
 
-  test_sim_nondeterminism:
+  test-sim-nondeterminism:
     executor: golang
     steps:
       - make:
-          target: test_sim_nondeterminism
+          target: test-sim-nondeterminism
           description: "Test individual module simulations"
 
-  test_sim_import_export:
+  test-sim-import-export:
     executor: golang
     steps:
       - make:
-          target: test_sim_import_export
+          target: test-sim-import-export
           description: "Test application import/export simulation"
 
-  test_sim_after_import:
+  test-sim-after-import:
     executor: golang
     steps:
       - make:
-          target: test_sim_after_import
+          target: test-sim-after-import
           description: "Test simulation after import"
 
-  test_sim_multi_seed_long:
+  test-sim-multi-seed-long:
     executor: golang
     steps:
       - make:
-          target: test_sim_multi_seed_long
+          target: test-sim-multi-seed-long
           description: "Test multi-seed simulation (long)"
 
-  test_sim_multi_seed_short:
+  test-sim-multi-seed-short:
     executor: golang
     steps:
       - make:
-          target: test_sim_multi_seed_short
+          target: test-sim-multi-seed-short
           description: "Test multi-seed simulation (short)"
 
-  test_cover:
+  test-cover:
     executor: golang
     parallelism: 4
     steps:
@@ -134,7 +134,7 @@ jobs:
       - store_artifacts:
           path: /tmp/logs
 
-  upload_coverage:
+  upload-coverage:
     executor: golang
     steps:
       - attach_workspace:
@@ -162,7 +162,7 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
-  check_statik:
+  update-swagger-docs:
     executor: golang
     steps:
       - make:
@@ -173,30 +173,30 @@ workflows:
   version: 2
   test-suite:
     jobs:
-      - check_statik:
+      - update-swagger-docs:
           requires:
-            - setup_dependencies
-      - setup_dependencies:
+            - setup-dependencies
+      - setup-dependencies:
           # This filter enables the job for tags
           filters:
             tags:
               only:
                 - /^v.*/
-      - test_sim_nondeterminism:
+      - test-sim-nondeterminism:
           requires:
-            - setup_dependencies
-      - test_sim_import_export:
+            - setup-dependencies
+      - test-sim-import-export:
           requires:
-            - setup_dependencies
-      - test_sim_after_import:
+            - setup-dependencies
+      - test-sim-after-import:
           requires:
-            - setup_dependencies
-      - test_sim_multi_seed_short:
+            - setup-dependencies
+      - test-sim-multi-seed-short:
           requires:
-            - setup_dependencies
-      - test_sim_multi_seed_long:
+            - setup-dependencies
+      - test-sim-multi-seed-long:
           requires:
-            - setup_dependencies
+            - setup-dependencies
           # These filters ensure that the long sim only runs during release
           filters:
             branches:
@@ -204,13 +204,13 @@ workflows:
             tags:
               only:
                 - /^v.*/
-      - test_cover:
+      - test-cover:
           requires:
-            - setup_dependencies
-      - upload_coverage:
+            - setup-dependencies
+      - upload-coverage:
           requires:
-            - test_cover
-      - build_docs:
+            - test-cover
+      - build-docs:
           context: docs-deployment-master
           filters:
             branches:
@@ -219,7 +219,7 @@ workflows:
             tags:
               ignore:
                 - /^v.*/
-      - build_docs:
+      - build-docs:
           context: docs-deployment-release
           filters:
             branches:

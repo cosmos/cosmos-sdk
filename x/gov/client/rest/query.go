@@ -35,7 +35,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Produce json
 // @Param type path string true "Type of param, deposit|tallying|voting"
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
 // @Failure 404 {object} rest.ErrorResponse "Returned if the type of parameter isn't found in store."
 // @Router /gov/parameters/{type} [get]
@@ -69,7 +69,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or height."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID isn't in the store."
 // @Router /gov/proposals/{proposalID} [get]
@@ -125,7 +125,7 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or height."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID isn't in the store."
 // @Router /gov/proposals/{proposalID}/deposits [get]
@@ -191,7 +191,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or height."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID isn't in the store."
 // @Router /gov/proposals/{proposalID}/proposer [get]
@@ -233,7 +233,7 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param depositor path string true "The address of the depositor."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or depositor."
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposalID is not found."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID or depositor isn't in the store."
@@ -333,7 +333,7 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param voter path string true "The address of the voter."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or v voter."
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposalID is not found."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID or voter isn't in the store."
@@ -434,7 +434,7 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or height."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID isn't in the store."
 // @Router /gov/proposals/{proposalID}/votes [get]
@@ -511,7 +511,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Param status query string false "filter proposals by proposal status: deposit_period|voting_period|passed|rejected."
 // @Param depositor query string false "filter proposals by depositor address."
 // @Param voter query string false "filter proposals by voter address."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid parameters."
 // @Failure 500 {object} rest.ErrorResponse "Returned if store query errors."
 // @Router /gov/proposals [get]
@@ -591,7 +591,7 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} types.ResponseWithHeight
+// @Success 200 {object} rest.ResponseWithHeight
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or height."
 // @Failure 500 {object} rest.ErrorResponse "Returned if the proposalID or depositor isn't in the store."
 // @Router /gov/proposals/{proposalID}/tally [get]

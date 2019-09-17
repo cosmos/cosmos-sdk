@@ -74,7 +74,6 @@ module.exports = {
           ["Basics", "basics"],
           ["SDK Core", "core"],
           ["About Modules", "modules"],
-          ["Using the SDK", "sdk"],
           ["Interfaces", "interfaces"]
         ])
       },
@@ -85,7 +84,6 @@ module.exports = {
           ["Основы", "basics"],
           ["SDK Core", "core"],
           ["Модули", "modules"],
-          ["Используем SDK", "sdk"],
           ["Интерфейсы", "interfaces"]
         ])
       },
@@ -96,7 +94,6 @@ module.exports = {
           ["기초", "basics"],
           ["SDK Core", "core"],
           ["모듈들", "modules"],
-          ["프로그램 사용", "sdk"],
           ["인터페이스", "interfaces"]
         ])
       },
@@ -107,7 +104,6 @@ module.exports = {
           ["基本", "basics"],
           ["SDK Core", "core"],
           ["模块", "modules"],
-          ["使用该程序", "sdk"],
           ["接口", "interfaces"]
         ])
       }

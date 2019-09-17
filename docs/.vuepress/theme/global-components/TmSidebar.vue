@@ -8,7 +8,7 @@
       .section(v-for="section in sidebar")
         router-link(:to="section.regularPath || ''" tag="div").section__title.link {{section.title}}
         .children
-          router-link(:to="link.regularPath" tag="div" v-for="link in section.children").link {{link.title}}
+          router-link(:to="link.regularPath" tag="div" v-for="link in section.children").link.link__child {{link.title}}
 </template>
 
 <style lang="stylus" scoped>
@@ -46,17 +46,40 @@
     &:before
       content ''
       position absolute
-      top 0.15rem
+      top 0.25rem
       left 0
       height 1rem
       width 1rem
-      background url('/circle.svg') no-repeat top left
+      background url('/bullet-hex-full.svg') no-repeat top left
+
+    &.router-link-active
+      &:before
+        content ''
+        position absolute
+        top 0.55rem
+        left 0
+        height 1rem
+        width 1rem
+        background url('/bullet-dash.svg') no-repeat top left
 
 .link
   margin-top 0.5rem
   margin-bottom 0.5rem
   cursor pointer
   padding-left 1.5rem
+
+  &__child
+    position relative
+
+    &.router-link-exact-active
+      &:before
+        content ''
+        position absolute
+        top 0.55rem
+        left 0
+        height 1rem
+        width 1rem
+        background url('/bullet-dash.svg') no-repeat top left
 </style>
 
 <script>

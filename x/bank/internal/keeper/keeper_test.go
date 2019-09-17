@@ -146,7 +146,7 @@ func TestSendKeeper(t *testing.T) {
 	// validate coins with invalid denoms or negative values cannot be sent
 	// NOTE: We must use the Coin literal as the constructor does not allow
 	// negative values.
-	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
+	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{Denom: "FOOCOIN", Amount: sdk.NewInt(-5)}})
 	require.Error(t, err)
 }
 

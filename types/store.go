@@ -14,15 +14,16 @@ type (
 
 // nolint - reexport
 type (
-	Store            = types.Store
-	Committer        = types.Committer
-	CommitStore      = types.CommitStore
-	Queryable        = types.Queryable
-	MultiStore       = types.MultiStore
-	CacheMultiStore  = types.CacheMultiStore
-	CommitMultiStore = types.CommitMultiStore
-	KVStore          = types.KVStore
-	Iterator         = types.Iterator
+	Store                     = types.Store
+	Committer                 = types.Committer
+	CommitStore               = types.CommitStore
+	Queryable                 = types.Queryable
+	MultiStore                = types.MultiStore
+	CacheMultiStore           = types.CacheMultiStore
+	CommitMultiStore          = types.CommitMultiStore
+	MultiStorePersistentCache = types.MultiStorePersistentCache
+	KVStore                   = types.KVStore
+	Iterator                  = types.Iterator
 )
 
 // StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport

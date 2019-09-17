@@ -45,7 +45,7 @@ func initChain(
 // TODO: split this monster function up
 func SimulateFromSeed(
 	tb testing.TB, w io.Writer, app *baseapp.BaseApp,
-	appStateFn AppStateFn, ops WeightedOperations, invariants sdk.Invariants,
+	appStateFn AppStateFn, ops WeightedOperations,
 	blackListedAccs map[string]bool, config Config,
 ) (stopEarly bool, exportedParams Params, err error) {
 
@@ -115,7 +115,7 @@ func SimulateFromSeed(
 	logWriter := NewLogWriter(testingMode)
 
 	blockSimulator := createBlockSimulator(
-		testingMode, tb, t, w, params, eventStats.Tally, invariants,
+		testingMode, tb, t, w, params, eventStats.Tally,
 		ops, operationQueue, timeOperationQueue, logWriter, config)
 
 	if !testingMode {
@@ -147,10 +147,6 @@ func SimulateFromSeed(
 		logWriter.AddEntry(BeginBlockEntry(int64(height)))
 		app.BeginBlock(request)
 
-		if testingMode {
-			assertAllInvariants(t, app, invariants, "BeginBlock", logWriter, config.AllInvariants)
-		}
-
 		ctx := app.NewContext(false, header)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
@@ -162,16 +158,9 @@ func SimulateFromSeed(
 			timeOperationQueue, int(header.Height), header.Time,
 			tb, r, app, ctx, accs, logWriter, eventStats.Tally, config.Lean)
 
-		if testingMode && config.OnOperation {
-			assertAllInvariants(t, app, invariants, "QueuedOperations", logWriter, config.AllInvariants)
-		}
-
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, header)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
-		if testingMode {
-			assertAllInvariants(t, app, invariants, "StandardOperations", logWriter, config.AllInvariants)
-		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
@@ -182,9 +171,6 @@ func SimulateFromSeed(
 		header.ProposerAddress = validators.randomProposer(r)
 		logWriter.AddEntry(EndBlockEntry(int64(height)))
 
-		if testingMode {
-			assertAllInvariants(t, app, invariants, "EndBlock", logWriter, config.AllInvariants)
-		}
 		if config.Commit {
 			app.Commit()
 		}
@@ -247,7 +233,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Writer, params Params,
-	event func(route, op, evResult string), invariants sdk.Invariants, ops WeightedOperations,
+	event func(route, op, evResult string), ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []FutureOperation,
 	logWriter LogWriter, config Config) blockSimFn {
 
@@ -287,9 +273,11 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			op, r2 := opAndR.op, opAndR.rand
 			opMsg, futureOps, err := op(r2, app, ctx, accounts)
 			opMsg.LogEvent(event)
+
 			if !config.Lean || opMsg.OK {
 				logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
+
 			if err != nil {
 				logWriter.PrintLogs()
 				tb.Fatalf("error on operation %d within block %d, %v",
@@ -297,17 +285,12 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, w io.Wr
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
-			if testingMode {
-				if config.OnOperation {
-					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
-						header.Height, config.NumBlocks, opCount, blocksize)
-					eventStr := fmt.Sprintf("operation: %v", opMsg.String())
-					assertAllInvariants(t, app, invariants, eventStr, logWriter, config.AllInvariants)
-				} else if opCount%50 == 0 {
-					fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
-						header.Height, config.NumBlocks, opCount, blocksize)
-				}
+
+			if testingMode && opCount%50 == 0 {
+				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
+					header.Height, config.NumBlocks, opCount, blocksize)
 			}
+
 			opCount++
 		}
 		return opCount

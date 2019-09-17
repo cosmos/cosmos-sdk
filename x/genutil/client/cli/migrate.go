@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
@@ -13,15 +15,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	extypes "github.com/cosmos/cosmos-sdk/x/genutil"
 	v036 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_36"
+	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
 )
 
+// Allow applications to extend and modify the migration process.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = extypes.MigrationMap{
 	"v0.36": v036.Migrate,
+	"v0.38": v038.Migrate,
 }
 
 const (
 	flagGenesisTime = "genesis-time"
-	flagChainId     = "chain-id"
+	flagChainID     = "chain-id"
 )
 
 func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
@@ -40,7 +47,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 			genDoc, err := types.GenesisDocFromFile(importGenesis)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
 			}
 
 			var initialState extypes.AppMap
@@ -59,20 +66,20 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 
 				err := t.UnmarshalText([]byte(genesisTime))
 				if err != nil {
-					return err
+					return errors.Wrap(err, "failed to unmarshal genesis time")
 				}
 
 				genDoc.GenesisTime = t
 			}
 
-			chainId := cmd.Flag(flagChainId).Value.String()
-			if chainId != "" {
-				genDoc.ChainID = chainId
+			chainID := cmd.Flag(flagChainID).Value.String()
+			if chainID != "" {
+				genDoc.ChainID = chainID
 			}
 
 			out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to marshal genesis doc")
 			}
 
 			fmt.Println(string(sdk.MustSortJSON(out)))
@@ -81,7 +88,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 	}
 
 	cmd.Flags().String(flagGenesisTime, "", "Override genesis_time with this flag")
-	cmd.Flags().String(flagChainId, "", "Override chain_id with this flag")
+	cmd.Flags().String(flagChainID, "", "Override chain_id with this flag")
 
 	return cmd
 }

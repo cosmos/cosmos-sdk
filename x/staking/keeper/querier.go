@@ -359,7 +359,7 @@ func delegationsToDelegationResponses(
 	ctx sdk.Context, k Keeper, delegations types.Delegations,
 ) (types.DelegationResponses, sdk.Error) {
 
-	resp := make(types.DelegationResponses, len(delegations), len(delegations))
+	resp := make(types.DelegationResponses, len(delegations))
 	for i, del := range delegations {
 		delResp, err := delegationToDelegationResponse(ctx, k, del)
 		if err != nil {
@@ -376,14 +376,14 @@ func redelegationsToRedelegationResponses(
 	ctx sdk.Context, k Keeper, redels types.Redelegations,
 ) (types.RedelegationResponses, sdk.Error) {
 
-	resp := make(types.RedelegationResponses, len(redels), len(redels))
+	resp := make(types.RedelegationResponses, len(redels))
 	for i, redel := range redels {
 		val, found := k.GetValidator(ctx, redel.ValidatorDstAddress)
 		if !found {
 			return nil, types.ErrNoValidatorFound(types.DefaultCodespace)
 		}
 
-		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries), len(redel.Entries))
+		entryResponses := make([]types.RedelegationEntryResponse, len(redel.Entries))
 		for j, entry := range redel.Entries {
 			entryResponses[j] = types.NewRedelegationEntryResponse(
 				entry.CreationHeight,

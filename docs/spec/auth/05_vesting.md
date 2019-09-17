@@ -27,7 +27,7 @@ This specification defines the vesting account implementation that is used by th
 For all vesting accounts, the owner of the vesting account is able to delegate and undelegate from validators, however they cannot transfer coins to another account until those coins are vested. This specification allows for three different kinds of vesting:
 * Delayed vesting, where all coins are vested once `T` is reached.
 * Continous vesting, where coins begin to vest at `T'` and vest linearly with respect to time until `T` is reached
-* Periodic vesting, where coins begin to vest at `T'` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable.
+* Periodic vesting, where coins begin to vest at `T'` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable. A periodic vesting account is distinguished from a continuous vesting account in that coins can be released in staggered tranches. For example, a periodic vesting account could be used for vesting arrangements where coins are relased quarterly, yearly, or over any other function of tokens over time.
 
 ## Note
 Vesting accounts can be initialized with some vesting and non-vesting coins. The non-vesting coins would be immediately transferable.
@@ -474,6 +474,82 @@ Same initial starting conditions as the simple example.
     ```
 
     Notice how we have an excess amount of `DV`.
+
+### Periodic Vesting
+A vesting account is created where 100 tokens will be released over 1 year, with 1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
+
+```json
+{
+  "vesting_periods": [
+    {
+      "period_length": 7884000,
+      "vesting_amount": [
+        {
+        "denom": "stake",
+        "amount": "25"
+      }
+    ]
+    },
+    {
+      "period_length": 7884000,
+      "vesting_amount": [
+        {
+        "denom": "stake",
+        "amount": "25"
+      }
+    ]
+    },
+    {
+      "period_length": 7884000,
+      "vesting_amount": [
+        {
+        "denom": "stake",
+        "amount": "25"
+      }
+    ]
+    },
+    {
+      "period_length": 7884000,
+      "vesting_amount": [
+        {
+        "denom": "stake",
+        "amount": "25"
+      }
+    ]
+    }
+  ]
+}
+```
+
+```
+OV = 100
+DF = 0
+DV = 0
+BC = 100
+V = 100
+V' = 0
+```
+
+1. Immediately receives 1 coin
+    ```
+    BC = 101
+    ```
+2. Vesting period 1 passes, 25 coins vest
+    ```
+    V = 75
+    V' = 25
+    ```
+3. During vesting period 2, 5 coins are transfered and 5 coins are delegated
+    ```
+    DV = 4
+    BC = 91
+    ```
+4. Vesting period 2 passes, 25 coins vest
+    ```
+    V = 50
+    V' = 50
+    ```
+
 
 ## Glossary
 

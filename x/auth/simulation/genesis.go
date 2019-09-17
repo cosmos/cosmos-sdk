@@ -91,7 +91,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 }
 
 // RandomGenesisAccounts returns randomly generated genesis accounts
-func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs []exported.GenesisAccount) {
+func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs exported.GenesisAccounts) {
 	for _, acc := range simState.Accounts {
 		coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))}
 		bacc := types.NewBaseAccountWithAddress(acc.Address)

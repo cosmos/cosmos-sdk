@@ -13,9 +13,7 @@ var (
 	NewPeriodicVestingAccount      = types.NewPeriodicVestingAccount
 	NewDelayedVestingAccountRaw    = types.NewDelayedVestingAccountRaw
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
-	NewGenesisState                = types.NewGenesisState
-	DefaultGenesisState            = types.DefaultGenesisState
-	ValidateGenesis                = types.DefaultGenesisState
+	RegisterCodec                  = types.RegisterCodec
 )
 
 type (
@@ -24,7 +22,6 @@ type (
 	ContinuousVestingAccount = types.ContinuousVestingAccount
 	PeriodicVestingAccount   = types.PeriodicVestingAccount
 	DelayedVestingAccount    = types.DelayedVestingAccount
-	GenesisState             = types.GenesisState
 	VestingPeriods           = types.VestingPeriods
 	VestingPeriod            = types.VestingPeriod
 )

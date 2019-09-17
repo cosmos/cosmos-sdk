@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,8 +28,6 @@ func init() {
 	authtypes.RegisterAccountTypeCodec(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount")
 }
 
-// Base Vesting Account
-
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
@@ -40,7 +37,9 @@ type BaseVestingAccount struct {
 	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
 	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
 
-	EndTime int64 `json:"end_time" yaml:"end_time"` // when the coins become unlocked
+	EndTime        int64 `json:"end_time" yaml:"end_time"` // when the coins become unlocked
+	StartTime      int64 `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+	VestingPeriods VestingPeriods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
@@ -56,29 +55,6 @@ func NewBaseVestingAccount(baseAccount *auth.BaseAccount, originalVesting sdk.Co
 	}
 }
 
-// String implements fmt.Stringer
-func (bva BaseVestingAccount) String() string {
-	var pubkey string
-
-	if bva.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(bva.PubKey)
-	}
-
-	return fmt.Sprintf(`Vesting Account:
-  Address:          %s
-  Pubkey:           %s
-  Coins:            %s
-  AccountNumber:    %d
-  Sequence:         %d
-  OriginalVesting:  %s
-  DelegatedFree:    %s
-  DelegatedVesting: %s
-  EndTime:          %d `,
-		bva.Address, pubkey, bva.Coins, bva.AccountNumber, bva.Sequence,
-		bva.OriginalVesting, bva.DelegatedFree, bva.DelegatedVesting, bva.EndTime,
-	)
-}
-
 // spendableCoins returns all the spendable coins for a vesting account given a
 // set of vesting coins.
 //
@@ -89,7 +65,6 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 	bc := bva.GetCoins()
 
 	for _, coin := range bc {
-		// zip/lineup all coins by their denomination to provide O(n) time
 		baseAmt := coin.Amount
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
@@ -115,8 +90,6 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 	bc := bva.GetCoins()
 
 	for _, coin := range amount {
-		// zip/lineup all coins by their denomination to provide O(n) time
-
 		baseAmt := bc.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
@@ -248,6 +221,8 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedFree    sdk.Coins
 		DelegatedVesting sdk.Coins
 		EndTime          int64
+		StartTime        int64
+		VestingPeriods   VestingPeriods
 	}{
 		Address:          bva.Address,
 		Coins:            bva.Coins,
@@ -258,6 +233,8 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
+		StartTime: bva.StartTime,
+		VestingPeriods: bva.VestingPeriods,
 	})
 	if err != nil {
 		return nil, err
@@ -281,9 +258,7 @@ type ContinuousVestingAccount struct {
 }
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
-func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
-	startTime int64) *ContinuousVestingAccount {
-
+func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
 	return &ContinuousVestingAccount{
 		BaseVestingAccount: bva,
 		StartTime:          startTime,
@@ -291,10 +266,7 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount,
 }
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
-func NewContinuousVestingAccount(
-	baseAcc *auth.BaseAccount, startTime, endTime int64,
-) *ContinuousVestingAccount {
-
+func NewContinuousVestingAccount(baseAcc *auth.BaseAccount, startTime, endTime int64) *ContinuousVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
@@ -305,30 +277,6 @@ func NewContinuousVestingAccount(
 		StartTime:          startTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
-}
-
-func (cva ContinuousVestingAccount) String() string {
-	var pubkey string
-
-	if cva.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(cva.PubKey)
-	}
-
-	return fmt.Sprintf(`Continuous Vesting Account:
-  Address:          %s
-  Pubkey:           %s
-  Coins:            %s
-  AccountNumber:    %d
-  Sequence:         %d
-  OriginalVesting:  %s
-  DelegatedFree:    %s
-  DelegatedVesting: %s
-  StartTime:        %d
-  EndTime:          %d `,
-		cva.Address, pubkey, cva.Coins, cva.AccountNumber, cva.Sequence,
-		cva.OriginalVesting, cva.DelegatedFree, cva.DelegatedVesting,
-		cva.StartTime, cva.EndTime,
-	)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -397,49 +345,6 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
-// MarshalYAML returns the YAML representation of an account.
-func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if cva.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address          sdk.AccAddress
-		Coins            sdk.Coins
-		PubKey           string
-		AccountNumber    uint64
-		Sequence         uint64
-		OriginalVesting  sdk.Coins
-		DelegatedFree    sdk.Coins
-		DelegatedVesting sdk.Coins
-		EndTime          int64
-		StartTime        int64
-	}{
-		Address:          cva.Address,
-		Coins:            cva.Coins,
-		PubKey:           pubkey,
-		AccountNumber:    cva.AccountNumber,
-		Sequence:         cva.Sequence,
-		OriginalVesting:  cva.OriginalVesting,
-		DelegatedFree:    cva.DelegatedFree,
-		DelegatedVesting: cva.DelegatedVesting,
-		EndTime:          cva.EndTime,
-		StartTime:        cva.StartTime,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bs), err
-}
-
 //-----------------------------------------------------------------------------
 // Periodic Vesting Account
 
@@ -454,8 +359,7 @@ type PeriodicVestingAccount struct {
 }
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
-func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount,
-	startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
 
 	cva := &ContinuousVestingAccount{
 		StartTime:          startTime,
@@ -468,8 +372,7 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount,
 }
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
-func NewPeriodicVestingAccount(
-	baseAcc *auth.BaseAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccount(baseAcc *auth.BaseAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
 
 	endTime := startTime
 	for _, p := range periods {
@@ -490,31 +393,6 @@ func NewPeriodicVestingAccount(
 		ContinuousVestingAccount: cva,
 		VestingPeriods:           periods,
 	}
-}
-
-func (pva PeriodicVestingAccount) String() string {
-	var pubkey string
-
-	if pva.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(pva.PubKey)
-	}
-
-	return fmt.Sprintf(`Periodic Vesting Account:
-  Address:          %s
-  Pubkey:           %s
-  Coins:            %s
-  AccountNumber:    %d
-  Sequence:         %d
-  OriginalVesting:  %s
-  DelegatedFree:    %s
-  DelegatedVesting: %s
-	StartTime:        %d
-	End Time: 				%d
-  VestingPeriods:          %s `,
-		pva.Address, pubkey, pva.Coins, pva.AccountNumber, pva.Sequence,
-		pva.OriginalVesting, pva.DelegatedFree, pva.DelegatedVesting,
-		pva.StartTime, pva.EndTime, pva.VestingPeriods,
-	)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -603,51 +481,6 @@ func (pva PeriodicVestingAccount) Validate() error {
 	}
 
 	return pva.BaseVestingAccount.Validate()
-}
-
-// MarshalYAML returns the YAML representation of an account.
-func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if pva.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(pva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address          sdk.AccAddress
-		Coins            sdk.Coins
-		PubKey           string
-		AccountNumber    uint64
-		Sequence         uint64
-		OriginalVesting  sdk.Coins
-		DelegatedFree    sdk.Coins
-		DelegatedVesting sdk.Coins
-		EndTime          int64
-		StartTime        int64
-		VestingPeriods   VestingPeriods
-	}{
-		Address:          pva.Address,
-		Coins:            pva.Coins,
-		PubKey:           pubkey,
-		AccountNumber:    pva.AccountNumber,
-		Sequence:         pva.Sequence,
-		OriginalVesting:  pva.OriginalVesting,
-		DelegatedFree:    pva.DelegatedFree,
-		DelegatedVesting: pva.DelegatedVesting,
-		EndTime:          pva.EndTime,
-		StartTime:        pva.StartTime,
-		VestingPeriods:   pva.VestingPeriods,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bs), err
 }
 
 //-----------------------------------------------------------------------------

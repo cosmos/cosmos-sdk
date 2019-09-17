@@ -43,21 +43,21 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 
 GOLANGCI_LINT = $(TOOLS_DESTDIR)/golangci-lint
-STATIK        = $(TOOLS_DESTDIR)/statik
+SWAG          = $(TOOLS_DESTDIR)/swag
 RUNSIM			  = $(TOOLS_DESTDIR)/runsim
 
 all: tools
 
-tools: statik runsim golangci-lint
+tools: swag runsim golangci-lint
 
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
 	bash $(mkfile_dir)/install-golangci-lint.sh $(TOOLS_DESTDIR) $(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_HASHSUM)
 
-statik: $(STATIK)
-$(STATIK):
-	@echo "Get statik"
-	@go get github.com/rakyll/statik
+swag: $(SWAG)
+$(SWAG):
+	@echo "Get swag"
+	@go get -u github.com/swaggo/swag/cmd/swag
 
 runsim: $(RUNSIM)
 $(RUNSIM):
@@ -65,7 +65,7 @@ $(RUNSIM):
 	@go get github.com/cosmos/tools/cmd/runsim
 
 tools-clean:
-	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
+	rm -f $(SWAG) $(GOLANGCI_LINT) $(RUNSIM)
 	rm -f tools-stamp
 
 .PHONY: all tools tools-clean

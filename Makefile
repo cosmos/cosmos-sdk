@@ -23,8 +23,8 @@ build: go.sum
 	@go build -mod=readonly ./...
 .PHONY: build
 
-update-swagger-docs: statik
-	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+update-swagger-docs: swag
+	$(BINDIR)/swag init -g client/rest/root.go --output client/rest/docs
 	@if [ -n "$(git status --porcelain)" ]; then \
         echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
         exit 1;\

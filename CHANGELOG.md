@@ -55,6 +55,8 @@ have this method perform a no-op.
   * Update gov keys to use big endian encoding instead of little endian
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
 deprecated and all components removed except the `legacy/` package.
+* (rest) [\#5038](https://github.com/cosmos/cosmos-sdk/pull/5038) RESTful Swagger documentation is
+now mounted under `/swagger/` instead of `/swagger-ui/`.
 
 ### Client Breaking Changes
 
@@ -78,6 +80,9 @@ and tx hash will be returned for specific Tendermint errors:
 
 ### Improvements
 
+* (rest) [\#5038](https://github.com/cosmos/cosmos-sdk/pull/5038) RESTful Swagger documentation is
+now handled automatically via handler annotations using the [Swag](https://github.com/swaggo/swag) library instead of a static
+configuration.
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.

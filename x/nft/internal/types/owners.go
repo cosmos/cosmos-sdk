@@ -202,19 +202,20 @@ func (sa SortedStringArray) Sort() SortedStringArray {
 }
 
 // Sort and Findable interface for IDCollections
-func (iDCollections IDCollections) ElAtIndex(index int) string { return iDCollections[index].Denom }
-func (iDCollections IDCollections) Len() int                   { return len(iDCollections) }
-func (iDCollections IDCollections) Less(i, j int) bool {
-	return strings.Compare(iDCollections[i].Denom, iDCollections[j].Denom) == -1
+
+func (idCollections IDCollections) ElAtIndex(index int) string { return idCollections[index].Denom }
+func (idCollections IDCollections) Len() int                   { return len(idCollections) }
+func (idCollections IDCollections) Less(i, j int) bool {
+	return strings.Compare(idCollections[i].Denom, idCollections[j].Denom) == -1
 }
-func (iDCollections IDCollections) Swap(i, j int) {
-	iDCollections[i].Denom, iDCollections[j].Denom = iDCollections[j].Denom, iDCollections[i].Denom
+func (idCollections IDCollections) Swap(i, j int) {
+	idCollections[i].Denom, idCollections[j].Denom = idCollections[j].Denom, idCollections[i].Denom
 }
 
 var _ sort.Interface = IDCollections{}
 
 // Sort is a helper function to sort the set of strings in place
-func (iDCollections IDCollections) Sort() IDCollections {
-	sort.Sort(iDCollections)
-	return iDCollections
+func (idCollections IDCollections) Sort() IDCollections {
+	sort.Sort(idCollections)
+	return idCollections
 }

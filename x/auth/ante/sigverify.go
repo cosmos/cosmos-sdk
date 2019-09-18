@@ -312,7 +312,7 @@ func processSig(
 ) (updatedAcc exported.Account, err error) {
 
 	pubKey := acc.GetPubKey()
-	if !simulate && &pubKey == nil {
+	if !simulate && pubKey == nil {
 		return nil, errs.Wrap(errs.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 

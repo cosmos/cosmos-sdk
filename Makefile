@@ -24,13 +24,7 @@ build: go.sum
 .PHONY: build
 
 update-swagger-docs: swag
-	$(BINDIR)/swag init -g client/rest/root.go --output client/rest/docs
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
+	@scripts/swag.sh $(BINDIR)/swag
 .PHONY: update-swagger-docs
 
 mocks: $(MOCKS_DIR)

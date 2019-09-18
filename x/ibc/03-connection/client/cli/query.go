@@ -13,15 +13,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
 const (
 	FlagProve = "prove"
 )
-
 
 func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.Object {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
@@ -45,15 +44,17 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 func QueryConnection(ctx context.CLIContext, obj connection.Object, prove bool) (res utils.JSONObject, err error) {
-	conn, connp, err := obj.ConnectionCLI(ctx)
+	q := state.NewCLIQuerier(ctx)
+
+	conn, connp, err := obj.ConnectionCLI(q)
 	if err != nil {
 		return
 	}
-	avail, availp, err := obj.AvailableCLI(ctx)
+	avail, availp, err := obj.AvailableCLI(q)
 	if err != nil {
 		return
 	}
-	kind, kindp, err := obj.KindCLI(ctx)
+	kind, kindp, err := obj.KindCLI(q)
 	if err != nil {
 		return
 	}

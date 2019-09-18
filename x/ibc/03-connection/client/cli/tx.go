@@ -14,9 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 /*
@@ -31,11 +31,11 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeObject, error) {
+func handshake(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeObject, error) {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewHandshaker(connection.NewManager(base, climan))
-	return man.CLIQuery(ctx, connid)
+	return man.CLIQuery(q, connid)
 }
 
 func lastheight(ctx context.CLIContext) (uint64, error) {
@@ -64,11 +64,13 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
 				WithFrom(viper.GetString(FlagFrom1))
+			q1 := state.NewCLIQuerier(ctx1)
 
 			ctx2 := context.NewCLIContext().
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
 				WithFrom(viper.GetString(FlagFrom2))
+			q2 := state.NewCLIQuerier(ctx2)
 
 			conn1id := args[0]
 			conn1bz, err := ioutil.ReadFile(args[1])
@@ -80,7 +82,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj1, err := handshake(ctx1, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			obj1, err := handshake(q1, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
 			if err != nil {
 				return err
 			}
@@ -95,7 +97,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			obj2, err := handshake(ctx2, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
+			obj2, err := handshake(q2, cdc, storeKey, ibc.VersionPrefix(ibc.Version), conn1id)
 			if err != nil {
 				return err
 			}
@@ -125,19 +127,19 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err := obj1.ConnectionCLI(ctx1)
+			_, pconn, err := obj1.ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
-			_, pstate, err := obj1.StateCLI(ctx1)
+			_, pstate, err := obj1.StateCLI(q1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err := obj1.NextTimeoutCLI(ctx1)
+			_, ptimeout, err := obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}
-			_, pcounter, err := obj1.CounterpartyClientCLI(ctx1)
+			_, pcounter, err := obj1.CounterpartyClientCLI(q1)
 			if err != nil {
 				return err
 			}
@@ -163,19 +165,19 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 			nextTimeout = height + 1000
-			_, pconn, err = obj2.ConnectionCLI(ctx2)
+			_, pconn, err = obj2.ConnectionCLI(q2)
 			if err != nil {
 				return err
 			}
-			_, pstate, err = obj2.StateCLI(ctx2)
+			_, pstate, err = obj2.StateCLI(q2)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err = obj2.NextTimeoutCLI(ctx2)
+			_, ptimeout, err = obj2.NextTimeoutCLI(q2)
 			if err != nil {
 				return err
 			}
-			_, pcounter, err = obj2.CounterpartyClientCLI(ctx2)
+			_, pcounter, err = obj2.CounterpartyClientCLI(q2)
 			if err != nil {
 				return err
 			}
@@ -194,11 +196,11 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 			}
 
 			timeout = nextTimeout
-			_, pstate, err = obj1.StateCLI(ctx1)
+			_, pstate, err = obj1.StateCLI(q1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err = obj1.NextTimeoutCLI(ctx1)
+			_, ptimeout, err = obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}

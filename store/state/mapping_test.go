@@ -88,7 +88,7 @@ func (m indexerT) RandomKey() interface{} {
 }
 
 func TestMapping(t *testing.T) {
-	ctx := defaultComponents()
+	ctx, _ := defaultComponents()
 	table := []mapping{newMapping(), newIndexer(Dec), newIndexer(Hex), newIndexer(Bin)}
 
 	for _, m := range table {

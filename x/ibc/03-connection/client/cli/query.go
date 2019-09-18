@@ -44,15 +44,17 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 func QueryConnection(ctx context.CLIContext, obj connection.Object, prove bool) (res utils.JSONObject, err error) {
-	conn, connp, err := obj.ConnectionCLI(ctx)
+	q := state.NewCLIQuerier(ctx)
+
+	conn, connp, err := obj.ConnectionCLI(q)
 	if err != nil {
 		return
 	}
-	avail, availp, err := obj.AvailableCLI(ctx)
+	avail, availp, err := obj.AvailableCLI(q)
 	if err != nil {
 		return
 	}
-	kind, kindp, err := obj.KindCLI(ctx)
+	kind, kindp, err := obj.KindCLI(q)
 	if err != nil {
 		return
 	}

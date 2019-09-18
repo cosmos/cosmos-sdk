@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,38 +11,42 @@ import (
 // IDCollection defines a set of nft ids that belong to a specific
 // collection
 type IDCollection struct {
-	Denom string   `json:"denom" yaml:"denom"`
-	IDs   []string `json:"ids" yaml:"ids"`
+	Denom string            `json:"denom" yaml:"denom"`
+	IDs   SortedStringArray `json:"ids" yaml:"ids"`
 }
+
+// SortedStringArray is an array of strings whose sole purpose is to help with find
+type SortedStringArray []string
+
+// String is the string representation
+func (sa SortedStringArray) String() string { return strings.Join(sa[:], ",") }
 
 // NewIDCollection creates a new IDCollection instance
 func NewIDCollection(denom string, ids []string) IDCollection {
 	return IDCollection{
 		Denom: strings.TrimSpace(denom),
-		IDs:   ids,
+		IDs:   SortedStringArray(ids).Sort(),
 	}
 }
 
 // Exists determines whether an ID is in the IDCollection
 func (idCollection IDCollection) Exists(id string) (exists bool) {
-	// TODO: improve performance
-	for _, _id := range idCollection.IDs {
-		if _id == id {
-			return true
-		}
+	index := idCollection.IDs.find(id)
+	if index == -1 {
+		return false
 	}
-	return false
+	return true
 }
 
 // AddID adds an ID to the idCollection
 func (idCollection IDCollection) AddID(id string) IDCollection {
-	idCollection.IDs = append(idCollection.IDs, id)
+	idCollection.IDs = append(idCollection.IDs, id).Sort()
 	return idCollection
 }
 
 // DeleteID deletes an ID from an ID Collection
 func (idCollection IDCollection) DeleteID(id string) (IDCollection, sdk.Error) {
-	index := stringArray(idCollection.IDs).find(id)
+	index := idCollection.IDs.find(id)
 	if index == -1 {
 		return idCollection, ErrUnknownNFT(DefaultCodespace,
 			fmt.Sprintf("ID #%s doesn't exist on ID Collection %s", id, idCollection.Denom),
@@ -86,22 +91,15 @@ func (idCollections IDCollections) String() string {
 	return out[:len(out)-1]
 }
 
-func (idCollections IDCollections) find(el string) int {
-	if len(idCollections) == 0 {
-		return -1
-	}
+func (idCollections IDCollections) Add(idCollection2 IDCollection) IDCollections {
+	return append(idCollections, idCollection2).Sort()
+}
 
-	midIdx := len(idCollections) / 2
-	midIDCollection := idCollections[midIdx]
-
-	switch {
-	case strings.Compare(el, midIDCollection.Denom) == -1:
-		return idCollections[:midIdx].find(el)
-	case midIDCollection.Denom == el:
-		return midIdx
-	default:
-		return idCollections[midIdx+1:].find(el)
-	}
+func (idCollections IDCollections) Append(idCollections2 IDCollections) IDCollections {
+	return append(idCollections, idCollections2...).Sort()
+}
+func (idCollections IDCollections) find(denom string) int {
+	return FindUtil(idCollections, denom)
 }
 
 // Owner of non fungible tokens
@@ -179,24 +177,44 @@ func (owner Owner) String() string {
 		owner.IDCollections.String(),
 	)
 }
+func (sa SortedStringArray) find(el string) (idx int) {
+	return FindUtil(sa, el)
+}
 
-// stringArray is an array of strings whose sole purpose is to help with find
-type stringArray []string
+//-----------------------------------------------------------------------------
+// Sort and Findable interface for SortedStringArray
 
-func (sa stringArray) find(el string) (idx int) {
-	if len(sa) == 0 {
-		return -1
-	}
+func (sa SortedStringArray) ElAtIndex(index int) string { return sa[index] }
+func (sa SortedStringArray) Len() int                   { return len(sa) }
+func (sa SortedStringArray) Less(i, j int) bool {
+	return strings.Compare(sa[i], sa[j]) == -1
+}
+func (sa SortedStringArray) Swap(i, j int) {
+	sa[i], sa[j] = sa[j], sa[i]
+}
 
-	midIdx := len(sa) / 2
-	stringArrayEl := sa[midIdx]
+var _ sort.Interface = SortedStringArray{}
 
-	switch {
-	case strings.Compare(el, stringArrayEl) == -1:
-		return sa[:midIdx].find(el)
-	case stringArrayEl == el:
-		return midIdx
-	default:
-		return sa[midIdx+1:].find(el)
-	}
+// Sort is a helper function to sort the set of strings in place
+func (sa SortedStringArray) Sort() SortedStringArray {
+	sort.Sort(sa)
+	return sa
+}
+
+// Sort and Findable interface for IDCollections
+func (iDCollections IDCollections) ElAtIndex(index int) string { return iDCollections[index].Denom }
+func (iDCollections IDCollections) Len() int                   { return len(iDCollections) }
+func (iDCollections IDCollections) Less(i, j int) bool {
+	return strings.Compare(iDCollections[i].Denom, iDCollections[j].Denom) == -1
+}
+func (iDCollections IDCollections) Swap(i, j int) {
+	iDCollections[i].Denom, iDCollections[j].Denom = iDCollections[j].Denom, iDCollections[i].Denom
+}
+
+var _ sort.Interface = IDCollections{}
+
+// Sort is a helper function to sort the set of strings in place
+func (iDCollections IDCollections) Sort() IDCollections {
+	sort.Sort(iDCollections)
+	return iDCollections
 }

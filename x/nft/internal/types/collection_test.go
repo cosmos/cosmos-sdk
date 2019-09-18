@@ -173,7 +173,7 @@ func TestNewCollections(t *testing.T) {
 
 }
 
-func TestCollectionsAddMethod(t *testing.T) {
+func TestCollectionsAppendMethod(t *testing.T) {
 
 	testNFT := NewBaseNFT(id, address, tokenURI)
 	nfts := NewNFTs(&testNFT)
@@ -186,7 +186,7 @@ func TestCollectionsAddMethod(t *testing.T) {
 	collection2 := NewCollection(denom2, nfts2)
 	collections2 := NewCollections(collection2)
 
-	collections = collections.Add(collections2)
+	collections = collections.Append(collections2)
 	require.Equal(t, len(collections), 2)
 
 }

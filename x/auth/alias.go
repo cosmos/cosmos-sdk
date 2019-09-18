@@ -48,9 +48,11 @@ var (
 	NewDelayedVestingAccount          = types.NewDelayedVestingAccount
 	NewAccountRetriever               = types.NewAccountRetriever
 	RegisterCodec                     = types.RegisterCodec
+	RegisterAccountTypeCodec          = types.RegisterAccountTypeCodec
 	NewGenesisState                   = types.NewGenesisState
 	DefaultGenesisState               = types.DefaultGenesisState
 	ValidateGenesis                   = types.ValidateGenesis
+	SanitizeGenesisAccounts           = types.SanitizeGenesisAccounts
 	AddressStoreKey                   = types.AddressStoreKey
 	NewParams                         = types.NewParams
 	ParamKeyTable                     = types.ParamKeyTable
@@ -65,6 +67,7 @@ var (
 	NewTxBuilder                      = types.NewTxBuilder
 	NewTxBuilderFromCLI               = types.NewTxBuilderFromCLI
 	MakeSignature                     = types.MakeSignature
+	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc
@@ -97,4 +100,5 @@ type (
 	StdSignDoc                       = types.StdSignDoc
 	StdSignature                     = types.StdSignature
 	TxBuilder                        = types.TxBuilder
+	GenesisAccountIterator           = types.GenesisAccountIterator
 )

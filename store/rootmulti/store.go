@@ -92,14 +92,25 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// Implements CommitMultiStore.
+// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.stores[key]
+	return rs.GetCommitKVStore(key)
 }
 
-// Implements CommitMultiStore.
+// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	return rs.stores[key].(types.CommitKVStore)
+	// If the Store has an inter-block cache, first attempt to lookup and unwrap
+	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
+	// the main mapping of CommitKVStores.
+	if rs.interBlockCache != nil {
+		if store := rs.interBlockCache.Unwrap(key); store != nil {
+			return store
+		}
+	}
+
+	return rs.stores[key]
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
@@ -323,11 +334,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
-			if rs.interBlockCache != nil {
-				if ckvs := rs.interBlockCache.Unwrap(key); ckvs != nil {
-					store = ckvs
-				}
-			}
+			store = rs.GetCommitKVStore(key)
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
@@ -346,20 +353,27 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
-// Implements MultiStore.
-// If the store does not exist, panics.
+// GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
+// not exist, it will panic. If the Store is wrapped in an inter-block cache, it
+// will be unwrapped prior to being returned.
+//
+// TODO: This isn't used directly upstream. Consider returning the Store as-is
+// instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.stores[key]
+	store := rs.GetCommitKVStore(key)
 	if store == nil {
-		panic("Could not load store " + key.String())
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
+
 	return store
 }
 
-// GetKVStore implements the MultiStore interface. If tracing is enabled on the
-// Store, a wrapped TraceKVStore will be returned with the given
-// tracer, otherwise, the original KVStore will be returned.
-// If the store does not exist, panics.
+// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
+// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
+// store's tracer, otherwise, the original KVStore will be returned.
+//
+// NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
+// set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := rs.stores[key].(types.KVStore)
 
@@ -370,19 +384,17 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-// Implements MultiStore
-
-// getStoreByName will first convert the original name to
-// a special key, before looking up the CommitStore.
-// This is not exposed to the extensions (which will need the
-// StoreKey), but is useful in main, and particularly app.Query,
-// in order to convert human strings into CommitStores.
+// getStoreByName performs a lookup of a StoreKey given a store name typically
+// provided in a path. The StoreKey is then used to perform a lookup and return
+// a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
+// prior to being returned. If the StoreKey does not exist, nil is returned.
 func (rs *Store) getStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
 	}
-	return rs.stores[key]
+
+	return rs.GetCommitKVStore(key)
 }
 
 //---------------------- Query ------------------
@@ -407,7 +419,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
+		msg := fmt.Sprintf("store %s (type %T) doesn't support queries", storeName, store)
 		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 

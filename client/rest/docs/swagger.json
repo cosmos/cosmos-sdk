@@ -10,6 +10,632 @@
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/gov/parameters/{type}": {
+            "get": {
+                "description": "Query either (deposit | tallying | voting) parameters of the governance module.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query governance parameters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Type of param (deposit | tallying | voting)",
+                        "name": "type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Returned if the type of parameter doesn't exist",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals": {
+            "get": {
+                "description": "Query the list of governance proposals with optional filters for\nproposal status, depositor, and/or voter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query for the list of governance proposals",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter proposals by proposal status (deposit_period | voting_period | passed | rejected)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter proposals by depositor address",
+                        "name": "depositor",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter proposals by voter address",
+                        "name": "voter",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid parameters",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Generate a proposal transaction that is ready for signing.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Generate an unsigned proposal transaction",
+                "parameters": [
+                    {
+                        "description": "The data required to construct a proposal message. The proposal_type can be text | parameter_change",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.PostProposalReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/types.StdTx"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}": {
+            "get": {
+                "description": "Query an individual governance proposal by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/deposits": {
+            "get": {
+                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's deposits",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Generate a deposit transaction that is ready for signing.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Generate an unsigned deposit transaction",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal to deposit to",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The data required to construct a deposit message",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.DepositReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/types.StdTx"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/deposits/{depositor}": {
+            "get": {
+                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query a deposit for a passed proposal, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's individual deposit",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The address of the depositor",
+                        "name": "depositor",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposalID or depositor",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Returned if the proposal is not found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/proposer": {
+            "get": {
+                "description": "Query an individual governance proposal's proposer.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's proposer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/tally": {
+            "get": {
+                "description": "Query an individual governance proposal's vote tally.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's individual tally",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/votes": {
+            "get": {
+                "description": "Query an individual governance proposal's votes.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's votes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or height",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Generate a vote transaction that is ready for signing.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Generate an unsigned vote transaction",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal to vote for",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The data required to construct a vote message",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.VoteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/types.StdTx"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/gov/proposals/{proposalID}/votes/{voter}": {
+            "get": {
+                "description": "Query an individual governance proposal's vote.\nNOTE: In order to query votes for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "governance"
+                ],
+                "summary": "Query a governance proposal's individual vote",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the governance proposal",
+                        "name": "proposalID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The address of the voter",
+                        "name": "voter",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid proposal ID or voter address",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Returned if the proposal is not found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the store query fails",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/txs": {
             "post": {
                 "description": "Broadcast a signed transaction with the broadcasting mode. The\nmode must either be sync, async, or block. The use of block mode\nis not advised. The sync mode will broadcast and wait for a\nCheckTx response, whereas async mode will broadcast and return\nimmediately.",
@@ -62,6 +688,41 @@
         }
     },
     "definitions": {
+        "rest.BaseReq": {
+            "type": "object",
+            "properties": {
+                "account_number": {
+                    "type": "integer"
+                },
+                "chain_id": {
+                    "type": "string"
+                },
+                "fees": {
+                    "type": "string"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "gas": {
+                    "type": "string"
+                },
+                "gas_adjustment": {
+                    "type": "string"
+                },
+                "gas_prices": {
+                    "type": "string"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "sequence": {
+                    "type": "integer"
+                },
+                "simulate": {
+                    "type": "boolean"
+                }
+            }
+        },
         "rest.BroadcastReq": {
             "type": "object",
             "properties": {
@@ -74,6 +735,23 @@
                 }
             }
         },
+        "rest.DepositReq": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Coins to add to the proposal's deposit",
+                    "type": "string"
+                },
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "depositor": {
+                    "description": "Address of the depositor",
+                    "type": "string"
+                }
+            }
+        },
         "rest.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -81,6 +759,63 @@
                     "type": "integer"
                 },
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.PostProposalReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "description": {
+                    "description": "Description of the proposal",
+                    "type": "string"
+                },
+                "initial_deposit": {
+                    "description": "Coins to add to the proposal's deposit",
+                    "type": "string"
+                },
+                "proposal_type": {
+                    "description": "Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}",
+                    "type": "string"
+                },
+                "proposer": {
+                    "description": "Address of the proposer",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Title of the proposal",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.ResponseWithHeight": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.VoteReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "option": {
+                    "description": "option from OptionSet chosen by the voter",
+                    "type": "string"
+                },
+                "voter": {
+                    "description": "address of the voter",
                     "type": "string"
                 }
             }

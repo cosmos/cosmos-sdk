@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -45,13 +45,17 @@ func Setup(isCheckTx bool) *SimApp {
 
 // SetupWithGenesisAccounts initializes a new SimApp with the passed in
 // genesis accounts.
-func SetupWithGenesisAccounts(genAccs genaccounts.GenesisAccounts) *SimApp {
+func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
-	genesisState = genaccounts.SetGenesisStateInAppState(app.Codec(), genesisState, genaccounts.GenesisState(genAccs))
+
+	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
+	genesisStateBz := app.cdc.MustMarshalJSON(authGenesis)
+	genesisState[auth.ModuleName] = genesisStateBz
+
 	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 	if err != nil {
 		panic(err)

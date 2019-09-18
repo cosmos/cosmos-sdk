@@ -1,5 +1,9 @@
 package keys
 
+import (
+	"github.com/tendermint/tendermint/crypto"
+)
+
 // used for outputting keys.Info over REST
 
 // AddNewKey request a new key
@@ -53,3 +57,9 @@ type DeleteKeyReq struct {
 
 // NewDeleteKeyReq constructs a new DeleteKeyReq structure.
 func NewDeleteKeyReq(password string) DeleteKeyReq { return DeleteKeyReq{Password: password} }
+
+type signedText struct {
+	Text string        `json:"text"`
+	Pub  crypto.PubKey `json:"pub"`
+	Sig  []byte        `json:"sig"`
+}

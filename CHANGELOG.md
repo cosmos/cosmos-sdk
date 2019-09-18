@@ -76,6 +76,8 @@ and tx hash will be returned for specific Tendermint errors:
   * `CodeMempoolIsFull`
   * `CodeTxTooLarge`
 * [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode transactions.
+* (cli)[\#4581](https://github.com/cosmos/cosmos-sdk/issues/4581) Add `keys sign` and `keys verify` commands to respectively sign
+and verify arbitrary plain text with private keys.
 
 ### Improvements
 

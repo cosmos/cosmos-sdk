@@ -48,11 +48,12 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
+			q := state.NewCLIQuerier(ctx)
 			mapp := mapping(cdc, storeKey, ibc.Version)
 			man := client.NewManager(mapp)
 			id := args[0]
 
-			state, _, err := man.Object(id).ConsensusStateCLI(ctx)
+			state, _, err := man.Object(id).ConsensusStateCLI(q)
 			if err != nil {
 				return err
 			}

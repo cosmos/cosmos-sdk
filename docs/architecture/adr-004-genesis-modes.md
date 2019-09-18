@@ -49,7 +49,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper types.SupplyKeeper, dat
 
 This kind of business logic in `InitGenesis` is not desirable because it modifies
 genesis state without explicitly doing so and as a result can lead to bugs, irregularities,
-and a confusing UX if the user is not aware of implicit modifications.
+and a confusing UX if the user is not aware of these implicit modifications.
 
 ## Decision
 

@@ -18,14 +18,14 @@ func FindUtil(group Findable, el string) int {
 	median := 0
 	for low <= high {
 		median = (low + high) / 2
-		compare := strings.Compare(group.ElAtIndex(median), el)
-		if compare == 0 {
+		switch compare := strings.Compare(group.ElAtIndex(median), el); {
+		case compare == 0:
 			// if sa[median] == el
 			return median
-		} else if compare == -1 {
+		case compare == -1:
 			// if sa[median] < el
 			low = median + 1
-		} else {
+		default:
 			// if sa[median] > el
 			high = median - 1
 		}

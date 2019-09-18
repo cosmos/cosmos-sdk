@@ -6,17 +6,50 @@
 
 ## Context
 
-In the SDK, providing an existing `genesis.json` to initialize the app will populate
-existing fields even if they were accidentally left out (_i.e_ undefined or with
-empty/zero value). This can be problematic because the application should only be
-initialized with all the genesis fields already pre-filled.
+Each module that implements the `AppModuleGenesis` interface is required to fulfill
+the `InitGenesis` contract. Typically, the business logic for any module's `InitGenesis`
+implementation revolves around setting values and parameters provided to that module
+from a genesis application state.
 
-The values that are currently being populated are either calculated by iterating
-the state or set to a default.
+Example from `x/auth`:
 
-A recurring case of this problem is to check if a balance is empty and initialize
-it if not (by iterating the state). This affects mostly the total [`Supply`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/supply/genesis.go#L14-L24) and
-[`ModuleAccounts`](https://github.com/cosmos/cosmos-sdk/blob/13e5e18d77e6010a4566ce187f18207669345419/x/gov/genesis.go#L44-L50) within each module.
+```go
+func InitGenesis(ctx sdk.Context, ak AccountKeeper, data GenesisState) {
+  ak.SetParams(ctx, data.Params)
+  data.Accounts = SanitizeGenesisAccounts(data.Accounts)
+
+  for _, a := range data.Accounts {
+    acc := ak.NewAccount(ctx, a)
+    ak.SetAccount(ctx, acc)
+  }
+}
+```
+
+However, some modules, in addition to setting parameters and values from genesis state,
+also _modify_ the genesis state implicitly when certain values are not provided.
+At the time of this ADR's draft, this only happens when module accounts are not
+provided in the genesis application state.
+
+Example from `x/gov`:
+
+```go
+func InitGenesis(ctx sdk.Context, k Keeper, supplyKeeper types.SupplyKeeper, data GenesisState) {
+  // ...
+
+  // add coins if not provided on genesis
+  if moduleAcc.GetCoins().IsZero() {
+    if err := moduleAcc.SetCoins(totalDeposits); err != nil {
+      panic(err)
+    }
+  
+    supplyKeeper.SetModuleAccount(ctx, moduleAcc)
+  }
+}
+```
+
+This kind of business logic in `InitGenesis` is not desirable because it modifies
+genesis state without explicitly doing so and as a result can lead to bugs, irregularities,
+and a confusing UX if the user is not aware of implicit modifications.
 
 ## Decision
 

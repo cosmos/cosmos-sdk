@@ -76,16 +76,14 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(0000)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContext().
+			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode1)).
-				WithFrom(viper.GetString(FlagFrom1))
+				WithNodeURI(viper.GetString(FlagNode1))
 			q1 := state.NewCLIQuerier(ctx1)
 
-			ctx2 := context.NewCLIContext().
+			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode2)).
-				WithFrom(viper.GetString(FlagFrom2))
+				WithNodeURI(viper.GetString(FlagNode2))
 			q2 := state.NewCLIQuerier(ctx2)
 
 			fmt.Println(3333)

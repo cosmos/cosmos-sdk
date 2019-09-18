@@ -107,6 +107,18 @@ func (tx StdTx) GetMemo() string { return tx.Memo }
 // .Empty().
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 
+// Gas returns the Gas in StdFee
+func (tx StdTx) Gas() uint64 { return tx.Fee.Gas }
+
+// FeeCoins returns the FeeAmount in StdFee
+func (tx StdTx) FeeCoins() sdk.Coins { return tx.Fee.Amount }
+
+// FeePayer returns the address that is responsible for paying fee
+// StdTx returns the first signer as the fee payer
+func (tx StdTx) FeePayer() sdk.AccAddress {
+	return tx.GetMsgs()[0].GetSigners()[0]
+}
+
 //__________________________________________________________
 
 // StdFee includes the amount of coins paid in fees and the maximum

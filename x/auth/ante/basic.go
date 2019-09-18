@@ -6,7 +6,6 @@ import (
 	errs "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error
@@ -25,8 +24,15 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	return next(ctx, tx, simulate)
 }
 
+// Tx must have GetMemo() method to use ValidateMemoDecorator
+type TxWithMemo interface {
+	sdk.Tx
+	GetMemo() string
+}
+
 // ValidateMemoDecorator will validate memo given the parameters passed in
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
+// CONTRACT: Tx must implement TxWithMemo interface
 type ValidateMemoDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -38,14 +44,14 @@ func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
 }
 
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	stdTx, ok := tx.(types.StdTx)
+	memoTx, ok := tx.(TxWithMemo)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must have a GetMemo method")
 	}
 
 	params := vmd.ak.GetParams(ctx)
 
-	memoLength := len(stdTx.GetMemo())
+	memoLength := len(memoTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
 		return ctx, err.Wrapf(err.ErrMemoTooLarge,
 			"maximum number of characters is %d but received %d characters",

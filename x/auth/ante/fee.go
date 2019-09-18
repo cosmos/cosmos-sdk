@@ -11,10 +11,19 @@ import (
 	errs "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Tx must implement FeeTx interface to use the FeeDecorators
+type FeeTx interface {
+	sdk.Tx
+	Gas() uint64
+	FeeCoins() sdk.Coins
+	FeePayer() sdk.AccAddress
+}
+
 // MempoolFeeDecorator will check if the transaction's fee is at least as large the local validator's minimum gasFee (defined in validator config).
 // If fee is too low, decorator returns error and tx is rejected from mempool.
 // Note this only applies when ctx.CheckTx = true
 // If fee is high enough or not CheckTx, then call next AnteHandler
+// CONTRACT: Tx must implement FeeTx to use MempoolFeeDecorator
 type MempoolFeeDecorator struct{}
 
 func NewMempoolFeeDecorator() MempoolFeeDecorator {
@@ -22,11 +31,12 @@ func NewMempoolFeeDecorator() MempoolFeeDecorator {
 }
 
 func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	stdTx, ok := tx.(types.StdTx)
+	feeTx, ok := tx.(FeeTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a FeeTx")
 	}
-	stdFee := stdTx.Fee
+	feeCoins := feeTx.FeeCoins()
+	gas := feeTx.Gas()
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
@@ -38,13 +48,15 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 			// Determine the required fees by multiplying each required minimum gas
 			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-			glDec := sdk.NewDec(int64(stdFee.Gas))
+			glDec := sdk.NewDec(int64(gas))
 			for i, gp := range minGasPrices {
 				fee := gp.Amount.Mul(glDec)
 				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 			}
 
-			return ctx, errs.Wrapf(errs.ErrInsufficientFee, "insufficient fees; got: %q required: %q", stdFee.Amount, requiredFees)
+			if !feeCoins.IsAnyGTE(requiredFees) {
+				return ctx, errs.Wrapf(errs.ErrInsufficientFee, "insufficient fees; got: %q required: %q", feeCoins, requiredFees)
+			}
 		}
 	}
 
@@ -54,6 +66,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // DeductFeeDecorator deducts fees from the first signer of the tx
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next AnteHandler if fees successfully deducted
+// CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
 	ak           keeper.AccountKeeper
 	supplyKeeper types.SupplyKeeper
@@ -67,28 +80,21 @@ func NewDeductFeeDecorator(ak keeper.AccountKeeper, sk types.SupplyKeeper) Deduc
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	stdTx, ok := tx.(types.StdTx)
+	feeTx, ok := tx.(FeeTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	if addr := dfd.supplyKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
 	}
 
-	// stdSigs contains the sequence number, account number, and signatures.
-	// When simulating, this would just be a 0-length slice.
-	signerAddrs := stdTx.GetSigners()
-
-	// fetch first signer, who's going to pay the fees
-	feePayer, err := GetSignerAcc(ctx, dfd.ak, signerAddrs[0])
-	if err != nil {
-		return ctx, err
-	}
+	feePayer := feeTx.FeePayer()
+	feePayerAcc := dfd.ak.GetAccount(ctx, feePayer)
 
 	// deduct the fees
-	if !stdTx.Fee.Amount.IsZero() {
-		err = DeductFees(dfd.supplyKeeper, ctx, feePayer, stdTx.Fee.Amount)
+	if !feeTx.FeeCoins().IsZero() {
+		err = DeductFees(dfd.supplyKeeper, ctx, feePayerAcc, feeTx.FeeCoins())
 		if err != nil {
 			return ctx, err
 		}

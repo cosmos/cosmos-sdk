@@ -5,13 +5,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errs "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+// Tx with a Gas() method is needed to use SetupDecorator
+type GasTx interface {
+	Gas() uint64
+}
 
 // SetUpDecorator sets the GasMeter in the Context and wraps the next AnteHandler with a defer clause
 // to recover from any downstream OutOfGas panics in the AnteHandler chain to return an error with information
 // on gas provided and gas used.
-// Should be the first decorator in the chain
+// CONTRACT: Must be first decorator in the chain
+// CONTRACT: Tx must implement GasTx interface
 type SetUpDecorator struct{}
 
 func NewSetupDecorator() SetUpDecorator {
@@ -19,16 +24,16 @@ func NewSetupDecorator() SetUpDecorator {
 }
 
 func (sud SetUpDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// all transactions must be of type auth.StdTx
-	stdTx, ok := tx.(types.StdTx)
+	// all transactions must implement GasTx
+	gasTx, ok := tx.(GasTx)
 	if !ok {
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.
 		newCtx = SetGasMeter(simulate, ctx, 0)
-		return newCtx, errs.Wrap(errs.ErrTxDecode, "Tx must be auth.StdTx")
+		return newCtx, errs.Wrap(errs.ErrTxDecode, "Tx must be GasTx")
 	}
 
-	newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
+	newCtx = SetGasMeter(simulate, ctx, gasTx.Gas())
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
@@ -41,7 +46,7 @@ func (sud SetUpDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-					rType.Descriptor, stdTx.Fee.Gas, newCtx.GasMeter().GasConsumed())
+					rType.Descriptor, gasTx.Gas(), newCtx.GasMeter().GasConsumed())
 
 				err = errs.Wrap(errs.ErrOutOfGas, log)
 				// TODO: figure out how to return Context, error so that baseapp can recover gasWanted/gasUsed

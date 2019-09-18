@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -30,6 +31,7 @@ func key() (res []byte) {
 }
 
 type value interface {
+	KeyBytes() []byte
 	Get(Context, interface{})
 	GetSafe(Context, interface{}) error
 	GetRaw(Context) []byte
@@ -37,6 +39,7 @@ type value interface {
 	SetRaw(Context, []byte)
 	Exists(Context) bool
 	Delete(Context)
+	Query(ABCIQuerier, interface{}) (*Proof, error)
 	Marshal(interface{}) []byte
 	Unmarshal([]byte, interface{})
 }
@@ -110,6 +113,15 @@ func (v booleanT) Unmarshal(bz []byte, ptr interface{}) {
 	}
 }
 
+func (v booleanT) Query(q ABCIQuerier, ptr interface{}) (proof *Proof, err error) {
+	res, proof, err := v.Boolean.Query(q)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(ptr).Elem().SetBool(res)
+	return
+}
+
 type integerT struct {
 	Integer
 }
@@ -153,6 +165,15 @@ func (v integerT) Unmarshal(bz []byte, ptr interface{}) {
 	reflect.ValueOf(ptr).Elem().SetUint(res)
 }
 
+func (v integerT) Query(q ABCIQuerier, ptr interface{}) (proof *Proof, err error) {
+	res, proof, err := v.Integer.Query(q)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(ptr).Elem().SetUint(res)
+	return
+}
+
 type enumT struct {
 	Enum
 }
@@ -190,6 +211,15 @@ func (v enumT) Marshal(o interface{}) []byte {
 
 func (v enumT) Unmarshal(bz []byte, ptr interface{}) {
 	reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(bz[0]))
+}
+
+func (v enumT) Query(q ABCIQuerier, ptr interface{}) (proof *Proof, err error) {
+	res, proof, err := v.Enum.Query(q)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(res))
+	return
 }
 
 type stringT struct {
@@ -231,13 +261,22 @@ func (v stringT) Unmarshal(bz []byte, ptr interface{}) {
 	reflect.ValueOf(ptr).Elem().SetString(string(bz))
 }
 
-func defaultComponents() sdk.Context {
+func (v stringT) Query(q ABCIQuerier, ptr interface{}) (proof *Proof, err error) {
+	res, proof, err := v.String.Query(q)
+	if err != nil {
+		return
+	}
+	reflect.ValueOf(ptr).Elem().SetString(res)
+	return
+}
+
+func defaultComponents() (sdk.Context, *rootmulti.Store) {
 	db := dbm.NewMemDB()
 	cms := rootmulti.NewStore(db)
 	cms.MountStoreWithDB(testkey, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
-	return ctx
+	return ctx, cms
 }
 
 func indirect(ptr interface{}) interface{} {
@@ -245,7 +284,7 @@ func indirect(ptr interface{}) interface{} {
 }
 
 func TestTypeValue(t *testing.T) {
-	ctx := defaultComponents()
+	ctx, cms := defaultComponents()
 
 	var table = []struct {
 		ty   typeValue
@@ -296,5 +335,19 @@ func TestTypeValue(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, reflect.Zero(reflect.TypeOf(ptr).Elem()).Interface(), indirect(ptr))
 		require.Nil(t, v.GetRaw(ctx))
+
+		// Set again and test abci query
+		v.Set(ctx, tc.orig)
+		cid := cms.Commit()
+		ptr = v.Proto()
+		q := NewStoreQuerier(cms)
+		proof, err := v.Query(q, ptr)
+		require.NoError(t, err)
+		require.Equal(t, tc.orig, indirect(ptr), "Expected equal on tc %d", i)
+		prt := rootmulti.DefaultProofRuntime()
+		kp := merkle.KeyPath{}.
+			AppendKey([]byte(testkey.Name()), merkle.KeyEncodingHex).
+			AppendKey(v.KeyBytes(), merkle.KeyEncodingHex)
+		require.NoError(t, prt.VerifyValue(proof, cid.Hash, kp.String(), v.GetRaw(ctx)))
 	}
 }

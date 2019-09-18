@@ -1,14 +1,17 @@
 package types
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 var (
@@ -478,4 +481,74 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Nil(t, dva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, dva.DelegatedVesting)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 75)}, dva.GetCoins())
+}
+
+func TestGenesisAccountValidate(t *testing.T) {
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	baseAcc := NewBaseAccount(addr, nil, pubkey, 0, 0)
+	tests := []struct {
+		name   string
+		acc    exported.GenesisAccount
+		expErr error
+	}{
+		{
+			"valid base account",
+			baseAcc,
+			nil,
+		},
+		{
+			"invalid base valid account",
+			NewBaseAccount(addr, sdk.NewCoins(), secp256k1.GenPrivKey().PubKey(), 0, 0),
+			errors.New("pubkey and address pair is invalid"),
+		},
+		{
+			"valid base vesting account",
+			NewBaseVestingAccount(baseAcc, sdk.NewCoins(), nil, nil, 100),
+			nil,
+		},
+		{
+			"invalid vesting amount; empty Coins",
+			NewBaseVestingAccount(
+				NewBaseAccount(addr, sdk.NewCoins(), pubkey, 0, 0),
+				sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)},
+				nil, nil, 100,
+			),
+			errors.New("vesting amount cannot be greater than total amount"),
+		},
+		{
+			"invalid vesting amount; OriginalVesting > Coins",
+			NewBaseVestingAccount(
+				NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), pubkey, 0, 0),
+				sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)},
+				nil, nil, 100,
+			),
+			errors.New("vesting amount cannot be greater than total amount"),
+		},
+		{
+			"invalid vesting amount with multi coins",
+			NewBaseVestingAccount(
+				NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)), pubkey, 0, 0),
+				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)),
+				nil, nil, 100,
+			),
+			errors.New("vesting amount cannot be greater than total amount"),
+		},
+		{
+			"valid continuous vesting account",
+			NewContinuousVestingAccount(baseAcc, 100, 200),
+			nil,
+		},
+		{
+			"invalid vesting times",
+			NewContinuousVestingAccount(baseAcc, 1654668078, 1554668078),
+			errors.New("vesting start-time cannot be before end-time"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.acc.Validate()
+			require.Equal(t, tt.expErr, err)
+		})
+	}
 }

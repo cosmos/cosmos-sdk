@@ -43,8 +43,8 @@ type testParams struct {
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		{[]byte(keyMaxValidators), &tp.MaxValidators},
-		{[]byte(keySlashingRate), &tp.SlashingRate},
+		{Key: []byte(keyMaxValidators), Value: &tp.MaxValidators},
+		{Key: []byte(keySlashingRate), Value: &tp.SlashingRate},
 	}
 }
 

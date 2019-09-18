@@ -3,8 +3,7 @@ package connection
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-
+	"github.com/cosmos/cosmos-sdk/store/state"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -18,20 +17,20 @@ func (obj Object) prefix() []byte {
 	return bytes.Split(obj.Connection.KeyBytes(), LocalRoot())[0]
 }
 
-func (obj Object) ConnectionCLI(ctx context.CLIContext) (res Connection, proof merkle.Proof, err error) {
-	tmproof, err := obj.Connection.Query(ctx, &res)
+func (obj Object) ConnectionCLI(q state.ABCIQuerier) (res Connection, proof merkle.Proof, err error) {
+	tmproof, err := obj.Connection.Query(q, &res)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Connection)
 	return
 }
 
-func (obj Object) AvailableCLI(ctx context.CLIContext) (res bool, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.Available.Query(ctx)
+func (obj Object) AvailableCLI(q state.ABCIQuerier) (res bool, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Available.Query(q)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Available)
 	return
 }
 
-func (obj Object) KindCLI(ctx context.CLIContext) (res string, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.Kind.Query(ctx)
+func (obj Object) KindCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Kind.Query(q)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Kind)
 	return
 }
@@ -40,9 +39,9 @@ func (man Handshaker) CLIObject(connid, clientid string) HandshakeObject {
 	return man.Object(man.man.CLIObject(connid, clientid))
 }
 
-func (man Handshaker) CLIQuery(ctx context.CLIContext, connid string) (HandshakeObject, error) {
+func (man Handshaker) CLIQuery(q state.ABCIQuerier, connid string) (HandshakeObject, error) {
 	obj := man.man.Object(connid)
-	conn, _, err := obj.ConnectionCLI(ctx)
+	conn, _, err := obj.ConnectionCLI(q)
 	if err != nil {
 		return HandshakeObject{}, err
 	}
@@ -50,20 +49,20 @@ func (man Handshaker) CLIQuery(ctx context.CLIContext, connid string) (Handshake
 	return man.Object(obj), nil
 }
 
-func (obj HandshakeObject) StateCLI(ctx context.CLIContext) (res byte, proof merkle.Proof, err error){
-	res, tmproof, err := obj.State.Query(ctx)
+func (obj HandshakeObject) StateCLI(q state.ABCIQuerier) (res byte, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.State.Query(q)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.State)
 	return
 }
 
-func (obj HandshakeObject) CounterpartyClientCLI(ctx context.CLIContext) (res string, proof merkle.Proof, err error)  {
-	res, tmproof, err := obj.CounterpartyClient.Query(ctx)
+func (obj HandshakeObject) CounterpartyClientCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.CounterpartyClient.Query(q)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.CounterpartyClient)
-	return 
+	return
 }
 
-func (obj HandshakeObject) NextTimeoutCLI(ctx context.CLIContext) (res uint64, proof merkle.Proof, err error){
-	res, tmproof, err := obj.NextTimeout.Query(ctx)
+func (obj HandshakeObject) NextTimeoutCLI(q state.ABCIQuerier) (res uint64, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.NextTimeout.Query(q)
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.NextTimeout)
 	return
 }

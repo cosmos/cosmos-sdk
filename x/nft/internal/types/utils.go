@@ -2,7 +2,7 @@ package types
 
 import "strings"
 
-// Findable does something
+// Findable is an interface for iterable types that allows the FindUtil function to work
 type Findable interface {
 	ElAtIndex(index int) string
 	Len() int

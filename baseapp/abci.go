@@ -30,11 +30,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		return
 	}
 
-	// reset the inter-block cache in case successive InitChain calls are made
-	if app.interBlockCache != nil {
-		app.interBlockCache.Reset()
-	}
-
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
@@ -219,7 +214,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
 		halt = true
 
-	case app.haltTime > 0 && header.Time.UnixNano() >= int64(app.haltTime):
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
 		halt = true
 	}
 
@@ -228,7 +223,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 		// Note: State is not actually committed when halted. Logs from Tendermint
 		// can be ignored.
-		return
+		return abci.ResponseCommit{}
 	}
 
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.

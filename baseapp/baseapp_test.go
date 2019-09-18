@@ -104,13 +104,13 @@ func TestLoadVersion(t *testing.T) {
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := sdk.CommitID{1, res.Data}
+	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// execute a block, collect commit ID
 	header = abci.Header{Height: 2}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res = app.Commit()
-	commitID2 := sdk.CommitID{2, res.Data}
+	commitID2 := sdk.CommitID{Version: 2, Hash: res.Data}
 
 	// reload with LoadLatestVersion
 	app = NewBaseApp(name, logger, db, nil, nil, pruningOpt)
@@ -307,7 +307,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 	header := abci.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	res := app.Commit()
-	commitID1 := sdk.CommitID{1, res.Data}
+	commitID1 := sdk.CommitID{Version: 1, Hash: res.Data}
 
 	// create a new app with the stores mounted under the same cap key
 	app = NewBaseApp(name, logger, db, nil, nil, pruningOpt)
@@ -540,7 +540,7 @@ func (msg msgCounter) ValidateBasic() sdk.Error {
 }
 
 func newTxCounter(txInt int64, msgInts ...int64) *txTest {
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, 0, len(msgInts))
 	for _, msgInt := range msgInts {
 		msgs = append(msgs, msgCounter{msgInt, false})
 	}

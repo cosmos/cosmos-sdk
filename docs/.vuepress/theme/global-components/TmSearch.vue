@@ -1,9 +1,12 @@
 <template lang="pug">
   div
-    search-box#x
+    search-box.search
 </template>
 
 <style lang="stylus" scoped>
+.search
+  z-index 10000
+
 /deep/
   .search-box
     margin-top 1.5rem

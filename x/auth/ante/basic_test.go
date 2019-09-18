@@ -97,5 +97,5 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	require.Nil(t, err, "ConsumeGasForTxSizeDecorator returned error: %v", err)
 
 	consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
-	require.Equal(t, sdk.Gas(expectedGas), consumedGas, "Decorator did not consume the correct amount of gas")
+	require.Equal(t, expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 }

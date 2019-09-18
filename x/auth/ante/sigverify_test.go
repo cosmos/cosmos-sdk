@@ -126,7 +126,7 @@ func TestSigVerification(t *testing.T) {
 	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
 	antehandler := sdk.ChainDecorators(spkd, svd)
 
-	ctx, err := antehandler(ctx, tx, false)
+	_, err := antehandler(ctx, tx, false)
 	require.NotNil(t, err)
 }
 
@@ -139,7 +139,7 @@ func TestSigIntegration(t *testing.T) {
 	initialCost, err := runSigDecorators(t, params, false, privs...)
 	require.Nil(t, err)
 
-	params.SigVerifyCostSecp256k1 = params.SigVerifyCostSecp256k1 * 2
+	params.SigVerifyCostSecp256k1 *= 2
 	doubleCost, err := runSigDecorators(t, params, false, privs...)
 	require.Nil(t, err)
 
@@ -181,5 +181,5 @@ func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ..
 	ctx, err := antehandler(ctx, tx, false)
 	after := ctx.GasMeter().GasConsumed()
 
-	return sdk.Gas(after - before), err
+	return after - before, err
 }

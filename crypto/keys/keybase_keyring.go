@@ -206,7 +206,7 @@ func (kb keyringKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, 
 	return sig, priv.PubKey(), nil
 }
 
-//ExportPrivateKeyObject exports an armored private key object to the terminal
+// ExportPrivateKeyObject exports an armored private key object to the terminal
 func (kb keyringKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {

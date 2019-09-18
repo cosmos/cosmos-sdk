@@ -65,7 +65,7 @@ module.exports = {
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsDir: "docs",
-    docsBranch: "master",
+    editLinks: true,
     locales: {
       "/": {
         label: "English",

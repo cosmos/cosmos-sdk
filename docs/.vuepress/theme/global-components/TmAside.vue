@@ -2,14 +2,14 @@
   div
     div
       a(href="https://hackathon.sfblockchainweek.io" target="_blank" rel="noreferrer noopener")
-        img(src="/banner-hackathon.svg").sidebar__image
-    .sidebar__title On this page
-    .sidebar__link(v-for="link in $page.headers")
-      a(:href="`${$page.regularPath}#${link.slug}`").sidebar__link__href.header-anchor {{link.title}}
+        img(src="/banner-hackathon.svg").aside__image
+    .aside__title On this page
+    .aside__link(v-for="link in $page.headers")
+      a(:href="`${$page.regularPath}#${link.slug}`").aside__link__href.header-anchor {{link.title}}
 </template>
 
 <style lang="stylus" scoped>
-.sidebar
+.aside
   &__image
     width 100%
 

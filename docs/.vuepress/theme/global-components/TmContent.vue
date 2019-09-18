@@ -1,8 +1,8 @@
 <template lang="pug">
   div
     .container
-      .content(:class="{noSidebar}")
-        .content__container(:class="{noSidebar}")
+      .content(:class="{noAside}")
+        .content__container(:class="{noAside}")
           slot(name="content")
 </template>
 
@@ -16,7 +16,7 @@
   width 100%
   position relative
 
-  &.noSidebar
+  &.noAside
     padding-right 0
 
   &__container
@@ -26,7 +26,7 @@
     padding-right 2rem
     overflow-x hidden
 
-    &.noSidebar
+    &.noAside
       max-width initial
 
 /deep/
@@ -79,14 +79,14 @@
 <script>
 export default {
   props: {
-    sidebar: {
+    aside: {
       type: Boolean,
       default: true
     }
   },
   computed: {
-    noSidebar() {
-      return !this.sidebar;
+    noAside() {
+      return !this.aside;
     }
   }
 };

@@ -1,6 +1,6 @@
 <template lang="pug">
   div
-    tm-layout(:sidebar="false")
+    tm-layout(:aside="false")
       template(v-slot:content)
         .intro
           .h1 {{$frontmatter.title}}

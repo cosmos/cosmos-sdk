@@ -32,10 +32,7 @@ func NewIDCollection(denom string, ids []string) IDCollection {
 // Exists determines whether an ID is in the IDCollection
 func (idCollection IDCollection) Exists(id string) (exists bool) {
 	index := idCollection.IDs.find(id)
-	if index == -1 {
-		return false
-	}
-	return true
+	return index != -1
 }
 
 // AddID adds an ID to the idCollection

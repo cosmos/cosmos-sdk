@@ -1,5 +1,14 @@
 package types
 
+/*
+Note, the Error implementation is deprecated in favor of the types/error package
+and will be removed entirely in a future release.
+
+Migration notes:
+
+TODO: ...
+*/
+
 import (
 	"bytes"
 	"encoding/json"

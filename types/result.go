@@ -14,11 +14,11 @@ import (
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
-	// Code is the response code, is stored back on the chain.
-	Code CodeType
+	// // Code is the response code, is stored back on the chain.
+	// Code CodeType
 
-	// Codespace is the string referring to the domain of an error
-	Codespace CodespaceType
+	// // Codespace is the string referring to the domain of an error
+	// Codespace CodespaceType
 
 	// Data is any data returned from the app.
 	// Data has to be length prefixed in order to separate

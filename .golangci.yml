@@ -12,7 +12,6 @@ linters:
     - unparam
     - lll
     - maligned
-    - nakedret
     - errcheck
     - scopelint
     - varcheck

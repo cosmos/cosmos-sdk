@@ -75,7 +75,7 @@ type keyWriter interface {
 
 func (kb baseKeybase) CreateAccount(keyWriter keyWriter, name, mnemonic,
 	bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := kb.CreateHDPath(account, index)
+	hdPath := CreateHDPath(account, index)
 	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -114,11 +114,6 @@ func (kb baseKeybase) CreateLedger(w infoWriter, name string,
 	}
 
 	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath), nil
-}
-
-// CreateHDPath returns BIP 44 object from account and index parameters.
-func (kb baseKeybase) CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
-	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
@@ -192,6 +187,11 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 func ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+}
+
+// CreateHDPath returns BIP 44 object from account and index parameters.
+func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
+	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
 // IsAlgoSupported returns whether the signing algorithm is supported.

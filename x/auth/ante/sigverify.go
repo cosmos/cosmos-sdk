@@ -116,6 +116,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	signerAddrs := stdTx.GetSigners()
 	signerAccs := make([]exported.Account, len(signerAddrs))
 
+	// check that signer length and signature length are the same
+	if len(stdSigs) != len(signerAddrs) {
+		return ctx, errs.Wrapf(errs.ErrUnauthorized, "Wrong number of signers. Expected: %d, got %d", len(signerAddrs), len(stdSigs))
+	}
+
 	for i := 0; i < len(stdSigs); i++ {
 		signerAccs[i], err = GetSignerAcc(ctx, svd.ak, signerAddrs[i])
 		if err != nil {

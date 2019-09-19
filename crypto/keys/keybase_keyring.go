@@ -41,18 +41,18 @@ func newKeyringKeybase(db keyring.Keyring) Keybase {
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	return kb.base.CreateMnemonic(&kb, name, language, passwd, algo)
+	return kb.base.CreateMnemonic(kb, name, language, passwd, algo)
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	return kb.base.CreateAccount(&kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index)
+	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index)
 }
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 // Derive private key from the seed using the BIP44 params.
 func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
-	return kb.base.Derive(&kb, name, mnemonic, bip39Passphrase, encryptPasswd, params)
+	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params)
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
@@ -74,7 +74,7 @@ func (kb keyringKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, er
 	return kb.writeMultisigKey(name, pub), nil
 }
 
-func (kb *keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
+func (kb keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
 	// create master key and derive first key for keyring
 	derivedPriv, err := kb.base.ComputeDerivedKey(seed, fullHdPath)
 	if err != nil {

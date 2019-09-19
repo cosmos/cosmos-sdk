@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/base64"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
@@ -15,7 +16,14 @@ import (
 type txDecodeRespTx authtypes.StdTx
 
 func (tx txDecodeRespTx) String() string {
-	return tx.String()
+	txString := fmt.Sprintf(`
+	Msgs: 			%s
+	Fee:  			%v
+	Signatures: %s
+	Memo: 			%s
+	`, tx.Msgs, tx.Fee,
+		tx.Signatures, tx.Memo)
+	return txString
 }
 
 // GetDecodeCommand returns the decode command to take Amino-serialized bytes

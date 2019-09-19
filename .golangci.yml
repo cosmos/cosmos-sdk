@@ -12,9 +12,9 @@ linters:
     - unparam
     - lll
     - maligned
-    - nakedret
     - errcheck
     - scopelint
+    - funlen
     - varcheck
 
 issues:

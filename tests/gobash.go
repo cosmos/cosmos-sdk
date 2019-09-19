@@ -52,7 +52,7 @@ func ExecuteT(t *testing.T, cmd, input string) (stdout, stderr string) {
 	stdout = strings.Trim(string(outbz), "\n")
 	stderr = strings.Trim(string(errbz), "\n")
 
-	return
+	return stdout, stderr
 }
 
 // Execute the command, launch goroutines to log stdout/err to t.

@@ -11,13 +11,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// txDecodeRespTx implements a simple Stringer wrapper for a decoded StdTx.
-type txDecodeRespTx authtypes.StdTx
-
-func (tx txDecodeRespTx) String() string {
-	return tx.String()
-}
-
 // GetDecodeCommand returns the decode command to take Amino-serialized bytes
 // and turn it into a JSONified transaction.
 func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
@@ -39,7 +32,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(txDecodeRespTx(stdTx))
+			return cliCtx.PrintOutput(stdTx)
 		},
 	}
 

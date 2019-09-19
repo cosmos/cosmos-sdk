@@ -9,5 +9,5 @@ func DefaultPrefix() []byte {
 }
 
 func Prefix(version int64) []byte {
-	return []byte(strconv.FormatInt(version, 10) + "/")
+	return []byte("v" + strconv.FormatInt(version, 10) + "/")
 }

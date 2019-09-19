@@ -31,7 +31,7 @@ func ExtractMsgPackets(msgs []sdk.Msg) (res []MsgPacket, abort bool) {
 
 func VerifyMsgPackets(ctx sdk.Context, channel channel.Manager, msgs []MsgPacket) error {
 	for _, msg := range msgs {
-		err := channel.Receive(ctx, msg.Proofs, msg.ReceiverPort(), msg.ChannelID, msg.Packet)
+		err := channel.Receive(ctx, msg.Proofs, msg.Height, msg.ReceiverPort(), msg.ChannelID, msg.Packet)
 		if err != nil {
 			return err
 		}

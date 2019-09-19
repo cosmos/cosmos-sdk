@@ -102,15 +102,15 @@ func (man CounterpartyManager) Object(id string) CounterObject {
 	}
 }
 
-func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, height uint64, proofs []commitment.Proof) (sdk.Context, error) {
-	if optpath == nil {
-		optpath = obj.GetConnection(ctx).Path
+func (obj Object) Context(ctx sdk.Context, height uint64, proofs []commitment.Proof) (sdk.Context, error) {
+	root, err := obj.Client.GetRoot(ctx, height)
+	if err != nil {
+		return ctx, err
 	}
 
 	store, err := commitment.NewStore(
-		// TODO: proof root should be able to be obtained from the past
-		obj.Client.GetConsensusState(ctx).GetRoot(),
-		optpath,
+		root,
+		obj.GetConnection(ctx).Path,
 		proofs,
 	)
 	if err != nil {

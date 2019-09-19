@@ -43,6 +43,7 @@ func (man Manager) RegisterKind(kind Kind, pred ValidityPredicate) Manager {
 func (man Manager) Object(id string) Object {
 	return Object{
 		id:             id,
+		Roots:          man.protocol.Prefix([]byte(id + "/roots/")).Indexer(state.Dec),
 		ConsensusState: man.protocol.Value([]byte(id)),
 		Frozen:         man.protocol.Value([]byte(id + "/freeze")).Boolean(),
 	}
@@ -53,6 +54,7 @@ func (man Manager) Create(ctx sdk.Context, id string, cs ConsensusState) (Object
 	if obj.exists(ctx) {
 		return Object{}, errors.New("Create client on already existing id")
 	}
+	obj.Roots.Set(ctx, cs.GetHeight(), cs.GetRoot())
 	obj.ConsensusState.Set(ctx, cs)
 	return obj, nil
 }
@@ -79,6 +81,7 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 // Any actor holding the Object can access on and modify that client information
 type Object struct {
 	id             string
+	Roots          state.Indexer
 	ConsensusState state.Value // ConsensusState
 	Frozen         state.Boolean
 }
@@ -94,6 +97,11 @@ func (obj Object) ID() string {
 
 func (obj Object) GetConsensusState(ctx sdk.Context) (res ConsensusState) {
 	obj.ConsensusState.Get(ctx, &res)
+	return
+}
+
+func (obj Object) GetRoot(ctx sdk.Context, height uint64) (res commitment.Root, err error) {
+	err = obj.Roots.GetSafe(ctx, height, &res)
 	return
 }
 
@@ -121,6 +129,7 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 	}
 
 	obj.ConsensusState.Set(ctx, updated)
+	obj.Roots.Set(ctx, updated.GetHeight(), updated.GetRoot())
 
 	return nil
 }

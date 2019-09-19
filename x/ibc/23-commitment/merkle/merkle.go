@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-//	"github.com/cosmos/cosmos-sdk/store/state"
+	//	"github.com/cosmos/cosmos-sdk/store/state"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -20,7 +20,7 @@ var _ commitment.Root = Root{}
 
 // Root is Merkle root hash
 type Root struct {
-	Hash []byte
+	Hash []byte `json:"hash"`
 }
 
 // NewRoot constructs a new Root
@@ -41,9 +41,9 @@ var _ commitment.Path = Path{}
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
 type Path struct {
 	// KeyPath is the list of keys prepended before the prefixed key
-	KeyPath [][]byte
+	KeyPath [][]byte `json:"key_path"`
 	// KeyPrefix is a byte slice prefixed before the key
-	KeyPrefix []byte
+	KeyPrefix []byte `json:"key_prefix"`
 }
 
 // NewPath() constructs new Path
@@ -63,8 +63,8 @@ var _ commitment.Proof = Proof{}
 
 // Proof is Merkle proof with the key information.
 type Proof struct {
-	Proof *merkle.Proof
-	Key   []byte
+	Proof *merkle.Proof `json:"proof"`
+	Key   []byte        `json:"key"`
 }
 
 // Implements commitment.Proof
@@ -93,7 +93,7 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 	for _, key := range path.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)	
+	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
 
 	// TODO: hard coded for now, should be extensible
 	runtime := rootmulti.DefaultProofRuntime()

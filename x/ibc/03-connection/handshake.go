@@ -148,7 +148,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, connection.Path, height, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
@@ -214,7 +214,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, obj.GetConnection(ctx).Path, height, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
@@ -277,7 +277,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, obj.GetConnection(ctx).Path, height, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}

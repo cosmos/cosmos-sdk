@@ -98,5 +98,5 @@ func TestPacket(t *testing.T) {
 	node.Counterparty.UpdateClient(t, header)
 	cliobj := node.CLIObject()
 	_, ppacket := node.QueryValue(t, cliobj.Packets.Value(1))
-	node.Counterparty.Receive(t, MyPacket{"ping"}, ppacket)
+	node.Counterparty.Receive(t, MyPacket{"ping"}, uint64(header.Height), ppacket)
 }

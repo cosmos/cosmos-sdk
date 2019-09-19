@@ -223,8 +223,8 @@ func (obj Object) OriginConnection() connection.Object {
 	return obj.Connections[0]
 }
 
-func (obj Object) Context(ctx sdk.Context, proofs []commitment.Proof) (sdk.Context, error) {
-	return obj.OriginConnection().Context(ctx, nil, proofs)
+func (obj Object) Context(ctx sdk.Context, proofs []commitment.Proof, height uint64) (sdk.Context, error) {
+	return obj.OriginConnection().Context(ctx, height, proofs)
 }
 
 func (obj Object) ChanID() string {
@@ -287,7 +287,7 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 	return nil
 }
 
-func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, portid, chanid string, packet Packet) error {
+func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height uint64, portid, chanid string, packet Packet) error {
 	obj, err := man.Query(ctx, portid, chanid)
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, portid, c
 		}
 	*/
 
-	ctx, err = obj.Context(ctx, proofs)
+	ctx, err = obj.Context(ctx, proofs, height)
 	if err != nil {
 		return err
 	}

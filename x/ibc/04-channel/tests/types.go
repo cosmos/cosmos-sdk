@@ -92,9 +92,9 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	require.False(t, obj.Available.Get(ctx))
 }
 
-func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, proofs, PortName, node.Name, node.Channel, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs, height, PortName, node.Name, node.Channel, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.OpenTry, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -102,9 +102,9 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	node.SetState(channel.OpenTry)
 }
 
-func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, proofs, PortName, node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs, height, PortName, node.Name, 100 /*TODO*/, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -112,9 +112,9 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	node.SetState(channel.Open)
 }
 
-func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, proofs, PortName, node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs, height, PortName, node.Name, 100 /*TODO*/)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -135,7 +135,7 @@ func (node *Node) Handshake(t *testing.T) {
 	_, pchan := node.QueryValue(t, cliobj.Channel)
 	_, pstate := node.QueryValue(t, cliobj.State)
 	_, ptimeout := node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenTry(t, pchan, pstate, ptimeout)
+	node.Counterparty.OpenTry(t, uint64(header.Height), pchan, pstate, ptimeout)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
@@ -144,7 +144,7 @@ func (node *Node) Handshake(t *testing.T) {
 	_, pchan = node.Counterparty.QueryValue(t, cliobj.Channel)
 	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
 	_, ptimeout = node.Counterparty.QueryValue(t, cliobj.NextTimeout)
-	node.OpenAck(t, pchan, pstate, ptimeout)
+	node.OpenAck(t, uint64(header.Height), pchan, pstate, ptimeout)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm
@@ -152,7 +152,7 @@ func (node *Node) Handshake(t *testing.T) {
 	cliobj = node.CLIObject()
 	_, pstate = node.QueryValue(t, cliobj.State)
 	_, ptimeout = node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenConfirm(t, pstate, ptimeout)
+	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate, ptimeout)
 }
 
 func (node *Node) Send(t *testing.T, packet channel.Packet) {
@@ -166,12 +166,12 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 	require.Equal(t, node.Cdc.MustMarshalBinaryBare(packet), obj.PacketCommit(ctx, seq+1))
 }
 
-func (node *Node) Receive(t *testing.T, packet channel.Packet, proofs ...commitment.Proof) {
+func (node *Node) Receive(t *testing.T, packet channel.Packet, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Context(), node.Manager()
 	obj, err := man.Query(ctx, PortName, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqRecv.Get(ctx)
-	err = man.Receive(ctx, proofs, PortName, node.Name, packet)
+	err = man.Receive(ctx, proofs, height, PortName, node.Name, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqRecv.Get(ctx))
 }

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // TODO: types in this file should be (de/)serialized with proto in the future

@@ -148,7 +148,7 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 
 // Using proofs: counterparty.{channel,state,nextTimeout}
 func (man Handshaker) OpenTry(ctx sdk.Context,
-	proofs []commitment.Proof,
+	proofs []commitment.Proof, height uint64,
 	portid, chanid string, channel Channel, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	if len(channel.ConnectionHops) != 1 {
@@ -159,7 +159,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, proofs)
+	ctx, err = obj.Context(ctx, proofs, height)
 	if err != nil {
 		return
 	}
@@ -213,7 +213,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 
 // Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
-	proofs []commitment.Proof,
+	proofs []commitment.Proof, height uint64,
 	portid, chanid string, timeoutHeight, nextTimeoutHeight uint64,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, portid, chanid)
@@ -221,7 +221,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	ctx, err = obj.Context(ctx, proofs)
+	ctx, err = obj.Context(ctx, proofs, height)
 	if err != nil {
 		return
 	}
@@ -274,14 +274,14 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
-	proofs []commitment.Proof,
+	proofs []commitment.Proof, height uint64,
 	portid, chanid string, timeoutHeight uint64) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, portid, chanid)
 	if err != nil {
 		return
 	}
 
-	ctx, err = obj.Context(ctx, proofs)
+	ctx, err = obj.Context(ctx, proofs, height)
 	if err != nil {
 		return
 	}

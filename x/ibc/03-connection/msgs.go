@@ -44,6 +44,7 @@ type MsgOpenTry struct {
 	Timeout            uint64             `json:"timeout"`
 	NextTimeout        uint64             `json:"next_timeout"`
 	Proofs             []commitment.Proof `json:"proofs"`
+	Height             uint64             `json:"height"`
 	Signer             sdk.AccAddress     `json:"signer"`
 }
 
@@ -74,6 +75,7 @@ type MsgOpenAck struct {
 	Timeout      uint64             `json:"timeout"`
 	NextTimeout  uint64             `json:"next_timeout"`
 	Proofs       []commitment.Proof `json:"proofs"`
+	Height       uint64             `json:"height"`
 	Signer       sdk.AccAddress     `json:"signer"`
 }
 
@@ -103,6 +105,7 @@ type MsgOpenConfirm struct {
 	ConnectionID string             `json:"connection_id"`
 	Timeout      uint64             `json:"timeout"`
 	Proofs       []commitment.Proof `json:"proofs"`
+	Height       uint64             `json:"height"`
 	Signer       sdk.AccAddress     `json:"signer"`
 }
 

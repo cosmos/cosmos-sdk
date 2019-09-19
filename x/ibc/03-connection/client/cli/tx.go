@@ -3,9 +3,12 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
@@ -68,6 +72,45 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+// TODO: move to 02/tendermint
+func getHeader(ctx context.CLIContext) (res tendermint.Header, err error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return
+	}
+
+	info, err := node.ABCIInfo()
+	if err != nil {
+		return
+	}
+
+	height := info.Response.LastBlockHeight
+	prevheight := height - 1
+
+	commit, err := node.Commit(&height)
+	if err != nil {
+		return
+	}
+
+	validators, err := node.Validators(&prevheight)
+	if err != nil {
+		return
+	}
+
+	nextvalidators, err := node.Validators(&height)
+	if err != nil {
+		return
+	}
+
+	res = tendermint.Header{
+		SignedHeader:     commit.SignedHeader,
+		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
+		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+	}
+
+	return
+}
+
 func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
@@ -75,7 +118,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(6),
 		// Args: []string{connid1, clientid1, path1, connid2, clientid2, connfilepath2}
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(0000)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
@@ -133,7 +175,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println(111)
 			// TODO: check state and if not Idle continue existing process
 			height, err := lastheight(ctx2)
 			if err != nil {
@@ -153,13 +194,35 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println(222)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err := getHeader(ctx1)
+			if err != nil {
+				return err
+			}
+
+			msgupdate := client.MsgUpdateClient{
+				ClientID: conn2.Client,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+
+			fmt.Printf("updated apphash to %X\n", header.AppHash)
+
+			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+			fmt.Printf("querying from %d\n", header.Height-1)
+
 			timeout := nextTimeout
 			height, err = lastheight(ctx1)
 			if err != nil {
 				return err
 			}
 			nextTimeout = height + 1000
+
 			_, pconn, err := obj1.ConnectionCLI(q1)
 			if err != nil {
 				return err
@@ -184,16 +247,35 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Timeout:            timeout,
 				NextTimeout:        nextTimeout,
 				Proofs:             []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Height:             uint64(header.Height),
 				Signer:             ctx2.GetFromAddress(),
 			}
 
-			fmt.Println(444)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
 			if err != nil {
 				return err
 			}
-
 			timeout = nextTimeout
+
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err = getHeader(ctx2)
+			if err != nil {
+				return err
+			}
+
+			msgupdate = client.MsgUpdateClient{
+				ClientID: conn1.Client,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
+
+			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
+
 			height, err = lastheight(ctx2)
 			if err != nil {
 				return err
@@ -221,6 +303,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Timeout:      timeout,
 				NextTimeout:  nextTimeout,
 				Proofs:       []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Height:       uint64(header.Height),
 				Signer:       ctx1.GetFromAddress(),
 			}
 
@@ -228,6 +311,25 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err = getHeader(ctx1)
+			if err != nil {
+				return err
+			}
+
+			msgupdate = client.MsgUpdateClient{
+				ClientID: conn2.Client,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+
+			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 
 			timeout = nextTimeout
 			_, pstate, err = obj1.StateCLI(q1)
@@ -243,6 +345,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				ConnectionID: connid2,
 				Timeout:      timeout,
 				Proofs:       []commitment.Proof{pstate, ptimeout},
+				Height:       uint64(header.Height),
 				Signer:       ctx2.GetFromAddress(),
 			}
 

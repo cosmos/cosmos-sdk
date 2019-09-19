@@ -35,6 +35,6 @@ func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
 	return port.channel.Send(ctx, port.id, chanid, packet)
 }
 
-func (port Port) Receive(ctx sdk.Context, proof []commitment.Proof, chanid string, packet Packet) error {
-	return port.channel.Receive(ctx, proof, port.id, chanid, packet)
+func (port Port) Receive(ctx sdk.Context, proof []commitment.Proof, height uint64, chanid string, packet Packet) error {
+	return port.channel.Receive(ctx, proof, height, port.id, chanid, packet)
 }

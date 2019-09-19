@@ -195,7 +195,7 @@ type Error interface {
 }
 
 // NewError - create an error.
-func NewError(codespace CodespaceType, code CodeType, format string, args ...interface{}) Error {
+func NewErrorz(codespace CodespaceType, code CodeType, format string, args ...interface{}) Error {
 	return newError(codespace, code, format, args...)
 }
 

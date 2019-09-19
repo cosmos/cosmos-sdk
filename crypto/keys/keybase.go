@@ -94,12 +94,7 @@ func NewInMemory() Keybase { return newDbKeybase(dbm.NewMemDB()) }
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
 func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
-	seed, fullFundraiserPath, mnemonic, err := kb.base.CreateMnemonic(language, algo)
-	if err != nil {
-		return
-	}
-	info, err = kb.persistDerivedKey(seed, passwd, name, fullFundraiserPath)
-	return
+	return kb.base.CreateMnemonic(&kb, name, language, passwd, algo)
 }
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.

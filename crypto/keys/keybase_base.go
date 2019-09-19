@@ -18,6 +18,10 @@ import (
 
 type baseKeybase struct{}
 
+type persistDerivedKeyer interface {
+	persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error)
+}
+
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
@@ -86,7 +90,9 @@ func (kb baseKeybase) CreateHDPath(account uint32, index uint32) *hd.BIP44Params
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
-func (kb baseKeybase) CreateMnemonic(language Language, algo SigningAlgo) (seed []byte, path, mnemonic string, err error) {
+func (kb baseKeybase) CreateMnemonic(persistDerivedKeyer persistDerivedKeyer, name string,
+	language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
+
 	if language != English {
 		err = ErrUnsupportedLanguage
 		return
@@ -107,8 +113,10 @@ func (kb baseKeybase) CreateMnemonic(language Language, algo SigningAlgo) (seed 
 		return
 	}
 
-	seed = bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
-	path = types.GetConfig().GetFullFundraiserPath()
+	info, err = persistDerivedKeyer.persistDerivedKey(
+		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
+		name, types.GetConfig().GetFullFundraiserPath(),
+	)
 	return
 }
 

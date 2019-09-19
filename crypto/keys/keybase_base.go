@@ -67,21 +67,28 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 	return sig, info.GetPubKey(), nil
 }
 
+type writeLedgerKeyer interface {
+	writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info
+}
+
 // CreateLedger creates a new reference to a Ledger key pair.
 // It returns a public key and a derivation path; it returns an error if the device
 // could not be querier.
-func (kb baseKeybase) CreateLedger(algo SigningAlgo, hrp string, account, index uint32) (tmcrypto.PubKey, *hd.BIP44Params, error) {
+func (kb baseKeybase) CreateLedger(writeLedgerKeyer writeLedgerKeyer, name string,
+	algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
+
 	if !kb.IsAlgoSupported(algo) {
-		return nil, nil, ErrUnsupportedSigningAlgo
+		return nil, ErrUnsupportedSigningAlgo
 	}
 
 	coinType := types.GetConfig().GetCoinType()
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return priv.PubKey(), hdPath, nil
+
+	return writeLedgerKeyer.writeLedgerKey(name, priv.PubKey(), *hdPath), nil
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

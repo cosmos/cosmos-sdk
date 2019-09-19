@@ -59,11 +59,7 @@ func (kb keyringKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd s
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
 func (kb keyringKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
-	pub, hdPath, err := kb.base.CreateLedger(algo, hrp, account, index)
-	if err != nil {
-		return nil, err
-	}
-	return kb.writeLedgerKey(name, pub, *hdPath), nil
+	return kb.base.CreateLedger(kb, name, algo, hrp, account, index)
 }
 
 // CreateOffline creates a new reference to an offline keypair. It returns the
@@ -140,6 +136,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	return readInfo(bs.Data)
 }
 
+// Get fetches a key by address and returns its public information.
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	ik, err := kb.db.Get(string(addrKey(address)))
 	if err != nil {

@@ -28,3 +28,5 @@ issues:
     - text: "don't use an underscore in package name"
       linters:
         - golint
+service:
+  golangci-lint-version: 1.18 # use the fixed version to not introduce new linters unexpectedly

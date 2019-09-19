@@ -241,8 +241,11 @@ func (ctx CLIContext) WithBroadcastMode(mode string) CLIContext {
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors
-func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
-	var out []byte
+func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
+	var (
+		out []byte
+		err error
+	)
 
 	switch ctx.OutputFormat {
 	case "text":
@@ -257,11 +260,11 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 	}
 
 	if err != nil {
-		return
+		return err
 	}
 
 	fmt.Println(string(out))
-	return
+	return nil
 }
 
 // GetFromFields returns a from account address and Keybase name given either

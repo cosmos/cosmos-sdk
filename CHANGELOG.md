@@ -101,6 +101,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 caching through `CommitKVStoreCacheManager`. Any application wishing to utilize an inter-block cache
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
+* (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
 
 ### Bug Fixes
 

@@ -30,6 +30,19 @@
       max-width initial
 
 /deep/
+  .term
+    text-decoration underline
+
+  .tooltip
+    h1
+      font-size 0.875rem
+      font-weight 500
+      margin-bottom 0
+
+    p
+      margin-top 0
+      margin-bottom 0
+
   a
     color var(--color-accent)
     text-decoration none
@@ -67,6 +80,15 @@
       position absolute
       top 0.35rem
       left 0
+
+  @media screen and (max-width: 550px)
+    .tooltip
+      position fixed
+      z-index 1000
+      border-radius 0
+      left 0
+      right 0
+      bottom 0
 
 @media screen and (max-width: 1024px)
   .content

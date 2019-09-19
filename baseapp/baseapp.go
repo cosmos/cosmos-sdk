@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"syscall"
 
 	"errors"
 
@@ -83,8 +84,11 @@ type BaseApp struct {
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
-	// height at which to halt the chain and gracefully shutdown
+	// block height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
+
+	// minimum block time (in Unix seconds) at which to halt the chain and gracefully shutdown
+	haltTime uint64
 
 	// application's version string
 	appVersion string
@@ -264,8 +268,12 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
-func (app *BaseApp) setHaltHeight(height uint64) {
-	app.haltHeight = height
+func (app *BaseApp) setHaltHeight(haltHeight uint64) {
+	app.haltHeight = haltHeight
+}
+
+func (app *BaseApp) setHaltTime(haltTime uint64) {
+	app.haltTime = haltTime
 }
 
 // Router returns the router of the BaseApp.
@@ -753,7 +761,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 // runMsgs iterates through all the messages and executes them.
 // nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	idxLogs := make([]sdk.ABCIMessageLog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
 	var (
 		data      []byte
@@ -764,12 +772,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	events := sdk.EmptyEvents()
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
-	for msgIdx, msg := range msgs {
+	for i, msg := range msgs {
 		// match message route
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
+			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result
@@ -787,28 +795,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 		events = events.AppendEvents(msgResult.Events)
 
-		idxLog := sdk.ABCIMessageLog{MsgIndex: uint16(msgIdx), Log: msgResult.Log}
-
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			idxLog.Success = false
-			idxLogs = append(idxLogs, idxLog)
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		idxLog.Success = true
-		idxLogs = append(idxLogs, idxLog)
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
 	}
 
-	logJSON := codec.Cdc.MustMarshalJSON(idxLogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.TrimSpace(string(logJSON)),
+		Log:       strings.TrimSpace(msgLogs.String()),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
 		Events:    events,
 	}
@@ -988,7 +991,27 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
-	// write the Deliver state and commit the MultiStore
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		app.halt()
+
+		// Note: State is not actually committed when halted. Logs from Tendermint
+		// can be ignored.
+		return abci.ResponseCommit{}
+	}
+
+	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
@@ -1002,16 +1025,31 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// empty/reset the deliver state
 	app.deliverState = nil
 
-	defer func() {
-		if app.haltHeight > 0 && uint64(header.Height) == app.haltHeight {
-			app.logger.Info("halting node per configuration", "height", app.haltHeight)
-			os.Exit(0)
-		}
-	}()
-
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
 	}
+}
+
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
+
+		if sigIntErr == nil || sigTermErr == nil {
+			return
+		}
+	}
+
+	// Resort to exiting immediately if the process could not be found or killed
+	// via SIGINT/SIGTERM signals.
+	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
+	os.Exit(0)
 }
 
 // ----------------------------------------------------------------------------

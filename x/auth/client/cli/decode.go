@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/base64"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
@@ -11,20 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// txDecodeRespTx implements a simple Stringer wrapper for a decoded StdTx.
-type txDecodeRespTx authtypes.StdTx
-
-func (tx txDecodeRespTx) String() string {
-	txString := fmt.Sprintf(`
-	Msgs: 			%s
-	Fee:  			%v
-	Signatures: %s
-	Memo: 			%s
-	`, tx.Msgs, tx.Fee,
-		tx.Signatures, tx.Memo)
-	return txString
-}
 
 // GetDecodeCommand returns the decode command to take Amino-serialized bytes
 // and turn it into a JSONified transaction.
@@ -47,7 +32,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.PrintOutput(txDecodeRespTx(stdTx))
+			return cliCtx.PrintOutput(stdTx)
 		},
 	}
 

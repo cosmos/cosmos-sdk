@@ -114,13 +114,13 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, acco
 // CreateOffline creates a new reference to an offline keypair. It returns the
 // created key info.
 func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.writeOfflineKey(name, pub), nil
+	return kb.base.writeOfflineKey(kb, name, pub), nil
 }
 
 // CreateMulti creates a new reference to a multisig (offline) keypair. It
 // returns the created key info.
 func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.writeMultisigKey(name, pub), nil
+	return kb.base.writeMultisigKey(kb, name, pub), nil
 }
 
 // List returns the keys from storage in alphabetical order.
@@ -306,7 +306,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-	kb.writeOfflineKey(name, pubKey)
+	kb.base.writeOfflineKey(kb, name, pubKey)
 	return
 }
 
@@ -372,24 +372,6 @@ func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase
 	// make Info
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, privArmor)
-	kb.writeInfo(name, info)
-	return info
-}
-
-func (kb dbKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
-	info := newLedgerInfo(name, pub, path)
-	kb.writeInfo(name, info)
-	return info
-}
-
-func (kb dbKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
-	info := newOfflineInfo(name, pub)
-	kb.writeInfo(name, info)
-	return info
-}
-
-func (kb dbKeybase) writeMultisigKey(name string, pub tmcrypto.PubKey) Info {
-	info := NewMultiInfo(name, pub)
 	kb.writeInfo(name, info)
 	return info
 }

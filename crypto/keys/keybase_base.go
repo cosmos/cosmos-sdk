@@ -64,30 +64,22 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 	return sig, info.GetPubKey(), nil
 }
 
-type writeLedgerKeyer interface {
-	writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info
+type writeLocalKeyer interface {
+	writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
 }
 
-func (kb baseKeybase) CreateAccount(keyWriter writeLocalOfflineKeyer, name, mnemonic,
+type keyWriter interface {
+	writeLocalKeyer
+	infoWriter
+}
+
+func (kb baseKeybase) CreateAccount(keyWriter keyWriter, name, mnemonic,
 	bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
 	hdPath := kb.CreateHDPath(account, index)
 	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
-type writeLocalKeyer interface {
-	writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
-}
-
-type writeOfflineKeyer interface {
-	writeOfflineKey(name string, pub tmcrypto.PubKey) Info
-}
-
-type writeLocalOfflineKeyer interface {
-	writeLocalKeyer
-	writeOfflineKeyer
-}
-
-func (kb baseKeybase) persistDerivedKey(keyWriter writeLocalOfflineKeyer, seed []byte, passwd,
+func (kb baseKeybase) persistDerivedKey(keyWriter keyWriter, seed []byte, passwd,
 	name, fullHdPath string) (info Info, err error) {
 	// create master key and derive first key for keyring
 	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
@@ -99,7 +91,7 @@ func (kb baseKeybase) persistDerivedKey(keyWriter writeLocalOfflineKeyer, seed [
 		info = keyWriter.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
 	} else {
 		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
-		info = keyWriter.writeOfflineKey(name, pubk)
+		info = kb.writeOfflineKey(keyWriter, name, pubk)
 	}
 	return
 }
@@ -107,7 +99,7 @@ func (kb baseKeybase) persistDerivedKey(keyWriter writeLocalOfflineKeyer, seed [
 // CreateLedger creates a new reference to a Ledger key pair.
 // It returns a public key and a derivation path; it returns an error if the device
 // could not be querier.
-func (kb baseKeybase) CreateLedger(writeLedgerKeyer writeLedgerKeyer, name string,
+func (kb baseKeybase) CreateLedger(w infoWriter, name string,
 	algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
 
 	if !IsAlgoSupported(algo) {
@@ -121,7 +113,7 @@ func (kb baseKeybase) CreateLedger(writeLedgerKeyer writeLedgerKeyer, name strin
 		return nil, err
 	}
 
-	return writeLedgerKeyer.writeLedgerKey(name, priv.PubKey(), *hdPath), nil
+	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath), nil
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.
@@ -130,7 +122,7 @@ func (kb baseKeybase) CreateHDPath(account uint32, index uint32) *hd.BIP44Params
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
-func (kb baseKeybase) CreateMnemonic(keyWriter writeLocalOfflineKeyer, name string,
+func (kb baseKeybase) CreateMnemonic(keyWriter keyWriter, name string,
 	language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
 
 	if language != English {
@@ -163,7 +155,7 @@ func (kb baseKeybase) CreateMnemonic(keyWriter writeLocalOfflineKeyer, name stri
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 // Derive private key from the seed using the BIP44 params.
-func (kb baseKeybase) Derive(keyWriter writeLocalOfflineKeyer, name, mnemonic,
+func (kb baseKeybase) Derive(keyWriter keyWriter, name, mnemonic,
 	bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
@@ -172,6 +164,28 @@ func (kb baseKeybase) Derive(keyWriter writeLocalOfflineKeyer, name, mnemonic,
 
 	info, err = kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
 	return
+}
+
+type infoWriter interface {
+	writeInfo(name string, info Info)
+}
+
+func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
+	info := newLedgerInfo(name, pub, path)
+	w.writeInfo(name, info)
+	return info
+}
+
+func (kb baseKeybase) writeOfflineKey(w infoWriter, name string, pub tmcrypto.PubKey) Info {
+	info := newOfflineInfo(name, pub)
+	w.writeInfo(name, info)
+	return info
+}
+
+func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.PubKey) Info {
+	info := NewMultiInfo(name, pub)
+	w.writeInfo(name, info)
+	return info
 }
 
 // ComputeDerivedKey derives and returns the private key for the given seed and HD path.

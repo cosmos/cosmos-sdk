@@ -102,7 +102,7 @@ func (man CounterpartyManager) Object(id string) CounterObject {
 	}
 }
 
-func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, proofs []commitment.Proof) (sdk.Context, error) {
+func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, height uint64, proofs []commitment.Proof) (sdk.Context, error) {
 	if optpath == nil {
 		optpath = obj.GetConnection(ctx).Path
 	}

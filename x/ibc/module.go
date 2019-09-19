@@ -45,10 +45,12 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	commitment.RegisterCodec(cdc)
 	merkle.RegisterCodec(cdc)
 	client.RegisterCodec(cdc)
+	connection.RegisterCodec(cdc)
 	tendermint.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
 
 	client.SetMsgCodec(cdc)
+	connection.SetMsgCodec(cdc)
 	channel.SetMsgCodec(cdc)
 }
 

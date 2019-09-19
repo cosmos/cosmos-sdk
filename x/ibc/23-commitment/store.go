@@ -60,6 +60,7 @@ func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
 			err = errors.New("proof type not matching with root's")
 			return
 		}
+		fmt.Println("set", string(proof.GetKey()))
 		res.proofs[string(proof.GetKey())] = proof
 	}
 
@@ -85,6 +86,7 @@ func (store *store) Prove(key, value []byte) bool {
 	}
 	err := proof.Verify(store.root, store.path, value)
 	if err != nil {
+		fmt.Println(222, string(key), err)
 		return false
 	}
 	store.verified[string(key)] = value

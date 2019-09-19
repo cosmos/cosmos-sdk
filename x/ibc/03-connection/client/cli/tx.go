@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,12 +79,14 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode1))
+				WithNodeURI(viper.GetString(FlagNode1)).
+				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode2))
+				WithNodeURI(viper.GetString(FlagNode2)).
+				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
 
 			fmt.Println(3333)

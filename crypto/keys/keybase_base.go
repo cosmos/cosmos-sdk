@@ -12,15 +12,12 @@ import (
 	"github.com/pkg/errors"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // Auxiliary type that groups storage agnostic features together.
 
 type baseKeybase struct{}
-
-type persistDerivedKeyer interface {
-	persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error)
-}
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
@@ -71,10 +68,40 @@ type writeLedgerKeyer interface {
 	writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info
 }
 
-func (kb baseKeybase) CreateAccount(persistDerivedKeyer persistDerivedKeyer, name, mnemonic,
+func (kb baseKeybase) CreateAccount(keyWriter writeLocalOfflineKeyer, name, mnemonic,
 	bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
 	hdPath := kb.CreateHDPath(account, index)
-	return kb.Derive(persistDerivedKeyer, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+}
+
+type writeLocalKeyer interface {
+	writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
+}
+
+type writeOfflineKeyer interface {
+	writeOfflineKey(name string, pub tmcrypto.PubKey) Info
+}
+
+type writeLocalOfflineKeyer interface {
+	writeLocalKeyer
+	writeOfflineKeyer
+}
+
+func (kb baseKeybase) persistDerivedKey(keyWriter writeLocalOfflineKeyer, seed []byte, passwd,
+	name, fullHdPath string) (info Info, err error) {
+	// create master key and derive first key for keyring
+	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
+	if err != nil {
+		return
+	}
+
+	if passwd != "" {
+		info = keyWriter.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
+	} else {
+		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
+		info = keyWriter.writeOfflineKey(name, pubk)
+	}
+	return
 }
 
 // CreateLedger creates a new reference to a Ledger key pair.
@@ -83,7 +110,7 @@ func (kb baseKeybase) CreateAccount(persistDerivedKeyer persistDerivedKeyer, nam
 func (kb baseKeybase) CreateLedger(writeLedgerKeyer writeLedgerKeyer, name string,
 	algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
 
-	if !kb.IsAlgoSupported(algo) {
+	if !IsAlgoSupported(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -103,14 +130,14 @@ func (kb baseKeybase) CreateHDPath(account uint32, index uint32) *hd.BIP44Params
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
-func (kb baseKeybase) CreateMnemonic(persistDerivedKeyer persistDerivedKeyer, name string,
+func (kb baseKeybase) CreateMnemonic(keyWriter writeLocalOfflineKeyer, name string,
 	language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
 
 	if language != English {
 		err = ErrUnsupportedLanguage
 		return
 	}
-	if !kb.IsAlgoSupported(algo) {
+	if !IsAlgoSupported(algo) {
 		err = ErrUnsupportedSigningAlgo
 		return
 	}
@@ -126,7 +153,8 @@ func (kb baseKeybase) CreateMnemonic(persistDerivedKeyer persistDerivedKeyer, na
 		return
 	}
 
-	info, err = persistDerivedKeyer.persistDerivedKey(
+	info, err = kb.persistDerivedKey(
+		keyWriter,
 		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
 		name, types.GetConfig().GetFullFundraiserPath(),
 	)
@@ -135,22 +163,22 @@ func (kb baseKeybase) CreateMnemonic(persistDerivedKeyer persistDerivedKeyer, na
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 // Derive private key from the seed using the BIP44 params.
-func (kb baseKeybase) Derive(persistDerivedKeyer persistDerivedKeyer, name, mnemonic,
+func (kb baseKeybase) Derive(keyWriter writeLocalOfflineKeyer, name, mnemonic,
 	bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
 		return
 	}
 
-	info, err = persistDerivedKeyer.persistDerivedKey(seed, encryptPasswd, name, params.String())
+	info, err = kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
 	return
 }
 
 // ComputeDerivedKey derives and returns the private key for the given seed and HD path.
-func (kb baseKeybase) ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
+func ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
 }
 
 // IsAlgoSupported returns whether the signing algorithm is supported.
-func (kb baseKeybase) IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }
+func IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }

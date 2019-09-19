@@ -14,7 +14,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -122,24 +121,6 @@ func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error
 // returns the created key info.
 func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
 	return kb.writeMultisigKey(name, pub), nil
-}
-
-func (kb dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
-	// create master key and derive first key:
-	derivedPriv, err := kb.base.ComputeDerivedKey(seed, fullHdPath)
-	if err != nil {
-		return
-	}
-
-	// if we have a password, use it to encrypt the private key and store it
-	// else store the public key only
-	if passwd != "" {
-		info = kb.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
-	} else {
-		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
-		info = kb.writeOfflineKey(name, pubk)
-	}
-	return
 }
 
 // List returns the keys from storage in alphabetical order.

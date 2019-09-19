@@ -17,7 +17,6 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 var _ Keybase = keyringKeybase{}
@@ -72,22 +71,6 @@ func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, 
 //CreateMulti for keyring
 func (kb keyringKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) {
 	return kb.writeMultisigKey(name, pub), nil
-}
-
-func (kb keyringKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
-	// create master key and derive first key for keyring
-	derivedPriv, err := kb.base.ComputeDerivedKey(seed, fullHdPath)
-	if err != nil {
-		return
-	}
-
-	if passwd != "" {
-		info = kb.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
-	} else {
-		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
-		info = kb.writeOfflineKey(name, pubk)
-	}
-	return
 }
 
 // List returns the keys from storage in alphabetical order.
@@ -394,8 +377,7 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 }
 
 // CloseDB releases the lock and closes the storage backend.
-func (kb keyringKeybase) CloseDB() {
-}
+func (kb keyringKeybase) CloseDB() {}
 
 func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info {
 	//encrypt private key using keyring

@@ -120,7 +120,20 @@ func (kb baseKeybase) CreateMnemonic(persistDerivedKeyer persistDerivedKeyer, na
 	return
 }
 
-// // ComputeDerivedKey derives and returns the private key for the given seed and HD path.
+// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
+// Derive private key from the seed using the BIP44 params.
+func (kb baseKeybase) Derive(persistDerivedKeyer persistDerivedKeyer, name, mnemonic,
+	bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
+	if err != nil {
+		return
+	}
+
+	info, err = persistDerivedKeyer.persistDerivedKey(seed, encryptPasswd, name, params.String())
+	return
+}
+
+// ComputeDerivedKey derives and returns the private key for the given seed and HD path.
 func (kb baseKeybase) ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)

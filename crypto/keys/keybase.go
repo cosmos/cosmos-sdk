@@ -12,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/go-bip39"
-
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -106,13 +104,7 @@ func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd str
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 // Derive private key from the seed using the BIP44 params.
 func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
-	if err != nil {
-		return
-	}
-
-	info, err = kb.persistDerivedKey(seed, encryptPasswd, name, params.String())
-	return
+	return kb.base.Derive(&kb, name, mnemonic, bip39Passphrase, encryptPasswd, params)
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair.

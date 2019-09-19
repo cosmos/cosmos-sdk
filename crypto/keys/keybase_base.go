@@ -71,6 +71,12 @@ type writeLedgerKeyer interface {
 	writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info
 }
 
+func (kb baseKeybase) CreateAccount(persistDerivedKeyer persistDerivedKeyer, name, mnemonic,
+	bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
+	hdPath := kb.CreateHDPath(account, index)
+	return kb.Derive(persistDerivedKeyer, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+}
+
 // CreateLedger creates a new reference to a Ledger key pair.
 // It returns a public key and a derivation path; it returns an error if the device
 // could not be querier.

@@ -46,8 +46,7 @@ func (kb keyringKeybase) CreateMnemonic(name string, language Language, passwd s
 
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
 func (kb keyringKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	hdPath := kb.base.CreateHDPath(account, index)
-	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+	return kb.base.CreateAccount(&kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index)
 }
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.

@@ -19,6 +19,7 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	conncli "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/cli"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	chancli "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/cli"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
@@ -75,7 +76,7 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd.AddCommand(
 		clicli.GetTxCmd(ModuleName, cdc),
 		conncli.GetTxCmd(ModuleName, cdc),
-		//		chancli.GetTxCmd(ModuleName, cdc),
+		chancli.GetTxCmd(ModuleName, cdc),
 	)
 
 	return cmd
@@ -90,7 +91,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	cmd.AddCommand(
 		clicli.GetQueryCmd(ModuleName, cdc),
 		conncli.GetQueryCmd(ModuleName, cdc),
-		//		chancli.GetQueryCmd(ModuleName, cdc),
+		chancli.GetQueryCmd(ModuleName, cdc),
 	)
 
 	return cmd

@@ -17,8 +17,6 @@ type JSONObject struct {
 	StateProof              commitment.Proof `json:"state_proof,omitempty"`
 	CounterpartyClient      string           `json:"counterparty_client,omitempty"`
 	CounterpartyClientProof commitment.Proof `json:"counterparty_client_proof,omitempty"`
-	NextTimeout             uint64           `json:"next_timeout,omitempty"`
-	NextTimeoutProof        commitment.Proof `json:"next_timeout_proof,omitempty"`
 }
 
 func NewJSONObject(
@@ -42,7 +40,6 @@ func NewHandshakeJSONObject(
 	kind string, kindp commitment.Proof,
 	state byte, statep commitment.Proof,
 	cpclient string, cpclientp commitment.Proof,
-	timeout uint64, timeoutp commitment.Proof,
 ) JSONObject {
 	return JSONObject{
 		Connection:      conn,
@@ -56,7 +53,5 @@ func NewHandshakeJSONObject(
 		StateProof:              statep,
 		CounterpartyClient:      cpclient,
 		CounterpartyClientProof: cpclientp,
-		NextTimeout:             timeout,
-		NextTimeoutProof:        timeoutp,
 	}
 }

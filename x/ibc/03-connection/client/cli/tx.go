@@ -131,7 +131,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
 
-			fmt.Println(3333)
 			connid1 := args[0]
 			clientid1 := args[1]
 			connid2 := args[3]
@@ -176,16 +175,10 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			// TODO: check state and if not Idle continue existing process
-			height, err := lastheight(ctx2)
-			if err != nil {
-				return err
-			}
-			nextTimeout := height + 1000 // TODO: parameterize
 			msginit := connection.MsgOpenInit{
 				ConnectionID:       connid1,
 				Connection:         conn1,
 				CounterpartyClient: conn2.Client,
-				NextTimeout:        nextTimeout,
 				Signer:             ctx1.GetFromAddress(),
 			}
 
@@ -216,22 +209,11 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 			fmt.Printf("querying from %d\n", header.Height-1)
 
-			timeout := nextTimeout
-			height, err = lastheight(ctx1)
-			if err != nil {
-				return err
-			}
-			nextTimeout = height + 1000
-
 			_, pconn, err := obj1.ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
 			_, pstate, err := obj1.StateCLI(q1)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err := obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}
@@ -244,9 +226,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				ConnectionID:       connid2,
 				Connection:         conn2,
 				CounterpartyClient: conn1.Client,
-				Timeout:            timeout,
-				NextTimeout:        nextTimeout,
-				Proofs:             []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Proofs:             []commitment.Proof{pconn, pstate, pcounter},
 				Height:             uint64(header.Height),
 				Signer:             ctx2.GetFromAddress(),
 			}
@@ -255,7 +235,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			timeout = nextTimeout
 
 			// Another block has to be passed after msginit is commited
 			// to retrieve the correct proofs
@@ -269,27 +248,18 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			msgupdate = client.MsgUpdateClient{
 				ClientID: conn1.Client,
 				Header:   header,
-				Signer:   ctx2.GetFromAddress(),
+				Signer:   ctx1.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
 
 			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
 
-			height, err = lastheight(ctx2)
-			if err != nil {
-				return err
-			}
-			nextTimeout = height + 1000
 			_, pconn, err = obj2.ConnectionCLI(q2)
 			if err != nil {
 				return err
 			}
 			_, pstate, err = obj2.StateCLI(q2)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err = obj2.NextTimeoutCLI(q2)
 			if err != nil {
 				return err
 			}
@@ -300,9 +270,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			msgack := connection.MsgOpenAck{
 				ConnectionID: connid1,
-				Timeout:      timeout,
-				NextTimeout:  nextTimeout,
-				Proofs:       []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Proofs:       []commitment.Proof{pconn, pstate, pcounter},
 				Height:       uint64(header.Height),
 				Signer:       ctx1.GetFromAddress(),
 			}
@@ -331,20 +299,14 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 
-			timeout = nextTimeout
 			_, pstate, err = obj1.StateCLI(q1)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err = obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}
 
 			msgconfirm := connection.MsgOpenConfirm{
 				ConnectionID: connid2,
-				Timeout:      timeout,
-				Proofs:       []commitment.Proof{pstate, ptimeout},
+				Proofs:       []commitment.Proof{pstate},
 				Height:       uint64(header.Height),
 				Signer:       ctx2.GetFromAddress(),
 			}

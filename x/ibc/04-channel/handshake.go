@@ -48,8 +48,7 @@ type CounterpartyHandshaker struct {
 type HandshakeObject struct {
 	Object
 
-	State       state.Enum
-	NextTimeout state.Integer
+	State state.Enum
 
 	counterparty CounterHandshakeObject
 }
@@ -57,8 +56,7 @@ type HandshakeObject struct {
 type CounterHandshakeObject struct {
 	CounterObject
 
-	State       commitment.Enum
-	NextTimeout commitment.Integer
+	State commitment.Enum
 }
 
 // CONTRACT: client and remote must be filled by the caller
@@ -68,8 +66,7 @@ func (man Handshaker) object(parent Object) HandshakeObject {
 	return HandshakeObject{
 		Object: parent,
 
-		State:       man.protocol.Value([]byte(prefix + "/state")).Enum(),
-		NextTimeout: man.protocol.Value([]byte(prefix + "/timeout")).Integer(state.Dec),
+		State: man.protocol.Value([]byte(prefix + "/state")).Enum(),
 
 		counterparty: man.counterparty.object(parent.counterparty),
 	}
@@ -81,8 +78,7 @@ func (man CounterpartyHandshaker) object(parent CounterObject) CounterHandshakeO
 	return CounterHandshakeObject{
 		CounterObject: man.man.object(parent.portid, parent.chanid),
 
-		State:       man.man.protocol.Value([]byte(prefix + "/state")).Enum(),
-		NextTimeout: man.man.protocol.Value([]byte(prefix + "/timeout")).Integer(state.Dec),
+		State: man.man.protocol.Value([]byte(prefix + "/state")).Enum(),
 	}
 }
 
@@ -125,7 +121,7 @@ func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
 
 // Using proofs: none
 func (man Handshaker) OpenInit(ctx sdk.Context,
-	portid, chanid string, channel Channel, nextTimeoutHeight uint64,
+	portid, chanid string, channel Channel,
 ) (HandshakeObject, error) {
 	// man.Create() will ensure
 	// assert(connectionHops.length === 2)
@@ -140,16 +136,15 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 		return HandshakeObject{}, err
 	}
 
-	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 	obj.State.Set(ctx, Init)
 
 	return obj, nil
 }
 
-// Using proofs: counterparty.{channel,state,nextTimeout}
+// Using proofs: counterparty.{channel,state}
 func (man Handshaker) OpenTry(ctx sdk.Context,
 	proofs []commitment.Proof, height uint64,
-	portid, chanid string, channel Channel, timeoutHeight, nextTimeoutHeight uint64,
+	portid, chanid string, channel Channel,
 ) (obj HandshakeObject, err error) {
 	if len(channel.ConnectionHops) != 1 {
 		return HandshakeObject{}, errors.New("ConnectionHops length must be 1")
@@ -164,41 +159,19 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		return
 	}
 
-	err = assertTimeout(ctx, timeoutHeight)
-	if err != nil {
-		return
-	}
-
 	if !obj.counterparty.State.Is(ctx, Init) {
 		err = errors.New("counterparty state not init")
 		return
 	}
 
 	if !obj.counterparty.Channel.Is(ctx, Channel{
-		Port:             channel.CounterpartyPort,
 		Counterparty:     chanid,
-		CounterpartyPort: channel.Port,
+		CounterpartyPort: portid,
 		ConnectionHops:   []string{obj.Connections[0].GetConnection(ctx).Counterparty},
 	}) {
 		err = errors.New("wrong counterparty connection")
 		return
 	}
-
-	if !obj.counterparty.NextTimeout.Is(ctx, timeoutHeight) {
-		err = errors.New("unexpected counterparty timeout value")
-		return
-	}
-
-	// TODO: commented out, need to check whether the stored client is compatible
-	// make a separate module that manages recent n block headers
-	// ref #4647
-	/*
-		var expected client.ConsensusState
-		obj.self.Get(ctx, expheight, &expected)
-		if !obj.counterparty.client.Is(ctx, expected) {
-			return errors.New("unexpected counterparty client value")
-		}
-	*/
 
 	// CONTRACT: OpenTry() should be called after man.Create(), not man.Query(),
 	// which will ensure
@@ -206,7 +179,6 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	// set("connections{identifier}", connection)
 
 	obj.State.Set(ctx, OpenTry)
-	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 
 	return
 }
@@ -214,7 +186,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 // Using proofs: counterparty.{handshake,state,nextTimeout,clientid,client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
 	proofs []commitment.Proof, height uint64,
-	portid, chanid string, timeoutHeight, nextTimeoutHeight uint64,
+	portid, chanid string,
 ) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, portid, chanid)
 	if err != nil {
@@ -231,16 +203,9 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	err = assertTimeout(ctx, timeoutHeight)
-	if err != nil {
-		return
-	}
-
-	channel := obj.GetChannel(ctx)
 	if !obj.counterparty.Channel.Is(ctx, Channel{
-		Port:             channel.CounterpartyPort,
 		Counterparty:     chanid,
-		CounterpartyPort: channel.Port,
+		CounterpartyPort: portid,
 		ConnectionHops:   []string{obj.Connections[0].GetConnection(ctx).Counterparty},
 	}) {
 		err = errors.New("wrong counterparty")
@@ -249,11 +214,6 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 
 	if !obj.counterparty.State.Is(ctx, OpenTry) {
 		err = errors.New("counterparty state not opentry")
-		return
-	}
-
-	if !obj.counterparty.NextTimeout.Is(ctx, timeoutHeight) {
-		err = errors.New("unexpected counterparty timeout value")
 		return
 	}
 
@@ -266,7 +226,6 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		}
 	*/
 
-	obj.NextTimeout.Set(ctx, nextTimeoutHeight)
 	obj.Available.Set(ctx, true)
 
 	return
@@ -275,7 +234,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 // Using proofs: counterparty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
 	proofs []commitment.Proof, height uint64,
-	portid, chanid string, timeoutHeight uint64) (obj HandshakeObject, err error) {
+	portid, chanid string) (obj HandshakeObject, err error) {
 	obj, err = man.query(ctx, portid, chanid)
 	if err != nil {
 		return
@@ -291,23 +250,12 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	err = assertTimeout(ctx, timeoutHeight)
-	if err != nil {
-		return
-	}
-
 	if !obj.counterparty.State.Is(ctx, Open) {
 		err = errors.New("counterparty state not open")
 		return
 	}
 
-	if !obj.counterparty.NextTimeout.Is(ctx, timeoutHeight) {
-		err = errors.New("unexpected counterparty timeout value")
-		return
-	}
-
 	obj.Available.Set(ctx, true)
-	obj.NextTimeout.Set(ctx, 0)
 
 	return
 }
@@ -352,7 +300,7 @@ func (obj HandshakeObject) CloseInit(ctx sdk.Context, nextTimeout uint64) error 
 	return nil
 }
 
-func (obj HandshakeObject) CloseTry(ctx sdk.Context, timeoutHeight, nextTimeoutHeight uint64) error {
+func (obj HandshakeObject) CloseTry(ctx sdk.Context,  nextTimeoutHeight uint64) error {
 	if !obj.State.Transit(ctx, Open, Closed) {
 		return errors.New("closetry on non-open connection")
 	}

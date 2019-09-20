@@ -25,11 +25,10 @@ type Packet interface {
 	ValidateBasic() sdk.Error
 	Timeout() uint64
 	MarshalAmino() (string, error) // Should exclude PortID/ChannelID info
-	MarshalJSON() ([]byte, error) // Should exclude PortID/ChannelID info 
+	MarshalJSON() ([]byte, error)  // Should exclude PortID/ChannelID info
 }
 
 type Channel struct {
-	Port             string
 	Counterparty     string
 	CounterpartyPort string
 	ConnectionHops   []string

@@ -41,14 +41,12 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	}
 
 	res.Channel = channel.Channel{
-		Port:             PortName,
 		Counterparty:     res.Counterparty.Name,
 		CounterpartyPort: PortName,
 		ConnectionHops:   []string{res.Name},
 	}
 
 	res.Counterparty.Channel = channel.Channel{
-		Port:             PortName,
 		Counterparty:     res.Name,
 		CounterpartyPort: PortName,
 		ConnectionHops:   []string{res.Counterparty.Name},
@@ -85,7 +83,7 @@ func (node *Node) Manager() channel.Manager {
 
 func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenInit(ctx, PortName, node.Name, node.Channel, 100) // TODO: test timeout
+	obj, err := man.OpenInit(ctx, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
 	require.Equal(t, channel.Init, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -94,7 +92,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, proofs, height, PortName, node.Name, node.Channel, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs, height, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
 	require.Equal(t, channel.OpenTry, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -104,7 +102,7 @@ func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proo
 
 func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, proofs, height, PortName, node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -114,7 +112,7 @@ func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proo
 
 func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, proofs, height, PortName, node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
 	require.Equal(t, channel.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
@@ -134,8 +132,7 @@ func (node *Node) Handshake(t *testing.T) {
 	cliobj := node.CLIObject()
 	_, pchan := node.QueryValue(t, cliobj.Channel)
 	_, pstate := node.QueryValue(t, cliobj.State)
-	_, ptimeout := node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenTry(t, uint64(header.Height), pchan, pstate, ptimeout)
+	node.Counterparty.OpenTry(t, uint64(header.Height), pchan, pstate)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
@@ -143,16 +140,14 @@ func (node *Node) Handshake(t *testing.T) {
 	cliobj = node.Counterparty.CLIObject()
 	_, pchan = node.Counterparty.QueryValue(t, cliobj.Channel)
 	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
-	_, ptimeout = node.Counterparty.QueryValue(t, cliobj.NextTimeout)
-	node.OpenAck(t, uint64(header.Height), pchan, pstate, ptimeout)
+	node.OpenAck(t, uint64(header.Height), pchan, pstate)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm
 	node.Counterparty.UpdateClient(t, header)
 	cliobj = node.CLIObject()
 	_, pstate = node.QueryValue(t, cliobj.State)
-	_, ptimeout = node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate, ptimeout)
+	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate)
 }
 
 func (node *Node) Send(t *testing.T, packet channel.Packet) {

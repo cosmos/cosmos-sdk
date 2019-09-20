@@ -79,9 +79,3 @@ func (obj HandshakeObject) StateCLI(q state.ABCIQuerier) (res State, proof merkl
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.State)
 	return
 }
-
-func (obj HandshakeObject) NextTimeoutCLI(q state.ABCIQuerier) (res uint64, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.NextTimeout.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.NextTimeout)
-	return
-}

@@ -5,7 +5,7 @@ import (
 )
 
 func HandleMsgOpenInit(ctx sdk.Context, msg MsgOpenInit, man Handshaker) sdk.Result {
-	_, err := man.OpenInit(ctx, msg.ConnectionID, msg.Connection, msg.CounterpartyClient, msg.NextTimeout)
+	_, err := man.OpenInit(ctx, msg.ConnectionID, msg.Connection, msg.CounterpartyClient)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), 100, err.Error()).Result()
 	}
@@ -13,7 +13,7 @@ func HandleMsgOpenInit(ctx sdk.Context, msg MsgOpenInit, man Handshaker) sdk.Res
 }
 
 func HandleMsgOpenTry(ctx sdk.Context, msg MsgOpenTry, man Handshaker) sdk.Result {
-	_, err := man.OpenTry(ctx, msg.Proofs, msg.Height, msg.ConnectionID, msg.Connection, msg.CounterpartyClient, msg.Timeout, msg.NextTimeout)
+	_, err := man.OpenTry(ctx, msg.Proofs, msg.Height, msg.ConnectionID, msg.Connection, msg.CounterpartyClient)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), 200, err.Error()).Result()
 	}
@@ -21,7 +21,7 @@ func HandleMsgOpenTry(ctx sdk.Context, msg MsgOpenTry, man Handshaker) sdk.Resul
 }
 
 func HandleMsgOpenAck(ctx sdk.Context, msg MsgOpenAck, man Handshaker) sdk.Result {
-	_, err := man.OpenAck(ctx, msg.Proofs, msg.Height, msg.ConnectionID, msg.Timeout, msg.NextTimeout)
+	_, err := man.OpenAck(ctx, msg.Proofs, msg.Height, msg.ConnectionID)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), 300, err.Error()).Result()
 	}
@@ -29,7 +29,7 @@ func HandleMsgOpenAck(ctx sdk.Context, msg MsgOpenAck, man Handshaker) sdk.Resul
 }
 
 func HandleMsgOpenConfirm(ctx sdk.Context, msg MsgOpenConfirm, man Handshaker) sdk.Result {
-	_, err := man.OpenConfirm(ctx, msg.Proofs, msg.Height, msg.ConnectionID, msg.Timeout)
+	_, err := man.OpenConfirm(ctx, msg.Proofs, msg.Height, msg.ConnectionID)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), 400, err.Error()).Result()
 	}

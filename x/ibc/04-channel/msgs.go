@@ -8,12 +8,10 @@ import (
 const Route = "ibc"
 
 type MsgOpenInit struct {
-	ConnectionID       string         `json:"connection_id"`
-	ChannelID          string         `json:"channel_id"`
-	Channel            Channel        `json:"channel"`
-	CounterpartyClient string         `json:"counterparty_client"`
-	NextTimeout        uint64         `json:"next_timeout"`
-	Signer             sdk.AccAddress `json:"signer"`
+	PortID    string         `json:"port_id"`
+	ChannelID string         `json:"channel_id"`
+	Channel   Channel        `json:"channel"`
+	Signer    sdk.AccAddress `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenInit{}
@@ -39,15 +37,12 @@ func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenTry struct {
-	ConnectionID       string             `json:"connection_id"`
-	ChannelID          string             `json:"channel_id"`
-	Channel            Channel            `json:"channel"`
-	CounterpartyClient string             `json:"counterparty_client"`
-	Timeout            uint64             `json:"timeout"`
-	NextTimeout        uint64             `json:"next_timeout"`
-	Proofs             []commitment.Proof `json:"proofs"`
-	Height             uint64             `json:"height"`
-	Signer             sdk.AccAddress     `json:"signer"`
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Channel   Channel            `json:"channel"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenTry{}
@@ -73,13 +68,11 @@ func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenAck struct {
-	ConnectionID string             `json:"connection_id"`
-	ChannelID    string             `json:"channel_id"`
-	Timeout      uint64             `json:"timeout"`
-	NextTimeout  uint64             `json:"next_timeout"`
-	Proofs       []commitment.Proof `json:"proofs"`
-	Height       uint64             `json:"height"`
-	Signer       sdk.AccAddress     `json:"signer"`
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenAck{}
@@ -105,12 +98,11 @@ func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenConfirm struct {
-	ConnectionID string             `json:"connection_id"`
-	ChannelID    string             `json:"channel_id"`
-	Timeout      uint64             `json:"timeout"`
-	Proofs       []commitment.Proof `json:"proofs"`
-	Height       uint64             `json:"height"`
-	Signer       sdk.AccAddress     `json:"signer"`
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenConfirm{}

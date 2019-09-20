@@ -1,11 +1,28 @@
 package cli
 
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	cli "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/state"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
+)
+
 const (
 	FlagProve = "prove"
 )
 
-// TODO
-/*
 func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Object {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
@@ -16,39 +33,36 @@ func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid str
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcQueryCmd := &cobra.Command{
-		Use:                        "connection",
-		Short:                      "Channel query subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
+		Use:                "channel",
+		Short:              "Channel query subcommands",
+		DisableFlagParsing: true,
 	}
 
 	ibcQueryCmd.AddCommand(cli.GetCommands(
-	//		GetCmdQueryChannel(storeKey, cdc),
+		GetCmdQueryChannel(storeKey, cdc),
 	)...)
+
 	return ibcQueryCmd
 }
 
 func QueryChannel(ctx context.CLIContext, obj channel.Object, prove bool) (res utils.JSONObject, err error) {
-	conn, connp, err := obj.ChannelCLI(ctx)
-	if err != nil {
-		return
-	}
-	avail, availp, err := obj.AvailableCLI(ctx)
-	if err != nil {
-		return
-	}
-	/*
-		kind, kindp, err := obj.Kind(ctx)
-		if err != nil {
-			return
-		}
+	q := state.NewCLIQuerier(ctx)
 
-	seqsend, seqsendp, err := obj.SeqSendCLI(ctx)
+	conn, connp, err := obj.ChannelCLI(q)
+	if err != nil {
+		return
+	}
+	avail, availp, err := obj.AvailableCLI(q)
 	if err != nil {
 		return
 	}
 
-	seqrecv, seqrecvp, err := obj.SeqRecvCLI(ctx)
+	seqsend, seqsendp, err := obj.SeqSendCLI(q)
+	if err != nil {
+		return
+	}
+
+	seqrecv, seqrecvp, err := obj.SeqRecvCLI(q)
 	if err != nil {
 		return
 	}
@@ -71,15 +85,14 @@ func QueryChannel(ctx context.CLIContext, obj channel.Object, prove bool) (res u
 	), nil
 }
 
-
 func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "connection",
 		Short: "Query stored connection",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(ctx, cdc, storeKey, ibc.Version, args[0], args[1])
+			obj := object(cdc, storeKey, version.DefaultPrefix(), args[0], args[1], []string{args[2]})
 			jsonobj, err := QueryChannel(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err
@@ -95,4 +108,32 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+
+/*
+func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Object {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+	climan := client.NewManager(base)
+	connman := connection.NewManager(base, climan)
+	man := channel.NewManager(base, connman)
+	return man.CLIObject(portid, chanid, connids)
+}
 */
+/*
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	ibcQueryCmd := &cobra.Command{
+		Use:                        "connection",
+		Short:                      "Channel query subcommands",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+	}
+
+	ibcQueryCmd.AddCommand(cli.GetCommands(
+	//		GetCmdQueryChannel(storeKey, cdc),
+	)...)
+	return ibcQueryCmd
+}
+*/
+/*
+
+
+ */

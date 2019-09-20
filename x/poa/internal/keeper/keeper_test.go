@@ -9,7 +9,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	ctx, _, keeper, _ := CreateTestInput(t, false, 0)
+	ctx, _, keeper, _ := CreateTestInput(t, false)
 	expParams := types.DefaultParams()
 
 	//check that the empty keeper loads the default
@@ -20,5 +20,5 @@ func TestParams(t *testing.T) {
 	expParams.MaxValidators = 777
 	keeper.SetParams(ctx, expParams)
 	resParams = keeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams)
+	require.True(t, expParams.Equal(resParams))
 }

@@ -16,7 +16,7 @@ func NewPOAProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
 		switch c := content.(type) {
 		case MsgProposeCreateValidator:
-			return handleMsgProposeCreateValidatorl(ctx, k, c)
+			return handleMsgProposeCreateValidator(ctx, k, c)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized poa proposal content type: %T", c)

@@ -512,7 +512,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
 // further details on transaction execution, reference the BaseApp SDK
 // documentation.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result *sdk.Result, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -523,7 +523,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		return sdk.ErrOutOfGas("no block gas left to run tx").Result()
+		return nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
 	var startingGas uint64
@@ -539,10 +539,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
 				)
-				result = sdk.ErrOutOfGas(log).Result()
+				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
+				// TODO: Wrap includes the stacktrace. Do we need to add an additional
+				// stacktrace log?
 				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
-				result = sdk.ErrInternal(log).Result()
+				err = sdkerrors.Wrap(sdkerrors.ErrPanic, log)
 			}
 		}
 
@@ -568,9 +570,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		}
 	}()
 
-	var msgs = tx.GetMsgs()
+	msgs := tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	if app.anteHandler != nil {
@@ -586,6 +588,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
+		// TODO: blocked by https://github.com/cosmos/cosmos-sdk/pull/5006
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
@@ -601,6 +604,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		gasWanted = result.GasWanted
 
 		if abort {
+			// TODO: blocked by https://github.com/cosmos/cosmos-sdk/pull/5006
 			return result
 		}
 
@@ -611,37 +615,33 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// MultiStore in case message processing fails. At this point, the MultiStore
 	// is doubly cached-wrapped.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
-	result = app.runMsgs(runMsgCtx, msgs, mode)
+	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
 
 	// Safety check: don't write the cache state unless we're in DeliverTx.
 	if mode != runTxModeDeliver {
-		return result
+		return result, err
 	}
 
 	// only update state if all messages pass
-	if result.IsOK() {
+	if err != nil {
 		msCache.Write()
 	}
 
-	return result
+	return result, err
 }
 
 // runMsgs iterates through all the messages and executes them. If a message fails
 // or does not have a valid route, runMsgs will return immediately with a
-// corresponding result and error. The result will only contain the events, logs,
-// and data up until the first invalid message. The error will contain the code
-// and codespace of the underlying error. If runMsgs is executed in runTxModeCheck
-// mode, an empty Result and no error will be returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
+// corresponding Result and error; this situation is still considered successful.
+// The result will only contain the events, logs, and data up until the first
+// invalid message. The error will contain the code and codespace of the
+// underlying error. If runMsgs is executed in runTxModeCheck mode, an empty
+// Result and no error will be returned.
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result *sdk.Result, err error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	data := make([]byte, 0, len(msgs))
 	events := sdk.EmptyEvents()
-
-	var (
-		msgResult *sdk.Result
-		err       error
-	)
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -658,19 +658,19 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			break
 		}
 
-		msgResult, err = handler(ctx, msg)
+		result, err = handler(ctx, msg)
 
 		// add message events along with adding message type event
-		events = events.AppendEvents(msgResult.Events)
+		events = events.AppendEvents(result.Events)
 		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 
 		// short-circuit if the message fails (i.e. disregard remaining messages)
 		if err != nil {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, result.Log, events))
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, result.Log, events))
 	}
 
 	return &sdk.Result{

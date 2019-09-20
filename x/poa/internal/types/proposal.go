@@ -115,16 +115,16 @@ func (nvc NewValidatorCreatation) String() string {
 // --------------------------------
 
 type MsgProposeIncreaseWeight struct {
-	Title       string                 `json:"title" yaml:"title"`             // title of the validator
-	Description string                 `json:"description" yaml:"description"` // description of validator
-	Validator   ValidatorIncreaseWeight `json:"validator" yaml:"validator"`	
+	Title       string                  `json:"title" yaml:"title"`             // title of the validator
+	Description string                  `json:"description" yaml:"description"` // description of validator
+	Validator   ValidatorIncreaseWeight `json:"validator" yaml:"validator"`
 }
 
-func NewMsgProposeIncreaseWeight(t, d string, v ValidatorWeightIncrease) MsgProposeIncreaseWeight {
+func NewMsgProposeIncreaseWeight(t, d string, v ValidatorIncreaseWeight) MsgProposeIncreaseWeight {
 	return MsgProposeIncreaseWeight{
-		Title: t, 
+		Title:       t,
 		Description: d,
-		Validator: v,	
+		Validator:   v,
 	}
 }
 
@@ -142,7 +142,7 @@ func (mpi MsgProposeIncreaseWeight) ProposalType() string { return ProposeCreate
 
 // String implements the stringer interface
 func (mpi MsgProposeIncreaseWeight) String() string {
-	des := mpc.Validator.Description
+	des := mpi.Validator.Description
 	d := fmt.Sprintf(`
 		Title: %s,
 		Moinker: %s,
@@ -152,14 +152,14 @@ func (mpi MsgProposeIncreaseWeight) String() string {
 		Details: %s,
 		ValidatorAddress: %s,
 		PubKey: %s
-		`, mpc.Title, des.Moniker, des.Identity, des.Website,
-		des.SecurityContact, des.Details, mpi.Validator.ValidatorAddress.String(), mpc.Validator.PubKey.Address().String())
+		`, mpi.Title, des.Moniker, des.Identity, des.Website,
+		des.SecurityContact, des.Details, mpi.Validator.ValidatorAddress.String(), mpi.Validator.PubKey.Address().String())
 	return d
 }
 
 // ValidateBasic validates the Creation of a validator proposal
 func (mpi MsgProposeIncreaseWeight) ValidateBasic() sdk.Error {
-	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpc)
+	err := govtypes.ValidateAbstract(DefaultCodeSpace, mpi)
 	if err != nil {
 		return err
 	}
@@ -180,16 +180,14 @@ type ValidatorIncreaseWeight struct {
 	Description      stakingtypes.Description `json:"description" yaml:"description"` // description of validator
 	ValidatorAddress sdk.ValAddress           `json:"validator_address" yaml:"validator_address"`
 	PubKey           crypto.PubKey            `json:"pubkey" yaml:"pubkey"`
-	NewWeight sdk.Int `json:"new_weight" yaml:"new_weight"`
+	NewWeight        sdk.Int                  `json:"new_weight" yaml:"new_weight"`
 }
 
 func ValidatorWeightIncrease(d stakingtypes.Description, va sdk.ValAddress, pb crypto.PubKey, nw sdk.Int) ValidatorIncreaseWeight {
-	return ValidatorIncreaseweight{
-		Description: d, 
+	return ValidatorIncreaseWeight{
+		Description:      d,
 		ValidatorAddress: va,
-		PubKey: pb,
-		NewWeight: nw,
+		PubKey:           pb,
+		NewWeight:        nw,
 	}
 }
-
-

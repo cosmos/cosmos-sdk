@@ -24,10 +24,6 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"empty description", "", "", "", "", "", valAddr1, pk1, false},
 		{"empty address", "a", "b", "c", "d", "e", emptyAddr, pk1, false},
 		{"empty pubkey", "a", "b", "c", "d", "e", valAddr1, emptyPubkey, true},
-		{"empty bond", "a", "b", "c", "d", "e", valAddr1, pk1, false},
-		{"zero min self delegation", "a", "b", "c", "d", "e", valAddr1, pk1, false},
-		{"negative min self delegation", "a", "b", "c", "d", "e", valAddr1, pk1, false},
-		{"delegation less than min self delegation", "a", "b", "c", "d", "e", valAddr1, pk1, false},
 	}
 
 	for _, tc := range tests {

@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,13 +37,8 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
-		useSecp := r.Int63()%2 == 0
-		if useSecp {
-			accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		} else {
-			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
-		}
 
+		accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		accs[i].PubKey = accs[i].PrivKey.PubKey()
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
 	}

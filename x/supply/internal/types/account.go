@@ -1,18 +1,31 @@
 package types
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
-var _ exported.ModuleAccountI = (*ModuleAccount)(nil)
+var (
+	_ authexported.GenesisAccount = (*ModuleAccount)(nil)
+	_ exported.ModuleAccountI     = (*ModuleAccount)(nil)
+)
+
+func init() {
+	// Register the ModuleAccount type as a GenesisAccount so that when no
+	// concrete GenesisAccount types exist and **default** genesis state is used,
+	// the genesis state will serialize correctly.
+	authtypes.RegisterAccountTypeCodec(&ModuleAccount{}, "cosmos-sdk/ModuleAccount")
+}
 
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
@@ -26,6 +39,7 @@ func NewModuleAddress(name string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
 }
 
+// NewEmptyModuleAccount creates a empty ModuleAccount from a string
 func NewEmptyModuleAccount(name string, permissions ...string) *ModuleAccount {
 	moduleAddress := NewModuleAddress(name)
 	baseAcc := authtypes.NewBaseAccountWithAddress(moduleAddress)
@@ -93,6 +107,18 @@ func (ma ModuleAccount) String() string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// Validate checks for errors on the account fields
+func (ma ModuleAccount) Validate() error {
+	if strings.TrimSpace(ma.Name) == "" {
+		return errors.New("module account name cannot be blank")
+	}
+	if !ma.Address.Equals(sdk.AccAddress(crypto.AddressHash([]byte(ma.Name)))) {
+		return fmt.Errorf("address %s cannot be derived from the module name '%s'", ma.Address, ma.Name)
+	}
+
+	return ma.BaseAccount.Validate()
 }
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.

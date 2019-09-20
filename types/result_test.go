@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,4 +27,14 @@ func TestParseABCILog(t *testing.T) {
 	require.Equal(t, res[0].Log, "")
 	require.Equal(t, res[0].MsgIndex, uint16(1))
 	require.True(t, res[0].Success)
+}
+
+func TestABCIMessageLog(t *testing.T) {
+	events := Events{NewEvent("transfer", NewAttribute("sender", "foo"))}
+	msgLog := NewABCIMessageLog(0, true, "", events)
+
+	msgLogs := ABCIMessageLogs{msgLog}
+	bz, err := codec.Cdc.MarshalJSON(msgLogs)
+	require.NoError(t, err)
+	require.Equal(t, string(bz), msgLogs.String())
 }

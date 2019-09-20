@@ -130,17 +130,9 @@ type AppModuleGenesis interface {
 	ExportGenesis(sdk.Context) json.RawMessage
 }
 
-// AppModuleSimulation defines the standard functions that every module should expose
-// for the SDK blockchain simulator
-type AppModuleSimulation interface {
-	// register a func to decode the each module's defined types from their corresponding store key
-	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
-}
-
 // AppModule is the standard form for an application module
 type AppModule interface {
 	AppModuleGenesis
-	AppModuleSimulation
 
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
@@ -172,9 +164,6 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// RegisterStoreDecoder empty store decoder registry
-func (GenesisOnlyAppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // Route empty module message route
 func (GenesisOnlyAppModule) Route() string { return "" }
@@ -212,7 +201,7 @@ type Manager struct {
 func NewManager(modules ...AppModule) *Manager {
 
 	moduleMap := make(map[string]AppModule)
-	var modulesStr []string
+	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
 		modulesStr = append(modulesStr, module.Name())

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -144,8 +146,53 @@ func TestSendKeeper(t *testing.T) {
 	// validate coins with invalid denoms or negative values cannot be sent
 	// NOTE: We must use the Coin literal as the constructor does not allow
 	// negative values.
-	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
+	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{Denom: "FOOCOIN", Amount: sdk.NewInt(-5)}})
 	require.Error(t, err)
+}
+
+func TestMsgSendEvents(t *testing.T) {
+	app, ctx := createTestApp(false)
+
+	app.BankKeeper.SetSendEnabled(ctx, true)
+
+	addr := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	err := app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins)
+	require.Error(t, err)
+	events := ctx.EventManager().Events()
+	require.Equal(t, 2, len(events))
+	event1 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []common.KVPair{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		common.KVPair{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())})
+	event1.Attributes = append(
+		event1.Attributes,
+		common.KVPair{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+	event2 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []common.KVPair{},
+	}
+	event2.Attributes = append(
+		event2.Attributes,
+		common.KVPair{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())})
+	require.Equal(t, event1, events[0])
+	require.Equal(t, event2, events[1])
+
+	app.BankKeeper.SetCoins(ctx, addr, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50)))
+	newCoins = sdk.NewCoins(sdk.NewInt64Coin("foocoin", 50))
+	err = app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins)
+	require.NoError(t, err)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 4, len(events))
+	require.Equal(t, event1, events[2])
+	require.Equal(t, event2, events[3])
 }
 
 func TestViewKeeper(t *testing.T) {

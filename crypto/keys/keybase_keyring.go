@@ -93,7 +93,7 @@ func (kb keyringKeybase) List() ([]Info, error) {
 				return nil, keyerror.NewErrKeyNotFound(key)
 			}
 
-			info, err := readInfo(rawInfo.Data)
+			info, err := unmarshalInfo(rawInfo.Data)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +115,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	if len(bs.Data) == 0 {
 		return nil, keyerror.NewErrKeyNotFound(name)
 	}
-	return readInfo(bs.Data)
+	return unmarshalInfo(bs.Data)
 }
 
 // Get fetches a key by address and returns its public information.
@@ -132,7 +132,7 @@ func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	return readInfo(bs.Data)
+	return unmarshalInfo(bs.Data)
 }
 
 // Sign signs the msg with the named key.
@@ -244,7 +244,7 @@ func (kb keyringKeybase) Import(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-	info, err := readInfo(infoBytes)
+	info, err := unmarshalInfo(infoBytes)
 
 	if err != nil {
 		return
@@ -391,7 +391,7 @@ func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passp
 func (kb keyringKeybase) writeInfo(name string, info Info) {
 	//write the info by key
 	key := infoKey(name)
-	serializedInfo := writeInfo(info)
+	serializedInfo := marshalInfo(info)
 	err := kb.db.Set(keyring.Item{
 		Key:  string(key),
 		Data: serializedInfo,

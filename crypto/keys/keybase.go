@@ -133,7 +133,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 
 		// need to include only keys in storage that have an info suffix
 		if strings.HasSuffix(key, infoSuffix) {
-			info, err := readInfo(iter.Value())
+			info, err := unmarshalInfo(iter.Value())
 			if err != nil {
 				return nil, err
 			}
@@ -149,7 +149,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	if len(bs) == 0 {
 		return nil, keyerror.NewErrKeyNotFound(name)
 	}
-	return readInfo(bs)
+	return unmarshalInfo(bs)
 }
 
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
@@ -158,7 +158,7 @@ func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 		return nil, fmt.Errorf("key with address %s not found", address)
 	}
 	bs := kb.db.Get(ik)
-	return readInfo(bs)
+	return unmarshalInfo(bs)
 }
 
 // Sign signs the msg with the named key.
@@ -241,7 +241,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
-	info, err := readInfo(bz)
+	info, err := unmarshalInfo(bz)
 	if err != nil {
 		return
 	}
@@ -379,7 +379,7 @@ func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase
 func (kb dbKeybase) writeInfo(name string, info Info) {
 	// write the info by key
 	key := infoKey(name)
-	serializedInfo := writeInfo(info)
+	serializedInfo := marshalInfo(info)
 	kb.db.SetSync(key, serializedInfo)
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)

@@ -126,7 +126,7 @@ func ABCIError(codespace string, code uint32, log string) error {
 
 // Error represents a root error.
 //
-// Weave framework is using root error to categorize issues. Each instance
+// The SDK uses root errors (see above) to categorize issues. Each instance
 // created during the runtime should wrap one of the declared root errors. This
 // allows error tests and returning all errors to the client in a safe manner.
 //

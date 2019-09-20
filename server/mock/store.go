@@ -19,7 +19,7 @@ func (ms multiStore) CacheMultiStore() sdk.CacheMultiStore {
 	panic("not implemented")
 }
 
-func (kv multiStore) CacheMultiStoreWithVersion(_ int64) (sdk.CacheMultiStore, error) {
+func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (sdk.CacheMultiStore, error) {
 	panic("not implemented")
 }
 

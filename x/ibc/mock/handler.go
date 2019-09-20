@@ -14,9 +14,12 @@ func NewHandler(k Keeper) sdk.Handler {
 			switch packet := msg.Packet.(type) {
 			case types.PacketSequence:
 				return handleMyPacket(ctx, k, packet, msg.ChannelID)
+			default:
+				return sdk.ErrUnknownRequest("23331345").Result()
 			}
+		default:
+			return sdk.ErrUnknownRequest("21345").Result()
 		}
-		return sdk.ErrUnknownRequest("21345").Result()
 	}
 }
 

@@ -187,7 +187,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			// Another block has to be passed after msginit is commited
+			// Another block has to be passed after msginit is committed
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
@@ -203,6 +203,9 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+			if err != nil {
+				return err
+			}
 
 			fmt.Printf("updated apphash to %X\n", header.AppHash)
 
@@ -236,7 +239,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			// Another block has to be passed after msginit is commited
+			// Another block has to be passed after msginit is committed
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
@@ -252,6 +255,9 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
+			if err != nil {
+				return err
+			}
 
 			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
 
@@ -280,7 +286,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			// Another block has to be passed after msginit is commited
+			// Another block has to be passed after msginit is committed
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
@@ -296,6 +302,9 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+			if err != nil {
+				return err
+			}
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 

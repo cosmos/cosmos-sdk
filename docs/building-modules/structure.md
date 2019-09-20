@@ -11,31 +11,31 @@ A typical Cosmos SDK module can be structured as follows:
 ```shell
 x/{module}
 ├── client
-│   ├── cli
-│   │   ├── query.go
-│   │   └── tx.go
-│   └── rest
-│       ├── query.go
-│       └── tx.go
+│   ├── cli
+│   │   ├── query.go
+│   │   └── tx.go
+│   └── rest
+│       ├── query.go
+│       └── tx.go
 ├── exported
-│   └── exported.go
+│   └── exported.go
 ├── internal
-│   ├── keeper
-│   │   ├── invariants.go
-│   │   ├── keeper.go
-│   │   ├── ...
-│   │   └── querier.go
-│   └── types
-│       ├── codec.go
-│       ├── errors.go
-│       ├── events.go
-│       ├── expected_keepers.go
-│       ├── genesis.go
-│       ├── keys.go
-│       ├── msgs.go
-│       ├── params.go
-│       ├── ...
-│       └── querier.go
+│   ├── keeper
+│   │   ├── invariants.go
+│   │   ├── keeper.go
+│   │   ├── ...
+│   │   └── querier.go
+│   └── types
+│       ├── codec.go
+│       ├── errors.go
+│       ├── events.go
+│       ├── expected_keepers.go
+│       ├── genesis.go
+│       ├── keys.go
+│       ├── msgs.go
+│       ├── params.go
+│       ├── ...
+│       └── querier.go
 ├── abci.go
 ├── alias.go
 ├── genesis.go

@@ -1,7 +1,3 @@
----
-order: false
----
-
 # Auth 
 
 The `x/auth` modules is used for accounts
@@ -54,15 +50,6 @@ See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)
 
 See the
 [specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/governance)
-
-# IBC
-
-The `x/ibc` module is for InterBlockchain Communication.
-
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/ibc)
-
-See the
-[specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/ibc)
 
 To keep up with the current status of IBC, follow and contribute to [ICS](https://github.com/cosmos/ics)
 

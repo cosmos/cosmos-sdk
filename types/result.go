@@ -14,15 +14,15 @@ import (
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
-	// Code is the response code, is stored back on the chain.
-	//
-	// DEPRECATED: Remove in a future release?
-	Code CodeType
+	// // Code is the response code, is stored back on the chain.
+	// //
+	// // DEPRECATED: Remove in a future release?
+	// Code CodeType
 
-	// Codespace is the string referring to the domain of an error
-	//
-	// DEPRECATED: Remove in a future release?
-	Codespace CodespaceType
+	// // Codespace is the string referring to the domain of an error
+	// //
+	// // DEPRECATED: Remove in a future release?
+	// Codespace CodespaceType
 
 	// Data is any data returned from the app.
 	// Data has to be length prefixed in order to separate
@@ -43,12 +43,12 @@ type Result struct {
 	Events Events
 }
 
-// TODO: In the future, more codes may be OK.
-//
-// DEPRECATED: Remove in a future release?
-func (res Result) IsOK() bool {
-	return res.Code.IsOK()
-}
+// // TODO: In the future, more codes may be OK.
+// //
+// // DEPRECATED: Remove in a future release?
+// func (res Result) IsOK() bool {
+// 	return res.Code.IsOK()
+// }
 
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
 type ABCIMessageLogs []ABCIMessageLog

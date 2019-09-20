@@ -17,7 +17,7 @@ type Msg interface {
 
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
-	ValidateBasic() Error
+	ValidateBasic() error
 
 	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
@@ -37,13 +37,13 @@ type Tx interface {
 
 	// ValidateBasic does a simple and lightweight validation check that doesn't
 	// require access to any other information.
-	ValidateBasic() Error
+	ValidateBasic() error
 }
 
 //__________________________________________________________
 
 // TxDecoder unmarshals transaction bytes
-type TxDecoder func(txBytes []byte) (Tx, Error)
+type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
@@ -73,7 +73,7 @@ func (msg *TestMsg) GetSignBytes() []byte {
 	}
 	return MustSortJSON(bz)
 }
-func (msg *TestMsg) ValidateBasic() Error { return nil }
+func (msg *TestMsg) ValidateBasic() error { return nil }
 func (msg *TestMsg) GetSigners() []AccAddress {
 	return msg.signers
 }

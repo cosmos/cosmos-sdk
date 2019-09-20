@@ -626,63 +626,56 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	return result
 }
 
-// runMsgs iterates through all the messages and executes them.
-// nolint: gocyclo
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
+// runMsgs iterates through all the messages and executes them. If a message fails
+// or does not have a valid route, runMsgs will return immediately with a
+// corresponding result and error. The result will only contain the events, logs,
+// and data up until the first invalid message. The error will contain the code
+// and codespace of the underlying error. If runMsgs is executed in runTxModeCheck
+// mode, an empty Result and no error will be returned.
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
-
 	data := make([]byte, 0, len(msgs))
-	var (
-		code      sdk.CodeType
-		codespace sdk.CodespaceType
-	)
-
 	events := sdk.EmptyEvents()
+
+	var (
+		msgResult *sdk.Result
+		err       error
+	)
 
 	// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
+		// skip actual execution for CheckTx mode
+		if mode == runTxModeCheck {
+			break
+		}
+
 		// match message route
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message type: %s,", msgRoute)
+			break
 		}
 
-		var msgResult sdk.Result
+		msgResult, err = handler(ctx, msg)
 
-		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
-			msgResult = handler(ctx, msg)
-		}
-
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, msgResult.Data...)
-
-		// append events from the message's execution and a message action event
-		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
+		// add message events along with adding message type event
 		events = events.AppendEvents(msgResult.Events)
+		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
 
-		// stop execution and return on first failed message
-		if !msgResult.IsOK() {
+		// short-circuit if the message fails (i.e. disregard remaining messages)
+		if err != nil {
 			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
-
-			code = msgResult.Code
-			codespace = msgResult.Codespace
 			break
 		}
 
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
 	}
 
-	result = sdk.Result{
-		Code:      code,
-		Codespace: codespace,
-		Data:      data,
-		Log:       strings.TrimSpace(msgLogs.String()),
-		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Events:    events,
-	}
-
-	return result
+	return &sdk.Result{
+		Data:    data,
+		Log:     strings.TrimSpace(msgLogs.String()),
+		GasUsed: ctx.GasMeter().GasConsumed(),
+		Events:  events,
+	}, err
 }

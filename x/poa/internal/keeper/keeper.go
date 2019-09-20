@@ -20,7 +20,6 @@ var _ types.ValidatorSet = Keeper{}
 // keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
-	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
 	supplyKeeper       types.SupplyKeeper
 	hooks              types.POAHooks
@@ -33,12 +32,11 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new staking Keeper instance
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, supplyKeeper types.SupplyKeeper,
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, supplyKeeper types.SupplyKeeper,
 	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 
 	return Keeper{
 		storeKey:           key,
-		storeTKey:          tkey,
 		cdc:                cdc,
 		supplyKeeper:       supplyKeeper,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),

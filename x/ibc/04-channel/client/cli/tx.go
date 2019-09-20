@@ -1,101 +1,3 @@
-/*
-
-
-func lastheight(ctx context.CLIContext) (uint64, error) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		return 0, err
-	}
-
-	info, err := node.ABCIInfo()
-	if err != nil {
-		return 0, err
-	}
-
-	return uint64(info.Response.LastBlockHeight), nil
-}
-
-func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "relay",
-		Short: "relay pakcets between two channels",
-		Args:  cobra.ExactArgs(4),
-		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx1 := context.NewCLIContext().
-				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode1)).
-				WithFrom(viper.GetString(FlagFrom1))
-
-			ctx2 := context.NewCLIContext().
-				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode2)).
-				WithFrom(viper.GetString(FlagFrom2))
-
-			conn1id, chan1id, conn2id, chan2id := args[0], args[1], args[2], args[3]
-
-			obj1 := object(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
-			obj2 := object(ctx2, cdc, storeKey, ibc.Version, conn2id, chan2id)
-
-			return relayLoop(cdc, ctx1, ctx2, obj1, obj2, conn1id, chan1id, conn2id, chan2id)
-		},
-	}
-
-	return cmd
-}
-
-func relayLoop(cdc *codec.Codec,
-	ctx1, ctx2 context.CLIContext,
-	obj1, obj2 channel.CLIObject,
-	conn1id, chan1id, conn2id, chan2id string,
-) error {
-	for {
-		// TODO: relay() should be goroutine and return error by channel
-		err := relay(cdc, ctx1, ctx2, obj1, obj2, conn2id, chan2id)
-		// TODO: relayBetween() should retry several times before halt
-		if err != nil {
-			return err
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func relay(cdc *codec.Codec, ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.CLIObject, connidTo, chanidTo string) error {
-	txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-	seq, _, err := objTo.SeqRecv(ctxTo)
-	if err != nil {
-		return err
-	}
-
-	sent, _, err := objFrom.SeqSend(ctxFrom)
-	if err != nil {
-		return err
-	}
-
-	for i := seq; i <= sent; i++ {
-		packet, proof, err := objFrom.Packet(ctxFrom, seq)
-		if err != nil {
-			return err
-		}
-
-		msg := channel.MsgReceive{
-			ConnectionID: connidTo,
-			ChannelID:    chanidTo,
-			Packet:       packet,
-			Proofs:       []commitment.Proof{proof},
-			Signer:       ctxTo.GetFromAddress(),
-		}
-
-		err = utils.GenerateOrBroadcastMsgs(ctxTo, txBldr, []sdk.Msg{msg})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-*/
 package cli
 
 import (
@@ -124,11 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
-/*
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-
-}
-*/
 const (
 	FlagNode1 = "node1"
 	FlagNode2 = "node2"
@@ -136,12 +33,12 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeObject, error) {
+func handshake(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid, connid string) channel.HandshakeObject {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewHandshaker(channel.NewManager(base, connman))
-	return man.CLIQuery(q, portid, chanid)
+	return man.CLIObject(portid, chanid, []string{connid})
 }
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -235,15 +132,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				ConnectionHops:   []string{connid2},
 			}
 
-			obj1, err := handshake(q1, cdc, storeKey, version.DefaultPrefix(), portid1, chanid1)
-			if err != nil {
-				return err
-			}
-
-			obj2, err := handshake(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
-			if err != nil {
-				return err
-			}
+			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
+			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
 
 			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
 			if err != nil {
@@ -380,11 +270,12 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgconfirm := connection.MsgOpenConfirm{
-				ConnectionID: connid2,
-				Proofs:       []commitment.Proof{pstate},
-				Height:       uint64(header.Height),
-				Signer:       ctx2.GetFromAddress(),
+			msgconfirm := channel.MsgOpenConfirm{
+				PortID:    portid2,
+				ChannelID: chanid2,
+				Proofs:    []commitment.Proof{pstate},
+				Height:    uint64(header.Height),
+				Signer:    ctx2.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgconfirm})

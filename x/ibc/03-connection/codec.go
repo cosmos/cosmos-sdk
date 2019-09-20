@@ -7,10 +7,10 @@ import (
 var MsgCdc *codec.Codec
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgOpenInit{}, "ibc/client/MsgOpenInit", nil)
-	cdc.RegisterConcrete(MsgOpenTry{}, "ibc/client/MsgOpenTry", nil)
-	cdc.RegisterConcrete(MsgOpenAck{}, "ibc/client/MsgOpenAck", nil)
-	cdc.RegisterConcrete(MsgOpenConfirm{}, "ibc/client/MsgOpenConfirm", nil)
+	cdc.RegisterConcrete(MsgOpenInit{}, "ibc/connection/MsgOpenInit", nil)
+	cdc.RegisterConcrete(MsgOpenTry{}, "ibc/connection/MsgOpenTry", nil)
+	cdc.RegisterConcrete(MsgOpenAck{}, "ibc/connection/MsgOpenAck", nil)
+	cdc.RegisterConcrete(MsgOpenConfirm{}, "ibc/connection/MsgOpenConfirm", nil)
 }
 
 func SetMsgCodec(cdc *codec.Codec) {

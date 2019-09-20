@@ -23,12 +23,12 @@ const (
 	FlagProve = "prove"
 )
 
-func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Object {
+func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.Object, error) {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewManager(base, connman)
-	return man.CLIObject(portid, chanid, connids)
+	return man.CLIQuery(state.NewCLIQuerier(ctx), portid, chanid)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -87,12 +87,15 @@ func QueryChannel(ctx context.CLIContext, obj channel.Object, prove bool) (res u
 
 func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connection",
+		Use:   "channel",
 		Short: "Query stored connection",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(cdc, storeKey, version.DefaultPrefix(), args[0], args[1], []string{args[2]})
+			obj, err := object(ctx, cdc, storeKey, version.DefaultPrefix(), args[0], args[1])
+			if err != nil {
+				return err
+			}
 			jsonobj, err := QueryChannel(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

@@ -72,10 +72,8 @@ func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
 		if plan.Height != 0 {
 			return sdk.ErrUnknownRequest("Only one of Time or Height should be specified")
 		}
-	} else {
-		if plan.Height <= ctx.BlockHeight() {
-			return sdk.ErrUnknownRequest("Upgrade cannot be scheduled in the past")
-		}
+	} else if plan.Height <= ctx.BlockHeight() {
+		return sdk.ErrUnknownRequest("Upgrade cannot be scheduled in the past")
 	}
 	store := ctx.KVStore(keeper.storeKey)
 	if store.Has(DoneHeightKey(plan.Name)) {
@@ -149,24 +147,8 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 		// set the handler already
 		_, ok := keeper.upgradeHandlers[plan.Name]
 		if ok {
-			ctx.Logger().Error(fmt.Sprintf("UNKOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
+			ctx.Logger().Error(fmt.Sprintf("UNKNOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
 			panic("BINARY UPDATED BEFORE TRIGGER!")
 		}
 	}
-}
-
-type logWriter struct {
-	sdk.Context
-	script string
-	err    bool
-}
-
-func (w logWriter) Write(p []byte) (n int, err error) {
-	s := fmt.Sprintf("script %s: %s", w.script, p)
-	if w.err {
-		w.Logger().Error(s)
-	} else {
-		w.Logger().Info(s)
-	}
-	return len(p), nil
 }

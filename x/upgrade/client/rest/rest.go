@@ -2,12 +2,13 @@ package rest
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 // RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.

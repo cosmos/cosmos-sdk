@@ -122,7 +122,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
-	return
 }
 
 // unjail a validator
@@ -131,5 +130,4 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.unjailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
-	return
 }

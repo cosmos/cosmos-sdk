@@ -15,8 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/cosmos/cosmos-sdk/x/poa/internal/types"
 )
@@ -91,16 +91,14 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 	)
 
 	maccPerms := map[string][]string{
-		auth.FeeCollectorName:   nil,
+		auth.FeeCollectorName: nil,
 	}
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
-
 
 	supplyKeeper.SetSupply(ctx, supply.DefaultSupply())
 
 	keeper := NewKeeper(cdc, keyPoa, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodeSpace)
 	keeper.SetParams(ctx, types.DefaultParams())
-
 
 	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 

@@ -17,13 +17,13 @@ const (
 var _ govtypes.Content = MsgProposeCreateValidator{}
 
 type MsgProposeCreateValidator struct {
-	Title       string                 `json:"title" yaml:"title"`             // title of the validator
-	Description string                 `json:"description" yaml:"description"` // description of validator
+	Title       string             `json:"title" yaml:"title"`             // title of the validator
+	Description string             `json:"description" yaml:"description"` // description of validator
 	Validator   MsgCreateValidator `json:"validator" yaml:"validator"`
 }
 
-func NewMsgProposeCreateValidator(title, description string, valAddr sdk.ValAddress, 
-	pubKey crypto.PubKey, valDescription stakingtypes.Description,) MsgProposeCreateValidator {
+func NewMsgProposeCreateValidator(title, description string, valAddr sdk.ValAddress,
+	pubKey crypto.PubKey, valDescription stakingtypes.Description) MsgProposeCreateValidator {
 	newValidator := NewMsgCreateValidator(valAddr, pubKey, valDescription)
 	return MsgProposeCreateValidator{
 		Title:       title,
@@ -140,8 +140,8 @@ func (mpi MsgProposeIncreaseWeight) ValidateBasic() sdk.Error {
 }
 
 type ValidatorIncreaseWeight struct {
-	ValidatorAddress sdk.ValAddress           `json:"validator_address" yaml:"validator_address"`
-	NewWeight        sdk.Int                  `json:"new_weight" yaml:"new_weight"`
+	ValidatorAddress sdk.ValAddress `json:"validator_address" yaml:"validator_address"`
+	NewWeight        sdk.Int        `json:"new_weight" yaml:"new_weight"`
 }
 
 func ValidatorWeightIncrease(va sdk.ValAddress, pb crypto.PubKey, nw sdk.Int) ValidatorIncreaseWeight {
@@ -150,5 +150,3 @@ func ValidatorWeightIncrease(va sdk.ValAddress, pb crypto.PubKey, nw sdk.Int) Va
 		NewWeight:        nw,
 	}
 }
-
-

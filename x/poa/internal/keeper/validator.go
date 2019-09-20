@@ -124,7 +124,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 func (k Keeper) AddValidatorWeight(ctx sdk.Context, validator types.Validator,
 	weightToAdd sdk.Int) (valOut types.Validator) {
 	params := k.GetParams(ctx)
-	if params.IncreaseWeight == false {
+	if !params.IncreaseWeight {
 		return
 	}
 	k.DeleteValidatorByPowerIndex(ctx, validator)

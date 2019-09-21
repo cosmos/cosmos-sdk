@@ -19,6 +19,18 @@ import (
 
 var _ Keybase = keyringKeybase{}
 
+// keyringKeybase implements the Keybase interface by using the Keyring library
+// for account key persistence.
+//
+// TODO: There is no need for keyringKeybase to implement the Keybase interface
+// or even have any of its members be public as it currently cannot be used by
+// the outside world. Any client uses this implementation through the
+// lazyKeybaseKeyring implementation. Consider either:
+//
+// 1. Remove lazyKeybaseKeyring and make keyringKeybase useable by the outside
+// world.
+// 2. Mark all keyringKeybase methods private and remove the compile time
+// Keybase interface assertion.
 type keyringKeybase struct {
 	db   keyring.Keyring
 	base baseKeybase

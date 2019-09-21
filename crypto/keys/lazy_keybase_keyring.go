@@ -54,7 +54,6 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 	}
 
 	realPrompt := func(prompt string) (string, error) {
-		buf := bufio.NewReader(lkb.userInput)
 		keyhashStored := false
 		keyhashFilePath := filepath.Join(lkb.dir, "keyhash")
 
@@ -84,6 +83,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 				return "", fmt.Errorf("too many failed passphrase attempts")
 			}
 
+			buf := bufio.NewReader(lkb.userInput)
 			pass, err := input.GetPassword("Enter keyring files passphrase for your keys:", buf)
 			if err != nil {
 				continue

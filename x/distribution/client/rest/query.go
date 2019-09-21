@@ -65,17 +65,23 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 
 }
 
-// delegatorRewardsHandlerFn implements a delegator rewards query route.
+// delegatorRewards helps generate documentation for delegatorRewardsHandlerFn
+type delegatorRewards struct {
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
+}
+
+// delegatorRewardsHandlerFn implements a delegator rewards query route
 //
-// @Summary Query all delegation rewards from a delegator.
-// @Description Query all delegation rewards from a single delegator address.
-// @Tags distribution queries
+// @Summary Query all delegation rewards from a delegator
+// @Description Query all delegation rewards from a single delegator address
+// @Tags distribution
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param delegatorAddr path string true "The address of the delegator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.delegatorRewards
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards [get]
 func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -94,18 +100,24 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 	}
 }
 
-// delegatorRewardsHandlerFn implements a individual delegation reward query route.
+// delegationRewards helps generate documentation for delegationRewardsHandlerFn
+type delegationRewards struct {
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
+}
+
+// delegationRewardsHandlerFn implements a individual delegation reward query route
 //
-// @Summary Query delegation rewards.
-// @Description Query delegation rewards from a single delegator address.
-// @Tags distribution queries
+// @Summary Query delegation rewards
+// @Description Query delegation rewards from a single delegator address
+// @Tags distribution
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator."
-// @Param validatorAddr path string true "The address of the validator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param delegatorAddr path string true "The address of the delegator"
+// @Param validatorAddr path string true "The address of the validator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.delegationRewards
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr} [get]
 func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -124,17 +136,23 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 	}
 }
 
-// delegatorWithdrawalAddrHandlerFn implements a delegator withdraw address query route.
+// delegatorWithdrawalAddr helps generate documentation for delegatorWithdrawalAddrHandlerFn
+type delegatorWithdrawalAddr struct {
+	Height int64       `json:"height"`
+	Result sdk.Address `json:"result"`
+}
+
+// delegatorWithdrawalAddrHandlerFn implements a delegator withdraw address query route
 //
-// @Summary Query delegator withdraw address.
-// @Description Query withdraw address from a single delegator address.
-// @Tags distribution queries
+// @Summary Query delegator withdraw address
+// @Description Query withdraw address from a single delegator address
+// @Tags distribution
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param delegatorAddr path string true "The address of the delegator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.delegatorWithdrawalAddr
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/withdraw_address [get]
 func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -178,17 +196,23 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 	}
 }
 
-// validatorInfoHandlerFn implements a validator distribution information route.
+// validatorInfo helps generate documentation for validatorInfoHandlerFn
+type validatorInfo struct {
+	Height int64             `json:"height"`
+	Result ValidatorDistInfo `json:"result"`
+}
+
+// validatorInfoHandlerFn implements a validator distribution information route
 //
-// @Summary Query validator distribution information.
-// @Description Query validator distribution information from a single validator.
-// @Tags distribution queries
+// @Summary Query validator distribution information
+// @Description Query validator distribution information from a single validator
+// @Tags distribution
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param validatorAddr path string true "The address of the validator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.validatorInfo
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr} [get]
 func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -227,19 +251,26 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
+
 }
 
-// validatorRewardsHandlerFn implements a validator rewards query route.
+// validatorRewards helps generate documentation for validatorRewardsHandlerFn
+type validatorRewards struct {
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
+}
+
+// validatorRewardsHandlerFn implements a validator rewards query route
 //
-// @Summary Query validator rewards information.
-// @Description Query validator rewards information from a single validator.
-// @Tags distribution queries
+// @Summary Query validator rewards information
+// @Description Query validator rewards information from a single validator
+// @Tags distribution
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param validatorAddr path string true "The address of the validator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.validatorRewards
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/rewards [get]
 func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -264,16 +295,22 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 	}
 }
 
-// paramsHandlerFn implements a params query route.
+// params helps generate documentation for paramsHandlerFn
+type params struct {
+	Height int64               `json:"height"`
+	Result common.PrettyParams `json:"result"`
+}
+
+// paramsHandlerFn implements a params query route
 //
-// @Summary Query distribution params data.
-// @Description Query distribution params data.
-// @Tags distribution queries
+// @Summary Query distribution params data
+// @Description Query distribution params data
+// @Tags distribution
 // @Produce json
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.params
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/parameters [get]
 func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -292,16 +329,22 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 	}
 }
 
-// communityPoolHandler implements a community pool query route.
+// communityPool helps generate documentation for communityPoolHandlerFn
+type communityPool struct {
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
+}
+
+// communityPoolHandler implements a community pool query route
 //
-// @Summary Query community pool data.
-// @Description Query community pool data.
-// @Tags distribution queries
+// @Summary Query community pool data
+// @Description Query community pool data
+// @Tags distribution
 // @Produce json
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.communityPool
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/community_pool [get]
 func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -327,17 +370,23 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 	}
 }
 
-// validatorRewardsHandlerFn implements a validator outstanding rewards query route.
+// validatorOutstandingRewards helps generate documentation for validatorOutstandingRewardsHandlerFn
+type validatorOutstandingRewards struct {
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
+}
+
+// outstandingRewardsHandlerFn implements a validator outstanding rewards query route.
 //
-// @Summary Query validator outstanding rewards information.
-// @Description Query validator rewards information from a single validator.
-// @Tags distribution queries
+// @Summary Query validator outstanding rewards information
+// @Description Query validator rewards information from a single validator
+// @Tags distribution
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator."
-// @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
-// @Failure 500 {object} rest.ErrorResponse "Returned on server error."
+// @Param validatorAddr path string true "The address of the validator"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.validatorOutstandingRewards
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/outstanding_rewards [get]
 func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

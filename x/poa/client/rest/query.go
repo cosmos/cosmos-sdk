@@ -26,12 +26,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 		validatorHandlerFn(cliCtx),
 	).Methods("GET")
 
-	// // Get the current state of the poa pool
-	// r.HandleFunc(
-	// 	"/poa/pool",
-	// 	poolHandlerFn(cliCtx),
-	// ).Methods("GET")
-
 	// Get the current poa parameter values
 	r.HandleFunc(
 		"/poa/parameters",
@@ -82,25 +76,6 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 func validatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryValidator(cliCtx, "custom/poa/validator")
 }
-
-// // HTTP request handler to query the pool information
-// func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-// 		if !ok {
-// 			return
-// 		}
-
-// 		res, height, err := cliCtx.QueryWithData("custom/staking/pool", nil)
-// 		if err != nil {
-// 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-// 			return
-// 		}
-
-// 		cliCtx = cliCtx.WithHeight(height)
-// 		rest.PostProcessResponse(w, cliCtx, res)
-// 	}
-// }
 
 // HTTP request handler to query the staking params values
 func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

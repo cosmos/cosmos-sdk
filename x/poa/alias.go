@@ -32,6 +32,7 @@ var (
 	AttributeKeyCompletionTime = types.AttributeKeyCompletionTime
 	AttributeValueCategory     = types.AttributeValueCategory
 	DefaultGenesisState        = types.DefaultGenesisState
+	NewGenesisState            = types.NewGenesisState
 )
 
 type (

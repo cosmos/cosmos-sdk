@@ -12,6 +12,7 @@ import (
 
 const (
 	ProposeCreateValidator = "NewValidatorCreatation"
+	ProposeIncreaseWeight  = "NewValidatorWeight"
 )
 
 var _ govtypes.Content = MsgProposeCreateValidator{}
@@ -110,7 +111,7 @@ func (mpi MsgProposeIncreaseWeight) GetDescription() string { return mpi.Descrip
 func (mpi MsgProposeIncreaseWeight) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a poa change proposal.
-func (mpi MsgProposeIncreaseWeight) ProposalType() string { return ProposeCreateValidator }
+func (mpi MsgProposeIncreaseWeight) ProposalType() string { return ProposeIncreaseWeight }
 
 // String implements the stringer interface
 func (mpi MsgProposeIncreaseWeight) String() string {
@@ -130,7 +131,7 @@ func (mpi MsgProposeIncreaseWeight) ValidateBasic() sdk.Error {
 		return err
 	}
 
-	if len(mpi.Title) == 0 {
+	if len(mpi.Title) == 0 || len(mpi.Description) == 0 {
 		return params.ErrEmptyChanges(DefaultCodeSpace)
 	}
 	if mpi.Validator.ValidatorAddress.Empty() {

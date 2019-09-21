@@ -8,7 +8,6 @@ import (
 const (
 	QueryValidators = "validators"
 	QueryValidator  = "validator"
-	// QueryPool       = "pool"
 	QueryParameters = "parameters"
 )
 

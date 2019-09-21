@@ -27,13 +27,13 @@ func MakeTestCodec() *codec.Codec {
 
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
-	cdc.RegisterConcrete(bank.MsgSend{}, "test/staking/Send", nil)
-	cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/staking/CreateValidator", nil)
-	cdc.RegisterConcrete(types.MsgEditValidator{}, "test/staking/EditValidator", nil)
+	cdc.RegisterConcrete(bank.MsgSend{}, "test/poa/Send", nil)
+	cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/poa/CreateValidator", nil)
+	cdc.RegisterConcrete(types.MsgEditValidator{}, "test/poa/EditValidator", nil)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
-	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
+	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/poa/BaseAccount", nil)
 	supply.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
@@ -56,6 +56,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, auth.AccountKee
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 

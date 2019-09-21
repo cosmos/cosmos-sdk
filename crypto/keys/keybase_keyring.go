@@ -142,7 +142,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 	return unmarshalInfo(bs.Data)
 }
 
-// Get fetches a key by address and returns its public information.
+// GetByAddress fetches a key by address and returns its public information.
 func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 	ik, err := kb.db.Get(string(addrKey(address)))
 	if err != nil {

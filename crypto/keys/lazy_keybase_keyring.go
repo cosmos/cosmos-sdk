@@ -23,6 +23,8 @@ var (
 	maxPassphraseEntryAttempts = 3
 )
 
+// lazyKeybaseKeyring implements a public wrapper around the keyringKeybase type
+// and implements the Keybase interface.
 type lazyKeybaseKeyring struct {
 	name      string
 	dir       string
@@ -135,6 +137,7 @@ func fakePrompt(prompt string) (string, error) {
 	return "test", nil
 }
 
+// List returns the keys from storage in alphabetical order.
 func (lkb lazyKeybaseKeyring) List() ([]Info, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
@@ -144,6 +147,7 @@ func (lkb lazyKeybaseKeyring) List() ([]Info, error) {
 	return newKeyringKeybase(db).List()
 }
 
+// Get returns the public information about one key.
 func (lkb lazyKeybaseKeyring) Get(name string) (Info, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
@@ -153,6 +157,7 @@ func (lkb lazyKeybaseKeyring) Get(name string) (Info, error) {
 	return newKeyringKeybase(db).Get(name)
 }
 
+// GetByAddress fetches a key by address and returns its public information.
 func (lkb lazyKeybaseKeyring) GetByAddress(address sdk.AccAddress) (Info, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
@@ -162,6 +167,10 @@ func (lkb lazyKeybaseKeyring) GetByAddress(address sdk.AccAddress) (Info, error)
 	return newKeyringKeybase(db).GetByAddress(address)
 }
 
+// Delete removes key forever, but we must present the proper passphrase before
+// deleting it (for security). It returns an error if the key doesn't exist or
+// passphrases don't match. The passphrase is ignored when deleting references to
+// offline and Ledger / HW wallet keys.
 func (lkb lazyKeybaseKeyring) Delete(name, passphrase string, skipPass bool) error {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
@@ -171,9 +180,10 @@ func (lkb lazyKeybaseKeyring) Delete(name, passphrase string, skipPass bool) err
 	return newKeyringKeybase(db).Delete(name, passphrase, skipPass)
 }
 
+// Sign signs an arbitrary set of bytes with the named key. It returns an error
+// if the key doesn't exist or the decryption fails.
 func (lkb lazyKeybaseKeyring) Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -181,9 +191,15 @@ func (lkb lazyKeybaseKeyring) Sign(name, passphrase string, msg []byte) ([]byte,
 	return newKeyringKeybase(db).Sign(name, passphrase, msg)
 }
 
-func (lkb lazyKeybaseKeyring) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error) {
-	db, err := keyring.Open(lkb.lkbToKeyringConfig())
+// CreateMnemonic generates a new key and persists it to storage, encrypted
+// using the provided password. It returns the generated mnemonic and the key Info.
+// An error is returned if it fails to generate a key for the given algo type,
+// or if another key is already stored under the same name.
+func (lkb lazyKeybaseKeyring) CreateMnemonic(
+	name string, language Language, passwd string, algo SigningAlgo,
+) (info Info, seed string, err error) {
 
+	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return nil, "", err
 	}
@@ -191,9 +207,13 @@ func (lkb lazyKeybaseKeyring) CreateMnemonic(name string, language Language, pas
 	return newKeyringKeybase(db).CreateMnemonic(name, language, passwd, algo)
 }
 
-func (lkb lazyKeybaseKeyring) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
-	db, err := keyring.Open(lkb.lkbToKeyringConfig())
+// CreateAccount converts a mnemonic to a private key and persists it, encrypted
+// with the given password.
+func (lkb lazyKeybaseKeyring) CreateAccount(
+	name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
+) (Info, error) {
 
+	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -201,9 +221,13 @@ func (lkb lazyKeybaseKeyring) CreateAccount(name, mnemonic, bip39Passwd, encrypt
 	return newKeyringKeybase(db).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index)
 }
 
-func (lkb lazyKeybaseKeyring) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error) {
-	db, err := keyring.Open(lkb.lkbToKeyringConfig())
+// Derive computes a BIP39 seed from th mnemonic and bip39Passphrase. It creates
+// a private key from the seed using the BIP44 params.
+func (lkb lazyKeybaseKeyring) Derive(
+	name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params,
+) (Info, error) {
 
+	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -211,9 +235,13 @@ func (lkb lazyKeybaseKeyring) Derive(name, mnemonic, bip39Passwd, encryptPasswd 
 	return newKeyringKeybase(db).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
 }
 
-func (lkb lazyKeybaseKeyring) CreateLedger(name string, algo SigningAlgo, hrp string, account uint32, index uint32) (info Info, err error) {
-	db, err := keyring.Open(lkb.lkbToKeyringConfig())
+// CreateLedger creates a new locally-stored reference to a Ledger keypair.
+// It returns the created key info and an error if the Ledger could not be queried.
+func (lkb lazyKeybaseKeyring) CreateLedger(
+	name string, algo SigningAlgo, hrp string, account, index uint32,
+) (Info, error) {
 
+	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -221,9 +249,10 @@ func (lkb lazyKeybaseKeyring) CreateLedger(name string, algo SigningAlgo, hrp st
 	return newKeyringKeybase(db).CreateLedger(name, algo, hrp, account, index)
 }
 
-func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
+// CreateOffline creates a new reference to an offline keypair. It returns the
+// created key info.
+func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (Info, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return nil, err
 	}
@@ -231,9 +260,10 @@ func (lkb lazyKeybaseKeyring) CreateOffline(name string, pubkey crypto.PubKey) (
 	return newKeyringKeybase(db).CreateOffline(name, pubkey)
 }
 
-func (lkb lazyKeybaseKeyring) CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error) {
+// CreateMulti creates a new reference to a multisig (offline) keypair. It
+// returns the created key Info object.
+func (lkb lazyKeybaseKeyring) CreateMulti(name string, pubkey crypto.PubKey) (Info, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return nil, err
 	}
@@ -241,9 +271,11 @@ func (lkb lazyKeybaseKeyring) CreateMulti(name string, pubkey crypto.PubKey) (in
 	return newKeyringKeybase(db).CreateMulti(name, pubkey)
 }
 
+// Update changes the passphrase with which an already stored key is encrypted.
+// The oldpass must be the current passphrase used for encryption, getNewpass is
+// a function to get the passphrase to permanently replace the current passphrase.
 func (lkb lazyKeybaseKeyring) Update(name, oldpass string, getNewpass func() (string, error)) error {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return err
 	}
@@ -251,9 +283,9 @@ func (lkb lazyKeybaseKeyring) Update(name, oldpass string, getNewpass func() (st
 	return newKeyringKeybase(db).Update(name, oldpass, getNewpass)
 }
 
-func (lkb lazyKeybaseKeyring) Import(name string, armor string) (err error) {
+// Import imports armored private key.
+func (lkb lazyKeybaseKeyring) Import(name, armor string) error {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return err
 	}
@@ -261,7 +293,10 @@ func (lkb lazyKeybaseKeyring) Import(name string, armor string) (err error) {
 	return newKeyringKeybase(db).Import(name, armor)
 }
 
-func (lkb lazyKeybaseKeyring) ImportPrivKey(name string, armor string, passphrase string) error {
+// ImportPrivKey imports a private key in ASCII armor format. An error is returned
+// if a key with the same name exists or a wrong encryption passphrase is
+// supplied.
+func (lkb lazyKeybaseKeyring) ImportPrivKey(name, armor, passphrase string) error {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return err
@@ -270,9 +305,11 @@ func (lkb lazyKeybaseKeyring) ImportPrivKey(name string, armor string, passphras
 	return newKeyringKeybase(db).ImportPrivKey(name, armor, passphrase)
 }
 
-func (lkb lazyKeybaseKeyring) ImportPubKey(name string, armor string) (err error) {
+// ImportPubKey imports an ASCII-armored public key. It will store a new Info
+// object holding a public key only, i.e. it will not be possible to sign with
+// it as it lacks the secret key.
+func (lkb lazyKeybaseKeyring) ImportPubKey(name, armor string) error {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return err
 	}
@@ -280,6 +317,7 @@ func (lkb lazyKeybaseKeyring) ImportPubKey(name string, armor string) (err error
 	return newKeyringKeybase(db).ImportPubKey(name, armor)
 }
 
+// Export exports armored a private key for the given name.
 func (lkb lazyKeybaseKeyring) Export(name string) (armor string, err error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
@@ -289,9 +327,10 @@ func (lkb lazyKeybaseKeyring) Export(name string) (armor string, err error) {
 	return newKeyringKeybase(db).Export(name)
 }
 
+// ExportPubKey returns public keys in ASCII armored format. It retrieves an Info
+// object by its name and return the public key in a portable format.
 func (lkb lazyKeybaseKeyring) ExportPubKey(name string) (armor string, err error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return "", err
 	}
@@ -299,9 +338,9 @@ func (lkb lazyKeybaseKeyring) ExportPubKey(name string) (armor string, err error
 	return newKeyringKeybase(db).ExportPubKey(name)
 }
 
-func (lkb lazyKeybaseKeyring) ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error) {
+// ExportPrivateKeyObject exports an armored private key object.
+func (lkb lazyKeybaseKeyring) ExportPrivateKeyObject(name, passphrase string) (crypto.PrivKey, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
-
 	if err != nil {
 		return nil, err
 	}
@@ -309,9 +348,9 @@ func (lkb lazyKeybaseKeyring) ExportPrivateKeyObject(name string, passphrase str
 	return newKeyringKeybase(db).ExportPrivateKeyObject(name, passphrase)
 }
 
-func (lkb lazyKeybaseKeyring) ExportPrivKey(name string, decryptPassphrase string,
-	encryptPassphrase string) (armor string, err error) {
-
+// ExportPrivKey returns a private key in ASCII armored format. An error is returned
+// if the key does not exist or a wrong encryption passphrase is supplied.
+func (lkb lazyKeybaseKeyring) ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (string, error) {
 	db, err := keyring.Open(lkb.lkbToKeyringConfig())
 	if err != nil {
 		return "", err

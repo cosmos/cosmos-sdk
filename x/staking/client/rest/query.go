@@ -100,6 +100,12 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 }
 
+// delegatorDelegations used to generate documentation for
+type delegatorDelegations struct {
+	Height int64                      `json:"height"`
+	Result []types.DelegationResponse `json:"result"`
+}
+
 // delegatorDelegationsHandlerFn implements a delegator delegations query route.
 //
 // @Summary Query all delegations from a delegator.
@@ -108,7 +114,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator."
 // @Param height query string false "block height to execute query, defaults to chain tip."
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} delegatorDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height."
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error."
 // @Router /staking/delegators/{delegatorAddr}/delegations [get]

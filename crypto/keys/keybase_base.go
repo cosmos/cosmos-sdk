@@ -15,9 +15,24 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
-// Auxiliary type that groups storage agnostic features together.
+type (
+	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
+	// together.
+	baseKeybase struct{}
 
-type baseKeybase struct{}
+	keyWriter interface {
+		writeLocalKeyer
+		infoWriter
+	}
+
+	writeLocalKeyer interface {
+		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
+	}
+
+	infoWriter interface {
+		writeInfo(name string, info Info)
+	}
+)
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
@@ -51,7 +66,7 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 		return nil, nil, err
 	}
 
-	// Will block until user inputs the signature
+	// will block until user inputs the signature
 	signed, err := buf.ReadString('\n')
 	if err != nil {
 		return nil, nil, err
@@ -64,43 +79,41 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 	return sig, info.GetPubKey(), nil
 }
 
-type writeLocalKeyer interface {
-	writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
-}
+// CreateAccount creates an account Info object.
+func (kb baseKeybase) CreateAccount(
+	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
+) (Info, error) {
 
-type keyWriter interface {
-	writeLocalKeyer
-	infoWriter
-}
-
-func (kb baseKeybase) CreateAccount(keyWriter keyWriter, name, mnemonic,
-	bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
 	hdPath := CreateHDPath(account, index)
 	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
-func (kb baseKeybase) persistDerivedKey(keyWriter keyWriter, seed []byte, passwd,
-	name, fullHdPath string) (info Info, err error) {
+func (kb baseKeybase) persistDerivedKey(
+	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string,
+) (Info, error) {
+
 	// create master key and derive first key for keyring
 	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
 	if err != nil {
-		return
+		return nil, err
 	}
+
+	var info Info
 
 	if passwd != "" {
 		info = keyWriter.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
 	} else {
-		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
-		info = kb.writeOfflineKey(keyWriter, name, pubk)
+		info = kb.writeOfflineKey(keyWriter, name, secp256k1.PrivKeySecp256k1(derivedPriv).PubKey())
 	}
-	return
+
+	return info, nil
 }
 
-// CreateLedger creates a new reference to a Ledger key pair.
-// It returns a public key and a derivation path; it returns an error if the device
-// could not be querier.
-func (kb baseKeybase) CreateLedger(w infoWriter, name string,
-	algo SigningAlgo, hrp string, account uint32, index uint32) (Info, error) {
+// CreateLedger creates a new reference to a Ledger key pair. It returns a public
+// key and a derivation path. It returns an error if the device could not be queried.
+func (kb baseKeybase) CreateLedger(
+	w infoWriter, name string, algo SigningAlgo, hrp string, account, index uint32,
+) (Info, error) {
 
 	if !IsAlgoSupported(algo) {
 		return nil, ErrUnsupportedSigningAlgo
@@ -108,6 +121,7 @@ func (kb baseKeybase) CreateLedger(w infoWriter, name string,
 
 	coinType := types.GetConfig().GetCoinType()
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
+
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
 	if err != nil {
 		return nil, err
@@ -117,27 +131,28 @@ func (kb baseKeybase) CreateLedger(w infoWriter, name string,
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
-func (kb baseKeybase) CreateMnemonic(keyWriter keyWriter, name string,
-	language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
+func (kb baseKeybase) CreateMnemonic(
+	keyWriter keyWriter, name string, language Language, passwd string, algo SigningAlgo,
+) (info Info, mnemonic string, err error) {
 
 	if language != English {
-		err = ErrUnsupportedLanguage
-		return
-	}
-	if !IsAlgoSupported(algo) {
-		err = ErrUnsupportedSigningAlgo
-		return
+		return nil, "", ErrUnsupportedLanguage
 	}
 
-	// default number of words (24):
-	// this generates a mnemonic directly from the number of words by reading system entropy.
+	if !IsAlgoSupported(algo) {
+		return nil, "", ErrUnsupportedSigningAlgo
+	}
+
+	// Default number of words (24): This generates a mnemonic directly from the
+	// number of words by reading system entropy.
 	entropy, err := bip39.NewEntropy(defaultEntropySize)
 	if err != nil {
-		return
+		return nil, "", err
 	}
+
 	mnemonic, err = bip39.NewMnemonic(entropy)
 	if err != nil {
-		return
+		return nil, "", err
 	}
 
 	info, err = kb.persistDerivedKey(
@@ -145,24 +160,22 @@ func (kb baseKeybase) CreateMnemonic(keyWriter keyWriter, name string,
 		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
 		name, types.GetConfig().GetFullFundraiserPath(),
 	)
-	return
+
+	return info, mnemonic, err
 }
 
-// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
-// Derive private key from the seed using the BIP44 params.
-func (kb baseKeybase) Derive(keyWriter keyWriter, name, mnemonic,
-	bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
+// Derive computes a BIP39 seed from the mnemonic and bip39Passphrase. It creates
+// a private key from the seed using the BIP44 params.
+func (kb baseKeybase) Derive(
+	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params,
+) (Info, error) {
+
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	info, err = kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
-	return
-}
-
-type infoWriter interface {
-	writeInfo(name string, info Info)
+	return kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
 }
 
 func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {

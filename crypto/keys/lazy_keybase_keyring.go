@@ -17,7 +17,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ Keybase = lazyKeybaseKeyring{}
+var (
+	_ Keybase = lazyKeybaseKeyring{}
+
+	maxPassphraseEntryAttempts = 3
+)
 
 type lazyKeybaseKeyring struct {
 	name      string
@@ -26,11 +30,10 @@ type lazyKeybaseKeyring struct {
 	userInput io.Reader
 }
 
-// NewKeybaseKeyring creates a new instance of a lazy keybase.
+// NewKeybaseKeyring creates a new instance of a lazy keybase using a Keyring as
+// the persistence layer.
 func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) Keybase {
-
 	_, err := keyring.Open(keyring.Config{
-		//Keyring with encrypted application data
 		ServiceName: name,
 	})
 	if err != nil {
@@ -43,7 +46,6 @@ func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) 
 func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 	if lkb.test {
 		return keyring.Config{
-			// Keyring with encrypted application data
 			AllowedBackends:  []keyring.BackendType{"file"},
 			ServiceName:      lkb.name,
 			FileDir:          lkb.dir,
@@ -57,24 +59,28 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 		keyhashFilePath := filepath.Join(lkb.dir, "keyhash")
 
 		var keyhash []byte
+
 		_, err := os.Stat(keyhashFilePath)
 		switch {
 		case err == nil:
 			keyhash, err = ioutil.ReadFile(keyhashFilePath)
 			if err != nil {
-				return "", fmt.Errorf("couldn't read %s: %v", keyhashFilePath, err)
+				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
 			}
+
 			keyhashStored = true
+
 		case os.IsNotExist(err):
 			keyhashStored = false
+
 		default:
-			return "", fmt.Errorf("couldn't open %s: %v", keyhashFilePath, err)
+			return "", fmt.Errorf("failed to open %s: %v", keyhashFilePath, err)
 		}
 
 		failureCounter := 0
 		for {
 			failureCounter++
-			if failureCounter > 10 {
+			if failureCounter > maxPassphraseEntryAttempts {
 				return "", fmt.Errorf("too many failed passphrase attempts")
 			}
 
@@ -85,7 +91,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 
 			if keyhashStored {
 				if err := bcrypt.CompareHashAndPassword(keyhash, []byte(pass)); err != nil {
-					fmt.Fprintln(os.Stderr, "incorrect password")
+					fmt.Fprintln(os.Stderr, "incorrect passphrase")
 					continue
 				}
 				return pass, nil
@@ -98,7 +104,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 			}
 
 			if pass != reEnteredPass {
-				fmt.Fprintln(os.Stderr, "Passwords do not match")
+				fmt.Fprintln(os.Stderr, "passphrase do not match")
 				continue
 			}
 
@@ -115,11 +121,9 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 
 			return pass, nil
 		}
-
 	}
 
 	return keyring.Config{
-		//Keyring with encrypted application data
 		ServiceName:      lkb.name,
 		FileDir:          lkb.dir,
 		FilePasswordFunc: realPrompt,

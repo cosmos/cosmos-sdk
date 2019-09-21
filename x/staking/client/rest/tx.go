@@ -55,6 +55,14 @@ type (
 	}
 )
 
+// postDelegations is used to generate documentation for postDelegationsHandlerFn
+type postDelegations struct {
+	Msgs       []types.MsgDelegate `json:"msg" yaml:"msg"`
+	Fee        StdFee              `json:"fee" yaml:"fee"`
+	Signatures []StdSignature      `json:"signatures" yaml:"signatures"`
+	Memo       string              `json:"memo" yaml:"memo"`
+}
+
 // postDelegationsHandlerFn implements a delegation handler that is responsible
 // for constructing a properly formatted delegation transaction for signing.
 //
@@ -64,8 +72,8 @@ type (
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address."
-// @Param tx body DelegateRequest true "The data required to delegate."
-// @Success 200 {object} types.StdTx
+// @Param tx body rest.DelegateRequest true "The data required to delegate."
+// @Success 200 {object} rest.postDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
@@ -105,6 +113,14 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// postRedelegations is used to generate documentation for postRedelegationsHandlerFn
+type postRedelegations struct {
+	Msgs       []types.MsgBeginRedelegate `json:"msg" yaml:"msg"`
+	Fee        StdFee                     `json:"fee" yaml:"fee"`
+	Signatures []StdSignature             `json:"signatures" yaml:"signatures"`
+	Memo       string                     `json:"memo" yaml:"memo"`
+}
+
 // postRedelegationsHandlerFn implements a redelegation handler that is responsible
 // for constructing a properly formatted redelegation transaction for signing.
 //
@@ -114,8 +130,8 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address."
-// @Param tx body RedelegateRequest true "The data required to delegate."
-// @Success 200 {object} types.StdTx
+// @Param tx body rest.RedelegateRequest true "The data required to delegate."
+// @Success 200 {object} rest.postRedelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."
@@ -155,6 +171,14 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// postUnbondingDelegations is used to generate documentation for postUnbondingDelegationsHandlerFn
+type postUnbondingDelegations struct {
+	Msgs       []types.MsgUndelegate `json:"msg" yaml:"msg"`
+	Fee        StdFee                `json:"fee" yaml:"fee"`
+	Signatures []StdSignature        `json:"signatures" yaml:"signatures"`
+	Memo       string                `json:"memo" yaml:"memo"`
+}
+
 // postUnbondingDelegationsHandlerFn implements an unbonding_delegation handler that is responsible
 // for constructing a properly formatted unbonding_delegation transaction for signing.
 //
@@ -164,8 +188,8 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address."
-// @Param tx body UndelegateRequest true "The data required to undelegate."
-// @Success 200 {object} types.StdTx
+// @Param tx body rest.UndelegateRequest true "The data required to undelegate."
+// @Success 200 {object} types.postUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect."
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid."

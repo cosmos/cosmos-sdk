@@ -73,7 +73,7 @@ type postDelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param tx body rest.DelegateRequest true "The data required to delegate"
+// @Param body body rest.DelegateRequest true "The data required to delegate"
 // @Success 200 {object} rest.postDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
@@ -131,7 +131,7 @@ type postRedelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param tx body rest.RedelegateRequest true "The data required to delegate"
+// @Param body body rest.RedelegateRequest true "The data required to delegate"
 // @Success 200 {object} rest.postRedelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
@@ -189,7 +189,7 @@ type postUnbondingDelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param tx body rest.UndelegateRequest true "The data required to undelegate"
+// @Param body body rest.UndelegateRequest true "The data required to undelegate"
 // @Success 200 {object} rest.postUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"

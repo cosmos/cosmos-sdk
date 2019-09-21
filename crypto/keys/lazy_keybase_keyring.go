@@ -84,7 +84,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 			}
 
 			buf := bufio.NewReader(lkb.userInput)
-			pass, err := input.GetPassword("Enter keyring files passphrase for your keys:", buf)
+			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
 			if err != nil {
 				continue
 			}
@@ -97,7 +97,7 @@ func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 				return pass, nil
 			}
 
-			reEnteredPass, err := input.GetPassword("Re-enter keyring files passphrase for your keys:", buf)
+			reEnteredPass, err := input.GetPassword("Re-enter keyring passphrase:", buf)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				continue

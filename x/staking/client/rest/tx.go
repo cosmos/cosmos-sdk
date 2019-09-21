@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -58,8 +59,8 @@ type (
 // postDelegations is used to generate documentation for postDelegationsHandlerFn
 type postDelegations struct {
 	Msgs       []types.MsgDelegate `json:"msg" yaml:"msg"`
-	Fee        StdFee              `json:"fee" yaml:"fee"`
-	Signatures []StdSignature      `json:"signatures" yaml:"signatures"`
+	Fee        auth.StdFee         `json:"fee" yaml:"fee"`
+	Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
 	Memo       string              `json:"memo" yaml:"memo"`
 }
 
@@ -116,8 +117,8 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // postRedelegations is used to generate documentation for postRedelegationsHandlerFn
 type postRedelegations struct {
 	Msgs       []types.MsgBeginRedelegate `json:"msg" yaml:"msg"`
-	Fee        StdFee                     `json:"fee" yaml:"fee"`
-	Signatures []StdSignature             `json:"signatures" yaml:"signatures"`
+	Fee        auth.StdFee                `json:"fee" yaml:"fee"`
+	Signatures []auth.StdSignature        `json:"signatures" yaml:"signatures"`
 	Memo       string                     `json:"memo" yaml:"memo"`
 }
 
@@ -174,8 +175,8 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // postUnbondingDelegations is used to generate documentation for postUnbondingDelegationsHandlerFn
 type postUnbondingDelegations struct {
 	Msgs       []types.MsgUndelegate `json:"msg" yaml:"msg"`
-	Fee        StdFee                `json:"fee" yaml:"fee"`
-	Signatures []StdSignature        `json:"signatures" yaml:"signatures"`
+	Fee        auth.StdFee           `json:"fee" yaml:"fee"`
+	Signatures []auth.StdSignature   `json:"signatures" yaml:"signatures"`
 	Memo       string                `json:"memo" yaml:"memo"`
 }
 

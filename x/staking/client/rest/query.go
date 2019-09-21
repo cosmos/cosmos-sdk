@@ -384,8 +384,8 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryDelegator(cliCtx, "custom/staking/delegatorValidators")
 }
 
-// delegatorValidators used to generate documentation for delegatorValidatorsHandlerFn
-type delegatorValidators struct {
+// delegatorValidator used to generate documentation for delegatorValidatorHandlerFn
+type delegatorValidator struct {
 	Height int64           `json:"height"`
 	Result types.Validator `json:"result"`
 }

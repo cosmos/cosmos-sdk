@@ -190,7 +190,7 @@ type postUnbondingDelegations struct {
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
 // @Param tx body rest.UndelegateRequest true "The data required to undelegate"
-// @Success 200 {object} types.postUnbondingDelegations
+// @Success 200 {object} rest.postUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"

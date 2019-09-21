@@ -208,4 +208,8 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 }
 
 // IsAlgoSupported returns whether the signing algorithm is supported.
+//
+// TODO: Refactor this to be configurable to support interchangeable key signing
+// and addressing.
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/4941
 func IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }

@@ -31,7 +31,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 //
 // @Summary Query governance parameters
 // @Tags governance
-// @Description Query either (deposit | tallying | voting) parameters of the governance module.
+// @Description Query either (deposit | tallying | voting) parameters of the governance module
 // @Produce json
 // @Param type path string true "Type of param (deposit | tallying | voting)"
 // @Param height query string false "Block height (defaults to chain tip)"
@@ -60,6 +60,12 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryProposal used to generate documentation for queryProposalHandlerFn
+type queryProposal struct {
+	Height int64          `json:"height"`
+	Result types.Proposal `json:"result"`
+}
+
 // queryProposalHanderFun implements a governance proposal querying route
 // for returning data on an individual governance proposal.
 //
@@ -69,7 +75,7 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID} [get]
@@ -113,6 +119,12 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryDeposits used to generate documentation for queryDepositsHandlerFn
+type queryDeposits struct {
+	Height int64           `json:"height"`
+	Result []types.Deposit `json:"result"`
+}
+
 // queryDepositsHandlerFn implements a governance deposits querying route
 // for returning data on an individual governance proposal's deposits.
 //
@@ -121,11 +133,11 @@ func queryProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Description Query an individual governance proposal's deposits.
 // @Description NOTE: In order to query deposits for passed proposals, the transaction
 // @Description record must be available otherwise the query will fail. This requires a
-// @Description node that is not pruning transaction history.
+// @Description node that is not pruning transaction history
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryDeposits
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/deposits [get]
@@ -182,6 +194,12 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryProposer used to generate documentation for queryProposerHandlerFn
+type queryProposer struct {
+	Height int64            `json:"height"`
+	Result gcutils.Proposer `json:"result"`
+}
+
 // queryProposerHandlerFn implements a governance proposal proposer querying route
 // for returning data on individual governance proposal proposer.
 //
@@ -191,7 +209,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryProposer
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/proposer [get]
@@ -220,20 +238,26 @@ func queryProposerHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryDeposit used to generate documentation for queryDepositHandlerFn
+type queryDeposit struct {
+	Height int64         `json:"height"`
+	Result types.Deposit `json:"result"`
+}
+
 // queryDepositHandlerFn implements a governance proposal deposit querying route
-// for returning data on a governance proposal's individual deposits.
+// for returning data on a governance proposal's individual deposits
 //
 // @Summary Query a governance proposal's individual deposit
 // @Tags governance
 // @Description Query an individual governance proposal's deposits.
 // @Description NOTE: In order to query a deposit for a passed proposal, the transaction
 // @Description record must be available otherwise the query will fail. This requires a
-// @Description node that is not pruning transaction history.
+// @Description node that is not pruning transaction history
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param depositor path string true "The address of the depositor"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryDeposit
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or depositor"
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposal is not found"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
@@ -320,6 +344,12 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryVote used to generate documentation for queryVoteHandlerFn
+type queryVote struct {
+	Height int64      `json:"height"`
+	Result types.Vote `json:"result"`
+}
+
 // queryVoteHandlerFn implements a governance proposal vote querying route
 // for returning data on an individual governance proposal vote.
 //
@@ -328,12 +358,12 @@ func queryDepositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Description Query an individual governance proposal's vote.
 // @Description NOTE: In order to query votes for passed proposals, the transaction
 // @Description record must be available otherwise the query will fail. This requires a
-// @Description node that is not pruning transaction history.
+// @Description node that is not pruning transaction history
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param voter path string true "The address of the voter"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryVote
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or voter address"
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposal is not found"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
@@ -420,6 +450,12 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryVotesOnProposal used to generate documentation for queryVotesOnProposalHandlerFn
+type queryVotesOnProposal struct {
+	Height int64       `json:"height"`
+	Result types.Votes `json:"result"`
+}
+
 // todo: Split this functionality into helper functions to remove the above
 //
 // queryVotesOnProposalHandlerFn implements a governance proposal votes querying route
@@ -430,11 +466,11 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Description Query an individual governance proposal's votes.
 // @Description NOTE: In order to query deposits for passed proposals, the transaction
 // @Description record must be available otherwise the query will fail. This requires a
-// @Description node that is not pruning transaction history.
+// @Description node that is not pruning transaction history
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryVotesOnProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/votes [get]
@@ -497,6 +533,12 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryProposals used to generate documentation for queryProposalsWithParameterHandlerFn
+type queryProposals struct {
+	Height int64            `json:"height"`
+	Result []types.Proposal `json:"result"`
+}
+
 // todo: Split this functionality into helper functions to remove the above
 //
 // queryProposalsWithParameterFn implements governance proposals querying
@@ -511,7 +553,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Param status query string false "Filter proposals by proposal status (deposit_period | voting_period | passed | rejected)"
 // @Param depositor query string false "Filter proposals by depositor address"
 // @Param voter query string false "Filter proposals by voter address"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryProposals
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid parameters"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals [get]
@@ -580,6 +622,12 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryTally used to generate documentation for queryTallyOnProposalHandlerFn
+type queryTally struct {
+	Height int64             `json:"height"`
+	Result types.TallyResult `json:"result"`
+}
+
 // todo: Split this functionality into helper functions to remove the above
 //
 // queryTallyOnProposalHandlerFn implements a governance proposal tally querying route
@@ -591,7 +639,7 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
+// @Success 200 {object} rest.queryTally
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/tally [get]

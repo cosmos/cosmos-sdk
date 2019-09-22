@@ -13,7 +13,7 @@ type AnteDecorator interface {
 }
 
 // ChainDecorator chains AnteDecorators together with each element
-// wrapping over the decorators further along chain and returns a single AnteHandler
+// wrapping over the decorators further along chain and returns a single AnteHandler.
 //
 // First element is outermost decorator, last element is innermost decorator
 func ChainDecorators(chain ...AnteDecorator) AnteHandler {

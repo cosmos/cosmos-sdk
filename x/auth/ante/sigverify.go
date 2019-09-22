@@ -49,11 +49,10 @@ func NewSigGasConsumeDecorator(ak keeper.AccountKeeper, sigGasConsumer Signature
 func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "invalid transaction type")
 	}
 
 	params := sgcd.ak.GetParams(ctx)
-
 	stdSigs := stdTx.GetSignatures()
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -102,7 +101,7 @@ func NewSigVerificationDecorator(ak keeper.AccountKeeper) SigVerificationDecorat
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, errs.Wrap(errs.ErrTxDecode, "invalid tx type")
 	}
 
 	isGenesis := ctx.BlockHeight() == 0
@@ -118,7 +117,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	// check that signer length and signature length are the same
 	if len(stdSigs) != len(signerAddrs) {
-		return ctx, errs.Wrapf(errs.ErrUnauthorized, "Wrong number of signers. Expected: %d, got %d", len(signerAddrs), len(stdSigs))
+		return ctx, errs.Wrapf(errs.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signerAddrs), len(stdSigs))
 	}
 
 	for i := 0; i < len(stdSigs); i++ {
@@ -159,7 +158,6 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	params := vscd.ak.GetParams(ctx)
-
 	stdSigs := stdTx.GetSignatures()
 
 	sigCount := 0
@@ -200,7 +198,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if sig.PubKey != nil {
 			if !bytes.Equal(sig.PubKey.Address(), signers[i]) {
 				return ctx, errs.Wrapf(errs.ErrInvalidPubKey,
-					"PubKey does not match Signer address %s with signer index: %d", signers[i], i)
+					"pubkey does not match signer address %s with signer index: %d", signers[i], i)
 			}
 
 			acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])

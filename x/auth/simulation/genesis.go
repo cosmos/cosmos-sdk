@@ -103,5 +103,5 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs export
 		genesisAccs = append(genesisAccs, gacc)
 	}
 
-	return
+	return genesisAccs
 }

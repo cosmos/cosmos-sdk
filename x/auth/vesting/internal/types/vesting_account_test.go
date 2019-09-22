@@ -645,6 +645,8 @@ func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := auth.NewBaseAccount(addr, nil, pubkey, 0, 0)
+	baseAccWithCoins := auth.NewBaseAccount(addr, nil, pubkey, 0, 0)
+	baseAccWithCoins.SetCoins(sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)})
 	tests := []struct {
 		name   string
 		acc    authexported.GenesisAccount
@@ -701,7 +703,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid periodic vesting account",
-			NewPeriodicVestingAccount(baseAcc, 100, VestingPeriods{VestingPeriod{PeriodLength: int64(50), VestingAmount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
+			NewPeriodicVestingAccount(baseAccWithCoins, 100, VestingPeriods{VestingPeriod{PeriodLength: int64(50), VestingAmount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
 			nil,
 		},
 		{

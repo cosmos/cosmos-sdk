@@ -15,8 +15,8 @@
           .title {{group.title}}
           .section(v-for="section in group.children")
             .section__title.section__inactive(v-if="!section.path") {{section.title}}
-            a.section__title.section__outbound(v-else-if="outboundUrl(section.path)" :href="section.path" target="_blank") {{section.title}} int
-            router-link.section__title.section__inactive(v-else :to="section.path") {{section.title}} ext
+            a.section__title.section__outbound(v-else-if="outboundUrl(section.path)" :href="section.path" target="_blank") {{section.title}}
+            router-link.section__title.section__inactive(v-else :to="section.path") {{section.title}}
             router-link(:to="item.path" tag="div" v-for="item in section.children").section__child {{item.title}}
       .footer
         a(href="https://cosmos.network").footer__item

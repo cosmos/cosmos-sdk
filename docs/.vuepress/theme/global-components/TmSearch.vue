@@ -21,6 +21,7 @@
 
       &:focus
         border-color rgba(0, 0, 0, 0.2)
+        background-color white
 
   .suggestions
     position absolute

@@ -10,7 +10,14 @@
           .section__title(:class="[`section__${sectionActive(contents) ? 'active' : 'inactive'}`]")
             router-link(:to="sectionUrl(contents, section) || '.'") {{section}}
           div(v-if="sectionActive(contents)")
-            router-link(:to="child.path" tag="div" v-for="child in contents" v-if="child.title" :class="{'section__child__active': $page.key == child.key}").link.link__child.section__child {{child.title}}
+            router-link(:to="child.path" tag="div" v-for="child in contents" v-if="child.title" :class="{'section__child__active': $page.key == child.key}").section__child {{child.title}}
+        div(v-for="group in sidebar")
+          .title {{group.title}}
+          .section(v-for="section in group.children")
+            .section__title.section__inactive(v-if="!section.path") {{section.title}}
+            a.section__title.section__outbound(v-else-if="outboundUrl(section.path)" :href="section.path" target="_blank") {{section.title}} int
+            router-link.section__title.section__inactive(v-else :to="section.path") {{section.title}} ext
+            router-link(:to="item.path" tag="div" v-for="item in section.children").section__child {{item.title}}
       .footer
         a(href="https://cosmos.network").footer__item
           svg(width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg").footer__item__icon
@@ -35,8 +42,8 @@
   text-transform uppercase
   letter-spacing 0.2em
   color #666
-  margin-top 1rem
-  margin-bottom 1rem
+  margin-top 2rem
+  margin-bottom .5rem
 
 .section
   font-size 0.875rem
@@ -89,6 +96,16 @@
       width 1rem
       background url('/bullet-hex-full.svg') no-repeat top left
 
+  &__outbound
+    &:before
+      content ''
+      position absolute
+      top 0.25rem
+      left 0
+      height 1rem
+      width 1rem
+      background url('/icon-outbound.svg') no-repeat top left
+
 .footer
   margin-top 1.5rem
   background-color var(--sidebar-bg)
@@ -109,11 +126,39 @@
 </style>
 
 <script>
-import { includes } from "lodash";
+import { includes, isString, isPlainObject, isArray } from "lodash";
 
 export default {
   props: ["value"],
+  computed: {
+    sidebar() {
+      return this.$themeConfig.sidebar;
+      return this.$themeConfig.sidebar.map(item => {
+        if (isString(item)) {
+          return {
+            title: item,
+            path: item
+          };
+        }
+        // if (isPlainObject(item)) {
+        //   return {
+        //     title: item.title,
+        //     children: item.children
+        //   };
+        // }
+        // if (isArray(item)) {
+        //   return {
+        //     url: item[0],
+        //     title: item[1] || item[0]
+        //   };
+        // }
+      });
+    }
+  },
   methods: {
+    outboundUrl(url) {
+      return /^[a-z]+:/i.test(url);
+    },
     sectionActive(section) {
       return includes(Object.values(section).map(e => e.key), this.$page.key);
     },
@@ -127,7 +172,6 @@ export default {
         section[
           search("readme.md") || search("index.md") || Object.keys(section)[0]
         ];
-      console.log(res);
       return res;
     }
   }

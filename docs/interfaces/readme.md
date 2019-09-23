@@ -1,3 +1,7 @@
+---
+order: 3
+---
+
 # Clients
 
 This section explains contains information on clients for SDK based blockchain. 

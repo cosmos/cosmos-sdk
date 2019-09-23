@@ -2,13 +2,13 @@
   div
     .container
       .sidebar__container(:class="{sidebarVisible}" @click.self="sidebarVisible = false")
-        tm-sidebar(:class="{sidebarVisible}" :value="sidebar").sidebar.sidebar__hidden
+        tm-sidebar(:class="{sidebarVisible}" :value="tree").sidebar.sidebar__hidden
       .content(:class="{sidebarVisible}")
         .topbar
           svg(width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" @click="sidebarVisible = !sidebarVisible").topbar__menu__button
             path(d="M24 18v1h-24v-1h24zm0-6v1h-24v-1h24zm0-6v1h-24v-1h24z")
               path(d="M24 19h-24v-1h24v1zm0-6h-24v-1h24v1zm0-6h-24v-1h24v1z")
-          .topbar__breadcrumbs(v-if="parent") #[router-link(:to="parent.children[0].regularPath" tag="a") {{parent.title}} ] #[span(style="opacity: .5").topbar__breadcrumbs__current / {{$page.title}}]
+          tm-breadcrumbs
           tm-select-language.topbar__language
         tm-content(:aside="aside")
           template(v-slot:content)
@@ -71,7 +71,7 @@
 
   &__menu
     &__button
-      margin-right auto
+      margin-right 1rem
       display none
 
 .aside
@@ -145,7 +145,7 @@
 </style>
 
 <script>
-import { find } from "lodash";
+import { find, filter, forEach, remove, last, omit, omitBy } from "lodash";
 
 export default {
   data: function() {
@@ -154,24 +154,32 @@ export default {
     };
   },
   computed: {
-    parent() {
-      return this.sidebar.find(section => {
-        return find(section.children, ["key", this.$page.key]);
+    tree() {
+      const langDirs = Object.keys(this.$site.locales).map(e =>
+        e.replace(/\//g, "")
+      );
+      const files = this.$site.pages;
+      const langCurrent = this.$localeConfig.path.replace(/\//g, "");
+      const langOther = langCurrent.length > 0;
+      let tree = {};
+      files.forEach(file => {
+        let location = file.relativePath.split("/");
+        if (location.length === 1) {
+          return (tree[location[0]] = file);
+        }
+        location.reduce((prevDir, currDir, i, filePath) => {
+          if (i === filePath.length - 1) {
+            prevDir[currDir] = file;
+          }
+          if (!prevDir.hasOwnProperty(currDir)) {
+            prevDir[currDir] = {};
+          }
+          return prevDir[currDir];
+        }, tree);
       });
-    },
-    sidebar() {
-      return this.$themeLocaleConfig.sidebar.map(section => {
-        const children = section.children.map(child => {
-          return find(this.$site.pages, {
-            relativePath: child.replace("./", "")
-          });
-        });
-        return {
-          title: section.title,
-          children,
-          regularPath: children[0] && children[0].regularPath
-        };
-      });
+      tree = langOther ? tree[langCurrent] : omit(tree, langDirs);
+      tree = omitBy(tree, e => typeof e.key === "string");
+      return tree;
     }
   },
   props: {

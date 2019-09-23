@@ -35,6 +35,9 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
+
+# Pruning sets the pruning strategy: syncable, nothing, everything
+pruning = {{ .BaseConfig.Pruning }}
 `
 
 var configTemplate *template.Template

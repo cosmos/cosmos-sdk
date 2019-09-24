@@ -20,9 +20,9 @@ type Config struct {
 	keyringServiceName  string
 }
 
-// GetConfig returns the config instance for the SDK.
-func GetConfig() *Config {
-	return &Config{
+var (
+	// Initializing an instance of Config
+	sdkConfig = &Config{
 		sealed: false,
 		bech32AddressPrefix: map[string]string{
 			"account_addr":   Bech32PrefixAccAddr,
@@ -37,6 +37,11 @@ func GetConfig() *Config {
 		txEncoder:          nil,
 		keyringServiceName: DefaultKeyringServiceName,
 	}
+)
+
+// GetConfig returns the config instance for the SDK.
+func GetConfig() *Config {
+	return sdkConfig
 }
 
 func (config *Config) assertNotSealed() {

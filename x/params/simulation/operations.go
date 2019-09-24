@@ -22,7 +22,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		}
 
 		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
-		paramChanges := make([]params.ParamChange, numChanges, numChanges)
+		paramChanges := make([]params.ParamChange, numChanges)
 
 		// map from key to empty struct; used only for look-up of the keys of the
 		// parameters that are already in the random set of changes.

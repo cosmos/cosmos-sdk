@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

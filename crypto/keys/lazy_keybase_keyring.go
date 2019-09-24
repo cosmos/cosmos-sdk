@@ -45,6 +45,19 @@ func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) 
 	return lazyKeybaseKeyring{name: name, dir: dir, userInput: userInput, test: test}
 }
 
+// New creates a new instance of a lazy keybase.
+func NewTestKeybaseKeyring(name string, dir string) Keybase {
+	if _, err := keyring.Open(keyring.Config{
+		AllowedBackends: []keyring.BackendType{"file"},
+		ServiceName:     name,
+		FileDir:         dir,
+	}); err != nil {
+		panic(err)
+	}
+
+	return lazyKeybaseKeyring{name: name, dir: dir, test: true}
+}
+
 func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {
 	if lkb.test {
 		return keyring.Config{

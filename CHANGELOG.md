@@ -80,6 +80,7 @@ correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 
 ### Improvements
 
+* (client/keys) [\#5091](https://github.com/cosmos/cosmos-sdk/issues/5091) Changed prefixes using `SetBech32PrefixForAccount(),SetBech32PrefixForValidator(),SetBech32PrefixForConsensusNode()`method, but `gaiacli keys parse` command still use `cosmos`prefix.
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.

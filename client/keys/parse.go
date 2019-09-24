@@ -17,14 +17,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var config = sdk.GetConfig()
-var bech32Prefixes = []string{
-	config.GetBech32AccountAddrPrefix(),
-	config.GetBech32AccountPubPrefix(),
-	config.GetBech32ValidatorAddrPrefix(),
-	config.GetBech32ValidatorPubPrefix(),
-	config.GetBech32ConsensusAddrPrefix(),
-	config.GetBech32ConsensusPubPrefix(),
+func bech32Prefixes()[]string{
+	var config = sdk.GetConfig()
+
+	return []string{
+		config.GetBech32AccountAddrPrefix(),
+		config.GetBech32AccountPubPrefix(),
+		config.GetBech32ValidatorAddrPrefix(),
+		config.GetBech32ValidatorPubPrefix(),
+		config.GetBech32ConsensusAddrPrefix(),
+		config.GetBech32ConsensusPubPrefix(),
+	}
 }
 
 type hexOutput struct {
@@ -45,6 +48,7 @@ type bech32Output struct {
 }
 
 func newBech32Output(bs []byte) bech32Output {
+	bech32Prefixes := bech32Prefixes()
 	out := bech32Output{Formats: make([]string, len(bech32Prefixes))}
 	for i, prefix := range bech32Prefixes {
 		bech32Addr, err := bech32.ConvertAndEncode(prefix, bs)

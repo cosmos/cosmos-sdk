@@ -5,8 +5,6 @@ package v0_36
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 )
@@ -29,7 +27,7 @@ type (
 
 	Validator struct {
 		OperatorAddress         sdk.ValAddress          `json:"operator_address" yaml:"operator_address"`
-		ConsPubKey              crypto.PubKey           `json:"consensus_pubkey" yaml:"consensus_pubkey"`
+		ConsPubKey              string                  `json:"consensus_pubkey" yaml:"consensus_pubkey"`
 		Jailed                  bool                    `json:"jailed" yaml:"jailed"`
 		Status                  sdk.BondStatus          `json:"status" yaml:"status"`
 		Tokens                  sdk.Int                 `json:"tokens" yaml:"tokens"`

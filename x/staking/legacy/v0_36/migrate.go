@@ -3,6 +3,7 @@
 package v0_36
 
 import (
+	"github.com/cosmos/cosmos-sdk/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_34"
 )
 
@@ -26,9 +27,13 @@ func migrateValidators(oldValidators v034staking.Validators) Validators {
 	validators := make(Validators, len(oldValidators))
 
 	for i, val := range oldValidators {
+		consPubKey, err := types.Bech32ifyConsPub(val.ConsPubKey)
+		if err != nil {
+			panic(err)
+		}
 		validators[i] = Validator{
 			OperatorAddress:         val.OperatorAddress,
-			ConsPubKey:              val.ConsPubKey,
+			ConsPubKey:              consPubKey,
 			Jailed:                  val.Jailed,
 			Status:                  val.Status,
 			Tokens:                  val.Tokens,

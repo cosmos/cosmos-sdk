@@ -53,13 +53,13 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
-	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
 		if content == nil {
 			// skip
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
@@ -99,7 +99,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, true, "")
+		opMsg := simulation.NewOperationMsg(msg, true, "")
 
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
@@ -147,7 +147,7 @@ func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Acc
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
@@ -202,7 +202,7 @@ func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operati
 
 func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		if simAccount.Equals(simulation.Account{}) {
 			simAccount, _ = simulation.RandomAcc(r, accs)

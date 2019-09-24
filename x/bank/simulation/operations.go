@@ -18,7 +18,7 @@ import (
 // accounts already exist.
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+	simulation.OperationMsg,[]simulation.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -81,7 +81,7 @@ func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 // accounts already exist.
 func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
-		opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil

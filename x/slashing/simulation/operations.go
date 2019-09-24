@@ -19,7 +19,7 @@ import (
 // TODO: this message is almost, if not always, skipped !
 func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		// TODO: create iterator to get all jailed validators and then select a random
 		// from the set
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)

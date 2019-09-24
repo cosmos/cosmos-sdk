@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -67,6 +68,7 @@ var (
 	MakeSignature                     = types.MakeSignature
 	ValidateGenAccounts               = types.ValidateGenAccounts
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
+	RandomGenesisAccounts             = simulation.RandomGenesisAccounts
 
 	// variable aliases
 	ModuleCdc                 = types.ModuleCdc

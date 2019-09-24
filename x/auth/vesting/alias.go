@@ -14,6 +14,7 @@ var (
 	NewDelayedVestingAccountRaw    = types.NewDelayedVestingAccountRaw
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
 	RegisterCodec                  = types.RegisterCodec
+	RandomGenesisAccounts          = types.RandomGenesisAccounts
 )
 
 type (

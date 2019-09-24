@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -90,14 +91,15 @@ func AppStateRandomizedFn(
 	)
 
 	simState := &module.SimulationState{
-		AppParams:    appParams,
-		Cdc:          cdc,
-		Rand:         r,
-		GenState:     genesisState,
-		Accounts:     accs,
-		InitialStake: initialStake,
-		NumBonded:    numInitiallyBonded,
-		GenTimestamp: genesisTimestamp,
+		AppParams:        appParams,
+		Cdc:              cdc,
+		Rand:             r,
+		GenState:         genesisState,
+		Accounts:         accs,
+		AccountGenerator: vesting.RandomGenesisAccounts,
+		InitialStake:     initialStake,
+		NumBonded:        numInitiallyBonded,
+		GenTimestamp:     genesisTimestamp,
 	}
 
 	simManager.GenerateGenesisStates(simState)

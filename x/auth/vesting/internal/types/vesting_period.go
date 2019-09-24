@@ -24,7 +24,7 @@ func (p VestingPeriod) String() string {
 
 // String VestingPeriods implements stringer interface
 func (vp VestingPeriods) String() string {
-	var periodsListString []string
+	periodsListString := make([]string, len(vp))
 	for _, period := range vp {
 		periodsListString = append(periodsListString, period.String())
 	}

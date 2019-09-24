@@ -20,8 +20,14 @@ type Config struct {
 	keyringServiceName  string
 }
 
-var (
-	// Initializing an instance of Config
+// cosmos-sdk wide global singleton
+var sdkConfig *Config
+
+// GetConfig returns the config instance for the SDK.
+func GetConfig() *Config {
+	if sdkConfig != nil {
+		return sdkConfig
+	}
 	sdkConfig = &Config{
 		sealed: false,
 		bech32AddressPrefix: map[string]string{
@@ -37,10 +43,6 @@ var (
 		txEncoder:          nil,
 		keyringServiceName: DefaultKeyringServiceName,
 	}
-)
-
-// GetConfig returns the config instance for the SDK.
-func GetConfig() *Config {
 	return sdkConfig
 }
 

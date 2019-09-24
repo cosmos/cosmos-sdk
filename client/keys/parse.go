@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func bech32Prefixes()[]string{
+func bech32Prefixes() []string {
 	var config = sdk.GetConfig()
 
 	return []string{

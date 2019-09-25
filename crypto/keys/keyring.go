@@ -1,16 +1,25 @@
 package keys
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/99designs/keyring"
 	"github.com/pkg/errors"
+
+	"github.com/tendermint/crypto/bcrypt"
+	"github.com/tendermint/tendermint/crypto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -21,26 +30,33 @@ var _ Keybase = keyringKeybase{}
 
 // keyringKeybase implements the Keybase interface by using the Keyring library
 // for account key persistence.
-//
-// TODO: There is no need for keyringKeybase to implement the Keybase interface
-// or even have any of its members be public as it currently cannot be used by
-// the outside world. Any client uses this implementation through the
-// lazyKeybaseKeyring implementation. Consider either:
-//
-// 1. Remove lazyKeybaseKeyring and make keyringKeybase useable by the outside
-// world.
-// 2. Mark all keyringKeybase methods private and remove the compile time
-// Keybase interface assertion.
 type keyringKeybase struct {
 	db   keyring.Keyring
 	base baseKeybase
 }
 
-func newKeyringKeybase(db keyring.Keyring) Keybase {
-	return keyringKeybase{
-		db:   db,
-		base: baseKeybase{},
+var maxPassphraseEntryAttempts = 3
+
+// NewKeyring creates a new instance of a lazy keybase using a Keyring as
+// the persistence layer.
+func NewKeyring(name string, dir string, userInput io.Reader) Keybase {
+	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
+	if err != nil {
+		panic(err)
 	}
+
+	return newKeyringKeybase(db)
+}
+
+// NewTestKeyring creates a new instance of a keyring keybase
+// for testing purposes that  does not prompt users for password.
+func NewTestKeyring(name string, dir string) Keybase {
+	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
+	if err != nil {
+		panic(err)
+	}
+
+	return newKeyringKeybase(db)
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -434,5 +450,105 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	})
 	if err != nil {
 		panic(err)
+	}
+}
+
+//nolint: funlen
+func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Config {
+	if test {
+		return keyring.Config{
+			AllowedBackends:  []keyring.BackendType{"file"},
+			ServiceName:      name,
+			FileDir:          dir,
+			FilePasswordFunc: fakePrompt,
+		}
+	}
+
+	realPrompt := func(prompt string) (string, error) {
+		keyhashStored := false
+		keyhashFilePath := filepath.Join(dir, "keyhash")
+
+		var keyhash []byte
+
+		_, err := os.Stat(keyhashFilePath)
+		switch {
+		case err == nil:
+			keyhash, err = ioutil.ReadFile(keyhashFilePath)
+			if err != nil {
+				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
+			}
+
+			keyhashStored = true
+
+		case os.IsNotExist(err):
+			keyhashStored = false
+
+		default:
+			return "", fmt.Errorf("failed to open %s: %v", keyhashFilePath, err)
+		}
+
+		failureCounter := 0
+		for {
+			failureCounter++
+			if failureCounter > maxPassphraseEntryAttempts {
+				return "", fmt.Errorf("too many failed passphrase attempts")
+			}
+
+			buf := bufio.NewReader(buf)
+			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			if err != nil {
+				continue
+			}
+
+			if keyhashStored {
+				if err := bcrypt.CompareHashAndPassword(keyhash, []byte(pass)); err != nil {
+					fmt.Fprintln(os.Stderr, "incorrect passphrase")
+					continue
+				}
+				return pass, nil
+			}
+
+			reEnteredPass, err := input.GetPassword("Re-enter keyring passphrase:", buf)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				continue
+			}
+
+			if pass != reEnteredPass {
+				fmt.Fprintln(os.Stderr, "passphrase do not match")
+				continue
+			}
+
+			saltBytes := crypto.CRandBytes(16)
+			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				continue
+			}
+
+			if err := ioutil.WriteFile(dir+"/keyhash", passwordHash, 0555); err != nil {
+				return "", err
+			}
+
+			return pass, nil
+		}
+	}
+
+	return keyring.Config{
+		ServiceName:      name,
+		FileDir:          dir,
+		FilePasswordFunc: realPrompt,
+	}
+}
+
+func fakePrompt(prompt string) (string, error) {
+	fmt.Fprintln(os.Stderr, "Fake prompt for passphase. Testing only")
+	return "test", nil
+}
+
+func newKeyringKeybase(db keyring.Keyring) Keybase {
+	return keyringKeybase{
+		db:   db,
+		base: baseKeybase{},
 	}
 }

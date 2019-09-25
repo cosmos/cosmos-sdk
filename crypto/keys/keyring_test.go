@@ -14,15 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestNewTestKeybaseKeyring(t *testing.T) {
-	dir, cleanup := tests.NewTestCaseDir(t)
-	defer cleanup()
-	kb := NewTestKeyring("keybasename", dir)
-	lazykb, ok := kb.(lazyKeybaseKeyring)
-	require.True(t, ok)
-	require.Equal(t, lazykb.name, "keybasename")
-}
-
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()

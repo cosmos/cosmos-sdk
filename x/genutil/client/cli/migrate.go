@@ -50,6 +50,8 @@ func GetMigrationVersions() []string {
 	return versions
 }
 
+// MigrateGenesisCmd returns a command to execute genesis state migration.
+// nolint: funlen
 func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [genesis-file]",

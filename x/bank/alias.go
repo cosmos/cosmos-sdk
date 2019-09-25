@@ -17,6 +17,12 @@ const (
 	RouterKey                = types.RouterKey
 	QuerierRoute             = types.QuerierRoute
 	DefaultParamspace        = types.DefaultParamspace
+	DefaultSendEnabled       = types.DefaultSendEnabled
+
+	EventTypeTransfer      = types.EventTypeTransfer
+	AttributeKeyRecipient  = types.AttributeKeyRecipient
+	AttributeKeySender     = types.AttributeKeySender
+	AttributeValueCategory = types.AttributeValueCategory
 )
 
 var (

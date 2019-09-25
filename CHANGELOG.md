@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.37.2] - TBD
 
+### Bug Fixes
+
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36/v0.37 not converting validator consensus pubkey to bech32 format.
+
 ### Improvements
 
 * (tendermint) Bump Tendermint version to [v0.32.5](https://github.com/tendermint/tendermint/releases/tag/v0.32.5)

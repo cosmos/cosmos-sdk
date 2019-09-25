@@ -17,7 +17,7 @@ import (
 func TestNewTestKeybaseKeyring(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 	lazykb, ok := kb.(lazyKeybaseKeyring)
 	require.True(t, ok)
 	require.Equal(t, lazykb.name, "keybasename")
@@ -26,7 +26,7 @@ func TestNewTestKeybaseKeyring(t *testing.T) {
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -109,7 +109,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 func TestLazySignVerifyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -184,7 +184,7 @@ func TestLazySignVerifyKeyRing(t *testing.T) {
 func TestLazyExportImportKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -212,7 +212,7 @@ func TestLazyExportImportKeyRing(t *testing.T) {
 func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
@@ -251,7 +251,7 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	info, _, err := kb.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -266,7 +266,7 @@ func TestLazyExportPrivateKeyObjectKeyRing(t *testing.T) {
 func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
@@ -299,7 +299,7 @@ func TestLazyAdvancedKeyManagementKeyRing(t *testing.T) {
 func TestLazySeedPhraseKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
-	kb := NewTestKeybaseKeyring("keybasename", dir)
+	kb := NewTestKeyring("keybasename", dir)
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"

@@ -45,9 +45,9 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	var keyring keys.Keybase
 	buf := bufio.NewReader(cmd.InOrStdin())
 	if viper.GetBool(flags.FlagDryRun) {
-		keyring = keys.NewTestKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir)
+		keyring = keys.NewTestKeyring(types.GetConfig().GetKeyringServiceName(), rootDir)
 	} else {
-		keyring = keys.NewKeybaseKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf)
+		keyring = keys.NewKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf)
 	}
 
 	for _, key := range oldKeys {

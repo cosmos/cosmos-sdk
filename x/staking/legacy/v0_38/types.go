@@ -69,9 +69,7 @@ type (
 )
 
 // NewDescription creates a new Description object
-func NewDescription(moniker, identity, website,
-	securityContact, details string) Description {
-
+func NewDescription(moniker, identity, website, securityContact, details string) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,

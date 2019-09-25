@@ -14,12 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// nolint: funlen
+
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -47,7 +48,6 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) (err error) {
-
 	account := ak.GetAccount(ctx, msg.FromAddress)
 	coins := account.SpendableCoins(ctx.BlockTime())
 
@@ -82,7 +82,6 @@ func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -114,7 +113,6 @@ func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) s
 // account.
 func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 	msg types.MsgMultiSend, ctx sdk.Context, chainID string, privkeys []crypto.PrivKey) (err error) {
-
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	accountNumbers := make([]uint64, len(msg.Inputs))
@@ -166,7 +164,6 @@ func sendMsgMultiSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper
 // as the transferred amount.
 func randomSendFields(r *rand.Rand, ctx sdk.Context, accs []simulation.Account,
 	ak types.AccountKeeper) (simulation.Account, simulation.Account, sdk.Coins, bool, error) {
-
 	simAccount, _ := simulation.RandomAcc(r, accs)
 	toSimAcc, _ := simulation.RandomAcc(r, accs)
 

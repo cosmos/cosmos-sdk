@@ -15,9 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// nolint: funlen
+
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
-func SimulateMsgCreateValidator(ak types.AccountKeeper,
-	k keeper.Keeper) simulation.Operation {
+func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
@@ -91,8 +92,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper,
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
-func SimulateMsgEditValidator(ak types.AccountKeeper,
-	k keeper.Keeper) simulation.Operation {
+func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if len(k.GetAllValidators(ctx)) == 0 {
@@ -153,8 +153,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper,
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
-func SimulateMsgDelegate(ak types.AccountKeeper,
-	k keeper.Keeper) simulation.Operation {
+func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		denom := k.GetParams(ctx).BondDenom
@@ -217,8 +216,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper,
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
-func SimulateMsgUndelegate(ak types.AccountKeeper,
-	k keeper.Keeper) simulation.Operation {
+func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, idx := simulation.RandomAcc(r, accs)
@@ -291,8 +289,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper,
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
-func SimulateMsgBeginRedelegate(ak types.AccountKeeper,
-	k keeper.Keeper) simulation.Operation {
+func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, idx := simulation.RandomAcc(r, accs)

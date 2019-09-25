@@ -27,8 +27,8 @@ type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []simulation.Acco
 // SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateSubmitProposal(ak types.AccountKeeper,
-	k keeper.Keeper, contentSim ContentSimulator) simulation.Operation {
+func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
+	contentSim ContentSimulator) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -53,7 +53,6 @@ func SimulateSubmitProposal(ak types.AccountKeeper,
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
 		if content == nil {
@@ -126,10 +125,6 @@ func SimulateSubmitProposal(ak types.AccountKeeper,
 				Op:        operationSimulateMsgVote(ak, k, accs[whoVotes[i]], int64(proposalID)),
 			}
 		}
-
-		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
-		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
-		// before and after.
 
 		return opMsg, fops, nil
 	}

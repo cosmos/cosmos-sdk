@@ -18,11 +18,12 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
+// nolint: funlen
+
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		if !k.GetWithdrawAddrEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -60,7 +61,6 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
@@ -104,13 +104,11 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		// FIXME: this msg is not simulated because the commission is always 0!
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.IsZero() {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil

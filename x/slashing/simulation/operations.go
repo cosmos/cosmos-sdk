@@ -32,7 +32,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
 		}
 
 		if !validator.IsJailed() {
-			// skip as validator is not jailed
+			// TODO: due to this condition this message is almost, if not always, skipped !
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 

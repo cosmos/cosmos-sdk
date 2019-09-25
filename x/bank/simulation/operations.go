@@ -14,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// nolint: funlen
-
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {

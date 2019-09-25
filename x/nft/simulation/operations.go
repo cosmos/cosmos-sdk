@@ -16,7 +16,6 @@ import (
 )
 
 // DONTCOVER
-// nolint: funlen
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
 func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {

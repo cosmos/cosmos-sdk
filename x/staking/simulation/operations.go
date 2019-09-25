@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// nolint: funlen
-
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
 func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,

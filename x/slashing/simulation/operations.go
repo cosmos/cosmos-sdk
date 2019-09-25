@@ -15,8 +15,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-// nolint: funlen
-
 // SimulateMsgUnjail generates a MsgUnjail with random values
 func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
 	sk stakingkeeper.Keeper) simulation.Operation {

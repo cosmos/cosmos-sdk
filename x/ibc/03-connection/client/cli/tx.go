@@ -26,11 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
-/*
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-
-}
-*/
 const (
 	FlagNode1 = "node1"
 	FlagNode2 = "node2"
@@ -38,14 +33,14 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeObject, error) {
+func handshake(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeState, error) {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-	climan := client.NewManager(base)
-	man := connection.NewHandshaker(connection.NewManager(base, climan))
+	clientManager := client.NewManager(base)
+	man := connection.NewHandshaker(connection.NewManager(base, clientManager))
 	return man.CLIQuery(q, connid)
 }
 
-func lastheight(ctx context.CLIContext) (uint64, error) {
+func lastHeight(ctx context.CLIContext) (uint64, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return 0, err
@@ -116,7 +111,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Use:   "handshake",
 		Short: "initiate connection handshake between two chains",
 		Args:  cobra.ExactArgs(6),
-		// Args: []string{connid1, clientid1, path1, connid2, clientid2, connfilepath2}
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
@@ -131,10 +125,10 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
 
-			connid1 := args[0]
-			clientid1 := args[1]
-			connid2 := args[3]
-			clientid2 := args[4]
+			connId1 := args[0]
+			clientId1 := args[1]
+			connId2 := args[3]
+			clientId2 := args[4]
 
 			var path1 commitment.Path
 			path1bz, err := ioutil.ReadFile(args[2])
@@ -145,12 +139,12 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			conn1 := connection.Connection{
-				Client:       clientid1,
-				Counterparty: connid2,
+				Client:       clientId1,
+				Counterparty: connId2,
 				Path:         path1,
 			}
 
-			obj1, err := handshake(q1, cdc, storeKey, version.DefaultPrefix(), connid1)
+			obj1, err := handshake(q1, cdc, storeKey, version.DefaultPrefix(), connId1)
 			if err != nil {
 				return err
 			}
@@ -164,31 +158,33 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			conn2 := connection.Connection{
-				Client:       clientid2,
-				Counterparty: connid1,
+				Client:       clientId2,
+				Counterparty: connId1,
 				Path:         path2,
 			}
 
-			obj2, err := handshake(q2, cdc, storeKey, version.DefaultPrefix(), connid2)
+			obj2, err := handshake(q2, cdc, storeKey, version.DefaultPrefix(), connId2)
 			if err != nil {
 				return err
 			}
 
 			// TODO: check state and if not Idle continue existing process
-			msginit := connection.MsgOpenInit{
-				ConnectionID:       connid1,
+			msgInit := connection.MsgOpenInit{
+				ConnectionID:       connId1,
 				Connection:         conn1,
 				CounterpartyClient: conn2.Client,
 				Signer:             ctx1.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msginit})
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgInit})
 			if err != nil {
 				return err
 			}
 
-			// Another block has to be passed after msginit is committed
+			// Another block has to be passed after msgInit is committed
 			// to retrieve the correct proofs
+			// TODO: Modify this to actually check two blocks being processed, and
+			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
 			header, err := getHeader(ctx1)
@@ -196,18 +192,16 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgupdate := client.MsgUpdateClient{
+			msgUpdate := client.MsgUpdateClient{
 				ClientID: conn2.Client,
 				Header:   header,
 				Signer:   ctx2.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
-
-			fmt.Printf("updated apphash to %X\n", header.AppHash)
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 			fmt.Printf("querying from %d\n", header.Height-1)
@@ -225,8 +219,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgtry := connection.MsgOpenTry{
-				ConnectionID:       connid2,
+			msgTry := connection.MsgOpenTry{
+				ConnectionID:       connId2,
 				Connection:         conn2,
 				CounterpartyClient: conn1.Client,
 				Proofs:             []commitment.Proof{pconn, pstate, pcounter},
@@ -234,13 +228,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:             ctx2.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgTry})
 			if err != nil {
 				return err
 			}
 
-			// Another block has to be passed after msginit is committed
+			// Another block has to be passed after msgInit is committed
 			// to retrieve the correct proofs
+			// TODO: Modify this to actually check two blocks being processed, and
+			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
 			header, err = getHeader(ctx2)
@@ -248,13 +244,13 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgupdate = client.MsgUpdateClient{
+			msgUpdate = client.MsgUpdateClient{
 				ClientID: conn1.Client,
 				Header:   header,
 				Signer:   ctx1.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
@@ -274,20 +270,22 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgack := connection.MsgOpenAck{
-				ConnectionID: connid1,
+			msgAck := connection.MsgOpenAck{
+				ConnectionID: connId1,
 				Proofs:       []commitment.Proof{pconn, pstate, pcounter},
 				Height:       uint64(header.Height),
 				Signer:       ctx1.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgack})
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgAck})
 			if err != nil {
 				return err
 			}
 
-			// Another block has to be passed after msginit is committed
+			// Another block has to be passed after msgInit is committed
 			// to retrieve the correct proofs
+			// TODO: Modify this to actually check two blocks being processed, and
+			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
 			header, err = getHeader(ctx1)
@@ -295,13 +293,13 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgupdate = client.MsgUpdateClient{
+			msgUpdate = client.MsgUpdateClient{
 				ClientID: conn2.Client,
 				Header:   header,
 				Signer:   ctx2.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
@@ -313,14 +311,14 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgconfirm := connection.MsgOpenConfirm{
-				ConnectionID: connid2,
+			msgConfirm := connection.MsgOpenConfirm{
+				ConnectionID: connId2,
 				Proofs:       []commitment.Proof{pstate},
 				Height:       uint64(header.Height),
 				Signer:       ctx2.GetFromAddress(),
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgconfirm})
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgConfirm})
 			if err != nil {
 				return err
 			}
@@ -329,6 +327,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
+	// TODO: Provide flag description
 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
 	cmd.Flags().String(FlagFrom1, "", "")

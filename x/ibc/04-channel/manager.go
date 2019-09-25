@@ -18,7 +18,7 @@ type Manager struct {
 
 	connection connection.Manager
 
-	counterparty CounterpartyManager
+	counterParty CounterpartyManager
 
 	ports map[string]struct{}
 }
@@ -33,8 +33,7 @@ func NewManager(protocol state.Mapping, connection connection.Manager) Manager {
 	return Manager{
 		protocol:     protocol.Prefix(LocalRoot()),
 		connection:   connection,
-		counterparty: NewCounterpartyManager(protocol.Cdc()),
-
+		counterParty: NewCounterpartyManager(protocol.Cdc()),
 		ports: make(map[string]struct{}),
 	}
 }
@@ -48,45 +47,41 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 	}
 }
 
-// CONTRACT: connection and counterparty must be filled by the caller
-func (man Manager) object(portid, chanid string) Object {
-	key := portid + "/channels/" + chanid
-	return Object{
-		chanid:  chanid,
-		portid:  portid,
-		Channel: man.protocol.Value([]byte(key)),
-
+// CONTRACT: connection and counterParty must be filled by the caller
+func (man Manager) object(portId, chanId string) State {
+	key := portId + "/channels/" + chanId
+	return State{
+		chanId:    chanId,
+		portId:    portId,
+		Channel:   man.protocol.Value([]byte(key)),
 		Available: man.protocol.Value([]byte(key + "/available")).Boolean(),
-
-		SeqSend: man.protocol.Value([]byte(key + "/nextSequenceSend")).Integer(state.Dec),
-		SeqRecv: man.protocol.Value([]byte(key + "/nextSequenceRecv")).Integer(state.Dec),
-		Packets: man.protocol.Prefix([]byte(key + "/packets/")).Indexer(state.Dec),
+		SeqSend:   man.protocol.Value([]byte(key + "/nextSequenceSend")).Integer(state.Dec),
+		SeqRecv:   man.protocol.Value([]byte(key + "/nextSequenceRecv")).Integer(state.Dec),
+		Packets:   man.protocol.Prefix([]byte(key + "/packets/")).Indexer(state.Dec),
 	}
 }
 
-func (man CounterpartyManager) object(portid, chanid string) CounterObject {
+func (man CounterpartyManager) object(portid, chanid string) CounterState {
 	key := portid + "/channels/" + chanid
-	return CounterObject{
-		chanid:  chanid,
-		portid:  portid,
-		Channel: man.protocol.Value([]byte(key)),
-
+	return CounterState{
+		chanId:    chanid,
+		portId:    portid,
+		Channel:   man.protocol.Value([]byte(key)),
 		Available: man.protocol.Value([]byte(key + "/available")).Boolean(),
-
-		SeqSend: man.protocol.Value([]byte(key + "/nextSequenceSend")).Integer(state.Dec),
-		SeqRecv: man.protocol.Value([]byte(key + "/nextSequenceRecv")).Integer(state.Dec),
-		Packets: man.protocol.Prefix([]byte(key + "/packets/")).Indexer(state.Dec),
+		SeqSend:   man.protocol.Value([]byte(key + "/nextSequenceSend")).Integer(state.Dec),
+		SeqRecv:   man.protocol.Value([]byte(key + "/nextSequenceRecv")).Integer(state.Dec),
+		Packets:   man.protocol.Prefix([]byte(key + "/packets/")).Indexer(state.Dec),
 	}
 }
 
-func (man Manager) create(ctx sdk.Context, portid, chanid string, channel Channel) (obj Object, err error) {
+func (man Manager) create(ctx sdk.Context, portid, chanid string, channel Channel) (obj State, err error) {
 	obj = man.object(portid, chanid)
 	if obj.exists(ctx) {
 		err = errors.New("channel already exists for the provided id")
 		return
 	}
 	obj.Channel.Set(ctx, channel)
-	obj.counterparty = man.counterparty.object(channel.CounterpartyPort, channel.Counterparty)
+	obj.counterParty = man.counterParty.object(channel.CounterpartyPort, channel.Counterparty)
 
 	for _, hop := range channel.ConnectionHops {
 		connobj, err := man.connection.Query(ctx, hop)
@@ -97,15 +92,15 @@ func (man Manager) create(ctx sdk.Context, portid, chanid string, channel Channe
 	}
 
 	for _, hop := range channel.CounterpartyHops() {
-		connobj := man.counterparty.connection.Object(hop)
-		obj.counterparty.Connections = append(obj.counterparty.Connections, connobj)
+		connobj := man.counterParty.connection.CreateState(hop)
+		obj.counterParty.Connections = append(obj.counterParty.Connections, connobj)
 	}
 
 	return
 }
 
 // Does not check availability
-func (man Manager) query(ctx sdk.Context, portid, chanid string) (obj Object, err error) {
+func (man Manager) query(ctx sdk.Context, portid, chanid string) (obj State, err error) {
 	obj = man.object(portid, chanid)
 	if !obj.exists(ctx) {
 		err = errors.New("channel not exists for the provided id")
@@ -113,7 +108,7 @@ func (man Manager) query(ctx sdk.Context, portid, chanid string) (obj Object, er
 	}
 
 	channel := obj.GetChannel(ctx)
-	obj.counterparty = man.counterparty.object(channel.CounterpartyPort, channel.Counterparty)
+	obj.counterParty = man.counterParty.object(channel.CounterpartyPort, channel.Counterparty)
 	for _, hop := range channel.ConnectionHops {
 		connobj, err := man.connection.Query(ctx, hop)
 		if err != nil {
@@ -123,73 +118,26 @@ func (man Manager) query(ctx sdk.Context, portid, chanid string) (obj Object, er
 	}
 
 	for _, hop := range channel.CounterpartyHops() {
-		connobj := man.counterparty.connection.Object(hop)
-		obj.counterparty.Connections = append(obj.counterparty.Connections, connobj)
+		connobj := man.counterParty.connection.CreateState(hop)
+		obj.counterParty.Connections = append(obj.counterParty.Connections, connobj)
 	}
 
 	return
 
 }
 
-func (man Manager) Query(ctx sdk.Context, portid, chanid string) (obj Object, err error) {
+func (man Manager) Query(ctx sdk.Context, portid, chanid string) (obj State, err error) {
 	obj, err = man.query(ctx, portid, chanid)
 	if !obj.Available.Get(ctx) {
-		err = errors.New("channel not Available")
+		err = errors.New("channel not available")
 		return
 	}
 	return
 }
 
-// TODO
-/*
-func (man Manager) Port(port string, chanid func(string) bool) PortManager {
-	return PortManager{
-		man:    man,
-		port:   le,
-		chanid: chanid,
-	}
-}
-
-// PortManage is port specific
-type PortManager struct {
-	man    Manager
-	port   string
-	chanid func(string) bool
-}
-
-func (man PortManager) Create(ctx sdk.Context, portid, chanid string, channel Channel) (Object, error) {
-	if !man.chanid(chanid) {
-		return Object{}, errors.New("invalid channel id")
-	}
-
-	if channel.Port != man.port {
-		return Object{}, errors.New("invalid port")
-	}
-
-	return man.man.Create(ctx, portid, chanid, channel)
-}
-
-func (man PortManager) Query(ctx sdk.Context, portid, chanid string) (Object, error) {
-	if !man.chanid(chanid) {
-		return Object{}, errors.New("invalid channel id")
-	}
-
-	obj, err := man.man.Query(ctx, portid, chanid)
-	if err != nil {
-		return Object{}, err
-	}
-
-	if obj.Value(ctx).Port != man.port {
-		return Object{}, errors.New("invalid port")
-	}
-
-	return obj, nil
-}
-*/
-
-type Object struct {
-	chanid string
-	portid string
+type State struct {
+	chanId string
+	portId string
 
 	Channel state.Value
 
@@ -199,14 +147,14 @@ type Object struct {
 
 	Available state.Boolean
 
-	Connections []connection.Object
+	Connections []connection.State
 
-	counterparty CounterObject
+	counterParty CounterState
 }
 
-type CounterObject struct {
-	chanid string
-	portid string
+type CounterState struct {
+	chanId string
+	portId string
 
 	Channel commitment.Value
 
@@ -216,54 +164,45 @@ type CounterObject struct {
 
 	Available commitment.Boolean
 
-	Connections []connection.CounterObject
+	Connections []connection.CounterState
 }
 
-func (obj Object) OriginConnection() connection.Object {
+func (obj State) OriginConnection() connection.State {
 	return obj.Connections[0]
 }
 
-func (obj Object) Context(ctx sdk.Context, proofs []commitment.Proof, height uint64) (sdk.Context, error) {
+func (obj State) Context(ctx sdk.Context, proofs []commitment.Proof, height uint64) (sdk.Context, error) {
 	return obj.OriginConnection().Context(ctx, height, proofs)
 }
 
-func (obj Object) ChanID() string {
-	return obj.chanid
+func (obj State) ChanID() string {
+	return obj.chanId
 }
 
-func (obj Object) GetChannel(ctx sdk.Context) (res Channel) {
+func (obj State) GetChannel(ctx sdk.Context) (res Channel) {
 	obj.Channel.Get(ctx, &res)
 	return
 }
 
-func (obj Object) PacketCommit(ctx sdk.Context, index uint64) []byte {
+func (obj State) PacketCommit(ctx sdk.Context, index uint64) []byte {
 	return obj.Packets.Value(index).GetRaw(ctx)
 }
 
 /*
-func (obj Object) Sendable(ctx sdk.Context) bool {
+func (obj Stage) Sendable(ctx sdk.Context) bool {
 	return obj.connection
 }
 
-func (obj Object) Receivable(ctx sdk.Context) bool {
+func (obj Stage) Receivable(ctx sdk.Context) bool {
 	return kinds[obj.kind.Get(ctx)].Receivable
 }
 */
-func (obj Object) exists(ctx sdk.Context) bool {
+func (obj State) exists(ctx sdk.Context) bool {
 	return obj.Channel.Exists(ctx)
 }
 
-func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) error {
-	/*
-		if !obj.Sendable(ctx) {
-			return errors.New("cannot send Packets on this channel")
-		}
-	*/
-	if portid != packet.SenderPort() {
-		return errors.New("Invalid portid")
-	}
-
-	obj, err := man.Query(ctx, portid, chanid)
+func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) error {
+	obj, err := man.Query(ctx, packet.SenderPort(), chanId)
 	if err != nil {
 		return err
 	}
@@ -279,7 +218,7 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 			EventTypeSendPacket,
 			sdk.NewAttribute(AttributeKeySenderPort, packet.SenderPort()),
 			sdk.NewAttribute(AttributeKeyReceiverPort, packet.ReceiverPort()),
-			sdk.NewAttribute(AttributeKeyChannelID, chanid),
+			sdk.NewAttribute(AttributeKeyChannelID, chanId),
 			sdk.NewAttribute(AttributeKeySequence, strconv.FormatUint(obj.SeqSend.Get(ctx), 10)),
 		),
 	})
@@ -308,10 +247,8 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height ui
 	if err != nil {
 		return err
 	}
-
-	// XXX: increment should happen before verification, reflect on the spec
-	// TODO: packet should be custom marshalled
-	if !obj.counterparty.Packets.Value(obj.SeqRecv.Increment(ctx)).Is(ctx, packet) {
+	
+	if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).Is(ctx, packet) {
 		return errors.New("verification failed")
 	}
 

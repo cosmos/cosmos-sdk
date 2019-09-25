@@ -22,7 +22,7 @@ type Node struct {
 
 	CounterpartyClient string
 	Connection         connection.Connection
-	State              connection.State
+	State              connection.HandshakeStage
 
 	Cdc *codec.Codec
 }
@@ -81,7 +81,7 @@ func (node *Node) UpdateClient(t *testing.T, header client.Header) {
 	require.NoError(t, err)
 }
 
-func (node *Node) SetState(state connection.State) {
+func (node *Node) SetState(state connection.HandshakeStage) {
 	node.State = state
 	node.Counterparty.State = state
 }
@@ -92,7 +92,7 @@ func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Conte
 	return ctx, connection.NewHandshaker(man)
 }
 
-func (node *Node) CLIObject() connection.HandshakeObject {
+func (node *Node) CLIObject() connection.HandshakeState {
 	_, man := node.Manager()
 	return connection.NewHandshaker(man).CLIObject(node.Name, node.Name)
 }

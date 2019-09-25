@@ -10,7 +10,7 @@ import (
 
 type Connection struct {
 	Client       string          `json:"client"`
-	Counterparty string          `json:"counterparty"`
+	Counterparty string          `json:"counterParty"`
 	Path         commitment.Path `json:"path"`
 }
 

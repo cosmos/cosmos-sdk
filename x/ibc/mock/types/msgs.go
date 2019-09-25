@@ -34,7 +34,7 @@ func (msg MsgSequence) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgSequence) GetSignBytes() []byte {
-	return cdc.MustMarshalJSON(msg) // TODO
+	return sdk.MustSortJSON(cdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgSequence) GetSigners() []sdk.AccAddress {

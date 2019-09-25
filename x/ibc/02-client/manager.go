@@ -78,7 +78,7 @@ func (man CounterpartyManager) Query(id string) CounterObject {
 	return man.Object(id)
 }
 
-// Any actor holding the Object can access on and modify that client information
+// Any actor holding the Stage can access on and modify that client information
 type Object struct {
 	id             string
 	Roots          state.Indexer

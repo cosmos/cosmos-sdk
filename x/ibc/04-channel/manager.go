@@ -272,7 +272,7 @@ func (man Manager) Send(ctx sdk.Context, portid, chanid string, packet Packet) e
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.Packets.Set(ctx, obj.SeqSend.Increment(ctx), packet)
+	obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Commitment())
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

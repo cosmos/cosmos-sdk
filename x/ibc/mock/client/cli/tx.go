@@ -29,15 +29,15 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 func SequenceTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sequence [from-key-or-address] [channel-id] [sequence]",
+		Use:   "sequence [channel-id] [sequence]",
 		Short: "Send SequencePacket",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			ctx := context.NewCLIContext().WithCodec(cdc)
 
-			chanid := args[1]
-			seq, err := strconv.ParseUint(args[2], 10, 64)
+			chanid := args[0]
+			seq, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}

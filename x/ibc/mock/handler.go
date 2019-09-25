@@ -10,6 +10,8 @@ import (
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
+		case MsgSequence:
+			return handleMsgSequence(ctx, k, msg)
 		case ibc.MsgPacket:
 			switch packet := msg.Packet.(type) {
 			case types.PacketSequence:
@@ -20,6 +22,13 @@ func NewHandler(k Keeper) sdk.Handler {
 		default:
 			return sdk.ErrUnknownRequest("21345").Result()
 		}
+	}
+}
+
+func handleMsgSequence(ctx sdk.Context, k Keeper, msg MsgSequence) (res sdk.Result) {
+	err := k.ibcPort.SendPacket(ctx, msg.ChannelID, types.PacketSequence{msg.Sequence})
+	if err != nil {
+
 	}
 }
 

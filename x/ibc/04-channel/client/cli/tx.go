@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -39,6 +40,14 @@ func handshake(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid,
 	connman := connection.NewManager(base, climan)
 	man := channel.NewHandshaker(channel.NewManager(base, connman))
 	return man.CLIObject(portid, chanid, []string{connid})
+}
+
+func flush(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeObject, error) {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+	climan := client.NewManager(base)
+	connman := connection.NewManager(base, climan)
+	man := channel.NewHandshaker(channel.NewManager(base, connman))
+	return man.CLIQuery(q, portid, chanid)
 }
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -296,4 +305,115 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd.MarkFlagRequired(FlagFrom2)
 
 	return cmd
+}
+
+func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "flush",
+		Short: "flush packets on queue",
+		Args:  cobra.ExactArgs(2),
+		// Args: []string{portid, chanid}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
+				WithCodec(cdc).
+				WithNodeURI(viper.GetString(FlagNode1)).
+				WithBroadcastMode(flags.BroadcastBlock)
+			q1 := state.NewCLIQuerier(ctx1)
+
+			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
+				WithCodec(cdc).
+				WithNodeURI(viper.GetString(FlagNode2)).
+				WithBroadcastMode(flags.BroadcastBlock)
+			q2 := state.NewCLIQuerier(ctx2)
+
+			portid1, chanid1 := args[0], args[1]
+
+			obj1, err := flush(q1, cdc, storeKey, version.DefaultPrefix(), portid1, chanid1)
+			if err != nil {
+				return err
+			}
+
+			chan1, _, err := obj1.ChannelCLI(q1)
+			if err != nil {
+				return err
+			}
+
+			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
+
+			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
+			if err != nil {
+				return err
+			}
+
+			chan2, _, err := obj2.ChannelCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			conn2, _, err := chan2.ConnectionCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			client2 := conn2.Client
+
+			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
+
+			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
+			if err != nil {
+				return err
+			}
+
+			seqrecv, _, err := obj2.SeqRecvCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			seqsend, _, err := obj1.SeqSendCLI(q1)
+			if err != nil {
+				return err
+			}
+
+			// SeqRecv is the latest received packet index(0 if not exists)
+			// SeqSend is the latest sent packet index (0 if not exists)
+			if !(seqsend > seqrecv) {
+				return errors.New("no unsent packets")
+			}
+
+			// TODO: optimize, don't updateclient if already updated
+			header, err := getHeader(ctx1)
+			if err != nil {
+				return err
+			}
+
+			msgupdate := client.MsgUpdateClient{
+				ClientID: client2,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			msgs := []sdk.Msg{msgupdate}
+
+			for i := seqrecv + 1; i <= seqsend; i++ {
+				packet, proof, err := obj1.PacketCLI(q1, i)
+				if err != nil {
+					return err
+				}
+
+				msg := channel.MsgPacket()
+			}
+		},
+	}
+
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagFrom1, "", "")
+	cmd.Flags().String(FlagFrom2, "", "")
+
+	cmd.MarkFlagRequired(FlagFrom1)
+	cmd.MarkFlagRequired(FlagFrom2)
+
+	return cmd
+
 }

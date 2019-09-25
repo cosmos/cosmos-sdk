@@ -2,10 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/types"
 
@@ -18,6 +18,11 @@ import (
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v0_38"
 )
 
+const (
+	flagGenesisTime = "genesis-time"
+	flagChainID     = "chain-id"
+)
+
 // Allow applications to extend and modify the migration process.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
@@ -26,10 +31,24 @@ var migrationMap = extypes.MigrationMap{
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
 }
 
-const (
-	flagGenesisTime = "genesis-time"
-	flagChainID     = "chain-id"
-)
+// GetMigrationCallback returns a MigrationCallback for a given version.
+func GetMigrationCallback(version string) extypes.MigrationCallback {
+	return migrationMap[version]
+}
+
+// GetMigrationVersions get all migration version in a sorted slice.
+func GetMigrationVersions() []string {
+	versions := make([]string, len(migrationMap))
+
+	var i int
+	for version := range migrationMap {
+		versions[i] = version
+		i++
+	}
+
+	sort.Strings(versions)
+	return versions
+}
 
 func MigrateGenesisCmd(_ *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -57,12 +76,13 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
 			}
 
-			if migrationMap[target] == nil {
-				return fmt.Errorf("unknown migration function version: %s", target)
+			migrationFunc := GetMigrationCallback(target)
+			if migrationFunc == nil {
+				return fmt.Errorf("unknown migration function for version: %s", target)
 			}
 
-			// TODO: handler error from migrationMap call
-			newGenState := migrationMap[target](initialState)
+			// TODO: handler error from migrationFunc call
+			newGenState := migrationFunc(initialState)
 
 			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
 			if err != nil {

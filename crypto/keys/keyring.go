@@ -37,8 +37,7 @@ type keyringKeybase struct {
 
 var maxPassphraseEntryAttempts = 3
 
-// NewKeyring creates a new instance of a lazy keybase using a Keyring as
-// the persistence layer.
+// NewKeyring creates a new instance of a keyring.
 func NewKeyring(name string, dir string, userInput io.Reader) Keybase {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
 	if err != nil {
@@ -48,8 +47,8 @@ func NewKeyring(name string, dir string, userInput io.Reader) Keybase {
 	return newKeyringKeybase(db)
 }
 
-// NewTestKeyring creates a new instance of a keyring keybase
-// for testing purposes that  does not prompt users for password.
+// NewTestKeyring creates a new instance of a keyring for
+// testing purposes that  does not prompt users for password.
 func NewTestKeyring(name string, dir string) Keybase {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {

@@ -23,7 +23,7 @@ import (
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = extypes.MigrationMap{
 	"v0.36": v036.Migrate,
-	"v0.38": v038.Migrate,
+	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
 }
 
 const (
@@ -42,6 +42,8 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 `, version.ServerName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
+
 			target := args[0]
 			importGenesis := args[1]
 
@@ -51,14 +53,21 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			}
 
 			var initialState extypes.AppMap
-			cdc.MustUnmarshalJSON(genDoc.AppState, &initialState)
+			if err := cdc.UnmarshalJSON(genDoc.AppState, &initialState); err != nil {
+				return errors.Wrap(err, "failed to JSON unmarshal initial genesis state")
+			}
 
 			if migrationMap[target] == nil {
 				return fmt.Errorf("unknown migration function version: %s", target)
 			}
 
+			// TODO: handler error from migrationMap call
 			newGenState := migrationMap[target](initialState)
-			genDoc.AppState = cdc.MustMarshalJSON(newGenState)
+
+			genDoc.AppState, err = cdc.MarshalJSON(newGenState)
+			if err != nil {
+				return errors.Wrap(err, "failed to JSON marshal migrated genesis state")
+			}
 
 			genesisTime := cmd.Flag(flagGenesisTime).Value.String()
 			if genesisTime != "" {
@@ -77,18 +86,23 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.ChainID = chainID
 			}
 
-			out, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
+			bz, err := cdc.MarshalJSONIndent(genDoc, "", "  ")
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}
 
-			fmt.Println(string(sdk.MustSortJSON(out)))
+			sortedBz, err := sdk.SortJSON(bz)
+			if err != nil {
+				return errors.Wrap(err, "failed to sort JSON genesis doc")
+			}
+
+			fmt.Println(string(sortedBz))
 			return nil
 		},
 	}
 
-	cmd.Flags().String(flagGenesisTime, "", "Override genesis_time with this flag")
-	cmd.Flags().String(flagChainID, "", "Override chain_id with this flag")
+	cmd.Flags().String(flagGenesisTime, "", "override genesis_time with this flag")
+	cmd.Flags().String(flagChainID, "", "override chain_id with this flag")
 
 	return cmd
 }

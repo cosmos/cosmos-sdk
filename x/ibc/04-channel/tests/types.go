@@ -28,15 +28,13 @@ type Node struct {
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Node: connection.NewNode(self, counter, cdc), // TODO: test with key prefix
-
+		Node: connection.NewNode(self, counter, cdc),
 		Cdc: cdc,
 	}
 
 	res.Counterparty = &Node{
 		Node:         res.Node.Counterparty,
 		Counterparty: res,
-
 		Cdc: cdc,
 	}
 
@@ -64,7 +62,7 @@ func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Conte
 	return ctx, channel.NewHandshaker(man)
 }
 
-func (node *Node) CLIObject() channel.HandshakeObject {
+func (node *Node) CLIObject() channel.HandshakeState {
 	man := node.Manager()
 	return channel.NewHandshaker(man).CLIObject(PortName, node.Name, []string{node.Name})
 }

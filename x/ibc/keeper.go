@@ -18,11 +18,11 @@ type Keeper struct {
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	base := state.NewMapping(key, cdc, version.DefaultPrefix())
-	climan := client.NewManager(base)
-	connman := connection.NewManager(base, climan)
+	client := client.NewManager(base)
+	connman := connection.NewManager(base, client)
 	chanman := channel.NewManager(base, connman)
 	return Keeper{
-		client:     climan,
+		client:     client,
 		connection: connection.NewHandshaker(connman),
 		channel:    channel.NewHandshaker(chanman),
 	}

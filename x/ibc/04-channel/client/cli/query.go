@@ -23,7 +23,7 @@ const (
 	FlagProve = "prove"
 )
 
-func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.Object, error) {
+func object(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.State, error) {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
@@ -45,7 +45,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return ibcQueryCmd
 }
 
-func QueryChannel(ctx context.CLIContext, obj channel.Object, prove bool) (res utils.JSONObject, err error) {
+func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res utils.JSONObject, err error) {
 	q := state.NewCLIQuerier(ctx)
 
 	conn, connp, err := obj.ChannelCLI(q)
@@ -113,7 +113,7 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 /*
-func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Object {
+func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Stage {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)

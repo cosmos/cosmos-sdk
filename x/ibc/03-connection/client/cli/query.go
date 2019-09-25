@@ -22,7 +22,7 @@ const (
 	FlagProve = "prove"
 )
 
-func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.Object {
+func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.State {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
@@ -43,7 +43,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return ibcQueryCmd
 }
 
-func QueryConnection(ctx context.CLIContext, obj connection.Object, prove bool) (res utils.JSONObject, err error) {
+func QueryConnection(ctx context.CLIContext, obj connection.State, prove bool) (res utils.JSONObject, err error) {
 	q := state.NewCLIQuerier(ctx)
 
 	conn, connp, err := obj.ConnectionCLI(q)

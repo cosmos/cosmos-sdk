@@ -16,11 +16,5 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 func SetMsgCodec(cdc *codec.Codec) {
-	// TODO
-	/*
-		if msgCdc != nil && msgCdc != cdc {
-			panic("MsgCdc set more than once")
-		}
-	*/
 	msgCdc = cdc
 }

@@ -109,6 +109,5 @@ type Value interface {
 }
 
 func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
-	// TODO: check HasPrefix
 	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

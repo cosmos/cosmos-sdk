@@ -8,7 +8,6 @@ import (
 type Port struct {
 	channel Manager
 	id      string
-	valid   *bool // once invalid forever invalid
 }
 
 // bindPort, expected to be called only at init time
@@ -18,17 +17,24 @@ func (man Manager) Port(id string) Port {
 		panic("port already occupied")
 	}
 	man.ports[id] = struct{}{}
-	valid := true
-	return Port{man, id, &valid}
+	return Port{man, id}
 }
 
 // releasePort
 func (port Port) Release() {
 	delete(port.channel.ports, port.id)
-	*port.valid = false
+}
+
+func (man Manager) IsValid(port Port) bool {
+	_, ok := man.ports[port.id]
+	return ok
 }
 
 func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
+	if !port.channel.IsValid(port) {
+		return errors.New("Port is not in valid state")
+	}
+
 	if packet.SenderPort() != port.id {
 		panic("Packet sent on wrong port")
 	}

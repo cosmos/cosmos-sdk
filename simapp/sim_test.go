@@ -72,7 +72,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
 					func(_ *rand.Rand) {
-						v = 10
+						v = 40
 					})
 				return v
 			}(nil),
@@ -116,7 +116,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
@@ -127,7 +127,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
@@ -138,7 +138,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
@@ -149,7 +149,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgDeposit, &v, nil,
 					func(_ *rand.Rand) {
-						v = 20
+						v = 100
 					})
 				return v
 			}(nil),
@@ -160,7 +160,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgVote, &v, nil,
 					func(_ *rand.Rand) {
-						v = 67
+						v = 100
 					})
 				return v
 			}(nil),
@@ -171,7 +171,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgCreateValidator, &v, nil,
 					func(_ *rand.Rand) {
-						v = 15
+						v = 100
 					})
 				return v
 			}(nil),
@@ -182,7 +182,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgEditValidator, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
@@ -193,7 +193,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgDelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 80
+						v = 100
 					})
 				return v
 			}(nil),
@@ -204,7 +204,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgUndelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 50
+						v = 100
 					})
 				return v
 			}(nil),
@@ -215,7 +215,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgBeginRedelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 80
+						v = 100
 					})
 				return v
 			}(nil),
@@ -232,50 +232,6 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 			}(nil),
 			slashingsim.SimulateMsgUnjail(app.AccountKeeper, app.SlashingKeeper, app.StakingKeeper),
 		},
-		// {
-		// 	func(_ *rand.Rand) int {
-		// 		var v int
-		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgTransferNFT, &v, nil,
-		// 			func(_ *rand.Rand) {
-		// 				v = 33
-		// 			})
-		// 		return v
-		// 	}(nil),
-		// 	nftsim.SimulateMsgTransferNFT(app.NFTKeeper),
-		// },
-		// {
-		// 	func(_ *rand.Rand) int {
-		// 		var v int
-		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgEditNFTMetadata, &v, nil,
-		// 			func(_ *rand.Rand) {
-		// 				v = 5
-		// 			})
-		// 		return v
-		// 	}(nil),
-		// 	nftsim.SimulateMsgEditNFTMetadata(app.NFTKeeper),
-		// },
-		// {
-		// 	func(_ *rand.Rand) int {
-		// 		var v int
-		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgMintNFT, &v, nil,
-		// 			func(_ *rand.Rand) {
-		// 				v = 10
-		// 			})
-		// 		return v
-		// 	}(nil),
-		// 	nftsim.SimulateMsgMintNFT(app.NFTKeeper),
-		// },
-		// {
-		// 	func(_ *rand.Rand) int {
-		// 		var v int
-		// 		ap.GetOrGenerate(app.cdc, OpWeightMsgBurnNFT, &v, nil,
-		// 			func(_ *rand.Rand) {
-		// 				v = 5
-		// 			})
-		// 		return v
-		// 	}(nil),
-		// 	nftsim.SimulateMsgBurnNFT(app.NFTKeeper),
-		// },
 	}
 }
 

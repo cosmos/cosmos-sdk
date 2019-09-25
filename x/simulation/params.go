@@ -69,7 +69,7 @@ type Params struct {
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
-		NumKeys:                   RandIntBetween(r, 2, 250),
+		NumKeys:                   RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
 		EvidenceFraction:          r.Float64(),
 		InitialLivenessWeightings: []int{RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,

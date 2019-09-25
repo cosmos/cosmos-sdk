@@ -18,7 +18,7 @@ import (
 // accounts already exist.
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
-	simulation.OperationMsg,[]simulation.FutureOperation, error) {
+		simulation.OperationMsg, []simulation.FutureOperation, error) {
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil

@@ -149,7 +149,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgDeposit, &v, nil,
 					func(_ *rand.Rand) {
-						v = 100
+						v = 20
 					})
 				return v
 			}(nil),
@@ -171,7 +171,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgCreateValidator, &v, nil,
 					func(_ *rand.Rand) {
-						v = 100
+						v = 15
 					})
 				return v
 			}(nil),
@@ -193,7 +193,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgDelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 100
+						v = 80
 					})
 				return v
 			}(nil),
@@ -204,7 +204,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgUndelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 100
+						v = 50
 					})
 				return v
 			}(nil),
@@ -215,7 +215,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgBeginRedelegate, &v, nil,
 					func(_ *rand.Rand) {
-						v = 100
+						v = 80
 					})
 				return v
 			}(nil),

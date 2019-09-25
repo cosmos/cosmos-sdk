@@ -62,7 +62,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			simulation.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
+		maxCommission := sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 0, 100)), 2)
 		commission := types.NewCommissionRates(
 			simulation.RandomDecAmount(r, maxCommission),
 			maxCommission,

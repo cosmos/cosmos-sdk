@@ -63,7 +63,7 @@ func TestNFTsAppendMethod(t *testing.T) {
 	testNFT2 := NewBaseNFT(id2, address, tokenURI)
 	nfts2 := NewNFTs(&testNFT2)
 
-	nfts = nfts.Append(nfts2)
+	nfts = nfts.Append(nfts2...)
 	require.Equal(t, len(nfts), 2)
 
 	var id3 = string('3')
@@ -74,7 +74,7 @@ func TestNFTsAppendMethod(t *testing.T) {
 	testNFT5 := NewBaseNFT(id5, address, tokenURI)
 
 	nfts3 := NewNFTs(&testNFT5, &testNFT3, &testNFT4)
-	nfts = nfts.Append(nfts3)
+	nfts = nfts.Append(nfts3...)
 	require.Equal(t, len(nfts), 5)
 
 	nft, found := nfts.Find(id2)

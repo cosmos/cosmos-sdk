@@ -55,7 +55,7 @@ func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
 			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
 		)
 	}
-	collection.NFTs = collection.NFTs.Add(nft)
+	collection.NFTs = collection.NFTs.Append(nft)
 	return collection, nil
 }
 
@@ -115,13 +115,8 @@ func NewCollections(collections ...Collection) Collections {
 }
 
 // Append appends two sets of Collections
-func (collections Collections) Append(collectionsB Collections) Collections {
+func (collections Collections) Append(collectionsB ...Collection) Collections {
 	return append(collections, collectionsB...).Sort()
-}
-
-// Add adds a collection to the set of Collections
-func (collections Collections) Add(collection Collection) Collections {
-	return append(collections, collection).Sort()
 }
 
 // Find returns the searched collection from the set

@@ -72,13 +72,8 @@ func NewNFTs(nfts ...exported.NFT) NFTs {
 }
 
 // Append appends two sets of NFTs
-func (nfts NFTs) Append(nftsB NFTs) NFTs {
+func (nfts NFTs) Append(nftsB ...exported.NFT) NFTs {
 	return append(nfts, nftsB...).Sort()
-}
-
-// Add adds an nft to the set of NFTs
-func (nfts NFTs) Add(nft exported.NFT) NFTs {
-	return append(nfts, nft).Sort()
 }
 
 // Find returns the searched collection from the set

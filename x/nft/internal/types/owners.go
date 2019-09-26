@@ -88,11 +88,8 @@ func (idCollections IDCollections) String() string {
 	return out[:len(out)-1]
 }
 
-func (idCollections IDCollections) Add(idCollection2 IDCollection) IDCollections {
-	return append(idCollections, idCollection2).Sort()
-}
-
-func (idCollections IDCollections) Append(idCollections2 IDCollections) IDCollections {
+// Append appends IDCollections to IDCollections
+func (idCollections IDCollections) Append(idCollections2 ...IDCollection) IDCollections {
 	return append(idCollections, idCollections2...).Sort()
 }
 func (idCollections IDCollections) find(denom string) int {

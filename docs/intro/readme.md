@@ -1,5 +1,7 @@
 ---
 order: 1
+parent:
+  order: 1
 ---
 
 # SDK Intro

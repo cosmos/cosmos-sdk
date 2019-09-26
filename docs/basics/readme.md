@@ -1,5 +1,7 @@
 ---
 order: 1
+parent:
+  order: 3
 ---
 
 # Anatomy of an SDK Application

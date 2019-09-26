@@ -9,17 +9,11 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@vuepress/plugin-active-header-links": "^1.0.0-rc.1",
-    "@vuepress/plugin-search": "^1.0.0-rc.1",
-    "lodash": "^4.17.15",
-    "markdown-it": "^8.4.2",
-    "markdown-it-meta": "0.0.1",
+  "dependencies": {
+    "consolidate": "^0.15.1",
     "pug": "^2.0.4",
     "pug-plain-loader": "^1.0.0",
-    "vuepress": "^1.0.2"
-  },
-  "dependencies": {
-    "tm-tooltip": "0.0.10"
+    "stylus": "^0.54.7",
+    "vuepress": "^1.1.0"
   }
 }

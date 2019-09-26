@@ -1,8 +1,3 @@
----
-parent:
-  order: 3
----
-
 # Auth 
 
 The `x/auth` modules is used for accounts

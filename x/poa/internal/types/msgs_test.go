@@ -46,7 +46,7 @@ func TestMsgCreateValidatorValidation(t *testing.T) {
 }
 
 func TestMsgEditValidator(t *testing.T) {
-	desc := stakingtypes.Description{"basic good", "a", "b", "c", "d"}
+	desc := stakingtypes.Description{"basic good", "a", "b", "c", "d"} // nolint: govet
 	var msg = NewMsgEditValidator(valAddr1, desc)
 
 	require.Equal(t, msg.Route(), RouterKey)

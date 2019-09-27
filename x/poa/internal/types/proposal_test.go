@@ -12,7 +12,7 @@ import (
 
 func TestMsgProposeCreateValidator(t *testing.T) {
 	title, description := "foo", "bar"
-	createVal := MsgCreateValidator{stakingtypes.Description{"basic good", "a", "b", "c", "d"}, valAddr1, pk1}
+	createVal := MsgCreateValidator{stakingtypes.Description{"basic good", "a", "b", "c", "d"}, valAddr1, pk1} // nolint: govet
 	newVal := NewMsgProposeCreateValidator(title, description, createVal.ValidatorAddress,
 		createVal.PubKey, createVal.Description)
 	require.Equal(t, title, newVal.GetTitle())

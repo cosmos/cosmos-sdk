@@ -71,6 +71,12 @@ and tx hash will be returned for specific Tendermint errors:
   * `CodeMempoolIsFull`
   * `CodeTxTooLarge`
 * [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode transactions.
+* (keys) [\#4754](https://github.com/cosmos/cosmos-sdk/pull/4754) Introduce new Keybase implementation that can
+leverage operating systems' built-in functionalities to securely store secrets. MacOS users may encounter
+the following [issue](https://github.com/keybase/go-keychain/issues/47) with the `go-keychain` library. If
+you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
+upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
+correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 
 ### Improvements
 
@@ -107,6 +113,7 @@ to detail this new feature and how state transitions occur.
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36 not converting validator consensus pubkey to bech32 format
 
 ## [v0.37.1] - 2019-09-19
 

@@ -2,6 +2,7 @@ package poa
 
 import (
 	"encoding/json"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/poa/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/poa/client/rest"
+	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 
@@ -96,12 +98,22 @@ func (AppModuleBasic) BuildCreateValidatorMsg(cliCtx context.CLIContext,
 
 //____________________________________________________________________________
 
-// AppModuleSimulation defines the module simulation functions used by the staking module.
+// AppModuleSimulation defines the module simulation functions used by the gov module.
 type AppModuleSimulation struct{}
 
-// RegisterStoreDecoder registers a decoder for staking module's types
+// RegisterStoreDecoder registers a decoder for nft module's types
 func (AppModuleSimulation) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[StoreKey] = simulation.DecodeStore
+}
+
+// GenerateGenesisState creates a randomized GenState of the nft module.
+func (AppModuleSimulation) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RandomizedParams doesn't create randomized nft param changes for the simulator.
+func (AppModuleSimulation) RandomizedParams(_ *rand.Rand) []sim.ParamChange {
+	return nil
 }
 
 //____________________________________________________________________________

@@ -16,6 +16,7 @@ linters:
     - scopelint
     - varcheck
     - funlen
+    - godox
 
 issues:
   exclude-rules:

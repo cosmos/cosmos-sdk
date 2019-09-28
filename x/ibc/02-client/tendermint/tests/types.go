@@ -140,7 +140,7 @@ func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root me
 }
 
 func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockValidators) error {
-	newcs, err := v.ConsensusState.Validate(header)
+	newcs, err := v.ConsensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return err
 	}

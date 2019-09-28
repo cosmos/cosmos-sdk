@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // TODO: types in this file should be (de/)serialized with proto in the future
@@ -17,20 +17,20 @@ type ConsensusState interface {
 	// which is used for key-value pair verification.
 	GetRoot() commitment.Root
 
-	// Validate() returns the updated consensus state
+	// CheckValidityAndUpdateState() returns the updated consensus state
 	// only if the header is a descendent of this consensus state.
-	Validate(Header) (ConsensusState, error) // ValidityPredicate
+	CheckValidityAndUpdateState(Header) (ConsensusState, error)
 
-	// Equivocation checks two headers' confliction.
-	Equivocation(Header, Header) bool // EquivocationPredicate
+	// CheckMisbehaviourAndUpdateState() checks any misbehaviour evidence
+	// depending on the state type.
+	CheckMisbehaviourAndUpdateState(Misbehaviour) bool
 }
 
-/*
-func Equal(client1, client2 ConsensusState) bool {
-	return client1.Kind() == client2.Kind() &&
-		client1.GetBase().Equal(client2.GetBase())
+type Misbehaviour interface {
+	Kind() Kind
+	// TODO: embed Evidence interface
+	// evidence.Evidence
 }
-*/
 
 // Header is the consensus state update information.
 type Header interface {
@@ -39,8 +39,6 @@ type Header interface {
 
 	GetHeight() uint64
 }
-
-// XXX: Kind should be enum?
 
 type Kind byte
 

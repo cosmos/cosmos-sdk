@@ -115,41 +115,12 @@ func (obj Object) Update(ctx sdk.Context, header Header) error {
 	}
 
 	stored := obj.GetConsensusState(ctx)
-	updated, err := stored.Validate(header)
+	updated, err := stored.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return err
 	}
 
 	obj.ConsensusState.Set(ctx, updated)
-
-	return nil
-}
-
-func (obj Object) Freeze(ctx sdk.Context) error {
-	if !obj.exists(ctx) {
-		panic("should not freeze nonexisting client")
-	}
-
-	if obj.Frozen.Get(ctx) {
-		return errors.New("client is already Frozen")
-	}
-
-	obj.Frozen.Set(ctx, true)
-
-	return nil
-}
-
-func (obj Object) Delete(ctx sdk.Context) error {
-	if !obj.exists(ctx) {
-		panic("should not delete nonexisting client")
-	}
-
-	if !obj.Frozen.Get(ctx) {
-		return errors.New("client is not Frozen")
-	}
-
-	obj.ConsensusState.Delete(ctx)
-	obj.Frozen.Delete(ctx)
 
 	return nil
 }

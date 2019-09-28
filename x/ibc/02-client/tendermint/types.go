@@ -7,8 +7,8 @@ import (
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	"github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -43,7 +43,7 @@ func (cs ConsensusState) update(header Header) ConsensusState {
 	}
 }
 
-func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState, error) {
+func (cs ConsensusState) CheckValidityAndUpdateState(cheader client.Header) (client.ConsensusState, error) {
 	header, ok := cheader.(Header)
 	if !ok {
 		return nil, errors.New("invalid type")
@@ -73,14 +73,14 @@ func (cs ConsensusState) Validate(cheader client.Header) (client.ConsensusState,
 	return cs.update(header), nil
 }
 
-func (cs ConsensusState) Equivocation(header1, header2 client.Header) bool {
-	return false // XXX
+func (cs ConsensusState) CheckMisbehaviourAndUpdateState(mb client.Misbehaviour) bool {
+	return false // TODO: implement
 }
 
 var _ client.Header = Header{}
 
 type Header struct {
-	// XXX: don't take the entire struct
+	// TODO: define Tendermint header type manually, don't use tmtypes
 	types.SignedHeader
 	ValidatorSet     *types.ValidatorSet
 	NextValidatorSet *types.ValidatorSet

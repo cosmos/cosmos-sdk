@@ -210,7 +210,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			_, pstate, err := obj1.StateCLI(q1)
+			_, pstate, err := obj1.StageCLI(q1)
 			if err != nil {
 				return err
 			}
@@ -261,7 +261,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			_, pstate, err = obj2.StateCLI(q2)
+			_, pstate, err = obj2.StageCLI(q2)
 			if err != nil {
 				return err
 			}
@@ -306,7 +306,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 
-			_, pstate, err = obj1.StateCLI(q1)
+			_, pstate, err = obj1.StageCLI(q1)
 			if err != nil {
 				return err
 			}

@@ -14,8 +14,8 @@ import (
 
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	queryCmd := &cobra.Command{
-		Use:   "ibcmock",
-		Short: "Querying commands for the ibcmock module",
+		Use:   "ibcmockrecv",
+		Short: "Querying commands for the ibcmockrecv module",
 		RunE:  client.ValidateCmd,
 	}
 
@@ -34,7 +34,7 @@ func GetCmdQuerySequence(storeName string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 
-			val, _, err := ctx.QueryStore(types.SequenceKey, storeName)
+			val, _, err := ctx.QueryStore(types.SequenceKey(args[0]), storeName)
 			if err != nil {
 				return err
 			}

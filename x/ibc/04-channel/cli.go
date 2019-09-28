@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-func (man Manager) CLIObject(portid, chanid string, connids []string) State {
+func (man Manager) CLIState(portid, chanid string, connids []string) State {
 	obj := man.object(portid, chanid)
 	for _, connid := range connids {
-		obj.Connections = append(obj.Connections, man.connection.Object(connid))
+		obj.Connections = append(obj.Connections, man.connection.State(connid))
 	}
 	return obj
 }
@@ -22,7 +22,7 @@ func (man Manager) CLIQuery(q state.ABCIQuerier, portid, chanid string) (obj Sta
 		return
 	}
 	for _, connid := range channel.ConnectionHops {
-		obj.Connections = append(obj.Connections, man.connection.Object(connid))
+		obj.Connections = append(obj.Connections, man.connection.State(connid))
 	}
 	return
 }
@@ -70,12 +70,12 @@ func (man Handshaker) CLIQuery(q state.ABCIQuerier, portid, chanid string) (Hand
 	return man.createState(obj), nil
 }
 
-func (man Handshaker) CLIObject(portid, chanid string, connids []string) HandshakeState {
-	return man.createState(man.Manager.CLIObject(portid, chanid, connids))
+func (man Handshaker) CLIState(portid, chanid string, connids []string) HandshakeState {
+	return man.createState(man.Manager.CLIState(portid, chanid, connids))
 }
 
-func (obj HandshakeState) StateCLI(q state.ABCIQuerier) (res HandshakeStage, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.State.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.State)
+func (obj HandshakeState) StageCLI(q state.ABCIQuerier) (res Stage, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Stage.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Stage)
 	return
 }

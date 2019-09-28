@@ -1,7 +1,6 @@
 package channel
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,26 +61,10 @@ func (MyPacket) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (packet MyPacket) MarshalAmino() (string, error) {
-	return "mp-" + packet.Message, nil
-}
-
-func (packet *MyPacket) UnmarshalAmino(text string) error {
-	if text[:3] != "mp-" {
-		return errors.New("Invalid text for MyPacket")
-	}
-	packet.Message = text[3:]
-	return nil
-}
-
-func (packet MyPacket) MarshalJSON() ([]byte, error) {
-	res, _ := packet.MarshalAmino()
-	return []byte("\"" + res + "\""), nil
-}
-
-func (packet *MyPacket) UnmarshalJSON(bz []byte) error {
-	bz = bz[1 : len(bz)-1]
-	return packet.UnmarshalAmino(string(bz))
+func (packet MyPacket) Marshal() []byte {
+	cdc := codec.New()
+	registerCodec(cdc)
+	return cdc.MustMarshalBinaryBare(packet)
 }
 
 func TestPacket(t *testing.T) {
@@ -96,7 +79,7 @@ func TestPacket(t *testing.T) {
 	header := node.Commit()
 
 	node.Counterparty.UpdateClient(t, header)
-	cliobj := node.CLIObject()
+	cliobj := node.CLIState()
 	_, ppacket := node.QueryValue(t, cliobj.Packets.Value(1))
 	node.Counterparty.Receive(t, MyPacket{"ping"}, uint64(header.Height), ppacket)
 }

@@ -29,13 +29,13 @@ type Node struct {
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
 		Node: connection.NewNode(self, counter, cdc),
-		Cdc: cdc,
+		Cdc:  cdc,
 	}
 
 	res.Counterparty = &Node{
 		Node:         res.Node.Counterparty,
 		Counterparty: res,
-		Cdc: cdc,
+		Cdc:          cdc,
 	}
 
 	res.Channel = channel.Channel{
@@ -62,9 +62,9 @@ func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Conte
 	return ctx, channel.NewHandshaker(man)
 }
 
-func (node *Node) CLIObject() channel.HandshakeState {
+func (node *Node) CLIState() channel.HandshakeState {
 	man := node.Manager()
-	return channel.NewHandshaker(man).CLIObject(PortName, node.Name, []string{node.Name})
+	return channel.NewHandshaker(man).CLIState(PortName, node.Name, []string{node.Name})
 }
 
 func base(cdc *codec.Codec, key sdk.StoreKey) (state.Mapping, state.Mapping) {
@@ -83,7 +83,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenInit(ctx, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
-	require.Equal(t, channel.Init, obj.State.Get(ctx))
+	require.Equal(t, channel.Init, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.False(t, obj.Available.Get(ctx))
 }
@@ -92,7 +92,7 @@ func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proo
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenTry(ctx, proofs, height, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
-	require.Equal(t, channel.OpenTry, obj.State.Get(ctx))
+	require.Equal(t, channel.OpenTry, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.False(t, obj.Available.Get(ctx))
 	node.SetState(channel.OpenTry)
@@ -102,7 +102,7 @@ func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proo
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenAck(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, channel.Open, obj.State.Get(ctx))
+	require.Equal(t, channel.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.True(t, obj.Available.Get(ctx))
 	node.SetState(channel.Open)
@@ -112,7 +112,7 @@ func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenConfirm(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, channel.Open, obj.State.Get(ctx))
+	require.Equal(t, channel.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.True(t, obj.Available.Get(ctx))
 	node.SetState(channel.CloseTry)
@@ -127,24 +127,24 @@ func (node *Node) Handshake(t *testing.T) {
 
 	// counterparty.OpenTry
 	node.Counterparty.UpdateClient(t, header)
-	cliobj := node.CLIObject()
+	cliobj := node.CLIState()
 	_, pchan := node.QueryValue(t, cliobj.Channel)
-	_, pstate := node.QueryValue(t, cliobj.State)
+	_, pstate := node.QueryValue(t, cliobj.Stage)
 	node.Counterparty.OpenTry(t, uint64(header.Height), pchan, pstate)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
 	node.UpdateClient(t, header)
-	cliobj = node.Counterparty.CLIObject()
+	cliobj = node.Counterparty.CLIState()
 	_, pchan = node.Counterparty.QueryValue(t, cliobj.Channel)
-	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
+	_, pstate = node.Counterparty.QueryValue(t, cliobj.Stage)
 	node.OpenAck(t, uint64(header.Height), pchan, pstate)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm
 	node.Counterparty.UpdateClient(t, header)
-	cliobj = node.CLIObject()
-	_, pstate = node.QueryValue(t, cliobj.State)
+	cliobj = node.CLIState()
+	_, pstate = node.QueryValue(t, cliobj.Stage)
 	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate)
 }
 
@@ -153,7 +153,7 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 	obj, err := man.Query(ctx, PortName, node.Name)
 	require.NoError(t, err)
 	seq := obj.SeqSend.Get(ctx)
-	err = man.Send(ctx, PortName, node.Name, packet)
+	err = man.Send(ctx, node.Name, packet)
 	require.NoError(t, err)
 	require.Equal(t, seq+1, obj.SeqSend.Get(ctx))
 	require.Equal(t, node.Cdc.MustMarshalBinaryBare(packet), obj.PacketCommit(ctx, seq+1))

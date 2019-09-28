@@ -55,7 +55,7 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 			man := client.NewManager(mapp)
 			id := args[0]
 
-			state, _, err := man.Object(id).ConsensusStateCLI(q)
+			state, _, err := man.State(id).ConsensusStateCLI(q)
 			if err != nil {
 				return err
 			}
@@ -83,7 +83,7 @@ func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			root, _, err := man.Object(id).RootCLI(q, height)
+			root, _, err := man.State(id).RootCLI(q, height)
 			if err != nil {
 				return err
 			}

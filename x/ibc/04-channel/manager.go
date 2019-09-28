@@ -34,7 +34,7 @@ func NewManager(protocol state.Mapping, connection connection.Manager) Manager {
 		protocol:     protocol.Prefix(LocalRoot()),
 		connection:   connection,
 		counterParty: NewCounterpartyManager(protocol.Cdc()),
-		ports: make(map[string]struct{}),
+		ports:        make(map[string]struct{}),
 	}
 }
 
@@ -211,7 +211,7 @@ func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) error {
 		return errors.New("timeout height higher than the latest known")
 	}
 
-	obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Commitment())
+	obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Marshal())
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -247,8 +247,8 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height ui
 	if err != nil {
 		return err
 	}
-	
-	if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).Is(ctx, packet) {
+
+	if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).IsRaw(ctx, packet.Marshal()) {
 		return errors.New("verification failed")
 	}
 

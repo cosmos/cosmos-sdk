@@ -5,7 +5,7 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-type JSONObject struct {
+type JSONState struct {
 	Connection      connection.Connection `json:"connection"`
 	ConnectionProof commitment.Proof      `json:"connection_proof,omitempty"`
 	Available       bool                  `json:"available"`
@@ -19,12 +19,12 @@ type JSONObject struct {
 	CounterpartyClientProof commitment.Proof `json:"counterparty_client_proof,omitempty"`
 }
 
-func NewJSONObject(
+func NewJSONState(
 	conn connection.Connection, connp commitment.Proof,
 	avail bool, availp commitment.Proof,
 	kind string, kindp commitment.Proof,
-) JSONObject {
-	return JSONObject{
+) JSONState {
+	return JSONState{
 		Connection:      conn,
 		ConnectionProof: connp,
 		Available:       avail,
@@ -34,14 +34,14 @@ func NewJSONObject(
 	}
 }
 
-func NewHandshakeJSONObject(
+func NewHandshakeJSONState(
 	conn connection.Connection, connp commitment.Proof,
 	avail bool, availp commitment.Proof,
 	kind string, kindp commitment.Proof,
 	state byte, statep commitment.Proof,
 	cpclient string, cpclientp commitment.Proof,
-) JSONObject {
-	return JSONObject{
+) JSONState {
+	return JSONState{
 		Connection:      conn,
 		ConnectionProof: connp,
 		Available:       avail,

@@ -1,3 +1,5 @@
 package types
 
-var SequenceKey = []byte("sequence")
+func SequenceKey(chanid string) []byte {
+	return []byte("sequence/" + chanid)
+}

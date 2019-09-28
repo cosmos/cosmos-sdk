@@ -1,6 +1,8 @@
 package channel
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -38,7 +40,8 @@ func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
 	if packet.SenderPort() != port.id {
 		panic("Packet sent on wrong port")
 	}
-	return port.channel.Send(ctx, port.id, chanid, packet)
+
+	return port.channel.Send(ctx, chanid, packet)
 }
 
 func (port Port) Receive(ctx sdk.Context, proof []commitment.Proof, height uint64, chanid string, packet Packet) error {

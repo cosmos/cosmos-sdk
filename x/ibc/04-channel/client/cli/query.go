@@ -45,7 +45,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return ibcQueryCmd
 }
 
-func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res utils.JSONObject, err error) {
+func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res utils.JSONState, err error) {
 	q := state.NewCLIQuerier(ctx)
 
 	conn, connp, err := obj.ChannelCLI(q)
@@ -68,7 +68,7 @@ func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res ut
 	}
 
 	if prove {
-		return utils.NewJSONObject(
+		return utils.NewJSONState(
 			conn, connp,
 			avail, availp,
 			//			kind, kindp,
@@ -77,7 +77,7 @@ func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res ut
 		), nil
 	}
 
-	return utils.NewJSONObject(
+	return utils.NewJSONState(
 		conn, nil,
 		avail, nil,
 		seqsend, nil,
@@ -118,7 +118,7 @@ func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid str
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewManager(base, connman)
-	return man.CLIObject(portid, chanid, connids)
+	return man.CLIState(portid, chanid, connids)
 }
 */
 /*

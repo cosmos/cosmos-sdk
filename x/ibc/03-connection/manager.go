@@ -56,12 +56,12 @@ type State struct {
 
 	Kind state.String
 
-	Client client.Object
+	Client client.State
 
 	path merkle.Path
 }
 
-func (man Manager) Object(id string) State {
+func (man Manager) State(id string) State {
 	return State{
 		id: id,
 
@@ -86,7 +86,7 @@ type CounterState struct {
 
 	Kind commitment.String
 
-	Client client.CounterObject // nolint: unused
+	Client client.CounterState // nolint: unused
 }
 
 func (man CounterpartyManager) CreateState(id string) CounterState {
@@ -152,7 +152,7 @@ func (man Manager) Cdc() *codec.Codec {
 }
 
 func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (obj State, err error) {
-	obj = man.Object(id)
+	obj = man.State(id)
 	if obj.exists(ctx) {
 		err = errors.New("Stage already exists")
 		return
@@ -170,7 +170,7 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 // query() is used internally by the connection creators
 // checks connection kind, doesn't check avilability
 func (man Manager) query(ctx sdk.Context, id string, kind string) (obj State, err error) {
-	obj = man.Object(id)
+	obj = man.State(id)
 	if !obj.exists(ctx) {
 		err = errors.New("Stage not exists")
 		return
@@ -187,7 +187,7 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj State, er
 }
 
 func (man Manager) Query(ctx sdk.Context, id string) (obj State, err error) {
-	obj = man.Object(id)
+	obj = man.State(id)
 	if !obj.exists(ctx) {
 		err = errors.New("Stage not exists")
 		return

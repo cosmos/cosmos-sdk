@@ -12,11 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/ibc/mock/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/mock/send/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/mock/types"
 )
 
 const (
-	ModuleName = "ibcmock"
+	ModuleName = "ibcmocksend"
 )
 
 var (
@@ -33,7 +34,7 @@ func (AppModuleBasic) Name() string {
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
@@ -27,6 +28,12 @@ func (packet *PacketSequence) UnmarshalAmino(text string) (err error) {
 	}
 	packet.Sequence, err = strconv.ParseUint(strings.TrimPrefix(text, "sequence-packet-"), 10, 64)
 	return
+}
+
+func (packet PacketSequence) Marshal() []byte {
+	cdc := codec.New()
+	RegisterCodec(cdc)
+	return cdc.MustMarshalBinaryBare(packet)
 }
 
 func (packet PacketSequence) MarshalJSON() ([]byte, error) {

@@ -7,10 +7,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-func (man Manager) CLIObject(connid, clientid string) State {
-	obj := man.Object(connid)
-	obj.Client = man.client.Object(clientid)
+func (man Manager) CLIState(connid, clientid string) State {
+	obj := man.State(connid)
+	obj.Client = man.client.State(clientid)
 	return obj
+}
+
+func (man Manager) CLIQuery(q state.ABCIQuerier, connid string) (State, error) {
+	obj := man.State(connid)
+	conn, _, err := obj.ConnectionCLI(q)
+	if err != nil {
+		return State{}, err
+	}
+	obj.Client = man.client.State(conn.Client)
+	return obj, nil
 }
 
 func (obj State) prefix() []byte {
@@ -35,23 +45,21 @@ func (obj State) KindCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, e
 	return
 }
 
-func (man Handshaker) CLIObject(connid, clientid string) HandshakeState {
-	return man.CreateState(man.man.CLIObject(connid, clientid))
+func (man Handshaker) CLIState(connid, clientid string) HandshakeState {
+	return man.CreateState(man.man.CLIState(connid, clientid))
 }
 
 func (man Handshaker) CLIQuery(q state.ABCIQuerier, connid string) (HandshakeState, error) {
-	obj := man.man.Object(connid)
-	conn, _, err := obj.ConnectionCLI(q)
+	state, err := man.man.CLIQuery(q, connid)
 	if err != nil {
 		return HandshakeState{}, err
 	}
-	obj.Client = man.man.client.Object(conn.Client)
-	return man.CreateState(obj), nil
+	return man.CreateState(state), nil
 }
 
-func (obj HandshakeState) StateCLI(q state.ABCIQuerier) (res byte, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.State.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.State)
+func (obj HandshakeState) StageCLI(q state.ABCIQuerier) (res byte, proof merkle.Proof, err error) {
+	res, tmproof, err := obj.Stage.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Stage)
 	return
 }
 

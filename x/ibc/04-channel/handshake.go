@@ -9,10 +9,10 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-type HandshakeStage = byte
+type Stage = byte
 
 const (
-	Idle HandshakeStage = iota
+	Idle Stage = iota
 	Init
 	OpenTry
 	Open
@@ -44,7 +44,7 @@ type CounterpartyHandshaker struct {
 type HandshakeState struct {
 	State
 
-	HandshakeStage state.Enum
+	Stage state.Enum
 
 	counterParty CounterHandshakeState
 }
@@ -60,9 +60,9 @@ func (man Handshaker) createState(parent State) HandshakeState {
 	prefix := parent.portId + "/channels/" + parent.chanId
 
 	return HandshakeState{
-		State:          parent,
-		HandshakeStage: man.protocol.Value([]byte(prefix + "/state")).Enum(),
-		counterParty:   man.counterParty.createState(parent.counterParty),
+		State:        parent,
+		Stage:        man.protocol.Value([]byte(prefix + "/state")).Enum(),
+		counterParty: man.counterParty.createState(parent.counterParty),
 	}
 }
 
@@ -98,7 +98,7 @@ func (man Handshaker) query(ctx sdk.Context, portid, chanid string) (obj Handsha
 /*
 func (obj HandshakeState) remove(ctx sdk.Context) {
 	obj.Stage.remove(ctx)
-	obj.HandshakeStage.Delete(ctx)
+	obj.Stage.Delete(ctx)
 	obj.counterpartyClient.Delete(ctx)
 	obj.NextTimeout.Delete(ctx)
 }
@@ -129,7 +129,7 @@ func (man Handshaker) OpenInit(ctx sdk.Context,
 		return HandshakeState{}, err
 	}
 
-	obj.HandshakeStage.Set(ctx, Init)
+	obj.Stage.Set(ctx, Init)
 
 	return obj, nil
 }
@@ -171,7 +171,7 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.HandshakeStage.Set(ctx, OpenTry)
+	obj.Stage.Set(ctx, OpenTry)
 
 	return
 }
@@ -191,7 +191,7 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		return
 	}
 
-	if !obj.HandshakeStage.Transit(ctx, Init, Open) {
+	if !obj.Stage.Transit(ctx, Init, Open) {
 		err = errors.New("ack on non-init connection")
 		return
 	}
@@ -238,7 +238,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 		return
 	}
 
-	if !obj.State.Transit(ctx, OpenTry, Open) {
+	if !obj.Stage.Transit(ctx, OpenTry, Open) {
 		err = errors.New("confirm on non-try connection")
 		return
 	}
@@ -256,7 +256,7 @@ func (man Handshaker) OpenConfirm(ctx sdk.Context,
 // TODO
 /*
 func (obj HandshakeState) CloseInit(ctx sdk.Context, nextTimeout uint64) error {
-	if !obj.HandshakeStage.Transit(ctx, Open, CloseTry) {
+	if !obj.Stage.Transit(ctx, Open, CloseTry) {
 		return errors.New("closeinit on non-open connection")
 	}
 

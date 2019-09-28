@@ -60,9 +60,3 @@ func (obj HandshakeObject) CounterpartyClientCLI(q state.ABCIQuerier) (res strin
 	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.CounterpartyClient)
 	return
 }
-
-func (obj HandshakeObject) NextTimeoutCLI(q state.ABCIQuerier) (res uint64, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.NextTimeout.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.NextTimeout)
-	return
-}

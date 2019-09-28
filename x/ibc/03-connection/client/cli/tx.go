@@ -103,16 +103,10 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 			}
 
 			// TODO: check state and if not Idle continue existing process
-			height, err := lastheight(ctx2)
-			if err != nil {
-				return err
-			}
-			nextTimeout := height + 1000 // TODO: parameterize
 			msginit := connection.MsgOpenInit{
 				ConnectionID:       conn1id,
 				Connection:         conn1,
 				CounterpartyClient: conn2.Client,
-				NextTimeout:        nextTimeout,
 				Signer:             ctx1.GetFromAddress(),
 			}
 
@@ -121,21 +115,11 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			timeout := nextTimeout
-			height, err = lastheight(ctx1)
-			if err != nil {
-				return err
-			}
-			nextTimeout = height + 1000
 			_, pconn, err := obj1.ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
 			_, pstate, err := obj1.StateCLI(q1)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err := obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}
@@ -148,9 +132,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				ConnectionID:       conn2id,
 				Connection:         conn2,
 				CounterpartyClient: conn1.Client,
-				Timeout:            timeout,
-				NextTimeout:        nextTimeout,
-				Proofs:             []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Proofs:             []commitment.Proof{pconn, pstate, pcounter},
 				Signer:             ctx2.GetFromAddress(),
 			}
 
@@ -159,21 +141,11 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			timeout = nextTimeout
-			height, err = lastheight(ctx2)
-			if err != nil {
-				return err
-			}
-			nextTimeout = height + 1000
 			_, pconn, err = obj2.ConnectionCLI(q2)
 			if err != nil {
 				return err
 			}
 			_, pstate, err = obj2.StateCLI(q2)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err = obj2.NextTimeoutCLI(q2)
 			if err != nil {
 				return err
 			}
@@ -184,9 +156,7 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 
 			msgack := connection.MsgOpenAck{
 				ConnectionID: conn1id,
-				Timeout:      timeout,
-				NextTimeout:  nextTimeout,
-				Proofs:       []commitment.Proof{pconn, pstate, ptimeout, pcounter},
+				Proofs:       []commitment.Proof{pconn, pstate, pcounter},
 				Signer:       ctx1.GetFromAddress(),
 			}
 
@@ -195,20 +165,14 @@ func GetCmdConnectionHandshake(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			timeout = nextTimeout
 			_, pstate, err = obj1.StateCLI(q1)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err = obj1.NextTimeoutCLI(q1)
 			if err != nil {
 				return err
 			}
 
 			msgconfirm := connection.MsgOpenConfirm{
 				ConnectionID: conn2id,
-				Timeout:      timeout,
-				Proofs:       []commitment.Proof{pstate, ptimeout},
+				Proofs:       []commitment.Proof{pstate},
 				Signer:       ctx2.GetFromAddress(),
 			}
 

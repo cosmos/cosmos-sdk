@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type Node struct {
@@ -29,7 +29,7 @@ type Node struct {
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Name: "self",                                                                                          // hard coded, doesnt matter
+		Name: "self",                                                         // hard coded, doesnt matter
 		Node: tendermint.NewNode(self, "teststoreself", []byte("protocol/")), // TODO: test with key prefix
 
 		State: connection.Idle,
@@ -59,7 +59,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 }
 
 // TODO: typeify v
-func (node *Node) QueryValue(t *testing.T, v interface{KeyBytes() []byte}) ([]byte, commitment.Proof) {
+func (node *Node) QueryValue(t *testing.T, v interface{ KeyBytes() []byte }) ([]byte, commitment.Proof) {
 	return node.Query(t, v.KeyBytes())
 }
 
@@ -110,7 +110,7 @@ func (node *Node) Manager() (client.Manager, connection.Manager) {
 
 func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenInit(ctx, node.Name, node.Connection, node.CounterpartyClient, 100) // TODO: test timeout
+	obj, err := man.OpenInit(ctx, node.Name, node.Connection, node.CounterpartyClient)
 	require.NoError(t, err)
 	require.Equal(t, connection.Init, obj.State.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
@@ -121,7 +121,7 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, proofs, node.Name, node.Connection, node.CounterpartyClient, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenTry(ctx, proofs, node.Name, node.Connection, node.CounterpartyClient)
 	require.NoError(t, err)
 	require.Equal(t, connection.OpenTry, obj.State.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
@@ -132,7 +132,7 @@ func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, proofs, node.Name, 100 /*TODO*/, 100 /*TODO*/)
+	obj, err := man.OpenAck(ctx, proofs, node.Name)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
@@ -142,12 +142,12 @@ func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
 
 func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, proofs, node.Name, 100 /*TODO*/)
+	obj, err := man.OpenConfirm(ctx, proofs, node.Name)
 	require.NoError(t, err)
 	require.Equal(t, connection.Open, obj.State.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.True(t, obj.Available.Get(ctx))
-	node.SetState(connection.CloseTry)
+	node.SetState(connection.Open)
 }
 
 func (node *Node) Handshake(t *testing.T) {
@@ -166,11 +166,10 @@ func (node *Node) Handshake(t *testing.T) {
 	cliobj := node.CLIObject()
 	_, pconn := node.QueryValue(t, cliobj.Connection)
 	_, pstate := node.QueryValue(t, cliobj.State)
-	_, ptimeout := node.QueryValue(t, cliobj.NextTimeout)
 	_, pcounterclient := node.QueryValue(t, cliobj.CounterpartyClient)
 	// TODO: implement consensus state checking
 	// _, pclient := node.Query(t, cliobj.Client.ConsensusStateKey)
-	node.Counterparty.OpenTry(t, pconn, pstate, ptimeout, pcounterclient)
+	node.Counterparty.OpenTry(t, pconn, pstate, pcounterclient)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
@@ -178,15 +177,13 @@ func (node *Node) Handshake(t *testing.T) {
 	cliobj = node.Counterparty.CLIObject()
 	_, pconn = node.Counterparty.QueryValue(t, cliobj.Connection)
 	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
-	_, ptimeout = node.Counterparty.QueryValue(t, cliobj.NextTimeout)
 	_, pcounterclient = node.Counterparty.QueryValue(t, cliobj.CounterpartyClient)
-	node.OpenAck(t, pconn, pstate, ptimeout, pcounterclient)
+	node.OpenAck(t, pconn, pstate, pcounterclient)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm
 	node.Counterparty.UpdateClient(t, header)
 	cliobj = node.CLIObject()
 	_, pstate = node.QueryValue(t, cliobj.State)
-	_, ptimeout = node.QueryValue(t, cliobj.NextTimeout)
-	node.Counterparty.OpenConfirm(t, pstate, ptimeout)
+	node.Counterparty.OpenConfirm(t, pstate)
 }

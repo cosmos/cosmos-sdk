@@ -2,8 +2,7 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const Route = "ibc"
@@ -12,7 +11,6 @@ type MsgOpenInit struct {
 	ConnectionID       string
 	Connection         Connection
 	CounterpartyClient string
-	NextTimeout        uint64
 	Signer             sdk.AccAddress
 }
 
@@ -42,8 +40,6 @@ type MsgOpenTry struct {
 	ConnectionID       string
 	Connection         Connection
 	CounterpartyClient string
-	Timeout            uint64
-	NextTimeout        uint64
 	Proofs             []commitment.Proof
 	Signer             sdk.AccAddress
 }
@@ -72,8 +68,6 @@ func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
 
 type MsgOpenAck struct {
 	ConnectionID string
-	Timeout      uint64
-	NextTimeout  uint64
 	Proofs       []commitment.Proof
 	Signer       sdk.AccAddress
 }
@@ -102,7 +96,6 @@ func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
 
 type MsgOpenConfirm struct {
 	ConnectionID string
-	Timeout      uint64
 	Proofs       []commitment.Proof
 	Signer       sdk.AccAddress
 }

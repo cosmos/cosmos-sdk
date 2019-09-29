@@ -43,7 +43,6 @@ type BaseVestingAccount struct {
 // NewBaseVestingAccount creates a new BaseVestingAccount object
 func NewBaseVestingAccount(baseAccount *auth.BaseAccount, originalVesting sdk.Coins,
 	endTime int64) *BaseVestingAccount {
-
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
@@ -358,7 +357,6 @@ type PeriodicVestingAccount struct {
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
-
 	cva := &ContinuousVestingAccount{
 		StartTime:          startTime,
 		BaseVestingAccount: bva,
@@ -371,7 +369,6 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
 func NewPeriodicVestingAccount(baseAcc *auth.BaseAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
-
 	endTime := startTime
 	for _, p := range periods {
 		endTime += p.Length

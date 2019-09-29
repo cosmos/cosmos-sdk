@@ -82,4 +82,3 @@ type SimulationState struct {
 	GenTimestamp     time.Time                                           // genesis timestamp
 	UnbondTime       time.Duration                                       // staking unbond time stored to use it as the slashing maximum evidence duration
 }
-

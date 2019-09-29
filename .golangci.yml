@@ -12,10 +12,10 @@ linters:
     - unparam
     - lll
     - maligned
-    - nakedret
     - errcheck
     - scopelint
     - varcheck
+    - godox
 
 issues:
   exclude-rules:

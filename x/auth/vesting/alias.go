@@ -18,11 +18,11 @@ var (
 )
 
 type (
-	VestingAccount           = exported.VestingAccount
+	Account                  = exported.VestingAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
 	PeriodicVestingAccount   = types.PeriodicVestingAccount
 	DelayedVestingAccount    = types.DelayedVestingAccount
-	VestingPeriods           = types.VestingPeriods
-	VestingPeriod            = types.VestingPeriod
+	Periods                  = types.Periods
+	Period                   = types.Period
 )

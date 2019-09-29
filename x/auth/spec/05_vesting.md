@@ -82,19 +82,19 @@ type DelayedVestingAccount struct {
 }
 
 // VestingPeriod defines a length of time and amount of coins that will vest
-type VestingPeriod struct {
-  PeriodLength int64 // length of the period, in seconds
-  VestingAmount Coins // amount of coins vesting during this period
+type Period struct {
+  Length int64 // length of the period, in seconds
+  Amount Coins // amount of coins vesting during this period
 }
 
 // Stores all vesting periods passed as part of a PeriodicVestingAccount
-type VestingPeriods []VestingPeriod
+type Periods []Period
 
 // PeriodicVestingAccount implements the VestingAccount interface. It
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
   ContinuousVestingAccount
-  VestingPeriods VestingPeriods // the vesting schedule
+  Periods Periods // the vesting schedule
 }
 ```
 
@@ -185,11 +185,11 @@ func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
   vested := 0
   periods = pva.GetPeriods()
   for i := 0; i < len(periods); i++ {
-    x := t - ct
-    if x>= periods[i].Length {
-      vested += periods[i].Amount
-      ct += periods[i].Length
-    } else {break}
+    if t - ct < periods[i].Length {
+      break
+    }
+    vested += periods[i].Amount
+    ct += periods[i].Length
   }
   return vested
 }

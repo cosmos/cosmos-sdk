@@ -83,5 +83,3 @@ type SimulationState struct {
 	UnbondTime       time.Duration                                       // staking unbond time stored to use it as the slashing maximum evidence duration
 }
 
-// // AccountGeneratorFn function type for generating simulation accounts.
-// type AccountGeneratorFn

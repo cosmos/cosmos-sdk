@@ -15,10 +15,10 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 // ModuleCdc module wide codec
-var ModuleCdc *codec.Codec
+var SubModuleCdc *codec.Codec
 
 func init() {
-	ModuleCdc = codec.New()
-	RegisterCodec(ModuleCdc)
-	ModuleCdc.Seal()
+	SubModuleCdc = codec.New()
+	RegisterCodec(SubModuleCdc)
+	SubModuleCdc.Seal()
 }

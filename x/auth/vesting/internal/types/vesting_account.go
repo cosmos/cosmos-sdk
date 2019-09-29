@@ -32,12 +32,12 @@ func init() {
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
 	*auth.BaseAccount
-	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
-	DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
-	DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
-	EndTime          int64          `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
-	StartTime        int64          `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	VestingPeriods   VestingPeriods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
+	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
+	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
+	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
+	StartTime        int64     `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+	Periods          Periods   `json:"periods,omitempty" yaml:"periods,omitempty"`
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
@@ -220,7 +220,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting sdk.Coins
 		EndTime          int64
 		StartTime        int64
-		VestingPeriods   VestingPeriods
+		Periods          Periods
 	}{
 		Address:          bva.Address,
 		Coins:            bva.Coins,
@@ -232,7 +232,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
 		StartTime:        bva.StartTime,
-		VestingPeriods:   bva.VestingPeriods,
+		Periods:          bva.Periods,
 	})
 	if err != nil {
 		return nil, err
@@ -353,11 +353,11 @@ var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
 	*ContinuousVestingAccount
-	VestingPeriods VestingPeriods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
+	VestingPeriods Periods `json:"periods" yaml:"periods"` // the vesting schedule
 }
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
-func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
 
 	cva := &ContinuousVestingAccount{
 		StartTime:          startTime,
@@ -370,11 +370,11 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 }
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
-func NewPeriodicVestingAccount(baseAcc *auth.BaseAccount, startTime int64, periods VestingPeriods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccount(baseAcc *auth.BaseAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
 
 	endTime := startTime
 	for _, p := range periods {
-		endTime += p.PeriodLength
+		endTime += p.Length
 	}
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
@@ -413,14 +413,12 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 	// for each period, if the period is over, add those coins as vested and check the next period.
 	for i := 0; i < numberPeriods; i++ {
 		x := blockTime.Unix() - currentPeriodStartTime
-		if x >= pva.VestingPeriods[i].PeriodLength {
-			vestedCoins = vestedCoins.Add(pva.VestingPeriods[i].VestingAmount)
-			// Update the start time of the next period
-			currentPeriodStartTime += pva.VestingPeriods[i].PeriodLength
-		} else {
-			// if the current period isn't vested, break out of the loop
+		if x < pva.VestingPeriods[i].Length {
 			break
 		}
+		vestedCoins = vestedCoins.Add(pva.VestingPeriods[i].Amount)
+		// Update the start time of the next period
+		currentPeriodStartTime += pva.VestingPeriods[i].Length
 	}
 	return vestedCoins
 }
@@ -456,7 +454,7 @@ func (pva *PeriodicVestingAccount) GetEndTime() int64 {
 }
 
 // GetVestingPeriods returns vesting periods associated with periodic vesting account.
-func (pva *PeriodicVestingAccount) GetVestingPeriods() VestingPeriods {
+func (pva *PeriodicVestingAccount) GetVestingPeriods() Periods {
 	return pva.VestingPeriods
 }
 
@@ -468,8 +466,8 @@ func (pva PeriodicVestingAccount) Validate() error {
 	endTime := pva.StartTime
 	originalVesting := sdk.NewCoins()
 	for _, p := range pva.VestingPeriods {
-		endTime += p.PeriodLength
-		originalVesting = originalVesting.Add(p.VestingAmount)
+		endTime += p.Length
+		originalVesting = originalVesting.Add(p.Amount)
 	}
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")

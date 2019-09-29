@@ -262,10 +262,10 @@ func TestPeriodicVestingAccountSend(t *testing.T) {
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	periods := vesting.VestingPeriods{
-		vesting.VestingPeriod{PeriodLength: int64(12 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
-		vesting.VestingPeriod{PeriodLength: int64(6 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
-		vesting.VestingPeriod{PeriodLength: int64(6 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+	periods := vesting.Periods{
+		vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
 	}
 	vacc := vesting.NewPeriodicVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), periods)
 	app.AccountKeeper.SetAccount(ctx, vacc)
@@ -331,10 +331,10 @@ func TestPeriodicVestingAccountReceive(t *testing.T) {
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	periods := vesting.VestingPeriods{
-		vesting.VestingPeriod{PeriodLength: int64(12 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
-		vesting.VestingPeriod{PeriodLength: int64(6 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
-		vesting.VestingPeriod{PeriodLength: int64(6 * 60 * 60), VestingAmount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+	periods := vesting.Periods{
+		vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
 	}
 	vacc := vesting.NewPeriodicVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), periods)
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)

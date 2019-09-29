@@ -7,23 +7,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// VestingPeriod defines a length of time and amount of coins that will vest
-type VestingPeriod struct {
-	PeriodLength  int64     `json:"period_length" yaml:"period_length"`   // length of the period, in seconds
-	VestingAmount sdk.Coins `json:"vesting_amount" yaml:"vesting_amount"` // amount of coins vesting during this period
+// Period defines a length of time and amount of coins that will vest
+type Period struct {
+	Length int64     `json:"length" yaml:"length"` // length of the period, in seconds
+	Amount sdk.Coins `json:"amount" yaml:"amount"` // amount of coins vesting during this period
 }
 
-// VestingPeriods stores all vesting periods passed as part of a PeriodicVestingAccount
-type VestingPeriods []VestingPeriod
+// Periods stores all vesting periods passed as part of a PeriodicVestingAccount
+type Periods []Period
 
-// String VestingPeriod implements stringer interface
-func (p VestingPeriod) String() string {
-	return fmt.Sprintf(`Period Length: %d
-	VestingAmount: %s`, p.PeriodLength, p.VestingAmount)
+// String Period implements stringer interface
+func (p Period) String() string {
+	return fmt.Sprintf(`Length: %d
+	Amount: %s`, p.Length, p.Amount)
 }
 
-// String VestingPeriods implements stringer interface
-func (vp VestingPeriods) String() string {
+// String Periods implements stringer interface
+func (vp Periods) String() string {
 	periodsListString := make([]string, len(vp))
 	for _, period := range vp {
 		periodsListString = append(periodsListString, period.String())

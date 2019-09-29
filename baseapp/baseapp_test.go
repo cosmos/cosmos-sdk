@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -600,12 +600,12 @@ func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sd
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
-			return newCtx, errs.Wrap(errs.ErrUnauthorized, "ante handler failure")
+			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
 		res := incrementingCounter(t, store, storeKey, txTest.Counter)
 		if !res.IsOK() {
-			err = errs.ABCIError(string(res.Codespace), uint32(res.Code), res.Log)
+			err = sdkerrors.ABCIError(string(res.Codespace), uint32(res.Code), res.Log)
 		}
 		return
 	}
@@ -996,7 +996,7 @@ func TestTxGasLimits(t *testing.T) {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = errs.Wrap(errs.ErrOutOfGas, log)
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1076,7 +1076,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
-						err = errs.Wrapf(errs.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1241,7 +1241,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = errs.Wrap(errs.ErrOutOfGas, log)
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1251,7 +1251,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			txTest := tx.(txTest)
 			newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
 			if txTest.FailOnAnte {
-				return newCtx, errs.Wrap(errs.ErrUnauthorized, "ante handler failure")
+				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
 			return

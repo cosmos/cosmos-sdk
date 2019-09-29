@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,8 +28,9 @@ func init() {
 	copy(simSecp256k1Pubkey[:], bz)
 }
 
-// SignatureVerificationGasConsumer is the type of function that is used to both consume gas when verifying signatures
-// and also to accept or reject different types of PubKey's. This is where apps can define their own PubKey
+// SignatureVerificationGasConsumer is the type of function that is used to both
+// consume gas when verifying signatures and also to accept or reject different types of pubkeys
+// This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
 
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
@@ -49,7 +50,7 @@ func NewSigGasConsumeDecorator(ak keeper.AccountKeeper, sigGasConsumer Signature
 func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a StdTx")
 	}
 
 	params := sgcd.ak.GetParams(ctx)
@@ -102,7 +103,7 @@ func NewSigVerificationDecorator(ak keeper.AccountKeeper) SigVerificationDecorat
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a StdTx")
 	}
 
 	isGenesis := ctx.BlockHeight() == 0
@@ -118,7 +119,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	// check that signer length and signature length are the same
 	if len(stdSigs) != len(signerAddrs) {
-		return ctx, errs.Wrapf(errs.ErrUnauthorized, "Wrong number of signers. Expected: %d, got %d", len(signerAddrs), len(stdSigs))
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Wrong number of signers. Expected: %d, got %d", len(signerAddrs), len(stdSigs))
 	}
 
 	for i := 0; i < len(stdSigs); i++ {
@@ -155,7 +156,7 @@ func NewValidateSigCountDecorator(ak keeper.AccountKeeper) ValidateSigCountDecor
 func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a StdTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
@@ -166,7 +167,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	for i := 0; i < len(stdSigs); i++ {
 		sigCount += types.CountSubKeys(stdSigs[i].PubKey)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errs.Wrapf(errs.ErrTooManySignatures,
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrTooManySignatures,
 				"signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
@@ -190,7 +191,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	stdTx, ok := tx.(types.StdTx)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must be a StdTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a StdTx")
 	}
 
 	stdSigs := stdTx.GetSignatures()
@@ -199,7 +200,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	for i, sig := range stdSigs {
 		if sig.PubKey != nil {
 			if !bytes.Equal(sig.PubKey.Address(), signers[i]) {
-				return ctx, errs.Wrapf(errs.ErrInvalidPubKey,
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
 					"PubKey does not match Signer address %s with signer index: %d", signers[i], i)
 			}
 
@@ -209,7 +210,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			err = acc.SetPubKey(sig.PubKey)
 			if err != nil {
-				return ctx, errs.Wrap(errs.ErrInvalidPubKey, err.Error())
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 			}
 			spkd.ak.SetAccount(ctx, acc)
 		}
@@ -227,7 +228,7 @@ func DefaultSigVerificationGasConsumer(
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-		return errs.Wrap(errs.ErrInvalidPubKey, "ED25519 public keys are unsupported")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 
 	case secp256k1.PubKeySecp256k1:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
@@ -241,7 +242,7 @@ func DefaultSigVerificationGasConsumer(
 		return nil
 
 	default:
-		return errs.Wrapf(errs.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 	}
 }
 
@@ -298,11 +299,11 @@ func ProcessPubKey(acc exported.Account, sig types.StdSignature, simulate bool) 
 	if pubKey == nil {
 		pubKey = sig.PubKey
 		if pubKey == nil {
-			return nil, errs.Wrap(errs.ErrInvalidPubKey, "PubKey not found")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "PubKey not found")
 		}
 
 		if !bytes.Equal(pubKey.Address(), acc.GetAddress()) {
-			return nil, errs.Wrapf(errs.ErrUnauthorized,
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized,
 				"PubKey does not match Signer address %s", acc.GetAddress())
 		}
 	}
@@ -318,11 +319,11 @@ func processSig(
 
 	pubKey := acc.GetPubKey()
 	if !simulate && pubKey == nil {
-		return nil, errs.Wrap(errs.ErrInvalidPubKey, "pubkey on account is not set")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
-		return nil, errs.Wrap(errs.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "signature verification failed; verify correct account sequence and chain-id")
 	}
 
 	if err = acc.SetSequence(acc.GetSequence() + 1); err != nil {
@@ -338,7 +339,7 @@ func GetSignerAcc(ctx sdk.Context, ak keeper.AccountKeeper, addr sdk.AccAddress)
 	if acc := ak.GetAccount(ctx, addr); acc != nil {
 		return acc, nil
 	}
-	return nil, errs.Wrapf(errs.ErrUnknownAddress, "account %s does not exist", addr)
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
 }
 
 // GetSignBytes returns a slice of bytes to sign over for a given transaction

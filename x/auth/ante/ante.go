@@ -10,15 +10,15 @@ import (
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
 func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
-	return sdk.ChainDecorators(
+	return sdk.ChainAnteDecorators(
 		NewSetupDecorator(),
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
+		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSetPubKeyDecorator(ak),
 		NewValidateSigCountDecorator(ak),
-		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		NewSigVerificationDecorator(ak),
 	)

@@ -3,7 +3,7 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	err "github.com/cosmos/cosmos-sdk/types/errors"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
@@ -46,7 +46,7 @@ func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	memoTx, ok := tx.(TxWithMemo)
 	if !ok {
-		return ctx, errs.Wrap(errs.ErrTxDecode, "Tx must have a GetMemo method")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must have a GetMemo method")
 	}
 
 	params := vmd.ak.GetParams(ctx)
@@ -62,19 +62,19 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	return next(ctx, tx, simulate)
 }
 
-// ConsumeGasForTxSizeDecorator will take in parameters and consume gas proportional to the size of tx
+// ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional to the size of tx
 // before calling next AnteHandler
-type ConsumeGasForTxSizeDecorator struct {
+type ConsumeTxSizeGasDecorator struct {
 	ak keeper.AccountKeeper
 }
 
-func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeGasForTxSizeDecorator {
-	return ConsumeGasForTxSizeDecorator{
+func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeTxSizeGasDecorator {
+	return ConsumeTxSizeGasDecorator{
 		ak: ak,
 	}
 }
 
-func (cgts ConsumeGasForTxSizeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	params := cgts.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
 

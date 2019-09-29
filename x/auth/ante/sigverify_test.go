@@ -41,7 +41,7 @@ func TestSetPubKey(t *testing.T) {
 	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
-	antehandler := sdk.ChainDecorators(spkd)
+	antehandler := sdk.ChainAnteDecorators(spkd)
 
 	ctx, err := antehandler(ctx, tx, false)
 	require.Nil(t, err)
@@ -124,7 +124,7 @@ func TestSigVerification(t *testing.T) {
 
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
-	antehandler := sdk.ChainDecorators(spkd, svd)
+	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	_, err := antehandler(ctx, tx, false)
 	require.NotNil(t, err)
@@ -174,7 +174,7 @@ func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ..
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svgc := ante.NewSigGasConsumeDecorator(app.AccountKeeper, ante.DefaultSigVerificationGasConsumer)
 	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
-	antehandler := sdk.ChainDecorators(spkd, svgc, svd)
+	antehandler := sdk.ChainAnteDecorators(spkd, svgc, svd)
 
 	// Determine gas consumption of antehandler with default params
 	before := ctx.GasMeter().GasConsumed()

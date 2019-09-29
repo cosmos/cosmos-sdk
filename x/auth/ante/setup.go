@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tx with a Gas() method is needed to use SetupDecorator
@@ -30,7 +30,7 @@ func (sud SetUpDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.
 		newCtx = SetGasMeter(simulate, ctx, 0)
-		return newCtx, errs.Wrap(errs.ErrTxDecode, "Tx must be GasTx")
+		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
 	newCtx = SetGasMeter(simulate, ctx, gasTx.Gas())
@@ -48,8 +48,7 @@ func (sud SetUpDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, 
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasTx.Gas(), newCtx.GasMeter().GasConsumed())
 
-				err = errs.Wrap(errs.ErrOutOfGas, log)
-				// TODO: figure out how to return Context, error so that baseapp can recover gasWanted/gasUsed
+				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:
 				panic(r)
 			}

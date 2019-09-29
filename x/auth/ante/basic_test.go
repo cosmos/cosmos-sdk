@@ -29,7 +29,7 @@ func TestValidateBasic(t *testing.T) {
 	invalidTx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	vbd := ante.NewValidateBasicDecorator()
-	antehandler := sdk.ChainDecorators(vbd)
+	antehandler := sdk.ChainAnteDecorators(vbd)
 	_, err := antehandler(ctx, invalidTx, false)
 
 	require.NotNil(t, err, "Did not error on invalid tx")
@@ -58,7 +58,7 @@ func TestValidateMemo(t *testing.T) {
 	invalidTx := types.NewTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, strings.Repeat("01234567890", 500))
 
 	vmd := ante.NewValidateMemoDecorator(app.AccountKeeper)
-	antehandler := sdk.ChainDecorators(vmd)
+	antehandler := sdk.ChainAnteDecorators(vmd)
 	_, err := antehandler(ctx, invalidTx, false)
 
 	require.NotNil(t, err, "Did not error on tx with high memo")
@@ -75,7 +75,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	app, ctx := createTestApp(true)
 
 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(app.AccountKeeper)
-	antehandler := sdk.ChainDecorators(cgtsd)
+	antehandler := sdk.ChainAnteDecorators(cgtsd)
 
 	params := app.AccountKeeper.GetParams(ctx)
 	txBytes := []byte(strings.Repeat("a", 10))
@@ -94,7 +94,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	// No need to send tx here since this Decorator will do nothing with it
 	beforeGas = ctx.GasMeter().GasConsumed()
 	ctx, err := antehandler(ctx, nil, false)
-	require.Nil(t, err, "ConsumeGasForTxSizeDecorator returned error: %v", err)
+	require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
 	consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
 	require.Equal(t, expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")

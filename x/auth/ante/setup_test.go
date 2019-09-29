@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func TestSetup(t *testing.T) {
 	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	sud := ante.NewSetupDecorator()
-	antehandler := sdk.ChainDecorators(sud)
+	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
 	ctx = ctx.WithBlockHeight(1)
@@ -60,7 +60,7 @@ func TestRecoverPanic(t *testing.T) {
 	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	sud := ante.NewSetupDecorator()
-	antehandler := sdk.ChainDecorators(sud, OutOfGasDecorator{})
+	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set
 	ctx = ctx.WithBlockHeight(1)
@@ -69,10 +69,10 @@ func TestRecoverPanic(t *testing.T) {
 
 	require.NotNil(t, err, "Did not return error on OutOfGas panic")
 
-	require.True(t, errs.ErrOutOfGas.Is(err), "Returned error is not an out of gas error")
+	require.True(t, sdkerrors.ErrOutOfGas.Is(err), "Returned error is not an out of gas error")
 	require.Equal(t, fee.Gas, newCtx.GasMeter().Limit())
 
-	antehandler = sdk.ChainDecorators(sud, PanicDecorator{})
+	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
 	require.Panics(t, func() { antehandler(ctx, tx, false) }, "Recovered from non-Out-of-Gas panic")
 }
 

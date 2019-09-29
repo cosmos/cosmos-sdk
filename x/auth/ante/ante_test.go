@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errs "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -736,7 +736,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 			return nil
 		default:
-			return errs.Wrapf(errs.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
 	})
 

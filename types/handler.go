@@ -16,23 +16,25 @@ type AnteDecorator interface {
 // wrapping over the decorators further along chain and returns a single AnteHandler
 //
 // First element is outermost decorator, last element is innermost decorator
-func ChainDecorators(chain ...AnteDecorator) AnteHandler {
-	chain = append(chain, Tail{})
+func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
+	if (chain[len(chain)-1] != Terminator{}) {
+		chain = append(chain, Terminator{})
+	}
 	if len(chain) == 1 {
 		return func(ctx Context, tx Tx, simulate bool) (Context, error) {
 			return chain[0].AnteHandle(ctx, tx, simulate, nil)
 		}
 	}
 	return func(ctx Context, tx Tx, simulate bool) (Context, error) {
-		return chain[0].AnteHandle(ctx, tx, simulate, ChainDecorators(chain[1:]...))
+		return chain[0].AnteHandle(ctx, tx, simulate, ChainAnteDecorators(chain[1:]...))
 	}
 }
 
-// Tail AnteDecorator will get added to the chain to simplify decorator code
+// Terminator AnteDecorator will get added to the chain to simplify decorator code
 // Don't need to check if next == nil further up the chain
-type Tail struct{}
+type Terminator struct{}
 
 // Simply return provided Context and nil error
-func (t Tail) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (Context, error) {
+func (t Terminator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (Context, error) {
 	return ctx, nil
 }

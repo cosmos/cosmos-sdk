@@ -15,7 +15,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	_, ctx := createTestApp(true)
 
 	mfd := ante.NewMempoolFeeDecorator()
-	antehandler := sdk.ChainDecorators(mfd)
+	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -81,7 +81,7 @@ func TestDeductFees(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.SupplyKeeper)
-	antehandler := sdk.ChainDecorators(dfd)
+	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err := antehandler(ctx, tx, false)
 

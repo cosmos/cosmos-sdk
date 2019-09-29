@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error
-// If ValidateBasic passes, decorator calls next AnteHandler in chain
+// ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
+// If ValidateBasic passes, decorator calls next AnteHandler in chain.
 type ValidateBasicDecorator struct{}
 
 func NewValidateBasicDecorator() ValidateBasicDecorator {
@@ -46,7 +46,7 @@ func NewValidateMemoDecorator(ak keeper.AccountKeeper) ValidateMemoDecorator {
 func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	memoTx, ok := tx.(TxWithMemo)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must have a GetMemo method")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	params := vmd.ak.GetParams(ctx)

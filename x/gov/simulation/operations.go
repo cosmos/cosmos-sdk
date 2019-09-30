@@ -275,8 +275,10 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, false, nil
 }
 
-// Pick a random proposal ID from a proposal with a given status.
-// It does not provide a default proposal ID.
+// Pick a random proposal ID between the initial proposal ID
+// (defined in gov GenesisState) and the latest proposal ID
+// that matches a given Status.
+// It does not provide a default ID.
 func randomProposalID(r *rand.Rand, k keeper.Keeper,
 	ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)

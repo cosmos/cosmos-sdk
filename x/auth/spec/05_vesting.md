@@ -184,7 +184,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
   ct := pva.StartTime // The time of the current period start
   vested := 0
   periods = pva.GetPeriods()
-  for i := 0; i < len(periods); i++ {
+  for i, _  := range periods {
     if t - ct < periods[i].Length {
       break
     }

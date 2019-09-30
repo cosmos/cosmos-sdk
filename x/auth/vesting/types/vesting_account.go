@@ -36,7 +36,7 @@ type BaseVestingAccount struct {
 	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
 	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
 	StartTime        int64     `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	Periods          Periods   `json:"periods,omitempty" yaml:"periods,omitempty"`
+	VestingPeriods   Periods   `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
@@ -230,7 +230,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
 		StartTime:        bva.StartTime,
-		Periods:          bva.Periods,
+		Periods:          bva.VestingPeriods,
 	})
 	if err != nil {
 		return nil, err
@@ -351,7 +351,7 @@ var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
 	*ContinuousVestingAccount
-	VestingPeriods Periods `json:"periods" yaml:"periods"` // the vesting schedule
+	VestingPeriods Periods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
 }
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
@@ -405,9 +405,8 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 
 	// track the start time of the next period
 	currentPeriodStartTime := pva.StartTime
-	numberPeriods := len(pva.VestingPeriods)
 	// for each period, if the period is over, add those coins as vested and check the next period.
-	for i := 0; i < numberPeriods; i++ {
+	for i := range pva.VestingPeriods {
 		x := blockTime.Unix() - currentPeriodStartTime
 		if x < pva.VestingPeriods[i].Length {
 			break

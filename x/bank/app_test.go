@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 )
 
 type (
@@ -93,7 +93,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -125,7 +125,7 @@ func TestSendToModuleAcc(t *testing.T) {
 		Coins:   coins,
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -156,7 +156,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -217,7 +217,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2)}
+	genAccs := []authexported.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
@@ -261,7 +261,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2), genaccounts.NewGenesisAccount(acc4)}
+	genAccs := []authexported.GenesisAccount{acc1, acc2, acc4}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
@@ -299,7 +299,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(&acc1), genaccounts.NewGenesisAccount(&acc2)}
+	genAccs := []authexported.GenesisAccount{&acc1, &acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{

@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
@@ -279,79 +279,27 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 	}
 }
 
-func invariants(app *SimApp) []sdk.Invariant {
-	// TODO: fix PeriodicInvariants, it doesn't seem to call individual invariants for a period of 1
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/4631
-	if flagPeriodValue == 1 {
-		return app.CrisisKeeper.Invariants()
-	}
-	return simulation.PeriodicInvariants(app.CrisisKeeper.Invariants(), flagPeriodValue, 0)
-}
-
-// Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
 }
 
-// Profile with:
-// /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
-func BenchmarkFullAppSimulation(b *testing.B) {
-	logger := log.NewNopLogger()
-	config := NewConfigFromFlags()
-
-	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ = sdk.NewLevelDB("Simulation", dir)
-	defer func() {
-		db.Close()
-		os.RemoveAll(dir)
-	}()
-	app := NewSimApp(logger, db, nil, true, 0)
-
-	// Run randomized simulation
-	// TODO: parameterize numbers, save for a later PR
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-	}
-
-	if config.ExportParamsPath != "" {
-		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-	}
-
-	if simErr != nil {
-		fmt.Println(simErr)
-		b.FailNow()
-	}
-
-	if config.Commit {
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -366,14 +314,13 @@ func TestFullAppSimulation(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		testAndRunTxs(app, config), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -399,14 +346,14 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application import/export simulation")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -421,14 +368,13 @@ func TestAppImportExport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		testAndRunTxs(app, config), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -466,7 +412,7 @@ func TestAppImportExport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
@@ -518,14 +464,14 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation after import")
 	}
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
 
-	if flagVerboseValue {
+	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
@@ -539,14 +485,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		os.RemoveAll(dir)
 	}()
 
-	app := NewSimApp(logger, db, nil, true, 0, fauxMerkleModeOpt)
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
 		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), invariants(app),
-		app.ModuleAccountAddrs(), config,
+		testAndRunTxs(app, config), app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and params before the simulation error is checked
@@ -591,8 +536,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		_ = os.RemoveAll(newDir)
 	}()
 
-	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, 0, fauxMerkleModeOpt)
+	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
+
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
 	})
@@ -600,8 +546,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(
 		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(newApp, config), invariants(newApp),
-		newApp.ModuleAccountAddrs(), config,
+		testAndRunTxs(newApp, config), newApp.ModuleAccountAddrs(), config,
 	)
 
 	require.NoError(t, err)
@@ -610,7 +555,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	if !flagEnabledValue {
+	if !FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
@@ -630,7 +575,8 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, 0)
+
+			app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -639,8 +585,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			_, _, err := simulation.SimulateFromSeed(
 				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-				testAndRunTxs(app, config), []sdk.Invariant{},
-				app.ModuleAccountAddrs(), config,
+				testAndRunTxs(app, config), app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
 
@@ -654,64 +599,5 @@ func TestAppStateDeterminism(t *testing.T) {
 				)
 			}
 		}
-	}
-}
-
-func BenchmarkInvariants(b *testing.B) {
-	logger := log.NewNopLogger()
-
-	config := NewConfigFromFlags()
-	config.AllInvariants = false
-
-	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
-	db, _ := sdk.NewLevelDB("simulation", dir)
-
-	defer func() {
-		db.Close()
-		os.RemoveAll(dir)
-	}()
-
-	app := NewSimApp(logger, db, nil, true, 0)
-
-	// 2. Run parameterized simulation (w/o invariants)
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		b, ioutil.Discard, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		testAndRunTxs(app, config), []sdk.Invariant{},
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-	}
-
-	if config.ExportParamsPath != "" {
-		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
-			fmt.Println(err)
-			b.Fail()
-		}
-	}
-
-	if simErr != nil {
-		fmt.Println(simErr)
-		b.FailNow()
-	}
-
-	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})
-
-	// 3. Benchmark each invariant separately
-	//
-	// NOTE: We use the crisis keeper as it has all the invariants registered with
-	// their respective metadata which makes it useful for testing/benchmarking.
-	for _, cr := range app.CrisisKeeper.Routes() {
-		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
-			if res, stop := cr.Invar(ctx); stop {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, config.NumBlocks, res)
-				b.FailNow()
-			}
-		})
 	}
 }

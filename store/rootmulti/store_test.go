@@ -9,15 +9,31 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db)
-	store.MountStoreWithDB(
-		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+}
 
+func TestGetCommitKVStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db)
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	key := ms.keysByName["store1"]
+
+	store1 := ms.GetCommitKVStore(key)
+	require.NotNil(t, store1)
+	require.IsType(t, &iavl.Store{}, store1)
+
+	store2 := ms.GetCommitStore(key)
+	require.NotNil(t, store2)
+	require.IsType(t, &iavl.Store{}, store2)
 }
 
 func TestStoreMount(t *testing.T) {
@@ -410,7 +426,7 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
+func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()

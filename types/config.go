@@ -4,6 +4,9 @@ import (
 	"sync"
 )
 
+// DefaultKeyringServiceName defines a default service name for the keyring.
+const DefaultKeyringServiceName = "cosmos"
+
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
@@ -14,10 +17,17 @@ type Config struct {
 	fullFundraiserPath  string
 	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
+	keyringServiceName  string
 }
 
-var (
-	// Initializing an instance of Config
+// cosmos-sdk wide global singleton
+var sdkConfig *Config
+
+// GetConfig returns the config instance for the SDK.
+func GetConfig() *Config {
+	if sdkConfig != nil {
+		return sdkConfig
+	}
 	sdkConfig = &Config{
 		sealed: false,
 		bech32AddressPrefix: map[string]string{
@@ -31,11 +41,8 @@ var (
 		coinType:           CoinType,
 		fullFundraiserPath: FullFundraiserPath,
 		txEncoder:          nil,
+		keyringServiceName: DefaultKeyringServiceName,
 	}
-)
-
-// GetConfig returns the config instance for the SDK.
-func GetConfig() *Config {
 	return sdkConfig
 }
 
@@ -97,6 +104,12 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
+// Set the keyringServiceName (BIP44Prefix) on the config
+func (config *Config) SetKeyringServiceName(keyringServiceName string) {
+	config.assertNotSealed()
+	config.keyringServiceName = keyringServiceName
+}
+
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -146,12 +159,17 @@ func (config *Config) GetAddressVerifier() func([]byte) error {
 	return config.addressVerifier
 }
 
-// Get the BIP-0044 CoinType code on the config
+// GetCoinType returns the BIP-0044 CoinType code on the config.
 func (config *Config) GetCoinType() uint32 {
 	return config.coinType
 }
 
-// Get the FullFundraiserPath (BIP44Prefix) on the config
+// GetFullFundraiserPath returns the BIP44Prefix.
 func (config *Config) GetFullFundraiserPath() string {
 	return config.fullFundraiserPath
+}
+
+// GetKeyringServiceName returns the keyring service name from the config.
+func (config *Config) GetKeyringServiceName() string {
+	return config.keyringServiceName
 }

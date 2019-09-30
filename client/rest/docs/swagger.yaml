@@ -1,5 +1,18 @@
-basePath: '{{.BasePath}}'
 definitions:
+  auth.StdFee:
+    properties:
+      amount:
+        type: string
+      gas:
+        type: integer
+    type: object
+  auth.StdSignature:
+    properties:
+      signature:
+        example: U3dhZ2dlciByb2Nrcw==
+        format: base64
+        type: string
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -90,6 +103,120 @@ definitions:
         description: address of the voter
         type: string
     type: object
+  rest.postDeposit:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgDeposit'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.postProposal:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgSubmitProposal'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.postVote:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgVote'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.queryDeposit:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Deposit'
+        type: object
+    type: object
+  rest.queryDeposits:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.Deposit'
+        type: array
+    type: object
+  rest.queryProposal:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Proposal'
+        type: object
+    type: object
+  rest.queryProposals:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.Proposal'
+        type: array
+    type: object
+  rest.queryProposer:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/utils.Proposer'
+        type: object
+    type: object
+  rest.queryTally:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.TallyResult'
+        type: object
+    type: object
+  rest.queryVote:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Vote'
+        type: object
+    type: object
+  rest.queryVotesOnProposal:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Votes'
+        type: object
+    type: object
   types.ABCIMessageLog:
     properties:
       events:
@@ -127,6 +254,86 @@ definitions:
       key:
         type: string
       value:
+        type: string
+    type: object
+  types.Content:
+    type: object
+  types.Deposit:
+    properties:
+      amount:
+        description: Deposit amount
+        type: string
+      depositor:
+        description: Address of the depositor
+        type: string
+      proposal_id:
+        description: proposalID of the proposal
+        type: integer
+    type: object
+  types.MsgDeposit:
+    properties:
+      amount:
+        description: Coins to add to the proposal's deposit
+        type: string
+      depositor:
+        description: Address of the depositor
+        type: string
+      proposal_id:
+        description: ID of the proposal
+        type: integer
+    type: object
+  types.MsgSubmitProposal:
+    properties:
+      content:
+        $ref: '#/definitions/types.Content'
+        type: object
+      initial_deposit:
+        description: Initial deposit paid by sender. Must be strictly positive
+        type: string
+      proposer:
+        description: Address of the proposer
+        type: string
+    type: object
+  types.MsgVote:
+    properties:
+      option:
+        description: option from OptionSet chosen by the voter
+        type: integer
+      proposal_id:
+        description: ID of the proposal
+        type: integer
+      voter:
+        description: address of the voter
+        type: string
+    type: object
+  types.Proposal:
+    properties:
+      deposit_end_time:
+        description: Time that the Proposal would expire if deposit amount isn't met
+        type: string
+      final_tally_result:
+        $ref: '#/definitions/types.TallyResult'
+        description: Result of Tallys
+        type: object
+      id:
+        description: ID of the proposal
+        type: integer
+      proposal_status:
+        description: Status of the Proposal {Pending, Active, Passed, Rejected}
+        type: integer
+      submit_time:
+        description: Time of the block where TxGovSubmitProposal was included
+        type: string
+      total_deposit:
+        description: Current deposit on this proposal. Initial value is set at InitialDeposit
+        type: string
+      voting_end_time:
+        description: Time that the VotingPeriod for this proposal will end and votes
+          will be tallied
+        type: string
+      voting_start_time:
+        description: Time of the block where MinDeposit was reached. -1 if MinDeposit
+          is not reached
         type: string
     type: object
   types.StdFee:
@@ -177,6 +384,17 @@ definitions:
           type: string
       type: object
     type: array
+  types.TallyResult:
+    properties:
+      abstain:
+        type: string
+      "no":
+        type: string
+      no_with_veto:
+        type: string
+      "yes":
+        type: string
+    type: object
   types.Tx:
     type: object
   types.TxResponse:
@@ -214,18 +432,47 @@ definitions:
       txhash:
         type: string
     type: object
-host: '{{.Host}}'
+  types.Vote:
+    properties:
+      option:
+        description: option from OptionSet chosen by the voter
+        type: integer
+      proposal_id:
+        description: proposalID of the proposal
+        type: integer
+      voter:
+        description: address of the voter
+        type: string
+    type: object
+  types.Votes:
+    items:
+      properties:
+        option:
+          description: option from OptionSet chosen by the voter
+          type: integer
+        proposal_id:
+          description: proposalID of the proposal
+          type: integer
+        voter:
+          description: address of the voter
+          type: string
+      type: object
+    type: array
+  utils.Proposer:
+    properties:
+      proposal_id:
+        type: integer
+      proposer:
+        type: string
+    type: object
 info:
   contact: {}
-  description: '{{.Description}}'
   license: {}
-  title: '{{.Title}}'
-  version: '{{.Version}}'
 paths:
   /gov/parameters/{type}:
     get:
       description: Query either (deposit | tallying | voting) parameters of the governance
-        module.
+        module
       parameters:
       - description: Type of param (deposit | tallying | voting)
         in: path
@@ -243,17 +490,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
         "400":
           description: Returned if the request doesn't have a valid height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "404":
           description: Returned if the type of parameter doesn't exist
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query governance parameters
       tags:
       - governance
@@ -286,30 +530,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryProposals'
         "400":
           description: Returned if the request doesn't have a valid parameters
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query for the list of governance proposals
       tags:
       - governance
     post:
       consumes:
       - application/json
-      description: Generate a proposal transaction that is ready for signing.
+      description: Generate a proposal transaction that is ready for signing
       parameters:
-      - description: The data required to construct a proposal message. The proposal_type
-          can be text | parameter_change
+      - description: The data required to construct a proposal message, the proposal_type
+          can be (text | parameter_change)
         in: body
-        name: tx
+        name: body
         required: true
         schema:
           $ref: '#/definitions/rest.PostProposalReq'
@@ -320,13 +561,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.StdTx'
-            type: object
+            $ref: '#/definitions/rest.postProposal'
         "400":
           description: Returned if the request is invalid
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Generate an unsigned proposal transaction
       tags:
       - governance
@@ -349,19 +588,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryProposal'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal by ID
       tags:
       - governance
@@ -371,7 +607,7 @@ paths:
         Query an individual governance proposal's deposits.
         NOTE: In order to query deposits for passed proposals, the transaction
         record must be available otherwise the query will fail. This requires a
-        node that is not pruning transaction history.
+        node that is not pruning transaction history
       parameters:
       - description: The ID of the governance proposal
         in: path
@@ -388,19 +624,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryDeposits'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's deposits
       tags:
       - governance
@@ -416,7 +649,7 @@ paths:
         type: integer
       - description: The data required to construct a deposit message
         in: body
-        name: tx
+        name: body
         required: true
         schema:
           $ref: '#/definitions/rest.DepositReq'
@@ -427,13 +660,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.StdTx'
-            type: object
+            $ref: '#/definitions/rest.postDeposit'
         "400":
           description: Returned if the request is invalid
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Generate an unsigned deposit transaction
       tags:
       - governance
@@ -443,7 +674,7 @@ paths:
         Query an individual governance proposal's deposits.
         NOTE: In order to query a deposit for a passed proposal, the transaction
         record must be available otherwise the query will fail. This requires a
-        node that is not pruning transaction history.
+        node that is not pruning transaction history
       parameters:
       - description: The ID of the governance proposal
         in: path
@@ -465,24 +696,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryDeposit'
         "400":
           description: Returned if the request doesn't have a valid proposalID or
             depositor
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "404":
           description: Returned if the proposal is not found
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's individual deposit
       tags:
       - governance
@@ -505,19 +732,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryProposer'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's proposer
       tags:
       - governance
@@ -540,19 +764,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryTally'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's individual tally
       tags:
       - governance
@@ -562,7 +783,7 @@ paths:
         Query an individual governance proposal's votes.
         NOTE: In order to query deposits for passed proposals, the transaction
         record must be available otherwise the query will fail. This requires a
-        node that is not pruning transaction history.
+        node that is not pruning transaction history
       parameters:
       - description: The ID of the governance proposal
         in: path
@@ -579,19 +800,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryVotesOnProposal'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             height
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's votes
       tags:
       - governance
@@ -607,7 +825,7 @@ paths:
         type: integer
       - description: The data required to construct a vote message
         in: body
-        name: tx
+        name: body
         required: true
         schema:
           $ref: '#/definitions/rest.VoteReq'
@@ -618,13 +836,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.StdTx'
-            type: object
+            $ref: '#/definitions/rest.postVote'
         "400":
           description: Returned if the request is invalid
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Generate an unsigned vote transaction
       tags:
       - governance
@@ -634,7 +850,7 @@ paths:
         Query an individual governance proposal's vote.
         NOTE: In order to query votes for passed proposals, the transaction
         record must be available otherwise the query will fail. This requires a
-        node that is not pruning transaction history.
+        node that is not pruning transaction history
       parameters:
       - description: The ID of the governance proposal
         in: path
@@ -656,24 +872,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
-            type: object
+            $ref: '#/definitions/rest.queryVote'
         "400":
           description: Returned if the request doesn't have a valid proposal ID or
             voter address
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "404":
           description: Returned if the proposal is not found
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the store query fails
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Query a governance proposal's individual vote
       tags:
       - governance
@@ -702,17 +914,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/types.TxResponse'
-            type: object
         "400":
           description: Returned if the request is invalid.
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
         "500":
           description: Returned if the transaction cannot be decoded.
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-            type: object
       summary: Broadcast a signed transaction
       tags:
       - transactions

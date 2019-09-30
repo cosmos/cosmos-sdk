@@ -29,12 +29,12 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, phs []ProposalRE
 // is responsible for constructing a properly formatted proposal for signing.
 //
 // @Summary Generate an unsigned proposal transaction
-// @Description Generate a proposal transaction that is ready for signing.
+// @Description Generate a proposal transaction that is ready for signing
 // @Tags governance
 // @Accept  json
 // @Produce  json
-// @Param tx body rest.PostProposalReq true "The data required to construct a proposal message. The proposal_type can be text | parameter_change"
-// @Success 200 {object} types.StdTx
+// @Param body body rest.PostProposalReq true "The data required to construct a proposal message, the proposal_type can be (text | parameter_change)"
+// @Success 200 {object} rest.postProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals [post]
 func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -71,8 +71,8 @@ func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param proposalID path int true "The ID of the governance proposal to deposit to"
-// @Param tx body rest.DepositReq true "The data required to construct a deposit message"
-// @Success 200 {object} types.StdTx
+// @Param body body rest.DepositReq true "The data required to construct a deposit message"
+// @Success 200 {object} rest.postDeposit
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals/{proposalID}/deposits [post]
 func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -120,8 +120,8 @@ func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param proposalID path int true "The ID of the governance proposal to vote for"
-// @Param tx body rest.VoteReq true "The data required to construct a vote message"
-// @Success 200 {object} types.StdTx
+// @Param body body rest.VoteReq true "The data required to construct a vote message"
+// @Success 200 {object} rest.postVote
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals/{proposalID}/votes [post]
 func voteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

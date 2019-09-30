@@ -1,18 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "{{.Description}}",
-        "title": "{{.Title}}",
         "contact": {},
-        "license": {},
-        "version": "{{.Version}}"
+        "license": {}
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
     "paths": {
         "/gov/parameters/{type}": {
             "get": {
-                "description": "Query either (deposit | tallying | voting) parameters of the governance module.",
+                "description": "Query either (deposit | tallying | voting) parameters of the governance module",
                 "produces": [
                     "application/json"
                 ],
@@ -39,21 +34,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ResponseWithHeight"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the type of parameter doesn't exist",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -100,28 +92,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryProposals"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid parameters",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
-                "description": "Generate a proposal transaction that is ready for signing.",
+                "description": "Generate a proposal transaction that is ready for signing",
                 "consumes": [
                     "application/json"
                 ],
@@ -134,8 +123,8 @@
                 "summary": "Generate an unsigned proposal transaction",
                 "parameters": [
                     {
-                        "description": "The data required to construct a proposal message. The proposal_type can be text | parameter_change",
-                        "name": "tx",
+                        "description": "The data required to construct a proposal message, the proposal_type can be (text | parameter_change)",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -148,14 +137,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/types.StdTx"
+                            "$ref": "#/definitions/rest.postProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -191,21 +178,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -214,7 +198,7 @@
         },
         "/gov/proposals/{proposalID}/deposits": {
             "get": {
-                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history",
                 "produces": [
                     "application/json"
                 ],
@@ -241,21 +225,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryDeposits"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -283,7 +264,7 @@
                     },
                     {
                         "description": "The data required to construct a deposit message",
-                        "name": "tx",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -296,14 +277,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/types.StdTx"
+                            "$ref": "#/definitions/rest.postDeposit"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -312,7 +291,7 @@
         },
         "/gov/proposals/{proposalID}/deposits/{depositor}": {
             "get": {
-                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query a deposit for a passed proposal, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "description": "Query an individual governance proposal's deposits.\nNOTE: In order to query a deposit for a passed proposal, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history",
                 "produces": [
                     "application/json"
                 ],
@@ -346,28 +325,24 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryDeposit"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposalID or depositor",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the proposal is not found",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -403,21 +378,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryProposer"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -453,21 +425,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryTally"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -476,7 +445,7 @@
         },
         "/gov/proposals/{proposalID}/votes": {
             "get": {
-                "description": "Query an individual governance proposal's votes.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "description": "Query an individual governance proposal's votes.\nNOTE: In order to query deposits for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history",
                 "produces": [
                     "application/json"
                 ],
@@ -503,21 +472,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryVotesOnProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -545,7 +511,7 @@
                     },
                     {
                         "description": "The data required to construct a vote message",
-                        "name": "tx",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -558,14 +524,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/types.StdTx"
+                            "$ref": "#/definitions/rest.postVote"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -574,7 +538,7 @@
         },
         "/gov/proposals/{proposalID}/votes/{voter}": {
             "get": {
-                "description": "Query an individual governance proposal's vote.\nNOTE: In order to query votes for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history.",
+                "description": "Query an individual governance proposal's vote.\nNOTE: In order to query votes for passed proposals, the transaction\nrecord must be available otherwise the query will fail. This requires a\nnode that is not pruning transaction history",
                 "produces": [
                     "application/json"
                 ],
@@ -608,28 +572,24 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.queryVote"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or voter address",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the proposal is not found",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -665,21 +625,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/types.TxResponse"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the transaction cannot be decoded.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -688,6 +645,27 @@
         }
     },
     "definitions": {
+        "auth.StdFee": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "gas": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.StdSignature": {
+            "type": "object",
+            "properties": {
+                "signature": {
+                    "type": "string",
+                    "format": "base64",
+                    "example": "U3dhZ2dlciByb2Nrcw=="
+                }
+            }
+        },
         "rest.BaseReq": {
             "type": "object",
             "properties": {
@@ -820,6 +798,178 @@
                 }
             }
         },
+        "rest.postDeposit": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgDeposit"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.postProposal": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgSubmitProposal"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.postVote": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgVote"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.queryDeposit": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Deposit"
+                }
+            }
+        },
+        "rest.queryDeposits": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Deposit"
+                    }
+                }
+            }
+        },
+        "rest.queryProposal": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Proposal"
+                }
+            }
+        },
+        "rest.queryProposals": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Proposal"
+                    }
+                }
+            }
+        },
+        "rest.queryProposer": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/utils.Proposer"
+                }
+            }
+        },
+        "rest.queryTally": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.TallyResult"
+                }
+            }
+        },
+        "rest.queryVote": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Vote"
+                }
+            }
+        },
+        "rest.queryVotesOnProposal": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Votes"
+                }
+            }
+        },
         "types.ABCIMessageLog": {
             "type": "object",
             "properties": {
@@ -868,6 +1018,115 @@
                     "type": "string"
                 },
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Content": {
+            "type": "object"
+        },
+        "types.Deposit": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Deposit amount",
+                    "type": "string"
+                },
+                "depositor": {
+                    "description": "Address of the depositor",
+                    "type": "string"
+                },
+                "proposal_id": {
+                    "description": "proposalID of the proposal",
+                    "type": "integer"
+                }
+            }
+        },
+        "types.MsgDeposit": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Coins to add to the proposal's deposit",
+                    "type": "string"
+                },
+                "depositor": {
+                    "description": "Address of the depositor",
+                    "type": "string"
+                },
+                "proposal_id": {
+                    "description": "ID of the proposal",
+                    "type": "integer"
+                }
+            }
+        },
+        "types.MsgSubmitProposal": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Content"
+                },
+                "initial_deposit": {
+                    "description": "Initial deposit paid by sender. Must be strictly positive",
+                    "type": "string"
+                },
+                "proposer": {
+                    "description": "Address of the proposer",
+                    "type": "string"
+                }
+            }
+        },
+        "types.MsgVote": {
+            "type": "object",
+            "properties": {
+                "option": {
+                    "description": "option from OptionSet chosen by the voter",
+                    "type": "integer"
+                },
+                "proposal_id": {
+                    "description": "ID of the proposal",
+                    "type": "integer"
+                },
+                "voter": {
+                    "description": "address of the voter",
+                    "type": "string"
+                }
+            }
+        },
+        "types.Proposal": {
+            "type": "object",
+            "properties": {
+                "deposit_end_time": {
+                    "description": "Time that the Proposal would expire if deposit amount isn't met",
+                    "type": "string"
+                },
+                "final_tally_result": {
+                    "description": "Result of Tallys",
+                    "type": "object",
+                    "$ref": "#/definitions/types.TallyResult"
+                },
+                "id": {
+                    "description": "ID of the proposal",
+                    "type": "integer"
+                },
+                "proposal_status": {
+                    "description": "Status of the Proposal {Pending, Active, Passed, Rejected}",
+                    "type": "integer"
+                },
+                "submit_time": {
+                    "description": "Time of the block where TxGovSubmitProposal was included",
+                    "type": "string"
+                },
+                "total_deposit": {
+                    "description": "Current deposit on this proposal. Initial value is set at InitialDeposit",
+                    "type": "string"
+                },
+                "voting_end_time": {
+                    "description": "Time that the VotingPeriod for this proposal will end and votes will be tallied",
+                    "type": "string"
+                },
+                "voting_start_time": {
+                    "description": "Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached",
                     "type": "string"
                 }
             }
@@ -945,6 +1204,23 @@
                 }
             }
         },
+        "types.TallyResult": {
+            "type": "object",
+            "properties": {
+                "abstain": {
+                    "type": "string"
+                },
+                "no": {
+                    "type": "string"
+                },
+                "no_with_veto": {
+                    "type": "string"
+                },
+                "yes": {
+                    "type": "string"
+                }
+            }
+        },
         "types.Tx": {
             "type": "object"
         },
@@ -992,6 +1268,54 @@
                     "$ref": "#/definitions/types.Tx"
                 },
                 "txhash": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.Vote": {
+            "type": "object",
+            "properties": {
+                "option": {
+                    "description": "option from OptionSet chosen by the voter",
+                    "type": "integer"
+                },
+                "proposal_id": {
+                    "description": "proposalID of the proposal",
+                    "type": "integer"
+                },
+                "voter": {
+                    "description": "address of the voter",
+                    "type": "string"
+                }
+            }
+        },
+        "types.Votes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "option": {
+                        "description": "option from OptionSet chosen by the voter",
+                        "type": "integer"
+                    },
+                    "proposal_id": {
+                        "description": "proposalID of the proposal",
+                        "type": "integer"
+                    },
+                    "voter": {
+                        "description": "address of the voter",
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "utils.Proposer": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {
+                    "type": "integer"
+                },
+                "proposer": {
                     "type": "string"
                 }
             }

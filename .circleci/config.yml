@@ -162,18 +162,18 @@ jobs:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
-  update-swagger-docs:
+  verify-swagger-docs:
     executor: golang
     steps:
       - make:
-          target: update-swagger-docs
-          description: "Check if Swagger docs are up-to-date"
+          target: verify-swagger-docs
+          description: "Verify Swagger docs are up-to-date"
 
 workflows:
   version: 2
   test-suite:
     jobs:
-      - update-swagger-docs:
+      - verify-swagger-docs:
           requires:
             - setup-dependencies
       - setup-dependencies:

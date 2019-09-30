@@ -6,15 +6,21 @@
 
 ## Context
 
-The application logic currently uses raw `KVStore` interface and `Codec` to access the state. While this gives large degree of freedom to the module writers, it is hard to write/read and modularize.
+SDK modules currently use the `KVStore` interface and `Codec` to access their respective state. While
+this provides a large degree of freedom to module developers, it is hard to modularize and the UX is
+mediocre.
 
-First, each time when a logic tries to access on the state, it have to marshal the value and set, or get the value and unmarshal. Usually this is done by declaring `Keeper.GetXXX` and `Keeper.SetXXX` functions, which are boilerplate codes hard to maintain.
+First, each time a module tries to access the state, it has to marshal the value and set or get the
+value and finally unmarshal. Usually this is done by declaring `Keeper.GetXXX` and `Keeper.SetXXX` functions,
+which are repetitive and hard to maintain.
 
-Second, this makes harder to align with object capability theorem: the right to access on the state is defined as a `StoreKey`, which gives the full access on the entire Merkle tree, 
-so a logic cannot send the access right to a specific key-value pair(or a set of key-value pairs) to another logic safely.
+Second, this makes it harder to align with the object capability theorem: the right to access the
+state is defined as a `StoreKey`, which gives full access on the entire Merkle tree, so a module cannot
+send the access right to a specific key-value pair (or a set of key-value pairs) to another module safely.
 
-Finally, because the getter/setter functions are defined as a method of `Keeper`, the reviewers have to consider the whole Merkle tree space when they reviewing a function accessing any part of the state. 
-There is no static way to know which part of the state that the function is accessing(and which is not).
+Finally, because the getter/setter functions are defined as methods of a module's `Keeper`, the reviewers
+have to consider the whole Merkle tree space when they reviewing a function accessing any part of the state.
+There is no static way to know which part of the state that the function is accessing (and which is not).
 
 ## Decision
 

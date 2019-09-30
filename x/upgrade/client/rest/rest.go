@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -12,8 +11,8 @@ import (
 )
 
 // RegisterRoutes registers REST routes for the upgrade module under the path specified by routeName.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, routeName string, storeName string) {
-	r.HandleFunc(fmt.Sprintf("/%s", routeName), getUpgradePlanHandler(cdc, cliCtx, storeName)).Methods("GET")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
+	r.HandleFunc("/"+upgrade.ModuleName, getUpgradePlanHandler(cdc, cliCtx, storeName)).Methods("GET")
 }
 
 func getUpgradePlanHandler(cdc *codec.Codec, cliCtx context.CLIContext, storeName string) func(http.ResponseWriter, *http.Request) {

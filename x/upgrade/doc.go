@@ -68,18 +68,13 @@ To perform the actual halt of the blockchain, the upgrade keeper simply panic's 
 from proceeding but doesn't actually exit the process. Exiting the process can cause issues for other nodes that start
 to lose connectivity with the exiting nodes, thus this module prefers to just halt but not exit.
 
-Will Upgrade and On Upgrade Callbacks
+Automation and Plan.Info
 
-The upgrade keeper has two methods for setting callbacks - SetWillUpgrader and SetOnUpgrader. Custom callbacks can be
-configured or the default ones will be used. DefaultWillUpgrader and DefaultOnUpgrader will call scripts
-called prepare-upgrade and do-upgrade respectively in the config directory of the running daemon if such files exist with
-the JSON-serialized upgrade plan as the first argument and the current block height as the second argument. The will upgrade
-callback will be called in the BeginBlocker of the first block after an upgrade is scheduled. The on upgrade callback
-will be called in the BeginBlocker at the block where an upgrade is needed right before the state machine is halted.
-The will upgrade callback can be used to notify some external process that an upgrade is needed so that it can
-prepare binaries, etc. The on upgrade callback can notify some external process to actually begin the upgrade process.
-
-BUG(aaronc): will upgrade callbacks are temporarily disabled
-
+We have deprecated calling out to scripts, instead with propose https://github.com/regen-network/cosmosd
+as a model for a watcher daemon that can launch gaiad as a subprocess and then read the upgrade log message
+to swap binaries as needed. You can pass in information into Plan.Info according to the format
+specified here https://github.com/regen-network/cosmosd/blob/master/README.md#auto-download .
+This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
+As noted there, this is intended more for full nodes than validators.
 */
 package upgrade

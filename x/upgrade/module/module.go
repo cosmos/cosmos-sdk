@@ -58,8 +58,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
-	// TODO: is ModuleName the proper route???
-	rest.RegisterRoutes(ctx, r, moduleCdc, upgrade.ModuleName, upgrade.StoreKey)
+	rest.RegisterRoutes(ctx, r, moduleCdc, upgrade.StoreKey)
 }
 
 // GetQueryCmd returns the cli query commands for this module
@@ -83,13 +82,10 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "upgrade",
 		Short: "Upgrade transaction subcommands",
 	}
-
 	txCmd.AddCommand(client.PostCommands()...)
-
 	return txCmd
 }
 
-//___________________________
 // app module
 type AppModule struct {
 	AppModuleBasic

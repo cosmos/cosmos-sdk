@@ -28,6 +28,59 @@ const (
 	FlagUpgradeInfo   = "upgrade-info"
 )
 
+func parseSubmitArgs(cmd *cobra.Command, cdc *codec.Codec) (gov.Content, error) {
+	title, err := cmd.Flags().GetString(cli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(cli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := cmd.Flags().GetString(FlagUpgradeName)
+	if err != nil {
+		return nil, err
+	}
+	if len(name) == 0 {
+		name = title
+	}
+
+	height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	timeStr, err := cmd.Flags().GetString(FlagUpgradeTime)
+	if err != nil {
+		return nil, err
+	}
+
+	if height != 0 {
+		if len(timeStr) != 0 {
+			return nil, fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
+		}
+	}
+
+	var upgradeTime time.Time
+	if len(timeStr) != 0 {
+		upgradeTime, err = time.Parse(TimeFormat, timeStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	content := upgrade.NewSoftwareUpgradeProposal(title, description,
+		upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info})
+	return content, nil
+}
+
 // GetCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -38,6 +91,11 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
 			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			content, err := parseSubmitArgs(cmd, cdc)
+			if err != nil {
+				return err
+			}
+
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			from := cliCtx.GetFromAddress()
@@ -46,61 +104,10 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			deposit, err := sdk.ParseCoins(depositStr)
 			if err != nil {
 				return err
 			}
-
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
-
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
-			if err != nil {
-				return err
-			}
-
-			name, err := cmd.Flags().GetString(FlagUpgradeName)
-			if err != nil {
-				return err
-			}
-			if len(name) == 0 {
-				name = title
-			}
-
-			height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
-			if err != nil {
-				return err
-			}
-
-			timeStr, err := cmd.Flags().GetString(FlagUpgradeTime)
-			if err != nil {
-				return err
-			}
-
-			if height != 0 {
-				if len(timeStr) != 0 {
-					return fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
-				}
-			}
-
-			var upgradeTime time.Time
-			if len(timeStr) != 0 {
-				upgradeTime, err = time.Parse(TimeFormat, timeStr)
-				if err != nil {
-					return err
-				}
-			}
-
-			info, err := cmd.Flags().GetString(FlagUpgradeInfo)
-			if err != nil {
-				return err
-			}
-
-			content := upgrade.NewSoftwareUpgradeProposal(title, description,
-				upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info})
 
 			msg := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {

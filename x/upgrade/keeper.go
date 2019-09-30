@@ -95,7 +95,6 @@ func (keeper *keeper) ClearUpgradePlan(ctx sdk.Context) {
 func (plan Plan) ValidateBasic() sdk.Error {
 	if len(plan.Name) == 0 {
 		return sdk.ErrUnknownRequest("Name cannot be empty")
-
 	}
 	return nil
 }

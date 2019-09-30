@@ -3,8 +3,9 @@ package upgrade
 import (
 	"fmt"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // Plan specifies information about a planned upgrade and when it should occur
 type Plan struct {

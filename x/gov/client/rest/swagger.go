@@ -10,7 +10,7 @@ import (
 // are not actually used but since all queries return a generic JSON raw message,
 // they enabled typed documentation.
 //
-// nolint:deadcode,unused
+//nolint:deadcode,unused
 type (
 	queryDeposits struct {
 		Height int64           `json:"height"`

@@ -18,7 +18,6 @@ linters:
     - godox
     - funlen
     - whitespace
-    - dogsled
 
 issues:
   exclude-rules:
@@ -34,3 +33,7 @@ issues:
     - text: "ST1003:"
       linters:
         - stylecheck
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3

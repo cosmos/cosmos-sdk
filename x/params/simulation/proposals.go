@@ -12,7 +12,7 @@ import (
 // OpWeightSubmitParamChangeProposal app params key for param change proposal
 const OpWeightSubmitParamChangeProposal = "op_weight_submit_param_change_proposal"
 
-// ProposalContents
+// ProposalContents defines the module weighted proposals' contents
 func ProposalContents(paramChanges []simulation.ParamChange) []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
@@ -35,7 +35,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		}
 
 		numChanges := simulation.RandIntBetween(r, 1, lenParamChange)
-		paramChanges := make([]types.ParamChange, numChanges, numChanges)
+		paramChanges := make([]types.ParamChange, numChanges)
 
 		// map from key to empty struct; used only for look-up of the keys of the
 		// parameters that are already in the random set of changes.

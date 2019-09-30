@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -25,16 +24,16 @@ func (acc Account) Equals(acc2 Account) bool {
 }
 
 // RandomAcc picks and returns a random account from an array and returs its
-// position on the array
+// position in the array.
 func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	idx := r.Intn(len(accs))
 	return accs[idx], idx
 }
 
-// RandomAccounts generates a given number of random accounts
-func RandomAccounts(r *rand.Rand, nAccounts int) []Account {
-	accs := make([]Account, nAccounts)
-	for i := 0; i < nAccounts; i++ {
+// RandomAccounts generates n random accounts
+func RandomAccounts(r *rand.Rand, n int) []Account {
+	accs := make([]Account, n)
+	for i := 0; i < n; i++ {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
@@ -82,9 +81,5 @@ func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	// Create a random fee and verify the fees are within the account's spendable
 	// balance.
 	fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
-	if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
-		return nil, errors.New("not enough funds for fees")
-	}
-
 	return fees, nil
 }

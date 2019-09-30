@@ -100,3 +100,23 @@ func (p Params) String() string {
 	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))
 	return sb.String()
 }
+
+// Validate checks that the parameters have valid values.
+func (p Params) Validate() error {
+	if p.TxSigLimit == 0 {
+		return fmt.Errorf("invalid tx signature limit: %d", p.TxSigLimit)
+	}
+	if p.SigVerifyCostED25519 == 0 {
+		return fmt.Errorf("invalid ED25519 signature verification cost: %d", p.SigVerifyCostED25519)
+	}
+	if p.SigVerifyCostSecp256k1 == 0 {
+		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", p.SigVerifyCostSecp256k1)
+	}
+	if p.MaxMemoCharacters == 0 {
+		return fmt.Errorf("invalid max memo characters: %d", p.MaxMemoCharacters)
+	}
+	if p.TxSizeCostPerByte == 0 {
+		return fmt.Errorf("invalid tx size cost per byte: %d", p.TxSizeCostPerByte)
+	}
+	return nil
+}

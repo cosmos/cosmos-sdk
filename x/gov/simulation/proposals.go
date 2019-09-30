@@ -11,7 +11,7 @@ import (
 // OpWeightSubmitTextProposal app params key for text proposal
 const OpWeightSubmitTextProposal = "op_weight_submit_text_proposal"
 
-// ProposalContents
+// ProposalContents defines the module weighted proposals' contents
 func ProposalContents() []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{

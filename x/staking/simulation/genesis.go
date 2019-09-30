@@ -63,9 +63,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
+		maxCommission := sdk.NewDecWithPrec(int64(simulation.RandIntBetween(simState.Rand, 1, 100)), 2)
+		commission := types.NewCommission(
+			simulation.RandomDecAmount(simState.Rand, maxCommission),
+			maxCommission,
+			simulation.RandomDecAmount(simState.Rand, maxCommission),
+		)
+
 		validator := types.NewValidator(valAddr, simState.Accounts[i].PubKey, types.Description{})
 		validator.Tokens = sdk.NewInt(simState.InitialStake)
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
+		validator.Commission = commission
+
 		delegation := types.NewDelegation(simState.Accounts[i].Address, valAddr, sdk.NewDec(simState.InitialStake))
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)

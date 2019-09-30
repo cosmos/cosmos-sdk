@@ -38,12 +38,12 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 }
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
-// TODO: this message is almost, if not always, skipped !
-func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-		// TODO: create iterator to get all jailed validators and then select a random
-		// from the set
+// nolint: funlen
+func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
+	sk stakingkeeper.Keeper) simulation.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string) (simulation.OperationMsg,
+		[]simulation.FutureOperation, error) {
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
@@ -55,7 +55,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		}
 
 		if !validator.IsJailed() {
-			// skip as validator is not jailed
+			// TODO: due to this condition this message is almost, if not always, skipped !
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 

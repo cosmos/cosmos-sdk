@@ -28,8 +28,6 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
-"Genesis Breaking" for breaking changes that require changes on the genesis 
-file through a migration script.
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 
 Ref: https://keepachangelog.com/en/1.0.0/
@@ -39,6 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+* (genesis) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
+deprecated and all components removed except the `legacy/` package. This requires changes to the
+genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
+logic has been implemented for v0.38 target version. Applications can migrate via:
+`$ {appd} migrate v0.38 genesis.json`.
+
 ### API Breaking Changes
 
 * (store) [\#4748](https://github.com/cosmos/cosmos-sdk/pull/4748) The `CommitMultiStore` interface
@@ -47,11 +53,8 @@ have this method perform a no-op.
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
-
-### Genesis Changes
-
-* (sdk) [\#4946](https://github.com/cosmos/cosmos-sdk/pull/4946) Add `PubKey` field
-to `GenesisAccount`
+* (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
+deprecated and all components removed except the `legacy/` package.
 
 ### Client Breaking Changes
 
@@ -59,17 +62,29 @@ to `GenesisAccount`
 
 ### Features
 
-* (cli) [\#4973](https://github.com/cosmos/cosmos-sdk/pull/4973) Enable application CPU profiling
-via the `--cpu-profile` flag.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.
-* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
-CLI option to the `start` command. When provided, an application will halt during `Commit` when the
-block time is >= the `halt-time`.
+* [\#4972](https://github.com/cosmos/cosmos-sdk/issues/4972) A `TxResponse` with a corresponding code
+and tx hash will be returned for specific Tendermint errors:
+  * `CodeTxInMempoolCache`
+  * `CodeMempoolIsFull`
+  * `CodeTxTooLarge`
+* [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode transactions.
+* (keys) [\#4754](https://github.com/cosmos/cosmos-sdk/pull/4754) Introduce new Keybase implementation that can
+leverage operating systems' built-in functionalities to securely store secrets. MacOS users may encounter
+the following [issue](https://github.com/keybase/go-keychain/issues/47) with the `go-keychain` library. If
+you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
+upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
+correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
+* (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
+to the new keyring.
+
 
 ### Improvements
 
+* (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
+generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
 * (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec.
 * (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description.
@@ -96,11 +111,32 @@ block time is >= the `halt-time`.
 caching through `CommitKVStoreCacheManager`. Any application wishing to utilize an inter-block cache
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
+* (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
 
 ### Bug Fixes
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36 not converting validator consensus pubkey to bech32 format
+
+## [v0.37.1] - 2019-09-19
+
+### Features
+
+* (cli) [\#4973](https://github.com/cosmos/cosmos-sdk/pull/4973) Enable application CPU profiling
+via the `--cpu-profile` flag.
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
+CLI option to the `start` command. When provided, an application will halt during `Commit` when the
+block time is >= the `halt-time`.
+
+### Improvements
+
+* [\#4990](https://github.com/cosmos/cosmos-sdk/issues/4990) Add `Events` to the `ABCIMessageLog` to
+provide context and grouping of events based on the messages they correspond to. The `Events` field
+in `TxResponse` is deprecated and will be removed in the next major release.
+
+### Bug Fixes
+
 * [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
 `os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
 
@@ -2604,6 +2640,7 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.1...HEAD
+[v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

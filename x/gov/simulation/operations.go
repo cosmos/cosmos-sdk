@@ -17,9 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-const defaultMinProposalID = 100000000000000
-
-var minProposalID = defaultMinProposalID
+var initialProposalID = uint64(100000000000000)
 
 // Simulation operation weights constants
 const (
@@ -54,7 +52,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 			wProposalOps,
 			simulation.NewWeigthedOperation(
 				weight,
-				SimulateSubmittingVotingAndSlashingForProposal(ak, k, wContent.ContentSimulatorFn),
+				SimulateSubmitProposal(ak, k, wContent.ContentSimulatorFn),
 			),
 		)
 	}
@@ -73,12 +71,12 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	return append(wProposalOps, wGovOps...)
 }
 
-// SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
+// SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-// TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
-// TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn) simulation.Operation {
+// nolint: funlen
+func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
+	contentSim simulation.ContentSimulatorFn) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -102,13 +100,11 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
-	) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
 		if content == nil {
-			// skip
-			return simulation.NoOpMsg(types.ModuleName), nil, err
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		simAccount, _ := simulation.RandomAcc(r, accs)
@@ -148,7 +144,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 
-		opMsg = simulation.NewOperationMsg(msg, true, "")
+		opMsg := simulation.NewOperationMsg(msg, true, "")
 
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
@@ -177,19 +173,15 @@ func SimulateSubmittingVotingAndSlashingForProposal(ak types.AccountKeeper, k ke
 			}
 		}
 
-		// 3) Make an operation to ensure slashes were done correctly. (Really should be a future invariant)
-		// TODO: Find a way to check if a validator was slashed other than just checking their balance a block
-		// before and after.
-
 		return opMsg, fops, nil
 	}
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
+// nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
@@ -237,14 +229,15 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
+// nolint: funlen
 func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(ak, k, simulation.Account{}, -1)
 }
 
-func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
+func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
+	simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if simAccount.Equals(simulation.Account{}) {
 			simAccount, _ = simulation.RandomAcc(r, accs)
 		}
@@ -290,10 +283,11 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper, simAccoun
 	}
 }
 
-// Pick a random deposit
-func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
+// Pick a random deposit with a random denomination with a
+// deposit amount between (0, min(balance, minDepositAmount))
+func randomDeposit(r *rand.Rand, ctx sdk.Context,
+	ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {
-
 	account := ak.GetAccount(ctx, addr)
 	coins := account.SpendableCoins(ctx.BlockHeader().Time)
 	if coins.Empty() {
@@ -310,8 +304,8 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 	}
 
 	maxAmt := depositCoins
-	if maxAmt.GT(minDeposit[0].Amount) {
-		maxAmt = minDeposit[0].Amount
+	if maxAmt.GT(minDeposit[denomIndex].Amount) {
+		maxAmt = minDeposit[denomIndex].Amount
 	}
 
 	amount, err := simulation.RandPositiveInt(r, maxAmt)
@@ -322,16 +316,23 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context, ak types.AccountKeeper, k keep
 	return sdk.Coins{sdk.NewCoin(denom, amount)}, false, nil
 }
 
-// Pick a random proposal ID from a proposal with a given status.
-// It does not provide a default proposal ID.
-func randomProposalID(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
+// Pick a random proposal ID between the initial proposal ID
+// (defined in gov GenesisState) and the latest proposal ID
+// that matches a given Status.
+// It does not provide a default ID.
+func randomProposalID(r *rand.Rand, k keeper.Keeper,
+	ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
-	if minProposalID == defaultMinProposalID {
-		minProposalID = int(math.Min(float64(minProposalID), float64(proposalID)))
-	}
 
-	if minProposalID < int(proposalID) {
-		proposalID = uint64(simulation.RandIntBetween(r, minProposalID, int(proposalID)))
+	switch {
+	case proposalID > initialProposalID:
+		// select a random ID between [initialProposalID, proposalID]
+		proposalID = uint64(simulation.RandIntBetween(r, int(initialProposalID), int(proposalID)))
+
+	default:
+		// This is called on the first call to this funcion
+		// in order to update the global variable
+		initialProposalID = proposalID
 	}
 
 	proposal, ok := k.GetProposal(ctx, proposalID)

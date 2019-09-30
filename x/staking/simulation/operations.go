@@ -76,10 +76,10 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 }
 
 // SimulateMsgCreateValidator generates a MsgCreateValidator with random values
+// nolint: funlen
 func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
@@ -95,7 +95,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err = simulation.RandPositiveInt(r, amount)
+		amount, err := simulation.RandPositiveInt(r, amount)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -122,7 +122,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 			simulation.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
+		maxCommission := sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 0, 100)), 2)
 		commission := types.NewCommissionRates(
 			simulation.RandomDecAmount(r, maxCommission),
 			maxCommission,
@@ -151,10 +151,10 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 }
 
 // SimulateMsgEditValidator generates a MsgEditValidator with random values
+// nolint: funlen
 func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -167,8 +167,8 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 		address := val.GetOperator()
 
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
-		err = val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time)
-		if err != nil {
+
+		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
 			// skip as the commission is invalid
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -213,10 +213,10 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 }
 
 // SimulateMsgDelegate generates a MsgDelegate with random values
+// nolint: funlen
 func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -237,7 +237,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
-		amount, err = simulation.RandPositiveInt(r, amount)
+		amount, err := simulation.RandPositiveInt(r, amount)
 		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
@@ -277,10 +277,10 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 }
 
 // SimulateMsgUndelegate generates a MsgUndelegate with random values
+// nolint: funlen
 func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 
@@ -351,10 +351,10 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 }
 
 // SimulateMsgBeginRedelegate generates a MsgBeginRedelegate with random values
+// nolint: funlen
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (opMsg simulation.OperationMsg, fOps []simulation.FutureOperation, err error) {
-
+		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 

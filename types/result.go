@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -50,12 +52,25 @@ type ABCIMessageLog struct {
 	MsgIndex uint16 `json:"msg_index"`
 	Success  bool   `json:"success"`
 	Log      string `json:"log"`
+
+	// Events contains a slice of Event objects that were emitted during some
+	// execution.
+	Events StringEvents `json:"events"`
+}
+
+func NewABCIMessageLog(i uint16, success bool, log string, events Events) ABCIMessageLog {
+	return ABCIMessageLog{
+		MsgIndex: i,
+		Success:  success,
+		Log:      log,
+		Events:   StringifyEvents(events.ToABCIEvents()),
+	}
 }
 
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := json.Marshal(logs)
+		raw, err := codec.Cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
 		}
@@ -76,10 +91,13 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Events    StringEvents    `json:"events,omitempty"`
 	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
+
+	// DEPRECATED: Remove in the next next major release in favor of using the
+	// ABCIMessageLog.Events field.
+	Events StringEvents `json:"events,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint

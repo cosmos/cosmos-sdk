@@ -13,7 +13,7 @@ import (
 // OpWeightSubmitCommunitySpendProposal app params key for community spend proposal
 const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_proposal"
 
-// ProposalContents
+// ProposalContents defines the module weighted proposals' contents
 func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
@@ -25,6 +25,7 @@ func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
+// nolint: funlen
 func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simulation.ContentSimulatorFn {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		simAccount, _ := simulation.RandomAcc(r, accs)

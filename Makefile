@@ -71,10 +71,11 @@ godocs:
 build-docs:
 	@cd docs && \
 	while read p; do \
-		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
-		mkdir -p ~/output/$${p} ; \
-		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		echo "<a href='$${p}'>$${p}</a>" >> ~/output/index.html ; \
+		(git checkout $${p} && npm install && VUEPRESS_BASE="/docs/$${p}/" npm run build) ; \
+		mkdir -p ~/output/docs/$${p} ; \
+		cp -r .vuepress/dist/* ~/output/docs/$${p}/ ; \
+		echo "<a href='docs/$${p}'>$${p}</a>" >> ~/output/index.html ; \
+		echo "<a href='$${p}'>$${p}</a>" >> ~/output/docs/index.html ; \
 	done < versions ;
 
 sync-docs:

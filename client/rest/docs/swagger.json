@@ -1,14 +1,9 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "{{.Description}}",
-        "title": "{{.Title}}",
         "contact": {},
-        "license": {},
-        "version": "{{.Version}}"
+        "license": {}
     },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
     "paths": {
         "/gov/parameters/{type}": {
             "get": {
@@ -39,21 +34,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ResponseWithHeight"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the type of parameter doesn't exist",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -100,21 +92,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryProposals"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid parameters",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -148,14 +137,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.postProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -191,21 +178,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -241,21 +225,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryDeposits"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -296,14 +277,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.postDeposit"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -346,28 +325,24 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryDeposit"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposalID or depositor",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the proposal is not found",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -403,21 +378,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryProposer"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -453,21 +425,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryTally"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -503,21 +472,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryVotesOnProposal"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or height",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -558,14 +524,12 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.postVote"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -608,28 +572,24 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.queryVote"
                         }
                     },
                     "400": {
                         "description": "Returned if the request doesn't have a valid proposal ID or voter address",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Returned if the proposal is not found",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the store query fails",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }
@@ -665,21 +625,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/types.TxResponse"
                         }
                     },
                     "400": {
                         "description": "Returned if the request is invalid.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Returned if the transaction cannot be decoded.",
                         "schema": {
-                            "type": "object",
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
                     }

@@ -142,11 +142,7 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc)
-				// removed due to #4588 (verifyt his didn't break anything)
-				// WithAccountDecoder(cdc)
-
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)

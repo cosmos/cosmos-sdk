@@ -31,7 +31,6 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	)...)
 
 	return queryCmd
-
 }
 
 // GetTxCmd returns the transaction commands for this module
@@ -40,7 +39,6 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 		Use:   "upgrade",
 		Short: "Upgrade transaction subcommands",
 	}
-
 	txCmd.AddCommand(client.PostCommands()...)
 
 	return txCmd

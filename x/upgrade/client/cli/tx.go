@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"strings"
-	time2 "time"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
@@ -19,7 +19,13 @@ import (
 )
 
 const (
+	// TimeFormat specifies ISO UTC format for submitting the upgrade-time for a new upgrade proposal
 	TimeFormat = "2006-01-02T15:04:05Z"
+
+	FlagUpgradeName   = "upgrade-name"
+	FlagUpgradeHeight = "upgrade-height"
+	FlagUpgradeTime   = "upgrade-time"
+	FlagUpgradeInfo   = "upgrade-info"
 )
 
 // GetCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
@@ -28,21 +34,15 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 		Use:   "software-upgrade --upgrade-name [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a software upgrade along with an initial deposit.
-`,
-			),
-		),
+		Long: "Submit a software upgrade along with an initial deposit.\n" +
+			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
+			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc)
-				// removed due to #4588 (verifyt his didn't break anything)
-				// WithAccountDecoder(cdc)
-
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			from := cliCtx.GetFromAddress()
 
-			depositStr, err := cmd.Flags().GetString("deposit")
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
 			if err != nil {
 				return err
 			}
@@ -52,17 +52,17 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString("title")
+			title, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString("description")
+			description, err := cmd.Flags().GetString(cli.FlagDescription)
 			if err != nil {
 				return err
 			}
 
-			name, err := cmd.Flags().GetString("upgrade-name")
+			name, err := cmd.Flags().GetString(FlagUpgradeName)
 			if err != nil {
 				return err
 			}
@@ -70,12 +70,12 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				name = title
 			}
 
-			height, err := cmd.Flags().GetInt64("upgrade-height")
+			height, err := cmd.Flags().GetInt64(FlagUpgradeHeight)
 			if err != nil {
 				return err
 			}
 
-			timeStr, err := cmd.Flags().GetString("upgrade-time")
+			timeStr, err := cmd.Flags().GetString(FlagUpgradeTime)
 			if err != nil {
 				return err
 			}
@@ -86,21 +86,21 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			var time time2.Time
+			var upgradeTime time.Time
 			if len(timeStr) != 0 {
-				time, err = time2.Parse(TimeFormat, timeStr)
+				upgradeTime, err = time.Parse(TimeFormat, timeStr)
 				if err != nil {
 					return err
 				}
 			}
 
-			info, err := cmd.Flags().GetString("upgrade-info")
+			info, err := cmd.Flags().GetString(FlagUpgradeInfo)
 			if err != nil {
 				return err
 			}
 
 			content := upgrade.NewSoftwareUpgradeProposal(title, description,
-				upgrade.Plan{Name: name, Time: time, Height: height, Info: info})
+				upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info})
 
 			msg := gov.NewMsgSubmitProposal(content, deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
@@ -114,10 +114,10 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().String("upgrade-name", "", "The name of the upgrade (if not specified title will be used)")
-	cmd.Flags().Int64("upgrade-height", 0, "The height at which the upgrade must happen (not to be used together with --upgrade-time)")
-	cmd.Flags().String("upgrade-time", "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
-	cmd.Flags().String("upgrade-info", "", "Optional info for the planned upgrade such as commit hash, etc.")
+	cmd.Flags().String(FlagUpgradeName, "", "The name of the upgrade (if not specified title will be used)")
+	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen (not to be used together with --upgrade-time)")
+	cmd.Flags().String(FlagUpgradeTime, "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
+	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
 
 	return cmd
 }
@@ -142,7 +142,7 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 
 			from := cliCtx.GetFromAddress()
 
-			depositStr, err := cmd.Flags().GetString("deposit")
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
 			if err != nil {
 				return err
 			}
@@ -152,12 +152,12 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString("title")
+			title, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString("description")
+			description, err := cmd.Flags().GetString(cli.FlagDescription)
 			if err != nil {
 				return err
 			}

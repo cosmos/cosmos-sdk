@@ -14,6 +14,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "plan",
 		Short: "get upgrade plan (if one exists)",
+		Long:  "This gets the currently scheduled upgrade plan",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -42,8 +43,10 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "applied-height [upgrade-name]",
-		Short: "get the height at which a completed upgrade was applied",
-		Args:  cobra.ExactArgs(1),
+		Short: "height at which a completed upgrade was applied",
+		Long: "If upgrade-name was previously executed on the chain, this returns the height at which it was applied.\n" +
+			"This helps a client determine which binary was valid over a given range of blocks.",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

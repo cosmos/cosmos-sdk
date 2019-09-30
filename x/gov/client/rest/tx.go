@@ -43,7 +43,7 @@ type postProposal struct {
 // @Accept  json
 // @Produce  json
 // @Param body body rest.PostProposalReq true "The data required to construct a proposal message, the proposal_type can be (text | parameter_change)"
-// @Success 200 {object} rest.postProposal
+// @Success 200 {object} postProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals [post]
 func postProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -89,7 +89,7 @@ type postDeposit struct {
 // @Produce  json
 // @Param proposalID path int true "The ID of the governance proposal to deposit to"
 // @Param body body rest.DepositReq true "The data required to construct a deposit message"
-// @Success 200 {object} rest.postDeposit
+// @Success 200 {object} postDeposit
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals/{proposalID}/deposits [post]
 func depositHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -146,7 +146,7 @@ type postVote struct {
 // @Produce  json
 // @Param proposalID path int true "The ID of the governance proposal to vote for"
 // @Param body body rest.VoteReq true "The data required to construct a vote message"
-// @Success 200 {object} rest.postVote
+// @Success 200 {object} postVote
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Router /gov/proposals/{proposalID}/votes [post]
 func voteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

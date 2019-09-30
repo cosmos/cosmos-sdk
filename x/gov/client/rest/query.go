@@ -75,7 +75,7 @@ type queryProposal struct {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryProposal
+// @Success 200 {object} queryProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID} [get]
@@ -137,7 +137,7 @@ type queryDeposits struct {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryDeposits
+// @Success 200 {object} queryDeposits
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/deposits [get]
@@ -209,7 +209,7 @@ type queryProposer struct {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryProposer
+// @Success 200 {object} queryProposer
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/proposer [get]
@@ -257,7 +257,7 @@ type queryDeposit struct {
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param depositor path string true "The address of the depositor"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryDeposit
+// @Success 200 {object} queryDeposit
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposalID or depositor"
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposal is not found"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
@@ -363,7 +363,7 @@ type queryVote struct {
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param voter path string true "The address of the voter"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryVote
+// @Success 200 {object} queryVote
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or voter address"
 // @Failure 404 {object} rest.ErrorResponse "Returned if the proposal is not found"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
@@ -470,7 +470,7 @@ type queryVotesOnProposal struct {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryVotesOnProposal
+// @Success 200 {object} queryVotesOnProposal
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/votes [get]
@@ -553,7 +553,7 @@ type queryProposals struct {
 // @Param status query string false "Filter proposals by proposal status (deposit_period | voting_period | passed | rejected)"
 // @Param depositor query string false "Filter proposals by depositor address"
 // @Param voter query string false "Filter proposals by voter address"
-// @Success 200 {object} rest.queryProposals
+// @Success 200 {object} queryProposals
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid parameters"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals [get]
@@ -639,7 +639,7 @@ type queryTally struct {
 // @Produce json
 // @Param proposalID path int true "The ID of the governance proposal"
 // @Param height query string false "Block height (defaults to chain tip)"
-// @Success 200 {object} rest.queryTally
+// @Success 200 {object} queryTally
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid proposal ID or height"
 // @Failure 500 {object} rest.ErrorResponse "Returned if the store query fails"
 // @Router /gov/proposals/{proposalID}/tally [get]

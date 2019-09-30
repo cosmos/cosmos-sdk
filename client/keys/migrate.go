@@ -66,17 +66,19 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		passwd, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+		password, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 		if err != nil {
 			return err
 		}
 
-		armoredPriv, err := legacykb.ExportPrivKey(keyName, passwd, "abc")
+		// NOTE: A passphrase is not actually needed here as when the key information
+		// is imported into the Keyring keystore it only needs the password (see: writeLocalKey).
+		armoredPriv, err := legacykb.ExportPrivKey(keyName, password, "NOOP_PASSPHRASE")
 		if err != nil {
 			return err
 		}
 
-		if err := keyring.ImportPrivKey(keyName, armoredPriv, "abc"); err != nil {
+		if err := keyring.ImportPrivKey(keyName, armoredPriv, "NOOP_PASSPHRASE"); err != nil {
 			return err
 		}
 	}

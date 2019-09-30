@@ -310,10 +310,11 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 
 	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
-		return errors.Wrap(err, "failed to import private key")
+		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	kb.writeLocalKey(name, privKey, passphrase)
+	// NOTE: The keyring keystore has no need for a passphrase.
+	kb.writeLocalKey(name, privKey, "")
 	return nil
 }
 
@@ -406,7 +407,7 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 // CloseDB releases the lock and closes the storage backend.
 func (kb keyringKeybase) CloseDB() {}
 
-func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(priv.Bytes()))

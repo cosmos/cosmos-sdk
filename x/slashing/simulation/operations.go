@@ -17,11 +17,12 @@ import (
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 // nolint: funlen
-func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
-	sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (simulation.OperationMsg,
-		[]simulation.FutureOperation, error) {
+func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip

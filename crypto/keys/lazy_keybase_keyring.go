@@ -32,9 +32,8 @@ type lazyKeybaseKeyring struct {
 	userInput io.Reader
 }
 
-// NewKeybaseKeyring creates a new instance of a lazy keybase using a Keyring as
-// the persistence layer.
-func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) Keybase {
+// NewKeyring creates a new instance of a keyring.
+func NewKeyring(name string, dir string, userInput io.Reader) Keybase {
 	_, err := keyring.Open(keyring.Config{
 		ServiceName: name,
 	})
@@ -42,7 +41,21 @@ func NewKeybaseKeyring(name string, dir string, userInput io.Reader, test bool) 
 		panic(err)
 	}
 
-	return lazyKeybaseKeyring{name: name, dir: dir, userInput: userInput, test: test}
+	return lazyKeybaseKeyring{name: name, dir: dir, userInput: userInput, test: false}
+}
+
+// NewTestKeyring creates a new instance of a keyring for
+// testing purposes that does not prompt users for password.
+func NewTestKeyring(name string, dir string) Keybase {
+	if _, err := keyring.Open(keyring.Config{
+		AllowedBackends: []keyring.BackendType{"file"},
+		ServiceName:     name,
+		FileDir:         dir,
+	}); err != nil {
+		panic(err)
+	}
+
+	return lazyKeybaseKeyring{name: name, dir: dir, test: true}
 }
 
 func (lkb lazyKeybaseKeyring) lkbToKeyringConfig() keyring.Config {

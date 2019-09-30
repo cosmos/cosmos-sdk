@@ -145,7 +145,7 @@ Proposed
 ### Negative
 
 - Serialization format will be hidden
-- Different architecture from the current
+- Different architecture from the current, but the use of accessor types can be opt-in
 - Type-specific types (e.g. `Boolean` and `Integer`) have to be defined manually
 
 ### Neutral

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -71,14 +70,13 @@ func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []si
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type SimulationState struct {
-	AppParams        simulation.AppParams
-	Cdc              *codec.Codec                                        // application codec
-	Rand             *rand.Rand                                          // random number
-	GenState         map[string]json.RawMessage                          // genesis state
-	Accounts         []simulation.Account                                // simulation accounts
-	AccountGenerator func(*SimulationState) authexported.GenesisAccounts // simulation account generator function
-	InitialStake     int64                                               // initial coins per account
-	NumBonded        int64                                               // number of initially bonded acconts
-	GenTimestamp     time.Time                                           // genesis timestamp
-	UnbondTime       time.Duration                                       // staking unbond time stored to use it as the slashing maximum evidence duration
+	AppParams    simulation.AppParams
+	Cdc          *codec.Codec               // application codec
+	Rand         *rand.Rand                 // random number
+	GenState     map[string]json.RawMessage // genesis state
+	Accounts     []simulation.Account       // simulation accounts
+	InitialStake int64                      // initial coins per account
+	NumBonded    int64                      // number of initially bonded acconts
+	GenTimestamp time.Time                  // genesis timestamp
+	UnbondTime   time.Duration              // staking unbond time stored to use it as the slashing maximum evidence duration
 }

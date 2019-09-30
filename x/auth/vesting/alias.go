@@ -2,7 +2,7 @@ package vesting
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
@@ -14,7 +14,6 @@ var (
 	NewDelayedVestingAccountRaw    = types.NewDelayedVestingAccountRaw
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
 	RegisterCodec                  = types.RegisterCodec
-	RandomGenesisAccounts          = types.RandomGenesisAccounts
 )
 
 type (

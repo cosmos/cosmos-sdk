@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -20,22 +20,22 @@ var (
 
 // require invalid vesting account fails validation (invalid end time)
 func TestValidateGenesisInvalidAccounts(t *testing.T) {
-	acc1 := auth.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
+	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr1))
 	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 	baseVestingAcc := NewBaseVestingAccount(&acc1, acc1.Coins.Add(acc1.Coins), 1548775410)
 
-	acc2 := auth.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
+	acc2 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(addr2))
 	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
 
 	genAccs := make([]exported.GenesisAccount, 2)
 	genAccs[0] = baseVestingAcc
 	genAccs[1] = &acc2
 
-	require.Error(t, auth.ValidateGenAccounts(genAccs))
+	require.Error(t, authtypes.ValidateGenAccounts(genAccs))
 	baseVestingAcc.OriginalVesting = acc1.Coins
 	genAccs[0] = baseVestingAcc
-	require.NoError(t, auth.ValidateGenAccounts(genAccs))
+	require.NoError(t, authtypes.ValidateGenAccounts(genAccs))
 
 	genAccs[0] = NewContinuousVestingAccountRaw(baseVestingAcc, 1548888000)
-	require.Error(t, auth.ValidateGenAccounts(genAccs))
+	require.Error(t, authtypes.ValidateGenAccounts(genAccs))
 }

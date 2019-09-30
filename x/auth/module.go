@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	sim "github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -36,6 +37,7 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the auth module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	types.RegisterCodec(cdc)
+	vestingtypes.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the auth

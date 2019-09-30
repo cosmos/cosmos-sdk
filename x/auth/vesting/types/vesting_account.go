@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -31,7 +30,7 @@ func init() {
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
-	*auth.BaseAccount
+	*authtypes.BaseAccount
 	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
 	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
 	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
@@ -41,7 +40,7 @@ type BaseVestingAccount struct {
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
-func NewBaseVestingAccount(baseAccount *auth.BaseAccount, originalVesting sdk.Coins,
+func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins,
 	endTime int64) *BaseVestingAccount {
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
@@ -263,7 +262,7 @@ func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *C
 }
 
 // NewContinuousVestingAccount returns a new ContinuousVestingAccount
-func NewContinuousVestingAccount(baseAcc *auth.BaseAccount, startTime, endTime int64) *ContinuousVestingAccount {
+func NewContinuousVestingAccount(baseAcc *authtypes.BaseAccount, startTime, endTime int64) *ContinuousVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
@@ -368,7 +367,7 @@ func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, peri
 }
 
 // NewPeriodicVestingAccount returns a new PeriodicVestingAccount
-func NewPeriodicVestingAccount(baseAcc *auth.BaseAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
+func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
 	endTime := startTime
 	for _, p := range periods {
 		endTime += p.Length
@@ -497,7 +496,7 @@ func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount
 }
 
 // NewDelayedVestingAccount returns a DelayedVestingAccount
-func NewDelayedVestingAccount(baseAcc *auth.BaseAccount, endTime int64) *DelayedVestingAccount {
+func NewDelayedVestingAccount(baseAcc *authtypes.BaseAccount, endTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,

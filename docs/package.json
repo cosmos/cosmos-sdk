@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.2"
+    "vuepress-theme-cosmos": "^1.0.3"
   }
 }

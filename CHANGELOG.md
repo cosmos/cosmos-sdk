@@ -113,6 +113,7 @@ to detail this new feature and how state transitions occur.
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36 not converting validator consensus pubkey to bech32 format
 
 ## [v0.37.1] - 2019-09-19
 

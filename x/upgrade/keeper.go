@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,8 +10,10 @@ import (
 )
 
 const (
+	// ModuleName is the name of this module
 	ModuleName = "upgrade"
-	StoreKey   = ModuleName
+	// StoreKey is the prefix under which we store this module's data
+	StoreKey = ModuleName
 )
 
 // Keeper of the upgrade module
@@ -122,6 +125,14 @@ func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 	return plan, true
 }
 
+// Mark this upgrade name as being done so the name can't be reused accidentally
+func (keeper *keeper) setDone(ctx sdk.Context, name string) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
+	store.Set(DoneHeightKey(name), bz)
+}
+
 func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
 	blockTime := ctx.BlockHeader().Time
 	blockHeight := ctx.BlockHeight()
@@ -140,10 +151,7 @@ func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) 
 			ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at height %d", plan.Name, blockHeight))
 			handler(ctx, plan)
 			keeper.ClearUpgradePlan(ctx)
-			// Mark this upgrade name as being done so the name can't be reused accidentally
-			store := ctx.KVStore(keeper.storeKey)
-			bz := keeper.cdc.MustMarshalBinaryBare(blockHeight)
-			store.Set(DoneHeightKey(plan.Name), bz)
+			keeper.setDone(ctx, plan.Name)
 		} else {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", plan.Name, blockHeight, plan.Info))

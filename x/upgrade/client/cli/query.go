@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -61,12 +62,11 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			if len(res) == 0 {
 				return fmt.Errorf("no upgrade found")
 			}
-
-			var height int64
-			err = cdc.UnmarshalBinaryBare(res, &height)
-			if err != nil {
-				return err
+			if len(res) != 8 {
+				return fmt.Errorf("unknown format for applied-upgrade")
 			}
+
+			height := int64(binary.BigEndian.Uint64(res))
 			fmt.Println(height)
 			return nil
 		},

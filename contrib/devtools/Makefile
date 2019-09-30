@@ -56,8 +56,8 @@ $(GOLANGCI_LINT): $(mkfile_dir)/install-golangci-lint.sh
 
 swag: $(SWAG)
 $(SWAG):
-	@echo "Get swag"
-	@go get -u github.com/swaggo/swag/cmd/swag
+	@echo "Installing swag..."
+	@(cd /tmp && go get -u github.com/swaggo/swag/cmd/swag@v1.6.3)
 
 runsim: $(RUNSIM)
 $(RUNSIM):

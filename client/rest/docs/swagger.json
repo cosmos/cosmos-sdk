@@ -149,7 +149,7 @@
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/postProposal"
+                            "$ref": "#/definitions/rest.postProposal"
                         }
                     },
                     "400": {
@@ -297,7 +297,7 @@
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/postDeposit"
+                            "$ref": "#/definitions/rest.postDeposit"
                         }
                     },
                     "400": {
@@ -559,7 +559,7 @@
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/postVote"
+                            "$ref": "#/definitions/rest.postVote"
                         }
                     },
                     "400": {
@@ -688,6 +688,27 @@
         }
     },
     "definitions": {
+        "auth.StdFee": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "gas": {
+                    "type": "integer"
+                }
+            }
+        },
+        "auth.StdSignature": {
+            "type": "object",
+            "properties": {
+                "signature": {
+                    "type": "string",
+                    "format": "base64",
+                    "example": "U3dhZ2dlciByb2Nrcw=="
+                }
+            }
+        },
         "rest.BaseReq": {
             "type": "object",
             "properties": {
@@ -820,6 +841,78 @@
                 }
             }
         },
+        "rest.postDeposit": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgDeposit"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.postProposal": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgSubmitProposal"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.postVote": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgVote"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
+                }
+            }
+        },
         "rest.queryDeposit": {
             "type": "object",
             "properties": {
@@ -879,7 +972,8 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/utils.Proposer"
                 }
             }
         },
@@ -971,6 +1065,9 @@
                 }
             }
         },
+        "types.Content": {
+            "type": "object"
+        },
         "types.Deposit": {
             "type": "object",
             "properties": {
@@ -985,6 +1082,57 @@
                 "proposal_id": {
                     "description": "proposalID of the proposal",
                     "type": "integer"
+                }
+            }
+        },
+        "types.MsgDeposit": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Coins to add to the proposal's deposit",
+                    "type": "string"
+                },
+                "depositor": {
+                    "description": "Address of the depositor",
+                    "type": "string"
+                },
+                "proposal_id": {
+                    "description": "ID of the proposal",
+                    "type": "integer"
+                }
+            }
+        },
+        "types.MsgSubmitProposal": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Content"
+                },
+                "initial_deposit": {
+                    "description": "Initial deposit paid by sender. Must be strictly positive",
+                    "type": "string"
+                },
+                "proposer": {
+                    "description": "Address of the proposer",
+                    "type": "string"
+                }
+            }
+        },
+        "types.MsgVote": {
+            "type": "object",
+            "properties": {
+                "option": {
+                    "description": "option from OptionSet chosen by the voter",
+                    "type": "integer"
+                },
+                "proposal_id": {
+                    "description": "ID of the proposal",
+                    "type": "integer"
+                },
+                "voter": {
+                    "description": "address of the voter",
+                    "type": "string"
                 }
             }
         },
@@ -1201,6 +1349,17 @@
                         "description": "address of the voter",
                         "type": "string"
                     }
+                }
+            }
+        },
+        "utils.Proposer": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {
+                    "type": "integer"
+                },
+                "proposer": {
+                    "type": "string"
                 }
             }
         }

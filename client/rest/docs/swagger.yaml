@@ -1,5 +1,19 @@
 basePath: '{{.BasePath}}'
 definitions:
+  auth.StdFee:
+    properties:
+      amount:
+        type: string
+      gas:
+        type: integer
+    type: object
+  auth.StdSignature:
+    properties:
+      signature:
+        example: U3dhZ2dlciByb2Nrcw==
+        format: base64
+        type: string
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -90,6 +104,54 @@ definitions:
         description: address of the voter
         type: string
     type: object
+  rest.postDeposit:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgDeposit'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.postProposal:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgSubmitProposal'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.postVote:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgVote'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
   rest.queryDeposit:
     properties:
       height:
@@ -129,7 +191,8 @@ definitions:
       height:
         type: integer
       result:
-        type: string
+        $ref: '#/definitions/utils.Proposer'
+        type: object
     type: object
   rest.queryTally:
     properties:
@@ -194,6 +257,8 @@ definitions:
       value:
         type: string
     type: object
+  types.Content:
+    type: object
   types.Deposit:
     properties:
       amount:
@@ -205,6 +270,42 @@ definitions:
       proposal_id:
         description: proposalID of the proposal
         type: integer
+    type: object
+  types.MsgDeposit:
+    properties:
+      amount:
+        description: Coins to add to the proposal's deposit
+        type: string
+      depositor:
+        description: Address of the depositor
+        type: string
+      proposal_id:
+        description: ID of the proposal
+        type: integer
+    type: object
+  types.MsgSubmitProposal:
+    properties:
+      content:
+        $ref: '#/definitions/types.Content'
+        type: object
+      initial_deposit:
+        description: Initial deposit paid by sender. Must be strictly positive
+        type: string
+      proposer:
+        description: Address of the proposer
+        type: string
+    type: object
+  types.MsgVote:
+    properties:
+      option:
+        description: option from OptionSet chosen by the voter
+        type: integer
+      proposal_id:
+        description: ID of the proposal
+        type: integer
+      voter:
+        description: address of the voter
+        type: string
     type: object
   types.Proposal:
     properties:
@@ -358,6 +459,13 @@ definitions:
           type: string
       type: object
     type: array
+  utils.Proposer:
+    properties:
+      proposal_id:
+        type: integer
+      proposer:
+        type: string
+    type: object
 host: '{{.Host}}'
 info:
   contact: {}
@@ -464,7 +572,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/postProposal'
+            $ref: '#/definitions/rest.postProposal'
             type: object
         "400":
           description: Returned if the request is invalid
@@ -571,7 +679,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/postDeposit'
+            $ref: '#/definitions/rest.postDeposit'
             type: object
         "400":
           description: Returned if the request is invalid
@@ -762,7 +870,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/postVote'
+            $ref: '#/definitions/rest.postVote'
             type: object
         "400":
           description: Returned if the request is invalid

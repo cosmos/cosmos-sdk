@@ -1,7 +1,8 @@
 package rest
 
 import (
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -22,8 +23,8 @@ type (
 	}
 
 	queryProposer struct {
-		Height int64            `json:"height"`
-		Result gcutils.Proposer `json:"result"`
+		Height int64          `json:"height"`
+		Result utils.Proposer `json:"result"`
 	}
 
 	queryDeposit struct {
@@ -49,5 +50,26 @@ type (
 	queryTally struct {
 		Height int64             `json:"height"`
 		Result types.TallyResult `json:"result"`
+	}
+
+	postProposal struct {
+		Msgs       []types.MsgSubmitProposal `json:"msg" yaml:"msg"`
+		Fee        auth.StdFee               `json:"fee" yaml:"fee"`
+		Signatures []auth.StdSignature       `json:"signatures" yaml:"signatures"`
+		Memo       string                    `json:"memo" yaml:"memo"`
+	}
+
+	postDeposit struct {
+		Msgs       []types.MsgDeposit  `json:"msg" yaml:"msg"`
+		Fee        auth.StdFee         `json:"fee" yaml:"fee"`
+		Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
+		Memo       string              `json:"memo" yaml:"memo"`
+	}
+
+	postVote struct {
+		Msgs       []types.MsgVote     `json:"msg" yaml:"msg"`
+		Fee        auth.StdFee         `json:"fee" yaml:"fee"`
+		Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
+		Memo       string              `json:"memo" yaml:"memo"`
 	}
 )

@@ -72,10 +72,14 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	}
 }
 
+// SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
+// with this name is applied. In order for an upgrade with the given name to proceed, a handler for this upgrade
+// must be set even if it is a no-op function.
 func (keeper *keeper) SetUpgradeHandler(name string, upgradeHandler Handler) {
 	keeper.upgradeHandlers[name] = upgradeHandler
 }
 
+// ScheduleUpgrade schedules an upgrade based on the specified plan
 func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
 	err := plan.ValidateBasic()
 	if err != nil {
@@ -101,6 +105,7 @@ func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
 	return nil
 }
 
+// ClearUpgradePlan clears any schedule upgrade
 func (keeper *keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(keeper.storeKey)
 	keeper.haveCache = false
@@ -115,6 +120,8 @@ func (plan Plan) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
+// upgrade or false if there is none
 func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(PlanKey())
@@ -125,7 +132,7 @@ func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool)
 	return plan, true
 }
 
-// Mark this upgrade name as being done so the name can't be reused accidentally
+// setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (keeper *keeper) setDone(ctx sdk.Context, name string) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := make([]byte, 8)
@@ -133,6 +140,8 @@ func (keeper *keeper) setDone(ctx sdk.Context, name string) {
 	store.Set(DoneHeightKey(name), bz)
 }
 
+// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
+// plans are cached in memory so the overhead of this method is trivial.
 func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
 	blockTime := ctx.BlockHeader().Time
 	blockHeight := ctx.BlockHeight()

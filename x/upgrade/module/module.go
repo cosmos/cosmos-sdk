@@ -73,7 +73,6 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 	)...)
 
 	return queryCmd
-
 }
 
 // GetTxCmd returns the transaction commands for this module

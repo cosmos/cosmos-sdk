@@ -15,6 +15,7 @@ linters:
     - errcheck
     - scopelint
     - varcheck
+    - godox
 
 issues:
   exclude-rules:

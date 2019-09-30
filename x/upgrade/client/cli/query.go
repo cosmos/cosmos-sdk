@@ -20,7 +20,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			// ignore height for now
-			res, _, err := cliCtx.QueryStore([]byte(upgrade.PlanKey), storeName)
+			res, _, err := cliCtx.QueryStore(upgrade.PlanKey(), storeName)
 			if err != nil {
 				return err
 			}

@@ -43,9 +43,22 @@ type keeper struct {
 }
 
 const (
-	// PlanKey specifies the key under which an upgrade plan is stored in the store
-	PlanKey = "plan"
+	// PlanByte specifies the Byte under which a pending upgrade plan is stored in the store
+	PlanByte = 0x0
+	// DoneByte is a prefix for to look up completed upgrade plan by name
+	DoneByte = 0x1
 )
+
+// PlanKey is the key under which the current plan is saved
+// We store PlanByte as a const to keep it immutible (unlike a []byte)
+func PlanKey() []byte {
+	return []byte{PlanByte}
+}
+
+// DoneHeightKey returns a key that points to the height at which a past upgrade was applied
+func DoneHeightKey(name string) []byte {
+	return append([]byte{DoneByte}, []byte(name)...)
+}
 
 // NewKeeper constructs an upgrade keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
@@ -81,14 +94,14 @@ func (keeper *keeper) ScheduleUpgrade(ctx sdk.Context, plan Plan) sdk.Error {
 	}
 	bz := keeper.cdc.MustMarshalBinaryBare(plan)
 	keeper.haveCache = false
-	store.Set([]byte(PlanKey), bz)
+	store.Set(PlanKey(), bz)
 	return nil
 }
 
 func (keeper *keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(keeper.storeKey)
 	keeper.haveCache = false
-	store.Delete([]byte(PlanKey))
+	store.Delete(PlanKey())
 }
 
 // ValidateBasic does basic validation of a Plan
@@ -101,17 +114,12 @@ func (plan Plan) ValidateBasic() sdk.Error {
 
 func (keeper *keeper) GetUpgradePlan(ctx sdk.Context) (plan Plan, havePlan bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get([]byte(PlanKey))
+	bz := store.Get(PlanKey())
 	if bz == nil {
 		return plan, false
 	}
 	keeper.cdc.MustUnmarshalBinaryBare(bz, &plan)
 	return plan, true
-}
-
-// DoneHeightKey returns a key that points to the height at which a past upgrade was applied
-func DoneHeightKey(name string) []byte {
-	return []byte(fmt.Sprintf("done/%s", name))
 }
 
 func (keeper *keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {

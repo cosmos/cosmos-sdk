@@ -24,8 +24,12 @@ build: go.sum
 .PHONY: build
 
 update-swagger-docs: swag
-	@scripts/swag.sh $(BINDIR)/swag
+	$(BINDIR)/swag init -g client/rest/root.go --output client/rest/docs
 .PHONY: update-swagger-docs
+
+verify-swagger-docs: swag
+	@scripts/swag.sh $(BINDIR)/swag
+.PHONY: verify-swagger-docs
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

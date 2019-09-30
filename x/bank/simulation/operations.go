@@ -16,6 +16,7 @@ import (
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
+// nolint: funlen
 func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -77,6 +78,7 @@ func sendMsgSend(r *rand.Rand, app *baseapp.BaseApp, ak types.AccountKeeper,
 
 // SimulateSingleInputMsgMultiSend tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
+// nolint: funlen
 func SimulateSingleInputMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string) (
 		simulation.OperationMsg, []simulation.FutureOperation, error) {

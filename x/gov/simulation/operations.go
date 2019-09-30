@@ -16,9 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-const defaultMinProposalID = 100000000000000
-
-var minProposalID = defaultMinProposalID
+var initialProposalID = uint64(100000000000000)
 
 // ContentSimulator defines a function type alias for generating random proposal
 // content.
@@ -27,6 +25,7 @@ type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []simulation.Acco
 // SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
+// nolint: funlen
 func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 	contentSim ContentSimulator) simulation.Operation {
 	// The states are:
@@ -56,7 +55,6 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
 		if content == nil {
-			// skip
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
@@ -139,6 +137,7 @@ func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Acc
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.
+// nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -189,6 +188,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 }
 
 // SimulateMsgVote generates a MsgVote with random values.
+// nolint: funlen
 func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return operationSimulateMsgVote(ak, k, simulation.Account{}, -1)
 }
@@ -242,7 +242,8 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 	}
 }
 
-// Pick a random deposit
+// Pick a random deposit with a random denomination with a
+// deposit amount between (0, min(balance, minDepositAmount))
 func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {
@@ -262,8 +263,8 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	}
 
 	maxAmt := depositCoins
-	if maxAmt.GT(minDeposit[0].Amount) {
-		maxAmt = minDeposit[0].Amount
+	if maxAmt.GT(minDeposit[denomIndex].Amount) {
+		maxAmt = minDeposit[denomIndex].Amount
 	}
 
 	amount, err := simulation.RandPositiveInt(r, maxAmt)
@@ -279,12 +280,16 @@ func randomDeposit(r *rand.Rand, ctx sdk.Context,
 func randomProposalID(r *rand.Rand, k keeper.Keeper,
 	ctx sdk.Context, status types.ProposalStatus) (proposalID uint64, found bool) {
 	proposalID, _ = k.GetProposalID(ctx)
-	if minProposalID == defaultMinProposalID {
-		minProposalID = int(math.Min(float64(minProposalID), float64(proposalID)))
-	}
 
-	if minProposalID < int(proposalID) {
-		proposalID = uint64(simulation.RandIntBetween(r, minProposalID, int(proposalID)))
+	switch {
+	case proposalID > initialProposalID:
+		// select a random ID between [initialProposalID, proposalID]
+		proposalID = uint64(simulation.RandIntBetween(r, int(initialProposalID), int(proposalID)))
+
+	default:
+		// This is called on the first call to this funcion
+		// in order to update the global variable
+		initialProposalID = proposalID
 	}
 
 	proposal, ok := k.GetProposal(ctx, proposalID)

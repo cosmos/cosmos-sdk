@@ -19,6 +19,7 @@ import (
 )
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
+// nolint: funlen
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -56,6 +57,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
+// nolint: funlen
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -99,6 +101,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 }
 
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
+// nolint: funlen
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -144,6 +147,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
+// nolint: funlen
 func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
 	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
 		simAccount, _ := simulation.RandomAcc(r, accs)

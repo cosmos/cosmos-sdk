@@ -16,8 +16,8 @@ linters:
     - errcheck
     - scopelint
     - varcheck
-    - funlen
     - whitespace
+    - godox
 
 issues:
   exclude-rules:

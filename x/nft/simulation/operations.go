@@ -18,6 +18,7 @@ import (
 // DONTCOVER
 
 // SimulateMsgTransferNFT simulates the transfer of an NFT
+// nolint: funlen
 func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -65,6 +66,7 @@ func SimulateMsgTransferNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.
 }
 
 // SimulateMsgEditNFTMetadata simulates an edit metadata transaction
+// nolint: funlen
 func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -110,6 +112,7 @@ func SimulateMsgEditNFTMetadata(ak types.AccountKeeper, k keeper.Keeper) simulat
 }
 
 // SimulateMsgMintNFT simulates a mint of an NFT
+// nolint: funlen
 func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
@@ -149,6 +152,7 @@ func SimulateMsgMintNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 }
 
 // SimulateMsgBurnNFT simulates a burn of an existing NFT
+// nolint: funlen
 func SimulateMsgBurnNFT(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {

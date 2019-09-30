@@ -77,7 +77,7 @@ func DefaultConfig() *Config {
 		BaseConfig{
 			MinGasPrices:    defaultMinGasPrices,
 			InterBlockCache: true,
-			Pruning:         "",
+			Pruning:         "syncable",
 		},
 	}
 }

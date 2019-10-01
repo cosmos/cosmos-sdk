@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type Keeper struct {
@@ -89,39 +88,19 @@ func (k *Keeper) setDone(ctx sdk.Context, name string) {
 	store.Set(types.DoneHeightKey(name), bz)
 }
 
-// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
-// plans are cached in memory so the overhead of this method is trivial.
-func (k *Keeper) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) {
-	blockTime := ctx.BlockHeader().Time
-	blockHeight := ctx.BlockHeight()
+// HasHandler returns true iff there is a handler registered for this name
+func (k *Keeper) HasHandler(name string) bool {
+	_, ok := k.upgradeHandlers[name]
+	return ok
+}
 
-	plan, found := k.GetUpgradePlan(ctx)
-	if !found {
-		return
+// ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
+func (k *Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
+	handler := k.upgradeHandlers[plan.Name]
+	if handler == nil {
+		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
-
-	upgradeTime := plan.Time
-	upgradeHeight := plan.Height
-	if (!upgradeTime.IsZero() && !blockTime.Before(upgradeTime)) || (upgradeHeight > 0 && upgradeHeight <= blockHeight) {
-		handler, ok := k.upgradeHandlers[plan.Name]
-		if ok {
-			// We have an upgrade handler for this upgrade name, so apply the upgrade
-			ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at height %d", plan.Name, blockHeight))
-			handler(ctx, plan)
-			k.ClearUpgradePlan(ctx)
-			k.setDone(ctx, plan.Name)
-		} else {
-			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at height %d: %s", plan.Name, blockHeight, plan.Info))
-			panic("UPGRADE REQUIRED!")
-		}
-	} else {
-		// if we have a pending upgrade, but it is not yet time, make sure we did not
-		// set the handler already
-		_, ok := k.upgradeHandlers[plan.Name]
-		if ok {
-			ctx.Logger().Error(fmt.Sprintf("UNKNOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
-			panic("BINARY UPDATED BEFORE TRIGGER!")
-		}
-	}
+	handler(ctx, plan)
+	k.ClearUpgradePlan(ctx)
+	k.setDone(ctx, plan.Name)
 }

@@ -3,7 +3,6 @@ package exported
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // Keeper of the upgrade module
@@ -23,7 +22,9 @@ type Keeper interface {
 	// upgrade or false if there is none
 	GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
-	// BeginBlocker should be called inside the BeginBlocker method of any app using the upgrade module. Scheduled upgrade
-	// plans are cached in memory so the overhead of this method is trivial.
-	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
+	// HasHandler returns true iff there is a handler registered for this name
+	HasHandler(name string) bool
+
+	// ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
+	ApplyUpgrade(ctx sdk.Context, plan types.Plan)
 }

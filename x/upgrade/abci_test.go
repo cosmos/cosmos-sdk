@@ -1,4 +1,4 @@
-package keeper
+package upgrade
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -26,7 +25,7 @@ func (s *TestSuite) SetupTest() {
 	s.cms = store.NewCommitMultiStore(db)
 	key := sdk.NewKVStoreKey("upgrade")
 	cdc := codec.New()
-	types.RegisterCodec(cdc)
+	RegisterCodec(cdc)
 	s.keeper = NewKeeper(key, cdc)
 	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	_ = s.cms.LoadLatestVersion()
@@ -34,32 +33,32 @@ func (s *TestSuite) SetupTest() {
 }
 
 func (s *TestSuite) TestRequireName() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureTime() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Time: s.ctx.BlockHeader().Time})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: s.ctx.BlockHeader().Time})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureBlock() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.BlockHeight()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight()})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestCantSetBothTimeAndHeight() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestDoTimeUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Time: time.Now()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -67,7 +66,7 @@ func (s *TestSuite) TestDoTimeUpgrade() {
 
 func (s *TestSuite) TestDoHeightUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -78,13 +77,13 @@ func (s *TestSuite) VerifyDoUpgrade() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().Panics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
+		BeginBlock(s.keeper, newCtx, req)
 	})
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan types.Plan) {})
+	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan Plan) {})
 	s.Require().NotPanics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
+		BeginBlock(s.keeper, newCtx, req)
 	})
 
 	s.VerifyCleared(newCtx)
@@ -93,20 +92,20 @@ func (s *TestSuite) VerifyDoUpgrade() {
 func (s *TestSuite) TestHaltIfTooNew() {
 	s.T().Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
-	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan types.Plan) { called++ })
+	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan Plan) { called++ })
 
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
+		BeginBlock(s.keeper, newCtx, req)
 	})
 	s.Require().Equal(0, called)
 
 	s.T().Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "future", Height: s.ctx.BlockHeight() + 3})
 	s.Require().NoError(err)
 	s.Require().Panics(func() {
-		s.keeper.BeginBlocker(newCtx, req)
+		BeginBlock(s.keeper, newCtx, req)
 	})
 	s.Require().Equal(0, called)
 
@@ -115,7 +114,7 @@ func (s *TestSuite) TestHaltIfTooNew() {
 	futCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 3, Time: time.Now()}, false, log.NewNopLogger())
 	req = abci.RequestBeginBlock{Header: futCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		s.keeper.BeginBlocker(futCtx, req)
+		BeginBlock(s.keeper, futCtx, req)
 	})
 	s.Require().Equal(1, called)
 
@@ -130,7 +129,7 @@ func (s *TestSuite) VerifyCleared(newCtx sdk.Context) {
 
 func (s *TestSuite) TestCanClear() {
 	s.T().Log("Verify upgrade is scheduled")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Time: time.Now()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
 	s.Require().Nil(err)
 
 	s.keeper.ClearUpgradePlan(s.ctx)
@@ -141,7 +140,7 @@ func (s *TestSuite) TestCanClear() {
 func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.TestDoTimeUpgrade()
 	s.T().Log("Verify an upgrade named \"test\" can't be scheduled twice")
-	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Time: time.Now()})
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
@@ -150,7 +149,7 @@ func (s *TestSuite) TestNoSpuriousUpgrades() {
 	s.T().Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
 	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		s.keeper.BeginBlocker(s.ctx, req)
+		BeginBlock(s.keeper, s.ctx, req)
 	})
 }
 
@@ -160,11 +159,11 @@ func (s *TestSuite) TestPlanStringer() {
 	s.Require().Equal(`Upgrade Plan
   Name: test
   Time: 2020-01-01T00:00:00Z
-  Info: `, types.Plan{Name: "test", Time: t}.String())
+  Info: `, Plan{Name: "test", Time: t}.String())
 	s.Require().Equal(`Upgrade Plan
   Name: test
   Height: 100
-  Info: `, types.Plan{Name: "test", Height: 100}.String())
+  Info: `, Plan{Name: "test", Height: 100}.String())
 }
 
 func TestTestSuite(t *testing.T) {

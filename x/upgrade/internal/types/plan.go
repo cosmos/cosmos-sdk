@@ -29,23 +29,46 @@ type Plan struct {
 	Info string `json:"info,omitempty"`
 }
 
-func (plan Plan) String() string {
+func (p Plan) String() string {
 	var whenStr string
-	if !plan.Time.IsZero() {
-		whenStr = fmt.Sprintf("Time: %s", plan.Time.Format(time.RFC3339))
+	if !p.Time.IsZero() {
+		whenStr = fmt.Sprintf("Time: %s", p.Time.Format(time.RFC3339))
 	} else {
-		whenStr = fmt.Sprintf("Height: %d", plan.Height)
+		whenStr = fmt.Sprintf("Height: %d", p.Height)
 	}
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s`, plan.Name, whenStr, plan.Info)
+  Info: %s`, p.Name, whenStr, p.Info)
 }
 
 // ValidateBasic does basic validation of a Plan
-func (plan Plan) ValidateBasic() sdk.Error {
-	if len(plan.Name) == 0 {
+func (p Plan) ValidateBasic() sdk.Error {
+	if len(p.Name) == 0 {
 		return sdk.ErrUnknownRequest("Name cannot be empty")
 	}
 	return nil
+}
+
+// ShouldExecute returns true if the Plan is ready to execute given the current context
+func (p Plan) ShouldExecute(ctx sdk.Context) bool {
+	if !p.Time.IsZero() {
+		return !ctx.BlockTime().Before(p.Time)
+	}
+	if p.Height > 0 {
+		return p.Height <= ctx.BlockHeight()
+	}
+	return false
+}
+
+// DueDate is a string representation of when this plan is due to be executed
+func (p Plan) DueDate() string {
+	if !p.Time.IsZero() {
+		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
+	}
+	if p.Height > 0 {
+		return fmt.Sprintf("height: %d", p.Height)
+	}
+	return "<DueDate unset>"
+
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
@@ -36,17 +37,34 @@ type MyPacket struct {
 	Message string
 }
 
-/*
 func (packet MyPacket) Commit() []byte {
 	return []byte(packet.Message)
 }
-*/
+
 func (packet MyPacket) Timeout() uint64 {
 	return 100 // TODO
 }
 
-func (MyPacket) Route() string {
-	return "my"
+func (MyPacket) SenderPort() string {
+	return PortName
+}
+
+func (MyPacket) ReceiverPort() string {
+	return PortName
+}
+
+func (MyPacket) Type() string {
+	return "my-packet"
+}
+
+func (MyPacket) ValidateBasic() sdk.Error {
+	return nil
+}
+
+func (packet MyPacket) Marshal() []byte {
+	cdc := codec.New()
+	registerCodec(cdc)
+	return cdc.MustMarshalBinaryBare(packet)
 }
 
 func TestPacket(t *testing.T) {
@@ -61,7 +79,7 @@ func TestPacket(t *testing.T) {
 	header := node.Commit()
 
 	node.Counterparty.UpdateClient(t, header)
-	cliobj := node.CLIObject()
+	cliobj := node.CLIState()
 	_, ppacket := node.QueryValue(t, cliobj.Packets.Value(1))
-	node.Counterparty.Receive(t, MyPacket{"ping"}, ppacket)
+	node.Counterparty.Receive(t, MyPacket{"ping"}, uint64(header.Height), ppacket)
 }

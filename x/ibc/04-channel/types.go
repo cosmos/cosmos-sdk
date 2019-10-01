@@ -1,5 +1,9 @@
 package channel
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 /*
 type Packet struct {
 	Sequence      uint64
@@ -15,13 +19,15 @@ type Packet struct {
 */
 
 type Packet interface {
+	SenderPort() string
+	ReceiverPort() string // == Route()
+	Type() string
+	ValidateBasic() sdk.Error
 	Timeout() uint64
-	//	Commit() []byte // Can be a commit message
-	Route() string
+	Marshal() []byte // Should exclude PortID/ChannelID info
 }
 
 type Channel struct {
-	Port             string
 	Counterparty     string
 	CounterpartyPort string
 	ConnectionHops   []string

@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-type JSONObject struct {
+type JSONState struct {
 	Channel              channel.Channel  `json:"channel"`
 	ChannelProof         commitment.Proof `json:"channel_proof,omitempty"`
 	Available            bool             `json:"available"`
@@ -18,14 +18,14 @@ type JSONObject struct {
 	//	KindProof            commitment.Proof `json:"kind_proof,omitempty"`
 }
 
-func NewJSONObject(
+func NewJSONState(
 	channel channel.Channel, channelp commitment.Proof,
 	avail bool, availp commitment.Proof,
 	//	kind string, kindp commitment.Proof,
 	seqsend uint64, seqsendp commitment.Proof,
 	seqrecv uint64, seqrecvp commitment.Proof,
-) JSONObject {
-	return JSONObject{
+) JSONState {
+	return JSONState{
 		Channel:        channel,
 		ChannelProof:   channelp,
 		Available:      avail,
@@ -35,8 +35,8 @@ func NewJSONObject(
 	}
 }
 
-type HandshakeJSONObject struct {
-	JSONObject              `json:"channel"`
+type HandshakeJSONState struct {
+	JSONState               `json:"channel"`
 	State                   byte             `json:"state"`
 	StateProof              commitment.Proof `json:"state_proof,omitempty"`
 	CounterpartyClient      string           `json:"counterparty_client"`
@@ -45,7 +45,7 @@ type HandshakeJSONObject struct {
 	NextTimeoutProof        commitment.Proof `json:"next_timeout_proof,omitempty"`
 }
 
-func NewHandshakeJSONObject(
+func NewHandshakeJSONState(
 	channel channel.Channel, channelp commitment.Proof,
 	avail bool, availp commitment.Proof,
 	//	kind string, kindp commitment.Proof,
@@ -54,9 +54,9 @@ func NewHandshakeJSONObject(
 
 	state byte, statep commitment.Proof,
 	timeout uint64, timeoutp commitment.Proof,
-) HandshakeJSONObject {
-	return HandshakeJSONObject{
-		JSONObject:       NewJSONObject(channel, channelp, avail, availp, seqsend, seqsendp, seqrecv, seqrecvp),
+) HandshakeJSONState {
+	return HandshakeJSONState{
+		JSONState:        NewJSONState(channel, channelp, avail, availp, seqsend, seqsendp, seqrecv, seqrecvp),
 		State:            state,
 		StateProof:       statep,
 		NextTimeout:      timeout,

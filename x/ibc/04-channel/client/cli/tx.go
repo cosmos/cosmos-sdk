@@ -1,10 +1,32 @@
 package cli
 
-/*
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+import (
+	"errors"
+	"fmt"
+	"time"
 
-}
-*/
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/state"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
+)
+
 const (
 	FlagNode1 = "node1"
 	FlagNode2 = "node2"
@@ -12,92 +34,143 @@ const (
 	FlagFrom2 = "from2"
 )
 
-// TODO
-/*
-func handshake(ctx context.CLIContext, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeObject, error) {
+func handshake(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid, connid string) channel.HandshakeState {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	connman := connection.NewManager(base, climan)
 	man := channel.NewHandshaker(channel.NewManager(base, connman))
-	return man.CLIQuery(ctx, portid, chanid)
+	return man.CLIState(portid, chanid, []string{connid})
 }
 
-func lastheight(ctx context.CLIContext) (uint64, error) {
+func flush(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeState, error) {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+	climan := client.NewManager(base)
+	connman := connection.NewManager(base, climan)
+	man := channel.NewHandshaker(channel.NewManager(base, connman))
+	return man.CLIQuery(q, portid, chanid)
+}
+
+// TODO: import from connection/client
+func conn(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.State, error) {
+	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+	clientManager := client.NewManager(base)
+	man := connection.NewManager(base, clientManager)
+	return man.CLIQuery(q, connid)
+}
+
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "channel",
+		Short: "IBC channel transaction subcommands",
+	}
+
+	cmd.AddCommand(
+		GetCmdHandshake(storeKey, cdc),
+		GetCmdFlushPackets(storeKey, cdc),
+	)
+
+	return cmd
+}
+
+// TODO: move to 02/tendermint
+func getHeader(ctx context.CLIContext) (res tendermint.Header, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return 0, err
+		return
 	}
 
-	return uint64(info.Response.LastBlockHeight), nil
+	height := info.Response.LastBlockHeight
+	prevheight := height - 1
+
+	commit, err := node.Commit(&height)
+	if err != nil {
+		return
+	}
+
+	validators, err := node.Validators(&prevheight)
+	if err != nil {
+		return
+	}
+
+	nextvalidators, err := node.Validators(&height)
+	if err != nil {
+		return
+	}
+
+	res = tendermint.Header{
+		SignedHeader:     commit.SignedHeader,
+		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
+		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+	}
+
+	return
 }
 
-func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
-		Short: "initiate channel handshake between two chains",
-		Args:  cobra.ExactArgs(4),
-		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
+		Short: "initiate connection handshake between two chains",
+		Args:  cobra.ExactArgs(6),
+		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContext().
+			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
-				WithFrom(viper.GetString(FlagFrom1))
+				WithBroadcastMode(flags.BroadcastBlock)
+			q1 := state.NewCLIQuerier(ctx1)
 
-			ctx2 := context.NewCLIContext().
+			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
-				WithFrom(viper.GetString(FlagFrom2))
+				WithBroadcastMode(flags.BroadcastBlock)
+			q2 := state.NewCLIQuerier(ctx2)
 
-			conn1id := args[0]
-			chan1id := args[1]
-			conn1bz, err := ioutil.ReadFile(args[2])
+			portid1 := args[0]
+			chanid1 := args[1]
+			connid1 := args[2]
+			portid2 := args[3]
+			chanid2 := args[4]
+			connid2 := args[5]
+
+			chan1 := channel.Channel{
+				Counterparty:     chanid2,
+				CounterpartyPort: portid2,
+				ConnectionHops:   []string{connid1},
+			}
+
+			chan2 := channel.Channel{
+				Counterparty:     chanid1,
+				CounterpartyPort: portid1,
+				ConnectionHops:   []string{connid2},
+			}
+
+			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
+			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
+
+			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
-			var conn1 channel.Channel
-			if err := cdc.UnmarshalJSON(conn1bz, &conn1); err != nil {
-				return err
-			}
+			clientid1 := conn1.Client
 
-			obj1, err := handshake(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
+			conn2, _, err := obj2.OriginConnection().ConnectionCLI(q2)
 			if err != nil {
 				return err
 			}
-
-			conn2id := args[3]
-			chan2id := args[4]
-			conn2bz, err := ioutil.ReadFile(args[5])
-			if err != nil {
-				return err
-			}
-			var conn2 channel.Channel
-			if err := cdc.UnmarshalJSON(conn2bz, &conn2); err != nil {
-				return err
-			}
-
-			obj2, err := handshake(ctx2, cdc, storeKey, ibc.Version, conn1id, chan1id)
-			if err != nil {
-				return err
-			}
+			clientid2 := conn2.Client
 
 			// TODO: check state and if not Idle continue existing process
-			height, err := lastheight(ctx2)
-			if err != nil {
-				return err
-			}
-			nextTimeout := height + 1000 // TODO: parameterize
 			msginit := channel.MsgOpenInit{
-				ConnectionID: conn1id,
-				ChannelID:    chan1id,
-				Channel:      conn1,
-				NextTimeout:  nextTimeout,
-				Signer:       ctx1.GetFromAddress(),
+				PortID:    portid1,
+				ChannelID: chanid1,
+				Channel:   chan1,
+				Signer:    ctx1.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msginit})
@@ -105,33 +178,44 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			timeout := nextTimeout
-			height, err = lastheight(ctx1)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err := getHeader(ctx1)
 			if err != nil {
 				return err
 			}
-			nextTimeout = height + 1000
-			_, pconn, err := obj1.ChannelCLI(ctx1)
+
+			msgupdate := client.MsgUpdateClient{
+				ClientID: clientid2,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+
+			fmt.Printf("updated apphash to %X\n", header.AppHash)
+
+			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+			fmt.Printf("querying from %d\n", header.Height-1)
+
+			_, pchan, err := obj1.ChannelCLI(q1)
 			if err != nil {
 				return err
 			}
-			_, pstate, err := obj1.StateCLI(ctx1)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err := obj1.NextTimeoutCLI(ctx1)
+			_, pstate, err := obj1.StageCLI(q1)
 			if err != nil {
 				return err
 			}
 
 			msgtry := channel.MsgOpenTry{
-				ConnectionID: conn2id,
-				ChannelID:    chan2id,
-				Channel:      conn2,
-				Timeout:      timeout,
-				NextTimeout:  nextTimeout,
-				Proofs:       []commitment.Proof{pconn, pstate, ptimeout},
-				Signer:       ctx2.GetFromAddress(),
+				PortID:    portid2,
+				ChannelID: chanid2,
+				Channel:   chan2,
+				Proofs:    []commitment.Proof{pchan, pstate},
+				Height:    uint64(header.Height),
+				Signer:    ctx2.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
@@ -139,31 +223,40 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			timeout = nextTimeout
-			height, err = lastheight(ctx2)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err = getHeader(ctx2)
 			if err != nil {
 				return err
 			}
-			nextTimeout = height + 1000
-			_, pconn, err = obj2.Channel(ctx2)
+
+			msgupdate = client.MsgUpdateClient{
+				ClientID: clientid1,
+				Header:   header,
+				Signer:   ctx1.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
+
+			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
+
+			_, pchan, err = obj2.ChannelCLI(q2)
 			if err != nil {
 				return err
 			}
-			_, pstate, err = obj2.State(ctx2)
-			if err != nil {
-				return err
-			}
-			_, ptimeout, err = obj2.NextTimeout(ctx2)
+			_, pstate, err = obj2.StageCLI(q2)
 			if err != nil {
 				return err
 			}
 
 			msgack := channel.MsgOpenAck{
-				ConnectionID: conn1id,
-				ChannelID:    chan1id,
-				Timeout:      timeout,
-				Proofs:       []commitment.Proof{pconn, pstate, ptimeout},
-				Signer:       ctx1.GetFromAddress(),
+				PortID:    portid1,
+				ChannelID: chanid1,
+				Proofs:    []commitment.Proof{pchan, pstate},
+				Height:    uint64(header.Height),
+				Signer:    ctx1.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgack})
@@ -171,22 +264,36 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			timeout = nextTimeout
-			_, pstate, err = obj1.State(ctx1)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
+
+			header, err = getHeader(ctx1)
 			if err != nil {
 				return err
 			}
-			_, ptimeout, err = obj1.NextTimeout(ctx1)
+
+			msgupdate = client.MsgUpdateClient{
+				ClientID: clientid2,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
+
+			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+
+			_, pstate, err = obj1.StageCLI(q1)
 			if err != nil {
 				return err
 			}
 
 			msgconfirm := channel.MsgOpenConfirm{
-				ConnectionID: conn2id,
-				ChannelID:    chan2id,
-				Timeout:      timeout,
-				Proofs:       []commitment.Proof{pstate, ptimeout},
-				Signer:       ctx2.GetFromAddress(),
+				PortID:    portid2,
+				ChannelID: chanid2,
+				Proofs:    []commitment.Proof{pstate},
+				Height:    uint64(header.Height),
+				Signer:    ctx2.GetFromAddress(),
 			}
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgconfirm})
@@ -198,87 +305,139 @@ func GetCmdChannelHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagFrom1, "", "")
+	cmd.Flags().String(FlagFrom2, "", "")
+
+	cmd.MarkFlagRequired(FlagFrom1)
+	cmd.MarkFlagRequired(FlagFrom2)
+
 	return cmd
 }
 
-func GetCmdRelay(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "relay",
-		Short: "relay pakcets between two channels",
-		Args:  cobra.ExactArgs(4),
-		// Args: []string{connid1, chanid1, chanfilepath1, connid2, chanid2, chanfilepath2}
+		Use:   "flush",
+		Short: "flush packets on queue",
+		Args:  cobra.ExactArgs(2),
+		// Args: []string{portid, chanid}
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx1 := context.NewCLIContext().
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
-				WithFrom(viper.GetString(FlagFrom1))
+				WithBroadcastMode(flags.BroadcastBlock)
+			q1 := state.NewCLIQuerier(ctx1)
 
-			ctx2 := context.NewCLIContext().
+			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
-				WithFrom(viper.GetString(FlagFrom2))
+				WithBroadcastMode(flags.BroadcastBlock)
+			q2 := state.NewCLIQuerier(ctx2)
 
-			conn1id, chan1id, conn2id, chan2id := args[0], args[1], args[2], args[3]
+			portid1, chanid1 := args[0], args[1]
 
-			obj1 := object(ctx1, cdc, storeKey, ibc.Version, conn1id, chan1id)
-			obj2 := object(ctx2, cdc, storeKey, ibc.Version, conn2id, chan2id)
+			obj1, err := flush(q1, cdc, storeKey, version.DefaultPrefix(), portid1, chanid1)
+			if err != nil {
+				return err
+			}
 
-			return relayLoop(cdc, ctx1, ctx2, obj1, obj2, conn1id, chan1id, conn2id, chan2id)
+			chan1, _, err := obj1.ChannelCLI(q1)
+			if err != nil {
+				return err
+			}
+
+			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
+
+			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
+			if err != nil {
+				return err
+			}
+
+			chan2, _, err := obj2.ChannelCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			connobj2, err := conn(q2, cdc, storeKey, version.DefaultPrefix(), chan2.ConnectionHops[0])
+			if err != nil {
+				return err
+			}
+
+			conn2, _, err := connobj2.ConnectionCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			client2 := conn2.Client
+
+			seqrecv, _, err := obj2.SeqRecvCLI(q2)
+			if err != nil {
+				return err
+			}
+
+			seqsend, _, err := obj1.SeqSendCLI(q1)
+			if err != nil {
+				return err
+			}
+
+			// SeqRecv is the latest received packet index(0 if not exists)
+			// SeqSend is the latest sent packet index (0 if not exists)
+			if !(seqsend > seqrecv) {
+				return errors.New("no unsent packets")
+			}
+
+			// TODO: optimize, don't updateclient if already updated
+			header, err := getHeader(ctx1)
+			if err != nil {
+				return err
+			}
+
+			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+
+			msgupdate := client.MsgUpdateClient{
+				ClientID: client2,
+				Header:   header,
+				Signer:   ctx2.GetFromAddress(),
+			}
+
+			msgs := []sdk.Msg{msgupdate}
+
+			for i := seqrecv + 1; i <= seqsend; i++ {
+				packet, proof, err := obj1.PacketCLI(q1, i)
+				if err != nil {
+					return err
+				}
+
+				msg := channel.MsgPacket{
+					packet,
+					chanid2,
+					[]commitment.Proof{proof},
+					uint64(header.Height),
+					ctx2.GetFromAddress(),
+				}
+
+				msgs = append(msgs, msg)
+			}
+
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, msgs)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
+	cmd.Flags().String(FlagFrom1, "", "")
+	cmd.Flags().String(FlagFrom2, "", "")
+
+	cmd.MarkFlagRequired(FlagFrom1)
+	cmd.MarkFlagRequired(FlagFrom2)
+
 	return cmd
+
 }
-
-func relayLoop(cdc *codec.Codec,
-	ctx1, ctx2 context.CLIContext,
-	obj1, obj2 channel.CLIObject,
-	conn1id, chan1id, conn2id, chan2id string,
-) error {
-	for {
-		// TODO: relay() should be goroutine and return error by channel
-		err := relay(cdc, ctx1, ctx2, obj1, obj2, conn2id, chan2id)
-		// TODO: relayBetween() should retry several times before halt
-		if err != nil {
-			return err
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func relay(cdc *codec.Codec, ctxFrom, ctxTo context.CLIContext, objFrom, objTo channel.CLIObject, connidTo, chanidTo string) error {
-	txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-	seq, _, err := objTo.SeqRecv(ctxTo)
-	if err != nil {
-		return err
-	}
-
-	sent, _, err := objFrom.SeqSend(ctxFrom)
-	if err != nil {
-		return err
-	}
-
-	for i := seq; i <= sent; i++ {
-		packet, proof, err := objFrom.Packet(ctxFrom, seq)
-		if err != nil {
-			return err
-		}
-
-		msg := channel.MsgReceive{
-			ConnectionID: connidTo,
-			ChannelID:    chanidTo,
-			Packet:       packet,
-			Proofs:       []commitment.Proof{proof},
-			Signer:       ctxTo.GetFromAddress(),
-		}
-
-		err = utils.GenerateOrBroadcastMsgs(ctxTo, txBldr, []sdk.Msg{msg})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-*/

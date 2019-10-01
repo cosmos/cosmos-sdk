@@ -2,19 +2,16 @@ package channel
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const Route = "ibc"
 
 type MsgOpenInit struct {
-	ConnectionID       string
-	ChannelID          string
-	Channel            Channel
-	CounterpartyClient string
-	NextTimeout        uint64
-	Signer             sdk.AccAddress
+	PortID    string         `json:"port_id"`
+	ChannelID string         `json:"channel_id"`
+	Channel   Channel        `json:"channel"`
+	Signer    sdk.AccAddress `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenInit{}
@@ -32,7 +29,7 @@ func (msg MsgOpenInit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenInit) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
@@ -40,14 +37,12 @@ func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenTry struct {
-	ConnectionID       string
-	ChannelID          string
-	Channel            Channel
-	CounterpartyClient string
-	Timeout            uint64
-	NextTimeout        uint64
-	Proofs             []commitment.Proof
-	Signer             sdk.AccAddress
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Channel   Channel            `json:"channel"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenTry{}
@@ -65,7 +60,7 @@ func (msg MsgOpenTry) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenTry) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
@@ -73,12 +68,11 @@ func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenAck struct {
-	ConnectionID string
-	ChannelID    string
-	Timeout      uint64
-	NextTimeout  uint64
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenAck{}
@@ -96,7 +90,7 @@ func (msg MsgOpenAck) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenAck) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
@@ -104,11 +98,11 @@ func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenConfirm struct {
-	ConnectionID string
-	ChannelID    string
-	Timeout      uint64
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+	PortID    string             `json:"port_id"`
+	ChannelID string             `json:"channel_id"`
+	Proofs    []commitment.Proof `json:"proofs"`
+	Height    uint64             `json:"height"`
+	Signer    sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenConfirm{}
@@ -126,39 +120,45 @@ func (msg MsgOpenConfirm) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenConfirm) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-type MsgReceive struct {
-	ConnectionID string
-	ChannelID    string
-	Packet       Packet
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+// PortID dependent on type
+// ChannelID can be empty if batched & not first MsgPacket
+// Height uint64 // height of the commitment root for the proofs
+type MsgPacket struct {
+	Packet    `json:"packet" yaml:"packet"`
+	ChannelID string             `json:"channel_id,omitempty" yaml:"channel_id"`
+	Proofs    []commitment.Proof `json:"proofs" yaml:"proofs"`
+	Height    uint64             `json:"height" yaml:"height"`
+	Signer    sdk.AccAddress     `json:"signer,omitempty" yaml:"signer"`
 }
 
-var _ sdk.Msg = MsgReceive{}
+var _ sdk.Msg = MsgPacket{}
 
-func (msg MsgReceive) Route() string {
-	return Route
-}
-
-func (msg MsgReceive) Type() string {
-	return "receive"
-}
-
-func (msg MsgReceive) ValidateBasic() sdk.Error {
+func (msg MsgPacket) ValidateBasic() sdk.Error {
+	// Check PortID ChannelID len
+	// Check packet != nil
+	// Check proofs != nil
+	// Signer can be empty
 	return nil // TODO
 }
 
-func (msg MsgReceive) GetSignBytes() []byte {
-	return nil // TODO
+func (msg MsgPacket) Route() string {
+	return msg.ReceiverPort()
 }
 
-func (msg MsgReceive) GetSigners() []sdk.AccAddress {
+func (msg MsgPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
+}
+
+func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+	if msg.Signer.Empty() {
+		return []sdk.AccAddress{}
+	}
 	return []sdk.AccAddress{msg.Signer}
 }

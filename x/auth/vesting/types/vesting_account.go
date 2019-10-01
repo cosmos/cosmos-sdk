@@ -406,14 +406,14 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 	// track the start time of the next period
 	currentPeriodStartTime := pva.StartTime
 	// for each period, if the period is over, add those coins as vested and check the next period.
-	for i := range pva.VestingPeriods {
+	for _, period := range pva.VestingPeriods {
 		x := blockTime.Unix() - currentPeriodStartTime
-		if x < pva.VestingPeriods[i].Length {
+		if x < period.Length {
 			break
 		}
-		vestedCoins = vestedCoins.Add(pva.VestingPeriods[i].Amount)
+		vestedCoins = vestedCoins.Add(period.Amount)
 		// Update the start time of the next period
-		currentPeriodStartTime += pva.VestingPeriods[i].Length
+		currentPeriodStartTime += period.Length
 	}
 	return vestedCoins
 }

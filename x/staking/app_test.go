@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -128,7 +129,7 @@ func TestStakingMsgs(t *testing.T) {
 		Address: addr2,
 		Coins:   sdk.Coins{genCoin},
 	}
-	accs := []auth.Account{acc1, acc2}
+	accs := []authexported.Account{acc1, acc2}
 
 	mock.SetGenesis(mApp, accs)
 	mock.CheckBalance(t, mApp, addr1, sdk.Coins{genCoin})

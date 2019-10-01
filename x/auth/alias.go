@@ -8,7 +8,6 @@ package auth
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -81,7 +80,6 @@ var (
 
 type (
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
-	Account                          = exported.Account
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
 	NodeQuerier                      = types.NodeQuerier

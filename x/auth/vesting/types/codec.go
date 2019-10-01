@@ -14,7 +14,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(&PeriodicVestingAccount{}, "cosmos-sdk/PeriodicVestingAccount", nil)
 }
 
-// ModuleCdc module wide codec
+// SubModuleCdc module wide codec
 var SubModuleCdc *codec.Codec
 
 func init() {

@@ -5,7 +5,6 @@
 package vesting
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -25,7 +24,6 @@ var (
 )
 
 type (
-	Account                  = exported.VestingAccount
 	BaseVestingAccount       = types.BaseVestingAccount
 	ContinuousVestingAccount = types.ContinuousVestingAccount
 	PeriodicVestingAccount   = types.PeriodicVestingAccount

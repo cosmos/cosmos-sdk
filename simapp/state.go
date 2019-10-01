@@ -151,28 +151,3 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile strin
 
 	return genesis.AppState, newAccs, genesis.ChainID
 }
-
-// RandomizedSimulationParams generate a random amount of initial stake coins
-// and a random initially bonded number of accounts
-func RandomizedSimulationParams(appParams simulation.AppParams, cdc *codec.Codec, r *rand.Rand, numAccs int64) (numInitiallyBonded, initialStake int64) {
-
-	appParams.GetOrGenerate(cdc, StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) })
-	appParams.GetOrGenerate(cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) })
-
-	if numInitiallyBonded > numAccs {
-		numInitiallyBonded = numAccs
-	}
-
-	fmt.Printf(
-		`Selected randomly generated parameters for simulated genesis:
-{
-  stake_per_account: "%d",
-  initially_bonded_validators: "%d"
-}
-`, initialStake, numInitiallyBonded,
-	)
-
-	return
-}

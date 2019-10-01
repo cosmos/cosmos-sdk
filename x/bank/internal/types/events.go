@@ -1,7 +1,7 @@
 package types
 
-// Bank module event types
-var (
+// bank module event types
+const (
 	EventTypeTransfer = "transfer"
 
 	AttributeKeyRecipient = "recipient"

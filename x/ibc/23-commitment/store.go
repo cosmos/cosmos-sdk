@@ -17,7 +17,7 @@ type Store interface {
 	Prove(path, value []byte) bool
 }
 
-var _ Store = (*prefix)(nil)
+var _ Store = prefix{}
 
 type prefix struct {
 	store  Store

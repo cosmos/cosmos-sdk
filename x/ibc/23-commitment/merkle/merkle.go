@@ -25,7 +25,7 @@ var _ commitment.Root = Root{}
 // Root is Merkle root hash
 // In Cosmos-SDK, the AppHash of the Header becomes Root.
 type Root struct {
-	Hash []byte
+	Hash []byte `json:"hash"`
 }
 
 // NewRoot constructs a new Root
@@ -46,13 +46,13 @@ var _ commitment.Prefix = Prefix{}
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
 type Prefix struct {
 	// KeyPath is the list of keys prepended before the prefixed key
-	KeyPath [][]byte
+	KeyPath [][]byte `json:"key_path"`
 	// KeyPrefix is a byte slice prefixed before the key
-	KeyPrefix []byte
+	KeyPrefix []byte `json:"key_prefix"`
 }
 
-// NewPath() constructs new Prefix
-func NewPath(keypath [][]byte, keyprefix []byte) Prefix {
+// NewPrefix constructs new Prefix instance
+func NewPrefix(keypath [][]byte, keyprefix []byte) Prefix {
 	return Prefix{
 		KeyPath:   keypath,
 		KeyPrefix: keyprefix,
@@ -64,12 +64,16 @@ func (Prefix) CommitmentKind() string {
 	return merkleKind
 }
 
+func (prefix Prefix) Key(key []byte) []byte {
+	return join(prefix.KeyPrefix, key)
+}
+
 var _ commitment.Proof = Proof{}
 
 // Proof is Merkle proof with the key information.
 type Proof struct {
-	Proof *merkle.Proof
-	Key   []byte
+	Proof *merkle.Proof `json:"proof"`
+	Key   []byte        `json:"key"`
 }
 
 // Implements commitment.Proof
@@ -114,6 +118,5 @@ type Value interface {
 }
 
 func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
-	// TODO: check HasPrefix
 	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

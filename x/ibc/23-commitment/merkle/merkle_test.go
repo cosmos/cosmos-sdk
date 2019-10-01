@@ -45,7 +45,7 @@ func TestStore(t *testing.T) {
 	storeName := k.Name()
 	prefix := []byte{0x01, 0x03, 0x05, 0xAA, 0xBB}
 	mapp := state.NewMapping(k, cdc, prefix)
-	path := NewPath([][]byte{[]byte(storeName)}, prefix)
+	path := NewPrefix([][]byte{[]byte(storeName)}, prefix)
 
 	m := make(map[string][]byte)
 	kvpn := 10

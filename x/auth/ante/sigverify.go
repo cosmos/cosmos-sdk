@@ -292,7 +292,6 @@ func DefaultSigVerificationGasConsumer(
 func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
 	params types.Params) {
-
 	size := sig.BitArray.Size()
 	sigIndex := 0
 	for i := 0; i < size; i++ {

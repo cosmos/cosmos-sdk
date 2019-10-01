@@ -52,7 +52,7 @@ type Node struct {
 	Commits []tmtypes.SignedHeader
 
 	StoreName string
-	Prefix    []byte
+	KeyPrefix []byte
 }
 
 func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
@@ -65,12 +65,12 @@ func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
 		Store:     ctx.KVStore(key),
 		Commits:   nil,
 		StoreName: storeName,
-		Prefix:    prefix,
+		KeyPrefix: prefix,
 	}
 }
 
-func (node *Node) Path() merkle.Path {
-	return merkle.NewPath([][]byte{[]byte(node.StoreName)}, node.Prefix)
+func (node *Node) Prefix() merkle.Prefix {
+	return merkle.NewPrefix([][]byte{[]byte(node.StoreName)}, node.KeyPrefix)
 }
 
 func (node *Node) Last() tmtypes.SignedHeader {
@@ -150,16 +150,16 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 }
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	if bytes.HasPrefix(k, node.Prefix) {
-		k = bytes.TrimPrefix(k, node.Prefix)
+	if bytes.HasPrefix(k, node.KeyPrefix) {
+		k = bytes.TrimPrefix(k, node.KeyPrefix)
 	}
-	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.Prefix, k)
+	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.KeyPrefix, k)
 	require.NoError(t, err)
 	return value, proof
 }
 
 func (node *Node) Set(k, value []byte) {
-	node.Store.Set(join(node.Prefix, k), value)
+	node.Store.Set(join(node.KeyPrefix, k), value)
 }
 
 // nolint:deadcode,unused
@@ -190,7 +190,7 @@ func testProof(t *testing.T) {
 			require.Equal(t, kvp.Value, v)
 			proofs = append(proofs, p)
 		}
-		cstore, err := commitment.NewStore(root, node.Path(), proofs)
+		cstore, err := commitment.NewStore(root, node.Prefix(), proofs)
 		require.NoError(t, err)
 
 		for _, kvp := range kvps {

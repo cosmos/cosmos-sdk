@@ -34,6 +34,7 @@ func NewPrefix(store Store, pref []byte) Store {
 	}
 }
 
+// Prove implements Store.
 func (prefix prefix) Prove(key, value []byte) bool {
 	return prefix.store.Prove(join(prefix.prefix, key), value)
 }
@@ -94,10 +95,4 @@ func (store *store) Prove(path, value []byte) bool {
 	store.verified[string(path)] = value
 
 	return true
-}
-
-// Proven() returns true if the key-value pair is already proven
-func (store *store) Proven(key []byte) bool {
-	_, ok := store.Get(key)
-	return ok
 }

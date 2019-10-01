@@ -130,7 +130,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			connId2 := args[3]
 			clientId2 := args[4]
 
-			var path1 commitment.Path
+			var path1 commitment.Prefix
 			path1bz, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
@@ -149,7 +149,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var path2 commitment.Path
+			var path2 commitment.Prefix
 			path2bz, err := ioutil.ReadFile(args[5])
 			if err != nil {
 				return err

@@ -13,13 +13,10 @@ import (
 )
 
 type Manager struct {
-	protocol state.Mapping
-
-	client client.Manager
-
+	protocol     state.Mapping
+	client       client.Manager
 	counterparty CounterpartyManager
-
-	path merkle.Path
+	path         merkle.Prefix
 }
 
 func NewManager(protocol state.Mapping, client client.Manager) Manager {
@@ -27,7 +24,7 @@ func NewManager(protocol state.Mapping, client client.Manager) Manager {
 		protocol:     protocol.Prefix(LocalRoot()),
 		client:       client,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
-		path:         merkle.NewPath([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
+		path:         merkle.NewPrefix([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
 	}
 }
 
@@ -58,47 +55,39 @@ type State struct {
 
 	Client client.State
 
-	path merkle.Path
+	path merkle.Prefix
 }
 
+// CONTRACT: client must be filled by the caller
 func (man Manager) State(id string) State {
 	return State{
-		id: id,
-
+		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
 		Connection: man.protocol.Value([]byte(id)),
 		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
-
-		Kind: man.protocol.Value([]byte(id + "/kind")).String(),
-
-		// CONTRACT: client must be filled by the caller
-
-		path: man.path,
+		Kind:       man.protocol.Value([]byte(id + "/kind")).String(),
+		path:       man.path,
 	}
 }
 
 type CounterState struct {
-	id string
-
+	id         string
 	protocol   commitment.Mapping
 	Connection commitment.Value
 	Available  commitment.Boolean
-
-	Kind commitment.String
-
-	Client client.CounterState // nolint: unused
+	Kind       commitment.String
+	Client     client.CounterState // nolint: unused
 }
 
+// CreateState creates a new CounterState instance.
+// CONTRACT: client should be filled by the caller
 func (man CounterpartyManager) CreateState(id string) CounterState {
 	return CounterState{
 		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
 		Connection: man.protocol.Value([]byte(id)),
 		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
-
-		Kind: man.protocol.Value([]byte(id + "/kind")).String(),
-
-		// CONTRACT: client should be filled by the caller
+		Kind:       man.protocol.Value([]byte(id + "/kind")).String(),
 	}
 }
 
@@ -175,14 +164,17 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj State, er
 		err = errors.New("Stage not exists")
 		return
 	}
+
 	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)
 	if err != nil {
 		return
 	}
+
 	if obj.Kind.Get(ctx) != kind {
 		err = errors.New("kind mismatch")
 		return
 	}
+
 	return
 }
 
@@ -191,12 +183,13 @@ func (man Manager) Query(ctx sdk.Context, id string) (obj State, err error) {
 	if !obj.exists(ctx) {
 		err = errors.New("Stage not exists")
 		return
-
 	}
+
 	if !obj.Available.Get(ctx) {
 		err = errors.New("Stage not available")
 		return
 	}
+
 	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)
 	return
 }

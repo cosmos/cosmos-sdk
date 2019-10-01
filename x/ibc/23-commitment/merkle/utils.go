@@ -32,8 +32,8 @@ func RequestQueryMultiStore(storeName string, prefix []byte, key []byte) abci.Re
 	}
 }
 
-func (path Path) Key(key []byte) []byte {
-	return join(path.KeyPrefix, key)
+func (prefix Prefix) Key(key []byte) []byte {
+	return join(prefix.KeyPrefix, key)
 }
 
 func join(a, b []byte) (res []byte) {
@@ -43,14 +43,12 @@ func join(a, b []byte) (res []byte) {
 	return
 }
 
-
-func (path Path) Path() string {
+func (prefix Prefix) Path() string {
 	pathstr := ""
-	for _, inter := range path.KeyPath {
+	for _, inter := range prefix.KeyPath {
 		// The Queryable() stores uses slash-separated keypath format for querying
 		pathstr = pathstr + "/" + string(inter)
 	}
 
 	return pathstr
 }
-*/

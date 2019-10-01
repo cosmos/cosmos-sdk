@@ -3,7 +3,6 @@ package commitment
 import (
 	"bytes"
 	"errors"
-	"fmt"
 )
 
 // Store proves key-value pairs' inclusion or non-inclusion with
@@ -12,15 +11,15 @@ type Store interface {
 	Prove(key, value []byte) bool
 }
 
-var _ Store = prefix{} // TODO: pointer
+var _ Store = (*prefix)(nil) // TODO: pointer
 
 type prefix struct {
 	store  Store
 	prefix []byte
 }
 
-func NewPrefix(store Store, pref []byte) prefix {
-	return prefix{
+func NewPrefix(store Store, pref []byte) Store {
+	return &prefix{
 		store:  store,
 		prefix: pref,
 	}
@@ -34,7 +33,7 @@ var _ Store = (*store)(nil)
 
 type store struct {
 	root     Root
-	path     Path
+	prefix   Prefix
 	proofs   map[string]Proof
 	verified map[string][]byte
 }
@@ -42,28 +41,26 @@ type store struct {
 // NewStore constructs a new Store with the root, path, and proofs.
 // The proofs are not proven immediately because proofs require value bytes to verify.
 // If the kinds of the arguments don't match, returns error.
-func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
-	if root.CommitmentKind() != path.CommitmentKind() {
-		err = errors.New("path type not matching with root's")
-		return
+func NewStore(root Root, prefix Prefix, proofs []Proof) (Store, error) {
+	if root.CommitmentKind() != prefix.CommitmentKind() {
+		return nil, errors.New("prefix type not matching with root's")
 	}
 
-	res = &store{
+	res := &store{
 		root:     root,
-		path:     path,
+		prefix:   prefix,
 		proofs:   make(map[string]Proof),
 		verified: make(map[string][]byte),
 	}
 
 	for _, proof := range proofs {
 		if proof.CommitmentKind() != root.CommitmentKind() {
-			err = errors.New("proof type not matching with root's")
-			return
+			return nil, errors.New("proof type not matching with root's")
 		}
 		res.proofs[string(proof.GetKey())] = proof
 	}
 
-	return
+	return res, nil
 }
 
 // Get() returns the value only if it is already proven.
@@ -80,10 +77,9 @@ func (store *store) Prove(key, value []byte) bool {
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
-		fmt.Println(111, string(key))
 		return false
 	}
-	err := proof.Verify(store.root, store.path, value)
+	err := proof.Verify(store.root, store.prefix, value)
 	if err != nil {
 		return false
 	}

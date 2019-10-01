@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-//	"github.com/cosmos/cosmos-sdk/store/state"
+	//	"github.com/cosmos/cosmos-sdk/store/state"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -35,27 +35,27 @@ func (Root) CommitmentKind() string {
 	return merkleKind
 }
 
-var _ commitment.Path = Path{}
+var _ commitment.Prefix = Prefix{}
 
-// Path is merkle path prefixed to the key.
+// Prefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
-type Path struct {
+type Prefix struct {
 	// KeyPath is the list of keys prepended before the prefixed key
 	KeyPath [][]byte
 	// KeyPrefix is a byte slice prefixed before the key
 	KeyPrefix []byte
 }
 
-// NewPath() constructs new Path
-func NewPath(keypath [][]byte, keyprefix []byte) Path {
-	return Path{
+// NewPath() constructs new Prefix
+func NewPath(keypath [][]byte, keyprefix []byte) Prefix {
+	return Prefix{
 		KeyPath:   keypath,
 		KeyPrefix: keyprefix,
 	}
 }
 
-// Implements commitment.Path
-func (Path) CommitmentKind() string {
+// Implements commitment.Prefix
+func (Prefix) CommitmentKind() string {
 	return merkleKind
 }
 
@@ -78,13 +78,13 @@ func (proof Proof) GetKey() []byte {
 }
 
 // Verify() proves the proof against the given root, path, and value.
-func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []byte) error {
+func (proof Proof) Verify(croot commitment.Root, cpath commitment.Prefix, value []byte) error {
 	root, ok := croot.(Root)
 	if !ok {
 		return errors.New("invalid commitment root type")
 	}
 
-	path, ok := cpath.(Path)
+	path, ok := cpath.(Prefix)
 	if !ok {
 		return errors.New("invalid commitment path type")
 	}
@@ -93,7 +93,7 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []
 	for _, key := range path.KeyPath {
 		keypath = keypath.AppendKey(key, merkle.KeyEncodingHex)
 	}
-	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)	
+	keypath = keypath.AppendKey(append(path.KeyPrefix, proof.Key...), merkle.KeyEncodingHex)
 
 	// TODO: hard coded for now, should be extensible
 	runtime := rootmulti.DefaultProofRuntime()

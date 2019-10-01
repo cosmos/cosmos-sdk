@@ -26,7 +26,7 @@ func (m Mapping) store(ctx sdk.Context) Store {
 	return NewPrefix(GetStore(ctx), m.prefix)
 }
 
-// Prefix() returns a new Mapping with the updated prefix
+// Prefix() returns a new Mapping with the updated key prefix
 func (m Mapping) Prefix(prefix []byte) Mapping {
 	return Mapping{
 		cdc:    m.cdc,
@@ -59,13 +59,13 @@ func (m Mapping) Value(key []byte) Value {
 	return Value{m, key}
 }
 
-// Is() proves the proof with the Value's key and the provided value.
-func (v Value) Is(ctx sdk.Context, value interface{}) bool {
+// Verify() proves the proof with the Value's key and the provided value.
+func (v Value) Verify(ctx sdk.Context, value interface{}) bool {
 	return v.m.store(ctx).Prove(v.key, v.m.cdc.MustMarshalBinaryBare(value))
 }
 
-// IsRaw() proves the proof with the Value's key and the provided raw value bytes.
-func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
+// VerifyRaw() proves the proof with the Value's key and the provided raw value bytes.
+func (v Value) VerifyRaw(ctx sdk.Context, value []byte) bool {
 
 	return v.m.store(ctx).Prove(v.key, value)
 }
@@ -81,9 +81,9 @@ func (v Value) Enum() Enum {
 	return Enum{v}
 }
 
-// Is() proves the proof with the Enum's key and the provided value
-func (v Enum) Is(ctx sdk.Context, value byte) bool {
-	return v.Value.IsRaw(ctx, []byte{value})
+// Verify() proves the proof with the Enum's key and the provided value
+func (v Enum) Verify(ctx sdk.Context, value byte) bool {
+	return v.Value.VerifyRaw(ctx, []byte{value})
 }
 
 type String struct {
@@ -94,8 +94,8 @@ func (v Value) String() String {
 	return String{v}
 }
 
-func (v String) Is(ctx sdk.Context, value string) bool {
-	return v.Value.IsRaw(ctx, []byte(value))
+func (v String) Verify(ctx sdk.Context, value string) bool {
+	return v.Value.VerifyRaw(ctx, []byte(value))
 }
 
 type Boolean struct {
@@ -106,8 +106,8 @@ func (v Value) Boolean() Boolean {
 	return Boolean{v}
 }
 
-func (v Boolean) Is(ctx sdk.Context, value bool) bool {
-	return v.Value.Is(ctx, value)
+func (v Boolean) Verify(ctx sdk.Context, value bool) bool {
+	return v.Value.Verify(ctx, value)
 }
 
 // Integer is a uint64 types wrapper for Value.
@@ -122,7 +122,7 @@ func (v Value) Integer(enc state.IntEncoding) Integer {
 	return Integer{v, enc}
 }
 
-// Is() proves the proof with the Integer's key and the provided value
-func (v Integer) Is(ctx sdk.Context, value uint64) bool {
-	return v.Value.IsRaw(ctx, state.EncodeInt(value, v.enc))
+// Verify() proves the proof with the Integer's key and the provided value
+func (v Integer) Verify(ctx sdk.Context, value uint64) bool {
+	return v.Value.VerifyRaw(ctx, state.EncodeInt(value, v.enc))
 }

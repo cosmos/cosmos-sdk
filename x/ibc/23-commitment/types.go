@@ -8,9 +8,9 @@ type Root interface {
 	CommitmentKind() string
 }
 
-// Path is the additional information provided to the verification function.
-// Path represents the common "prefix" that a set of keys shares.
-type Path interface {
+// Prefix is the additional information provided to the verification function.
+// Prefix represents the common "prefix" that a set of keys shares.
+type Prefix interface {
 	CommitmentKind() string
 }
 
@@ -20,5 +20,5 @@ type Path interface {
 type Proof interface {
 	CommitmentKind() string
 	GetKey() []byte
-	Verify(Root, Path, []byte) error
+	Verify(Root, Prefix, []byte) error
 }

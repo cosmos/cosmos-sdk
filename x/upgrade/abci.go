@@ -20,21 +20,21 @@ func BeginBlock(k *Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	}
 
 	if plan.ShouldExecute(ctx) {
-		if k.HasHandler(plan.Name) {
-			// We have an upgrade handler for this upgrade name, so apply the upgrade
-			ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at %s", plan.Name, plan.DueDate()))
-			k.ApplyUpgrade(ctx, plan)
-		} else {
+		if !k.HasHandler(plan.Name) {
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueDate(), plan.Info))
 			panic("UPGRADE REQUIRED!")
 		}
-	} else {
-		// if we have a pending upgrade, but it is not yet time, make sure we did not
-		// set the handler already
-		if k.HasHandler(plan.Name) {
-			ctx.Logger().Error(fmt.Sprintf("UNKNOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
-			panic("BINARY UPDATED BEFORE TRIGGER!")
-		}
+		// We have an upgrade handler for this upgrade name, so apply the upgrade
+		ctx.Logger().Info(fmt.Sprintf("Applying upgrade \"%s\" at %s", plan.Name, plan.DueDate()))
+		k.ApplyUpgrade(ctx, plan)
+		return
+	}
+
+	// if we have a pending upgrade, but it is not yet time, make sure we did not
+	// set the handler already
+	if k.HasHandler(plan.Name) {
+		ctx.Logger().Error(fmt.Sprintf("UNKNOWN UPGRADE \"%s\" - in binary but not executed on chain", plan.Name))
+		panic("BINARY UPDATED BEFORE TRIGGER!")
 	}
 }

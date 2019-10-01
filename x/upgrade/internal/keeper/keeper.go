@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
@@ -43,17 +44,17 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	}
 	if !plan.Time.IsZero() {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
-			return sdk.ErrUnknownRequest("Upgrade cannot be scheduled in the past")
+			return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 		}
 		if plan.Height != 0 {
-			return sdk.ErrUnknownRequest("Only one of Time or Height should be specified")
+			return sdk.ErrUnknownRequest("only one of Time or Height should be specified")
 		}
 	} else if plan.Height <= ctx.BlockHeight() {
-		return sdk.ErrUnknownRequest("Upgrade cannot be scheduled in the past")
+		return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 	}
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(types.DoneHeightKey(plan.Name)) {
-		return sdk.ErrUnknownRequest(fmt.Sprintf("Upgrade with name %s has already been completed", plan.Name))
+		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
 	}
 	bz := k.cdc.MustMarshalBinaryBare(plan)
 	k.haveCache = false
@@ -66,6 +67,11 @@ func (k *Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	k.haveCache = false
 	store.Delete(types.PlanKey())
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled

@@ -28,7 +28,7 @@ const (
 	FlagUpgradeInfo   = "upgrade-info"
 )
 
-func parseSubmitArgs(cmd *cobra.Command, cdc *codec.Codec) (gov.Content, error) {
+func parseArgsToContent(cmd *cobra.Command, cdc *codec.Codec) (gov.Content, error) {
 	title, err := cmd.Flags().GetString(cli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -76,8 +76,8 @@ func parseSubmitArgs(cmd *cobra.Command, cdc *codec.Codec) (gov.Content, error) 
 		return nil, err
 	}
 
-	content := upgrade.NewSoftwareUpgradeProposal(title, description,
-		upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info})
+	plan := upgrade.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
+	content := upgrade.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
 }
 
@@ -91,7 +91,7 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
 			"You may include info to reference a binary download link, in a format compatible with: https://github.com/regen-network/cosmosd",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			content, err := parseSubmitArgs(cmd, cdc)
+			content, err := parseArgsToContent(cmd, cdc)
 			if err != nil {
 				return err
 			}

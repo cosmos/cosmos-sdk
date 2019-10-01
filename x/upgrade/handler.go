@@ -7,6 +7,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+// NewSoftwareUpgradeProposalHandler creates a governance handler to manage new proposal types.
+// It enables SoftwareUpgradeProposal to propose an Upgrade, and CancelSoftwareUpgradeProposal
+// to abort a previously voted upgrade.
 func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
 		switch c := content.(type) {

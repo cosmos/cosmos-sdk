@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	storestate "github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -33,8 +33,8 @@ const (
 	FlagFrom2 = "from2"
 )
 
-func handshake(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeState, error) {
-	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+func handshake(q storestate.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeState, error) {
+	base := storestate.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	clientManager := client.NewManager(base)
 	man := connection.NewHandshaker(connection.NewManager(base, clientManager))
 	return man.CLIQuery(q, connid)
@@ -117,20 +117,20 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
 				WithBroadcastMode(flags.BroadcastBlock)
-			q1 := state.NewCLIQuerier(ctx1)
+			q1 := storestate.NewCLIQuerier(ctx1)
 
 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
 				WithBroadcastMode(flags.BroadcastBlock)
-			q2 := state.NewCLIQuerier(ctx2)
+			q2 := storestate.NewCLIQuerier(ctx2)
 
 			connId1 := args[0]
 			clientId1 := args[1]
 			connId2 := args[3]
 			clientId2 := args[4]
 
-			var path1 commitment.Path
+			var path1 commitment.Prefix
 			path1bz, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
@@ -149,7 +149,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var path2 commitment.Path
+			var path2 commitment.Prefix
 			path2bz, err := ioutil.ReadFile(args[5])
 			if err != nil {
 				return err
@@ -203,7 +203,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 			fmt.Printf("querying from %d\n", header.Height-1)
 
 			_, pconn, err := obj1.ConnectionCLI(q1)
@@ -255,7 +255,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
+			q2 = storestate.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
 
 			_, pconn, err = obj2.ConnectionCLI(q2)
 			if err != nil {
@@ -304,7 +304,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 
 			_, pstate, err = obj1.StageCLI(q1)
 			if err != nil {

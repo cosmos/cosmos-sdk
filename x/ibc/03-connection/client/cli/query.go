@@ -9,7 +9,7 @@ import (
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	storestate "github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
@@ -22,8 +22,8 @@ const (
 	FlagProve = "prove"
 )
 
-func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.State {
-	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
+func state(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.State {
+	base := storestate.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
 	return man.CLIState(connid, clientid)
@@ -44,7 +44,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 func QueryConnection(ctx context.CLIContext, obj connection.State, prove bool) (res utils.JSONState, err error) {
-	q := state.NewCLIQuerier(ctx)
+	q := storestate.NewCLIQuerier(ctx)
 
 	conn, connp, err := obj.ConnectionCLI(q)
 	if err != nil {
@@ -81,13 +81,13 @@ func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(cdc, storeKey, version.Prefix(version.Version), args[0], "")
-			jsonobj, err := QueryConnection(ctx, obj, viper.GetBool(FlagProve))
+			state := state(cdc, storeKey, version.Prefix(version.Version), args[0], "")
+			jsonObj, err := QueryConnection(ctx, state, viper.GetBool(FlagProve))
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, jsonobj))
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, jsonObj))
 
 			return nil
 		},

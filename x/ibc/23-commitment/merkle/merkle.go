@@ -12,6 +12,10 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// ICS 023 Merkle Types Implementation
+//
+// This file defines Merkle commitment types that implements ICS 023.
+
 const merkleKind = "merkle"
 
 // merkle.Proof implementation of Proof
@@ -19,6 +23,7 @@ const merkleKind = "merkle"
 var _ commitment.Root = Root{}
 
 // Root is Merkle root hash
+// In Cosmos-SDK, the AppHash of the Header becomes Root.
 type Root struct {
 	Hash []byte `json:"hash"`
 }
@@ -35,28 +40,32 @@ func (Root) CommitmentKind() string {
 	return merkleKind
 }
 
-var _ commitment.Path = Path{}
+var _ commitment.Prefix = Prefix{}
 
-// Path is merkle path prefixed to the key.
+// Prefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
-type Path struct {
+type Prefix struct {
 	// KeyPath is the list of keys prepended before the prefixed key
 	KeyPath [][]byte `json:"key_path"`
 	// KeyPrefix is a byte slice prefixed before the key
 	KeyPrefix []byte `json:"key_prefix"`
 }
 
-// NewPath() constructs new Path
-func NewPath(keypath [][]byte, keyprefix []byte) Path {
-	return Path{
+// NewPrefix constructs new Prefix instance
+func NewPrefix(keypath [][]byte, keyprefix []byte) Prefix {
+	return Prefix{
 		KeyPath:   keypath,
 		KeyPrefix: keyprefix,
 	}
 }
 
-// Implements commitment.Path
-func (Path) CommitmentKind() string {
+// Implements commitment.Prefix
+func (Prefix) CommitmentKind() string {
 	return merkleKind
+}
+
+func (prefix Prefix) Key(key []byte) []byte {
+	return join(prefix.KeyPrefix, key)
 }
 
 var _ commitment.Proof = Proof{}
@@ -78,13 +87,13 @@ func (proof Proof) GetKey() []byte {
 }
 
 // Verify() proves the proof against the given root, path, and value.
-func (proof Proof) Verify(croot commitment.Root, cpath commitment.Path, value []byte) error {
+func (proof Proof) Verify(croot commitment.Root, cpath commitment.Prefix, value []byte) error {
 	root, ok := croot.(Root)
 	if !ok {
 		return errors.New("invalid commitment root type")
 	}
 
-	path, ok := cpath.(Path)
+	path, ok := cpath.(Prefix)
 	if !ok {
 		return errors.New("invalid commitment path type")
 	}

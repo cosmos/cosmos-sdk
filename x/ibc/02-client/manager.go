@@ -123,7 +123,7 @@ func (obj State) Update(ctx sdk.Context, header Header) error {
 	}
 
 	stored := obj.GetConsensusState(ctx)
-	updated, err := stored.Validate(header)
+	updated, err := stored.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return err
 	}

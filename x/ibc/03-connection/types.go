@@ -9,9 +9,9 @@ import (
 )
 
 type Connection struct {
-	Client       string          `json:"client"`
-	Counterparty string          `json:"counterParty"`
-	Path         commitment.Path `json:"path"`
+	Client       string            `json:"client"`
+	Counterparty string            `json:"counterParty"`
+	Path         commitment.Prefix `json:"path"`
 }
 
 /*

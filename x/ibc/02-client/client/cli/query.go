@@ -144,7 +144,7 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			mapp := mapping(cdc, storeName, version.Version)
-			path := merkle.NewPath([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
+			path := merkle.NewPrefix([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
 			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
 			return nil
 		},

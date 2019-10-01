@@ -47,12 +47,12 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 	res.Connection = connection.Connection{
 		Counterparty: res.Counterparty.Name,
-		Path:         res.Counterparty.Path(),
+		Path:         res.Counterparty.Prefix(),
 	}
 
 	res.Counterparty.Connection = connection.Connection{
 		Counterparty: res.Name,
-		Path:         res.Path(),
+		Path:         res.Prefix(),
 	}
 
 	return res
@@ -98,7 +98,7 @@ func (node *Node) CLIState() connection.HandshakeState {
 }
 
 func (node *Node) Mapping() state.Mapping {
-	protocol := state.NewMapping(node.Key, node.Cdc, node.Prefix)
+	protocol := state.NewMapping(node.Key, node.Cdc, node.KeyPrefix)
 	return protocol
 }
 
@@ -147,7 +147,7 @@ func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.
 	require.Equal(t, connection.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.True(t, obj.Available.Get(ctx))
-	node.SetState(connection.CloseTry)
+	node.SetState(connection.Open)
 }
 
 func (node *Node) Handshake(t *testing.T) {

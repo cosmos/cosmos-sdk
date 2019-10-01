@@ -16,8 +16,6 @@ const (
 	Init
 	OpenTry
 	Open
-	CloseTry
-	Closed
 )
 
 const HandshakeKind = "handshake"
@@ -30,7 +28,7 @@ type Handshaker struct {
 
 func NewHandshaker(man Manager) Handshaker {
 	return Handshaker{
-		man: man,
+		man:          man,
 		counterParty: CounterpartyHandshaker{man.counterparty},
 	}
 }
@@ -58,7 +56,7 @@ type CounterHandshakeState struct {
 // CONTRACT: client and remote must be filled by the caller
 func (man Handshaker) CreateState(parent State) HandshakeState {
 	return HandshakeState{
-		State: parent,
+		State:              parent,
 		Stage:              man.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
 		CounterpartyClient: man.man.protocol.Value([]byte(parent.id + "/counterpartyClient")).String(),
 
@@ -68,7 +66,7 @@ func (man Handshaker) CreateState(parent State) HandshakeState {
 
 func (man CounterpartyHandshaker) CreateState(id string) CounterHandshakeState {
 	return CounterHandshakeState{
-		CounterState: man.man.CreateState(id),
+		CounterState:       man.man.CreateState(id),
 		Stage:              man.man.protocol.Value([]byte(id + "/state")).Enum(),
 		CounterpartyClient: man.man.protocol.Value([]byte(id + "/counterpartyClient")).String(),
 	}

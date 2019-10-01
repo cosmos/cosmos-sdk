@@ -77,6 +77,9 @@ the following [issue](https://github.com/keybase/go-keychain/issues/47) with the
 you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
 upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
+* (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
+to the new keyring.
+
 
 ### Improvements
 
@@ -135,6 +138,7 @@ in `TxResponse` is deprecated and will be removed in the next major release.
 
 * [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
 `os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
+* [\#5034](https://github.com/cosmos/cosmos-sdk/issues/5034) Binary search in NFT Module wasn't working on larger sets.
 
 ## [v0.37.0] - 2019-08-21
 

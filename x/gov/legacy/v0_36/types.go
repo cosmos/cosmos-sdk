@@ -18,7 +18,7 @@ const (
 
 	DefaultCodespace sdk.CodespaceType = "gov"
 
-	ProposalTypeText            string = "Text"
+	ProposalTypeText string = "Text"
 
 	MaxDescriptionLength int = 5000
 	MaxTitleLength       int = 140

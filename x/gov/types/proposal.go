@@ -201,7 +201,7 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 
 // Proposal types
 const (
-	ProposalTypeText            string = "Text"
+	ProposalTypeText string = "Text"
 )
 
 // TextProposal defines a standard text proposal whose changes need to be
@@ -242,9 +242,8 @@ func (tp TextProposal) String() string {
 `, tp.Title, tp.Description)
 }
 
-
 var validProposalTypes = map[string]struct{}{
-	ProposalTypeText:            {},
+	ProposalTypeText: {},
 }
 
 // RegisterProposalType registers a proposal type. It will panic if the type is

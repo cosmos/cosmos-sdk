@@ -8,40 +8,40 @@ import (
 )
 
 func (man Manager) CLIState(connid, clientid string) State {
-	obj := man.State(connid)
-	obj.Client = man.client.State(clientid)
-	return obj
+	state := man.State(connid)
+	state.Client = man.client.State(clientid)
+	return state
 }
 
 func (man Manager) CLIQuery(q state.ABCIQuerier, connid string) (State, error) {
-	obj := man.State(connid)
-	conn, _, err := obj.ConnectionCLI(q)
+	state := man.State(connid)
+	conn, _, err := state.ConnectionCLI(q)
 	if err != nil {
 		return State{}, err
 	}
-	obj.Client = man.client.State(conn.Client)
-	return obj, nil
+	state.Client = man.client.State(conn.Client)
+	return state, nil
 }
 
-func (obj State) prefix() []byte {
-	return bytes.Split(obj.Connection.KeyBytes(), LocalRoot())[0]
+func (state State) prefix() []byte {
+	return bytes.Split(state.Connection.KeyBytes(), LocalRoot())[0]
 }
 
-func (obj State) ConnectionCLI(q state.ABCIQuerier) (res Connection, proof merkle.Proof, err error) {
-	tmproof, err := obj.Connection.Query(q, &res)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Connection)
+func (state State) ConnectionCLI(q state.ABCIQuerier) (res Connection, proof merkle.Proof, err error) {
+	tmproof, err := state.Connection.Query(q, &res)
+	proof = merkle.NewProofFromValue(tmproof, state.prefix(), state.Connection)
 	return
 }
 
-func (obj State) AvailableCLI(q state.ABCIQuerier) (res bool, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.Available.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Available)
+func (state State) AvailableCLI(q state.ABCIQuerier) (res bool, proof merkle.Proof, err error) {
+	res, tmproof, err := state.Available.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, state.prefix(), state.Available)
 	return
 }
 
-func (obj State) KindCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.Kind.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Kind)
+func (state State) KindCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
+	res, tmproof, err := state.Kind.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, state.prefix(), state.Kind)
 	return
 }
 
@@ -57,14 +57,14 @@ func (man Handshaker) CLIQuery(q state.ABCIQuerier, connid string) (HandshakeSta
 	return man.CreateState(state), nil
 }
 
-func (obj HandshakeState) StageCLI(q state.ABCIQuerier) (res byte, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.Stage.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.Stage)
+func (state HandshakeState) StageCLI(q state.ABCIQuerier) (res byte, proof merkle.Proof, err error) {
+	res, tmproof, err := state.Stage.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, state.prefix(), state.Stage)
 	return
 }
 
-func (obj HandshakeState) CounterpartyClientCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
-	res, tmproof, err := obj.CounterpartyClient.Query(q)
-	proof = merkle.NewProofFromValue(tmproof, obj.prefix(), obj.CounterpartyClient)
+func (state HandshakeState) CounterpartyClientCLI(q state.ABCIQuerier) (res string, proof merkle.Proof, err error) {
+	res, tmproof, err := state.CounterpartyClient.Query(q)
+	proof = merkle.NewProofFromValue(tmproof, state.prefix(), state.CounterpartyClient)
 	return
 }

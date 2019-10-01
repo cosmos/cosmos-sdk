@@ -1,4 +1,4 @@
-package upgrade
+package types
 
 import (
 	"fmt"
@@ -6,6 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// TODO!!
+// Handler specifies the type of function that is called when an upgrade is applied
+type Handler func(ctx sdk.Context, plan Plan)
 
 // Plan specifies information about a planned upgrade and when it should occur
 type Plan struct {
@@ -28,9 +32,6 @@ type Plan struct {
 	// such as a git commit that validators could automatically upgrade to
 	Info string `json:"info,omitempty"`
 }
-
-// Handler specifies the type of function that is called when an upgrade is applied
-type Handler func(ctx sdk.Context, plan Plan)
 
 func (plan Plan) String() string {
 	var whenStr string

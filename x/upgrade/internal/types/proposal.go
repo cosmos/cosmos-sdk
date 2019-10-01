@@ -1,4 +1,4 @@
-package upgrade
+package types
 
 import (
 	"fmt"

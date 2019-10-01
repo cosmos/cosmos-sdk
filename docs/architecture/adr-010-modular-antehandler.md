@@ -211,9 +211,9 @@ Define AnteDecorator functions
 
 ```go
 // Setup GasMeter, catch OutOfGasPanic and handle appropriately
-type SetupDecorator struct{}
+type SetUpContextDecorator struct{}
 
-func (sud SetupDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+func (sud SetUpContextDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
     ctx.GasMeter = NewGasMeter(tx.Gas)
 
     defer func() {
@@ -251,7 +251,7 @@ Link AnteDecorators to create a final AnteHandler. Set this AnteHandler in basea
 
 ```go
 // Create final antehandler by chaining the decorators together
-antehandler := ChainAnteDecorators(NewSetupDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
+antehandler := ChainAnteDecorators(NewSetUpContextDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
 
 // Set chained Antehandler in the baseapp
 bapp.SetAnteHandler(antehandler)

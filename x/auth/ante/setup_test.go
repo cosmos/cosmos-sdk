@@ -27,7 +27,7 @@ func TestSetup(t *testing.T) {
 	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
-	sud := ante.NewSetupDecorator()
+	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
@@ -37,9 +37,9 @@ func TestSetup(t *testing.T) {
 	require.Equal(t, uint64(0), ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
 
 	newCtx, err := antehandler(ctx, tx, false)
-	require.Nil(t, err, "SetupDecorator returned error")
+	require.Nil(t, err, "SetUpContextDecorator returned error")
 
-	// Context GasMeter Limit should be set after SetupDecorator runs
+	// Context GasMeter Limit should be set after SetUpContextDecorator runs
 	require.Equal(t, fee.Gas, newCtx.GasMeter().Limit(), "GasMeter not set correctly")
 }
 
@@ -59,7 +59,7 @@ func TestRecoverPanic(t *testing.T) {
 	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
-	sud := ante.NewSetupDecorator()
+	sud := ante.NewSetUpContextDecorator()
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set

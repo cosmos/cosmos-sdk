@@ -260,7 +260,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 		return
 	}
 
-	sigs := stdTx.GetSignatures()
+	sigs := stdTx.Signatures
 	if len(sigs) == 0 || !appendSig {
 		sigs = []StdSignature{stdSignature}
 	} else {

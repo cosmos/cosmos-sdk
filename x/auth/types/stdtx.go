@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 var (
@@ -98,14 +99,43 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 func (tx StdTx) GetMemo() string { return tx.Memo }
 
 // GetSignatures returns the signature of signers who signed the Msg.
-// GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
 // pubkeys returned from MsgKeySigners, and the order
 // matches.
 // CONTRACT: If the signature is missing (ie the Msg is
 // invalid), then the corresponding signature is
 // .Empty().
-func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
+func (tx StdTx) GetSignatures() [][]byte {
+	var sigs [][]byte
+	for _, stdSig := range tx.Signatures {
+		sigs = append(sigs, stdSig.Signature)
+	}
+	return sigs
+}
+
+// GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
+// If pubkey is not included in the signature, then nil is in the slice instead
+func (tx StdTx) GetPubKeys() []crypto.PubKey {
+	var pks []crypto.PubKey
+	for _, stdSig := range tx.Signatures {
+		pks = append(pks, stdSig.PubKey)
+	}
+	return pks
+}
+
+// GetSignBytes returns the signBytes of the tx for a given signer
+func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+	genesis := ctx.BlockHeight() == 0
+	chainID := ctx.ChainID()
+	var accNum uint64
+	if !genesis {
+		accNum = acc.GetAccountNumber()
+	}
+
+	return StdSignBytes(
+		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
+	)
+}
 
 // Gas returns the Gas in StdFee
 func (tx StdTx) Gas() uint64 { return tx.Fee.Gas }

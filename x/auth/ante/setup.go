@@ -7,23 +7,23 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Tx with a Gas() method is needed to use SetupDecorator
+// Tx with a Gas() method is needed to use SetUpContextDecorator
 type GasTx interface {
 	Gas() uint64
 }
 
-// SetUpDecorator sets the GasMeter in the Context and wraps the next AnteHandler with a defer clause
+// SetUpContextDecorator sets the GasMeter in the Context and wraps the next AnteHandler with a defer clause
 // to recover from any downstream OutOfGas panics in the AnteHandler chain to return an error with information
 // on gas provided and gas used.
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
-type SetUpDecorator struct{}
+type SetUpContextDecorator struct{}
 
-func NewSetupDecorator() SetUpDecorator {
-	return SetUpDecorator{}
+func NewSetUpContextDecorator() SetUpContextDecorator {
+	return SetUpContextDecorator{}
 }
 
-func (sud SetUpDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	// all transactions must implement GasTx
 	gasTx, ok := tx.(GasTx)
 	if !ok {

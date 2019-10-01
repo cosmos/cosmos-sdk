@@ -31,11 +31,9 @@ var (
 	// functions aliases
 	NewAnteHandler                    = ante.NewAnteHandler
 	GetSignerAcc                      = ante.GetSignerAcc
-	ProcessPubKey                     = ante.ProcessPubKey
 	DefaultSigVerificationGasConsumer = ante.DefaultSigVerificationGasConsumer
 	DeductFees                        = ante.DeductFees
 	SetGasMeter                       = ante.SetGasMeter
-	GetSignBytes                      = ante.GetSignBytes
 	NewAccountKeeper                  = keeper.NewAccountKeeper
 	NewQuerier                        = keeper.NewQuerier
 	NewBaseAccount                    = types.NewBaseAccount

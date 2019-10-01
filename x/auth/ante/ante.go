@@ -11,15 +11,16 @@ import (
 // signer.
 func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		NewSetupDecorator(),
+		NewSetUpContextDecorator(),
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewValidateMemoDecorator(ak),
 		NewConsumeGasForTxSizeDecorator(ak),
-		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSetPubKeyDecorator(ak),
 		NewValidateSigCountDecorator(ak),
+		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		NewSigVerificationDecorator(ak),
+		NewIncrementSequenceDecorator(ak),
 	)
 }

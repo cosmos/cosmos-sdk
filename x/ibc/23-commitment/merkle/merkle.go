@@ -51,8 +51,8 @@ type Prefix struct {
 	KeyPrefix []byte `json:"key_prefix"`
 }
 
-// NewPath() constructs new Prefix
-func NewPath(keypath [][]byte, keyprefix []byte) Prefix {
+// NewPrefix constructs new Prefix instance
+func NewPrefix(keypath [][]byte, keyprefix []byte) Prefix {
 	return Prefix{
 		KeyPath:   keypath,
 		KeyPrefix: keyprefix,
@@ -62,6 +62,10 @@ func NewPath(keypath [][]byte, keyprefix []byte) Prefix {
 // Implements commitment.Prefix
 func (Prefix) CommitmentKind() string {
 	return merkleKind
+}
+
+func (path Prefix) Key(key []byte) []byte {
+	return join(path.KeyPrefix, key)
 }
 
 var _ commitment.Proof = Proof{}

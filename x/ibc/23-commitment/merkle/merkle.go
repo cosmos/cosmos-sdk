@@ -12,6 +12,10 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// ICS 023 Merkle Types Implementation
+//
+// This file defines Merkle commitment types that implements ICS 023.
+
 const merkleKind = "merkle"
 
 // merkle.Proof implementation of Proof
@@ -19,6 +23,7 @@ const merkleKind = "merkle"
 var _ commitment.Root = Root{}
 
 // Root is Merkle root hash
+// In Cosmos-SDK, the AppHash of the Header becomes Root.
 type Root struct {
 	Hash []byte
 }

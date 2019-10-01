@@ -25,9 +25,10 @@
 This specification defines the vesting account implementation that is used by the Cosmos Hub. The requirements for this vesting account is that it should be initialized during genesis with a starting balance `X` and a vesting end time `T`. A vesting account may be initialized with a vesting start time `T'` and a number of vesting periods `P`. If a vesting start time is included, the vesting period will not begin until start time is reached. If vesting periods are included, the vesting will occur over the specified number of periods.
 
 For all vesting accounts, the owner of the vesting account is able to delegate and undelegate from validators, however they cannot transfer coins to another account until those coins are vested. This specification allows for three different kinds of vesting:
-* Delayed vesting, where all coins are vested once `T` is reached.
-* Continous vesting, where coins begin to vest at `T'` and vest linearly with respect to time until `T` is reached
-* Periodic vesting, where coins begin to vest at `T'` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable. A periodic vesting account is distinguished from a continuous vesting account in that coins can be released in staggered tranches. For example, a periodic vesting account could be used for vesting arrangements where coins are relased quarterly, yearly, or over any other function of tokens over time.
+
+- Delayed vesting, where all coins are vested once `T` is reached.
+- Continous vesting, where coins begin to vest at `T'` and vest linearly with respect to time until `T` is reached
+- Periodic vesting, where coins begin to vest at `T'` and vest periodically according to number of periods and the vesting amount per period. The number of periods, length per period, and amount per period are configurable. A periodic vesting account is distinguished from a continuous vesting account in that coins can be released in staggered tranches. For example, a periodic vesting account could be used for vesting arrangements where coins are relased quarterly, yearly, or over any other function of tokens over time.
 
 ## Note
 Vesting accounts can be initialized with some vesting and non-vesting coins. The non-vesting coins would be immediately transferable.
@@ -164,16 +165,20 @@ func (cva ContinuousVestingAccount) GetVestingCoins(t Time) Coins {
 ```
 
 ### Periodic Vesting Accounts
+
 Periodic vesting accounts require calculating the coins released during each period for a given block time `T`. Note that multiple periods could have passed when calculating GetVestedCoins, so we must iterate over each period until the end of that period is after `T`.
 
 Set `CT := StartTime`
+
 Set `V' := 0`
+
 For each Period P:
+
   1. Compute `X := T - CT`
   2. IF `X >= P.Length`
-    a. Compute `V' += P.Amount`
-    b. Compute `CT += P.Length`
-    ELSE break
+      1. Compute `V' += P.Amount`
+      2. Compute `CT += P.Length`
+      3. ELSE break
   3. Compute `V := OV = V'`
 
 ```go
@@ -184,12 +189,12 @@ func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
   ct := pva.StartTime // The time of the current period start
   vested := 0
   periods = pva.GetPeriods()
-  for i, _  := range periods {
-    if t - ct < periods[i].Length {
+  for _, period  := range periods {
+    if t - ct < period.Length {
       break
     }
-    vested += periods[i].Amount
-    ct += periods[i].Length
+    vested += period.Amount
+    ct += period.Length
   }
   return vested
 }
@@ -414,28 +419,37 @@ V' = 0
 ```
 
 1. Immediately receives 1 coin
+
     ```
     BC = 11
     ```
+
 2. Time passes, 2 coins vest
+
     ```
     V = 8
     V' = 2
     ```
+
 3. Delegates 4 coins to validator A
+
     ```
     DV = 4
     BC = 7
     ```
+
 4. Sends 3 coins
+
     ```
     BC = 4
     ```
+
 5. More time passes, 2 more coins vest
     ```
     V = 6
     V' = 4
     ```
+
 6. Sends 2 coins. At this point the account cannot send anymore until further coins vest or it receives additional coins. It can still however, delegate.
     ```
     BC = 2
@@ -446,27 +460,36 @@ V' = 0
 Same initial starting conditions as the simple example.
 
 1. Time passes, 5 coins vest
+
     ```
     V = 5
     V' = 5
     ```
+
 2. Delegate 5 coins to validator A
+
     ```
     DV = 5
     BC = 5
     ```
+
 3. Delegate 5 coins to validator B
+
     ```
     DF = 5
     BC = 0
     ```
+
 4. Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
 5. Undelegate from validator A (2.5 coins)
+
     ```
     DF = 5 - 2.5 = 2.5
     BC = 0 + 2.5 = 2.5
     ```
+
 6. Undelegate from validator B (5 coins). The account at this point can only send 2.5 coins unless it receives more coins or until more coins vest. It can still however, delegate.
+
     ```
     DV = 5 - 2.5 = 2.5
     DF = 2.5 - 2.5 = 0
@@ -476,6 +499,7 @@ Same initial starting conditions as the simple example.
     Notice how we have an excess amount of `DV`.
 
 ### Periodic Vesting
+
 A vesting account is created where 100 tokens will be released over 1 year, with 1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
 
 ```json
@@ -531,25 +555,31 @@ V' = 0
 ```
 
 1. Immediately receives 1 coin
+
     ```
     BC = 101
     ```
+
 2. Vesting period 1 passes, 25 coins vest
+
     ```
     V = 75
     V' = 25
     ```
+
 3. During vesting period 2, 5 coins are transfered and 5 coins are delegated
+
     ```
     DV = 4
     BC = 91
     ```
+
 4. Vesting period 2 passes, 25 coins vest
+
     ```
     V = 50
     V' = 50
     ```
-
 
 ## Glossary
 

@@ -68,20 +68,22 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs := make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			v0, p, err := QueryMultiStore(cms, storeName, prefix, []byte(k))
+			q := state.NewStoreQuerier(cms.(types.Queryable))
+			v0, p, err := mapp.Value([]byte(k)).QueryRaw(q)
 			require.NoError(t, err)
 			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0, "Queried value different at %d", repeat)
-			proofs = append(proofs, p)
+			proofs = append(proofs, Proof{Key: []byte(k), Proof: p})
 		}
 
 		// Add some exclusion proofs
 		for i := 0; i < 10; i++ {
 			k := make([]byte, 64)
 			rand.Read(k)
-			v, p, err := QueryMultiStore(cms, storeName, prefix, k)
+			q := state.NewStoreQuerier(cms.(types.Queryable))
+			v, p, err := mapp.Value([]byte(k)).QueryRaw(q)
 			require.NoError(t, err)
 			require.Nil(t, v)
-			proofs = append(proofs, p)
+			proofs = append(proofs, Proof{Key: []byte(k), Proof: p})
 			m[string(k)] = []byte{}
 		}
 
@@ -110,10 +112,11 @@ func TestStore(t *testing.T) {
 		// Test query, and accumulate proofs
 		proofs = make([]commitment.Proof, 0, kvpn)
 		for k, v := range m {
-			v0, p, err := QueryMultiStore(cms, storeName, prefix, []byte(k))
+			q := state.NewStoreQuerier(cms.(types.Queryable))
+			v0, p, err := mapp.Value([]byte(k)).QueryRaw(q)
 			require.NoError(t, err)
 			require.Equal(t, cdc.MustMarshalBinaryBare(v), v0)
-			proofs = append(proofs, p)
+			proofs = append(proofs, Proof{Key: []byte(k), Proof: p})
 		}
 
 		cstore, err = commitment.NewStore(root, path, proofs)

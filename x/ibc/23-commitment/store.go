@@ -3,7 +3,6 @@ package commitment
 import (
 	"bytes"
 	"errors"
-	"fmt"
 )
 
 // Store proves key-value pairs' inclusion or non-inclusion with
@@ -12,7 +11,7 @@ type Store interface {
 	Prove(key, value []byte) bool
 }
 
-var _ Store = prefix{} // TODO: pointer
+var _ Store = prefix{}
 
 type prefix struct {
 	store  Store
@@ -80,7 +79,6 @@ func (store *store) Prove(key, value []byte) bool {
 	}
 	proof, ok := store.proofs[string(key)]
 	if !ok {
-		fmt.Println(111, string(key))
 		return false
 	}
 	err := proof.Verify(store.root, store.path, value)

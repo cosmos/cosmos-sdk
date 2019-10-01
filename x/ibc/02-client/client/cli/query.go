@@ -14,14 +14,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
-func mapping(cdc *codec.Codec, storeKey string, version int64) state.Mapping {
-	prefix := []byte(strconv.FormatInt(version, 10) + "/")
+func mapping(cdc *codec.Codec, storeKey string, v int64) state.Mapping {
+	prefix := version.Prefix(v)
 	return state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 }
 
@@ -35,8 +35,10 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ibcQueryCmd.AddCommand(cli.GetCommands(
 		GetCmdQueryConsensusState(storeKey, cdc),
+		GetCmdQueryPath(storeKey, cdc),
 		GetCmdQueryHeader(cdc),
 		GetCmdQueryClient(storeKey, cdc),
+		GetCmdQueryRoot(storeKey, cdc),
 	)...)
 	return ibcQueryCmd
 }
@@ -49,11 +51,11 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 			q := state.NewCLIQuerier(ctx)
-			mapp := mapping(cdc, storeKey, ibc.Version)
+			mapp := mapping(cdc, storeKey, version.Version)
 			man := client.NewManager(mapp)
 			id := args[0]
 
-			state, _, err := man.Object(id).ConsensusStateCLI(q)
+			state, _, err := man.State(id).ConsensusStateCLI(q)
 			if err != nil {
 				return err
 			}
@@ -65,6 +67,33 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 }
 
+func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "root",
+		Short: "Query stored root",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCLIContext().WithCodec(cdc)
+			q := state.NewCLIQuerier(ctx)
+			mapp := mapping(cdc, storeKey, version.Version)
+			man := client.NewManager(mapp)
+			id := args[0]
+			height, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			root, _, err := man.State(id).RootCLI(q, height)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, root))
+
+			return nil
+		},
+	}
+}
 func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "consensus-state",
@@ -104,6 +133,19 @@ func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command
 
 			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
 
+			return nil
+		},
+	}
+}
+
+func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "path",
+		Short: "Query the commitment path of the running chain",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mapp := mapping(cdc, storeName, version.Version)
+			path := merkle.NewPath([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
 			return nil
 		},
 	}

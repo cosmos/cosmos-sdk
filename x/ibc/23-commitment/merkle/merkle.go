@@ -7,7 +7,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	//	"github.com/cosmos/cosmos-sdk/store/state"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -20,7 +20,7 @@ var _ commitment.Root = Root{}
 
 // Root is Merkle root hash
 type Root struct {
-	Hash []byte
+	Hash []byte `json:"hash"`
 }
 
 // NewRoot constructs a new Root
@@ -41,9 +41,9 @@ var _ commitment.Path = Path{}
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
 type Path struct {
 	// KeyPath is the list of keys prepended before the prefixed key
-	KeyPath [][]byte
+	KeyPath [][]byte `json:"key_path"`
 	// KeyPrefix is a byte slice prefixed before the key
-	KeyPrefix []byte
+	KeyPrefix []byte `json:"key_prefix"`
 }
 
 // NewPath() constructs new Path
@@ -59,16 +59,12 @@ func (Path) CommitmentKind() string {
 	return merkleKind
 }
 
-func NewPathFromMapping(mapp state.Mapping) Path {
-	return NewPath([][]byte{[]byte(mapp.StoreName())}, mapp.PrefixBytes())
-}
-
 var _ commitment.Proof = Proof{}
 
 // Proof is Merkle proof with the key information.
 type Proof struct {
-	Proof *merkle.Proof
-	Key   []byte
+	Proof *merkle.Proof `json:"proof"`
+	Key   []byte        `json:"key"`
 }
 
 // Implements commitment.Proof
@@ -113,6 +109,5 @@ type Value interface {
 }
 
 func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
-	// TODO: check HasPrefix
 	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

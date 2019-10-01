@@ -7,10 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO!!
-// Handler specifies the type of function that is called when an upgrade is applied
-type Handler func(ctx sdk.Context, plan Plan)
-
 // Plan specifies information about a planned upgrade and when it should occur
 type Plan struct {
 	// Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any
@@ -44,4 +40,12 @@ func (plan Plan) String() string {
   Name: %s
   %s
   Info: %s`, plan.Name, whenStr, plan.Info)
+}
+
+// ValidateBasic does basic validation of a Plan
+func (plan Plan) ValidateBasic() sdk.Error {
+	if len(plan.Name) == 0 {
+		return sdk.ErrUnknownRequest("Name cannot be empty")
+	}
+	return nil
 }

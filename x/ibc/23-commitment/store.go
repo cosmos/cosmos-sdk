@@ -35,8 +35,8 @@ func NewPrefix(store Store, pref []byte) Store {
 }
 
 // Prove implements Store.
-func (prefix prefix) Prove(path, value []byte) bool {
-	return prefix.store.Prove(join(prefix.prefix, path), value)
+func (prefix prefix) Prove(key, value []byte) bool {
+	return prefix.store.Prove(join(prefix.prefix, key), value)
 }
 
 var _ Store = (*store)(nil)

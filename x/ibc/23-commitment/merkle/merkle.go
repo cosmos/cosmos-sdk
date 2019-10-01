@@ -64,8 +64,8 @@ func (Prefix) CommitmentKind() string {
 	return merkleKind
 }
 
-func (path Prefix) Key(key []byte) []byte {
-	return join(path.KeyPrefix, key)
+func (prefix Prefix) Key(key []byte) []byte {
+	return join(prefix.KeyPrefix, key)
 }
 
 var _ commitment.Proof = Proof{}

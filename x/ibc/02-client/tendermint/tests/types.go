@@ -52,7 +52,7 @@ type Node struct {
 	Commits []tmtypes.SignedHeader
 
 	StoreName string
-	Prefix    []byte
+	KeyPrefix []byte
 }
 
 func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
@@ -65,12 +65,12 @@ func NewNode(valset MockValidators, storeName string, prefix []byte) *Node {
 		Store:     ctx.KVStore(key),
 		Commits:   nil,
 		StoreName: storeName,
-		Prefix:    prefix,
+		KeyPrefix: prefix,
 	}
 }
 
-func (node *Node) Path() merkle.Path {
-	return merkle.NewPath([][]byte{[]byte(node.StoreName)}, node.Prefix)
+func (node *Node) Prefix() merkle.Prefix {
+	return merkle.NewPrefix([][]byte{[]byte(node.StoreName)}, node.KeyPrefix)
 }
 
 func (node *Node) Last() tmtypes.SignedHeader {

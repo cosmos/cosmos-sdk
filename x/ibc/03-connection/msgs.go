@@ -2,18 +2,17 @@ package connection
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const Route = "ibc"
 
 type MsgOpenInit struct {
-	ConnectionID       string
-	Connection         Connection
-	CounterpartyClient string
-	NextTimeout        uint64
-	Signer             sdk.AccAddress
+	ConnectionID       string         `json:"connection_id"`
+	Connection         Connection     `json:"connection"`
+	CounterpartyClient string         `json:"counterparty_client"`
+	NextTimeout        uint64         `json:"next_timeout"`
+	Signer             sdk.AccAddress `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenInit{}
@@ -31,7 +30,7 @@ func (msg MsgOpenInit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenInit) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
@@ -39,13 +38,14 @@ func (msg MsgOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenTry struct {
-	ConnectionID       string
-	Connection         Connection
-	CounterpartyClient string
-	Timeout            uint64
-	NextTimeout        uint64
-	Proofs             []commitment.Proof
-	Signer             sdk.AccAddress
+	ConnectionID       string             `json:"connection_id"`
+	Connection         Connection         `json:"connection"`
+	CounterpartyClient string             `json:"counterparty_client"`
+	Timeout            uint64             `json:"timeout"`
+	NextTimeout        uint64             `json:"next_timeout"`
+	Proofs             []commitment.Proof `json:"proofs"`
+	Height             uint64             `json:"height"`
+	Signer             sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenTry{}
@@ -63,7 +63,7 @@ func (msg MsgOpenTry) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenTry) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
@@ -71,11 +71,12 @@ func (msg MsgOpenTry) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenAck struct {
-	ConnectionID string
-	Timeout      uint64
-	NextTimeout  uint64
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+	ConnectionID string             `json:"connection_id"`
+	Timeout      uint64             `json:"timeout"`
+	NextTimeout  uint64             `json:"next_timeout"`
+	Proofs       []commitment.Proof `json:"proofs"`
+	Height       uint64             `json:"height"`
+	Signer       sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenAck{}
@@ -93,7 +94,7 @@ func (msg MsgOpenAck) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgOpenAck) GetSignBytes() []byte {
-	return nil // TODO
+	return sdk.MustSortJSON(MsgCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
@@ -101,10 +102,11 @@ func (msg MsgOpenAck) GetSigners() []sdk.AccAddress {
 }
 
 type MsgOpenConfirm struct {
-	ConnectionID string
-	Timeout      uint64
-	Proofs       []commitment.Proof
-	Signer       sdk.AccAddress
+	ConnectionID string             `json:"connection_id"`
+	Timeout      uint64             `json:"timeout"`
+	Proofs       []commitment.Proof `json:"proofs"`
+	Height       uint64             `json:"height"`
+	Signer       sdk.AccAddress     `json:"signer"`
 }
 
 var _ sdk.Msg = MsgOpenConfirm{}

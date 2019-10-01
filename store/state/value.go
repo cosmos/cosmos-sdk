@@ -1,11 +1,7 @@
 package state
 
 import (
-	"errors"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Value is a capability for reading and writing on a specific key-value point
@@ -29,7 +25,7 @@ func (v Value) store(ctx Context) KVStore {
 }
 
 // Cdc() returns the codec that the value is using to marshal/unmarshal
-func (v Value) Cdc() *codec.Codec {
+func (v Value) Cdc() *Codec {
 	return v.m.Cdc()
 }
 
@@ -108,19 +104,13 @@ func (v Value) KeyBytes() []byte {
 }
 
 func (v Value) QueryRaw(q ABCIQuerier) ([]byte, *Proof, error) {
-	req := abci.RequestQuery{
-		Path:  "/store" + v.m.StoreName() + "/key",
-		Data:  v.KeyBytes(),
-		Prove: true,
-	}
-
-	resp, err := q.QueryABCI(req)
+	resp, err := q.Query(v.m.StoreName(), v.KeyBytes())
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if !resp.IsOK() {
-		return nil, nil, errors.New(resp.Log)
+		return nil, nil, sdk.NewError(sdk.CodespaceRoot, sdk.CodeType(resp.Code), resp.Log)
 	}
 
 	return resp.Value, resp.Proof, nil

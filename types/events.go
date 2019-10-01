@@ -174,11 +174,8 @@ func (se StringEvents) Flatten() StringEvents {
 	for _, e := range se {
 		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
 	}
-
-	var (
-		res  StringEvents
-		keys []string
-	)
+	keys := make([]string, 0, len(flatEvents))
+	res := make(StringEvents, 0, len(flatEvents)) // appeneded to keys, same length of what is allocated to keys
 
 	for ty := range flatEvents {
 		keys = append(keys, ty)
@@ -209,7 +206,7 @@ func StringifyEvent(e abci.Event) StringEvent {
 // StringifyEvents converts a slice of Event objects into a slice of StringEvent
 // objects.
 func StringifyEvents(events []abci.Event) StringEvents {
-	var res StringEvents
+	res := make(StringEvents, 0, len(events))
 
 	for _, e := range events {
 		res = append(res, StringifyEvent(e))

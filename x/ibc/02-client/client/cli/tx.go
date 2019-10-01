@@ -32,8 +32,8 @@ const (
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcTxCmd := &cobra.Command{
-		Use:                        "ibc",
-		Short:                      "IBC transaction subcommands",
+		Use:                        "client",
+		Short:                      "Client transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
@@ -48,7 +48,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-client",
+		Use:   "create",
 		Short: "create new client with a consensus state",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,7 +81,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-client",
+		Use:   "update",
 		Short: "update existing client with a header",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

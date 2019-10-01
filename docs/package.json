@@ -4,12 +4,12 @@
   "description": "## Get Started",
   "main": "index.js",
   "scripts": {
-    "serve": "vuepress dev",
-    "build": "vuepress build"
+    "serve": "./modules.sh && vuepress dev",
+    "build": "./modules.sh && vuepress build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.3"
+    "vuepress-theme-cosmos": "^1.0.4"
   }
 }

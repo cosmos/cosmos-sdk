@@ -27,37 +27,37 @@ module.exports = {
     editLinks: true,
     logo: "/logo.svg",
     sidebar: [
-      {
-        title: "Using the SDK",
-        children: [
-          {
-            title: "Scaffolding",
-            children: [
-              {
-                title: "Scaffolding 1",
-                path: "/scaffolding1"
-              },
-              {
-                title: "Scaffolding 2",
-                path: "/scaffolding2"
-              }
-            ]
-          },
-          {
-            title: "Modules",
-            children: [
-              {
-                title: "Auth",
-                path: "/auth",
-              },
-              {
-                title: "Bank",
-                path: "/bank"
-              }
-            ]
-          }
-        ]
-      },
+      // {
+      //   title: "Using the SDK",
+      //   children: [
+      //     {
+      //       title: "Scaffolding",
+      //       children: [
+      //         {
+      //           title: "Scaffolding 1",
+      //           path: "/scaffolding1"
+      //         },
+      //         {
+      //           title: "Scaffolding 2",
+      //           path: "/scaffolding2"
+      //         }
+      //       ]
+      //     },
+      //     {
+      //       title: "Modules",
+      //       children: [
+      //         {
+      //           title: "Auth",
+      //           path: "/auth",
+      //         },
+      //         {
+      //           title: "Bank",
+      //           path: "/bank"
+      //         }
+      //       ]
+      //     }
+      //   ]
+      // },
       {
         title: "Resources",
         children: [
@@ -72,7 +72,7 @@ module.exports = {
           {
             title: "REST API Spec",
             path: "https://github.com/cosmos/sdk-application-tutorial"
-          },
+          }
         ]
       }
     ]

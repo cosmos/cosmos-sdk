@@ -5,13 +5,13 @@ import (
 		"errors"
 		"strings"
 	*/
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 type Connection struct {
-	Client       string
-	Counterparty string
-	Path         commitment.Path
+	Client       string          `json:"client"`
+	Counterparty string          `json:"counterParty"`
+	Path         commitment.Path `json:"path"`
 }
 
 /*

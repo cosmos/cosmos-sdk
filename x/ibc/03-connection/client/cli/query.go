@@ -12,21 +12,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
 const (
 	FlagProve = "prove"
 )
 
-func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.Object {
+func object(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.State {
 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
 	climan := client.NewManager(base)
 	man := connection.NewManager(base, climan)
-	return man.CLIObject(connid, clientid)
+	return man.CLIState(connid, clientid)
 }
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -43,7 +43,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return ibcQueryCmd
 }
 
-func QueryConnection(ctx context.CLIContext, obj connection.Object, prove bool) (res utils.JSONObject, err error) {
+func QueryConnection(ctx context.CLIContext, obj connection.State, prove bool) (res utils.JSONState, err error) {
 	q := state.NewCLIQuerier(ctx)
 
 	conn, connp, err := obj.ConnectionCLI(q)
@@ -60,14 +60,14 @@ func QueryConnection(ctx context.CLIContext, obj connection.Object, prove bool) 
 	}
 
 	if prove {
-		return utils.NewJSONObject(
+		return utils.NewJSONState(
 			conn, connp,
 			avail, availp,
 			kind, kindp,
 		), nil
 	}
 
-	return utils.NewJSONObject(
+	return utils.NewJSONState(
 		conn, nil,
 		avail, nil,
 		kind, nil,
@@ -81,7 +81,7 @@ func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			obj := object(cdc, storeKey, ibc.VersionPrefix(ibc.Version), args[0], "")
+			obj := object(cdc, storeKey, version.Prefix(version.Version), args[0], "")
 			jsonobj, err := QueryConnection(ctx, obj, viper.GetBool(FlagProve))
 			if err != nil {
 				return err

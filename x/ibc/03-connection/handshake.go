@@ -9,10 +9,10 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-type State = byte
+type HandshakeStage = byte
 
 const (
-	Idle State = iota
+	Idle HandshakeStage = iota
 	Init
 	OpenTry
 	Open
@@ -23,17 +23,13 @@ const HandshakeKind = "handshake"
 type Handshaker struct {
 	man Manager
 
-	counterparty CounterpartyHandshaker
+	counterParty CounterpartyHandshaker
 }
 
-// TODO: ocapify Manager; an actor who holds Manager
-// should not be able to construct creaters from it
-// or add Seal() method to Manager?
 func NewHandshaker(man Manager) Handshaker {
 	return Handshaker{
-		man: man,
-
-		counterparty: CounterpartyHandshaker{man.counterparty},
+		man:          man,
+		counterParty: CounterpartyHandshaker{man.counterparty},
 	}
 }
 
@@ -41,98 +37,102 @@ type CounterpartyHandshaker struct {
 	man CounterpartyManager
 }
 
-type HandshakeObject struct {
-	Object
+type HandshakeState struct {
+	State
 
-	State              state.Enum
+	Stage              state.Enum
 	CounterpartyClient state.String
 
-	Counterparty CounterHandshakeObject
+	Counterparty CounterHandshakeState
 }
 
-type CounterHandshakeObject struct {
-	CounterObject
+type CounterHandshakeState struct {
+	CounterState
 
-	State              commitment.Enum
+	Stage              commitment.Enum
 	CounterpartyClient commitment.String
 }
 
 // CONTRACT: client and remote must be filled by the caller
-func (man Handshaker) Object(parent Object) HandshakeObject {
-	return HandshakeObject{
-		Object: parent,
-
-		State:              man.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
+func (man Handshaker) CreateState(parent State) HandshakeState {
+	return HandshakeState{
+		State:              parent,
+		Stage:              man.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
 		CounterpartyClient: man.man.protocol.Value([]byte(parent.id + "/counterpartyClient")).String(),
 
-		// CONTRACT: counterparty must be filled by the caller
+		// CONTRACT: counterParty must be filled by the caller
 	}
 }
 
-func (man CounterpartyHandshaker) Object(id string) CounterHandshakeObject {
-	return CounterHandshakeObject{
-		CounterObject: man.man.Object(id),
-
-		State:              man.man.protocol.Value([]byte(id + "/state")).Enum(),
+func (man CounterpartyHandshaker) CreateState(id string) CounterHandshakeState {
+	return CounterHandshakeState{
+		CounterState:       man.man.CreateState(id),
+		Stage:              man.man.protocol.Value([]byte(id + "/state")).Enum(),
 		CounterpartyClient: man.man.protocol.Value([]byte(id + "/counterpartyClient")).String(),
 	}
 }
 
-func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, counterpartyClient string) (obj HandshakeObject, err error) {
+func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, counterpartyClient string) (obj HandshakeState, err error) {
 	cobj, err := man.man.create(ctx, id, connection, HandshakeKind)
 	if err != nil {
 		return
 	}
-	obj = man.Object(cobj)
+	obj = man.CreateState(cobj)
 	obj.CounterpartyClient.Set(ctx, counterpartyClient)
-	obj.Counterparty = man.counterparty.Object(connection.Counterparty)
+	obj.Counterparty = man.counterParty.CreateState(connection.Counterparty)
 	return obj, nil
 }
 
-func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeObject, err error) {
+func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeState, err error) {
 	cobj, err := man.man.query(ctx, id, HandshakeKind)
 	if err != nil {
 		return
 	}
-	obj = man.Object(cobj)
-	obj.Counterparty = man.counterparty.Object(obj.GetConnection(ctx).Counterparty)
+	obj = man.CreateState(cobj)
+	obj.Counterparty = man.counterParty.CreateState(obj.GetConnection(ctx).Counterparty)
 	return
+}
+
+func (obj HandshakeState) remove(ctx sdk.Context) {
+	obj.State.remove(ctx)
+	obj.Stage.Delete(ctx)
+	obj.CounterpartyClient.Delete(ctx)
 }
 
 // Using proofs: none
 func (man Handshaker) OpenInit(ctx sdk.Context,
 	id string, connection Connection, counterpartyClient string,
-) (HandshakeObject, error) {
+) (HandshakeState, error) {
 	// man.Create() will ensure
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
 	obj, err := man.create(ctx, id, connection, counterpartyClient)
 	if err != nil {
-		return HandshakeObject{}, err
+		return HandshakeState{}, err
 	}
 
-	obj.State.Set(ctx, Init)
+	obj.Stage.Set(ctx, Init)
 
 	return obj, nil
 }
 
-// Using proofs: counterparty.{connection,state,nextTimeout,counterpartyClient, client}
+// Using proofs: counterParty.{connection,state,nextTimeout,counterpartyClient, client}
 func (man Handshaker) OpenTry(ctx sdk.Context,
-	proofs []commitment.Proof,
+	proofs []commitment.Proof, height uint64,
 	id string, connection Connection, counterpartyClient string,
-) (obj HandshakeObject, err error) {
+) (obj HandshakeState, err error) {
 	obj, err = man.create(ctx, id, connection, counterpartyClient)
 	if err != nil {
 		return
 	}
 
-	ctx, err = obj.Context(ctx, connection.Path, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
 
-	if !obj.Counterparty.State.Is(ctx, Init) {
-		err = errors.New("counterparty state not init")
+	if !obj.Counterparty.Stage.Is(ctx, Init) {
+		err = errors.New("counterParty state not init")
 		return
 	}
 
@@ -141,12 +141,12 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 		Counterparty: id,
 		Path:         obj.path,
 	}) {
-		err = errors.New("wrong counterparty connection")
+		err = errors.New("wrong counterParty connection")
 		return
 	}
 
 	if !obj.Counterparty.CounterpartyClient.Is(ctx, connection.Client) {
-		err = errors.New("counterparty client not match")
+		err = errors.New("counterParty client not match")
 		return
 	}
 
@@ -156,8 +156,8 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	/*
 		var expected client.ConsensusState
 		obj.self.Get(ctx, expheight, &expected)
-		if !obj.counterparty.client.Is(ctx, expected) {
-			return errors.New("unexpected counterparty client value")
+		if !obj.counterParty.client.Is(ctx, expected) {
+			return errors.New("unexpected counterParty client value")
 		}
 	*/
 
@@ -166,27 +166,27 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 	// assert(get("connections/{desiredIdentifier}") === null) and
 	// set("connections{identifier}", connection)
 
-	obj.State.Set(ctx, OpenTry)
+	obj.Stage.Set(ctx, OpenTry)
 
 	return
 }
 
-// Using proofs: counterparty.{connection, state, counterpartyClient, client}
+// Using proofs: counterParty.{connection, state, timeout, counterpartyClient, client}
 func (man Handshaker) OpenAck(ctx sdk.Context,
-	proofs []commitment.Proof,
-	id string, /*expheight uint64, */
-) (obj HandshakeObject, err error) {
+	proofs []commitment.Proof, height uint64,
+	id string,
+) (obj HandshakeState, err error) {
 	obj, err = man.query(ctx, id)
 	if err != nil {
 		return
 	}
 
-	ctx, err = obj.Context(ctx, nil, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
 
-	if !obj.State.Transit(ctx, Init, Open) {
+	if !obj.Stage.Transit(ctx, Init, Open) {
 		err = errors.New("ack on non-init connection")
 		return
 	}
@@ -196,17 +196,17 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 		Counterparty: obj.ID(),
 		Path:         obj.path,
 	}) {
-		err = errors.New("wrong counterparty")
+		err = errors.New("wrong counterParty")
 		return
 	}
 
-	if !obj.Counterparty.State.Is(ctx, OpenTry) {
-		err = errors.New("counterparty state not opentry")
+	if !obj.Counterparty.Stage.Is(ctx, OpenTry) {
+		err = errors.New("counterParty state not opentry")
 		return
 	}
 
 	if !obj.Counterparty.CounterpartyClient.Is(ctx, obj.GetConnection(ctx).Client) {
-		err = errors.New("counterparty client not match")
+		err = errors.New("counterParty client not match")
 		return
 	}
 
@@ -214,8 +214,8 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 	/*
 		var expected client.ConsensusState
 		// obj.self.Get(ctx, expheight, &expected)
-		if !obj.counterparty.client.Is(ctx, expected) {
-			// return errors.New("unexpected counterparty client value")
+		if !obj.counterParty.client.Is(ctx, expected) {
+			// return errors.New("unexpected counterParty client value")
 		}
 	*/
 	obj.Available.Set(ctx, true)
@@ -223,28 +223,28 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 	return
 }
 
-// Using proofs: counterparty.{connection,state, nextTimeout}
+// Using proofs: counterParty.{connection,state, nextTimeout}
 func (man Handshaker) OpenConfirm(ctx sdk.Context,
-	proofs []commitment.Proof,
-	id string) (obj HandshakeObject, err error) {
+	proofs []commitment.Proof, height uint64,
+	id string) (obj HandshakeState, err error) {
 
 	obj, err = man.query(ctx, id)
 	if err != nil {
 		return
 	}
 
-	ctx, err = obj.Context(ctx, nil, proofs)
+	ctx, err = obj.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
 
-	if !obj.State.Transit(ctx, OpenTry, Open) {
+	if !obj.Stage.Transit(ctx, OpenTry, Open) {
 		err = errors.New("confirm on non-try connection")
 		return
 	}
 
-	if !obj.Counterparty.State.Is(ctx, Open) {
-		err = errors.New("counterparty state not open")
+	if !obj.Counterparty.Stage.Is(ctx, Open) {
+		err = errors.New("counterParty state not open")
 		return
 	}
 

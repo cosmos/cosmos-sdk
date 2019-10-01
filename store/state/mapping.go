@@ -101,4 +101,3 @@ func (m Mapping) Prefix(prefix []byte) Mapping {
 		prefix:   join(m.prefix, prefix),
 	}
 }
-

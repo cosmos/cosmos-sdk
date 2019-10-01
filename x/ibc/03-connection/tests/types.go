@@ -22,15 +22,15 @@ type Node struct {
 
 	CounterpartyClient string
 	Connection         connection.Connection
-	State              connection.State
+	State              connection.HandshakeStage
 
 	Cdc *codec.Codec
 }
 
 func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	res := &Node{
-		Name: "self",                                                         // hard coded, doesnt matter
-		Node: tendermint.NewNode(self, "teststoreself", []byte("protocol/")), // TODO: test with key prefix
+		Name: "self", // hard coded, doesnt matter
+		Node: tendermint.NewNode(self, "teststoreself", []byte("protocol/")),
 
 		State: connection.Idle,
 		Cdc:   cdc,
@@ -81,7 +81,7 @@ func (node *Node) UpdateClient(t *testing.T, header client.Header) {
 	require.NoError(t, err)
 }
 
-func (node *Node) SetState(state connection.State) {
+func (node *Node) SetState(state connection.HandshakeStage) {
 	node.State = state
 	node.Counterparty.State = state
 }
@@ -92,9 +92,9 @@ func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Conte
 	return ctx, connection.NewHandshaker(man)
 }
 
-func (node *Node) CLIObject() connection.HandshakeObject {
+func (node *Node) CLIState() connection.HandshakeState {
 	_, man := node.Manager()
-	return connection.NewHandshaker(man).CLIObject(node.Name, node.Name)
+	return connection.NewHandshaker(man).CLIState(node.Name, node.Name)
 }
 
 func (node *Node) Mapping() state.Mapping {
@@ -112,39 +112,39 @@ func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenInit(ctx, node.Name, node.Connection, node.CounterpartyClient)
 	require.NoError(t, err)
-	require.Equal(t, connection.Init, obj.State.Get(ctx))
+	require.Equal(t, connection.Init, obj.Stage.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient.Get(ctx))
 	require.False(t, obj.Available.Get(ctx))
 	node.SetState(connection.Init)
 }
 
-func (node *Node) OpenTry(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenTry(ctx, proofs, node.Name, node.Connection, node.CounterpartyClient)
+	obj, err := man.OpenTry(ctx, proofs, height, node.Name, node.Connection, node.CounterpartyClient)
 	require.NoError(t, err)
-	require.Equal(t, connection.OpenTry, obj.State.Get(ctx))
+	require.Equal(t, connection.OpenTry, obj.Stage.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.Equal(t, node.CounterpartyClient, obj.CounterpartyClient.Get(ctx))
 	require.False(t, obj.Available.Get(ctx))
 	node.SetState(connection.OpenTry)
 }
 
-func (node *Node) OpenAck(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenAck(ctx, proofs, node.Name)
+	obj, err := man.OpenAck(ctx, proofs, height, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, connection.Open, obj.State.Get(ctx))
+	require.Equal(t, connection.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.True(t, obj.Available.Get(ctx))
 	node.SetState(connection.Open)
 }
 
-func (node *Node) OpenConfirm(t *testing.T, proofs ...commitment.Proof) {
+func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
-	obj, err := man.OpenConfirm(ctx, proofs, node.Name)
+	obj, err := man.OpenConfirm(ctx, proofs, height, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, connection.Open, obj.State.Get(ctx))
+	require.Equal(t, connection.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Connection, obj.GetConnection(ctx))
 	require.True(t, obj.Available.Get(ctx))
 	node.SetState(connection.Open)
@@ -163,27 +163,27 @@ func (node *Node) Handshake(t *testing.T) {
 
 	// counterparty.OpenTry
 	node.Counterparty.UpdateClient(t, header)
-	cliobj := node.CLIObject()
+	cliobj := node.CLIState()
 	_, pconn := node.QueryValue(t, cliobj.Connection)
-	_, pstate := node.QueryValue(t, cliobj.State)
+	_, pstate := node.QueryValue(t, cliobj.Stage)
 	_, pcounterclient := node.QueryValue(t, cliobj.CounterpartyClient)
 	// TODO: implement consensus state checking
 	// _, pclient := node.Query(t, cliobj.Client.ConsensusStateKey)
-	node.Counterparty.OpenTry(t, pconn, pstate, pcounterclient)
+	node.Counterparty.OpenTry(t, uint64(header.Height), pconn, pstate, pcounterclient)
 	header = node.Counterparty.Commit()
 
 	// self.OpenAck
 	node.UpdateClient(t, header)
-	cliobj = node.Counterparty.CLIObject()
+	cliobj = node.Counterparty.CLIState()
 	_, pconn = node.Counterparty.QueryValue(t, cliobj.Connection)
-	_, pstate = node.Counterparty.QueryValue(t, cliobj.State)
+	_, pstate = node.Counterparty.QueryValue(t, cliobj.Stage)
 	_, pcounterclient = node.Counterparty.QueryValue(t, cliobj.CounterpartyClient)
-	node.OpenAck(t, pconn, pstate, pcounterclient)
+	node.OpenAck(t, uint64(header.Height), pconn, pstate, pcounterclient)
 	header = node.Commit()
 
 	// counterparty.OpenConfirm
 	node.Counterparty.UpdateClient(t, header)
-	cliobj = node.CLIObject()
-	_, pstate = node.QueryValue(t, cliobj.State)
-	node.Counterparty.OpenConfirm(t, pstate)
+	cliobj = node.CLIState()
+	_, pstate = node.QueryValue(t, cliobj.Stage)
+	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate)
 }

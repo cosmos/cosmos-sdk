@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
@@ -24,7 +24,7 @@ type Manager struct {
 
 func NewManager(protocol state.Mapping, client client.Manager) Manager {
 	return Manager{
-		protocol: protocol.Prefix(LocalRoot()),
+		protocol:     protocol.Prefix(LocalRoot()),
 		client:       client,
 		counterparty: NewCounterpartyManager(protocol.Cdc()),
 		path:         merkle.NewPath([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
@@ -47,7 +47,7 @@ func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
 	}
 }
 
-type Object struct {
+type State struct {
 	id string
 
 	protocol   state.Mapping
@@ -56,13 +56,13 @@ type Object struct {
 
 	Kind state.String
 
-	Client client.Object
+	Client client.State
 
 	path merkle.Path
 }
 
-func (man Manager) Object(id string) Object {
-	return Object{
+func (man Manager) State(id string) State {
+	return State{
 		id: id,
 
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
@@ -77,7 +77,7 @@ func (man Manager) Object(id string) Object {
 	}
 }
 
-type CounterObject struct {
+type CounterState struct {
 	id string
 
 	protocol   commitment.Mapping
@@ -86,11 +86,11 @@ type CounterObject struct {
 
 	Kind commitment.String
 
-	Client client.CounterObject // nolint: unused
+	Client client.CounterState // nolint: unused
 }
 
-func (man CounterpartyManager) Object(id string) CounterObject {
-	return CounterObject{
+func (man CounterpartyManager) CreateState(id string) CounterState {
+	return CounterState{
 		id:         id,
 		protocol:   man.protocol.Prefix([]byte(id + "/")),
 		Connection: man.protocol.Value([]byte(id)),
@@ -102,15 +102,15 @@ func (man CounterpartyManager) Object(id string) CounterObject {
 	}
 }
 
-func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, proofs []commitment.Proof) (sdk.Context, error) {
-	if optpath == nil {
-		optpath = obj.GetConnection(ctx).Path
+func (obj State) Context(ctx sdk.Context, height uint64, proofs []commitment.Proof) (sdk.Context, error) {
+	root, err := obj.Client.GetRoot(ctx, height)
+	if err != nil {
+		return ctx, err
 	}
 
 	store, err := commitment.NewStore(
-		// TODO: proof root should be able to be obtained from the past
-		obj.Client.GetConsensusState(ctx).GetRoot(),
-		optpath,
+		root,
+		obj.GetConnection(ctx).Path,
 		proofs,
 	)
 	if err != nil {
@@ -120,30 +120,30 @@ func (obj Object) Context(ctx sdk.Context, optpath commitment.Path, proofs []com
 	return commitment.WithStore(ctx, store), nil
 }
 
-func (obj Object) ID() string {
+func (obj State) ID() string {
 	return obj.id
 }
 
-func (obj Object) GetConnection(ctx sdk.Context) (res Connection) {
+func (obj State) GetConnection(ctx sdk.Context) (res Connection) {
 	obj.Connection.Get(ctx, &res)
 	return
 }
 
-func (obj Object) Sendable(ctx sdk.Context) bool {
+func (obj State) Sendable(ctx sdk.Context) bool {
 	return kinds[obj.Kind.Get(ctx)].Sendable
 }
 
-func (obj Object) Receivable(ctx sdk.Context) bool {
+func (obj State) Receivable(ctx sdk.Context) bool {
 	return kinds[obj.Kind.Get(ctx)].Receivable
 }
 
-func (obj Object) remove(ctx sdk.Context) {
+func (obj State) remove(ctx sdk.Context) {
 	obj.Connection.Delete(ctx)
 	obj.Available.Delete(ctx)
 	obj.Kind.Delete(ctx)
 }
 
-func (obj Object) exists(ctx sdk.Context) bool {
+func (obj State) exists(ctx sdk.Context) bool {
 	return obj.Connection.Exists(ctx)
 }
 
@@ -151,10 +151,10 @@ func (man Manager) Cdc() *codec.Codec {
 	return man.protocol.Cdc()
 }
 
-func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (obj Object, err error) {
-	obj = man.Object(id)
+func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (obj State, err error) {
+	obj = man.State(id)
 	if obj.exists(ctx) {
-		err = errors.New("Object already exists")
+		err = errors.New("Stage already exists")
 		return
 	}
 	obj.Client, err = man.client.Query(ctx, connection.Client)
@@ -169,10 +169,10 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 
 // query() is used internally by the connection creators
 // checks connection kind, doesn't check avilability
-func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, err error) {
-	obj = man.Object(id)
+func (man Manager) query(ctx sdk.Context, id string, kind string) (obj State, err error) {
+	obj = man.State(id)
 	if !obj.exists(ctx) {
-		err = errors.New("Object not exists")
+		err = errors.New("Stage not exists")
 		return
 	}
 	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)
@@ -186,15 +186,15 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (obj Object, e
 	return
 }
 
-func (man Manager) Query(ctx sdk.Context, id string) (obj Object, err error) {
-	obj = man.Object(id)
+func (man Manager) Query(ctx sdk.Context, id string) (obj State, err error) {
+	obj = man.State(id)
 	if !obj.exists(ctx) {
-		err = errors.New("Object not exists")
+		err = errors.New("Stage not exists")
 		return
 
 	}
 	if !obj.Available.Get(ctx) {
-		err = errors.New("Object not available")
+		err = errors.New("Stage not available")
 		return
 	}
 	obj.Client, err = man.client.Query(ctx, obj.GetConnection(ctx).Client)

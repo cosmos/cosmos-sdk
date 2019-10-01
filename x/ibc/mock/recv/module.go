@@ -62,6 +62,14 @@ type AppModule struct {
 	k Keeper
 }
 
+func NewAppModule(k Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{},
+
+		k: k,
+	}
+}
+
 func (AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 }

@@ -42,15 +42,3 @@ func join(a, b []byte) (res []byte) {
 	copy(res[len(a):], b)
 	return
 }
-
-
-func (path Path) Path() string {
-	pathstr := ""
-	for _, inter := range path.KeyPath {
-		// The Queryable() stores uses slash-separated keypath format for querying
-		pathstr = pathstr + "/" + string(inter)
-	}
-
-	return pathstr
-}
-*/

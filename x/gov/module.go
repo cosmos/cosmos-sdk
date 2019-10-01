@@ -69,7 +69,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // RegisterRESTRoutes registers the REST routes for the gov module.
 func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	var proposalRESTHandlers []rest.ProposalRESTHandler
+	proposalRESTHandlers := make([]rest.ProposalRESTHandler, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
 		proposalRESTHandlers = append(proposalRESTHandlers, proposalHandler.RESTHandler(ctx))
 	}
@@ -80,7 +80,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Rout
 // GetTxCmd returns the root tx command for the gov module.
 func (a AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
-	var proposalCLIHandlers []*cobra.Command
+	proposalCLIHandlers := make([]*cobra.Command, 0, len(a.proposalHandlers))
 	for _, proposalHandler := range a.proposalHandlers {
 		proposalCLIHandlers = append(proposalCLIHandlers, proposalHandler.CLIHandler(cdc))
 	}

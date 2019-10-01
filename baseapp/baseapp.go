@@ -631,8 +631,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
+	data := make([]byte, 0, len(msgs))
 	var (
-		data      []byte
 		code      sdk.CodeType
 		codespace sdk.CodespaceType
 	)

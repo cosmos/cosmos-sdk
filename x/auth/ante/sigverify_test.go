@@ -26,13 +26,13 @@ func TestSetPubKey(t *testing.T) {
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 	pubs := []crypto.PubKey{pub1, pub2, pub3}
 
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs = append(msgs, types.NewTestMsg(addr))
+		msgs[i] = types.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
@@ -108,13 +108,13 @@ func TestSigVerification(t *testing.T) {
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, len(addrs))
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs = append(msgs, types.NewTestMsg(addr))
+		msgs[i] = types.NewTestMsg(addr)
 	}
 
 	fee := types.NewTestStdFee()
@@ -153,18 +153,18 @@ func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ..
 	ctx = ctx.WithBlockHeight(1)
 	app.AccountKeeper.SetParams(ctx, params)
 
-	var msgs []sdk.Msg
-	var accNums []uint64
-	var seqs []uint64
+	msgs := make([]sdk.Msg, len(privs))
+	accNums := make([]uint64, len(privs))
+	seqs := make([]uint64, len(privs))
 	// set accounts and create msg for each address
 	for i, priv := range privs {
 		addr := sdk.AccAddress(priv.PubKey().Address())
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetAccountNumber(uint64(i)))
 		app.AccountKeeper.SetAccount(ctx, acc)
-		msgs = append(msgs, types.NewTestMsg(addr))
-		accNums = append(accNums, uint64(i))
-		seqs = append(seqs, uint64(0))
+		msgs[i] = types.NewTestMsg(addr)
+		accNums[i] = uint64(i)
+		seqs[i] = uint64(0)
 	}
 
 	fee := types.NewTestStdFee()

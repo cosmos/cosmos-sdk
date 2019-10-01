@@ -106,9 +106,9 @@ func (tx StdTx) GetMemo() string { return tx.Memo }
 // invalid), then the corresponding signature is
 // .Empty().
 func (tx StdTx) GetSignatures() [][]byte {
-	var sigs [][]byte
-	for _, stdSig := range tx.Signatures {
-		sigs = append(sigs, stdSig.Signature)
+	sigs := make([][]byte, len(tx.Signatures))
+	for i, stdSig := range tx.Signatures {
+		sigs[i] = stdSig.Signature
 	}
 	return sigs
 }
@@ -116,9 +116,9 @@ func (tx StdTx) GetSignatures() [][]byte {
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() []crypto.PubKey {
-	var pks []crypto.PubKey
-	for _, stdSig := range tx.Signatures {
-		pks = append(pks, stdSig.PubKey)
+	pks := make([]crypto.PubKey, len(tx.Signatures))
+	for i, stdSig := range tx.Signatures {
+		pks[i] = stdSig.PubKey
 	}
 	return pks
 }

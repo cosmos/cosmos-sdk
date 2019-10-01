@@ -67,7 +67,6 @@ func TestValidateMemo(t *testing.T) {
 
 	_, err = antehandler(ctx, validTx, false)
 	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
-
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {

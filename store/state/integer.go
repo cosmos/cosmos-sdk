@@ -58,6 +58,10 @@ func (v Integer) Query(q ABCIQuerier) (res uint64, proof *Proof, err error) {
 	if err != nil {
 		return
 	}
+	if value == nil {
+		res = 0
+		return
+	}
 	res, err = DecodeInt(value, v.enc)
 	return
 }

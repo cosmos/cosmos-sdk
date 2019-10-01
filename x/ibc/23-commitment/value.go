@@ -67,7 +67,6 @@ func (v Value) Is(ctx sdk.Context, value interface{}) bool {
 
 // IsRaw() proves the proof with the Value's key and the provided raw value bytes.
 func (v Value) IsRaw(ctx sdk.Context, value []byte) bool {
-
 	return v.m.store(ctx).Prove(v.key, value)
 }
 

@@ -46,4 +46,4 @@ each corresponds to `spec: Header.{height, proof, state, root}`.
 
 ### manager.go
 
-`spec: interface ClientState` is implemented by `type Object`. // TODO
+`spec: interface ClientState` is implemented by `type State`. // TODO

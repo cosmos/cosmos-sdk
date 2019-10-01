@@ -19,9 +19,9 @@ import (
 // nolint: funlen
 func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(simAccount.Address)
 
@@ -96,9 +96,9 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, k keeper.Keeper) simulat
 // nolint: funlen
 func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -160,9 +160,9 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, k keeper.Keeper) simulatio
 // nolint: funlen
 func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		denom := k.GetParams(ctx).BondDenom
 		if len(k.GetAllValidators(ctx)) == 0 {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -226,9 +226,9 @@ func SimulateMsgDelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Ope
 // nolint: funlen
 func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 
@@ -302,9 +302,9 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 // nolint: funlen
 func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		simAccount, idx := simulation.RandomAcc(r, accs)
 		delegations := k.GetAllDelegatorDelegations(ctx, simAccount.Address)
 

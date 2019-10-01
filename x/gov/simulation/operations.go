@@ -50,7 +50,8 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 	curNumVotesState := 1
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
@@ -139,8 +140,10 @@ func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Acc
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 // nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
@@ -195,8 +198,10 @@ func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operati
 
 func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 	simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if simAccount.Equals(simulation.Account{}) {
 			simAccount, _ = simulation.RandomAcc(r, accs)
 		}

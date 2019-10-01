@@ -33,7 +33,9 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
 
+// SigVerifiableTx defines a tx interface for all signature verification decorators
 type SigVerifiableTx interface {
+	sdk.Tx
 	GetSignatures() [][]byte
 	GetSigners() []sdk.AccAddress
 	GetPubKeys() []crypto.PubKey // If signer already has pubkey in context, this list will have nil in its place
@@ -42,6 +44,7 @@ type SigVerifiableTx interface {
 
 // SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
 // PubKeys must be set in context for all signers before any other sigverify decorators run
+// CONTRACT: Tx must implement SigVerifiableTx interface
 type SetPubKeyDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -91,6 +94,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
 // before calling the next AnteHandler
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
+// CONTRACT: Tx must implement SigVerifiableTx interface
 type SigGasConsumeDecorator struct {
 	ak             keeper.AccountKeeper
 	sigGasConsumer SignatureVerificationGasConsumer
@@ -144,6 +148,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // increment sequence of each signer and set updated account back in store
 // Call next AnteHandler
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
+// CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -200,6 +205,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // Increments sequences of all signers.
 // Use this decorator to prevent replay attacks
+// CONTRACT: Tx must implement SigVerifiableTx interface
 type IncrementSequenceDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -231,6 +237,7 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params
 // otherwise it calls next AnteHandler
 // Use this decorator to set parameterized limit on number of signatures in tx
+// CONTRACT: Tx must implement SigVerifiableTx interface
 type ValidateSigCountDecorator struct {
 	ak keeper.AccountKeeper
 }

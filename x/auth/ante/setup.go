@@ -9,6 +9,7 @@ import (
 
 // Tx with a Gas() method is needed to use SetUpContextDecorator
 type GasTx interface {
+	sdk.Tx
 	Gas() uint64
 }
 

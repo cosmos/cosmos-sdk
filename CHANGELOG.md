@@ -139,6 +139,7 @@ in `TxResponse` is deprecated and will be removed in the next major release.
 
 * [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
 `os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
+* [\#5034](https://github.com/cosmos/cosmos-sdk/issues/5034) Binary search in NFT Module wasn't working on larger sets.
 
 ## [v0.37.0] - 2019-08-21
 

@@ -17,7 +17,7 @@ func TestNewIDCollection(t *testing.T) {
 }
 
 func TestIDCollectionExistsMethod(t *testing.T) {
-	ids := []string{id, id2}
+	ids := []string{id2, id}
 	idCollection := NewIDCollection(denom, ids)
 	require.True(t, idCollection.Exists(id))
 	require.True(t, idCollection.Exists(id2))

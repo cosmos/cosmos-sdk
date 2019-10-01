@@ -94,7 +94,7 @@ func join(a, b []byte) (res []byte) {
 }
 
 // Prefix returns a new mapping with an updated prefix.
-func (m Mapping) Prefix(prefix []byte) Mapping {
+func (m Mapping) UpdatePrefix(prefix []byte) Mapping {
 	return Mapping{
 		storeKey: m.storeKey,
 		cdc:      m.cdc,

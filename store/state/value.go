@@ -5,10 +5,10 @@ import (
 )
 
 // Value is a capability for reading and writing on a specific key-value point
-// in the state. Value consists of Base and key []byte. An actor holding a Value
+// in the state. Value consists of a mapping and a key. An actor holding a Value
 // has a full access right on that state point.
 type Value struct {
-	m   Mapping
+	mapping   Mapping
 	key []byte
 }
 

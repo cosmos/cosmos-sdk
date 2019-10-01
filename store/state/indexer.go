@@ -26,9 +26,9 @@ const (
 // checking, it does not alter the behaviour. All keys are encoded depending on
 // the IntEncoding.
 type Indexer struct {
-	m Mapping
+	mapping Mapping
 
-	enc IntEncoding
+	encoding IntEncoding
 }
 
 // Indexer() constructs the Indexer with an IntEncoding

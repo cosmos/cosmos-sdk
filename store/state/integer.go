@@ -5,7 +5,7 @@ package state
 type Integer struct {
 	Value
 
-	enc IntEncoding
+	encoding IntEncoding
 }
 
 func (v Value) Integer(enc IntEncoding) Integer {

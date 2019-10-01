@@ -50,11 +50,11 @@ func (packet *PacketSequence) UnmarshalJSON(bz []byte) (err error) {
 }
 
 func (PacketSequence) SenderPort() string {
-	return "ibcmock"
+	return "ibcmocksend"
 }
 
 func (PacketSequence) ReceiverPort() string {
-	return "ibcmock"
+	return "ibcmockrecv"
 }
 
 func (PacketSequence) String() string {

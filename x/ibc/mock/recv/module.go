@@ -1,4 +1,4 @@
-package mock
+package mockrecv
 
 import (
 	"encoding/json"

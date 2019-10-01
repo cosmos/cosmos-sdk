@@ -1,4 +1,4 @@
-package mock
+package mockrecv
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -1,4 +1,4 @@
-package mock
+package mocksend
 
 import (
 	"encoding/json"

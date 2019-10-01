@@ -1,4 +1,4 @@
-package mock
+package mockrecv
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

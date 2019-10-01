@@ -64,7 +64,6 @@ const (
 
 var (
 	// functions aliases
-	NewCLIContextWithFrom              = context.NewCLIContextWithFrom
 	NewCLIContext                      = context.NewCLIContext
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount

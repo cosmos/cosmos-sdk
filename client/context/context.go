@@ -35,6 +35,7 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	Client        rpcclient.Client
 	Keybase       cryptokeys.Keybase
+	Input         io.Reader
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -51,22 +52,17 @@ type CLIContext struct {
 	FromName      string
 	Indent        bool
 	SkipConfirm   bool
+	LegacyKeybase bool
 }
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly.
-func NewCLIContextWithFrom(from string) CLIContext {
+func NewCLIContext() CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(from, genOnly)
-	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
-		os.Exit(1)
-	}
-
 	if !genOnly {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
@@ -93,16 +89,33 @@ func NewCLIContextWithFrom(from string) CLIContext {
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(flags.FlagDryRun),
 		GenerateOnly:  genOnly,
-		FromAddress:   fromAddress,
-		FromName:      fromName,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
+		LegacyKeybase: viper.GetBool(flags.FlagLegacyKeybase),
 	}
 }
 
-// NewCLIContext returns a new initialized CLIContext with parameters from the
-// command line using Viper.
-func NewCLIContext() CLIContext { return NewCLIContextWithFrom(viper.GetString(flags.FlagFrom)) }
+// WithInput returns a copy of the context with an updated input.
+func (ctx CLIContext) WithInput(input io.Reader) CLIContext {
+	ctx.Input = input
+	return ctx
+}
+
+// WithKeybase returns a copy of the context with an initialised Keybase field.
+func (ctx CLIContext) WithKeybase() CLIContext {
+	if !ctx.LegacyKeybase {
+		ctx.Keybase = keys.NewKeyring(ctx.Input)
+		return ctx
+	}
+
+	var err error
+	ctx.Keybase, err = keys.NewKeyBaseFromHomeFlag()
+	if err != nil {
+		panic(err)
+	}
+
+	return ctx
+}
 
 func createVerifier() tmlite.Verifier {
 	trustNodeDefined := viper.IsSet(flags.FlagTrustNode)
@@ -164,7 +177,12 @@ func (ctx CLIContext) WithOutput(w io.Writer) CLIContext {
 
 // WithFrom returns a copy of the context with an updated from address or name.
 func (ctx CLIContext) WithFrom(from string) CLIContext {
-	ctx.From = from
+	fromAddress, fromName, err := GetFromFields(from, ctx.GenerateOnly, ctx.Input)
+	if err != nil {
+		panic(err)
+	}
+	ctx.FromAddress = fromAddress
+	ctx.FromName = fromName
 	return ctx
 }
 
@@ -216,6 +234,22 @@ func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
 func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
 	ctx.Simulate = simulate
 	return ctx
+}
+
+// WithFromFields returns a copy of the context with an updated FromName and FromAddres flag.
+func (ctx CLIContext) WithFromFields() CLIContext {
+	from := viper.GetString(flags.FlagFrom)
+
+	fromAddress, fromName, err := GetFromFields(from, ctx.GenerateOnly, ctx.Input)
+
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.FromAddress = fromAddress
+	ctx.FromName = fromName
+	return ctx
+
 }
 
 // WithFromName returns a copy of the context with an updated from account name.
@@ -270,11 +304,12 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(from string, genOnly bool, input io.Reader) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
+	legacyKeybase := viper.GetBool(flags.FlagLegacyKeybase)
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
@@ -284,9 +319,15 @@ func GetFromFields(from string, genOnly bool) (sdk.AccAddress, string, error) {
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, "", err
+	var keybase cryptokeys.Keybase
+	if !legacyKeybase {
+		keybase = keys.NewKeyring(input)
+	} else {
+		var err error
+		keybase, err = keys.NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return nil, "", err
+		}
 	}
 
 	var info cryptokeys.Info

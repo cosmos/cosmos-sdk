@@ -3,97 +3,96 @@ package commitment
 import (
 	"bytes"
 	"errors"
-	"fmt"
 )
 
-// Store proves key-value pairs' inclusion or non-inclusion with
-// the stored commitment proofs against the commitment root.
+// ICS 023 Function Implementation
+//
+// This file includes functions defined under
+// https://github.com/cosmos/ics/tree/master/spec/ics-023-vector-commitments
+
+// Store partially implements spec:verifyMembership and spec:verifyNonMembership.
+// Store holds Root, Prefix, and list of Proofs that will be verified.
+// Proofs incldues their respective Paths. Values are provided at the verification time.
 type Store interface {
-	Prove(key, value []byte) bool
+	Prove(path, value []byte) bool
 }
 
-var _ Store = prefix{} // TODO: pointer
+var _ Store = prefix{}
 
 type prefix struct {
 	store  Store
 	prefix []byte
 }
 
-func NewPrefix(store Store, pref []byte) prefix {
-	return prefix{
+// NewPrefix returns a prefixed store given base store and prefix.
+// Prefix store for commitment proofs is used for similar path bytestring
+// prefixing UX with local KVStore.
+func NewPrefix(store Store, pref []byte) Store {
+	return &prefix{
 		store:  store,
 		prefix: pref,
 	}
 }
 
-func (prefix prefix) Prove(key, value []byte) bool {
-	return prefix.store.Prove(join(prefix.prefix, key), value)
+// Prove implements Store.
+func (prefix prefix) Prove(path, value []byte) bool {
+	return prefix.store.Prove(join(prefix.prefix, path), value)
 }
 
 var _ Store = (*store)(nil)
 
 type store struct {
 	root     Root
-	path     Path
+	prefix   Prefix
 	proofs   map[string]Proof
 	verified map[string][]byte
 }
 
 // NewStore constructs a new Store with the root, path, and proofs.
-// The proofs are not proven immediately because proofs require value bytes to verify.
-// If the kinds of the arguments don't match, returns error.
-func NewStore(root Root, path Path, proofs []Proof) (res *store, err error) {
-	if root.CommitmentKind() != path.CommitmentKind() {
-		err = errors.New("path type not matching with root's")
-		return
+// The result store will be stored in the context and used by the
+// commitment.Value types.
+func NewStore(root Root, prefix Prefix, proofs []Proof) (Store, error) {
+	if root.CommitmentKind() != prefix.CommitmentKind() {
+		return nil, errors.New("prefix type not matching with root's")
 	}
 
-	res = &store{
+	res := &store{
 		root:     root,
-		path:     path,
+		prefix:   prefix,
 		proofs:   make(map[string]Proof),
 		verified: make(map[string][]byte),
 	}
 
 	for _, proof := range proofs {
 		if proof.CommitmentKind() != root.CommitmentKind() {
-			err = errors.New("proof type not matching with root's")
-			return
+			return nil, errors.New("proof type not matching with root's")
 		}
 		res.proofs[string(proof.GetKey())] = proof
 	}
 
-	return
+	return res, nil
 }
 
-// Get() returns the value only if it is already proven.
-func (store *store) Get(key []byte) ([]byte, bool) {
-	res, ok := store.verified[string(key)]
-	return res, ok
-}
-
-// Prove() proves the key-value pair with the stored proof.
-func (store *store) Prove(key, value []byte) bool {
-	stored, ok := store.Get(key)
+// Prove implements spec:verifyMembership and spec:verifyNonMembership.
+// The path should be one of the path format defined under
+// https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements
+// Prove retrieves the matching proof with the provided path from the internal map
+// and call Verify method on it with internal Root and Prefix.
+// Prove acts as verifyMembership if value is not nil, and verifyNonMembership if nil.
+func (store *store) Prove(path, value []byte) bool {
+	stored, ok := store.verified[string(path)]
 	if ok && bytes.Equal(stored, value) {
 		return true
 	}
-	proof, ok := store.proofs[string(key)]
+	proof, ok := store.proofs[string(path)]
 	if !ok {
-		fmt.Println(111, string(key))
 		return false
 	}
-	err := proof.Verify(store.root, store.path, value)
+	err := proof.Verify(store.root, store.prefix, value)
 	if err != nil {
 		return false
 	}
-	store.verified[string(key)] = value
+	store.verified[string(path)] = value
 
 	return true
-}
-
-// Proven() returns true if the key-value pair is already proven
-func (store *store) Proven(key []byte) bool {
-	_, ok := store.Get(key)
-	return ok
 }

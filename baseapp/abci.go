@@ -60,7 +60,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
-	return
+	return res
 }
 
 // Info implements the ABCI interface.
@@ -137,7 +137,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
-	return
+	return res
 }
 
 // EndBlock implements the ABCI interface.

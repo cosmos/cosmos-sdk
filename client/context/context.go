@@ -89,7 +89,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 
 	// create a verifier for the specific chain ID and RPC client
 	verifier, err := CreateVerifier(ctx, DefaultVerifierCacheSize)
-	if err != nil {
+	if err != nil && viper.IsSet(flags.FlagTrustNode) {
 		fmt.Printf("failed to create verifier: %s\n", err)
 		os.Exit(1)
 	}

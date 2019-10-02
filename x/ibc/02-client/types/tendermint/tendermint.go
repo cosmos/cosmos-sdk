@@ -16,31 +16,25 @@ var _ exported.ConsensusState = ConsensusState{}
 
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
-	ChainID          string
-	Height           uint64
-	Root             ics23.Root
-	NextValidatorSet *tmtypes.ValidatorSet
+	ChainID          string                `json:"chain_id" yaml:"chain_id"`
+	Height           uint64                `json:"height" yaml:"height"`
+	Root             ics23.Root            `json:"root" yaml:"root"`
+	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
 }
 
+// Kind returns Tendermint
 func (ConsensusState) Kind() exported.Kind {
 	return exported.Tendermint
 }
 
+// GetHeight returns the ConsensusState height
 func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Height
 }
 
+// GetRoot returns the commitment Root
 func (cs ConsensusState) GetRoot() ics23.Root {
 	return cs.Root
-}
-
-func (cs ConsensusState) update(header Header) ConsensusState {
-	return ConsensusState{
-		ChainID:          cs.ChainID,
-		Height:           uint64(header.Height),
-		Root:             merkle.NewRoot(header.AppHash),
-		NextValidatorSet: header.NextValidatorSet,
-	}
 }
 
 // CheckValidityAndUpdateState
@@ -80,14 +74,24 @@ func (cs ConsensusState) CheckMisbehaviourAndUpdateState(mb exported.Misbehaviou
 	return false
 }
 
+// update updates the consensus state from a new header
+func (cs ConsensusState) update(header Header) ConsensusState {
+	return ConsensusState{
+		ChainID:          cs.ChainID,
+		Height:           uint64(header.Height),
+		Root:             merkle.NewRoot(header.AppHash),
+		NextValidatorSet: header.NextValidatorSet,
+	}
+}
+
 var _ exported.Header = Header{}
 
 // Header defines the Tendermint consensus Header
 type Header struct {
 	// TODO: define Tendermint header type manually, don't use tmtypes
 	tmtypes.SignedHeader
-	ValidatorSet     *tmtypes.ValidatorSet
-	NextValidatorSet *tmtypes.ValidatorSet
+	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
+	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
 }
 
 // Kind defines that the Header is a Tendermint consensus algorithm

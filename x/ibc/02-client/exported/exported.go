@@ -41,7 +41,6 @@ type Misbehaviour interface {
 type Header interface {
 	Kind() Kind
 	GetHeight() uint64
-	ValidateBasic(chainID string) error // NOTE: added for msg validation
 }
 
 // Kind defines the type of the consensus algorithm

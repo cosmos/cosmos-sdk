@@ -19,12 +19,12 @@ type State struct {
 	// Past state roots required to avoid race conditions between client updates
 	// and proof-carrying transactions as defined in
 	// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#utilising-past-roots
-	Roots state.Indexer
+	Roots state.Indexer `json:"roots" yaml:"roots"`
 	// Consensus state bytes
-	ConsensusState state.Value
+	ConsensusState state.Value `json:"consensus_state" yaml:"consensus_state"`
 	// Boolean that states if the client is frozen when a misbehaviour proof is
 	// submitted in the event of an equivocation.
-	Frozen state.Boolean
+	Frozen state.Boolean `json:"frozen" yaml:"frozen"`
 }
 
 // ID returns the client identifier
@@ -106,13 +106,4 @@ func (state State) exists(ctx sdk.Context) bool {
 
 func (state State) prefix() []byte {
 	return bytes.Split(state.ConsensusState.KeyBytes(), LocalRoot())[0]
-}
-
-type CounterState struct {
-	id             string
-	ConsensusState ics23.Value
-}
-
-func (counterState CounterState) Is(ctx sdk.Context, client exported.ConsensusState) bool {
-	return counterState.ConsensusState.Is(ctx, client)
 }

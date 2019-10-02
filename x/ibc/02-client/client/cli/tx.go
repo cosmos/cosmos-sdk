@@ -102,10 +102,6 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			if err := header.ValidateBasic(txBldr.ChainID()); err != nil {
-				return sdk.ErrInternal(err.Error()) // TODO: create error on types
-			}
-
 			msg := types.MsgUpdateClient{
 				ClientID: args[0],
 				Header:   header,

@@ -10,9 +10,18 @@ var _ sdk.Msg = MsgCreateClient{}
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID       string
-	ConsensusState exported.ConsensusState
-	Signer         sdk.AccAddress
+	ClientID       string                  `json:"id" yaml:"id"`
+	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_address"`
+	Signer         sdk.AccAddress          `json:"address" yaml:"address"`
+}
+
+// NewMsgCreateClient creates a new MsgCreateClient instance
+func NewMsgCreateClient(ID string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
+	return MsgCreateClient{
+		ClientID:       ID,
+		ConsensusState: consensusState,
+		Signer:         signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -47,9 +56,9 @@ var _ sdk.Msg = MsgUpdateClient{}
 
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
-	ClientID string
-	Header   exported.Header
-	Signer   sdk.AccAddress
+	ClientID string          `json:"id" yaml:"id"`
+	Header   exported.Header `json:"header" yaml:"header"`
+	Signer   sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
 // Route implements sdk.Msg

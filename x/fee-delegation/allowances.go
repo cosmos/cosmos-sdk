@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+// BasicFeeAllowance provides a fee allowance which specifies a maximum spend
+// limit and an expiration time. As a user pays for fees using this
+// allowance, the SpendLimit will be updated until it reaches zero at which
+// point the allowance is exhausted. For example if a SpendLimit of 100 is
+// granted, then the user could make two transactions of 50 and then the
+// allowance is done and a new one is needed. SpendLimit can be left empty
+// to allow for unlimited spending
 type BasicFeeAllowance struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
 	// by this capability and will be updated as tokens are spent. If it is
@@ -35,6 +42,14 @@ func (allowance BasicFeeAllowance) Accept(fee sdk.Coins, block abci.Header) (all
 	return true, BasicFeeAllowance{SpendLimit: left}, false
 }
 
+// PeriodicFeeAllowance inherits the basic restrictions from BasicFeeAllowance,
+// and also puts a limit on how many coins can be spent in a given time window.
+// Period is the period of time over which PeriodSpendLimit coins can be spent.
+// Once one period elapses, a new period begins and the user can again spend
+// up to PeriodSpendLimit coins in that period. PeriodCanSpend and PeriodReset
+// are used to maintain the state of the allowance and generally should be
+// left empty in transactions. The total SpendLimit and Expiration from
+// BasicFeeAllowance still apply.
 type PeriodicFeeAllowance struct {
 	BasicFeeAllowance
 	// Period specifies the time duration in which PeriodSpendLimit coins can

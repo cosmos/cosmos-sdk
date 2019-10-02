@@ -47,7 +47,8 @@ type CLIContext struct {
 
 // NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
-// FromAddress field accordingly.
+// FromAddress field accordingly. It will also create Tendermint verifier using
+// the chain ID, home directory and RPC URI provided by the command line.
 func NewCLIContextWithFrom(from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client

@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
@@ -52,10 +52,10 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 			q := state.NewCLIQuerier(ctx)
 			mapp := mapping(cdc, storeKey, version.Version)
-			man := client.NewManager(mapp)
+			manager := types.NewManager(mapp)
 			id := args[0]
 
-			state, _, err := man.State(id).ConsensusStateCLI(q)
+			state, _, err := manager.State(id).ConsensusStateCLI(q)
 			if err != nil {
 				return err
 			}
@@ -76,14 +76,14 @@ func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 			q := state.NewCLIQuerier(ctx)
 			mapp := mapping(cdc, storeKey, version.Version)
-			man := client.NewManager(mapp)
+			manager := types.NewManager(mapp)
 			id := args[0]
 			height, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			root, _, err := man.State(id).RootCLI(q, height)
+			root, _, err := manager.State(id).RootCLI(q, height)
 			if err != nil {
 				return err
 			}

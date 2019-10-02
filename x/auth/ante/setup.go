@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Tx with a GetGas() method is needed to use SetUpContextDecorator
+// GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
 type GasTx interface {
 	sdk.Tx
 	GetGas() uint64

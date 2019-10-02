@@ -33,7 +33,7 @@ func init() {
 // This is where apps can define their own PubKey
 type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
 
-// SigVerifiableTx defines a tx interface for all signature verification decorators
+// SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
 	sdk.Tx
 	GetSignatures() [][]byte

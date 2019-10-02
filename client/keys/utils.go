@@ -3,6 +3,7 @@ package keys
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -21,7 +23,8 @@ const (
 	OutputFormatJSON = "json"
 
 	// defaultKeyDBName is the client's subdirectory where keys are stored.
-	defaultKeyDBName = "keys"
+	defaultKeyDBName         = "keys"
+	deprecatedKeybaseWarning = "Using deprecated secret store. This will be removed in a future release."
 )
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
@@ -73,6 +76,12 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 	}
 
 	return passphrase, nil
+}
+
+func NewKeyring(input io.Reader) keys.Keybase {
+	rootDir := viper.GetString(flags.FlagHome)
+
+	return keys.NewKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, input)
 }
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.

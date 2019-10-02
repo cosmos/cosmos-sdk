@@ -401,6 +401,13 @@ that error is that the account doesn't exist.
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
 
+## 0.34.8
+
+### Bug Fixes
+
+* Bump Tendermint version to v0.31.9 to fix the p2p panic error.
+* Update gaiareplay's use of an internal Tendermint API
+
 ## 0.34.7
 
 ### Bug Fixes

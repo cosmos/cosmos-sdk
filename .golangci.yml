@@ -17,6 +17,8 @@ linters:
     - varcheck
     - funlen
     - godox
+    - funlen
+    - whitespace
 
 issues:
   exclude-rules:
@@ -29,3 +31,10 @@ issues:
     - text: "don't use an underscore in package name"
       linters:
         - golint
+    - text: "ST1003:"
+      linters:
+        - stylecheck
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3

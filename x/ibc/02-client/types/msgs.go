@@ -16,9 +16,9 @@ type MsgCreateClient struct {
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(ID string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
+func NewMsgCreateClient(id string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
 	return MsgCreateClient{
-		ClientID:       ID,
+		ClientID:       id,
 		ConsensusState: consensusState,
 		Signer:         signer,
 	}
@@ -61,6 +61,15 @@ type MsgUpdateClient struct {
 	Signer   sdk.AccAddress  `json:"address" yaml:"address"`
 }
 
+// NewMsgUpdateClient creates a new MsgUpdateClient instance
+func NewMsgUpdateClient(id string, header exported.Header, signer sdk.AccAddress) MsgUpdateClient {
+	return MsgUpdateClient{
+		ClientID: id,
+		Header:   header,
+		Signer:   signer,
+	}
+}
+
 // Route implements sdk.Msg
 func (msg MsgUpdateClient) Route() string {
 	return ibctypes.RouterKey
@@ -86,5 +95,49 @@ func (msg MsgUpdateClient) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// MsgSubmitMisbehaviour defines a message to update an IBC client
+type MsgSubmitMisbehaviour struct {
+	ClientID string            `json:"id" yaml:"id"`
+	Evidence exported.Evidence `json:"evidence" yaml:"evidence"`
+	Signer   sdk.AccAddress    `json:"address" yaml:"address"`
+}
+
+// NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance
+func NewMsgSubmitMisbehaviour(id string, evidence exported.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
+	return MsgSubmitMisbehaviour{
+		ClientID: id,
+		Evidence: evidence,
+		Signer:   signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (msg MsgSubmitMisbehaviour) Route() string {
+	return ibctypes.RouterKey
+}
+
+// Type implements sdk.Msg
+func (msg MsgSubmitMisbehaviour) Type() string {
+	return "submit_misbehaviour"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("empty address")
+	}
+	return nil
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgSubmitMisbehaviour) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgSubmitMisbehaviour) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

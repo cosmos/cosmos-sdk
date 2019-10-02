@@ -37,41 +37,38 @@ func (cs ConsensusState) GetRoot() ics23.Root {
 	return cs.Root
 }
 
-// CheckValidityAndUpdateState
+// CheckValidityAndUpdateState checks if the provided header is valid and updates
+// the consensus state if appropiate
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
 		return nil, errors.New("header is not from a tendermint consensus") // TODO: create concrete error
 	}
 
-	if cs.Height == uint64(tmHeader.Height-1) {
-		nexthash := cs.NextValidatorSet.Hash()
-		if !bytes.Equal(tmHeader.ValidatorsHash, nexthash) {
-			return nil, lerr.ErrUnexpectedValidators(tmHeader.ValidatorsHash, nexthash)
-		}
-	}
-
-	if !bytes.Equal(tmHeader.NextValidatorsHash, tmHeader.NextValidatorSet.Hash()) {
-		return nil, lerr.ErrUnexpectedValidators(tmHeader.NextValidatorsHash, tmHeader.NextValidatorSet.Hash())
-	}
-
-	err := tmHeader.ValidateBasic(cs.ChainID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = cs.NextValidatorSet.VerifyFutureCommit(tmHeader.ValidatorSet, cs.ChainID, tmHeader.Commit.BlockID, tmHeader.Height, tmHeader.Commit)
-	if err != nil {
+	if err := cs.checkValidity(tmHeader); err != nil {
 		return nil, err
 	}
 
 	return cs.update(tmHeader), nil
 }
 
-// CheckMisbehaviourAndUpdateState - not implemented
-func (cs ConsensusState) CheckMisbehaviourAndUpdateState(mb exported.Misbehaviour) bool {
-	// TODO: implement
-	return false
+// checkValidity checks if the Tendermint header is valid
+func (cs ConsensusState) checkValidity(header Header) error {
+	nextHash := cs.NextValidatorSet.Hash()
+	if cs.Height == uint64(header.Height-1) &&
+		!bytes.Equal(header.ValidatorsHash, nextHash) {
+		return lerr.ErrUnexpectedValidators(header.ValidatorsHash, nextHash)
+	}
+
+	if !bytes.Equal(header.NextValidatorsHash, nextHash) {
+		return lerr.ErrUnexpectedValidators(header.NextValidatorsHash, nextHash)
+	}
+
+	if err := header.ValidateBasic(cs.ChainID); err != nil {
+		return err
+	}
+
+	return cs.NextValidatorSet.VerifyFutureCommit(header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit)
 }
 
 // update updates the consensus state from a new header
@@ -82,24 +79,4 @@ func (cs ConsensusState) update(header Header) ConsensusState {
 		Root:             merkle.NewRoot(header.AppHash),
 		NextValidatorSet: header.NextValidatorSet,
 	}
-}
-
-var _ exported.Header = Header{}
-
-// Header defines the Tendermint consensus Header
-type Header struct {
-	// TODO: define Tendermint header type manually, don't use tmtypes
-	tmtypes.SignedHeader
-	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
-	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
-}
-
-// Kind defines that the Header is a Tendermint consensus algorithm
-func (header Header) Kind() exported.Kind {
-	return exported.Tendermint
-}
-
-// GetHeight returns the current height
-func (header Header) GetHeight() uint64 {
-	return uint64(header.Height)
 }

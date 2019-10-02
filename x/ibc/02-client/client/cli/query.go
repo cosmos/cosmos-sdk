@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
+// TODO: use Queriers
+
 func mapping(cdc *codec.Codec, storeKey string, v int64) state.Mapping {
 	prefix := version.Prefix(v)
 	return state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)

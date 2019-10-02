@@ -24,17 +24,19 @@ type ConsensusState interface {
 	// CheckValidityAndUpdateState returns the updated consensus state
 	// only if the header is a descendent of this consensus state.
 	CheckValidityAndUpdateState(Header) (ConsensusState, error)
-
-	// CheckMisbehaviourAndUpdateState checks any misbehaviour evidence
-	// depending on the state type.
-	CheckMisbehaviourAndUpdateState(Misbehaviour) bool
 }
 
-// Misbehaviour defines the evidence
+// Evidence contains two disctict headers used to submit client equivocation
+// TODO: use evidence module type
+type Evidence interface {
+	H1() Header
+	H2() Header
+}
+
+// Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
 	Kind() Kind
-	// TODO: embed Evidence interface
-	// evidence.Evidence
+	Evidence() Evidence
 }
 
 // Header is the consensus state update information

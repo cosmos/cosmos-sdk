@@ -27,6 +27,16 @@ type State struct {
 	Frozen state.Boolean `json:"frozen" yaml:"frozen"`
 }
 
+// NewState creates a new State instance
+func NewState(id string, roots state.Indexer, consensusState state.Value, frozen state.Boolean) State {
+	return State{
+		id:             id,
+		Roots:          roots,
+		ConsensusState: consensusState,
+		Frozen:         frozen,
+	}
+}
+
 // ID returns the client identifier
 func (state State) ID() string {
 	return state.id
@@ -44,9 +54,14 @@ func (state State) GetRoot(ctx sdk.Context, height uint64) (root ics23.Root, err
 	return
 }
 
+// Exists verifies if the client exists or not
+func (state State) Exists(ctx sdk.Context) bool {
+	return state.ConsensusState.Exists(ctx)
+}
+
 // Update updates the consensus state and the state root from a provided header
 func (state State) Update(ctx sdk.Context, header exported.Header) error {
-	if !state.exists(ctx) {
+	if !state.Exists(ctx) {
 		panic("should not update nonexisting client")
 	}
 
@@ -68,7 +83,7 @@ func (state State) Update(ctx sdk.Context, header exported.Header) error {
 
 // Freeze updates the state of the client in the event of a misbehaviour
 func (state State) Freeze(ctx sdk.Context) error {
-	if !state.exists(ctx) {
+	if !state.Exists(ctx) {
 		panic("should not freeze nonexisting client")
 	}
 
@@ -99,11 +114,6 @@ func (state State) FrozenCLI(q state.ABCIQuerier) (res bool, proof merkle.Proof,
 	return
 }
 
-// exists verifies if the client exists or not
-func (state State) exists(ctx sdk.Context) bool {
-	return state.ConsensusState.Exists(ctx)
-}
-
 func (state State) prefix() []byte {
-	return bytes.Split(state.ConsensusState.KeyBytes(), LocalRoot())[0]
+	return bytes.Split(state.ConsensusState.KeyBytes(), []byte(SubModuleName+"/"))[0]
 }

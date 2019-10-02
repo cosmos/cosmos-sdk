@@ -14,8 +14,8 @@ import (
 // Tx must implement FeeTx interface to use the FeeDecorators
 type FeeTx interface {
 	sdk.Tx
-	Gas() uint64
-	FeeCoins() sdk.Coins
+	GetGas() uint64
+	GetFee() sdk.Coins
 	FeePayer() sdk.AccAddress
 }
 
@@ -36,8 +36,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
-	feeCoins := feeTx.FeeCoins()
-	gas := feeTx.Gas()
+	feeCoins := feeTx.GetFee()
+	gas := feeTx.GetGas()
 
 	// Ensure that the provided fees meet a minimum threshold for the validator,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
@@ -94,8 +94,8 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	feePayerAcc := dfd.ak.GetAccount(ctx, feePayer)
 
 	// deduct the fees
-	if !feeTx.FeeCoins().IsZero() {
-		err = DeductFees(dfd.supplyKeeper, ctx, feePayerAcc, feeTx.FeeCoins())
+	if !feeTx.GetFee().IsZero() {
+		err = DeductFees(dfd.supplyKeeper, ctx, feePayerAcc, feeTx.GetFee())
 		if err != nil {
 			return ctx, err
 		}

@@ -57,6 +57,7 @@ func TestValidateMemo(t *testing.T) {
 	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	invalidTx := types.NewTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, strings.Repeat("01234567890", 500))
 
+	// require that long memos get rejected
 	vmd := ante.NewValidateMemoDecorator(app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(vmd)
 	_, err := antehandler(ctx, invalidTx, false)
@@ -65,6 +66,7 @@ func TestValidateMemo(t *testing.T) {
 
 	validTx := types.NewTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, strings.Repeat("01234567890", 10))
 
+	// require small memos pass ValidateMemo Decorator
 	_, err = antehandler(ctx, validTx, false)
 	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 }
@@ -84,7 +86,6 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	ctx = ctx.WithTxBytes(txBytes)
 
 	// track how much gas is necessary to retrieve parameters
-	//
 	beforeGas := ctx.GasMeter().GasConsumed()
 	app.AccountKeeper.GetParams(ctx)
 	afterGas := ctx.GasMeter().GasConsumed()
@@ -95,6 +96,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	ctx, err := antehandler(ctx, nil, false)
 	require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
+	// require that decorator consumes expected amount of gas
 	consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
 	require.Equal(t, expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 }

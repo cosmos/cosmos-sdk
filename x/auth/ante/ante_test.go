@@ -532,41 +532,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	require.Nil(t, acc2.GetPubKey())
 }
 
-// func TestProcessPubKey(t *testing.T) {
-// 	app, ctx := createTestApp(true)
-
-// 	// keys
-// 	_, _, addr1 := types.KeyTestPubAddr()
-// 	priv2, _, addr2 := types.KeyTestPubAddr()
-// 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-// 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-
-// 	acc2.SetPubKey(priv2.PubKey())
-
-// 	type args struct {
-// 		acc      exported.Account
-// 		sig      types.StdSignature
-// 		simulate bool
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		args    args
-// 		wantErr bool
-// 	}{
-// 		{"no sigs, simulate off", args{acc1, types.StdSignature{}, false}, true},
-// 		{"no sigs, simulate on", args{acc1, types.StdSignature{}, true}, false},
-// 		{"no sigs, account with pub, simulate on", args{acc2, types.StdSignature{}, true}, false},
-// 		{"pubkey doesn't match addr, simulate off", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, false}, true},
-// 		{"pubkey doesn't match addr, simulate on", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, true}, false},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			_, err := ante.ProcessPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
-// 			require.Equal(t, tt.wantErr, err != nil)
-// 		})
-// 	}
-// }
-
 func generatePubKeysAndSignatures(n int, msg []byte, keyTypeed25519 bool) (pubkeys []crypto.PubKey, signatures [][]byte) {
 	pubkeys = make([]crypto.PubKey, n)
 	signatures = make([][]byte, n)

@@ -7,10 +7,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Tx with a Gas() method is needed to use SetUpContextDecorator
+// Tx with a GetGas() method is needed to use SetUpContextDecorator
 type GasTx interface {
 	sdk.Tx
-	Gas() uint64
+	GetGas() uint64
 }
 
 // SetUpContextDecorator sets the GasMeter in the Context and wraps the next AnteHandler with a defer clause
@@ -34,7 +34,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		return newCtx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be GasTx")
 	}
 
-	newCtx = SetGasMeter(simulate, ctx, gasTx.Gas())
+	newCtx = SetGasMeter(simulate, ctx, gasTx.GetGas())
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler
 	// AnteHandlers must have their own defer/recover in order for the BaseApp
@@ -47,7 +47,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-					rType.Descriptor, gasTx.Gas(), newCtx.GasMeter().GasConsumed())
+					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
 
 				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:

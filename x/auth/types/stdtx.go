@@ -137,11 +137,11 @@ func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
 	)
 }
 
-// Gas returns the Gas in StdFee
-func (tx StdTx) Gas() uint64 { return tx.Fee.Gas }
+// GetGas returns the Gas in StdFee
+func (tx StdTx) GetGas() uint64 { return tx.Fee.Gas }
 
-// FeeCoins returns the FeeAmount in StdFee
-func (tx StdTx) FeeCoins() sdk.Coins { return tx.Fee.Amount }
+// GetFee returns the FeeAmount in StdFee
+func (tx StdTx) GetFee() sdk.Coins { return tx.Fee.Amount }
 
 // FeePayer returns the address that is responsible for paying fee
 // StdTx returns the first signer as the fee payer

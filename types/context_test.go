@@ -91,7 +91,7 @@ func TestLogContext(t *testing.T) {
 	require.Equal(t, *logger.logs, []string{"debug", "info", "error"})
 }
 
-type dummy int64
+type dummy int64 //nolint: unused
 
 func (d dummy) Clone() interface{} {
 	return d

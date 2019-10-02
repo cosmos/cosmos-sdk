@@ -150,9 +150,7 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 }
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	if bytes.HasPrefix(k, node.KeyPrefix) {
-		k = bytes.TrimPrefix(k, node.KeyPrefix)
-	}
+	k = bytes.TrimPrefix(k, node.KeyPrefix)
 	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.KeyPrefix, k)
 	require.NoError(t, err)
 	return value, proof

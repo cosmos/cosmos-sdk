@@ -9,7 +9,7 @@ import (
 // This interface is implemented as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#blockchain.
 type Blockchain interface {
 	Genesis() ConsensusState // Consensus state defined in the genesis
-	Consensus() Header       // Header generating funciton
+	Consensus() Header       // Header generating function
 }
 
 // ConsensusState is the state of the consensus process

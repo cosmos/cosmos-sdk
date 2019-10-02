@@ -28,7 +28,7 @@ func NewHandler(manager types.Manager) sdk.Handler {
 }
 
 func handleMsgCreateClient(ctx sdk.Context, manager types.Manager, msg types.MsgCreateClient) sdk.Result {
-	_, err := manager.Create(ctx, msg.ClientID, msg.ConsensusState)
+	_, err := manager.CreateClient(ctx, msg.ClientID, msg.ConsensusState)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(100), err.Error()).Result()
 	}
@@ -38,11 +38,12 @@ func handleMsgCreateClient(ctx sdk.Context, manager types.Manager, msg types.Msg
 }
 
 func handleMsgUpdateClient(ctx sdk.Context, manager types.Manager, msg types.MsgUpdateClient) sdk.Result {
-	obj, err := manager.Query(ctx, msg.ClientID)
+	state, err := manager.Query(ctx, msg.ClientID)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(200), err.Error()).Result()
 	}
-	err = obj.Update(ctx, msg.Header)
+
+	err = state.Update(ctx, msg.Header)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(300), err.Error()).Result()
 	}

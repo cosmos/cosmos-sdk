@@ -50,7 +50,5 @@ each corresponds to `spec: Header.{height, proof, state, root}`.
 2. Manager
 
 `spec: interface ClientState` is implemented by `type State`.
-
-
 */
 package ics02

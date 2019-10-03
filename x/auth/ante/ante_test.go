@@ -635,59 +635,6 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }
 
-/*
-func TestEnsureSufficientMempoolFees(t *testing.T) {
-	// setup
-	_, ctx := createTestApp(true)
-	ctx = ctx.WithMinGasPrices(
-		sdk.DecCoins{
-			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001stake
-		},
-	)
-
-	testCases := []struct {
-		input      types.StdFee
-		expectedOK bool
-	}{
-		{types.NewStdFee(200000, sdk.Coins{}), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 10))), true},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("atom", 5),
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-	}
-
-	for i, tc := range testCases {
-		res := ante.EnsureSufficientMempoolFees(ctx, tc.input)
-		require.Equal(
-			t, tc.expectedOK, res.IsOK(),
-			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
-		)
-	}
-}
-*/
-
 // Test custom SignatureVerificationGasConsumer
 func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	// setup

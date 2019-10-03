@@ -145,8 +145,12 @@ func (tx StdTx) GetFee() sdk.Coins { return tx.Fee.Amount }
 
 // FeePayer returns the address that is responsible for paying fee
 // StdTx returns the first signer as the fee payer
+// If no signers for tx, return empty address
 func (tx StdTx) FeePayer() sdk.AccAddress {
-	return tx.GetMsgs()[0].GetSigners()[0]
+	if tx.GetSigners() != nil {
+		return tx.GetSigners()[0]
+	}
+	return sdk.AccAddress{}
 }
 
 //__________________________________________________________

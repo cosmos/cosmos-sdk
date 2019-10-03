@@ -116,7 +116,8 @@ type Periods []Period
 // PeriodicVestingAccount implements the VestingAccount interface. It
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
-  ContinuousVestingAccount
+  BaseVestingAccount
+  StartTime int64
   Periods Periods // the vesting schedule
 }
 ```

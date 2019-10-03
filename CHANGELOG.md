@@ -80,8 +80,25 @@ correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
 
-
 ### Improvements
+
+* (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
+when connecting to multiple chains. The connecting chain's `CLIContext` will have to have the correct
+chain ID and node URI or client set. To use a `CLIContext` with a verifier for another chain:
+
+  ```go
+  // main or parent chain (chain as if you're running without IBC)
+  mainCtx := context.NewCLIContext()
+
+  // connecting IBC chain
+  sideCtx := context.NewCLIContext().
+    WithChainID(sideChainID).
+    WithNodeURI(sideChainNodeURI) // or .WithClient(...)
+
+  sideCtx = sideCtx.WithVerifier(
+    context.CreateVerifier(sideCtx, context.DefaultVerifierCacheSize),
+  )
+  ```
 
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
@@ -400,6 +417,13 @@ that error is that the account doesn't exist.
 
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
+
+## 0.34.8
+
+### Bug Fixes
+
+* Bump Tendermint version to v0.31.9 to fix the p2p panic error.
+* Update gaiareplay's use of an internal Tendermint API
 
 ## 0.34.7
 

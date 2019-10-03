@@ -386,7 +386,6 @@ func trackDelegation(acc authexported.Account, blockTime time.Time, amt sdk.Coin
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(blockTime, amt)
-		return nil
 	}
 
 	return acc.SetCoins(acc.GetCoins().Sub(amt))
@@ -398,7 +397,6 @@ func trackUndelegation(acc authexported.Account, amt sdk.Coins) error {
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)
-		return nil
 	}
 
 	return acc.SetCoins(acc.GetCoins().Add(amt))

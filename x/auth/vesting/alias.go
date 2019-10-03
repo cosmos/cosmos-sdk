@@ -20,7 +20,7 @@ var (
 	NewDelayedVestingAccount       = types.NewDelayedVestingAccount
 
 	// variable aliases
-	SubModuleCdc = types.SubModuleCdc
+	VestingCdc = types.VestingCdc
 )
 
 type (

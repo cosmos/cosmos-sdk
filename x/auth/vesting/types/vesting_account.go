@@ -35,8 +35,6 @@ type BaseVestingAccount struct {
 	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
 	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
 	EndTime          int64     `json:"end_time" yaml:"end_time"`                   // when the coins become unlocked
-	StartTime        int64     `json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	VestingPeriods   Periods   `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
@@ -112,7 +110,6 @@ func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
 			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Sub(sdk.Coins{coin})
 	}
 }
 
@@ -151,7 +148,6 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
 		}
 
-		bva.Coins = bva.Coins.Add(sdk.Coins{coin})
 	}
 }
 
@@ -175,11 +171,6 @@ func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
 // GetEndTime returns a vesting account's end time
 func (bva BaseVestingAccount) GetEndTime() int64 {
 	return bva.EndTime
-}
-
-// GetStartTime returns 0 since base vesting account has no start time
-func (bva BaseVestingAccount) GetStartTime() int64 {
-	return 0
 }
 
 // Validate checks for errors on the account fields
@@ -217,8 +208,6 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedFree    sdk.Coins
 		DelegatedVesting sdk.Coins
 		EndTime          int64
-		StartTime        int64
-		Periods          Periods
 	}{
 		Address:          bva.Address,
 		Coins:            bva.Coins,
@@ -229,8 +218,6 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-		StartTime:        bva.StartTime,
-		Periods:          bva.VestingPeriods,
 	})
 	if err != nil {
 		return nil, err
@@ -341,6 +328,49 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
+// MarshalYAML returns the YAML representation of an account.
+func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
+	var bs []byte
+	var err error
+	var pubkey string
+
+	if cva.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(cva.PubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bs, err = yaml.Marshal(struct {
+		Address          sdk.AccAddress
+		Coins            sdk.Coins
+		PubKey           string
+		AccountNumber    uint64
+		Sequence         uint64
+		OriginalVesting  sdk.Coins
+		DelegatedFree    sdk.Coins
+		DelegatedVesting sdk.Coins
+		EndTime          int64
+		StartTime        int64
+	}{
+		Address:          cva.Address,
+		Coins:            cva.Coins,
+		PubKey:           pubkey,
+		AccountNumber:    cva.AccountNumber,
+		Sequence:         cva.Sequence,
+		OriginalVesting:  cva.OriginalVesting,
+		DelegatedFree:    cva.DelegatedFree,
+		DelegatedVesting: cva.DelegatedVesting,
+		EndTime:          cva.EndTime,
+		StartTime:        cva.StartTime,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), err
+}
+
 //-----------------------------------------------------------------------------
 // Periodic Vesting Account
 
@@ -351,14 +381,15 @@ var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
 	*BaseVestingAccount
+	StartTime      int64   `json:"start_time" yaml:"start_time"`           // when the coins start to vest
 	VestingPeriods Periods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
 }
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
-	bva.StartTime = startTime
 	return &PeriodicVestingAccount{
 		BaseVestingAccount: bva,
+		StartTime:          startTime,
 		VestingPeriods:     periods,
 	}
 }
@@ -372,12 +403,12 @@ func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, startTime int64, 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
-		StartTime:       startTime,
 		EndTime:         endTime,
 	}
 
 	return &PeriodicVestingAccount{
 		BaseVestingAccount: baseVestingAcc,
+		StartTime:          startTime,
 		VestingPeriods:     periods,
 	}
 }
@@ -465,6 +496,51 @@ func (pva PeriodicVestingAccount) Validate() error {
 	}
 
 	return pva.BaseVestingAccount.Validate()
+}
+
+// MarshalYAML returns the YAML representation of an account.
+func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
+	var bs []byte
+	var err error
+	var pubkey string
+
+	if pva.PubKey != nil {
+		pubkey, err = sdk.Bech32ifyAccPub(pva.PubKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	bs, err = yaml.Marshal(struct {
+		Address          sdk.AccAddress
+		Coins            sdk.Coins
+		PubKey           string
+		AccountNumber    uint64
+		Sequence         uint64
+		OriginalVesting  sdk.Coins
+		DelegatedFree    sdk.Coins
+		DelegatedVesting sdk.Coins
+		EndTime          int64
+		StartTime        int64
+		VestingPeriods   Periods
+	}{
+		Address:          pva.Address,
+		Coins:            pva.Coins,
+		PubKey:           pubkey,
+		AccountNumber:    pva.AccountNumber,
+		Sequence:         pva.Sequence,
+		OriginalVesting:  pva.OriginalVesting,
+		DelegatedFree:    pva.DelegatedFree,
+		DelegatedVesting: pva.DelegatedVesting,
+		EndTime:          pva.EndTime,
+		StartTime:        pva.StartTime,
+		VestingPeriods:   pva.VestingPeriods,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), err
 }
 
 //-----------------------------------------------------------------------------

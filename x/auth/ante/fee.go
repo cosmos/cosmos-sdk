@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Tx must implement FeeTx interface to use the FeeDecorators
+// FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
 type FeeTx interface {
 	sdk.Tx
 	GetGas() uint64
@@ -106,8 +106,8 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 // DeductFees deducts fees from the given account.
 //
-// NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
-// the CoinKeeper doesn't give us accounts), but it seems easier to do this.
+// NOTE: We could use the BankKeeper (in addition to the AccountKeeper, because
+// the BankKeeper doesn't give us accounts), but it seems easier to do this.
 func DeductFees(supplyKeeper types.SupplyKeeper, ctx sdk.Context, acc exported.Account, fees sdk.Coins) error {
 	blockTime := ctx.BlockHeader().Time
 	coins := acc.GetCoins()

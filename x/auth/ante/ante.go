@@ -11,7 +11,7 @@ import (
 // signer.
 func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		NewSetUpContextDecorator(),
+		NewSetUpContextDecorator(), // outermost AnteDecorator
 		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewValidateMemoDecorator(ak),
@@ -21,6 +21,6 @@ func NewAnteHandler(ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, si
 		NewDeductFeeDecorator(ak, supplyKeeper),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		NewSigVerificationDecorator(ak),
-		NewIncrementSequenceDecorator(ak),
+		NewIncrementSequenceDecorator(ak), // innermost AnteDecorator
 	)
 }

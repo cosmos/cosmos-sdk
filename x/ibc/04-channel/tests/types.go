@@ -55,7 +55,7 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 
 func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, channel.Handshaker) {
 	ctx := node.Context()
-	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Path(), proofs)
+	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Prefix(), proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
 	man := node.Manager()

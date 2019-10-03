@@ -557,6 +557,24 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, pva.DelegatedFree)
 	require.Nil(t, pva.GetCoins())
 
+	// delegate half of vesting coins
+	bacc.SetCoins(origCoins)
+	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
+	pva.TrackDelegation(now, periods[0].Amount)
+	// require that all delegated coins are delegated vesting
+	require.Equal(t, pva.DelegatedVesting, periods[0].Amount)
+	require.Nil(t, pva.DelegatedFree)
+	require.Equal(t, pva.GetCoins(), periods[0].Amount)
+
+	// delegate 75% of coins, split between vested and vesting
+	bacc.SetCoins(origCoins)
+	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
+	pva.TrackDelegation(now.Add(12*time.Hour), periods[0].Amount.Add(periods[1].Amount))
+	// require that the maximum possible amount of vesting coins are chosen for delegation.
+	require.Equal(t, pva.DelegatedFree, periods[1].Amount)
+	require.Equal(t, pva.DelegatedVesting, periods[0].Amount)
+	require.Equal(t, pva.GetCoins(), periods[2].Amount)
+
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
 	bacc.SetCoins(origCoins)
 	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
@@ -594,7 +612,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	bacc.SetCoins(origCoins)
 
-	// require the ability to undelegate all vesting coins
+	// require the ability to undelegate all vesting coins at the beginning of vesting
 	pva := NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
 	pva.TrackDelegation(now, origCoins)
 	pva.TrackUndelegation(origCoins)
@@ -602,7 +620,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	require.Nil(t, pva.DelegatedVesting)
 	require.Equal(t, origCoins, pva.GetCoins())
 
-	// require the ability to undelegate all vested coins
+	// require the ability to undelegate all vested coins at the end of vesting
 	bacc.SetCoins(origCoins)
 	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
 
@@ -611,6 +629,14 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	require.Nil(t, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 	require.Equal(t, origCoins, pva.GetCoins())
+
+	// require the ability to undelegate half of coins
+	bacc.SetCoins(origCoins)
+	pva = NewPeriodicVestingAccount(&bacc, now.Unix(), periods)
+	pva.TrackDelegation(endTime, periods[0].Amount)
+	pva.TrackUndelegation(periods[0].Amount)
+	require.Nil(t, pva.DelegatedFree)
+	require.Nil(t, pva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	bacc.SetCoins(origCoins)

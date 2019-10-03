@@ -350,19 +350,16 @@ var _ authexported.GenesisAccount = (*PeriodicVestingAccount)(nil)
 // PeriodicVestingAccount implements the VestingAccount interface. It
 // periodically vests by unlocking coins during each specified period
 type PeriodicVestingAccount struct {
-	*ContinuousVestingAccount
+	*BaseVestingAccount
 	VestingPeriods Periods `json:"vesting_periods" yaml:"vesting_periods"` // the vesting schedule
 }
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
-	cva := &ContinuousVestingAccount{
-		StartTime:          startTime,
-		BaseVestingAccount: bva,
-	}
+	bva.StartTime = startTime
 	return &PeriodicVestingAccount{
-		ContinuousVestingAccount: cva,
-		VestingPeriods:           periods,
+		BaseVestingAccount: bva,
+		VestingPeriods:     periods,
 	}
 }
 
@@ -375,17 +372,13 @@ func NewPeriodicVestingAccount(baseAcc *authtypes.BaseAccount, startTime int64, 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: baseAcc.Coins,
+		StartTime:       startTime,
 		EndTime:         endTime,
 	}
 
-	cva := &ContinuousVestingAccount{
-		StartTime:          startTime,
-		BaseVestingAccount: baseVestingAcc,
-	}
-
 	return &PeriodicVestingAccount{
-		ContinuousVestingAccount: cva,
-		VestingPeriods:           periods,
+		BaseVestingAccount: baseVestingAcc,
+		VestingPeriods:     periods,
 	}
 }
 

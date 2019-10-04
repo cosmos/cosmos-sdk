@@ -21,8 +21,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryValidators(ctx, req, k)
 		case types.QueryValidator:
 			return queryValidator(ctx, req, k)
-		// case types.QueryPool:
-		// 	return queryPool(ctx, k)
 		case types.QueryParameters:
 			return queryParameters(ctx, k)
 		default:
@@ -83,27 +81,6 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 
 	return res, nil
 }
-
-// func queryPool(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
-// 	bondDenom := k.BondDenom(ctx)
-// 	bondedPool := k.GetBondedPool(ctx)
-// 	notBondedPool := k.GetNotBondedPool(ctx)
-// 	if bondedPool == nil || notBondedPool == nil {
-// 		return nil, sdk.ErrInternal("pool accounts haven't been set")
-// 	}
-
-// 	pool := types.NewPool(
-// 		notBondedPool.GetCoins().AmountOf(bondDenom),
-// 		bondedPool.GetCoins().AmountOf(bondDenom),
-// 	)
-
-// 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, pool)
-// 	if err != nil {
-// 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-// 	}
-
-// 	return res, nil
-// }
 
 func queryParameters(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	params := k.GetParams(ctx)

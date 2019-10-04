@@ -33,6 +33,7 @@ var (
 	AttributeValueCategory     = types.AttributeValueCategory
 	DefaultGenesisState        = types.DefaultGenesisState
 	NewGenesisState            = types.NewGenesisState
+	NewQueryValidatorParams    = types.NewQueryValidatorParams
 )
 
 type (

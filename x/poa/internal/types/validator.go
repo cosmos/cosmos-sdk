@@ -34,7 +34,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description sta
 		OperatorAddress:         operator,
 		ConsPubKey:              pubKey,
 		Jailed:                  false,
-		Status:                  sdk.Unbonded,
+		Status:                  sdk.Bonded,
 		Weight:                  sdk.NewInt(int64(10)), // set default to 10 when creating a validator
 		Description:             description,
 		UnbondingHeight:         int64(0),

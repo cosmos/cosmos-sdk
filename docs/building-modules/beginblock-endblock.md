@@ -20,7 +20,7 @@ The actual implementation of `BeginBlocker` and `EndBlocker` are very similar to
 - If needed, they use the `keeper` and `ctx` to trigger state-transitions. 
 - If needed, they can emit [`events`](../core/events.md) via the `ctx`'s `EventManager`. 
 
-A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). 
+A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). This is the preferred way to implement custom validator changes. 
 
 For more, see an [example implementation of `BeginBlocker` from the `distr` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/abci.go) and an [example implementation of `EndBlocker`]( https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/handler.go#L44)
 

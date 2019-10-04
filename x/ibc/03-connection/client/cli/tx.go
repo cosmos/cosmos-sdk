@@ -120,7 +120,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, viper.GetString(FlagNode1)).
 				WithCodec(cdc).
-				WithBroadcastMode(flags.BroadcastBlock).
+				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := storestate.NewCLIQuerier(ctx1)
 
 			fmt.Println("setting cid2")
@@ -128,7 +128,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, viper.GetString(FlagNode2)).
 				WithCodec(cdc).
-				WithBroadcastMode(flags.BroadcastBlock).
+				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := storestate.NewCLIQuerier(ctx2)
 
 			connId1 := args[0]

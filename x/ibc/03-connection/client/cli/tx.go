@@ -116,6 +116,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainId2)
 			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).

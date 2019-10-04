@@ -32,7 +32,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Height
 }
 
-// GetRoot returns the commitment Root
+// GetRoot returns the commitment Rootgit
 func (cs ConsensusState) GetRoot() ics23.Root {
 	return cs.Root
 }
@@ -61,6 +61,7 @@ func (cs ConsensusState) checkValidity(header Header) error {
 		return lerr.ErrUnexpectedValidators(header.ValidatorsHash, nextHash)
 	}
 
+	nextHash = header.NextValidatorSet.Hash()
 	if !bytes.Equal(header.NextValidatorsHash, nextHash) {
 		return lerr.ErrUnexpectedValidators(header.NextValidatorsHash, nextHash)
 	}

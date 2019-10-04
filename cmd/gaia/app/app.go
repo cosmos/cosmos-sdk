@@ -37,6 +37,7 @@ var (
 	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
 )
 
+
 // Extended ABCI application
 type GaiaApp struct {
 	*bam.BaseApp

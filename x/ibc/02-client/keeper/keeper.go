@@ -48,7 +48,7 @@ func (k Keeper) CreateClient(ctx sdk.Context, id string, cs exported.ConsensusSt
 }
 
 // State returns a new client state with a given id
-func (k Keeper) State(id string) types.State {
+func (k Keeper) ClientState(id string) types.State {
 	return types.NewState(
 		id, // client ID
 		k.mapping.Prefix([]byte(id+"/roots/")).Indexer(state.Dec), // commitment roots
@@ -59,7 +59,7 @@ func (k Keeper) State(id string) types.State {
 
 // Query returns a client state that matches a given ID
 func (k Keeper) Query(ctx sdk.Context, id string) (types.State, error) {
-	state := k.State(id)
+	state := k.ClientState(id)
 	if !state.Exists(ctx) {
 		return types.State{}, types.ErrClientExists(k.codespace)
 	}

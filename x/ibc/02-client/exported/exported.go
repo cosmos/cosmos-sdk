@@ -14,7 +14,7 @@ type Blockchain interface {
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
-	Kind() Kind // Consensus kind
+	ClientType() ClientType // Consensus kind
 	GetHeight() uint64
 
 	// GetRoot returns the commitment root of the consensus state,
@@ -35,20 +35,20 @@ type Evidence interface {
 
 // Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
-	Kind() Kind
+	ClientType() ClientType
 	Evidence() Evidence
 }
 
 // Header is the consensus state update information
 type Header interface {
-	Kind() Kind
+	ClientType() ClientType
 	GetHeight() uint64
 }
 
-// Kind defines the type of the consensus algorithm
-type Kind byte
+// ClientType defines the type of the consensus algorithm
+type ClientType byte
 
 // Registered consensus types
 const (
-	Tendermint Kind = iota
+	Tendermint ClientType = iota
 )

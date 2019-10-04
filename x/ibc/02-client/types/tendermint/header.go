@@ -16,8 +16,8 @@ type Header struct {
 	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
 }
 
-// Kind defines that the Header is a Tendermint consensus algorithm
-func (header Header) Kind() exported.Kind {
+// ClientType defines that the Header is a Tendermint consensus algorithm
+func (header Header) ClientType() exported.ClientType {
 	return exported.Tendermint
 }
 

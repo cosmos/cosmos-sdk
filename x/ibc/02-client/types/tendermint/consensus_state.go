@@ -22,8 +22,8 @@ type ConsensusState struct {
 	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 
-// Kind returns Tendermint
-func (ConsensusState) Kind() exported.Kind {
+// ClientType returns Tendermint
+func (ConsensusState) ClientType() exported.ClientType {
 	return exported.Tendermint
 }
 

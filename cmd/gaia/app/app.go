@@ -350,6 +350,10 @@ func (app *GaiaApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }
 
+func (app *GaiaApp) GetCodec() *codec.Codec {
+	return app.cdc
+}
+
 // ______________________________________________________________________________________________
 
 var _ sdk.StakingHooks = StakingHooks{}

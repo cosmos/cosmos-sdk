@@ -37,8 +37,19 @@ func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreate
 		return sdk.ResultFromError(err)
 	}
 
-	// TODO: events
-	return sdk.Result{}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreateClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
+		),
+	})
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdateClient) sdk.Result {
@@ -52,8 +63,20 @@ func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdate
 		return sdk.ResultFromError(err)
 	}
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUpdateClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
+		),
+	})
+
 	// TODO: events
-	return sdk.Result{}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.MsgSubmitMisbehaviour) sdk.Result {
@@ -67,6 +90,17 @@ func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 		return sdk.ResultFromError(err)
 	}
 
-	// TODO: events
-	return sdk.Result{}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeSubmitMisbehaviour,
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
+		),
+	})
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

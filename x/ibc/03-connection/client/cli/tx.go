@@ -118,21 +118,17 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
+			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, viper.GetString(FlagNode1)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode1)).
 				WithBroadcastMode(flags.BroadcastBlock).
-				WithChainID(cid1)
 			q1 := storestate.NewCLIQuerier(ctx1)
 
 			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
-			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
+			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, viper.GetString(FlagNode2)).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode2)).
 				WithBroadcastMode(flags.BroadcastBlock).
-				WithChainID(cid2)
 			q2 := storestate.NewCLIQuerier(ctx2)
 
 			connId1 := args[0]

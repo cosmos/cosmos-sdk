@@ -27,10 +27,11 @@ import (
 )
 
 const (
-	FlagNode1 = "node1"
-	FlagNode2 = "node2"
-	FlagFrom1 = "from1"
-	FlagFrom2 = "from2"
+	FlagNode1    = "node1"
+	FlagNode2    = "node2"
+	FlagFrom1    = "from1"
+	FlagFrom2    = "from2"
+	FlagChainId2 = "chain-id2"
 )
 
 func handshake(q storestate.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, connid string) (connection.HandshakeState, error) {
@@ -116,13 +117,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
-				WithBroadcastMode(flags.BroadcastBlock)
+				WithBroadcastMode(flags.BroadcastBlock).
+				WithChainID(viper.GetString(flags.FlagChainID))
 			q1 := storestate.NewCLIQuerier(ctx1)
 
 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
-				WithBroadcastMode(flags.BroadcastBlock)
+				WithBroadcastMode(flags.BroadcastBlock).
+				WithChainID(viper.GetString(FlagChainId2))
 			q2 := storestate.NewCLIQuerier(ctx2)
 
 			connId1 := args[0]
@@ -328,10 +331,11 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	// TODO: Provide flag description
-	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagFrom1, "", "")
-	cmd.Flags().String(FlagFrom2, "", "")
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
+	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 
 	cmd.MarkFlagRequired(FlagFrom1)
 	cmd.MarkFlagRequired(FlagFrom2)

@@ -113,21 +113,25 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "initiate connection handshake between two chains",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cid1 := viper.GetString(flags.FlagChainID)
+			cid2 := viper.GetString(FlagChainId2)
+			fmt.Println("setting cid1")
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode1)).
 				WithBroadcastMode(flags.BroadcastBlock).
-				WithChainID(viper.GetString(flags.FlagChainID))
+				WithChainID(cid1)
 			q1 := storestate.NewCLIQuerier(ctx1)
 
-			viper.Set(flags.FlagChainID, viper.GetString(FlagChainId2))
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 
 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).
 				WithBroadcastMode(flags.BroadcastBlock).
-				WithChainID(viper.GetString(FlagChainId2))
+				WithChainID(cid2)
 			q2 := storestate.NewCLIQuerier(ctx2)
 
 			connId1 := args[0]
@@ -181,6 +185,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:             ctx1.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgInit})
 			if err != nil {
 				return err
@@ -203,11 +209,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:   ctx2.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
 
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 			fmt.Printf("querying from %d\n", header.Height-1)
 
@@ -233,6 +243,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:             ctx2.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgTry})
 			if err != nil {
 				return err
@@ -255,11 +267,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:   ctx1.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
 
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 			q2 = storestate.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
 
 			_, pconn, err = obj2.ConnectionCLI(q2)
@@ -282,6 +298,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:       ctx1.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgAck})
 			if err != nil {
 				return err
@@ -304,11 +322,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:   ctx2.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgUpdate})
 			if err != nil {
 				return err
 			}
 
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
 
 			_, pstate, err = obj1.StageCLI(q1)
@@ -323,6 +345,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				Signer:       ctx2.GetFromAddress(),
 			}
 
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgConfirm})
 			if err != nil {
 				return err

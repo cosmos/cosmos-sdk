@@ -121,6 +121,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithChainID(viper.GetString(flags.FlagChainID))
 			q1 := storestate.NewCLIQuerier(ctx1)
 
+			viper.Set(flags.FlagChainID, viper.GetString(FlagChainId2))
+
 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 				WithCodec(cdc).
 				WithNodeURI(viper.GetString(FlagNode2)).

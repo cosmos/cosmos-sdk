@@ -57,9 +57,6 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 }
 
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
-	if app.sealed {
-		panic("SetBeginBlocker() on sealed BaseApp")
-	}
 	app.beginBlocker = beginBlocker
 }
 
@@ -92,8 +89,5 @@ func (app *BaseApp) SetIDPeerFilter(pf sdk.PeerFilter) {
 }
 
 func (app *BaseApp) SetFauxMerkleMode() {
-	if app.sealed {
-		panic("SetFauxMerkleMode() on sealed BaseApp")
-	}
 	app.fauxMerkleMode = true
 }

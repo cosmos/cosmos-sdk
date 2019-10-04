@@ -1,13 +1,13 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
@@ -22,9 +22,10 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(mapping state.Mapping) Keeper {
+func NewKeeper(mapping state.Mapping, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
-		mapping: mapping.Prefix([]byte(types.SubModuleName + "/")),
+		mapping:   mapping.Prefix([]byte(types.SubModuleName + "/")),                          // "client/"
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client"
 	}
 }
 
@@ -37,7 +38,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) CreateClient(ctx sdk.Context, id string, cs exported.ConsensusState) (types.State, error) {
 	state, err := k.Query(ctx, id)
 	if err == nil {
-		return types.State{}, errors.New("cannot create client on an existing id")
+		return types.State{}, sdkerrors.Wrap(err, "cannot create client")
 	}
 
 	// set the most recent state root and consensus state
@@ -46,7 +47,7 @@ func (k Keeper) CreateClient(ctx sdk.Context, id string, cs exported.ConsensusSt
 	return state, nil
 }
 
-// State returnts a new client state with a given id
+// State returns a new client state with a given id
 func (k Keeper) State(id string) types.State {
 	return types.NewState(
 		id, // client ID
@@ -60,7 +61,7 @@ func (k Keeper) State(id string) types.State {
 func (k Keeper) Query(ctx sdk.Context, id string) (types.State, error) {
 	state := k.State(id)
 	if !state.Exists(ctx) {
-		return types.State{}, errors.New("client doesn't exist")
+		return types.State{}, types.ErrClientExists(k.codespace)
 	}
 	return state, nil
 }
@@ -71,7 +72,12 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, state types.Sta
 	var err error
 	switch evidence.H1().Kind() {
 	case exported.Tendermint:
-		err = tendermint.CheckMisbehaviour(evidence)
+		var tmEvidence tendermint.Evidence
+		_, ok := evidence.(tendermint.Evidence)
+		if !ok {
+			return sdkerrors.Wrap(types.ErrInvalidConsensus(k.codespace), "consensus is not Tendermint")
+		}
+		err = tendermint.CheckMisbehaviour(tmEvidence)
 	default:
 		panic("unregistered consensus type")
 	}
@@ -80,5 +86,40 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, state types.Sta
 		return err
 	}
 
-	return state.Freeze(ctx)
+	return k.Freeze(ctx, state)
+}
+
+// Update updates the consensus state and the state root from a provided header
+func (k Keeper) Update(ctx sdk.Context, state types.State, header exported.Header) error {
+	if !state.Exists(ctx) {
+		panic("should not update nonexisting client")
+	}
+
+	if state.Frozen.Get(ctx) {
+		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "cannot update client")
+	}
+
+	consensusState := state.GetConsensusState(ctx)
+	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
+	if err != nil {
+		return sdkerrors.Wrap(err, "cannot update client")
+	}
+
+	state.ConsensusState.Set(ctx, consensusState)
+	state.Roots.Set(ctx, consensusState.GetHeight(), consensusState.GetRoot())
+	return nil
+}
+
+// Freeze updates the state of the client in the event of a misbehaviour
+func (k Keeper) Freeze(ctx sdk.Context, state types.State) error {
+	if !state.Exists(ctx) {
+		panic("should not freeze nonexisting client")
+	}
+
+	if state.Frozen.Get(ctx) {
+		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "already frozen")
+	}
+
+	state.Frozen.Set(ctx, true)
+	return nil
 }

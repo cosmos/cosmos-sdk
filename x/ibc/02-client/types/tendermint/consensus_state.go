@@ -17,9 +17,9 @@ var _ exported.ConsensusState = ConsensusState{}
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
 	ChainID          string                `json:"chain_id" yaml:"chain_id"`
-	Height           uint64                `json:"height" yaml:"height"`
+	Height           uint64                `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
 	Root             ics23.Root            `json:"root" yaml:"root"`
-	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`
+	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 
 // Kind returns Tendermint
@@ -42,7 +42,7 @@ func (cs ConsensusState) GetRoot() ics23.Root {
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
-		return nil, errors.New("header is not from a tendermint consensus") // TODO: create concrete error
+		return nil, errors.New("header is not from a tendermint consensus")
 	}
 
 	if err := cs.checkValidity(tmHeader); err != nil {
@@ -54,6 +54,7 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 
 // checkValidity checks if the Tendermint header is valid
 func (cs ConsensusState) checkValidity(header Header) error {
+	// TODO: shouldn't we check that header.Height > cs.Height?
 	nextHash := cs.NextValidatorSet.Hash()
 	if cs.Height == uint64(header.Height-1) &&
 		!bytes.Equal(header.ValidatorsHash, nextHash) {
@@ -68,10 +69,12 @@ func (cs ConsensusState) checkValidity(header Header) error {
 		return err
 	}
 
-	return cs.NextValidatorSet.VerifyFutureCommit(header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit)
+	return cs.NextValidatorSet.VerifyFutureCommit(
+		header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit,
+	)
 }
 
-// update updates the consensus state from a new header
+// update the consensus state from a new header
 func (cs ConsensusState) update(header Header) ConsensusState {
 	return ConsensusState{
 		ChainID:          cs.ChainID,

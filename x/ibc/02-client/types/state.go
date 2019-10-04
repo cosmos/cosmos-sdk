@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"errors"
 
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,42 +56,6 @@ func (state State) GetRoot(ctx sdk.Context, height uint64) (root ics23.Root, err
 // Exists verifies if the client exists or not
 func (state State) Exists(ctx sdk.Context) bool {
 	return state.ConsensusState.Exists(ctx)
-}
-
-// Update updates the consensus state and the state root from a provided header
-func (state State) Update(ctx sdk.Context, header exported.Header) error {
-	if !state.Exists(ctx) {
-		panic("should not update nonexisting client")
-	}
-
-	if state.Frozen.Get(ctx) {
-		return errors.New("client is frozen due to misbehaviour")
-	}
-
-	stored := state.GetConsensusState(ctx)
-	updated, err := stored.CheckValidityAndUpdateState(header)
-	if err != nil {
-		return err
-	}
-
-	state.ConsensusState.Set(ctx, updated)
-	state.Roots.Set(ctx, updated.GetHeight(), updated.GetRoot())
-
-	return nil
-}
-
-// Freeze updates the state of the client in the event of a misbehaviour
-func (state State) Freeze(ctx sdk.Context) error {
-	if !state.Exists(ctx) {
-		panic("should not freeze nonexisting client")
-	}
-
-	if state.Frozen.Get(ctx) {
-		return errors.New("cannot freeze an already frozen client")
-	}
-
-	state.Frozen.Set(ctx, true)
-	return nil
 }
 
 func (state State) RootCLI(q state.ABCIQuerier, height uint64) (res ics23.Root, proof merkle.Proof, err error) {

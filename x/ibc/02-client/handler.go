@@ -34,7 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreateClient) sdk.Result {
 	_, err := k.CreateClient(ctx, msg.ClientID, msg.ConsensusState)
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(100), err.Error()).Result()
+		return sdk.ResultFromError(err)
 	}
 
 	// TODO: events
@@ -44,12 +44,12 @@ func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreate
 func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdateClient) sdk.Result {
 	state, err := k.Query(ctx, msg.ClientID)
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(200), err.Error()).Result()
+		return sdk.ResultFromError(err)
 	}
 
-	err = state.Update(ctx, msg.Header)
+	err = k.Update(ctx, state, msg.Header)
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(300), err.Error()).Result()
+		return sdk.ResultFromError(err)
 	}
 
 	// TODO: events
@@ -59,12 +59,12 @@ func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdate
 func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.MsgSubmitMisbehaviour) sdk.Result {
 	state, err := k.Query(ctx, msg.ClientID)
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(200), err.Error()).Result()
+		return sdk.ResultFromError(err)
 	}
 
 	err = k.CheckMisbehaviourAndUpdateState(ctx, state, msg.Evidence)
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(200), err.Error()).Result()
+		return sdk.ResultFromError(err)
 	}
 
 	// TODO: events

@@ -2,15 +2,38 @@ package app
 
 import (
 	"database/sql"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"reflect"
 
-	types2 "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/abci/types"
+	tm "github.com/tendermint/tendermint/types"
 )
 
-func (app *GaiaApp) BeginBlockHook(Database *sql.DB, blockerFunctions []func(*GaiaApp, *sql.DB, types2.Context, types.RequestBeginBlock)) types2.BeginBlocker {
-	return func(ctx types2.Context, req types.RequestBeginBlock) types.ResponseBeginBlock {
+type (
+	// AddressContainingStruct exists to parse JSON blobs containing sdk.Addressbased fields.
+	AddressContainingStruct struct {
+		From         sdk.AccAddress `json:"from_address"`
+		To           sdk.AccAddress `json:"to_address"`
+		Validator    sdk.ValAddress `json:"validator_address"`
+		Delegator    sdk.AccAddress `json:"delegator_address"`
+		SrcValidator sdk.ValAddress `json:"src_validator_address"`
+		DstValidator sdk.ValAddress `json:"dst_validator_address"`
+		Proposer     sdk.AccAddress `json:"proposer"`
+	}
+
+	// BasicMsgStruct is a simplified reprentation of an sdk.Msg
+	BasicMsgStruct struct {
+		Type  string                  `json:"type"`
+		Value AddressContainingStruct `json:"value"`
+	}
+)
+
+func (app *GaiaApp) BeginBlockHook(Database *sql.DB, blockerFunctions []func(*GaiaApp, *sql.DB, sdk.Context, types.RequestBeginBlock)) sdk.BeginBlocker {
+	return func(ctx sdk.Context, req types.RequestBeginBlock) types.ResponseBeginBlock {
 		res := app.BeginBlocker(ctx, req)
 		// fucntions
 		for _, fn := range blockerFunctions {
@@ -20,7 +43,7 @@ func (app *GaiaApp) BeginBlockHook(Database *sql.DB, blockerFunctions []func(*Ga
 	}
 }
 
-func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx types2.Context, req types.RequestBeginBlock) {
+func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
 	var (
 		tx, _                  = Database.Begin()
 		tx2, _                 = Database.Begin()
@@ -47,7 +70,7 @@ func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx types2.Context, req typ
 			}
 		}
 		wrap, _ := ctx.CacheContext()
-		app.stakingKeeper.IterateDelegations(wrap, account.GetAddress(), func(index int64, del types2.Delegation) (stop bool) {
+		app.stakingKeeper.IterateDelegations(wrap, account.GetAddress(), func(index int64, del sdk.Delegation) (stop bool) {
 			val, _ := app.stakingKeeper.GetValidator(wrap, del.GetValidatorAddr())
 			rew := app.distrKeeper.IncrementValidatorPeriod(wrap, val)
 			rewards := app.distrKeeper.CalculateDelegationRewards(wrap, val, del, rew)
@@ -100,7 +123,7 @@ func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx types2.Context, req typ
 	}
 }
 
-func DelegationsBlocker(app *GaiaApp, Database *sql.DB, ctx types2.Context, req types.RequestBeginBlock) {
+func DelegationsBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
 	var (
 		tx, _                   = Database.Begin()
 		tx2, _                  = Database.Begin()
@@ -150,4 +173,96 @@ func DelegationsBlocker(app *GaiaApp, Database *sql.DB, ctx types2.Context, req 
 	if err := tx2.Commit(); err != nil {
 		panic(err)
 	}
+}
+
+func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, types.RequestBeginBlock) {
+
+	return func(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
+		var (
+			dbtx, _                 = Database.Begin()
+			dbtx2, _                = Database.Begin()
+			dbtx3, _                = Database.Begin()
+			messagesStatement, _    = dbtx.Prepare("INSERT INTO messages (hash,idx,msgtype,msg,timestamp) VALUES (?,?,?,?,?)")
+			addressesStatement, _   = dbtx3.Prepare("INSERT INTO message_addresses (hash,idx,address) VALUES (?,?,?)")
+			transactionStatement, _ = dbtx2.Prepare("INSERT INTO transactions (hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,timestamp) VALUES (?,?,?,?,?,?,?,?,?,?)")
+		)
+		defer messagesStatement.Close()
+		defer transactionStatement.Close()
+		defer addressesStatement.Close()
+
+		for _, tx := range block.Data.Txs {
+			txHash := hex.EncodeToString(tx.Hash())
+			decoded, _ := app.BaseApp.GetTxDecoder()(tx)
+			sdktx, ok := decoded.(auth.StdTx)
+			if ok {
+				for msgidx, msg := range sdktx.GetMsgs() {
+					if _, err := messagesStatement.Exec(
+						txHash,
+						msgidx,
+						msg.Type(),
+						string(msg.GetSignBytes()),
+						block.Header.Time,
+					); err != nil {
+						panic(err)
+					}
+					addAddresses(msg, txHash, msgidx, addressesStatement)
+
+				}
+				fmt.Printf("EXECUTING TX %s FOR %d\n", txHash, block.Header.Height)
+				result := app.BaseApp.DeliverTx(tx) // cause transaction to be applied to snapshotted db, so we can interrogate results.
+				jsonTags, _ := app.GetCodec().MarshalJSON(sdk.TagsToStringTags(result.GetTags()))
+				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
+
+				if _, err := transactionStatement.Exec(
+					txHash,
+					block.Header.Height,
+					result.GetCode(),
+					result.GetGasWanted(),
+					result.GetGasUsed(),
+					result.GetLog(),
+					sdktx.GetMemo(),
+					string(jsonTags),
+					string(jsonFee),
+					block.Header.Time,
+				); err != nil {
+					panic(err)
+				}
+			} else {
+				fmt.Println("Assertion Error")
+			}
+		}
+		if err := dbtx.Commit(); err != nil {
+			panic(err)
+		}
+		if err := dbtx2.Commit(); err != nil {
+			panic(err)
+		}
+		if err := dbtx3.Commit(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
+	// get addresses
+	m := BasicMsgStruct{}
+	a := make(map[string]bool)
+
+	_ = json.Unmarshal(msg.GetSignBytes(), &m)
+	ref := reflect.ValueOf(&m.Value).Elem()
+	for i := 0; i < ref.NumField(); i++ {
+		addr := ref.Field(i).Interface()
+		sdkAddr, ok := addr.(sdk.Address)                   // cast to address interface so we have access to the String() method, which bech32ifies the address
+		if ok && !sdkAddr.Empty() && !a[sdkAddr.String()] { // pks in clickhouse aren't unique, so avoid dedupe here.
+			a[sdkAddr.String()] = true
+			if _, err := stmt.Exec(
+				hash,
+				idx,
+				sdkAddr.String(),
+			); err != nil {
+				panic(err)
+			}
+		}
+	}
+
 }

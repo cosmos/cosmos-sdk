@@ -196,6 +196,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 			sdktx, ok := decoded.(auth.StdTx)
 			if ok {
 				for msgidx, msg := range sdktx.GetMsgs() {
+					fmt.Printf("Msg %d for %s", msgidx, txHash)
 					if _, err := messagesStatement.Exec(
 						txHash,
 						msgidx,
@@ -205,6 +206,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 					); err != nil {
 						panic(err)
 					}
+					fmt.Printf("Adding addresses for msg %d for %s", msgidx, txHash)
 					addAddresses(msg, txHash, msgidx, addressesStatement)
 
 				}

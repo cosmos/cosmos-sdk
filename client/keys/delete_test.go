@@ -65,6 +65,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Equal(t, "EOF", err.Error())
 
 	{
+		if runningOnServer {
+			mockIn.Reset("testpass1\n")
+		}
 		_, err = kb.Get(fakeKeyName1)
 		require.NoError(t, err)
 
@@ -82,10 +85,13 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	viper.Set(flagYes, true)
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\ntestpass1\n")
+		mockIn.Reset("testpass1\n")
 	}
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
 	_, err = kb.Get(fakeKeyName2)

@@ -26,11 +26,11 @@ func exportKeyCommand() *cobra.Command {
 func runExportCmd(cmd *cobra.Command, args []string) error {
 	var err error
 	var kb keys.Keybase
-	var decryptPassword, encryptPassword string
+	var encryptPassword string
 
+	decryptPassword := DefaultKeyPass
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
 		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
-		decryptPassword = DefaultKeyPass
 	} else {
 		cmd.PrintErrln(deprecatedKeybaseWarning)
 		kb, err = NewKeyBaseFromHomeFlag()

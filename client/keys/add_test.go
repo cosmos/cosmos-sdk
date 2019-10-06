@@ -50,8 +50,8 @@ func Test_runAddCmdBasic(t *testing.T) {
 		mockIn.Reset("y\n")
 	}
 	err := runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
 	fmt.Println(err)
+	assert.NoError(t, err)
 
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 	if runningOnServer {

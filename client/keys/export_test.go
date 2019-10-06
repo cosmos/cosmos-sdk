@@ -36,7 +36,7 @@ func Test_runExportCmd(t *testing.T) {
 
 	// Now enter password
 	if runningOnServer {
-		mockIn.Reset("123456789\ntestpass1\n")
+		mockIn.Reset("123456789\n123456789\ntestpass1\n")
 	} else {
 		mockIn.Reset("123456789\n123456789\n")
 	}

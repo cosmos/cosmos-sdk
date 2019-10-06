@@ -27,10 +27,9 @@ func importKeyCommand() *cobra.Command {
 func runImportCmd(cmd *cobra.Command, args []string) error {
 	var err error
 	var kb keys.Keybase
-	var decryptPassword string
+
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
 		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
-		decryptPassword = DefaultKeyPass
 	} else {
 		cmd.PrintErrln(deprecatedKeybaseWarning)
 		kb, err = NewKeyBaseFromHomeFlag()
@@ -39,10 +38,11 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	decryptPassword, err = input.GetPassword("Enter passphrase to decrypt your key:", bufio.NewReader(cmd.InOrStdin()))
+	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", bufio.NewReader(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}
+
 	bz, err := ioutil.ReadFile(args[1])
 	if err != nil {
 		return err

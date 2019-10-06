@@ -28,9 +28,10 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var encryptPassword string
 
+	inBuf := bufio.NewReader(cmd.InOrStdin())
 	decryptPassword := DefaultKeyPass
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
-		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
+		kb = NewKeyring(bufio.NewReader(inBuf))
 	} else {
 		cmd.PrintErrln(deprecatedKeybaseWarning)
 		kb, err = NewKeyBaseFromHomeFlag()
@@ -38,15 +39,13 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		buf := bufio.NewReader(cmd.InOrStdin())
-		decryptPassword, err = input.GetPassword("Enter passphrase to decrypt your key:", buf)
+		decryptPassword, err = input.GetPassword("Enter passphrase to decrypt your key:", inBuf)
 		if err != nil {
 			return err
 		}
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
-	encryptPassword, err = input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
+	encryptPassword, err = input.GetPassword("Enter passphrase to encrypt the exported key:", inBuf)
 	if err != nil {
 		return err
 	}

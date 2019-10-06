@@ -17,6 +17,7 @@ import (
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
+	runningOnServer := isRunningOnServer()
 	config := sdk.GetConfig()
 
 	bech32PrefixAccAddr := "terra"
@@ -55,6 +56,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		kb.Delete("keyname1", "", false)
 	}()
 	assert.NotNil(t, kb)
+	mockIn.Reset("test1234\n")
+	if runningOnServer {
+		mockIn.Reset("test1234\ntest1234\n")
+	}
 	key1, err := kb.Get("keyname1")
 	assert.NoError(t, err)
 	assert.NotNil(t, key1)

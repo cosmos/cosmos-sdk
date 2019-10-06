@@ -26,7 +26,6 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	if runningOnServer {
 		mockIn.Reset("testpass1\ntestpass1\n")
-
 	} else {
 		mockIn.Reset("y\n")
 		kb := NewKeyring(mockIn)

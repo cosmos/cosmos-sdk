@@ -72,10 +72,9 @@ func Test_runDeleteCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Now there is a confirmation
+		viper.Set(flagYes, true)
 		if runningOnServer {
-			mockIn.Reset("testpass1\ny\ntestpass1\n")
-		} else {
-			mockIn.Reset("y\n")
+			mockIn.Reset("testpass1\ntestpass1\n")
 		}
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 

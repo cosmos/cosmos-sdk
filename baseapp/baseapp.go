@@ -549,7 +549,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if err := app.validateHeight(req); err != nil {
-		panic(err)
+		fmt.Println("Ignoring incorrect height...")
+                
 	}
 
 	// Initialize the DeliverTx state. If this is the first block, it should

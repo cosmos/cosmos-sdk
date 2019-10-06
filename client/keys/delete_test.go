@@ -40,8 +40,15 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	// Now
 	kb := NewKeyring(mockIn)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
@@ -50,6 +57,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())

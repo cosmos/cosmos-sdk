@@ -17,7 +17,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	runningOnServer := isRunningOnServer()
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	mockIn, mockOut, _ := tests.ApplyMockIO(cmd)
 
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
@@ -50,7 +50,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 		mockIn.Reset("y\n")
 	}
 	err := runAddCmd(cmd, []string{"keyname1"})
-	fmt.Println(err)
+	fmt.Println(mockOut.String())
 	assert.NoError(t, err)
 
 	viper.Set(cli.OutputFlag, OutputFormatJSON)

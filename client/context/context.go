@@ -197,18 +197,7 @@ func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
 
 // WithFromFields returns a copy of the context with an updated FromName and FromAddres flag.
 func (ctx CLIContext) WithFromFields() CLIContext {
-	from := viper.GetString(flags.FlagFrom)
-
-	fromAddress, fromName, err := GetFromFields(from, ctx.GenerateOnly, ctx.Input)
-
-	if err != nil {
-		panic(err)
-	}
-
-	ctx.FromAddress = fromAddress
-	ctx.FromName = fromName
-	return ctx
-
+	return ctx.WithFrom(viper.GetString(flags.FlagFrom))
 }
 
 // WithFromName returns a copy of the context with an updated from account name.

@@ -45,7 +45,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.Error(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\ntestpass1\n")
+		mockIn.Reset("y\ntestpass1\n\ntestpass1\n")
 	} else {
 		mockIn.Reset("y\n")
 	}

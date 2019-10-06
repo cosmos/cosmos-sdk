@@ -31,14 +31,14 @@ func Test_runExportCmd(t *testing.T) {
 	if runningOnServer {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
+	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "testpass1", 0, 0)
 	assert.NoError(t, err)
 
 	// Now enter password
 	if runningOnServer {
-		mockIn.Reset("123456789\n123456789\ntestpass1\n")
+		mockIn.Reset("testpass1\ntestpass1\ntestpass1\n")
 	} else {
-		mockIn.Reset("123456789\n123456789\n")
+		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	assert.NoError(t, runExportCmd(exportKeyCommand, []string{"keyname1"}))
 }

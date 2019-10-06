@@ -45,19 +45,19 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.Error(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	if runningOnServer {
-		mockIn.Reset("testpass1\ny\ntestpass1\n")
+		mockIn.Reset("testpass1\nN\n")
 	} else {
 		mockIn.Reset("y\n")
 	}
-	err := runAddCmd(cmd, []string{"keyname1"})
+	err := runAddCmd(cmd, []string{"keyname2"})
 	fmt.Println(mockOut.String())
 	assert.NoError(t, err)
 
-	viper.Set(cli.OutputFlag, OutputFormatJSON)
-	if runningOnServer {
-		mockIn.Reset("testpass1\n")
-	} else {
-		mockIn.Reset("y\n")
-	}
-	assert.NoError(t, runAddCmd(cmd, []string{"keyname2"}))
+	// viper.Set(cli.OutputFlag, OutputFormatJSON)
+	// if runningOnServer {
+	// 	mockIn.Reset("testpass1\n")
+	// } else {
+	// 	mockIn.Reset("y\n")
+	// }
+	// assert.NoError(t, runAddCmd(cmd, []string{"keyname2"}))
 }

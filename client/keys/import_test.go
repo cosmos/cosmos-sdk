@@ -27,7 +27,6 @@ func Test_runImportCmd(t *testing.T) {
 		kb := NewKeyring(mockIn)
 		defer func() {
 			kb.Delete("keyname1", "", false)
-
 		}()
 	}
 
@@ -46,7 +45,6 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	// Now enter password
 	if runningOnServer {
 		mockIn.Reset("123456789\n12345678\n12345678\n")
-
 	} else {
 		mockIn.Reset("123456789\n")
 	}

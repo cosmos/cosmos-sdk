@@ -12,8 +12,10 @@ func updateKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",
 		Short: "Change the password used to protect private key",
-		RunE:  runUpdateCmd,
-		Args:  cobra.ExactArgs(1),
+		Long: `Update private key's encryption passphrase. This command is no-op
+when keys are stored in the operating system credential storage.`,
+		RunE: runUpdateCmd,
+		Args: cobra.ExactArgs(1),
 	}
 	return cmd
 }
@@ -22,6 +24,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := bufio.NewReader(cmd.InOrStdin())
+	cmd.PrintErrln(deprecatedKeybaseWarning)
 	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err

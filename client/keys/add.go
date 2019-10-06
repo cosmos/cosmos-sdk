@@ -104,7 +104,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		encryptPassword = DefaultKeyPass
 	} else {
 		if !viper.GetBool(flags.FlagLegacyKeybase) {
-			kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
+			kb = NewKeyring(inBuf)
 		} else {
 			cmd.PrintErrln(deprecatedKeybaseWarning)
 			var err error

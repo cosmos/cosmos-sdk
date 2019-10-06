@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -48,7 +49,9 @@ func Test_runAddCmdBasic(t *testing.T) {
 	} else {
 		mockIn.Reset("y\n")
 	}
-	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+	err := runAddCmd(cmd, []string{"keyname1"})
+	assert.NoError(t, err)
+	fmt.Println(err)
 
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 	if runningOnServer {

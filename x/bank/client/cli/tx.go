@@ -35,7 +35,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContextWithFrom(args[0]).WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithInput(cmd.InOrStdin()).WithFrom(args[0]).WithCodec(cdc)
 
 			to, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {

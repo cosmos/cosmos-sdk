@@ -72,6 +72,7 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagLegacyKeybase, false, "Use legacy on-disk keybase")
 	return cmd
 }
 
@@ -94,6 +95,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
+	legacyKeybase := viper.GetBool(flags.FlagLegacyKeybase)
 
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
@@ -101,9 +103,15 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = keys.NewInMemory()
 		encryptPassword = DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
-		if err != nil {
-			return err
+		if !viper.GetBool(flags.FlagLegacyKeybase) {
+			kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
+		} else {
+			cmd.PrintErrln(deprecatedKeybaseWarning)
+			var err error
+			kb, err = NewKeyBaseFromHomeFlag()
+			if err != nil {
+				return err
+			}
 		}
 
 		_, err = kb.Get(name)
@@ -152,13 +160,15 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
+		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) && legacyKeybase {
 			encryptPassword, err = input.GetCheckPassword(
 				"Enter a passphrase to encrypt your key to disk:",
 				"Repeat the passphrase:", inBuf)
 			if err != nil {
 				return err
 			}
+		} else {
+			encryptPassword = DefaultKeyPass
 		}
 	}
 

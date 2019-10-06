@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 
@@ -49,22 +50,34 @@ consisting of all the keys provided by name and multisig threshold.`,
 	cmd.Flags().BoolP(FlagDevice, "d", false, "Output the address in a ledger device")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagLegacyKeybase, false, "Use legacy on-disk keybase")
 
 	return cmd
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
+	var kb keys.Keybase
 	var info keys.Info
 
+	if !viper.GetBool(flags.FlagLegacyKeybase) {
+		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
+	} else {
+		cmd.PrintErrln(deprecatedKeybaseWarning)
+		kb, err = NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(args) == 1 {
-		info, err = GetKeyInfo(args[0])
+		info, err = kb.Get(args[0])
 		if err != nil {
 			return err
 		}
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
-			info, err := GetKeyInfo(keyName)
+			info, err := kb.Get(keyName)
 			if err != nil {
 				return err
 			}
@@ -73,8 +86,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multisigThreshold := viper.GetInt(flagMultiSigThreshold)
-		err = validateMultisigThreshold(multisigThreshold, len(args))
-		if err != nil {
+		if err := validateMultisigThreshold(multisigThreshold, len(args)); err != nil {
 			return err
 		}
 

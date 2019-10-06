@@ -11,7 +11,9 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
+	runningOnServer := isRunningOnServer()
 	exportKeyCommand := exportKeyCommand()
+	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
 
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
@@ -19,13 +21,24 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
+	kb := NewKeyring(mockIn)
+	if !runningOnServer {
+		defer func() {
+			kb.Delete("keyname1", "", false)
+		}()
+	}
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	_, err := kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
 	assert.NoError(t, err)
 
-	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
-	mockIn.Reset("123456789\n123456789\n")
 	// Now enter password
+	if runningOnServer {
+		mockIn.Reset("123456789\n123456789\ntestpass1\n")
+	} else {
+		mockIn.Reset("123456789\n123456789\n")
+	}
 	assert.NoError(t, runExportCmd(exportKeyCommand, []string{"keyname1"}))
 }

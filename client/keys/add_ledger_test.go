@@ -50,8 +50,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
+	kb := NewKeyring(mockIn)
+	defer func() {
+		kb.Delete("keyname1", "", false)
+	}()
 	assert.NotNil(t, kb)
 	key1, err := kb.Get("keyname1")
 	assert.NoError(t, err)
@@ -89,9 +91,11 @@ func Test_runAddCmdLedger(t *testing.T) {
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
+	kb := NewKeyring(mockIn)
 	assert.NotNil(t, kb)
+	defer func() {
+		kb.Delete("keyname1", "", false)
+	}()
 	key1, err := kb.Get("keyname1")
 	assert.NoError(t, err)
 	assert.NotNil(t, key1)

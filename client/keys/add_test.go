@@ -13,6 +13,7 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
+	runningOnServer := isRunningOnServer()
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
@@ -21,28 +22,40 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
 	viper.Set(flags.FlagHome, kbHome)
-
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	mockIn.Reset("test1234\ntest1234\n")
-	err := runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
 
-	viper.Set(cli.OutputFlag, OutputFormatText)
+	} else {
+		mockIn.Reset("y\n")
+		kb := NewKeyring(mockIn)
+		defer func() {
+			kb.Delete("keyname1", "", false)
+			kb.Delete("keyname2", "", false)
+		}()
+	}
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
-	mockIn.Reset("test1234\ntest1234\n")
-	err = runAddCmd(cmd, []string{"keyname1"})
-	assert.Error(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\nN\n")
+	} else {
+		mockIn.Reset("N\n")
+	}
+	assert.Error(t, runAddCmd(cmd, []string{"keyname1"}))
 
-	viper.Set(cli.OutputFlag, OutputFormatText)
-
-	mockIn.Reset("y\ntest1234\ntest1234\n")
-	err = runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
+	} else {
+		mockIn.Reset("y\n")
+	}
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
-
-	mockIn.Reset("test1234\ntest1234\n")
-	err = runAddCmd(cmd, []string{"keyname2"})
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	} else {
+		mockIn.Reset("y\n")
+	}
+	assert.NoError(t, runAddCmd(cmd, []string{"keyname2"}))
 }

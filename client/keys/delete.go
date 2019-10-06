@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
@@ -40,20 +41,26 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
+	var kb keys.Keybase
 
-	kb, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return err
+	if !viper.GetBool(flags.FlagLegacyKeybase) {
+		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
+	} else {
+		cmd.PrintErrln(deprecatedKeybaseWarning)
+		var err error
+		kb, err = NewKeyBaseFromHomeFlag()
+		if err != nil {
+			return err
+		}
 	}
-
 	info, err := kb.Get(name)
 	if err != nil {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
 		if !viper.GetBool(flagYes) {
+			buf := bufio.NewReader(cmd.InOrStdin())
 			if err := confirmDeletion(buf); err != nil {
 				return err
 			}
@@ -69,6 +76,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	skipPass := viper.GetBool(flagForce)
 	var oldpass string
 	if !skipPass {
+		buf := bufio.NewReader(cmd.InOrStdin())
 		if oldpass, err = input.GetPassword(
 			"DANGER - enter password to permanently delete key:", buf); err != nil {
 			return err

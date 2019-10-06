@@ -35,13 +35,11 @@ func Test_showKeysCmd(t *testing.T) {
 }
 
 func Test_runShowCmd(t *testing.T) {
+	runningOnServer := isRunningOnServer()
 	cmd := showKeysCmd()
-
-	err := runShowCmd(cmd, []string{"invalid"})
-	assert.EqualError(t, err, "Key invalid not found")
-
-	err = runShowCmd(cmd, []string{"invalid1", "invalid2"})
-	assert.EqualError(t, err, "Key invalid1 not found")
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	assert.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
+	assert.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -51,30 +49,49 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb := NewKeyring(mockIn)
+	defer func() {
+		kb.Delete("runShowCmd_Key1", "", false)
+		kb.Delete("runShowCmd_Key2", "", false)
+	}()
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	_, err := kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
+
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
 	// Now try single key
-	err = runShowCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
+	assert.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1}), "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	err = runShowCmd(cmd, []string{fakeKeyName1})
-	assert.NoError(t, err)
+	if runningOnServer {
+		mockIn.Reset("testpass1\n")
+	}
+	assert.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.EqualError(t, err, "threshold must be a positive integer")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	assert.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2}), "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.NoError(t, err)
 
@@ -82,14 +99,23 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagBechPrefix, "acc")
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
+	if runningOnServer {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
 

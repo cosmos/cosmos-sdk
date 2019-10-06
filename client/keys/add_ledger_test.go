@@ -52,10 +52,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 	// Now check that it has been stored properly
 	kb := NewKeyring(mockIn)
+	assert.NotNil(t, kb)
 	defer func() {
 		kb.Delete("keyname1", "", false)
 	}()
-	assert.NotNil(t, kb)
 	mockIn.Reset("test1234\n")
 	if runningOnServer {
 		mockIn.Reset("test1234\ntest1234\n")
@@ -78,8 +78,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 }
 
 func Test_runAddCmdLedger(t *testing.T) {
+	runningOnServer := isRunningOnServer()
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
@@ -91,7 +93,6 @@ func Test_runAddCmdLedger(t *testing.T) {
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
-	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
@@ -101,6 +102,10 @@ func Test_runAddCmdLedger(t *testing.T) {
 	defer func() {
 		kb.Delete("keyname1", "", false)
 	}()
+	mockIn.Reset("test1234\n")
+	if runningOnServer {
+		mockIn.Reset("test1234\ntest1234\n")
+	}
 	key1, err := kb.Get("keyname1")
 	assert.NoError(t, err)
 	assert.NotNil(t, key1)

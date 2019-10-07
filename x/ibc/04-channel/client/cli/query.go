@@ -87,7 +87,7 @@ func QueryChannel(ctx context.CLIContext, obj channel.State, prove bool) (res ut
 
 func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "channel",
+		Use:   "channel [port-id] [chan-id]",
 		Short: "Query stored connection",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

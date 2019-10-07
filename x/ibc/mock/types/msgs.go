@@ -22,7 +22,7 @@ func NewMsgSequence(signer sdk.AccAddress, chanid string, sequence uint64) MsgSe
 }
 
 func (MsgSequence) Route() string {
-	return "ibcmock"
+	return "ibcmocksend"
 }
 
 func (MsgSequence) Type() string {

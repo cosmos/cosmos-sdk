@@ -121,18 +121,23 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainId2)
+			node1 := viper.GetString(FlagNode1)
+			node2 := viper.GetString(FlagNode2)
+
 			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
+
 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, viper.GetString(FlagNode1)).
+			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, node1).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
 			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
+
 			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, viper.GetString(FlagNode2)).
+			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, node2).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
@@ -158,6 +163,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
+
 			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
 			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
 			if err != nil {
@@ -167,6 +173,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
+
 			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
 			conn2, _, err := obj2.OriginConnection().ConnectionCLI(q2)
 			if err != nil {
@@ -345,18 +352,44 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		// Args: []string{portid, chanid}
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
+			cid1 := viper.GetString(flags.FlagChainID)
+			cid2 := viper.GetString(FlagChainId2)
+			node1 := viper.GetString(FlagNode1)
+			node2 := viper.GetString(FlagNode2)
+
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
+
+			// txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, node1).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode1)).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
-			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
+
+			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, node2).
 				WithCodec(cdc).
-				WithNodeURI(viper.GetString(FlagNode2)).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
+			
+			// txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			// ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
+			// 	WithCodec(cdc).
+			// 	WithNodeURI(viper.GetString(FlagNode1)).
+			// 	WithBroadcastMode(flags.BroadcastBlock)
+			// q1 := state.NewCLIQuerier(ctx1)
+
+			// ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
+			// 	WithCodec(cdc).
+			// 	WithNodeURI(viper.GetString(FlagNode2)).
+			// 	WithBroadcastMode(flags.BroadcastBlock)
+			// q2 := state.NewCLIQuerier(ctx2)
+
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
 
 			portid1, chanid1 := args[0], args[1]
 
@@ -371,6 +404,9 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
+
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 
 			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
 			if err != nil {
@@ -410,6 +446,10 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return errors.New("no unsent packets")
 			}
 
+
+			fmt.Println("setting cid1")
+			viper.Set(flags.FlagChainID, cid1)
+
 			// TODO: optimize, don't updateclient if already updated
 			header, err := getHeader(ctx1)
 			if err != nil {
@@ -417,6 +457,10 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+
+
+			fmt.Println("setting cid2")
+			viper.Set(flags.FlagChainID, cid2)
 
 			msgupdate := client.MsgUpdateClient{
 				ClientID: client2,
@@ -443,7 +487,7 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				msgs = append(msgs, msg)
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, msgs)
+			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, msgs)
 			if err != nil {
 				return err
 			}
@@ -452,14 +496,14 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagFrom1, "", "")
-	cmd.Flags().String(FlagFrom2, "", "")
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
+	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 
 	cmd.MarkFlagRequired(FlagFrom1)
 	cmd.MarkFlagRequired(FlagFrom2)
 
 	return cmd
-
 }

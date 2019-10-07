@@ -16,7 +16,6 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:   "ibcmocksend",
 		Short: "Querying commands for the ibcmocksend module",
-		RunE:  client.ValidateCmd,
 	}
 
 	queryCmd.AddCommand(client.GetCommands(

@@ -18,7 +18,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "ibcmocksend",
 		Short: "IBC mocksend module transaction subcommands",
-		RunE:  client.ValidateCmd,
+		// RunE:  client.ValidateCmd,
 	}
 	txCmd.AddCommand(
 		SequenceTxCmd(cdc),

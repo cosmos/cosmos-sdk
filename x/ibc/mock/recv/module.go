@@ -34,7 +34,7 @@ func (AppModuleBasic) Name() string {
 }
 
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
-	types.RegisterCodec(cdc)
+	types.RegisterRecv(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {

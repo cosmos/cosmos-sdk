@@ -31,6 +31,7 @@ func init() {
 // the necessary fields needed for any vesting account implementation.
 type BaseVestingAccount struct {
 	*authtypes.BaseAccount
+
 	OriginalVesting  sdk.Coins `json:"original_vesting" yaml:"original_vesting"`   // coins in account upon initialization
 	DelegatedFree    sdk.Coins `json:"delegated_free" yaml:"delegated_free"`       // coins that are vested and delegated
 	DelegatedVesting sdk.Coins `json:"delegated_vesting" yaml:"delegated_vesting"` // coins that vesting and delegated
@@ -38,8 +39,7 @@ type BaseVestingAccount struct {
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
-func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins,
-	endTime int64) *BaseVestingAccount {
+func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) *BaseVestingAccount {
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
@@ -109,7 +109,6 @@ func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
 			yCoin := sdk.NewCoin(coin.Denom, y)
 			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
 		}
-
 	}
 }
 
@@ -147,7 +146,6 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			yCoin := sdk.NewCoin(coin.Denom, y)
 			bva.DelegatedVesting = bva.DelegatedVesting.Sub(sdk.Coins{yCoin})
 		}
-
 	}
 }
 
@@ -314,11 +312,6 @@ func (cva ContinuousVestingAccount) GetStartTime() int64 {
 	return cva.StartTime
 }
 
-// GetEndTime returns the time when vesting ends for a continuous vesting account.
-func (cva ContinuousVestingAccount) GetEndTime() int64 {
-	return cva.EndTime
-}
-
 // Validate checks for errors on the account fields
 func (cva ContinuousVestingAccount) Validate() error {
 	if cva.GetStartTime() >= cva.GetEndTime() {
@@ -467,11 +460,6 @@ func (pva PeriodicVestingAccount) GetStartTime() int64 {
 	return pva.StartTime
 }
 
-// GetEndTime returns the time when vesting ends for a periodic vesting account.
-func (pva PeriodicVestingAccount) GetEndTime() int64 {
-	return pva.EndTime
-}
-
 // GetVestingPeriods returns vesting periods associated with periodic vesting account.
 func (pva PeriodicVestingAccount) GetVestingPeriods() Periods {
 	return pva.VestingPeriods
@@ -606,11 +594,6 @@ func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sd
 // GetStartTime returns zero since a delayed vesting account has no start time.
 func (dva DelayedVestingAccount) GetStartTime() int64 {
 	return 0
-}
-
-// GetEndTime returns the time when vesting ends for a delayed vesting account.
-func (dva DelayedVestingAccount) GetEndTime() int64 {
-	return dva.EndTime
 }
 
 // Validate checks for errors on the account fields

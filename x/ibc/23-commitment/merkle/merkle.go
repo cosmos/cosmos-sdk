@@ -1,15 +1,13 @@
 package merkle
 
 import (
-	"bytes"
 	"errors"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	//	"github.com/cosmos/cosmos-sdk/store/state"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -20,7 +18,7 @@ const merkleKind = "merkle"
 
 // merkle.Proof implementation of Proof
 // Applied on SDK-based IBC implementation
-var _ commitment.Root = Root{}
+var _ ics23.Root = Root{}
 
 // Root is Merkle root hash
 // In Cosmos-SDK, the AppHash of the Header becomes Root.
@@ -35,12 +33,12 @@ func NewRoot(hash []byte) Root {
 	}
 }
 
-// Implements commitment.Root
+// Implements ics23.Root
 func (Root) CommitmentKind() string {
 	return merkleKind
 }
 
-var _ commitment.Prefix = Prefix{}
+var _ ics23.Prefix = Prefix{}
 
 // Prefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
@@ -59,7 +57,7 @@ func NewPrefix(keypath [][]byte, keyprefix []byte) Prefix {
 	}
 }
 
-// Implements commitment.Prefix
+// Implements ics23.Prefix
 func (Prefix) CommitmentKind() string {
 	return merkleKind
 }
@@ -68,7 +66,7 @@ func (prefix Prefix) Key(key []byte) []byte {
 	return join(prefix.KeyPrefix, key)
 }
 
-var _ commitment.Proof = Proof{}
+var _ ics23.Proof = Proof{}
 
 // Proof is Merkle proof with the key information.
 type Proof struct {
@@ -76,7 +74,7 @@ type Proof struct {
 	Key   []byte        `json:"key"`
 }
 
-// Implements commitment.Proof
+// Implements ics23.Proof
 func (Proof) CommitmentKind() string {
 	return merkleKind
 }
@@ -86,8 +84,8 @@ func (proof Proof) GetKey() []byte {
 	return proof.Key
 }
 
-// Verify() proves the proof against the given root, path, and value.
-func (proof Proof) Verify(croot commitment.Root, cpath commitment.Prefix, value []byte) error {
+// Verify proves the proof against the given root, path, and value.
+func (proof Proof) Verify(croot ics23.Root, cpath ics23.Prefix, value []byte) error {
 	root, ok := croot.(Root)
 	if !ok {
 		return errors.New("invalid commitment root type")
@@ -111,12 +109,4 @@ func (proof Proof) Verify(croot commitment.Root, cpath commitment.Prefix, value 
 		return runtime.VerifyValue(proof.Proof, root.Hash, keypath.String(), value)
 	}
 	return runtime.VerifyAbsence(proof.Proof, root.Hash, keypath.String())
-}
-
-type Value interface {
-	KeyBytes() []byte
-}
-
-func NewProofFromValue(proof *merkle.Proof, prefix []byte, value Value) Proof {
-	return Proof{proof, bytes.TrimPrefix(value.KeyBytes(), prefix)}
 }

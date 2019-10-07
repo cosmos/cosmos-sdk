@@ -11,7 +11,7 @@ import (
 func QueryMultiStore(cms types.CommitMultiStore, storeName string, prefix []byte, key []byte) ([]byte, Proof, error) {
 	queryable, ok := cms.(types.Queryable)
 	if !ok {
-		panic("CommitMultiStore not queryable")
+		panic("commitMultiStore not queryable")
 	}
 	qres := queryable.Query(RequestQueryMultiStore(storeName, prefix, key))
 	if !qres.IsOK() {

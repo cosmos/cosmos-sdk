@@ -62,7 +62,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
 		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
 	} else {
-		cmd.PrintErrln(deprecatedKeybaseWarning)
+		cmd.PrintErrln(DeprecatedKeybaseWarning)
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
 			return err

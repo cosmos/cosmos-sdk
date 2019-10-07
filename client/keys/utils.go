@@ -1,19 +1,16 @@
 package keys
 
 import (
-	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,59 +22,10 @@ const (
 
 	// defaultKeyDBName is the client's subdirectory where keys are stored.
 	defaultKeyDBName         = "keys"
-	deprecatedKeybaseWarning = "Using deprecated secret store. This will be removed in a future release."
+	DeprecatedKeybaseWarning = "Using deprecated secret store. This will be removed in a future release."
 )
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
-
-// GetKeyInfo returns key info for a given name. An error is returned if the
-// keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, err
-	}
-
-	return keybase.Get(name)
-}
-
-// GetPassphrase returns a passphrase for a given name. It will first retrieve
-// the key info for that name if the type is local, it'll fetch input from
-// STDIN. Otherwise, an empty passphrase is returned. An error is returned if
-// the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string) (string, error) {
-	var passphrase string
-
-	keyInfo, err := GetKeyInfo(name)
-	if err != nil {
-		return passphrase, err
-	}
-
-	// we only need a passphrase for locally stored keys
-	// TODO: (ref: #864) address security concerns
-	if keyInfo.GetType() == keys.TypeLocal {
-		passphrase, err = ReadPassphraseFromStdin(name)
-		if err != nil {
-			return passphrase, err
-		}
-	}
-
-	return passphrase, nil
-}
-
-// ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
-// error upon failure.
-func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := bufio.NewReader(os.Stdin)
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-
-	passphrase, err := input.GetPassword(prompt, buf)
-	if err != nil {
-		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
-	}
-
-	return passphrase, nil
-}
 
 func NewKeyring(input io.Reader) keys.Keybase {
 	rootDir := viper.GetString(flags.FlagHome)

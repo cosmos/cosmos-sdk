@@ -33,7 +33,7 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
 		kb = NewKeyring(bufio.NewReader(inBuf))
 	} else {
-		cmd.PrintErrln(deprecatedKeybaseWarning)
+		cmd.PrintErrln(DeprecatedKeybaseWarning)
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
 			return err

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -94,7 +96,10 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+			clientHome := viper.GetString(flagClientHome)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+
+			kb, err := initClientKeybase(cmd, clientHome, inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
@@ -106,7 +111,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 			}
 
 			// Set flags for creating gentx
-			viper.Set(client.FlagHome, viper.GetString(flagClientHome))
+			viper.Set(client.FlagHome, clientHome)
 			smbh.PrepareFlagsForTxCreateValidator(config, nodeID, genDoc.ChainID, valPubKey)
 
 			// Fetch the amount of coins staked
@@ -121,8 +126,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := client.NewCLIContext().WithCodec(cdc)
+			cliCtx := client.NewCLIContextWithKeybase(inBuf).WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc)).WithKeybase(cliCtx.Keybase)
 
 			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.
@@ -191,10 +196,20 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
+	cmd.Flags().Bool(flags.FlagLegacyKeybase, false, "Use legacy on-disk keybase")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
+}
+
+func initClientKeybase(cmd *cobra.Command, clientHome string, inBuf io.Reader) (kbkeys.Keybase, error) {
+	if !viper.GetBool(flags.FlagLegacyKeybase) {
+		return kbkeys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), clientHome, inBuf), nil
+	}
+
+	cmd.PrintErrln(client.DeprecatedKeybaseWarning)
+	return client.NewKeyBaseFromDir(clientHome)
 }
 
 func makeOutputFilepath(rootDir, nodeID string) (string, error) {

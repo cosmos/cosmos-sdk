@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -52,12 +51,7 @@ func NewTxBuilder(
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI() TxBuilder {
-	kb, err := keys.NewKeyBaseFromHomeFlag()
-	if err != nil {
-		panic(err)
-	}
 	txbldr := TxBuilder{
-		keybase:            kb,
 		accountNumber:      uint64(viper.GetInt64(flags.FlagAccountNumber)),
 		sequence:           uint64(viper.GetInt64(flags.FlagSequence)),
 		gas:                flags.GasFlagVar.Gas,
@@ -274,10 +268,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 	if keybase == nil {
-		keybase, err = keys.NewKeyBaseFromHomeFlag()
-		if err != nil {
-			return
-		}
+		panic("keybase cannot be nil")
 	}
 
 	sigBytes, pubkey, err := keybase.Sign(name, passphrase, msg.Bytes())

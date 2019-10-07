@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -85,7 +84,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n\n", json)
 
-		buf := bufio.NewReader(os.Stdin)
+		buf := bufio.NewReader(cliCtx.Input)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf)
 		if err != nil || !ok {
 			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
@@ -93,9 +92,12 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(fromName)
-	if err != nil {
-		return err
+	passphrase := ""
+	if cliCtx.LegacyKeybase {
+		passphrase, err = cliCtx.GetPassphrase(fromName)
+		if err != nil {
+			return err
+		}
 	}
 
 	// build and sign the transaction
@@ -197,7 +199,7 @@ func SignStdTx(
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := cliCtx.GetPassphrase(name)
 	if err != nil {
 		return signedStdTx, err
 	}
@@ -224,7 +226,7 @@ func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLICo
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := cliCtx.GetPassphrase(name)
 	if err != nil {
 		return signedStdTx, err
 	}

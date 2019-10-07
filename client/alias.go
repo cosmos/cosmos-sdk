@@ -65,6 +65,8 @@ const (
 var (
 	// functions aliases
 	NewCLIContext                      = context.NewCLIContext
+	NewCLIContextWithKeybase           = context.NewCLIContextWithKeybase
+	NewCLIContextWithInput             = context.NewCLIContextWithInput
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount
 	ErrVerifyCommit                    = context.ErrVerifyCommit
@@ -73,6 +75,7 @@ var (
 	RegisterRestServerFlags            = flags.RegisterRestServerFlags
 	ParseGas                           = flags.ParseGas
 	NewCompletionCmd                   = flags.NewCompletionCmd
+	DeprecatedKeybaseWarning           = keys.DeprecatedKeybaseWarning
 	MarshalJSON                        = keys.MarshalJSON
 	UnmarshalJSON                      = keys.UnmarshalJSON
 	Commands                           = keys.Commands
@@ -80,9 +83,6 @@ var (
 	NewRecoverKey                      = keys.NewRecoverKey
 	NewUpdateKeyReq                    = keys.NewUpdateKeyReq
 	NewDeleteKeyReq                    = keys.NewDeleteKeyReq
-	GetKeyInfo                         = keys.GetKeyInfo
-	GetPassphrase                      = keys.GetPassphrase
-	ReadPassphraseFromStdin            = keys.ReadPassphraseFromStdin
 	NewKeyBaseFromHomeFlag             = keys.NewKeyBaseFromHomeFlag
 	NewKeyBaseFromDir                  = keys.NewKeyBaseFromDir
 	NewInMemoryKeyBase                 = keys.NewInMemoryKeyBase

@@ -46,7 +46,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if !viper.GetBool(flags.FlagLegacyKeybase) {
 		kb = NewKeyring(bufio.NewReader(cmd.InOrStdin()))
 	} else {
-		cmd.PrintErrln(deprecatedKeybaseWarning)
+		cmd.PrintErrln(DeprecatedKeybaseWarning)
 		var err error
 		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {

@@ -24,7 +24,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := bufio.NewReader(cmd.InOrStdin())
-	cmd.PrintErrln(deprecatedKeybaseWarning)
+	cmd.PrintErrln(DeprecatedKeybaseWarning)
 	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err

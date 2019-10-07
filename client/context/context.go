@@ -1,6 +1,7 @@
 package context
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +15,7 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -47,7 +49,7 @@ type CLIContext struct {
 	LegacyKeybase bool
 }
 
-// NewCLIContextWithFrom returns a new initialized CLIContext with parameters from the
+// NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper. It takes a key name or address and populates the FromName and
 // FromAddress field accordingly. It will also create Tendermint verifier using
 // the chain ID, home directory and RPC URI provided by the command line. If using
@@ -92,6 +94,14 @@ func NewCLIContext() CLIContext {
 	}
 
 	return ctx.WithVerifier(verifier)
+}
+
+// NewCLIContextWithInput returns a new CLIContext with an input stream.
+func NewCLIContextWithInput(input io.Reader) CLIContext { return NewCLIContext().WithInput(input) }
+
+// NewCLIContextWithInput returns a new CLIContext with an input stream and an initialised keybase.
+func NewCLIContextWithKeybase(input io.Reader) CLIContext {
+	return NewCLIContext().WithInput(input).WithKeybase()
 }
 
 // WithInput returns a copy of the context with an updated input.
@@ -249,6 +259,30 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 	return nil
 }
 
+// GetPassphrase returns a passphrase for a given name. It will first retrieve
+// the key info for that name if the type is local, it'll fetch input from
+// ctx.Input. Otherwise, an empty passphrase is returned. An error is returned if
+// the key info cannot be fetched or reading from the input fails.
+func (ctx CLIContext) GetPassphrase(name string) (string, error) {
+	var passphrase string
+
+	keyInfo, err := ctx.Keybase.Get(name)
+	if err != nil {
+		return passphrase, err
+	}
+
+	// we only need a passphrase for locally stored keys
+	// TODO: (ref: #864) address security concerns
+	if keyInfo.GetType() == cryptokeys.TypeLocal {
+		passphrase, err = ReadPassphrase(ctx.Input, name)
+		if err != nil {
+			return passphrase, err
+		}
+	}
+
+	return passphrase, nil
+}
+
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
@@ -292,4 +326,17 @@ func GetFromFields(from string, genOnly bool, input io.Reader) (sdk.AccAddress, 
 	}
 
 	return info.GetAddress(), info.GetName(), nil
+}
+
+// ReadPassphrase attempts to read a passphrase from a io.Reader;
+// it returns an  error upon failure.
+func ReadPassphrase(r io.Reader, name string) (string, error) {
+	prompt := fmt.Sprintf("Password to sign with '%s':", name)
+
+	passphrase, err := input.GetPassword(prompt, bufio.NewReader(r))
+	if err != nil {
+		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
+	}
+
+	return passphrase, nil
 }

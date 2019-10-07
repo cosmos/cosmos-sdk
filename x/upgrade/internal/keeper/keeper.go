@@ -15,7 +15,6 @@ type Keeper struct {
 	storeKey        sdk.StoreKey
 	cdc             *codec.Codec
 	upgradeHandlers map[string]types.UpgradeHandler
-	haveCache       bool
 }
 
 var _ exported.Keeper = (*Keeper)(nil)
@@ -36,7 +35,9 @@ func (k *Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHand
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// ScheduleUpgrade schedules an upgrade based on the specified plan
+// ScheduleUpgrade schedules an upgrade based on the specified plan.
+// It fails to schedule if there is another Plan already scheduled,
+// you must first ClearUpgradePlan.
 func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	err := plan.ValidateBasic()
 	if err != nil {
@@ -46,18 +47,19 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
 			return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 		}
-		if plan.Height != 0 {
-			return sdk.ErrUnknownRequest("only one of Time or Height should be specified")
-		}
 	} else if plan.Height <= ctx.BlockHeight() {
 		return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 	}
+
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(types.DoneHeightKey(plan.Name)) {
 		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
 	}
+	if p, ok := k.GetUpgradePlan(ctx); ok {
+		return sdk.ErrUnknownRequest(fmt.Sprintf("another upgrade is already scehduled: %s", p.Name))
+	}
+
 	bz := k.cdc.MustMarshalBinaryBare(plan)
-	k.haveCache = false
 	store.Set(types.PlanKey(), bz)
 	return nil
 }
@@ -65,7 +67,6 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 // ClearUpgradePlan clears any schedule upgrade
 func (k *Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	k.haveCache = false
 	store.Delete(types.PlanKey())
 }
 

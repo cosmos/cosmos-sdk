@@ -72,6 +72,25 @@ func (s *TestSuite) TestDoHeightUpgrade() {
 	s.VerifyDoUpgrade()
 }
 
+func (s *TestSuite) CannotOverwriteScheduleUpgrade() {
+	s.T().Log("Cannot overwrite a scheduled upgrade")
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
+	s.Require().Nil(err)
+	err = s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test2", Height: s.ctx.BlockHeight() + 2})
+	s.Require().NotNil(err)
+}
+
+func (s *TestSuite) CanCancelAndReschedule() {
+	s.T().Log("Can clear plan and reschedule")
+	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10})
+	s.Require().Nil(err)
+	s.keeper.ClearUpgradePlan(s.ctx)
+	err = s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
+	s.Require().NotNil(err)
+
+	s.VerifyDoUpgrade()
+}
+
 func (s *TestSuite) VerifyDoUpgrade() {
 	s.T().Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())

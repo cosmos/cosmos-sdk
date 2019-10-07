@@ -43,7 +43,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // RegisterRESTRoutes registers all REST query handlers
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) {
-	rest.RegisterRoutes(ctx, r, moduleCdc, StoreKey)
+	rest.RegisterRoutes(ctx, r)
 }
 
 // GetQueryCmd returns the cli query commands for this module
@@ -98,8 +98,7 @@ func (AppModule) QuerierRoute() string { return QuerierKey }
 
 // NewQuerierHandler registers a query handler to respond to the module-specific queries
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	// TODO
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades

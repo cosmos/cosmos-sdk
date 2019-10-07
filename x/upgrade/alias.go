@@ -20,6 +20,8 @@ const (
 	ProposalTypeSoftwareUpgrade       = types.ProposalTypeSoftwareUpgrade
 	ProposalTypeCancelSoftwareUpgrade = types.ProposalTypeCancelSoftwareUpgrade
 	DefaultCodespace                  = types.DefaultCodespace
+	QueryCurrent                      = types.QueryCurrent
+	QueryApplied                      = types.QueryApplied
 )
 
 var (
@@ -29,7 +31,9 @@ var (
 	DoneHeightKey                    = types.DoneHeightKey
 	NewSoftwareUpgradeProposal       = types.NewSoftwareUpgradeProposal
 	NewCancelSoftwareUpgradeProposal = types.NewCancelSoftwareUpgradeProposal
+	NewQueryAppliedParams            = types.NewQueryAppliedParams
 	NewKeeper                        = keeper.NewKeeper
+	NewQuerier                       = keeper.NewQuerier
 )
 
 type (
@@ -37,5 +41,6 @@ type (
 	Plan                          = types.Plan
 	SoftwareUpgradeProposal       = types.SoftwareUpgradeProposal
 	CancelSoftwareUpgradeProposal = types.CancelSoftwareUpgradeProposal
+	QueryAppliedParams            = types.QueryAppliedParams
 	Keeper                        = keeper.Keeper
 )

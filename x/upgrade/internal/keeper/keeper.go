@@ -64,6 +64,15 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	return nil
 }
 
+func (k *Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.DoneHeightKey(name))
+	if len(bz) == 0 {
+		return 0
+	}
+	return int64(binary.BigEndian.Uint64(bz))
+}
+
 // ClearUpgradePlan clears any schedule upgrade
 func (k *Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)

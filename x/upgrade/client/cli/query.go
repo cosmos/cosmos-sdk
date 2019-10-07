@@ -21,7 +21,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			// ignore height for now
-			res, _, err := cliCtx.QueryStore(upgrade.PlanKey(), storeName)
+			res, _, err := cliCtx.Query(fmt.Sprintf("custom/%s/%s", upgrade.QuerierKey, upgrade.QueryCurrent))
 			if err != nil {
 				return err
 			}
@@ -52,9 +52,13 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			name := args[0]
+			params := upgrade.NewQueryAppliedParams(name)
+			bz, err := cliCtx.Codec.MarshalJSON(params)
+			if err != nil {
+				return err
+			}
 
-			// ignore height for now
-			res, _, err := cliCtx.QueryStore(upgrade.DoneHeightKey(name), storeName)
+			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", upgrade.QuerierKey, upgrade.QueryApplied), bz)
 			if err != nil {
 				return err
 			}
@@ -66,8 +70,8 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("unknown format for applied-upgrade")
 			}
 
-			height := int64(binary.BigEndian.Uint64(res))
-			fmt.Println(height)
+			applied := int64(binary.BigEndian.Uint64(res))
+			fmt.Println(applied)
 			return nil
 		},
 	}

@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -390,33 +389,9 @@ func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
 	return nil
 }
 
-// Update changes the passphrase with which an already stored key is encrypted.
-// The oldpass must be the current passphrase used for encryption, getNewpass is
-// a function to get the passphrase to permanently replace the current passphrase.
+// Update does nothing.
 func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	info, err := kb.Get(name)
-	if err != nil {
-		return err
-	}
-
-	switch linfo := info.(type) {
-	case localInfo:
-		key, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
-		if err != nil {
-			return err
-		}
-
-		newpass, err := getNewpass()
-		if err != nil {
-			return err
-		}
-
-		kb.writeLocalKey(name, key, newpass)
-		return nil
-
-	default:
-		return fmt.Errorf("locally stored key required; received: %v", reflect.TypeOf(info).String())
-	}
+	return nil
 }
 
 // CloseDB releases the lock and closes the storage backend.

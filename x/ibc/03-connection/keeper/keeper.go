@@ -7,87 +7,90 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
-type Manager struct {
-	protocol     state.Mapping
-	client       client.Manager
+// Keeper defines the IBC connection keeper
+type Keeper struct {
+	mapping      state.Mapping
+	clientKeeper types.ClientKeeper
+	
 	counterparty CounterpartyManager
 	path         merkle.Prefix
 }
 
-func NewManager(protocol state.Mapping, client client.Manager) Manager {
-	return Manager{
-		protocol:     protocol.Prefix(LocalRoot()),
-		client:       client,
-		counterparty: NewCounterpartyManager(protocol.Cdc()),
-		path:         merkle.NewPrefix([][]byte{[]byte(protocol.StoreName())}, protocol.PrefixBytes()),
+// NewKeeper creates a new IBC connection Keeper instance
+func NewKeeper(mapping state.Mapping, ck types.ClientKeeper) Keeper {
+	return Keeper{
+		mapping:      mapping.Prefix([]byte(types.SubModuleName + "/")),
+		clientKeeper: ck,
+		counterparty: NewCounterpartyManager(mapping.Cdc()),
+		path:         merkle.NewPrefix([][]byte{[]byte(mapping.StoreName())}, mapping.PrefixBytes()),
 	}
 }
 
 type CounterpartyManager struct {
-	protocol commitment.Mapping
+	mapping commitment.Mapping
 
-	client client.CounterpartyManager
+	client ics02.CounterpartyManager
 }
 
 func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
-	protocol := commitment.NewMapping(cdc, nil)
+	mapping := commitment.NewMapping(cdc, nil)
 
 	return CounterpartyManager{
-		protocol: protocol.Prefix(LocalRoot()),
+		mapping: mapping.Prefix([]byte(types.SubModuleName + "/")),
 
-		client: client.NewCounterpartyManager(cdc),
+		client: ics02.NewCounterpartyManager(cdc),
 	}
 }
 
 type State struct {
 	id string
 
-	protocol   state.Mapping
+	mapping    state.Mapping
 	Connection state.Value
 	Available  state.Boolean
 
 	Kind state.String
 
-	Client client.State
+	Client ics02.State
 
 	path merkle.Prefix
 }
 
 // CONTRACT: client must be filled by the caller
-func (man Manager) State(id string) State {
+func (k Keeper) State(id string) State {
 	return State{
 		id:         id,
-		protocol:   man.protocol.Prefix([]byte(id + "/")),
-		Connection: man.protocol.Value([]byte(id)),
-		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
-		Kind:       man.protocol.Value([]byte(id + "/kind")).String(),
-		path:       man.path,
+		mapping:    k.mapping.Prefix([]byte(id + "/")),
+		Connection: k.mapping.Value([]byte(id)),
+		Available:  k.mapping.Value([]byte(id + "/available")).Boolean(),
+		Kind:       k.mapping.Value([]byte(id + "/kind")).String(),
+		path:       k.path,
 	}
 }
 
 type CounterState struct {
 	id         string
-	protocol   commitment.Mapping
+	mapping    commitment.Mapping
 	Connection commitment.Value
 	Available  commitment.Boolean
 	Kind       commitment.String
-	Client     client.CounterState // nolint: unused
+	Client     ics02.CounterState // nolint: unused
 }
 
 // CreateState creates a new CounterState instance.
 // CONTRACT: client should be filled by the caller
-func (man CounterpartyManager) CreateState(id string) CounterState {
+func (k CounterpartyManager) CreateState(id string) CounterState {
 	return CounterState{
 		id:         id,
-		protocol:   man.protocol.Prefix([]byte(id + "/")),
-		Connection: man.protocol.Value([]byte(id)),
-		Available:  man.protocol.Value([]byte(id + "/available")).Boolean(),
-		Kind:       man.protocol.Value([]byte(id + "/kind")).String(),
+		mapping:    k.mapping.Prefix([]byte(id + "/")),
+		Connection: k.mapping.Value([]byte(id)),
+		Available:  k.mapping.Value([]byte(id + "/available")).Boolean(),
+		Kind:       k.mapping.Value([]byte(id + "/kind")).String(),
 	}
 }
 
@@ -113,7 +116,7 @@ func (state State) ID() string {
 	return state.id
 }
 
-func (state State) GetConnection(ctx sdk.Context) (res Connection) {
+func (state State) GetConnection(ctx sdk.Context) (res types.ConnectionEnd) {
 	state.Connection.Get(ctx, &res)
 	return
 }
@@ -126,27 +129,21 @@ func (state State) Receivable(ctx sdk.Context) bool {
 	return kinds[state.Kind.Get(ctx)].Receivable
 }
 
-func (state State) remove(ctx sdk.Context) {
-	state.Connection.Delete(ctx)
-	state.Available.Delete(ctx)
-	state.Kind.Delete(ctx)
-}
-
 func (state State) exists(ctx sdk.Context) bool {
 	return state.Connection.Exists(ctx)
 }
 
-func (man Manager) Cdc() *codec.Codec {
-	return man.protocol.Cdc()
+func (k Keeper) Cdc() *codec.Codec {
+	return k.mapping.Cdc()
 }
 
-func (man Manager) create(ctx sdk.Context, id string, connection Connection, kind string) (state State, err error) {
-	state = man.State(id)
+func (k Keeper) create(ctx sdk.Context, id string, connection Connection, kind string) (state State, err error) {
+	state = k.State(id)
 	if state.exists(ctx) {
 		err = errors.New("Stage already exists")
 		return
 	}
-	state.Client, err = man.client.Query(ctx, connection.Client)
+	state.Client, err = k.client.Query(ctx, connection.Client)
 	if err != nil {
 		return
 	}
@@ -158,14 +155,14 @@ func (man Manager) create(ctx sdk.Context, id string, connection Connection, kin
 
 // query() is used internally by the connection creators
 // checks connection kind, doesn't check avilability
-func (man Manager) query(ctx sdk.Context, id string, kind string) (state State, err error) {
-	state = man.State(id)
+func (k Keeper) query(ctx sdk.Context, id string, kind string) (state State, err error) {
+	state = k.State(id)
 	if !state.exists(ctx) {
 		err = errors.New("Stage not exists")
 		return
 	}
 
-	state.Client, err = man.client.Query(ctx, state.GetConnection(ctx).Client)
+	state.Client, err = k.client.Query(ctx, state.GetConnection(ctx).Client)
 	if err != nil {
 		return
 	}
@@ -178,8 +175,8 @@ func (man Manager) query(ctx sdk.Context, id string, kind string) (state State, 
 	return
 }
 
-func (man Manager) Query(ctx sdk.Context, id string) (state State, err error) {
-	state = man.State(id)
+func (k Keeper) Query(ctx sdk.Context, id string) (state State, err error) {
+	state = k.State(id)
 	if !state.exists(ctx) {
 		err = errors.New("Stage not exists")
 		return
@@ -190,6 +187,6 @@ func (man Manager) Query(ctx sdk.Context, id string) (state State, err error) {
 		return
 	}
 
-	state.Client, err = man.client.Query(ctx, state.GetConnection(ctx).Client)
+	state.Client, err = k.client.Query(ctx, state.GetConnection(ctx).Client)
 	return
 }

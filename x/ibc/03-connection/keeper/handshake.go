@@ -1,4 +1,4 @@
-package connection
+package tyoes
 
 import (
 	"errors"
@@ -6,127 +6,90 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
-
-type HandshakeStage = byte
-
-const (
-	Idle HandshakeStage = iota
-	Init
-	OpenTry
-	Open
-)
-
-const HandshakeKind = "handshake"
-
-type Handshaker struct {
-	man Manager
-
-	counterParty CounterpartyHandshaker
-}
-
-func NewHandshaker(man Manager) Handshaker {
-	return Handshaker{
-		man:          man,
-		counterParty: CounterpartyHandshaker{man.counterparty},
-	}
-}
-
-type CounterpartyHandshaker struct {
-	man CounterpartyManager
-}
 
 type HandshakeState struct {
 	State
 
 	Stage              state.Enum
 	CounterpartyClient state.String
-
-	Counterparty CounterHandshakeState
+	Counterparty       CounterHandshakeState
 }
 
 type CounterHandshakeState struct {
 	CounterState
 
-	Stage              commitment.Enum
-	CounterpartyClient commitment.String
+	Stage              ics23.Enum
+	CounterpartyClient ics23.String
 }
 
 // CONTRACT: client and remote must be filled by the caller
-func (man Handshaker) CreateState(parent State) HandshakeState {
+func (k Keeper) CreateState(parent State) HandshakeState {
 	return HandshakeState{
 		State:              parent,
-		Stage:              man.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
-		CounterpartyClient: man.man.protocol.Value([]byte(parent.id + "/counterpartyClient")).String(),
-
-		// CONTRACT: counterParty must be filled by the caller
+		Stage:              k.man.protocol.Value([]byte(parent.id + "/state")).Enum(),
+		CounterpartyClient: k.man.protocol.Value([]byte(parent.id + "/counterpartyClient")).String(),
 	}
 }
 
 func (man CounterpartyHandshaker) CreateState(id string) CounterHandshakeState {
 	return CounterHandshakeState{
-		CounterState:       man.man.CreateState(id),
-		Stage:              man.man.protocol.Value([]byte(id + "/state")).Enum(),
-		CounterpartyClient: man.man.protocol.Value([]byte(id + "/counterpartyClient")).String(),
+		CounterState:       k.man.CreateState(id),
+		Stage:              k.man.protocol.Value([]byte(id + "/state")).Enum(),
+		CounterpartyClient: k.man.protocol.Value([]byte(id + "/counterpartyClient")).String(),
 	}
 }
 
-func (man Handshaker) create(ctx sdk.Context, id string, connection Connection, counterpartyClient string) (obj HandshakeState, err error) {
-	cobj, err := man.man.create(ctx, id, connection, HandshakeKind)
+func (k Keeper) create(ctx sdk.Context, id string, connection Connection, counterpartyClient string) (obj HandshakeState, err error) {
+	cobj, err := k.man.create(ctx, id, connection, HandshakeKind)
 	if err != nil {
 		return
 	}
-	obj = man.CreateState(cobj)
+	obj = k.CreateState(cobj)
 	obj.CounterpartyClient.Set(ctx, counterpartyClient)
-	obj.Counterparty = man.counterParty.CreateState(connection.Counterparty)
+	obj.Counterparty = k.CounterParty.CreateState(connection.Counterparty)
 	return obj, nil
 }
 
-func (man Handshaker) query(ctx sdk.Context, id string) (obj HandshakeState, err error) {
-	cobj, err := man.man.query(ctx, id, HandshakeKind)
+func (k Keeper) query(ctx sdk.Context, id string) (obj HandshakeState, err error) {
+	cobj, err := k.man.query(ctx, id, HandshakeKind)
 	if err != nil {
 		return
 	}
-	obj = man.CreateState(cobj)
-	obj.Counterparty = man.counterParty.CreateState(obj.GetConnection(ctx).Counterparty)
+	obj = k.CreateState(cobj)
+	obj.Counterparty = k.counterParty.CreateState(obj.GetConnection(ctx).Counterparty)
 	return
 }
 
-func (obj HandshakeState) remove(ctx sdk.Context) {
-	obj.State.remove(ctx)
-	obj.Stage.Delete(ctx)
-	obj.CounterpartyClient.Delete(ctx)
-}
-
-// Using proofs: none
-func (man Handshaker) OpenInit(ctx sdk.Context,
-	id string, connection Connection, counterpartyClient string,
-) (HandshakeState, error) {
+func (k Keeper) ConnOpenInit(
+	ctx sdk.Context, connectionID, clientID string, counterparty types.Counterparty,
+) (HandshakeState, sdk.Error) {
 	// man.Create() will ensure
 	// assert(get("connections/{identifier}") === null) and
 	// set("connections{identifier}", connection)
-	obj, err := man.create(ctx, id, connection, counterpartyClient)
+
+	// connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, []string{}) // TODO: getCompatibleVersions()
+
+	obj, err := k.create(ctx, id, connection, counterpartyClient)
 	if err != nil {
 		return HandshakeState{}, err
 	}
-
-	obj.Stage.Set(ctx, Init)
 
 	return obj, nil
 }
 
 // Using proofs: counterParty.{connection,state,nextTimeout,counterpartyClient, client}
-func (man Handshaker) OpenTry(ctx sdk.Context,
-	proofs []commitment.Proof, height uint64,
-	id string, connection Connection, counterpartyClient string,
+func (k Keeper) ConnOpenTry(ctx sdk.Context, connectionID, clientID string, counterparty types.Counterparty,
 ) (obj HandshakeState, err error) {
-	obj, err = man.create(ctx, id, connection, counterpartyClient)
+
+	obj, err = k.create(ctx, id, connection, counterpartyClient)
 	if err != nil {
 		return
 	}
 
-	ctx, err = obj.Context(ctx, height, proofs)
+	ctx, err = k.Context(ctx, height, proofs)
 	if err != nil {
 		return
 	}
@@ -172,8 +135,8 @@ func (man Handshaker) OpenTry(ctx sdk.Context,
 }
 
 // Using proofs: counterParty.{connection, state, timeout, counterpartyClient, client}
-func (man Handshaker) OpenAck(ctx sdk.Context,
-	proofs []commitment.Proof, height uint64,
+func (k Keeper) OpenAck(ctx sdk.Context,
+	proofs []ics23.Proof, height uint64,
 	id string,
 ) (obj HandshakeState, err error) {
 	obj, err = man.query(ctx, id)
@@ -224,8 +187,8 @@ func (man Handshaker) OpenAck(ctx sdk.Context,
 }
 
 // Using proofs: counterParty.{connection,state, nextTimeout}
-func (man Handshaker) OpenConfirm(ctx sdk.Context,
-	proofs []commitment.Proof, height uint64,
+func (k Keeper) OpenConfirm(ctx sdk.Context,
+	proofs []ics23.Proof, height uint64,
 	id string) (obj HandshakeState, err error) {
 
 	obj, err = man.query(ctx, id)

@@ -2,24 +2,21 @@ package cli
 
 import (
 	"io/ioutil"
-	//	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
-
-	//	"github.com/tendermint/tendermint/libs/log"
 
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	//	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
+// ICS02 Client CLI flags
 const (
 	FlagStatePath            = "state"
 	FlagClientID             = "client-id"
@@ -30,6 +27,7 @@ const (
 	FlagSourceNode           = "source-node"
 )
 
+// GetTxCmd returns the transaction commands for IBC Clients
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ibcTxCmd := &cobra.Command{
 		Use:                        "client",
@@ -46,27 +44,32 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return ibcTxCmd
 }
 
+// GetCmdCreateClient defines the command to create a new IBC Client as defined
+// in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "create new client with a consensus state",
-		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`create new client with a specified identifier and consensus state:
+
+$ <appcli> tx ibc client create [client-id] [path/to/consensus_state.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+		`),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			contents, err := ioutil.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
 
-			var state client.ConsensusState
+			var state exported.ConsensusState
 			if err := cdc.UnmarshalJSON(contents, &state); err != nil {
 				return err
 			}
 
-			msg := client.MsgCreateClient{
+			msg := types.MsgCreateClient{
 				ClientID:       args[0],
 				ConsensusState: state,
 				Signer:         cliCtx.GetFromAddress(),
@@ -75,31 +78,35 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
 	return cmd
 }
 
+// GetCmdUpdateClient defines the command to update a client as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "update existing client with a header",
-		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`update existing client with a header:
+
+$ <appcli> tx ibc client create [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+		`),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			contents, err := ioutil.ReadFile(args[1])
+			bz, err := ioutil.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
 
-			var header client.Header
-			if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+			var header exported.Header
+			if err := cdc.UnmarshalJSON(bz, &header); err != nil {
 				return err
 			}
 
-			msg := client.MsgUpdateClient{
+			msg := types.MsgUpdateClient{
 				ClientID: args[0],
 				Header:   header,
 				Signer:   cliCtx.GetFromAddress(),
@@ -108,6 +115,43 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+	return cmd
+}
 
+// GetCmdSubmitMisbehaviour defines the command to submit a misbehaviour to invalidate
+// previous state roots and prevent future updates as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
+func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "misbehaviour",
+		Short: "submit a client misbehaviour",
+		Long: strings.TrimSpace(`submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates:
+
+$ <appcli> tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+		`),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			bz, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
+			var evidence exported.Evidence
+			if err := cdc.UnmarshalJSON(bz, &evidence); err != nil {
+				return err
+			}
+
+			msg := types.MsgSubmitMisbehaviour{
+				ClientID: args[0],
+				Evidence: evidence,
+				Signer:   cliCtx.GetFromAddress(),
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
 	return cmd
 }

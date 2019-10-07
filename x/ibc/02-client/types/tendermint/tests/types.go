@@ -18,8 +18,8 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
@@ -125,7 +125,7 @@ func (node *Node) Context() sdk.Context {
 }
 
 type Verifier struct {
-	client.ConsensusState
+	exported.ConsensusState
 }
 
 func NewVerifier(header tmtypes.SignedHeader, nextvalset MockValidators, root merkle.Root) *Verifier {
@@ -150,9 +150,7 @@ func (v *Verifier) Validate(header tendermint.Header, valset, nextvalset MockVal
 }
 
 func (node *Node) Query(t *testing.T, k []byte) ([]byte, commitment.Proof) {
-	if bytes.HasPrefix(k, node.KeyPrefix) {
-		k = bytes.TrimPrefix(k, node.KeyPrefix)
-	}
+	k = bytes.TrimPrefix(k, node.KeyPrefix)
 	value, proof, err := merkle.QueryMultiStore(node.Cms, node.StoreName, node.KeyPrefix, k)
 	require.NoError(t, err)
 	return value, proof

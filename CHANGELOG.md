@@ -82,6 +82,8 @@ to the new keyring.
 
 ### Improvements
 
+* (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
+has been moved to the configuration file, to allow easier node configuration.
 * (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
 when connecting to multiple chains. The connecting chain's `CLIContext` will have to have the correct
 chain ID and node URI or client set. To use a `CLIContext` with a verifier for another chain:

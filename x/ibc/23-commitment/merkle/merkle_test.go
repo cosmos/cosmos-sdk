@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func defaultComponents() (sdk.StoreKey, sdk.Context, types.CommitMultiStore, *codec.Codec) {
@@ -38,7 +38,7 @@ func commit(cms types.CommitMultiStore) Root {
 	return NewRoot(cid.Hash)
 }
 
-// TestStore tests Merkle proof on the commitment.Store
+// TestStore tests Merkle proof on the ics23.Store
 // Sets/upates key-value pairs and prove with the query result proofs
 func TestStore(t *testing.T) {
 	k, ctx, cms, cdc := defaultComponents()
@@ -66,7 +66,7 @@ func TestStore(t *testing.T) {
 		root := commit(cms)
 
 		// Test query, and accumulate proofs
-		proofs := make([]commitment.Proof, 0, kvpn)
+		proofs := make([]ics23.Proof, 0, kvpn)
 		for k, v := range m {
 			q := state.NewStoreQuerier(cms.(types.Queryable))
 			v0, p, err := mapp.Value([]byte(k)).QueryRaw(q)
@@ -87,7 +87,7 @@ func TestStore(t *testing.T) {
 			m[string(k)] = []byte{}
 		}
 
-		cstore, err := commitment.NewStore(root, path, proofs)
+		cstore, err := ics23.NewStore(root, path, proofs)
 		require.NoError(t, err)
 
 		// Test commitment store
@@ -110,7 +110,7 @@ func TestStore(t *testing.T) {
 		root = commit(cms)
 
 		// Test query, and accumulate proofs
-		proofs = make([]commitment.Proof, 0, kvpn)
+		proofs = make([]ics23.Proof, 0, kvpn)
 		for k, v := range m {
 			q := state.NewStoreQuerier(cms.(types.Queryable))
 			v0, p, err := mapp.Value([]byte(k)).QueryRaw(q)
@@ -119,7 +119,7 @@ func TestStore(t *testing.T) {
 			proofs = append(proofs, Proof{Key: []byte(k), Proof: p})
 		}
 
-		cstore, err = commitment.NewStore(root, path, proofs)
+		cstore, err = ics23.NewStore(root, path, proofs)
 		require.NoError(t, err)
 
 		// Test commitment store

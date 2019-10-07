@@ -6,12 +6,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 func QueryMultiStore(cms types.CommitMultiStore, storeName string, prefix []byte, key []byte) ([]byte, Proof, error) {
 	queryable, ok := cms.(types.Queryable)
 	if !ok {
-		panic("CommitMultiStore not queryable")
+		panic("commitMultiStore not queryable")
 	}
 	qres := queryable.Query(RequestQueryMultiStore(storeName, prefix, key))
 	if !qres.IsOK() {
@@ -27,14 +28,7 @@ func RequestQueryMultiStore(storeName string, prefix []byte, key []byte) abci.Re
 	// and performs key-value query only if it is "/key"
 	return abci.RequestQuery{
 		Path:  "/" + storeName + "/key",
-		Data:  join(prefix, key),
+		Data:  ics23.Join(prefix, key),
 		Prove: true,
 	}
-}
-
-func join(a, b []byte) (res []byte) {
-	res = make([]byte, len(a)+len(b))
-	copy(res, a)
-	copy(res[len(a):], b)
-	return
 }

@@ -156,11 +156,9 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				ConnectionHops:   []string{connid2},
 			}
 
-			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
-			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
-
 			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
+			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
 			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
 			if err != nil {
 				return err
@@ -169,6 +167,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
+			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
 			conn2, _, err := obj2.OriginConnection().ConnectionCLI(q2)
 			if err != nil {
 				return err

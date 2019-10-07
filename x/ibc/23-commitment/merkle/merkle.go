@@ -63,7 +63,7 @@ func (Prefix) CommitmentKind() string {
 }
 
 func (prefix Prefix) Key(key []byte) []byte {
-	return join(prefix.KeyPrefix, key)
+	return ics23.Join(prefix.KeyPrefix, key)
 }
 
 var _ ics23.Proof = Proof{}

@@ -211,7 +211,7 @@ For each Period P:
       1. Compute `V' += P.Amount`
       2. Compute `CT += P.Length`
       3. ELSE break
-  3. Compute `V := OV = V'`
+  3. Compute `V := OV - V'`
 
 ```go
 func (pva PeriodicVestingAccount) GetVestedCoins(t Time) Coins {
@@ -318,7 +318,6 @@ func (va VestingAccount) TrackDelegation(t Time, amount Coins) {
 **Note** `TrackDelegation` only modifies the `DelegatedVesting` and `DelegatedFree`
 fields, so upstream callers MUST modify the `Coins` field by subtracting `amount`.
 
-
 #### Keepers/Handlers
 
 ```go
@@ -343,8 +342,7 @@ NOTE: `DV < D` and `(DV + DF) < D` may be possible due to quirks in the rounding
 delegation/undelegation logic.
 
 1. Verify `D > 0`
-2. Compute `X := min(DF, D)` (portion of `D` that should become free,
-prioritizing free coins)
+2. Compute `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
 3. Compute `Y := min(DV, D - X)` (portion of `D` that should remain vesting)
 4. Set `DF -= X`
 5. Set `DV -= Y`
@@ -359,7 +357,7 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 }
 ```
 
-Note that `TrackDelegation` only modifies the `DelegatedVesting` and `DelegatedFree`
+**Note** `TrackUnDelegation` only modifies the `DelegatedVesting` and `DelegatedFree`
 fields, so upstream callers MUST modify the `Coins` field by adding `amount`.
 
 **Note**: If a delegation is slashed, the continuous vesting account will end up
@@ -544,13 +542,12 @@ It can still however, delegate.
 A vesting account is created where 100 tokens will be released over 1 year, with
 1/4 of tokens vesting each quarter. The vesting schedule would be as follows:
 
-```json
+```yaml
 Periods:
 - amount: 25stake, length: 7884000
 - amount: 25stake, length: 7884000
 - amount: 25stake, length: 7884000
 - amount: 25stake, length: 7884000
-
 ```
 
 ```

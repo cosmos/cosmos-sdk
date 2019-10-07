@@ -310,12 +310,12 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 
 // GetStartTime returns the time when vesting starts for a continuous vesting
 // account.
-func (cva *ContinuousVestingAccount) GetStartTime() int64 {
+func (cva ContinuousVestingAccount) GetStartTime() int64 {
 	return cva.StartTime
 }
 
 // GetEndTime returns the time when vesting ends for a continuous vesting account.
-func (cva *ContinuousVestingAccount) GetEndTime() int64 {
+func (cva ContinuousVestingAccount) GetEndTime() int64 {
 	return cva.EndTime
 }
 
@@ -463,17 +463,17 @@ func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, amount s
 
 // GetStartTime returns the time when vesting starts for a periodic vesting
 // account.
-func (pva *PeriodicVestingAccount) GetStartTime() int64 {
+func (pva PeriodicVestingAccount) GetStartTime() int64 {
 	return pva.StartTime
 }
 
 // GetEndTime returns the time when vesting ends for a periodic vesting account.
-func (pva *PeriodicVestingAccount) GetEndTime() int64 {
+func (pva PeriodicVestingAccount) GetEndTime() int64 {
 	return pva.EndTime
 }
 
 // GetVestingPeriods returns vesting periods associated with periodic vesting account.
-func (pva *PeriodicVestingAccount) GetVestingPeriods() Periods {
+func (pva PeriodicVestingAccount) GetVestingPeriods() Periods {
 	return pva.VestingPeriods
 }
 
@@ -604,12 +604,12 @@ func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sd
 }
 
 // GetStartTime returns zero since a delayed vesting account has no start time.
-func (dva *DelayedVestingAccount) GetStartTime() int64 {
+func (dva DelayedVestingAccount) GetStartTime() int64 {
 	return 0
 }
 
 // GetEndTime returns the time when vesting ends for a delayed vesting account.
-func (dva *DelayedVestingAccount) GetEndTime() int64 {
+func (dva DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
 }
 

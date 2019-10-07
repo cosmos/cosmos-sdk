@@ -390,9 +390,7 @@ func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
 }
 
 // Update does nothing.
-func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
-	return nil
-}
+func (kb keyringKeybase) Update(_, _ string, _ func() (string, error)) error { return nil }
 
 // CloseDB releases the lock and closes the storage backend.
 func (kb keyringKeybase) CloseDB() {}

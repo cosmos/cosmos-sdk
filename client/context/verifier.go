@@ -1,7 +1,6 @@
 package context
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -27,8 +26,6 @@ func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 	if ctx.TrustNode {
 		return nil, nil
 	}
-
-	fmt.Println("CREATEVERIFIER-CHAINID", ctx.ChainID)
 
 	switch {
 	case ctx.ChainID == "":

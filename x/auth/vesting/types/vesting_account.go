@@ -49,12 +49,12 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 	}
 }
 
-// SpendableCoinsFromVestingCoins returns all the spendable coins for a vesting account given a
+// SpendableCoinsVestingAccount returns all the spendable coins for a vesting account given a
 // set of vesting coins.
 //
 // CONTRACT: The account's coins, delegated vesting coins, vestingCoins must be
 // sorted.
-func (bva BaseVestingAccount) SpendableCoinsFromVestingCoins(vestingCoins sdk.Coins) sdk.Coins {
+func (bva BaseVestingAccount) SpendableCoinsVestingAccount(vestingCoins sdk.Coins) sdk.Coins {
 	var spendableCoins sdk.Coins
 	bc := bva.GetCoins()
 
@@ -296,7 +296,7 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 // SpendableCoins returns the total number of spendable coins per denom for a
 // continuous vesting account.
 func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return cva.BaseVestingAccount.SpendableCoinsFromVestingCoins(cva.GetVestingCoins(blockTime))
+	return cva.BaseVestingAccount.SpendableCoinsVestingAccount(cva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -444,7 +444,7 @@ func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins
 // SpendableCoins returns the total number of spendable coins per denom for a
 // periodic vesting account.
 func (pva PeriodicVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return pva.BaseVestingAccount.SpendableCoinsFromVestingCoins(pva.GetVestingCoins(blockTime))
+	return pva.BaseVestingAccount.SpendableCoinsVestingAccount(pva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -581,7 +581,7 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 // SpendableCoins returns the total number of spendable coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return dva.BaseVestingAccount.SpendableCoinsFromVestingCoins(dva.GetVestingCoins(blockTime))
+	return dva.BaseVestingAccount.SpendableCoinsVestingAccount(dva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate

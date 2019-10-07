@@ -23,16 +23,16 @@ type State struct {
 	ConsensusState state.Value `json:"consensus_state" yaml:"consensus_state"`
 	// Boolean that states if the client is frozen when a misbehaviour proof is
 	// submitted in the event of an equivocation.
-	Frozen state.Boolean `json:"frozen" yaml:"frozen"`
+	Frozen bool `json:"frozen" yaml:"frozen"`
 }
 
 // NewState creates a new State instance
-func NewState(id string, roots state.Indexer, consensusState state.Value, frozen state.Boolean) State {
+func NewState(id string, roots state.Indexer, consensusState state.Value) State {
 	return State{
 		id:             id,
 		Roots:          roots,
 		ConsensusState: consensusState,
-		Frozen:         frozen,
+		Frozen:         false,
 	}
 }
 

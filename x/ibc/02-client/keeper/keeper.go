@@ -5,6 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,15 +19,19 @@ import (
 // Keeper represents a type that grants read and write permissions to any client
 // state information
 type Keeper struct {
-	mapping   state.Mapping
+	storeKey  sdk.StoreKey
+	cdc       *codec.Codec
 	codespace sdk.CodespaceType
+	prefix    []byte // prefix bytes for accessing the store
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(mapping state.Mapping, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
-		mapping:   mapping.Prefix([]byte(types.SubModuleName + "/")),                          // "client/"
-		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client"
+		storeKey:  key,
+		cdc:       cdc,
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client",
+		prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
 	}
 }
 
@@ -34,11 +40,29 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
+// GetClient creates a new client state and populates it with a given consensus state
+func (k Keeper) GetClient(ctx sdk.Context, id string) (state types.State, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(KeyClientState(id))
+	if bz == nil {
+		return types.State{}, false
+	}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &state)
+	return state, true
+}
+
+// SetClient creates a new client state and populates it with a given consensus state
+func (k Keeper) SetClient(ctx sdk.Context, clientState types.State) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
+	store.Set(KeyClientState(id), bz)
+}
+
 // CreateClient creates a new client state and populates it with a given consensus state
 func (k Keeper) CreateClient(ctx sdk.Context, id string, cs exported.ConsensusState) (types.State, error) {
-	state, err := k.Query(ctx, id)
-	if err == nil {
-		return types.State{}, sdkerrors.Wrap(err, "cannot create client")
+	state, found := k.GetClient(ctx, id)
+	if found {
+		return types.State{}, types.ErrClientExists(k.codespace)
 	}
 
 	// set the most recent state root and consensus state

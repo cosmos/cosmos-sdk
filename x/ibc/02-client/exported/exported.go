@@ -50,5 +50,5 @@ type ClientType byte
 
 // Registered consensus types
 const (
-	Tendermint ClientType = iota
+	Tendermint ClientType = iota + 1 // 1
 )

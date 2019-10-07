@@ -7,12 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -40,66 +40,124 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
-// GetClient creates a new client state and populates it with a given consensus state
-func (k Keeper) GetClient(ctx sdk.Context, id string) (state types.State, found bool) {
+// GetClientState gets a particular client from the
+func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.ClientState, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
-	bz := store.Get(KeyClientState(id))
+	bz := store.Get(types.KeyClientState(clientID))
 	if bz == nil {
-		return types.State{}, false
+		return types.ClientState{}, false
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &state)
-	return state, true
+
+	var clientState types.ClientState
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
+	return clientState, true
 }
 
-// SetClient creates a new client state and populates it with a given consensus state
-func (k Keeper) SetClient(ctx sdk.Context, clientState types.State) {
+// SetClient sets a particular Client to the store
+func (k Keeper) SetClient(ctx sdk.Context, clientState types.ClientState) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
-	store.Set(KeyClientState(id), bz)
+	store.Set(types.KeyClientState(clientState.ID()), bz)
 }
 
-// CreateClient creates a new client state and populates it with a given consensus state
-func (k Keeper) CreateClient(ctx sdk.Context, id string, cs exported.ConsensusState) (types.State, error) {
-	state, found := k.GetClient(ctx, id)
+// GetClientType gets the consensus type for a specific client
+func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyClientType(clientID))
+	if bz == nil {
+		return 0, false
+	}
+
+	return exported.ClientType(bz[0]), true
+}
+
+// SetClientType sets the specific client consensus type to the provable store
+func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store.Set(types.KeyClientType(clientID), []byte{byte(clientType)})
+}
+
+// GetConsensusState creates a new client state and populates it with a given consensus state
+func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string) (exported.ConsensusState, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyClientState(clientID))
+	if bz == nil {
+		return nil, false
+	}
+
+	var consensusState exported.ConsensusState
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &consensusState)
+	return consensusState, true
+}
+
+// SetConsensusState sets a ConsensusState to a particular Client
+func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
+	store.Set(types.KeyClientState(clientID), bz)
+}
+
+// GetCommitmentRoot gets a commitment Root from a particular height to a client
+func (k Keeper) GetCommitmentRoot(ctx sdk.Context, clientID string, height uint64) (ics23.Root, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyRoot(clientID, height))
+	if bz == nil {
+		return nil, false
+	}
+
+	var root ics23.Root
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &root)
+	return root, true
+}
+
+// SetCommitmentRoot sets a commitment Root from a particular height to a client
+func (k Keeper) SetCommitmentRoot(ctx sdk.Context, clientID string, height uint64, root ics23.Root) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
+	store.Set(types.KeyRoot(clientID, height), bz)
+}
+
+// CreateClient creates a new client state and populates it with a given consensus
+// state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
+func (k Keeper) CreateClient(
+	ctx sdk.Context, clientID string,
+	clientType exported.ClientType, consensusState exported.ConsensusState,
+) (types.ClientState, error) {
+	clientState, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.State{}, types.ErrClientExists(k.codespace)
+		return types.ClientState{}, types.ErrClientExists(k.codespace)
 	}
 
-	// set the most recent state root and consensus state
-	state.Roots.Set(ctx, cs.GetHeight(), cs.GetRoot())
-	state.ConsensusState.Set(ctx, cs)
-	return state, nil
-}
-
-// State returns a new client state with a given id
-func (k Keeper) ClientState(id string) types.State {
-	return types.NewState(
-		id, // client ID
-		k.mapping.Prefix([]byte(id+"/roots/")).Indexer(state.Dec), // commitment roots
-		k.mapping.Value([]byte(id)),                               // consensus state
-		k.mapping.Value([]byte(id+"/freeze")).Boolean(),           // client frozen
-	)
-}
-
-// Query returns a client state that matches a given ID
-func (k Keeper) Query(ctx sdk.Context, id string) (types.State, error) {
-	state := k.ClientState(id)
-	if !state.Exists(ctx) {
-		return types.State{}, types.ErrClientExists(k.codespace)
+	clientType, found = k.GetClientType(ctx, clientID)
+	if found {
+		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
 	}
-	return state, nil
+
+	clientState = k.initialize(ctx, clientID, consensusState)
+	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
+	k.SetClient(ctx, clientState)
+	k.SetClientType(ctx, clientID, clientType)
+	return clientState, nil
+}
+
+// ClientState returns a new client state with a given id as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
+func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.ClientState {
+	clientState := types.NewClientState(clientID)
+	k.SetConsensusState(ctx, clientID, consensusState)
+	return clientState
 }
 
 // CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
 // client if so.
-func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, state types.State, evidence exported.Evidence) error {
+func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientState types.ClientState, evidence exported.Evidence) error {
 	var err error
-	switch evidence.H1().Kind() {
+	switch evidence.H1().ClientType() {
 	case exported.Tendermint:
 		var tmEvidence tendermint.Evidence
 		_, ok := evidence.(tendermint.Evidence)
 		if !ok {
-			return sdkerrors.Wrap(types.ErrInvalidConsensus(k.codespace), "consensus is not Tendermint")
+			return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
 		}
 		err = tendermint.CheckMisbehaviour(tmEvidence)
 	default:
@@ -110,40 +168,58 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, state types.Sta
 		return err
 	}
 
-	return k.Freeze(ctx, state)
-}
-
-// Update updates the consensus state and the state root from a provided header
-func (k Keeper) Update(ctx sdk.Context, state types.State, header exported.Header) error {
-	if !state.Exists(ctx) {
-		panic("should not update nonexisting client")
+	clientState, err = k.freeze(ctx, clientState)
+	if err != nil {
+		return err
 	}
 
-	if state.Frozen.Get(ctx) {
+	k.SetClient(ctx, clientState)
+	return nil
+}
+
+// UpdateClient updates the consensus state and the state root from a provided header
+func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
+	clientType, found := k.GetClientType(ctx, clientID)
+	if !found {
+		return sdkerrors.Wrap(types.ErrClientTypeNotFound(k.codespace), "cannot update client")
+	}
+
+	// check that the header consensus matches the client one
+	if header.ClientType() != clientType {
+		return sdkerrors.Wrap(types.ErrInvalidConsensus(k.codespace), "cannot update client")
+	}
+
+	clientState, found := k.GetClientState(ctx, clientID)
+	if !found {
+		return sdkerrors.Wrap(types.ErrClientNotFound(k.codespace), "cannot update client")
+	}
+
+	if clientState.Frozen {
 		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "cannot update client")
 	}
 
-	consensusState := state.GetConsensusState(ctx)
+	consensusState, found := k.GetConsensusState(ctx, clientID)
+	if !found {
+		return sdkerrors.Wrap(types.ErrConsensusStateNotFound(k.codespace), "cannot update client")
+		panic(fmt.Sprintf("consensus state not found for client %s", clientID))
+	}
+
 	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return sdkerrors.Wrap(err, "cannot update client")
 	}
 
-	state.ConsensusState.Set(ctx, consensusState)
-	state.Roots.Set(ctx, consensusState.GetHeight(), consensusState.GetRoot())
+	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	return nil
 }
 
-// Freeze updates the state of the client in the event of a misbehaviour
-func (k Keeper) Freeze(ctx sdk.Context, state types.State) error {
-	if !state.Exists(ctx) {
-		panic("should not freeze nonexisting client")
+// freeze updates the state of the client in the event of a misbehaviour
+func (k Keeper) freeze(ctx sdk.Context, clientState types.ClientState) (types.ClientState, error) {
+	if clientState.Frozen {
+		return types.ClientState{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "already frozen")
 	}
 
-	if state.Frozen.Get(ctx) {
-		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "already frozen")
-	}
-
-	state.Frozen.Set(ctx, true)
-	return nil
+	clientState.Frozen = true
+	return clientState, nil
 }

@@ -22,7 +22,7 @@ const (
 )
 
 // PlanKey is the key under which the current plan is saved
-// We store PlanByte as a const to keep it immutible (unlike a []byte)
+// We store PlanByte as a const to keep it immutable (unlike a []byte)
 func PlanKey() []byte {
 	return []byte{PlanByte}
 }

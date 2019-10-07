@@ -45,7 +45,13 @@ func (p Plan) String() string {
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() sdk.Error {
 	if len(p.Name) == 0 {
-		return sdk.ErrUnknownRequest("Name cannot be empty")
+		return sdk.ErrUnknownRequest("name cannot be empty")
+	}
+	if p.Time.IsZero() && p.Height == 0 {
+		return sdk.ErrUnknownRequest("must set either time or height")
+	}
+	if !p.Time.IsZero() && p.Height != 0 {
+		return sdk.ErrUnknownRequest("cannot set both time and height")
 	}
 	return nil
 }
@@ -61,14 +67,14 @@ func (p Plan) ShouldExecute(ctx sdk.Context) bool {
 	return false
 }
 
-// DueDate is a string representation of when this plan is due to be executed
-func (p Plan) DueDate() string {
+// DueAt is a string representation of when this plan is due to be executed
+func (p Plan) DueAt() string {
 	if !p.Time.IsZero() {
 		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
 	}
 	if p.Height > 0 {
 		return fmt.Sprintf("height: %d", p.Height)
 	}
-	return "<DueDate unset>"
+	return "<DueAt unset>"
 
 }

@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/mattn/go-isatty v0.0.9
-	github.com/pelletier/go-toml v1.4.0
+	github.com/pelletier/go-toml v1.5.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
 	github.com/spf13/afero v1.2.1 // indirect

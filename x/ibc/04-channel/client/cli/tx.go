@@ -28,10 +28,11 @@ import (
 )
 
 const (
-	FlagNode1 = "node1"
-	FlagNode2 = "node2"
-	FlagFrom1 = "from1"
-	FlagFrom2 = "from2"
+	FlagNode1    = "node1"
+	FlagNode2    = "node2"
+	FlagFrom1    = "from1"
+	FlagFrom2    = "from2"
+	FlagChainId2 = "chain-id2"
 )
 
 func handshake(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid, connid string) channel.HandshakeState {
@@ -322,10 +323,11 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
-	cmd.Flags().String(FlagFrom1, "", "")
-	cmd.Flags().String(FlagFrom2, "", "")
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
+	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 
 	cmd.MarkFlagRequired(FlagFrom1)
 	cmd.MarkFlagRequired(FlagFrom2)

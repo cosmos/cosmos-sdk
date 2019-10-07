@@ -68,12 +68,12 @@ func NewNFTs(nfts ...exported.NFT) NFTs {
 	if len(nfts) == 0 {
 		return NFTs{}
 	}
-	return NFTs(nfts)
+	return NFTs(nfts).Sort()
 }
 
-// Add appends two sets of NFTs
-func (nfts NFTs) Add(nftsB NFTs) NFTs {
-	return append(nfts, nftsB...)
+// Append appends two sets of NFTs
+func (nfts NFTs) Append(nftsB ...exported.NFT) NFTs {
+	return append(nfts, nftsB...).Sort()
 }
 
 // Find returns the searched collection from the set
@@ -124,21 +124,7 @@ func (nfts NFTs) Empty() bool {
 }
 
 func (nfts NFTs) find(id string) int {
-	if len(nfts) == 0 {
-		return -1
-	}
-
-	midIdx := len(nfts) / 2
-	nft := nfts[midIdx]
-
-	switch {
-	case strings.Compare(id, nft.GetID()) == -1:
-		return nfts[:midIdx].find(id)
-	case id == nft.GetID():
-		return midIdx
-	default:
-		return nfts[midIdx+1:].find(id)
-	}
+	return FindUtil(nfts, id)
 }
 
 // ----------------------------------------------------------------------------
@@ -172,17 +158,15 @@ func (nfts *NFTs) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//-----------------------------------------------------------------------------
-// Sort interface
-
-//nolint
-func (nfts NFTs) Len() int           { return len(nfts) }
-func (nfts NFTs) Less(i, j int) bool { return strings.Compare(nfts[i].GetID(), nfts[j].GetID()) == -1 }
-func (nfts NFTs) Swap(i, j int)      { nfts[i], nfts[j] = nfts[j], nfts[i] }
+// Findable and Sort interfaces
+func (nfts NFTs) ElAtIndex(index int) string { return nfts[index].GetID() }
+func (nfts NFTs) Len() int                   { return len(nfts) }
+func (nfts NFTs) Less(i, j int) bool         { return strings.Compare(nfts[i].GetID(), nfts[j].GetID()) == -1 }
+func (nfts NFTs) Swap(i, j int)              { nfts[i], nfts[j] = nfts[j], nfts[i] }
 
 var _ sort.Interface = NFTs{}
 
-// Sort is a helper function to sort the set of coins inplace
+// Sort is a helper function to sort the set of coins in place
 func (nfts NFTs) Sort() NFTs {
 	sort.Sort(nfts)
 	return nfts

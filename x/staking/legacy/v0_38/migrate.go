@@ -1,14 +1,14 @@
 // DONTCOVER
 // nolint
-package v0_37
+package v0_38
 
 import (
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
 )
 
-// Migrate accepts exported genesis state from v0.34 and migrates it to v0.36
-// genesis state. All entries are identical except for validator slashing events
-// which now include the period.
+// Migrate accepts exported genesis state from v0.36 or v0.37 and migrates it to
+// v0.38 genesis state. All entries are identical except for validator descriptions
+// which now include a security contact.
 func Migrate(oldGenState v036staking.GenesisState) GenesisState {
 	return NewGenesisState(
 		oldGenState.Params,

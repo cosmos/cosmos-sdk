@@ -136,7 +136,7 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a software upgrade along with an initial deposit.
+			fmt.Sprintf(`Cancel a software upgrade along with an initial deposit.
 `,
 			),
 		),

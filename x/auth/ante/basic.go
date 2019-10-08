@@ -6,6 +6,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+var (
+	_ TxWithMemo = (*types.StdTx)(nil) // assert StdTx implements TxWithMemo
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.

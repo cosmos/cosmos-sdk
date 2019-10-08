@@ -11,6 +11,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+var (
+	_ FeeTx = (*types.StdTx)(nil) // assert StdTx implements FeeTx
+)
+
 // FeeTx defines the interface to be implemented by Tx to use the FeeDecorators
 type FeeTx interface {
 	sdk.Tx

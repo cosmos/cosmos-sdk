@@ -46,7 +46,7 @@ func GetCmdQueryClientState(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Use:   "state",
 		Short: "Query a client state",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client
+			fmt.Sprintf(`Query stored client state
 
 Example:
 $ %s query ibc client state [client-id]
@@ -83,7 +83,7 @@ func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Use:   "root",
 		Short: "Query stored root",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client
+			fmt.Sprintf(`Query a stored commitment root at a specific height for a particular client
 
 Example:
 $ %s query ibc client root [client-id] [height]
@@ -123,9 +123,9 @@ $ %s query ibc client root [client-id] [height]
 func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "consensus-state",
-		Short: "Query the latest consensus state of the running chain",
+		Short: "Query the latest consensus state of the client",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query consensus state
+			fmt.Sprintf(`Query the consensus state for a particular client
 
 Example:
 $ %s query ibc client consensus-state [client-id]
@@ -192,7 +192,7 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "header",
 		Short: "Query the latest header of the running chain",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query the latest header
+		Long: strings.TrimSpace(fmt.Sprintf(`Query the latest Tendermint header
 		
 Example:
 $ %s query ibc client header

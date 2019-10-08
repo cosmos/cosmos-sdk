@@ -193,6 +193,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	k.SetConsensusState(ctx, clientID, consensusState)
 	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated at height %d", clientID, consensusState.GetHeight()))
 	return nil
 }
 
@@ -215,6 +216,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string
 	}
 
 	k.SetClient(ctx, clientState)
+	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", clientID))
 	return nil
 }
 

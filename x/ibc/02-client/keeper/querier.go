@@ -9,22 +9,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-// TODO: return proof
-
 // NewQuerier creates a querier for the IBC client
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case types.QueryClientState:
-			return queryClientState(ctx, req, k) // TODO: return proof
+			return queryClientState(ctx, req, k)
 		case types.QueryConsensusState:
-			return queryConsensusState(ctx, req, k) // TODO: return proof
+			return queryConsensusState(ctx, req, k)
 		case types.QueryCommitmentPath:
 			return queryCommitmentPath(k)
 		case types.QueryCommitmentRoot:
-			return queryCommitmentRoot(ctx, req, k) // TODO: return proof
-		// case types.QueryHeader:
-		// 	return queryHeader(ctx, req, k)
+			return queryCommitmentRoot(ctx, req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown IBC client query endpoint")
 		}
@@ -106,14 +102,3 @@ func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 
 	return bz, nil
 }
-
-// TODO: this is implented directly on the client
-// func queryHeader(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
-// 	res, err := codec.MarshalJSONIndent(types.SubModuleCdc, header)
-// 	if err != nil {
-// 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", err.Error()))
-// 	}
-
-// 	return res, nil
-// }

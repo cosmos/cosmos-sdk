@@ -55,6 +55,11 @@ have this method perform a no-op.
   * Update gov keys to use big endian encoding instead of little endian
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
 deprecated and all components removed except the `legacy/` package.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Vesting account types decoupled from the `x/auth` module and
+now live under `x/auth/vesting`. Applications wishing to use vesting account types must be sure to register types via
+`RegisterCodec` under the new vesting package.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) The `NewBaseVestingAccount` constructor returns an error
+if the provided arguments are invalid.
 
 ### Client Breaking Changes
 
@@ -79,6 +84,8 @@ upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --in
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
+that allows for arbitrary vesting periods.
 
 ### Improvements
 

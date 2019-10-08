@@ -32,13 +32,13 @@ func (cs ConsensusState) GetHeight() uint64 {
 	return cs.Height
 }
 
-// GetRoot returns the commitment Rootgit
+// GetRoot returns the commitment Root for the specific
 func (cs ConsensusState) GetRoot() ics23.Root {
 	return cs.Root
 }
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
-// the consensus state if appropiate
+// the consensus state if appropriate
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
@@ -53,23 +53,29 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 }
 
 // checkValidity checks if the Tendermint header is valid
+//
+// CONTRACT: assumes header.Height > consensusState.Height
 func (cs ConsensusState) checkValidity(header Header) error {
-	// TODO: shouldn't we check that header.Height > cs.Height?
+	// check if the hash from the consensus set and header
+	// matches
 	nextHash := cs.NextValidatorSet.Hash()
 	if cs.Height == uint64(header.Height-1) &&
-		!bytes.Equal(header.ValidatorsHash, nextHash) {
-		return lerr.ErrUnexpectedValidators(header.ValidatorsHash, nextHash)
+		!bytes.Equal(nextHash, header.ValidatorsHash) {
+		return lerr.ErrUnexpectedValidators(nextHash, header.ValidatorsHash)
 	}
 
+	// validate the next validator set hash from the header
 	nextHash = header.NextValidatorSet.Hash()
 	if !bytes.Equal(header.NextValidatorsHash, nextHash) {
 		return lerr.ErrUnexpectedValidators(header.NextValidatorsHash, nextHash)
 	}
 
+	// basic consistency check
 	if err := header.ValidateBasic(cs.ChainID); err != nil {
 		return err
 	}
 
+	// abortTransactionUnless(consensusState.publicKey.verify(header.signature))
 	return cs.NextValidatorSet.VerifyFutureCommit(
 		header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit,
 	)
@@ -77,10 +83,8 @@ func (cs ConsensusState) checkValidity(header Header) error {
 
 // update the consensus state from a new header
 func (cs ConsensusState) update(header Header) ConsensusState {
-	return ConsensusState{
-		ChainID:          cs.ChainID,
-		Height:           uint64(header.Height),
-		Root:             merkle.NewRoot(header.AppHash),
-		NextValidatorSet: header.NextValidatorSet,
-	}
+	cs.Height = header.GetHeight()
+	cs.Root = merkle.NewRoot(header.AppHash)
+	cs.NextValidatorSet = header.NextValidatorSet
+	return cs
 }

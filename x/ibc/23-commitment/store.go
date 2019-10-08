@@ -1,4 +1,4 @@
-package commitment
+package ics23
 
 import (
 	"bytes"
@@ -35,8 +35,8 @@ func NewPrefix(store Store, pref []byte) Store {
 }
 
 // Prove implements Store.
-func (prefix prefix) Prove(key, value []byte) bool {
-	return prefix.store.Prove(join(prefix.prefix, key), value)
+func (prefix prefix) Prove(path, value []byte) bool {
+	return prefix.store.Prove(Join(prefix.prefix, path), value)
 }
 
 var _ Store = (*store)(nil)
@@ -95,4 +95,11 @@ func (store *store) Prove(path, value []byte) bool {
 	store.verified[string(path)] = value
 
 	return true
+}
+
+func Join(a, b []byte) (res []byte) {
+	res = make([]byte, len(a)+len(b))
+	copy(res, a)
+	copy(res[len(a):], b)
+	return
 }

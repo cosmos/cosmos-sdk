@@ -10,15 +10,17 @@ var _ sdk.Msg = MsgCreateClient{}
 
 // MsgCreateClient defines a message to create an IBC client
 type MsgCreateClient struct {
-	ClientID       string                  `json:"id" yaml:"id"`
+	ClientID       string                  `json:"client_id" yaml:"client_id"`
+	ClientType     string                  `json:"client_type" yaml:"client_type"`
 	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_address"`
 	Signer         sdk.AccAddress          `json:"address" yaml:"address"`
 }
 
 // NewMsgCreateClient creates a new MsgCreateClient instance
-func NewMsgCreateClient(id string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
+func NewMsgCreateClient(id, clientType string, consensusState exported.ConsensusState, signer sdk.AccAddress) MsgCreateClient {
 	return MsgCreateClient{
 		ClientID:       id,
+		ClientType:     clientType,
 		ConsensusState: consensusState,
 		Signer:         signer,
 	}
@@ -39,6 +41,7 @@ func (msg MsgCreateClient) ValidateBasic() sdk.Error {
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
 	}
+	// TODO: validate client type and ID
 	return nil
 }
 
@@ -56,7 +59,7 @@ var _ sdk.Msg = MsgUpdateClient{}
 
 // MsgUpdateClient defines a message to update an IBC client
 type MsgUpdateClient struct {
-	ClientID string          `json:"id" yaml:"id"`
+	ClientID string          `json:"client_id" yaml:"client_id"`
 	Header   exported.Header `json:"header" yaml:"header"`
 	Signer   sdk.AccAddress  `json:"address" yaml:"address"`
 }
@@ -85,6 +88,7 @@ func (msg MsgUpdateClient) ValidateBasic() sdk.Error {
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
 	}
+	// TODO: validate client ID
 	return nil
 }
 
@@ -129,6 +133,7 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
 	}
+	// TODO: validate client ID
 	return nil
 }
 

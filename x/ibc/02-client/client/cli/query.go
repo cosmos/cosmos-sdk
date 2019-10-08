@@ -7,11 +7,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 // GetQueryCmd returns the query commands for IBC clients
@@ -40,10 +46,10 @@ func GetCmdQueryClientState(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Use:   "state",
 		Short: "Query a client state",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client
+			fmt.Sprintf(`Query stored client state
 
 Example:
-$ %s query ibc client state [id]
+$ %s query ibc client state [client-id]
 		`, version.ClientName),
 		),
 		Args: cobra.ExactArgs(1),
@@ -56,13 +62,17 @@ $ %s query ibc client state [id]
 				return err
 			}
 
-			req := abci.RequestQuery{
-				Path:  "/store/" + storeKey + "/key",
-				Data:  bz,
-				Prove: true,
+			res, _, err := cliCtx.QueryWithData(types.ClientStatePath(id), bz)
+			if err != nil {
+				return err
 			}
 
-			return cliCtx.PrintOutput()
+			var clientState types.ClientState
+			if err := cdc.UnmarshalJSON(res, &clientState); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(clientState)
 		},
 	}
 }
@@ -73,10 +83,10 @@ func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Use:   "root",
 		Short: "Query stored root",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query stored client
+			fmt.Sprintf(`Query a stored commitment root at a specific height for a particular client
 
 Example:
-$ %s query ibc client root [id] [height]
+$ %s query ibc client root [client-id] [height]
 `, version.ClientName),
 		),
 		Args: cobra.ExactArgs(2),
@@ -93,7 +103,17 @@ $ %s query ibc client root [id] [height]
 				return err
 			}
 
-			return cliCtx.PrintOutput()
+			res, _, err := cliCtx.QueryWithData(types.RootPath(id, height), bz)
+			if err != nil {
+				return err
+			}
+
+			var root ics23.Root
+			if err := cdc.UnmarshalJSON(res, &root); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(root)
 		},
 	}
 }
@@ -103,39 +123,35 @@ $ %s query ibc client root [id] [height]
 func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "consensus-state",
-		Short: "Query the latest consensus state of the running chain",
+		Short: "Query the latest consensus state of the client",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query consensus state
+			fmt.Sprintf(`Query the consensus state for a particular client
 
 Example:
-$ %s query ibc client consensus-state
+$ %s query ibc client consensus-state [client-id]
 		`, version.ClientName),
 		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			node, err := cliCtx.GetNode()
+			id := args[0]
+
+			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(id))
 			if err != nil {
 				return err
 			}
 
-			info, err := node.ABCIInfo()
+			res, _, err := cliCtx.QueryWithData(types.ConsensusStatePath(id), bz)
 			if err != nil {
 				return err
 			}
 
-			height := info.Response.LastBlockHeight
-			prevheight := height - 1
-			commit, err := node.Commit(&height)
-			if err != nil {
+			var consensusState exported.ConsensusState
+			if err := cdc.UnmarshalJSON(res, &consensusState); err != nil {
 				return err
 			}
 
-			validators, err := node.Validators(&prevheight)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput()
+			return cliCtx.PrintOutput(consensusState)
 		},
 	}
 }
@@ -154,17 +170,29 @@ $ %s query ibc client path
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			return cliCtx.PrintOutput()
+			// TODO:
+			res, _, err := cliCtx.Query("")
+			if err != nil {
+				return err
+			}
+
+			var path merkle.Prefix
+			if err := cdc.UnmarshalJSON(res, &path); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(path)
 		},
 	}
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain
+// TODO: do we really need this cmd ??
 func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "header",
 		Short: "Query the latest header of the running chain",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query the latest header
+		Long: strings.TrimSpace(fmt.Sprintf(`Query the latest Tendermint header
 		
 Example:
 $ %s query ibc client header
@@ -173,7 +201,41 @@ $ %s query ibc client header
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			return cliCtx.PrintOutput()
+			node, err := cliCtx.GetNode()
+			if err != nil {
+				return err
+			}
+
+			info, err := node.ABCIInfo()
+			if err != nil {
+				return err
+			}
+
+			height := info.Response.LastBlockHeight
+			prevHeight := height - 1
+
+			commit, err := node.Commit(&height)
+			if err != nil {
+				return err
+			}
+
+			validators, err := node.Validators(&prevHeight)
+			if err != nil {
+				return err
+			}
+
+			nextValidators, err := node.Validators(&height)
+			if err != nil {
+				return err
+			}
+
+			header := tendermint.Header{
+				SignedHeader:     commit.SignedHeader,
+				ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
+				NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
+			}
+
+			return cliCtx.PrintOutput(header)
 		},
 	}
 }

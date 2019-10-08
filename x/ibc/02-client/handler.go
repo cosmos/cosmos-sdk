@@ -32,7 +32,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreateClient) sdk.Result {
-	_, err := k.CreateClient(ctx, msg.ClientID, msg.ConsensusState)
+	_, err := k.CreateClient(ctx, msg.ClientID, msg.ClientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -53,12 +53,7 @@ func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreate
 }
 
 func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdateClient) sdk.Result {
-	state, err := k.Query(ctx, msg.ClientID)
-	if err != nil {
-		return sdk.ResultFromError(err)
-	}
-
-	err = k.Update(ctx, state, msg.Header)
+	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -80,12 +75,7 @@ func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdate
 }
 
 func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.MsgSubmitMisbehaviour) sdk.Result {
-	state, err := k.Query(ctx, msg.ClientID)
-	if err != nil {
-		return sdk.ResultFromError(err)
-	}
-
-	err = k.CheckMisbehaviourAndUpdateState(ctx, state, msg.Evidence)
+	err := k.CheckMisbehaviourAndUpdateState(ctx, msg.ClientID, msg.Evidence)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}

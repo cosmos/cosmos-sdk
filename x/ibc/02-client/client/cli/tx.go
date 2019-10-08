@@ -89,7 +89,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#update
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update",
+		Use:   "update [client-id] [path/to/header.json]",
 		Short: "update existing client with a header",
 		Long: strings.TrimSpace(fmt.Sprintf(`update existing client with a header:
 
@@ -129,7 +129,7 @@ $ %s tx ibc client create [client-id] [path/to/header.json] --from node0 --home 
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
 func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "misbehaviour",
+		Use:   "misbehaviour [client-it] [path/to/evidence.json]",
 		Short: "submit a client misbehaviour",
 		Long: strings.TrimSpace(fmt.Sprintf(`submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates:
 

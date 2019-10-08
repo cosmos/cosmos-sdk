@@ -40,6 +40,9 @@ func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Descript
 func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
 func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
 func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
+	if err := sup.Plan.ValidateBasic(); err != nil {
+		return err
+	}
 	return gov.ValidateAbstract(DefaultCodespace, sup)
 }
 

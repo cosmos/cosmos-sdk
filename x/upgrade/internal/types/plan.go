@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,22 +31,21 @@ type Plan struct {
 }
 
 func (p Plan) String() string {
-	var whenStr string
-	if !p.Time.IsZero() {
-		whenStr = fmt.Sprintf("Time: %s", p.Time.Format(time.RFC3339))
-	} else {
-		whenStr = fmt.Sprintf("Height: %d", p.Height)
-	}
+	due := p.DueAt()
+	dueUp := strings.ToUpper(due[0:1]) + due[1:]
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s`, p.Name, whenStr, p.Info)
+  Info: %s`, p.Name, dueUp, p.Info)
 }
 
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() sdk.Error {
 	if len(p.Name) == 0 {
 		return sdk.ErrUnknownRequest("name cannot be empty")
+	}
+	if p.Height < 0 {
+		return sdk.ErrUnknownRequest("height cannot be negative")
 	}
 	if p.Time.IsZero() && p.Height == 0 {
 		return sdk.ErrUnknownRequest("must set either time or height")
@@ -72,9 +72,5 @@ func (p Plan) DueAt() string {
 	if !p.Time.IsZero() {
 		return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
 	}
-	if p.Height > 0 {
-		return fmt.Sprintf("height: %d", p.Height)
-	}
-	return "<DueAt unset>"
-
+	return fmt.Sprintf("height: %d", p.Height)
 }

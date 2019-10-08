@@ -72,21 +72,12 @@ func (s *TestSuite) TestDoHeightUpgrade() {
 	s.VerifyDoUpgrade()
 }
 
-func (s *TestSuite) CannotOverwriteScheduleUpgrade() {
-	s.T().Log("Cannot overwrite a scheduled upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
-	s.Require().Nil(err)
-	err = s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test2", Height: s.ctx.BlockHeight() + 2})
-	s.Require().NotNil(err)
-}
-
-func (s *TestSuite) CanCancelAndReschedule() {
-	s.T().Log("Can clear plan and reschedule")
+func (s *TestSuite) TestCanOverwriteScheduleUpgrade() {
+	s.T().Log("Can overwrite plan")
 	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10})
 	s.Require().Nil(err)
-	s.keeper.ClearUpgradePlan(s.ctx)
 	err = s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
-	s.Require().NotNil(err)
+	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
 }

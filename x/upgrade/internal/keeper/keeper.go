@@ -36,8 +36,8 @@ func (k *Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHand
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
-// It fails to schedule if there is another Plan already scheduled,
-// you must first ClearUpgradePlan.
+// It there is another Plan already scheduled, it will overwrite it
+// (implicitly cancelling the current plan)
 func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	err := plan.ValidateBasic()
 	if err != nil {
@@ -54,9 +54,6 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(types.DoneHeightKey(plan.Name)) {
 		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
-	}
-	if p, ok := k.GetUpgradePlan(ctx); ok {
-		return sdk.ErrUnknownRequest(fmt.Sprintf("another upgrade is already scehduled: %s", p.Name))
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(plan)

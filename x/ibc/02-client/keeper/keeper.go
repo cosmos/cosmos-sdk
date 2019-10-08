@@ -129,7 +129,7 @@ func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
 	clientTypeStr string, consensusState exported.ConsensusState,
 ) (types.ClientState, error) {
-	clientState, found := k.GetClientState(ctx, clientID)
+	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return types.ClientState{}, types.ErrClientExists(k.codespace)
 	}
@@ -144,7 +144,7 @@ func (k Keeper) CreateClient(
 		return types.ClientState{}, types.ErrInvalidClientType(k.codespace)
 	}
 
-	clientState = k.initialize(ctx, clientID, consensusState)
+	clientState := k.initialize(ctx, clientID, consensusState)
 	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClient(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)

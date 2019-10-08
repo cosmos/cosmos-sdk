@@ -638,12 +638,42 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, pva.DelegatedVesting)
 }
 
+func TestNewBaseVestingAccount(t *testing.T) {
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	_, err := NewBaseVestingAccount(
+		authtypes.NewBaseAccount(addr, sdk.NewCoins(), pubkey, 0, 0),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 100,
+	)
+	require.Equal(t, errors.New("vesting amount cannot be greater than total amount"), err)
+
+	_, err = NewBaseVestingAccount(
+		authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), pubkey, 0, 0),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 100,
+	)
+	require.Equal(t, errors.New("vesting amount cannot be greater than total amount"), err)
+
+	_, err = NewBaseVestingAccount(
+		authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)), pubkey, 0, 0),
+		sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)), 100,
+	)
+	require.Equal(t, errors.New("vesting amount cannot be greater than total amount"), err)
+
+	_, err = NewBaseVestingAccount(
+		authtypes.NewBaseAccount(addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, pubkey, 0, 0),
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 100,
+	)
+	require.NoError(t, err)
+
+}
+
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, nil, pubkey, 0, 0)
 	baseAccWithCoins := authtypes.NewBaseAccount(addr, nil, pubkey, 0, 0)
 	baseAccWithCoins.SetCoins(sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)})
+	baseVestingWithCoins, _ := NewBaseVestingAccount(baseAccWithCoins, baseAccWithCoins.Coins, 100)
 	tests := []struct {
 		name   string
 		acc    authexported.GenesisAccount
@@ -661,32 +691,8 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid base vesting account",
-			NewBaseVestingAccount(baseAcc, sdk.NewCoins(), 100),
+			baseVestingWithCoins,
 			nil,
-		},
-		{
-			"invalid vesting amount; empty Coins",
-			NewBaseVestingAccount(
-				authtypes.NewBaseAccount(addr, sdk.NewCoins(), pubkey, 0, 0),
-				sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 100,
-			),
-			errors.New("vesting amount cannot be greater than total amount"),
-		},
-		{
-			"invalid vesting amount; OriginalVesting > Coins",
-			NewBaseVestingAccount(
-				authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), pubkey, 0, 0),
-				sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 100,
-			),
-			errors.New("vesting amount cannot be greater than total amount"),
-		},
-		{
-			"invalid vesting amount with multi coins",
-			NewBaseVestingAccount(
-				authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin("uatom", 50), sdk.NewInt64Coin("eth", 50)), pubkey, 0, 0),
-				sdk.NewCoins(sdk.NewInt64Coin("uatom", 100), sdk.NewInt64Coin("eth", 20)), 100,
-			),
-			errors.New("vesting amount cannot be greater than total amount"),
 		},
 		{
 			"valid continuous vesting account",
@@ -700,27 +706,21 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid periodic vesting account",
-			NewPeriodicVestingAccount(baseAccWithCoins, 100, Periods{Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
+			NewPeriodicVestingAccount(baseAccWithCoins, 0, Periods{Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
 			nil,
 		},
 		{
 			"invalid vesting period lengths",
 			NewPeriodicVestingAccountRaw(
-				NewBaseVestingAccount(
-					authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)), pubkey, 0, 0),
-					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 200,
-				),
-				100, Periods{Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
+				baseVestingWithCoins,
+				0, Periods{Period{Length: int64(50), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}}}),
 			errors.New("vesting end time does not match length of all vesting periods"),
 		},
 		{
 			"invalid vesting period amounts",
 			NewPeriodicVestingAccountRaw(
-				NewBaseVestingAccount(
-					authtypes.NewBaseAccount(addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)), pubkey, 0, 0),
-					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}, 200,
-				),
-				100, Periods{Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)}}}),
+				baseVestingWithCoins,
+				0, Periods{Period{Length: int64(100), Amount: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 25)}}}),
 			errors.New("original vesting coins does not match the sum of all coins in vesting periods"),
 		},
 	}

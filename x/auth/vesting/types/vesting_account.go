@@ -39,14 +39,17 @@ type BaseVestingAccount struct {
 }
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object
-func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) *BaseVestingAccount {
+func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting sdk.Coins, endTime int64) (*BaseVestingAccount, error) {
+	if (baseAccount.Coins.IsZero() && !originalVesting.IsZero()) || originalVesting.IsAnyGT(baseAccount.Coins) {
+		return &BaseVestingAccount{}, errors.New("vesting amount cannot be greater than total amount")
+	}
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
 		DelegatedFree:    sdk.NewCoins(),
 		DelegatedVesting: sdk.NewCoins(),
 		EndTime:          endTime,
-	}
+	}, nil
 }
 
 // SpendableCoinsVestingAccount returns all the spendable coins for a vesting account given a
@@ -173,10 +176,6 @@ func (bva BaseVestingAccount) GetEndTime() int64 {
 
 // Validate checks for errors on the account fields
 func (bva BaseVestingAccount) Validate() error {
-	if (bva.Coins.IsZero() && !bva.OriginalVesting.IsZero()) ||
-		bva.OriginalVesting.IsAnyGT(bva.Coins) {
-		return errors.New("vesting amount cannot be greater than total amount")
-	}
 	if !(bva.DelegatedVesting.IsAllLTE(bva.OriginalVesting)) {
 		return errors.New("delegated vesting amount cannot be greater than original vesting amount")
 	}

@@ -35,7 +35,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.37.1] - TBD
+## [v0.37.2] - TBD
+
+### Bug Fixes
+
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36/v0.37 not converting validator consensus pubkey to bech32 format.
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.5](https://github.com/tendermint/tendermint/releases/tag/v0.32.5)
+
+## [v0.37.1] - 2019-09-19
 
 ### Features
 
@@ -2556,7 +2566,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.1...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.2...HEAD
+[v0.37.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.2
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

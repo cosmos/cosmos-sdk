@@ -68,10 +68,7 @@ func NewSimAppUNSAFE(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLat
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file
-func AppStateFromGenesisFileFn(
-	r *rand.Rand, _ []simulation.Account, _ time.Time,
-) (json.RawMessage, []simulation.Account, string) {
-
+func AppStateFromGenesisFileFn(r *rand.Rand) (tmtypes.GenesisDoc, []simulation.Account) {
 	var genesis tmtypes.GenesisDoc
 	cdc := MakeCodec()
 
@@ -87,8 +84,8 @@ func AppStateFromGenesisFileFn(
 
 	accounts := genaccounts.GetGenesisStateFromAppState(cdc, appState)
 
-	var newAccs []simulation.Account
-	for _, acc := range accounts {
+	newAccs := make([]simulation.Account, len(accounts))
+	for i, acc := range accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
@@ -96,10 +93,10 @@ func AppStateFromGenesisFileFn(
 		r.Read(privkeySeed)
 
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+		newAccs[i] = simulation.Account{privKey, privKey.PubKey(), acc.Address}
 	}
 
-	return genesis.AppState, newAccs, genesis.ChainID
+	return genesis, newAccs
 }
 
 // GenAuthGenesisState generates a random GenesisState for auth

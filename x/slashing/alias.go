@@ -70,6 +70,18 @@ var (
 	KeyDowntimeJailDuration         = types.KeyDowntimeJailDuration
 	KeySlashFractionDoubleSign      = types.KeySlashFractionDoubleSign
 	KeySlashFractionDowntime        = types.KeySlashFractionDowntime
+
+	EventTypeSlash                 = types.EventTypeSlash
+	EventTypeLiveness              = types.EventTypeLiveness
+	AttributeKeyAddress            = types.AttributeKeyAddress
+	AttributeKeyHeight             = types.AttributeKeyHeight
+	AttributeKeyPower              = types.AttributeKeyPower
+	AttributeKeyReason             = types.AttributeKeyReason
+	AttributeKeyJailed             = types.AttributeKeyJailed
+	AttributeKeyMissedBlocks       = types.AttributeKeyMissedBlocks
+	AttributeValueDoubleSign       = types.AttributeValueDoubleSign
+	AttributeValueMissingSignature = types.AttributeValueMissingSignature
+	AttributeValueCategory         = types.AttributeValueCategory
 )
 
 type (

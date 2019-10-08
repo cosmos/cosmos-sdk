@@ -4,33 +4,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// client error codes
+// connection error codes
 const (
 	DefaultCodespace sdk.CodespaceType = SubModuleName
 
-	CodeClientExists     sdk.CodeType = 101
-	CodeClientNotFound   sdk.CodeType = 102
-	CodeClientFrozen     sdk.CodeType = 103
-	CodeInvalidConsensus sdk.CodeType = 104
-	CodeValidatorJailed  sdk.CodeType = 104
+	CodeConnectionExists              sdk.CodeType = 101
+	CodeConnectionNotFound            sdk.CodeType = 102
+	CodeClientConnectionPathsNotFound sdk.CodeType = 103
+	CodeConnectionPath                sdk.CodeType = 104
 )
 
-// ErrClientExists implements sdk.Error
-func ErrClientExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientExists, "client already exists")
+// ErrConnectionExists implements sdk.Error
+func ErrConnectionExists(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeConnectionExists, "connection already exists")
 }
 
-// ErrClientNotFound implements sdk.Error
-func ErrClientNotFound(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientNotFound, "client not found")
+// ErrConnectionNotFound implements sdk.Error
+func ErrConnectionNotFound(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeConnectionNotFound, "connection not found")
 }
 
-// ErrClientFrozen implements sdk.Error
-func ErrClientFrozen(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientFrozen, "client is frozen due to misbehaviour")
+// ErrClientConnectionPathsNotFound implements sdk.Error
+func ErrClientConnectionPathsNotFound(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeClientConnectionPathsNotFound, "client connection paths not found")
 }
 
-// ErrInvalidConsensus implements sdk.Error
-func ErrInvalidConsensus(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidConsensus, "invalid consensus algorithm type")
+// ErrConnectionPath implements sdk.Error
+func ErrConnectionPath(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeConnectionPath, "connection path is not associated to the client")
 }

@@ -24,7 +24,7 @@ const (
 // between two chains.
 type ConnectionEnd struct {
 	State    ConnectionState `json:"state" yaml:"state"`
-	ClientID string          `json:"client" yaml:"client"`
+	ClientID string          `json:"client_id" yaml:"client_id"`
 
 	// Counterparty chain associated with this connection.
 	Counterparty Counterparty `json:"counterparty" yaml:"counterparty"`
@@ -34,9 +34,9 @@ type ConnectionEnd struct {
 }
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(state ConnectionState, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
-		State:        state,
+		State:        NONE,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     versions,

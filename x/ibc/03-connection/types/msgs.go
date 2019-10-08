@@ -14,7 +14,6 @@ type MsgConnectionOpenInit struct {
 	ConnectionID string         `json:"connection_id"`
 	ClientID     string         `json:"client_id"`
 	Counterparty Counterparty   `json:"counterparty"`
-	NextTimeout  uint64         `json:"next_timeout"` // TODO: Where is this defined?
 	Signer       sdk.AccAddress `json:"signer"`
 }
 
@@ -48,14 +47,13 @@ var _ sdk.Msg = MsgConnectionOpenTry{}
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
 type MsgConnectionOpenTry struct {
-	ConnectionID         string        `json:"connection_id"`
-	ClientID             string        `json:"client_id"`
-	Counterparty         Counterparty  `json:"counterparty"`
-	CounterpartyVersions []string      `json:"counterparty_versions"` // TODO: why wasn't this defined previously?
-	Proofs               []ics23.Proof `json:"proofs"`                // Contains a Proof of the initialization the connection on Chain A
-	Height               uint64        `json:"height"`                // TODO: Rename to ProofHeight? Is this supposed to be the same as ConsensusHeight?
-	// ConsensusHeight       uint64         `json:"consensus_height"`
-	Signer sdk.AccAddress `json:"signer"`
+	ConnectionID         string         `json:"connection_id"`
+	ClientID             string         `json:"client_id"`
+	Counterparty         Counterparty   `json:"counterparty"`
+	CounterpartyVersions []string       `json:"counterparty_versions"` // TODO: why wasn't this defined previously?
+	Proofs               []ics23.Proof  `json:"proofs"`                // Contains a Proof of the initialization the connection on Chain A
+	ConsensusHeight      uint64         `json:"consensus_height"`
+	Signer               sdk.AccAddress `json:"signer"`
 }
 
 // Route implements sdk.Msg
@@ -89,9 +87,7 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 // the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
 	ConnectionID    string         `json:"connection_id"`
-	Timeout         uint64         `json:"timeout"`      // TODO: Where's this defined ?
-	NextTimeout     uint64         `json:"next_timeout"` // TODO: Where's this defined ?
-	Proofs          []ics23.Proof  `json:"proofs"`       // Contains a Proof for the change of the connection state on Chain B: `none -> TRYOPEN`
+	Proofs          []ics23.Proof  `json:"proofs"` // Contains a Proof for the change of the connection state on Chain B: `none -> TRYOPEN`
 	ConsensusHeight uint64         `json:"consensus_height"`
 	Signer          sdk.AccAddress `json:"signer"`
 }
@@ -127,9 +123,8 @@ var _ sdk.Msg = MsgConnectionOpenConfirm{}
 // the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
 	ConnectionID string         `json:"connection_id"`
-	Timeout      uint64         `json:"timeout"` // TODO: Where's this defined ?
-	Proofs       []ics23.Proof  `json:"proofs"`  // Contains a Proof for the change of the connection state on Chain A: `INIT -> OPEN`
-	Height       uint64         `json:"height"`  // TODO: Rename to ProofHeight?
+	Proofs       []ics23.Proof  `json:"proofs"` // Contains a Proof for the change of the connection state on Chain A: `INIT -> OPEN`
+	ProofHeight  uint64         `json:"proof_height"`
 	Signer       sdk.AccAddress `json:"signer"`
 }
 

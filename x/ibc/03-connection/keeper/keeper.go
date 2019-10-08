@@ -1,192 +1,136 @@
-package connection
+package keeper
 
 import (
-	"errors"
+	"fmt"
+
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
-	mapping      state.Mapping
+	storeKey  sdk.StoreKey
+	cdc       *codec.Codec
+	codespace sdk.CodespaceType
+	prefix    []byte // prefix bytes for accessing the store
+
 	clientKeeper types.ClientKeeper
-	
-	counterparty CounterpartyManager
-	path         merkle.Prefix
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(mapping state.Mapping, ck types.ClientKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ClientKeeper) Keeper {
 	return Keeper{
-		mapping:      mapping.Prefix([]byte(types.SubModuleName + "/")),
+		storeKey:     key,
+		cdc:          cdc,
+		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connections",
+		prefix:       []byte(types.SubModuleName + "/"),                                          // "connections/"
 		clientKeeper: ck,
-		counterparty: NewCounterpartyManager(mapping.Cdc()),
-		path:         merkle.NewPrefix([][]byte{[]byte(mapping.StoreName())}, mapping.PrefixBytes()),
 	}
 }
 
-type CounterpartyManager struct {
-	mapping commitment.Mapping
-
-	client ics02.CounterpartyManager
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
 }
 
-func NewCounterpartyManager(cdc *codec.Codec) CounterpartyManager {
-	mapping := commitment.NewMapping(cdc, nil)
-
-	return CounterpartyManager{
-		mapping: mapping.Prefix([]byte(types.SubModuleName + "/")),
-
-		client: ics02.NewCounterpartyManager(cdc),
-	}
-}
-
-type State struct {
-	id string
-
-	mapping    state.Mapping
-	Connection state.Value
-	Available  state.Boolean
-
-	Kind state.String
-
-	Client ics02.State
-
-	path merkle.Prefix
-}
-
-// CONTRACT: client must be filled by the caller
-func (k Keeper) State(id string) State {
-	return State{
-		id:         id,
-		mapping:    k.mapping.Prefix([]byte(id + "/")),
-		Connection: k.mapping.Value([]byte(id)),
-		Available:  k.mapping.Value([]byte(id + "/available")).Boolean(),
-		Kind:       k.mapping.Value([]byte(id + "/kind")).String(),
-		path:       k.path,
-	}
-}
-
-type CounterState struct {
-	id         string
-	mapping    commitment.Mapping
-	Connection commitment.Value
-	Available  commitment.Boolean
-	Kind       commitment.String
-	Client     ics02.CounterState // nolint: unused
-}
-
-// CreateState creates a new CounterState instance.
-// CONTRACT: client should be filled by the caller
-func (k CounterpartyManager) CreateState(id string) CounterState {
-	return CounterState{
-		id:         id,
-		mapping:    k.mapping.Prefix([]byte(id + "/")),
-		Connection: k.mapping.Value([]byte(id)),
-		Available:  k.mapping.Value([]byte(id + "/available")).Boolean(),
-		Kind:       k.mapping.Value([]byte(id + "/kind")).String(),
-	}
-}
-
-func (state State) Context(ctx sdk.Context, height uint64, proofs []commitment.Proof) (sdk.Context, error) {
-	root, err := state.Client.GetRoot(ctx, height)
-	if err != nil {
-		return ctx, err
+// GetConnection returns a connection with a particular identifier
+func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyConnection(connectionID))
+	if bz == nil {
+		return types.ConnectionEnd{}, false
 	}
 
-	store, err := commitment.NewStore(
-		root,
-		state.GetConnection(ctx).Path,
-		proofs,
-	)
-	if err != nil {
-		return ctx, err
+	var connection types.ConnectionEnd
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &connection)
+	return connection, true
+}
+
+// SetConnection sets a connection to the store
+func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
+	store.Set(types.KeyConnection(connectionID), bz)
+}
+
+// GetClientConnectionPaths returns all the connection paths stored under a
+// particular client
+func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyClientConnections(clientID))
+	if bz == nil {
+		return nil, false
 	}
 
-	return commitment.WithStore(ctx, store), nil
+	var paths []string
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &paths)
+	return paths, true
 }
 
-func (state State) ID() string {
-	return state.id
+// SetClientConnectionPaths sets the connections paths for client
+func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths []string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(paths)
+	store.Set(types.KeyClientConnections(clientID), bz)
 }
 
-func (state State) GetConnection(ctx sdk.Context) (res types.ConnectionEnd) {
-	state.Connection.Get(ctx, &res)
-	return
-}
-
-func (state State) Sendable(ctx sdk.Context) bool {
-	return kinds[state.Kind.Get(ctx)].Sendable
-}
-
-func (state State) Receivable(ctx sdk.Context) bool {
-	return kinds[state.Kind.Get(ctx)].Receivable
-}
-
-func (state State) exists(ctx sdk.Context) bool {
-	return state.Connection.Exists(ctx)
-}
-
-func (k Keeper) Cdc() *codec.Codec {
-	return k.mapping.Cdc()
-}
-
-func (k Keeper) create(ctx sdk.Context, id string, connection Connection, kind string) (state State, err error) {
-	state = k.State(id)
-	if state.exists(ctx) {
-		err = errors.New("Stage already exists")
-		return
-	}
-	state.Client, err = k.client.Query(ctx, connection.Client)
-	if err != nil {
-		return
-	}
-	state.Connection.Set(ctx, connection)
-	state.Kind.Set(ctx, kind)
-	return
-
-}
-
-// query() is used internally by the connection creators
-// checks connection kind, doesn't check avilability
-func (k Keeper) query(ctx sdk.Context, id string, kind string) (state State, err error) {
-	state = k.State(id)
-	if !state.exists(ctx) {
-		err = errors.New("Stage not exists")
-		return
+// addConnectionToClient is used to add a connection identifier to the set of
+// connections associated with a client.
+//
+// CONTRACT: client must already exist
+func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
+	conns, found := k.GetClientConnectionPaths(ctx, clientID)
+	if !found {
+		return types.ErrClientConnectionPathsNotFound(k.codespace)
 	}
 
-	state.Client, err = k.client.Query(ctx, state.GetConnection(ctx).Client)
-	if err != nil {
-		return
-	}
-
-	if state.Kind.Get(ctx) != kind {
-		err = errors.New("kind mismatch")
-		return
-	}
-
-	return
+	conns = append(conns, connectionID)
+	k.SetClientConnectionPaths(ctx, clientID, conns)
+	return nil
 }
 
-func (k Keeper) Query(ctx sdk.Context, id string) (state State, err error) {
-	state = k.State(id)
-	if !state.exists(ctx) {
-		err = errors.New("Stage not exists")
-		return
+// removeConnectionFromClient is used to remove a connection identifier from the
+// set of connections associated with a client.
+//
+// CONTRACT: client must already exist
+func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
+	conns, found := k.GetClientConnectionPaths(ctx, clientID)
+	if !found {
+		return types.ErrClientConnectionPathsNotFound(k.codespace)
 	}
 
-	if !state.Available.Get(ctx) {
-		err = errors.New("Stage not available")
-		return
+	conns, ok := removePath(conns, connectionID)
+	if !ok {
+		return types.ErrConnectionPath(k.codespace)
 	}
 
-	state.Client, err = k.client.Query(ctx, state.GetConnection(ctx).Client)
-	return
+	k.SetClientConnectionPaths(ctx, clientID, conns)
+	return nil
+}
+
+func (k Keeper) getCompatibleVersions() []string {
+	// TODO:
+	return nil
+}
+
+func (k Keeper) pickVersion(counterpartyVersions []string) string {
+	// TODO:
+	return ""
+}
+
+// removePath is an util function to remove a path from a set.
+//
+// TODO: move to ICS24
+func removePath(paths []string, path string) ([]string, bool) {
+	for i, p := range paths {
+		if p == path {
+			return append(paths[:i], paths[i+1:]...), true
+		}
+	}
+	return paths, false
 }

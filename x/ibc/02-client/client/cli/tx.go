@@ -50,7 +50,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create [client-id] [path/to/consensus_state.json]",
 		Short: "create new client with a consensus state",
 		Long: strings.TrimSpace(fmt.Sprintf(`create new client with a specified identifier and consensus state:
 

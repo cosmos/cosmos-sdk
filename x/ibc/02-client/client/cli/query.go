@@ -43,7 +43,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryClientState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "state",
+		Use:   "state [client-id]",
 		Short: "Query a client state",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query stored client state
@@ -80,7 +80,7 @@ $ %s query ibc client state [client-id]
 // GetCmdQueryRoot defines the command to query
 func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "root",
+		Use:   "root [client-id] [height]",
 		Short: "Query stored root",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query a stored commitment root at a specific height for a particular client
@@ -122,7 +122,7 @@ $ %s query ibc client root [client-id] [height]
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "consensus-state",
+		Use:   "consensus-state [client-id]",
 		Short: "Query the latest consensus state of the client",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the consensus state for a particular client

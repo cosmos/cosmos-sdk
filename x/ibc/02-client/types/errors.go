@@ -15,6 +15,7 @@ const (
 	CodeInvalidConsensusState  sdk.CodeType = 105
 	CodeClientTypeNotFound     sdk.CodeType = 106
 	CodeInvalidClientType      sdk.CodeType = 107
+	CodeRootNotFound           sdk.CodeType = 108
 )
 
 // ErrClientExists implements sdk.Error
@@ -50,4 +51,9 @@ func ErrClientTypeNotFound(codespace sdk.CodespaceType) sdk.Error {
 // ErrInvalidClientType implements sdk.Error
 func ErrInvalidClientType(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidClientType, "client type mismatch")
+}
+
+// ErrRootNotFound implements sdk.Error
+func ErrRootNotFound(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeRootNotFound, "commitment root not found")
 }

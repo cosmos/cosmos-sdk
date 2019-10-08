@@ -5,34 +5,34 @@ const (
 	QueryClientState    = "clientState"
 	QueryConsensusState = "consensusState"
 	QueryCommitmentPath = "commitmentPath"
-	QueryCommitmentRoot = "commitmentRoot"
-	QueryHeader         = "header"
+	QueryCommitmentRoot = "roots"
 )
 
 // QueryClientStateParams defines the params for the following queries:
-// - 'custom/ibc/client/clientState'
+// - 'custom/ibc/clients/<clientID>/clientState'
+// - 'custom/ibc/clients/<clientID>/consensusState'
 type QueryClientStateParams struct {
-	ID string
+	ClientID string
 }
 
 // NewQueryClientStateParams creates a new QueryClientStateParams instance
 func NewQueryClientStateParams(id string) QueryClientStateParams {
 	return QueryClientStateParams{
-		ID: id,
+		ClientID: id,
 	}
 }
 
 // QueryCommitmentRootParams defines the params for the following queries:
-// - 'custom/ibc/client/commitmentRoot'
+// - 'custom/ibc/clients/<clientID>/roots/<height>'
 type QueryCommitmentRootParams struct {
-	ID     string
-	Height uint64
+	ClientID string
+	Height   uint64
 }
 
 // NewQueryCommitmentRootParams creates a new QueryCommitmentRootParams instance
 func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootParams {
 	return QueryCommitmentRootParams{
-		ID:     id,
-		Height: height,
+		ClientID: id,
+		Height:   height,
 	}
 }

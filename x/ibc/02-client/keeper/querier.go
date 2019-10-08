@@ -5,27 +5,26 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
+
+// TODO: return proof
 
 // NewQuerier creates a querier for the IBC client
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case types.QueryClientState:
-			return queryClientState(ctx, req, k)
+			return queryClientState(ctx, req, k) // TODO: return proof
 		case types.QueryConsensusState:
-			return queryConsensusState(ctx)
+			return queryConsensusState(ctx, req, k) // TODO: return proof
 		case types.QueryCommitmentPath:
-			return queryCommitmentPath(ctx, req, k)
+			return queryCommitmentPath(k)
 		case types.QueryCommitmentRoot:
-			return queryCommitmentRoot(ctx, req, k)
-		case types.QueryHeader:
-			return queryHeader(ctx, req, k)
+			return queryCommitmentRoot(ctx, req, k) // TODO: return proof
+		// case types.QueryHeader:
+		// 	return queryHeader(ctx, req, k)
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown IBC client query endpoint")
 		}
@@ -40,95 +39,81 @@ func queryClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-
-	// mapp := mapping(cdc, storeKey, version.Version)
-	// state, _, err := k.State(id).ConsensusStateCLI(q)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return res, nil
-}
-
-func queryConsensusState(ctx sdk.Context) ([]byte, sdk.Error) {
-
-	state := tendermint.ConsensusState{
-		ChainID:          commit.ChainID,
-		Height:           uint64(commit.Height),
-		Root:             merkle.NewRoot(commit.AppHash),
-		NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+	// NOTE: clientID won't be exported as it's declared as private
+	// TODO: should we create a custom ExportedClientState to make it public ?
+	clientState, found := k.GetClientState(ctx, params.ClientID)
+	if !found {
+		return nil, types.ErrClientTypeNotFound(k.codespace)
 	}
 
-	return res, nil
+	bz, err := types.SubModuleCdc.MarshalJSON(clientState)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
 }
 
-func queryCommitmentPath(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-
-	path := merkle.NewPrefix([][]byte{[]byte(k.mapping.storeName)}, k.mapping.PrefixBytes())
-
-	return res, nil
-}
-
-func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params types.QueryCommitmentRoot
+func queryConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryClientStateParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	root, _, err := k.ClientState(params.ID).RootCLI(q, params.Height)
-	if err != nil {
-		return nil, err
+	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
+	if !found {
+		return nil, types.ErrConsensusStateNotFound(k.codespace)
 	}
 
-	res, err := codec.MarshalJSONIndent(types.SubModuleCdc, root)
+	bz, err := types.SubModuleCdc.MarshalJSON(consensusState)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 
-	return res, nil
+	return bz, nil
 }
 
-func queryHeader(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	// node, err := ctx.GetNode()
-	// if err != nil {
-	// 	return err
-	// }
+func queryCommitmentPath(k Keeper) ([]byte, sdk.Error) {
+	path := k.GetCommitmentPath()
 
-	// info, err := node.ABCIInfo()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// height := info.Response.LastBlockHeight
-	// prevheight := height - 1
-
-	// commit, err := node.Commit(&height)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// validators, err := node.Validators(&prevheight)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// nextValidators, err := node.Validators(&height)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// header := tendermint.Header{
-	// 	SignedHeader:     commit.SignedHeader,
-	// 	ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-	// 	NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
-	// }
-
-	res, err := codec.MarshalJSONIndent(types.SubModuleCdc, header)
+	bz, err := types.SubModuleCdc.MarshalJSON(path)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", err.Error()))
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
 
-	return res, nil
+	return bz, nil
 }
+
+func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryCommitmentRootParams
+
+	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	}
+
+	root, found := k.GetCommitmentRoot(ctx, params.ClientID, params.Height)
+	if !found {
+		return nil, types.ErrRootNotFound(k.codespace)
+	}
+
+	bz, err := types.SubModuleCdc.MarshalJSON(root)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
+}
+
+// TODO: this is implented directly on the client
+// func queryHeader(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+
+// 	res, err := codec.MarshalJSONIndent(types.SubModuleCdc, header)
+// 	if err != nil {
+// 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", err.Error()))
+// 	}
+
+// 	return res, nil
+// }

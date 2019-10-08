@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -38,6 +39,11 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
+}
+
+// GetCommitmentPath returns the commitment path of the client
+func (k Keeper) GetCommitmentPath() merkle.Prefix {
+	return merkle.NewPrefix([][]byte{[]byte(k.storeKey.Name())}, k.prefix)
 }
 
 // GetClientState gets a particular client from the
@@ -121,16 +127,21 @@ func (k Keeper) SetCommitmentRoot(ctx sdk.Context, clientID string, height uint6
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
-	clientType exported.ClientType, consensusState exported.ConsensusState,
+	clientTypeStr string, consensusState exported.ConsensusState,
 ) (types.ClientState, error) {
 	clientState, found := k.GetClientState(ctx, clientID)
 	if found {
 		return types.ClientState{}, types.ErrClientExists(k.codespace)
 	}
 
-	clientType, found = k.GetClientType(ctx, clientID)
+	_, found = k.GetClientType(ctx, clientID)
 	if found {
 		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
+	}
+
+	clientType := exported.ClientTypeFromStr(clientTypeStr)
+	if clientType == 0 {
+		return types.ClientState{}, types.ErrInvalidClientType(k.codespace)
 	}
 
 	clientState = k.initialize(ctx, clientID, consensusState)
@@ -138,43 +149,6 @@ func (k Keeper) CreateClient(
 	k.SetClient(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
 	return clientState, nil
-}
-
-// ClientState returns a new client state with a given id as defined in
-// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
-func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.ClientState {
-	clientState := types.NewClientState(clientID)
-	k.SetConsensusState(ctx, clientID, consensusState)
-	return clientState
-}
-
-// CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
-// client if so.
-func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientState types.ClientState, evidence exported.Evidence) error {
-	var err error
-	switch evidence.H1().ClientType() {
-	case exported.Tendermint:
-		var tmEvidence tendermint.Evidence
-		_, ok := evidence.(tendermint.Evidence)
-		if !ok {
-			return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
-		}
-		err = tendermint.CheckMisbehaviour(tmEvidence)
-	default:
-		panic("unregistered consensus type")
-	}
-
-	if err != nil {
-		return err
-	}
-
-	clientState, err = k.freeze(ctx, clientState)
-	if err != nil {
-		return err
-	}
-
-	k.SetClient(ctx, clientState)
-	return nil
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header
@@ -201,7 +175,15 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	consensusState, found := k.GetConsensusState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound(k.codespace), "cannot update client")
-		panic(fmt.Sprintf("consensus state not found for client %s", clientID))
+	}
+
+	if header.GetHeight() < consensusState.GetHeight() {
+		return sdkerrors.Wrap(
+			sdk.ErrInvalidSequence(
+				fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), consensusState.GetHeight()),
+			),
+			"cannot update client",
+		)
 	}
 
 	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
@@ -212,6 +194,51 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	k.SetConsensusState(ctx, clientID, consensusState)
 	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	return nil
+}
+
+// CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
+// client if so.
+func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string, evidence exported.Evidence) error {
+	clientState, found := k.GetClientState(ctx, clientID)
+	if !found {
+		sdk.ResultFromError(types.ErrClientNotFound(k.codespace))
+	}
+
+	err := k.checkMisbehaviour(ctx, evidence)
+	if err != nil {
+		return err
+	}
+
+	clientState, err = k.freeze(ctx, clientState)
+	if err != nil {
+		return err
+	}
+
+	k.SetClient(ctx, clientState)
+	return nil
+}
+
+// ClientState returns a new client state with a given id as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
+func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.ClientState {
+	clientState := types.NewClientState(clientID)
+	k.SetConsensusState(ctx, clientID, consensusState)
+	return clientState
+}
+
+func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
+	switch evidence.H1().ClientType() {
+	case exported.Tendermint:
+		var tmEvidence tendermint.Evidence
+		_, ok := evidence.(tendermint.Evidence)
+		if !ok {
+			return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
+		}
+		// TODO: pass past consensus states
+		return tendermint.CheckMisbehaviour(tmEvidence)
+	default:
+		panic("unregistered consensus type")
+	}
 }
 
 // freeze updates the state of the client in the event of a misbehaviour

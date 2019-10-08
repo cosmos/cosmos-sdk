@@ -17,13 +17,15 @@ type Header struct {
 }
 
 // ClientType defines that the Header is a Tendermint consensus algorithm
-func (header Header) ClientType() exported.ClientType {
+func (h Header) ClientType() exported.ClientType {
 	return exported.Tendermint
 }
 
 // GetHeight returns the current height
-func (header Header) GetHeight() uint64 {
-	return uint64(header.Height)
+//
+// NOTE: also referred as `sequence`
+func (h Header) GetHeight() uint64 {
+	return uint64(h.Height)
 }
 
 var _ exported.Evidence = Evidence{}

@@ -15,7 +15,7 @@ var _ sdk.QueryRouter = NewQueryRouter()
 // NewQueryRouter returns a reference to a new queryRouter.
 //
 // TODO: Either make the function private or make return type (queryRouter) public.
-func NewQueryRouter() *queryRouter { // nolint: golint
+func NewQueryRouter() *queryRouter { //nolint:golint
 	return &queryRouter{
 		routes: map[string]sdk.Querier{},
 	}

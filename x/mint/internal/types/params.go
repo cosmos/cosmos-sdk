@@ -59,7 +59,7 @@ func DefaultParams() Params {
 
 // validate params
 func ValidateParams(params Params) error {
-	if params.GoalBonded.LT(sdk.ZeroDec()) {
+	if params.GoalBonded.IsNegative() {
 		return fmt.Errorf("mint parameter GoalBonded should be positive, is %s ", params.GoalBonded.String())
 	}
 	if params.GoalBonded.GT(sdk.OneDec()) {

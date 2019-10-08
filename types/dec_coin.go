@@ -20,7 +20,7 @@ type DecCoin struct {
 func NewDecCoin(denom string, amount Int) DecCoin {
 	mustValidateDenom(denom)
 
-	if amount.LT(ZeroInt()) {
+	if amount.IsNegative() {
 		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
 	}
 
@@ -33,7 +33,7 @@ func NewDecCoin(denom string, amount Int) DecCoin {
 func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 	mustValidateDenom(denom)
 
-	if amount.LT(ZeroDec()) {
+	if amount.IsNegative() {
 		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
 	}
 
@@ -44,7 +44,7 @@ func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 }
 
 func NewDecCoinFromCoin(coin Coin) DecCoin {
-	if coin.Amount.LT(ZeroInt()) {
+	if coin.Amount.IsNegative() {
 		panic(fmt.Sprintf("negative decimal coin amount: %v\n", coin.Amount))
 	}
 	if strings.ToLower(coin.Denom) != coin.Denom {

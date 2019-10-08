@@ -187,7 +187,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	if validator.Tokens.IsPositive() {
 		panic("attempting to remove a validator which still contains tokens")
 	}
-	if validator.Tokens.GT(sdk.ZeroInt()) {
+	if validator.Tokens.IsPositive() {
 		panic("validator being removed should never have positive tokens")
 	}
 

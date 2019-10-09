@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -110,6 +111,31 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.MinSelfDelegation = msgCreateValJSON.MinSelfDelegation
 
 	return nil
+}
+
+// custom marshal yaml function due to consensus pubkey
+func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		Commission        CommissionRates
+		MinSelfDelegation sdk.Int
+		DelegatorAddress  sdk.AccAddress
+		ValidatorAddress  sdk.ValAddress
+		PubKey            string
+		Value             sdk.Coin
+	}{
+		Commission:        msg.Commission,
+		MinSelfDelegation: msg.MinSelfDelegation,
+		DelegatorAddress:  msg.DelegatorAddress,
+		ValidatorAddress:  msg.ValidatorAddress,
+		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
+		Value:             msg.Value,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
 }
 
 // GetSignBytes returns the message bytes to sign over.

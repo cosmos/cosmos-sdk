@@ -1,41 +1,35 @@
 package types
 
+// query routes supported by the IBC connection Querier
+const (
+	QueryClientState    = "clientState"
+	QueryConsensusState = "consensusState"
+	QueryCommitmentPath = "commitmentPath"
+	QueryCommitmentRoot = "roots"
+)
 
-// TODO:
+// QueryConnectionParams defines the params for the following queries:
+// - 'custom/ibc/connections/<connectionID>'
+type QueryConnectionParams struct {
+	ConnectionID string
+}
 
-// // query routes supported by the IBC client Querier
-// const (
-// 	QueryClientState    = "clientState"
-// 	QueryConsensusState = "consensusState"
-// 	QueryCommitmentPath = "commitmentPath"
-// 	QueryCommitmentRoot = "roots"
-// )
+// NewQueryConnectionParams creates a new QueryConnectionParams instance
+func NewQueryConnectionParams(clientID string) QueryConnectionParams {
+	return QueryConnectionParams{
+		ConnectionID: clientID,
+	}
+}
 
-// // QueryClientStateParams defines the params for the following queries:
-// // - 'custom/ibc/clients/<clientID>/clientState'
-// // - 'custom/ibc/clients/<clientID>/consensusState'
-// type QueryClientStateParams struct {
-// 	ClientID string
-// }
+// QueryClientConnectionsParams defines the params for the following queries:
+// - 'custom/ibc/client/<clientID>/connections'
+type QueryClientConnectionsParams struct {
+	ClientID string
+}
 
-// // NewQueryClientStateParams creates a new QueryClientStateParams instance
-// func NewQueryClientStateParams(id string) QueryClientStateParams {
-// 	return QueryClientStateParams{
-// 		ClientID: id,
-// 	}
-// }
-
-// // QueryCommitmentRootParams defines the params for the following queries:
-// // - 'custom/ibc/clients/<clientID>/roots/<height>'
-// type QueryCommitmentRootParams struct {
-// 	ClientID string
-// 	Height   uint64
-// }
-
-// // NewQueryCommitmentRootParams creates a new QueryCommitmentRootParams instance
-// func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootParams {
-// 	return QueryCommitmentRootParams{
-// 		ClientID: id,
-// 		Height:   height,
-// 	}
-// }
+// NewQueryClientConnectionsParams creates a new QueryClientConnectionsParams instance
+func NewQueryClientConnectionsParams(clientID string) QueryClientConnectionsParams {
+	return QueryClientConnectionsParams{
+		ClientID: clientID,
+	}
+}

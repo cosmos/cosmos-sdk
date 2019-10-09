@@ -2,98 +2,107 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storestate "github.com/cosmos/cosmos-sdk/store/state"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/version"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-const (
-	FlagProve = "prove"
-)
+// const (
+// 	FlagProve = "prove"
+// )
 
-func state(cdc *codec.Codec, storeKey string, prefix []byte, connid, clientid string) connection.State {
-	base := storestate.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-	climan := client.NewManager(base)
-	man := connection.NewManager(base, climan)
-	return man.CLIState(connid, clientid)
-}
-
+// GetQueryCmd returns the query commands for IBC connections
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
+	ics03ConnectionQueryCmd := &cobra.Command{
 		Use:                        "connection",
-		Short:                      "Connection query subcommands",
+		Short:                      "IBC connection query subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ibcQueryCmd.AddCommand(cli.GetCommands(
+	ics03ConnectionQueryCmd.AddCommand(client.GetCommands(
 		GetCmdQueryConnection(storeKey, cdc),
 	)...)
-	return ibcQueryCmd
+	return ics03ConnectionQueryCmd
 }
 
-func QueryConnection(ctx context.CLIContext, obj connection.State, prove bool) (res utils.JSONState, err error) {
-	q := storestate.NewCLIQuerier(ctx)
-
-	conn, connp, err := obj.ConnectionCLI(q)
-	if err != nil {
-		return
-	}
-	avail, availp, err := obj.AvailableCLI(q)
-	if err != nil {
-		return
-	}
-	kind, kindp, err := obj.KindCLI(q)
-	if err != nil {
-		return
-	}
-
-	if prove {
-		return utils.NewJSONState(
-			conn, connp,
-			avail, availp,
-			kind, kindp,
-		), nil
-	}
-
-	return utils.NewJSONState(
-		conn, nil,
-		avail, nil,
-		kind, nil,
-	), nil
-}
-
+// GetCmdQueryConnection defines the command to query a connection end
 func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connection",
-		Short: "Query stored connection",
-		Args:  cobra.ExactArgs(1),
+		Use:   "end [connection-id]",
+		Short: "Query stored connection end",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query stored connection end
+		
+Example:
+$ %s query ibc connection end [connection-id]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
-			state := state(cdc, storeKey, version.Prefix(version.Version), args[0], "")
-			jsonObj, err := QueryConnection(ctx, state, viper.GetBool(FlagProve))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			connectionID := args[0]
+
+			bz, err := cdc.MarshalJSON(types.NewQueryConnectionParams(connectionID))
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, jsonObj))
+			res, _, err := cliCtx.QueryWithData(types.ConnectionPath(connectionID), bz)
+			if err != nil {
+				return err
+			}
 
-			return nil
+			var connection types.ConnectionEnd
+			if err := cdc.UnmarshalJSON(res, &connection); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(connection)
 		},
 	}
-
-	cmd.Flags().Bool(FlagProve, false, "(optional) show proofs for the query results")
+	// cmd.Flags().Bool(FlagProve, false, "(optional) show proofs for the query results")
 
 	return cmd
+}
+
+// GetCmdQueryClientConnections defines the command to query a client connections
+func GetCmdQueryClientConnections(storeKey string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "client [client-id]",
+		Short: "Query stored client connection paths",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query stored client connection paths
+		
+Example:
+$ %s query ibc connection client [client-id]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientID := args[0]
+
+			bz, err := cdc.MarshalJSON(types.NewQueryClientConnectionsParams(clientID))
+			if err != nil {
+				return err
+			}
+
+			res, _, err := cliCtx.QueryWithData(types.ClientConnectionsPath(clientID), bz)
+			if err != nil {
+				return err
+			}
+
+			var connectionPaths []string
+			if err := cdc.UnmarshalJSON(res, &connectionPaths); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(connectionPaths)
+		},
+	}
 }

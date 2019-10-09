@@ -2,11 +2,11 @@ package types
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

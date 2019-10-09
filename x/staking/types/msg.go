@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -111,6 +112,21 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 
 	return nil
 }
+
+
+func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(msgCreateValidatorJSON{
+		Description:       msg.Description,
+		Commission:        msg.Commission,
+		DelegatorAddress:  msg.DelegatorAddress,
+		ValidatorAddress:  msg.ValidatorAddress,
+		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
+		Value:             msg.Value,
+		MinSelfDelegation: msg.MinSelfDelegation,
+	})
+	return string(bz), err
+}
+
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {

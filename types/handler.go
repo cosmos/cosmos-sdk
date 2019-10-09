@@ -15,7 +15,15 @@ type AnteDecorator interface {
 // ChainDecorator chains AnteDecorators together with each element
 // wrapping over the decorators further along chain and returns a single AnteHandler.
 //
-// First element is outermost decorator, last element is innermost decorator
+// First element is outermost decorator, last element is innermost decorator.
+// Decorating ordering is critical since some decorators will expect certain checks
+// and updates to be performed before the decorator is run. These expectations should
+// be documented clearly in a CONTRACT docline in the decorator godocs.
+//
+// NOTE: Any application that uses GasMeter to limit transaction processing cost
+// MUST set GasMeter with the first AnteDecorator. Failing to do so will cause
+// transactions to be processed with an infinite gasmeter and open a DOS attack vector.
+// Use `ante.SetUpContextDecorator` or a custom Decorator with similar functionality
 func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	if (chain[len(chain)-1] != Terminator{}) {
 		chain = append(chain, Terminator{})

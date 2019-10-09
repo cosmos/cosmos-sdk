@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,32 +18,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-// ICS02 Client CLI flags
-const (
-	FlagStatePath            = "state"
-	FlagClientID             = "client-id"
-	FlagConnectionID         = "connection-id"
-	FlagChannelID            = "channel-id"
-	FlagCounterpartyID       = "counterparty-id"
-	FlagCounterpartyClientID = "counterparty-client-id"
-	FlagSourceNode           = "source-node"
-)
-
 // GetTxCmd returns the transaction commands for IBC Clients
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcTxCmd := &cobra.Command{
+	ics02ClientTxCmd := &cobra.Command{
 		Use:                        "client",
 		Short:                      "Client transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ibcTxCmd.AddCommand(cli.PostCommands(
+	ics02ClientTxCmd.AddCommand(client.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdUpdateClient(cdc),
 	)...)
 
-	return ibcTxCmd
+	return ics02ClientTxCmd
 }
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
@@ -74,7 +63,8 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 			}
 
 			msg := types.MsgCreateClient{
-				ClientID:       args[0],
+				ClientID: args[0],
+
 				ConsensusState: state,
 				Signer:         cliCtx.GetFromAddress(),
 			}

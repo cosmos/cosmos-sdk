@@ -9,7 +9,7 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -21,22 +21,22 @@ import (
 )
 
 // GetQueryCmd returns the query commands for IBC clients
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
+func GetQueryCmd(queryRouter string, cdc *codec.Codec) *cobra.Command {
+	ics02ClientQueryCmd := &cobra.Command{
 		Use:                        "client",
 		Short:                      "IBC client query subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ibcQueryCmd.AddCommand(cli.GetCommands(
-		GetCmdQueryConsensusState(storeKey, cdc),
-		GetCmdQueryPath(storeKey, cdc),
+	ics02ClientQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryConsensusState(queryRouter, cdc),
+		GetCmdQueryPath(queryRouter, cdc),
 		GetCmdQueryHeader(cdc),
-		GetCmdQueryClientState(storeKey, cdc),
-		GetCmdQueryRoot(storeKey, cdc),
+		GetCmdQueryClientState(queryRouter, cdc),
+		GetCmdQueryRoot(queryRouter, cdc),
 	)...)
-	return ibcQueryCmd
+	return ics02ClientQueryCmd
 }
 
 // GetCmdQueryClientState defines the command to query the state of a client with
@@ -170,7 +170,7 @@ $ %s query ibc client path
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			// TODO:
+			// TODO: get right path
 			res, _, err := cliCtx.Query("")
 			if err != nil {
 				return err

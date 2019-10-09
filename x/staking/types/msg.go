@@ -3,9 +3,8 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	"gopkg.in/yaml.v2"
-
 	"github.com/tendermint/tendermint/crypto"
+	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -79,7 +78,16 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 // MarshalJSON implements the json.Marshaler interface to provide custom JSON
 // serialization of the MsgCreateValidator type.
 func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
-	return json.Marshal(msgCreateValidatorJSON{
+	return json.Marshal(msg.toMarshalObj())
+}
+
+func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(msg.toMarshalObj())
+	return string(bz), err
+}
+
+func (msg MsgCreateValidator) toMarshalObj() msgCreateValidatorJSON {
+	return msgCreateValidatorJSON{
 		Description:       msg.Description,
 		Commission:        msg.Commission,
 		DelegatorAddress:  msg.DelegatorAddress,
@@ -87,7 +95,7 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
 		Value:             msg.Value,
 		MinSelfDelegation: msg.MinSelfDelegation,
-	})
+	}
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface to provide custom
@@ -112,21 +120,6 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 
 	return nil
 }
-
-
-func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
-	bz, err := yaml.Marshal(msgCreateValidatorJSON{
-		Description:       msg.Description,
-		Commission:        msg.Commission,
-		DelegatorAddress:  msg.DelegatorAddress,
-		ValidatorAddress:  msg.ValidatorAddress,
-		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
-		Value:             msg.Value,
-		MinSelfDelegation: msg.MinSelfDelegation,
-	})
-	return string(bz), err
-}
-
 
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {

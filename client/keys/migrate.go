@@ -58,7 +58,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	}
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(
-			"couldn't initialize keyring for service %s at directory %s",
+			"failed to initialize keyring for service %s at directory %s",
 			keyringServiceName, rootDir))
 	}
 

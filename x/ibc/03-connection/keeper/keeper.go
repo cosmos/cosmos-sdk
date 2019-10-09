@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -113,6 +114,37 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 	return nil
 }
 
+func (k Keeper) verifyMembership(
+	ctx sdk.Context,
+	connection types.ConnectionEnd,
+	height uint64,
+	proof ics23.Proof,
+	path string,
+	value interface{}, // value: Value
+) bool {
+	_, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return false
+	}
+	// k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, applyPrefix(connection.Counterparty.Prefix, path), value)
+	return true
+}
+
+func (k Keeper) verifyNonMembership(
+	ctx sdk.Context,
+	connection types.ConnectionEnd,
+	height uint64,
+	proof ics23.Proof,
+	path string,
+) bool {
+	_, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return false
+	}
+	// k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, applyPrefix(connection.Counterparty.Prefix, path))
+	return true
+}
+
 func (k Keeper) getCompatibleVersions() []string {
 	// TODO:
 	return nil
@@ -121,6 +153,13 @@ func (k Keeper) getCompatibleVersions() []string {
 func (k Keeper) pickVersion(counterpartyVersions []string) string {
 	// TODO:
 	return ""
+}
+
+// checkVersion is an opaque function defined by the host state machine which
+// determines if two versions are compatible
+func checkVersion(version, counterpartyVersion string) bool {
+	// TODO:
+	return true
 }
 
 // removePath is an util function to remove a path from a set.

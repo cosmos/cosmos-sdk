@@ -1,4 +1,4 @@
-package connection
+package ics03
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 func handleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenInit) sdk.Result {
-	_, err := k.ConnOpenInit(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty)
+	err := k.ConnOpenInit(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -57,7 +57,9 @@ func handleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 }
 
 func handleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) sdk.Result {
-	_, err := k.ConnOpenTry(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty, msg.Proofs, msg.Height)
+	err := k.ConnOpenTry(
+		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
+		msg.CounterpartyVersions, msg.ProofInit, msg.ProofHeight, msg.ConsensusHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -79,7 +81,10 @@ func handleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 }
 
 func handleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) sdk.Result {
-	_, err := k.OpenAck(ctx, msg.Proofs, msg.Height, msg.ConnectionID)
+	err := k.ConnOpenAck(
+		ctx, msg.ConnectionID, msg.Version, msg.ProofTry,
+		msg.ProofHeight, msg.ConsensusHeight,
+	)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -100,7 +105,7 @@ func handleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 }
 
 func handleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) sdk.Result {
-	_, err := k.OpenConfirm(ctx, msg.Proofs, msg.Height, msg.ConnectionID)
+	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}

@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
@@ -65,45 +62,6 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	)
 
 	return cmd
-}
-
-// TODO: move to 02/tendermint
-func getHeader(ctx context.CLIContext) (res tendermint.Header, err error) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		return
-	}
-
-	info, err := node.ABCIInfo()
-	if err != nil {
-		return
-	}
-
-	height := info.Response.LastBlockHeight
-	prevheight := height - 1
-
-	commit, err := node.Commit(&height)
-	if err != nil {
-		return
-	}
-
-	validators, err := node.Validators(&prevheight)
-	if err != nil {
-		return
-	}
-
-	nextvalidators, err := node.Validators(&height)
-	if err != nil {
-		return
-	}
-
-	res = tendermint.Header{
-		SignedHeader:     commit.SignedHeader,
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
-	}
-
-	return
 }
 
 func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {

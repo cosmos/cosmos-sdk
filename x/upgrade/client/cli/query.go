@@ -40,6 +40,10 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	}
 }
 
+type appliedHeight struct {
+	Applied int64 `json:"applied" yaml:"applied"`
+}
+
 // GetAppliedHeightCmd returns the height at which a completed upgrade was applied
 func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
@@ -71,8 +75,7 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			applied := int64(binary.BigEndian.Uint64(res))
-			fmt.Println(applied)
-			return nil
+			return cliCtx.PrintOutput(appliedHeight{applied})
 		},
 	}
 }

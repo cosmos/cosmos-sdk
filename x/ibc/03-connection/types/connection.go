@@ -10,9 +10,9 @@ import (
 // chains
 type ConnectionState = byte
 
-// available ConnectionStates
+// available connection states
 const (
-	NONE ConnectionState = iota // default State
+	NONE ConnectionState = iota // default ConnectionState
 	INIT
 	TRYOPEN
 	OPEN

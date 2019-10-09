@@ -120,14 +120,14 @@ func (k Keeper) verifyMembership(
 	height uint64,
 	proof ics23.Proof,
 	path string,
-	value interface{}, // value: Value
+	value []byte,
 ) bool {
-	_, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
 		return false
 	}
-	// k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, applyPrefix(connection.Counterparty.Prefix, path), value)
-	return true
+	path = k.applyPrefix(connection.Counterparty.Prefix, path)
+	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
 }
 
 func (k Keeper) verifyNonMembership(
@@ -137,12 +137,13 @@ func (k Keeper) verifyNonMembership(
 	proof ics23.Proof,
 	path string,
 ) bool {
-	_, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
 		return false
 	}
-	// k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, applyPrefix(connection.Counterparty.Prefix, path))
-	return true
+
+	path = k.applyPrefix(connection.Counterparty.Prefix, path)
+	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
 }
 
 func (k Keeper) getCompatibleVersions() []string {
@@ -153,6 +154,11 @@ func (k Keeper) getCompatibleVersions() []string {
 func (k Keeper) pickVersion(counterpartyVersions []string) string {
 	// TODO:
 	return ""
+}
+
+func (k Keeper) applyPrefix(prefix ics23.Prefix, path string) string {
+	// TODO:
+	return path
 }
 
 // checkVersion is an opaque function defined by the host state machine which

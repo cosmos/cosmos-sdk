@@ -4,24 +4,22 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // NewHandler creates a new Handler instance for IBC client
 // transactions
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case types.MsgCreateClient:
+		case MsgCreateClient:
 			return handleMsgCreateClient(ctx, k, msg)
 
-		case types.MsgUpdateClient:
+		case MsgUpdateClient:
 			return handleMsgUpdateClient(ctx, k, msg)
 
-		case types.MsgSubmitMisbehaviour:
+		case MsgSubmitMisbehaviour:
 			return handleMsgSubmitMisbehaviour(ctx, k, msg)
 
 		default:
@@ -31,7 +29,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreateClient) sdk.Result {
+func handleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
 	_, err := k.CreateClient(ctx, msg.ClientID, msg.ClientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -39,12 +37,12 @@ func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreate
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeCreateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+			EventTypeCreateClient,
+			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
 		),
 	})
@@ -52,7 +50,7 @@ func handleMsgCreateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgCreate
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdateClient) sdk.Result {
+func handleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.Result {
 	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -60,12 +58,12 @@ func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdate
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeUpdateClient,
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+			EventTypeUpdateClient,
+			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
 		),
 	})
@@ -74,7 +72,7 @@ func handleMsgUpdateClient(ctx sdk.Context, k keeper.Keeper, msg types.MsgUpdate
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.MsgSubmitMisbehaviour) sdk.Result {
+func handleMsgSubmitMisbehaviour(ctx sdk.Context, k Keeper, msg MsgSubmitMisbehaviour) sdk.Result {
 	err := k.CheckMisbehaviourAndUpdateState(ctx, msg.ClientID, msg.Evidence)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -82,12 +80,12 @@ func handleMsgSubmitMisbehaviour(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeSubmitMisbehaviour,
-			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
+			EventTypeSubmitMisbehaviour,
+			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
 		),
 	})

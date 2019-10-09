@@ -28,8 +28,7 @@ func (k Keeper) UpdateSequence(ctx sdk.Context, chanid string, seq uint64) sdk.E
 		return sdk.NewError(sdk.CodespaceType("ibcmocksend"), 600, "invalid sequence")
 	}
 	k.SetSequence(ctx, chanid, seq)
-	k.port.Send(ctx, chanid, types.PacketSequence{seq})
-	return nil
+	return k.port.Send(ctx, chanid, types.PacketSequence{seq})
 }
 
 func (k Keeper) GetSequence(ctx sdk.Context, chanid string) (res uint64) {

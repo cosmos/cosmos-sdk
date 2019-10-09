@@ -1,8 +1,6 @@
 package channel
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -32,9 +30,9 @@ func (man Manager) IsValid(port Port) bool {
 	return ok
 }
 
-func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
+func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) sdk.Error {
 	if !port.channel.IsValid(port) {
-		return errors.New("Port is not in valid state")
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(333), "Port is not in valid state")
 	}
 
 	if packet.SenderPort() != port.id {
@@ -44,6 +42,6 @@ func (port Port) Send(ctx sdk.Context, chanid string, packet Packet) error {
 	return port.channel.Send(ctx, chanid, packet)
 }
 
-func (port Port) Receive(ctx sdk.Context, proof []commitment.Proof, height uint64, chanid string, packet Packet) error {
+func (port Port) Receive(ctx sdk.Context, proof []commitment.Proof, height uint64, chanid string, packet Packet) sdk.Error {
 	return port.channel.Receive(ctx, proof, height, port.id, chanid, packet)
 }

@@ -374,13 +374,13 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
-			
+
 			// txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			// ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
 			// 	WithCodec(cdc).
 			// 	WithNodeURI(viper.GetString(FlagNode1)).
 			// 	WithBroadcastMode(flags.BroadcastBlock)
-			// q1 := state.NewCLIQuerier(ctx1)
+			// q1 := state.NewCLIQuerier(ctx1)₩
 
 			// ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
 			// 	WithCodec(cdc).
@@ -446,7 +446,6 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return errors.New("no unsent packets")
 			}
 
-
 			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
@@ -457,7 +456,6 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-
 
 			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)

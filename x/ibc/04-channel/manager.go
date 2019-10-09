@@ -201,14 +201,14 @@ func (obj State) exists(ctx sdk.Context) bool {
 	return obj.Channel.Exists(ctx)
 }
 
-func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) error {
+func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) sdk.Error {
 	obj, err := man.Query(ctx, packet.SenderPort(), chanId)
 	if err != nil {
-		return err
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(999), err.Error())
 	}
 
 	if obj.OriginConnection().Client.GetConsensusState(ctx).GetHeight() >= packet.Timeout() {
-		return errors.New("timeout height higher than the latest known")
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(888), "timeout height higher than the latest known")
 	}
 
 	obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Marshal())
@@ -226,10 +226,10 @@ func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) error {
 	return nil
 }
 
-func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height uint64, portid, chanid string, packet Packet) error {
+func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height uint64, portid, chanid string, packet Packet) sdk.Error {
 	obj, err := man.Query(ctx, portid, chanid)
 	if err != nil {
-		return err
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(777), err.Error())
 	}
 
 	/*
@@ -240,16 +240,16 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height ui
 
 	ctx, err = obj.Context(ctx, proofs, height)
 	if err != nil {
-		return err
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(666), err.Error())
 	}
 
 	err = assertTimeout(ctx, packet.Timeout())
 	if err != nil {
-		return err
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(555), err.Error())
 	}
 
 	if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).IsRaw(ctx, packet.Marshal()) {
-		return errors.New("verification failed")
+		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(444), "verification failed")
 	}
 
 	return nil

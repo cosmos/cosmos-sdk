@@ -1,11 +1,9 @@
-package client_test
+package client
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func TestPaginate(t *testing.T) {
@@ -53,7 +51,7 @@ func TestPaginate(t *testing.T) {
 
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			start, end := client.Paginate(tc.numObjs, tc.page, tc.limit, tc.defLimit)
+			start, end := Paginate(tc.numObjs, tc.page, tc.limit, tc.defLimit)
 			require.Equal(t, tc.expectedStart, start, "invalid result; test case #%d", i)
 			require.Equal(t, tc.expectedEnd, end, "invalid result; test case #%d", i)
 		})

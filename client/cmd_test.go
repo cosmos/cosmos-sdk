@@ -1,12 +1,10 @@
-package client_test
+package client
 
 import (
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func TestValidateCmd(t *testing.T) {
@@ -44,7 +42,7 @@ func TestValidateCmd(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		err := client.ValidateCmd(distCmd, tt.args)
+		err := ValidateCmd(distCmd, tt.args)
 		require.Equal(t, tt.wantErr, err != nil, tt.reason)
 	}
 }

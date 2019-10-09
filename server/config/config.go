@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -77,7 +78,7 @@ func DefaultConfig() *Config {
 		BaseConfig{
 			MinGasPrices:    defaultMinGasPrices,
 			InterBlockCache: true,
-			Pruning:         "syncable",
+			Pruning:         store.PruningStrategySyncable,
 		},
 	}
 }

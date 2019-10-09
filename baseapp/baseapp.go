@@ -358,7 +358,7 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
-		// We cannot return a router when the app is sealed because we can't have
+		// We cannot return a Router when the app is sealed because we can't have
 		// any routes modified which would cause unexpected routing behavior.
 		panic("Router() on sealed BaseApp")
 	}

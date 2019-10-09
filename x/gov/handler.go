@@ -7,9 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// AttributeKeyProposalType is used to flag events on the type of the proposal
-const AttributeKeyProposalType = "proposaltype"
-
 // NewHandler creates an sdk.Handler for all the gov type messages
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
@@ -48,18 +45,18 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer.String()),
-			sdk.NewAttribute(AttributeKeyProposalType, msg.Content.ProposalType()),
 		),
 	)
 
+	submitAttrs := []sdk.Attribute{sdk.NewAttribute(types.AttributeKeyProposalType, msg.Content.ProposalType())}
 	if votingStarted {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeSubmitProposal,
-				sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
-			),
+		submitAttrs = append(submitAttrs,
+			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 		)
 	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeSubmitProposal, submitAttrs...),
+	)
 
 	return sdk.Result{
 		Data:   GetProposalIDBytes(proposal.ProposalID),

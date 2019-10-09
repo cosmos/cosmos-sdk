@@ -109,7 +109,7 @@ func TestPlanValid(t *testing.T) {
 
 }
 
-func TestshouldExecute(t *testing.T) {
+func TestShouldExecute(t *testing.T) {
 	cases := map[string]struct {
 		p         Plan
 		ctxTime   time.Time

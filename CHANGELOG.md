@@ -130,6 +130,7 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+* (cli) [\#5112](https://github.com/cosmos/cosmos-sdk/issues/5112) Bech32ify pubkey of MsgCreateValidator during yaml marshal, to make `gaiacli q tx` more readable when tx msg is CreateValidator.
 
 ### Bug Fixes
 

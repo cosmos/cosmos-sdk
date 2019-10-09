@@ -130,13 +130,13 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
-* (cli) [\#5112](https://github.com/cosmos/cosmos-sdk/issues/5112) Bech32ify pubkey of MsgCreateValidator during yaml marshal, to make `gaiacli q tx` more readable when tx msg is CreateValidator.
 
 ### Bug Fixes
 
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
 * (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to v0.36 not converting validator consensus pubkey to bech32 format
+* (cli) [\#5112](https://github.com/cosmos/cosmos-sdk/issues/5112) Bech32ify pubkey of MsgCreateValidator during yaml marshal, to make `gaiacli q tx` more readable when tx msg is CreateValidator.
 
 ## [v0.37.1] - 2019-09-19
 

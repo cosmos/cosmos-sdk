@@ -391,8 +391,8 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	// path[0] should be "custom" because "/custom" prefix is required for keeper
 	// queries.
 	//
-	// The queryRouter routes using path[1]. For example, in the path
-	// "custom/gov/proposal", queryRouter routes using "gov".
+	// The QueryRouter routes using path[1]. For example, in the path
+	// "custom/gov/proposal", QueryRouter routes using "gov".
 	if len(path) < 2 || path[1] == "" {
 		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}

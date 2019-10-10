@@ -184,7 +184,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 			dbtx3, _                = Database.Begin()
 			messagesStatement, _    = dbtx.Prepare("INSERT INTO messages (hash,idx,msgtype,msg,timestamp) VALUES (?,?,?,?,?)")
 			addressesStatement, _   = dbtx3.Prepare("INSERT INTO message_addresses (hash,idx,address) VALUES (?,?,?)")
-			transactionStatement, _ = dbtx2.Prepare("INSERT INTO transactions (hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,timestamp) VALUES (?,?,?,?,?,?,?,?,?,?)")
+			transactionStatement, _ = dbtx2.Prepare("INSERT INTO transactions (hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
 		)
 		defer messagesStatement.Close()
 		defer transactionStatement.Close()
@@ -213,6 +213,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 				fmt.Printf("EXECUTING TX %s FOR %d\n", txHash, block.Header.Height)
 				result := app.BaseApp.DeliverTx(tx) // cause transaction to be applied to snapshotted db, so we can interrogate results.
 				jsonTags, _ := app.GetCodec().MarshalJSON(sdk.TagsToStringTags(result.GetTags()))
+				jsonMsgs, _ := app.GetCodec().MarshalJSON(sdktx.GetMsgs())
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
 				if _, err := transactionStatement.Exec(
@@ -225,6 +226,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 					sdktx.GetMemo(),
 					string(jsonFee),
 					string(jsonTags),
+					string(jsonMsgs),
 					block.Header.Time,
 				); err != nil {
 					panic(err)

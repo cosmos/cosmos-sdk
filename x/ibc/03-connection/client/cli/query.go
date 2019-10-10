@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
+// TODO: get proofs
 // const (
 // 	FlagProve = "prove"
 // )

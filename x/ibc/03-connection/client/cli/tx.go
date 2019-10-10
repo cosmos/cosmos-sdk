@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
@@ -47,7 +49,15 @@ func GetCmdConnectionOpenInit(storeKey string, cdc *codec.Codec) *cobra.Command 
 		Use: strings.TrimSpace(`open-init [connection-id] [client-id] [counterparty-connection-id] 
 		[counterparty-client-id] [path/to/counterparty_prefix.json]`),
 		Short: "initialize connection on chain A",
-		Args:  cobra.ExactArgs(6),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
+
+Example:
+$ %s tx ibc connection open-init [connection-id] [client-id] [counterparty-connection-id] 
+[counterparty-client-id] [path/to/counterparty_prefix.json]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -82,15 +92,24 @@ func GetCmdConnectionOpenInit(storeKey string, cdc *codec.Codec) *cobra.Command 
 	return cmd
 }
 
-// GetCmdConnectionOpenTry defines the command to initialize a connection on
-// chain A with a given counterparty chain B
+// GetCmdConnectionOpenTry defines the command to relay a try open a connection on
+// chain B
 func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id] 
 [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
 [counterparty-versions] [path/to/proof_init.json]`),
 		Short: "initiate connection handshake between two chains",
-		Args:  cobra.ExactArgs(6),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
+
+Example:
+$ %s tx ibc connection open-try connection-id] [client-id] 
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
+[counterparty-versions] [path/to/proof_init.json]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -146,13 +165,20 @@ func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdConnectionOpenAck defines the command to initialize a connection on
-// chain A with a given counterparty chain B
+// GetCmdConnectionOpenAck defines the command to relay the acceptance of a
+// connection open attempt from chain B to chain A
 func GetCmdConnectionOpenAck(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open-ack [connection-id] [path/to/proof_try.json] [version]",
 		Short: "relay the acceptance of a connection open attempt from chain B to chain A",
-		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`relay the acceptance of a connection open attempt from chain B to chain A:
+
+Example:
+$ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [version]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -197,7 +223,14 @@ func GetCmdConnectionOpenConfirm(storeKey string, cdc *codec.Codec) *cobra.Comma
 	cmd := &cobra.Command{
 		Use:   "open-confirm [connection-id] [path/to/proof_ack.json]",
 		Short: "confirm to chain B that connection is open on chain A",
-		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`confirm to chain B that connection is open on chain A:
+
+Example:
+$ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().

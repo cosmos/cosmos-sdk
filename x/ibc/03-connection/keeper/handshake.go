@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,6 +34,7 @@ func (k Keeper) ConnOpenInit(
 		sdkerrors.Wrap(err, "cannot initialize connection")
 	}
 
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))
 	return nil
 }
 
@@ -105,6 +107,7 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	k.SetConnection(ctx, connectionID, connection)
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> TRYOPEN ", connectionID))
 	return nil
 }
 
@@ -173,6 +176,7 @@ func (k Keeper) ConnOpenAck(
 
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
 	return nil
 }
 
@@ -209,5 +213,6 @@ func (k Keeper) ConnOpenConfirm(
 
 	connection.State = types.OPEN
 	k.SetConnection(ctx, connectionID, connection)
+	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: TRYOPEN -> OPEN ", connectionID))
 	return nil
 }

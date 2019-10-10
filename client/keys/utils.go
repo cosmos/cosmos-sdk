@@ -3,9 +3,11 @@ package keys
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 	yaml "gopkg.in/yaml.v2"
@@ -13,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -88,6 +91,16 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
+
+// NewKeyBaseFromHomeFlag initializes a keyring based.
+func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagHome), input)
+}
+
+// NewKeyBaseFromDir initializes a keybase at a particular dir.
+func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+}
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
@@ -170,4 +183,13 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	fmt.Println(ko.PubKey)
+}
+
+func isRunningOnServer() bool {
+	backends := keyring.AvailableBackends()
+	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
+}
+
+func configureTestKeyringServiceName() {
+	sdk.GetConfig().SetKeyringServiceName("cosmos-sdk-test")
 }

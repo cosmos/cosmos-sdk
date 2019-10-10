@@ -131,16 +131,22 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		pubKey := signerAcc.GetPubKey()
 
 		if simulate {
+			// In simulate mode the transaction comes with no signatures, thus if the
+			// account's pubkey is nil, both signature verification and gasKVStore.Set()
+			// shall consume the largest amount, i.e. it takes more gas to verify
+			// secp256k1 keys than ed25519 ones.
+			if pubKey == nil {
+				pubKey = simSecp256k1Pubkey
+			}
 			// Simulated txs should not contain a signature and are not required to
 			// contain a pubkey, so we must account for tx size of including a
 			// StdSignature (Amino encoding) and simulate gas consumption
 			// (assuming a SECP256k1 simulation key).
 			consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
-		} else {
-			err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
-			if err != nil {
-				return ctx, err
-			}
+		}
+		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
+		if err != nil {
+			return ctx, err
 		}
 	}
 

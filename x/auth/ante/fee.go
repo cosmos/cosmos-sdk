@@ -60,7 +60,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 
 			if !feeCoins.IsAnyGTE(requiredFees) {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %q required: %q", feeCoins, requiredFees)
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 			}
 		}
 	}

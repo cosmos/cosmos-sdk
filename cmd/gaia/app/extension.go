@@ -223,8 +223,8 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 					result.GetGasUsed(),
 					result.GetLog(),
 					sdktx.GetMemo(),
-					string(jsonTags),
 					string(jsonFee),
+					string(jsonTags),
 					block.Header.Time,
 				); err != nil {
 					panic(err)

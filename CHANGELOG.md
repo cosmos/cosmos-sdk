@@ -43,7 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (tendermint) Bump Tendermint version to [v0.32.5](https://github.com/tendermint/tendermint/releases/tag/v0.32.5)
+* (tendermint) Bump Tendermint version to [v0.32.6](https://github.com/tendermint/tendermint/releases/tag/v0.32.6)
 
 ## [v0.37.1] - 2019-09-19
 

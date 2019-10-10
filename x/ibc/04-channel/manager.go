@@ -207,8 +207,13 @@ func (man Manager) Send(ctx sdk.Context, chanId string, packet Packet) sdk.Error
 		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(999), err.Error())
 	}
 
-	if obj.OriginConnection().Client.GetConsensusState(ctx).GetHeight() >= packet.Timeout() {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(888), "timeout height higher than the latest known")
+	// 0 is considered as INFINITY
+	// TODO: not matching with the spec, remove later or change spec
+	// introduced for making mock module work
+	if packet.Timeout() != 0 {
+		if obj.OriginConnection().Client.GetConsensusState(ctx).GetHeight() >= packet.Timeout() {
+			return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(888), "timeout height higher than the latest known")
+		}
 	}
 
 	obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Marshal())
@@ -243,9 +248,12 @@ func (man Manager) Receive(ctx sdk.Context, proofs []commitment.Proof, height ui
 		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(666), err.Error())
 	}
 
-	err = assertTimeout(ctx, packet.Timeout())
-	if err != nil {
-		return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(555), err.Error())
+	// TODO: see todo in man.Send
+	if packet.Timeout() != 0 {
+		err = assertTimeout(ctx, packet.Timeout())
+		if err != nil {
+			return sdk.NewError(sdk.CodespaceType("ibc"), sdk.CodeType(555), err.Error())
+		}
 	}
 
 	if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).IsRaw(ctx, packet.Marshal()) {

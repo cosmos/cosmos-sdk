@@ -116,6 +116,7 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 // custom marshal yaml function due to consensus pubkey
 func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
 	bs, err := yaml.Marshal(struct {
+		Description       Description
 		Commission        CommissionRates
 		MinSelfDelegation sdk.Int
 		DelegatorAddress  sdk.AccAddress
@@ -123,6 +124,7 @@ func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
 		PubKey            string
 		Value             sdk.Coin
 	}{
+		Description:       msg.Description,
 		Commission:        msg.Commission,
 		MinSelfDelegation: msg.MinSelfDelegation,
 		DelegatorAddress:  msg.DelegatorAddress,

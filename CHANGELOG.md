@@ -464,6 +464,12 @@ that error is that the account doesn't exist.
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
 
+## 0.34.9
+
+### Bug Fixes
+
+* Bump Tendermint version to [v0.31.10](https://github.com/tendermint/tendermint/releases/tag/v0.31.10) to address p2p panic errors.
+
 ## 0.34.8
 
 ### Bug Fixes

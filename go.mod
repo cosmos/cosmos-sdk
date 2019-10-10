@@ -46,7 +46,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/go-amino v0.14.1
 	github.com/tendermint/iavl v0.12.1
-	github.com/tendermint/tendermint v0.31.9
+	github.com/tendermint/tendermint v0.31.10
 	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25
 	google.golang.org/grpc v1.19.0 // indirect

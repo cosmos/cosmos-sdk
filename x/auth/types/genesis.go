@@ -46,7 +46,7 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
-	return validateGenAccounts(data.Accounts)
+	return ValidateGenAccounts(data.Accounts)
 }
 
 // SanitizeGenesisAccounts sorts accounts and coin sets.
@@ -64,7 +64,8 @@ func SanitizeGenesisAccounts(genAccs exported.GenesisAccounts) exported.GenesisA
 	return genAccs
 }
 
-func validateGenAccounts(accounts exported.GenesisAccounts) error {
+// ValidateGenAccounts validates an array of GenesisAccounts and checks for duplicates
+func ValidateGenAccounts(accounts exported.GenesisAccounts) error {
 	addrMap := make(map[string]bool, len(accounts))
 	for _, acc := range accounts {
 

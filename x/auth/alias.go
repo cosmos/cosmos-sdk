@@ -8,7 +8,6 @@ package auth
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -39,11 +38,6 @@ var (
 	NewBaseAccount                    = types.NewBaseAccount
 	ProtoBaseAccount                  = types.ProtoBaseAccount
 	NewBaseAccountWithAddress         = types.NewBaseAccountWithAddress
-	NewBaseVestingAccount             = types.NewBaseVestingAccount
-	NewContinuousVestingAccountRaw    = types.NewContinuousVestingAccountRaw
-	NewContinuousVestingAccount       = types.NewContinuousVestingAccount
-	NewDelayedVestingAccountRaw       = types.NewDelayedVestingAccountRaw
-	NewDelayedVestingAccount          = types.NewDelayedVestingAccount
 	NewAccountRetriever               = types.NewAccountRetriever
 	RegisterCodec                     = types.RegisterCodec
 	RegisterAccountTypeCodec          = types.RegisterAccountTypeCodec
@@ -65,6 +59,7 @@ var (
 	NewTxBuilder                      = types.NewTxBuilder
 	NewTxBuilderFromCLI               = types.NewTxBuilderFromCLI
 	MakeSignature                     = types.MakeSignature
+	ValidateGenAccounts               = types.ValidateGenAccounts
 	GetGenesisStateFromAppState       = types.GetGenesisStateFromAppState
 
 	// variable aliases
@@ -80,13 +75,8 @@ var (
 
 type (
 	SignatureVerificationGasConsumer = ante.SignatureVerificationGasConsumer
-	Account                          = exported.Account
-	VestingAccount                   = exported.VestingAccount
 	AccountKeeper                    = keeper.AccountKeeper
 	BaseAccount                      = types.BaseAccount
-	BaseVestingAccount               = types.BaseVestingAccount
-	ContinuousVestingAccount         = types.ContinuousVestingAccount
-	DelayedVestingAccount            = types.DelayedVestingAccount
 	NodeQuerier                      = types.NodeQuerier
 	AccountRetriever                 = types.AccountRetriever
 	GenesisState                     = types.GenesisState

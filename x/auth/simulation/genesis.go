@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -116,9 +117,9 @@ func RandomGenesisAccounts(simState *module.SimulationState) (genesisAccs export
 			}
 
 			if simState.Rand.Intn(100) < 50 {
-				gacc = types.NewContinuousVestingAccount(&bacc, startTime, endTime)
+				gacc = vestingtypes.NewContinuousVestingAccount(&bacc, startTime, endTime)
 			} else {
-				gacc = types.NewDelayedVestingAccount(&bacc, endTime)
+				gacc = vestingtypes.NewDelayedVestingAccount(&bacc, endTime)
 			}
 		}
 		genesisAccs = append(genesisAccs, gacc)

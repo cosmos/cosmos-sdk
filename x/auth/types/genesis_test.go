@@ -57,29 +57,7 @@ func TestValidateGenesisDuplicateAccounts(t *testing.T) {
 	genAccs[0] = &acc1
 	genAccs[1] = &acc1
 
-	require.Error(t, validateGenAccounts(genAccs))
-}
-
-// require invalid vesting account fails validation (invalid end time)
-func TestValidateGenesisInvalidAccounts(t *testing.T) {
-	acc1 := NewBaseAccountWithAddress(sdk.AccAddress(addr1))
-	acc1.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
-	baseVestingAcc := NewBaseVestingAccount(&acc1, acc1.Coins.Add(acc1.Coins), nil, nil, 1548775410)
-
-	acc2 := NewBaseAccountWithAddress(sdk.AccAddress(addr2))
-	acc2.Coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150))
-
-	genAccs := make(exported.GenesisAccounts, 2)
-	genAccs[0] = baseVestingAcc
-	genAccs[1] = &acc2
-
-	require.Error(t, validateGenAccounts(genAccs))
-	baseVestingAcc.OriginalVesting = acc1.Coins
-	genAccs[0] = baseVestingAcc
-	require.NoError(t, validateGenAccounts(genAccs))
-
-	genAccs[0] = NewContinuousVestingAccountRaw(baseVestingAcc, 1548888000)
-	require.Error(t, validateGenAccounts(genAccs))
+	require.Error(t, ValidateGenAccounts(genAccs))
 }
 
 func TestGenesisAccountIterator(t *testing.T) {

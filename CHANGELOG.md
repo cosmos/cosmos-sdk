@@ -60,10 +60,23 @@ now live under `x/auth/vesting`. Applications wishing to use vesting account typ
 `RegisterCodec` under the new vesting package.
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) The `NewBaseVestingAccount` constructor returns an error
 if the provided arguments are invalid.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteHandler` interface now returns `(newCtx Context, err error)` instead of `(newCtx Context, result sdk.Result, abort bool)`
+  * The `NewAnteHandler` function returns an `AnteHandler` function that returns the new `AnteHandler`
+  interface and has been moved into the `auth/ante` directory.
+  * `ValidateSigCount`, `ValidateMemo`, `ProcessPubKey`, `EnsureSufficientMempoolFee`, and `GetSignBytes`
+  have all been removed as public functions.
+  * Invalid Signatures may return `InvalidPubKey` instead of `Unauthorized` error, since the transaction
+  will first hit `SetPubKeyDecorator` before the `SigVerificationDecorator` runs.
+  * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
+  returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
+  `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 
 ### Client Breaking Changes
 
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
+increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 
 ### Features
 
@@ -86,6 +99,29 @@ correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 to the new keyring.
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
 that allows for arbitrary vesting periods.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteDecorator` interface has been introduced to allow users to implement modular `AnteHandler`
+  functionality that can be composed together to create a single `AnteHandler` rather than implementing
+  a custom `AnteHandler` completely from scratch, where each `AnteDecorator` allows for custom behavior in
+  tightly defined and logically isolated manner. These custom `AnteDecorator` can then be chained together
+  with default `AnteDecorator` or third-party `AnteDecorator` to create a modularized `AnteHandler`
+  which will run each `AnteDecorator` in the order specified in `ChainAnteDecorators`. For details
+  on the new architecture, refer to the [ADR](docs/architecture/adr-010-modular-antehandler.md).
+  * `ChainAnteDecorators` function has been introduced to take in a list of `AnteDecorators` and chain
+  them in sequence and return a single `AnteHandler`:
+    * `SetUpContextDecorator`: Sets `GasMeter` in context and creates defer clause to recover from any
+    `OutOfGas` panics in future AnteDecorators and return `OutOfGas` error to `BaseApp`. It MUST be the
+    first `AnteDecorator` in the chain for any application that uses gas (or another one that sets the gas meter).
+    * `ValidateBasicDecorator`: Calls tx.ValidateBasic and returns any non-nil error.
+    * `ValidateMemoDecorator`: Validates tx memo with application parameters and returns any non-nil error.
+    * `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the tx size based on application parameters.
+    * `MempoolFeeDecorator`: Checks if fee is above local mempool `minFee` parameter during `CheckTx`.
+    * `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction.
+    * `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
+    * `SigGasConsumeDecorator`: Consume parameter-defined amount of gas for each signature.
+    * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
+    * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
+    * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 ### Improvements
 

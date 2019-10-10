@@ -1,4 +1,4 @@
-package commitment
+package ics23
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

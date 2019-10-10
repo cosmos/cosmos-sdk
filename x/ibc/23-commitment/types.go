@@ -1,4 +1,4 @@
-package commitment
+package ics23
 
 // ICS 023 Types Implementation
 //

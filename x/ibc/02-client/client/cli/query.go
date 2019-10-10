@@ -3,162 +3,205 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	cli "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/state"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
-	"github.com/cosmos/cosmos-sdk/x/ibc/version"
 )
 
-func mapping(cdc *codec.Codec, storeKey string, v int64) state.Mapping {
-	prefix := version.Prefix(v)
-	return state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-}
-
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
+// GetQueryCmd returns the query commands for IBC clients
+func GetQueryCmd(queryRouter string, cdc *codec.Codec) *cobra.Command {
+	ics02ClientQueryCmd := &cobra.Command{
 		Use:                        "client",
 		Short:                      "IBC client query subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ibcQueryCmd.AddCommand(cli.GetCommands(
-		GetCmdQueryConsensusState(storeKey, cdc),
-		GetCmdQueryPath(storeKey, cdc),
+	ics02ClientQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryConsensusState(queryRouter, cdc),
+		GetCmdQueryPath(queryRouter, cdc),
 		GetCmdQueryHeader(cdc),
-		GetCmdQueryClient(storeKey, cdc),
-		GetCmdQueryRoot(storeKey, cdc),
+		GetCmdQueryClientState(queryRouter, cdc),
+		GetCmdQueryRoot(queryRouter, cdc),
 	)...)
-	return ibcQueryCmd
+	return ics02ClientQueryCmd
 }
 
-func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
+// GetCmdQueryClientState defines the command to query the state of a client with
+// a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
+func GetCmdQueryClientState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "client",
-		Short: "Query stored client",
-		Args:  cobra.ExactArgs(1),
+		Use:   "state [client-id]",
+		Short: "Query a client state",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query stored client state
+
+Example:
+$ %s query ibc client state [client-id]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
-			q := state.NewCLIQuerier(ctx)
-			mapp := mapping(cdc, storeKey, version.Version)
-			man := client.NewManager(mapp)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			id := args[0]
 
-			state, _, err := man.State(id).ConsensusStateCLI(q)
+			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(id))
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
+			res, _, err := cliCtx.QueryWithData(types.ClientStatePath(id), bz)
+			if err != nil {
+				return err
+			}
 
-			return nil
+			var clientState types.ClientState
+			if err := cdc.UnmarshalJSON(res, &clientState); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(clientState)
 		},
 	}
 }
 
+// GetCmdQueryRoot defines the command to query
 func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "root",
+		Use:   "root [client-id] [height]",
 		Short: "Query stored root",
-		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query a stored commitment root at a specific height for a particular client
+
+Example:
+$ %s query ibc client root [client-id] [height]
+`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
-			q := state.NewCLIQuerier(ctx)
-			mapp := mapping(cdc, storeKey, version.Version)
-			man := client.NewManager(mapp)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			id := args[0]
 			height, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			root, _, err := man.State(id).RootCLI(q, height)
+			bz, err := cdc.MarshalJSON(types.NewQueryCommitmentRootParams(id, height))
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, root))
+			res, _, err := cliCtx.QueryWithData(types.RootPath(id, height), bz)
+			if err != nil {
+				return err
+			}
 
-			return nil
+			var root ics23.Root
+			if err := cdc.UnmarshalJSON(res, &root); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(root)
 		},
 	}
 }
+
+// GetCmdQueryConsensusState defines the command to query the consensus state of
+// the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "consensus-state",
-		Short: "Query the latest consensus state of the running chain",
+		Use:   "consensus-state [client-id]",
+		Short: "Query the latest consensus state of the client",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the consensus state for a particular client
+
+Example:
+$ %s query ibc client consensus-state [client-id]
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			id := args[0]
 
-			node, err := ctx.GetNode()
+			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(id))
 			if err != nil {
 				return err
 			}
 
-			info, err := node.ABCIInfo()
+			res, _, err := cliCtx.QueryWithData(types.ConsensusStatePath(id), bz)
 			if err != nil {
 				return err
 			}
 
-			height := info.Response.LastBlockHeight
-			prevheight := height - 1
-
-			commit, err := node.Commit(&height)
-			if err != nil {
+			var consensusState exported.ConsensusState
+			if err := cdc.UnmarshalJSON(res, &consensusState); err != nil {
 				return err
 			}
 
-			validators, err := node.Validators(&prevheight)
-			if err != nil {
-				return err
-			}
-
-			state := tendermint.ConsensusState{
-				ChainID:          commit.ChainID,
-				Height:           uint64(commit.Height),
-				Root:             merkle.NewRoot(commit.AppHash),
-				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
-			}
-
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
-
-			return nil
+			return cliCtx.PrintOutput(consensusState)
 		},
 	}
 }
 
+// GetCmdQueryPath defines the command to query the commitment path
 func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "path",
 		Short: "Query the commitment path of the running chain",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query the commitment path
+		
+Example:
+$ %s query ibc client path
+		`, version.ClientName),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			mapp := mapping(cdc, storeName, version.Version)
-			path := merkle.NewPrefix([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
-			return nil
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// TODO: get right path
+			res, _, err := cliCtx.Query("")
+			if err != nil {
+				return err
+			}
+
+			var path merkle.Prefix
+			if err := cdc.UnmarshalJSON(res, &path); err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(path)
 		},
 	}
 }
 
+// GetCmdQueryHeader defines the command to query the latest header on the chain
+// TODO: do we really need this cmd ??
 func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "header",
 		Short: "Query the latest header of the running chain",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query the latest Tendermint header
+		
+Example:
+$ %s query ibc client header
+		`, version.ClientName),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			node, err := ctx.GetNode()
+			node, err := cliCtx.GetNode()
 			if err != nil {
 				return err
 			}
@@ -169,19 +212,19 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 			}
 
 			height := info.Response.LastBlockHeight
-			prevheight := height - 1
+			prevHeight := height - 1
 
 			commit, err := node.Commit(&height)
 			if err != nil {
 				return err
 			}
 
-			validators, err := node.Validators(&prevheight)
+			validators, err := node.Validators(&prevHeight)
 			if err != nil {
 				return err
 			}
 
-			nextvalidators, err := node.Validators(&height)
+			nextValidators, err := node.Validators(&height)
 			if err != nil {
 				return err
 			}
@@ -189,12 +232,10 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 			header := tendermint.Header{
 				SignedHeader:     commit.SignedHeader,
 				ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-				NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+				NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, header))
-
-			return nil
+			return cliCtx.PrintOutput(header)
 		},
 	}
 }

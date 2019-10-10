@@ -35,6 +35,12 @@ halt-time = {{ .BaseConfig.HaltTime }}
 
 # InterBlockCache enables inter-block caching.
 inter-block-cache = {{ .BaseConfig.InterBlockCache }}
+
+# Pruning sets the pruning strategy: syncable, nothing, everything
+# syncable: only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+# nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
+# everything: all saved states will be deleted, storing only the current state
+pruning = {{ .BaseConfig.Pruning }}
 `
 
 var configTemplate *template.Template

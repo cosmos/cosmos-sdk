@@ -84,7 +84,7 @@ func GetCmdQueryOwner(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 Example:
 $ %s query %s owner cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-$ %s query %s owner cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cripto-kitties
+$ %s query %s owner cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p crypto-kitties
 `, version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
 			),
 		),
@@ -138,7 +138,7 @@ func GetCmdQueryCollection(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			fmt.Sprintf(`Get a list of all NFTs from a given collection.
 
 Example:
-$ %s query %s collection cripto-kitties
+$ %s query %s collection crypto-kitties
 `, version.ClientName, types.ModuleName,
 			),
 		),

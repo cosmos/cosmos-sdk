@@ -52,7 +52,7 @@ func GetCmdTransferNFT(cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s tx %s transfer 
 cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmos1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm \
-cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
+crypto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
 --from mykey
 `,
 				version.ClientName, types.ModuleName,
@@ -92,7 +92,7 @@ func GetCmdEditNFTMetadata(cdc *codec.Codec) *cobra.Command {
 			specific id (SHA-256 hex hash).
 
 Example:
-$ %s tx %s edit-metadata cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
+$ %s tx %s edit-metadata crypto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
 --tokenURI path_to_token_URI_JSON --from mykey
 `,
 				version.ClientName, types.ModuleName,
@@ -126,7 +126,7 @@ func GetCmdMintNFT(cdc *codec.Codec) *cobra.Command {
 			specific id (SHA-256 hex hash) and set the ownership to a specific address.
 
 Example:
-$ %s tx %s mint cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
+$ %s tx %s mint crypto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
 cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `,
 				version.ClientName, types.ModuleName,
@@ -167,7 +167,7 @@ func GetCmdBurnNFT(cdc *codec.Codec) *cobra.Command {
 			specific id (SHA-256 hex hash).
 
 Example:
-$ %s tx %s burn cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
+$ %s tx %s burn crypto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa \
 --from mykey
 `,
 				version.ClientName, types.ModuleName,

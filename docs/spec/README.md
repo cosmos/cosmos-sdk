@@ -13,17 +13,17 @@ block.
 
 ## Modules specifications
 
-- [Auth](./auth) - The structure and authentication of accounts and transactions.
-- [Bank](./bank) - Sending tokens.
-- [Governance](./governance) - Proposals and voting.
-- [Staking](./staking) - Proof-of-stake bonding, delegation, etc.
-- [Slashing](./slashing) - Validator punishment mechanisms.
-- [Distribution](./distribution) - Fee distribution, and staking token provision distribution.
-- [Crisis](./crisis) - Halting the blockchain under certain circumstances.
-- [Mint](./mint) - Staking token provision creation.
-- [Params](./params) - Globally available parameter store.
-- [Supply](./supply) - Total supply of the chain.
-- [NFT](./nft) - Non-fungible tokens.
+- [Auth](../../x/authspec) - The structure and authentication of accounts and transactions.
+- [Bank](../../x/bank/spec) - Sending tokens.
+- [Governance](../../x/governance/spec) - Proposals and voting.
+- [Staking](../../x/staking/spec) - Proof-of-stake bonding, delegation, etc.
+- [Slashing](../../x/slashing/spec) - Validator punishment mechanisms.
+- [Distribution](../../x/distribution/spec) - Fee distribution, and staking token provision distribution.
+- [Crisis](.../../x/crisis/spec) - Halting the blockchain under certain circumstances.
+- [Mint](../../x/mint/spec) - Staking token provision creation.
+- [Params](../../x/params/spec) - Globally available parameter store.
+- [Supply](../../x/supply/spec) - Total supply of the chain.
+- [NFT](https://github.com/cosmos/modules/tree/master/incubator/nft/docs/spec) - Non-fungible tokens.
 
 For details on the underlying blockchain and p2p protocols, see
 the [Tendermint specification](https://github.com/tendermint/tendermint/tree/master/docs/spec).

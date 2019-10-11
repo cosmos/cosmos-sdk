@@ -51,24 +51,26 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// confirm deletion, unless -y is passed
-	if !viper.GetBool(flagYes) {
-		if err := confirmDeletion(buf); err != nil {
+	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+		// confirm deletion, unless -y is passed
+		if !viper.GetBool(flagYes) {
+			if err := confirmDeletion(buf); err != nil {
+				return err
+			}
+		}
+
+		if err := kb.Delete(name, "", true); err != nil {
 			return err
 		}
+		cmd.PrintErrln("Public key reference deleted")
+		return nil
 	}
 
 	// old password and skip flag arguments are ignored
 	if err := kb.Delete(name, "", true); err != nil {
 		return err
 	}
-
-	exitMessage := "Key deleted forever (uh oh!)"
-	if info.GetType() != keys.TypeLocal {
-		exitMessage = "Public key reference deleted"
-	}
-
-	cmd.PrintErrln(exitMessage)
+	cmd.PrintErrln("Key deleted forever (uh oh!)")
 	return nil
 }
 

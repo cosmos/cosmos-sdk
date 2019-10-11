@@ -251,7 +251,7 @@ paths:
         - in: query
           name: message.action
           type: string
-          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'"
+          description: "transaction events such as 'message.action=send' which results in the following endpoint: 'GET /txs?message.action=send'. note that each module documents its own events. look for xx_events.md in the corresponding cosmos-sdk/docs/spec directory"
           x-example: "send"
         - in: query
           name: message.sender
@@ -335,6 +335,36 @@ paths:
               tx:
                 type: string
                 example: The base64-encoded Amino-serialized bytes for the tx
+        400:
+          description: The tx was malformated
+        500:
+          description: Server internal error
+  /txs/decode:
+    post:
+      tags:
+        - Transactions
+      summary: Decode a transaction from the Amino wire format
+      description: Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: tx
+          description: The tx to decode
+          required: true
+          schema:
+            type: object
+            properties:
+              tx:
+                type: string
+                example: SvBiXe4KPqijYZoKFFHEzJ8c2HPAfv2EFUcIhx0yPagwEhTy0vPA+GGhCEslKXa4Af0uB+mfShoMCgVzdGFrZRIDMTAwEgQQwJoM
+      responses:
+        200:
+          description: The tx was successfully decoded
+          schema:
+            $ref: "#/definitions/StdTx"
         400:
           description: The tx was malformated
         500:

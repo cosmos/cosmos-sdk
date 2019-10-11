@@ -5,36 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// assertAll asserts the all invariants against application state
-func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invs sdk.Invariants,
-	event string, logWriter LogWriter, allInvariants bool) {
-
-	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
-
-	var invariantResults []string
-	for i := 0; i < len(invs); i++ {
-		res, stop := invs[i](ctx)
-		if stop {
-			invariantResults = append(invariantResults, res)
-		}
-	}
-
-	if len(invariantResults) > 0 {
-		fmt.Printf("Invariants broken after %s\n\n", event)
-		for _, res := range invariantResults {
-			fmt.Printf("%s\n", res)
-		}
-		logWriter.PrintLogs()
-		t.Fatal()
-	}
-}
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	testingMode = false
@@ -70,22 +41,6 @@ func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize 
 	}
 
 	return state, blockSize
-}
-
-// PeriodicInvariants  returns an array of wrapped Invariants. Where each
-// invariant function is only executed periodically defined by period and offset.
-func PeriodicInvariants(invariants []sdk.Invariant, period, offset int) []sdk.Invariant {
-	var outInvariants []sdk.Invariant
-	for _, invariant := range invariants {
-		outInvariant := func(ctx sdk.Context) (string, bool) {
-			if int(ctx.BlockHeight())%period == offset {
-				return invariant(ctx)
-			}
-			return "", false
-		}
-		outInvariants = append(outInvariants, outInvariant)
-	}
-	return outInvariants
 }
 
 func mustMarshalJSONIndent(o interface{}) []byte {

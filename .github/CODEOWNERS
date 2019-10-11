@@ -2,3 +2,12 @@
 
 # Primary repo maintainers
 *       @rigelrozanski @alexanderbez @jackzampolin @alessio @fedekunze
+
+###############################################################################
+# Module Specific Ownership
+# See CONTRIBUTING.md for further details
+###############################################################################
+
+# The following contributors own all files in the x/nft directory at the root
+# of the repository and any of its subdirectories.
+x/nft @okwme @fedekunze

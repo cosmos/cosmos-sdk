@@ -151,6 +151,10 @@ type CommitMultiStore interface {
 	// must be idempotent (return the same commit id). Otherwise the behavior is
 	// undefined.
 	LoadVersion(ver int64) error
+
+	// Set an inter-block (persistent) cache that maintains a mapping from
+	// StoreKeys to CommitKVStores.
+	SetInterBlockCache(MultiStorePersistentCache)
 }
 
 //---------subsp-------------------------------
@@ -328,3 +332,17 @@ type KVPair cmn.KVPair
 // TraceContext contains TraceKVStore context data. It will be written with
 // every trace operation.
 type TraceContext map[string]interface{}
+
+// MultiStorePersistentCache defines an interface which provides inter-block
+// (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
+type MultiStorePersistentCache interface {
+	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
+	// cache.
+	GetStoreCache(key StoreKey, store CommitKVStore) CommitKVStore
+
+	// Return the underlying CommitKVStore for a StoreKey.
+	Unwrap(key StoreKey) CommitKVStore
+
+	// Reset the entire set of internal caches.
+	Reset()
+}

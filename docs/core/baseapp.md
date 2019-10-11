@@ -7,165 +7,207 @@
 
 ## Synopsis
 
-This document describes `baseapp`, the abstraction that implements most of the common functionalities of an SDK application. 
+This document describes `BaseApp`, the abstraction that implements the core
+functionalities of an SDK application.
 
-- [Introduction](#introduction)
-- [Type Definition](#type-definition)
-- [Constructor](#constructor)
-- [States](#states)
-- [Routing](#routing)
-- [Main ABCI Messages](#abci)
-    + [CheckTx](#checktx)
-    + [DeliverTx](#delivertx)
-- [RunTx, AnteHandler and RunMsgs](#runtx-antehandler-and-runmsgs)
-    + [RunTx](#runtx)
-    + [AnteHandler](#antehandler)
-    + [RunMsgs](#runmsgs)
-- [Other ABCI Message](#other-abci-message)
-    + [InitChain](#initchain)
-    + [BeginBlock](#beginblock)
-    + [EndBlock](#endblock)
-    + [Commit](#commit)
-    + [Info](#info)
-    + [Query](#query)
-    
+- [BaseApp](#baseapp)
+  - [Pre-requisite Reading](#pre-requisite-reading)
+  - [Synopsis](#synopsis)
+  - [Introduction](#introduction)
+  - [Type Definition](#type-definition)
+  - [Constructor](#constructor)
+  - [State Updates](#state-updates)
+    - [InitChain State Updates](#initchain-state-updates)
+    - [CheckState State Updates-](#checktx-state-updates)
+    - [BeginBlock State Updates](#beginblock-state-updates)
+    - [DeliverTx State Updates](#delivertx-state-updates)
+    - [Commit State Updates](#commit-state-updates)
+  - [Routing](#routing)
+    - [Message Routing](#message-routing)
+    - [Query Routing](#query-routing)
+  - [Main ABCI Messages](#main-abci-messages)
+    - [CheckTx](#checktx)
+    - [DeliverTx](#delivertx)
+  - [RunTx, AnteHandler and RunMsgs](#runtx-antehandler-and-runmsgs)
+    - [RunTx](#runtx)
+    - [AnteHandler](#antehandler)
+    - [RunMsgs](#runmsgs)
+  - [Other ABCI Messages](#other-abci-messages)
+    - [InitChain](#initchain)
+    - [BeginBlock](#beginblock)
+    - [EndBlock](#endblock)
+    - [Commit](#commit)
+    - [Info](#info)
+    - [Query](#query)
+
 ## Introduction
 
-`baseapp` is an abstraction that implements the core of an SDK application, namely:
+`BaseApp` is a base type that implements the core of an SDK application, namely:
 
-- The [Application-Blockchain Interface](#abci), for the state-machine to communicate with the underlying consensus engine (e.g. Tendermint). 
-- A [Router](#routing), to route [messages](./tx-msgs.md) and [queries](./querier.md) to the appropriate [module](../building-modules/intro.md).
-- Different [states](#states), as the state-machine can have different parallel states updated based on the ABCI message received. 
+- The [Application Blockchain Interface](#abci), for the state-machine to communicate with the
+underlying consensus engine (e.g. Tendermint).
+- A [Router](#routing), to route messages and queries to the appropriate module.
+- Different [states](#states), as the state-machine can have different volatile
+states updated based on the ABCI message received.
 
-The goal of `baseapp` is to provide a boilerplate SDK application that developers can easily extend to build their own custom application. Usually, developers will create a custom type for their application, like so:
+The goal of `BaseApp` is to provide the fundamental layer of an SDK application
+that developers can easily extend to build their own custom application. Usually,
+developers will create a custom type for their application, like so:
 
-```go 
-type app struct {
-    *bam.BaseApp // reference to baseapp
-    cdc *codec.Codec
+```go
+type App struct {
+  // reference to a BaseApp
+  *bam.BaseApp
 
-    // list of application store keys
+  // list of application store keys
 
-    // list of application keepers
+  // list of application keepers
 
-    // module manager
+  // module manager
 }
 ```
 
-Extending the application with `baseapp` gives the former access to all of `baseapp`'s methods. This allows developers to compose their custom application with the modules they want, while not having to concern themselves with the hard work of implementing the ABCI, the routing and state management logic. 
+Extending the application with `BaseApp` gives the former access to all of `BaseApp`'s methods.
+This allows developers to compose their custom application with the modules they want, while not
+having to concern themselves with the hard work of implementing the ABCI, the routing and state
+management logic.
 
 ## Type Definition
 
-The [`baseapp` type](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L45-L91) holds many important parameters for any Cosmos SDK based application. Let us go through the most important components.
+The [`BaseApp` type](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L53) holds
+many important parameters for any Cosmos SDK based application. Let us go through the most
+important components.
 
-*Note: Not all parameters are described, only the most important ones. Refer to the [type definition](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L45-L91) for the full list* 
+> __Note__: Not all parameters are described, only the most important ones. Refer to the
+[type definition](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L53) for the
+full list.
 
-First, the important parameters that are initialized during the initialization of the application:
+First, the important parameters that are initialized during the bootstrapping of the application:
 
-- A [`CommitMultiStore`](./store.md#commit-multi-store). This is the main store of the application, which holds the canonical state that is committed at the [end of each block](#commit). This store is **not** cached, meaning it is not used to update the application's intermediate (un-committed) states. The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application uses one or multiple `KVStores` in the multi-store to persist their subset of the state. 
-- A [database](./store.md#database) `db`, which is used by the `CommitMultiStore` to handle data storage.
-- A [router](#message-routing). The `router` facilitates the routing of [messages](../building-modules/messages-and-queries.md#messages) to the appropriate module for it to be processed.
-- A [query router](#query-routing). The `query router` facilitates the routing of [queries](../building-modules/messages-and-queries.md#queries) to the appropriate module for it to be processed.
-- A [`txDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder), used to decode transaction `[]byte` relayed by the underlying Tendermint engine.
-- A [`baseKey`], to access the [main store](./store.md#main-store) in the `CommitMultiStore`. The main store is used to persist data related to the core of the application, like consensus parameters.  
-- A [`anteHandler`](#antehandler), to handle signature verification and fee paiement when a transaction is received.
-- An [`initChainer`](../basics/app-anatomy.md#initchainer), [`beginBlocker` and `endBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker), which are the functions executed when the application received the [InitChain], [BeginBlock] and [EndBlock] messages from the underlying Tendermint engine. 
+- [`CommitMultiStore`](./store.md#commitmultistore): This is the main store of the application,
+which holds the canonical state that is committed at the [end of each block](#commit). This store
+is **not** cached, meaning it is not used to update the application's volatile (un-committed) states.
+The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application
+uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
+- Database: The `db` is used by the `CommitMultiStore` to handle data persistence.
+- [Router](#message-routing): The `router` facilitates the routing of `messages` to the appropriate
+module for it to be processed. Here a `message` refers to the transaction components that need to be
+processed by the application in order to update the state, and not to ABCI messages which implement
+the interface between the application and the underlying consensus engine.
+- [Query Router](#query-routing): The `query router` facilitates the routing of queries to the
+appropriate module for it to be processed. These `queries` are not ABCI messages themselves, but they
+are relayed to the application from the underlying consensus engine via the ABCI message [`Query`](#query).
+- [`TxDecoder`](https://godoc.org/github.com/cosmos/cosmos-sdk/types#TxDecoder): It is used to decode
+raw transaction bytes relayed by the underlying Tendermint engine.
+- `BaseKey`: This key is used to access the main store in the `CommitMultiStore`. The main store is
+used to persist data related to the core of the application, like consensus parameters.
+- [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
+and other pre-message execution checks when a transaction is received. It's executed during
+[`CheckTx`](#checktx) and [`DeliverTx`](#delivertx).
+- [`InitChainer`](../basics/app-anatomy.md#initchainer),
+[`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker): These are
+the functions executed when the application receives the `InitChain`, `BeginBlock` and `EndBlock`
+ABCI messages from the underlying Tendermint engine.
 
 Then, parameters used to define [volatile states](#volatile-states) (i.e. cached states):
 
 - `checkState`: This state is updated during [`CheckTx`](#checktx), and reset on [`Commit`](#commit).
-- `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and reset on [`Commit`](#commit).
+- `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
+[`Commit`](#commit) and gets re-initialized on BeginBlock.
 
 Finally, a few more important parameterd:
 
-- `voteInfos`: This parameter carries the list of validators whose precommit is missing, either because they did not vote or because the proposer did not include their vote. This information is carried by the [context](#context) and can be used by the application for various things like punishing absent validators.
-- `minGasPrices`: This parameter defines the minimum [gas prices](./accounts-fees-gas.md#gas) accepted by the node. This is a local parameter, meaning each full-node can set a different `minGasPrices`. It is run by the [`anteHandler`](./accounts-fees-gas.md#antehandler) during `CheckTx`, mainly as a spam protection mechanism. The transaction enters the [mempool](https://tendermint.com/docs/tendermint-core/mempool.html#transaction-ordering) only if the gas price of the transaction is superior to one of the minimum gas price in `minGasPrices` (i.e. if `minGasPrices == 1uatom, 1upho`, the `gas-price` of the transaction must be superior to `1uatom` OR `1upho`).
-- `appVersion`: Version of the application. It is set in the [application's constructor function](../basics/app-anatomy.md#constructor-function).
+- `voteInfos`: This parameter carries the list of validators whose precommit is missing, either
+because they did not vote or because the proposer did not include their vote. This information is
+carried by the [Context](#context) and can be used by the application for various things like
+punishing absent validators.
+- `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
+**local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
+`AnteHandler` during [`CheckTx`](#checktx), mainly as a spam protection mechanism. The transaction
+enters the [mempool](https://tendermint.com/docs/tendermint-core/mempool.html#transaction-ordering)
+only if the gas prices of the transaction are greater than one of the minimum gas price in
+`minGasPrices` (e.g. if `minGasPrices == 1uatom,1photon`, the `gas-price` of the transaction must be
+greater than `1uatom` OR `1photon`).
+- `appVersion`: Version of the application. It is set in the
+[application's constructor function](../basics/app-anatomy.md#constructor-function).
 
 ## Constructor
 
-`NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),)` is the constructor function for `baseapp`. It is called from the [application's constructor function](../basics/app-anatomy.md#constructor-function) each time the full-node is started. 
+```go
+func NewBaseApp(
+  name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+) *BaseApp {
 
-`baseapp`'s constructor function is pretty straightforward. The only thing worth noting is the possibility to add additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go) to `baseapp` by passing `options functions` to the constructor function, which will execute them in order. `options` are generally `setters` function for important parameters, like `SetPruning()` to active pruning or `SetMinGasPrices()` to set the node's `min-gas-prices`. 
-
-A list of `options` example can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go). Naturally, developers can add additional `options` based on their application's needs. 
-
-## States 
-
-`baseapp` handles various parallel states for different purposes. There is the [main state](#main-state), which is the canonical state of the application, and volatile states like [`checkState`](#checkState) and [`deliverState`](#deliverstate), which are used to handle temporary states inbetween updates of the main state.
-
-```
-                To perform stateful checks        To execute state                To serve queries
-                on received transactions     transitions during DeliverTx   on last-committed state
-                +----------------------+      +----------------------+       +----------------------+
-                |   CheckState(t)(0)   |      |  DeliverState(t)(0)  |       |    QueryState(t)     |
-                +----------------------+      |                      |       |                      |
-CheckTx(tx1)               |                  |                      |       |                      |
-                           v                  |                      |       |                      |
-                +----------------------+      |                      |       |                      |
-                |   CheckState(t)(1)   |      |                      |       |                      |
-                +----------------------+      |                      |       |                      |
-CheckTx(tx2)               |                  |                      |       |                      |
-                           v                  |                      |       |                      |
-                +----------------------+      |                      |       |                      |
-                |   CheckState(t)(2)   |      |                      |       |                      |
-                +----------------------+      |                      |       |                      |
-CheckTx(tx3)               |                  |                      |       |                      |
-                           v                  |                      |       |                      |
-                +----------------------+      |                      |       |                      |
-                |   CheckState(t)(3)   |      |                      |       |                      |
-                +----------------------+      +----------------------+       |                      |
-DeliverTx(tx1)             |                             |                   |                      |
-                           v                             v                   |                      |
-                +----------------------+      +----------------------+       |                      |
-                |                      |      |  DeliverState(t)(1)  |       |                      |
-                |                      |      +----------------------+       |                      |
-DeliverTx(tx2)  |                      |                 |                   |                      | 
-                |                      |                 v                   |                      |
-                |                      |      +----------------------+       |                      |
-                |                      |      |  DeliverState(t)(2)  |       |                      |
-                |                      |      +----------------------+       |                      |
-DeliverTx(tx3)  |                      |                 |                   |                      |
-                |                      |                 v                   |                      |
-                |                      |      +----------------------+       |                      |
-                |                      |      |  DeliverState(t)(3)  |       |                      |
-                +----------------------+      +----------------------+       +----------------------+
-Commit()                  |                              |                               |
-                          v                              v                               v
-                +----------------------+      +----------------------+       +----------------------+
-                |  CheckState(t+1)(0)  |      | DeliverState(t+1)(0) |       |   QueryState(t+1)    |
-                +----------------------+      |                      |       |                      |
-                          .                              .                               .
-                          .                              .                               .
-                          .                              .                               .
-                
+  // ...
+}
 ```
 
-### Main State
+The `BaseApp` constructor function is pretty straightforward. The only thing worth noting is the
+possibility to provide additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go)
+to the `BaseApp`, which will execute them in order. The `options` are generally `setter` functions
+for important parameters, like `SetPruning()` to set pruning options or `SetMinGasPrices()` to set
+the node's `min-gas-prices`.
 
-The main state is the canonical state of the application. It is initialized on [`InitChain`](#initchain and updated on [`Commit`](#abci-commit) at the end of each block. 
+A list of `options` examples can be found
+[here](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go). Naturally, developers
+can add additional `options` based on their application's needs.
 
-```
-+--------+                              +--------+
-|        |                              |        |
-|   S    +----------------------------> |   S'   |
-|        |   For each T in B: apply(T)  |        |
-+--------+                              +--------+
-```
+## State Updates 
 
-The main state is held by `baseapp` in a structure called the [`CommitMultiStore`](./store.md#commit-multi-store). This multi-store is used by developers to instantiate all the stores they need for each of their application's modules.   
+The `BaseApp` maintains two primary volatile states and a root or main state. The main state
+is the canonical state of the application and the volatile states, `checkState` and `deliverState`,
+are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
-### Volatile States
+Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
+From this root state, we derive two volatile state through a mechanism called cache-wrapping. The
+types can be illustrated as follows:
 
-Volatile - or cached - states are used in between [`Commit`s](#commit) to manage temporary states. They are reset to the latest version of the main state after it is committed. There are two main volatile states:
+![Types](./baseapp_state_types.png)
 
-- `checkState`: This cached state is initialized during [`InitChain`](#initchain), updated during [`CheckTx`](#abci-checktx) when an unconfirmed transaction is received, and reset to the [main state](#main-state) on [`Commit`](#abci-commit). 
-- `deliverState`: This cached state is initialized during [`BeginBlock`](#beginblock), updated during [`DeliverTx`](#abci-delivertx) when a transaction included in a block is processed, and reset to the [main state](#main-state) on [`Commit`](#abci-commit).
+### InitChain State Updates
 
-Both `checkState` and `deliverState` are of type [`state`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L973-L976), which includes:
+During `InitChain`, the two volatile states, `checkState` and `deliverState` are set by cache-wrapping
+the root `CommitMultiStore`. Any subsequent reads and writes happen on cached versions of the `CommitMultiStore`.
 
-- A [`CacheMultiStore`](https://github.com/cosmos/cosmos-sdk/blob/master/store/cachemulti/store.go), which is a cached version of the main `CommitMultiStore`. A new version of this store is committed at the end of each successful `CheckTx`/`DeliverTx` execution. 
-- A [`Context`](./context.md), which carries general information (like raw transaction size, block height, ...) that might be needed in order to process the transaction during `CheckTx` and `DeliverTx`. The `context` also holds a cache-wrapped version of the `CacheMultiStore`, so that the `CacheMultiStore` can maintain the correct version even if an internal step of `CheckTx` or `DeliverTx` fails. 
+![InitChain](./baseapp_state-initchain.png)
+
+### CheckTx State Updates
+
+During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
+store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a router
+exists for every message in the transaction. Note, when we execute the `AnteHandler`, we cache-wrap
+the already cache-wrapped `checkState`. This has the side effect that if the `AnteHandler` fails,
+the state transitions won't be reflected in the `checkState` -- i.e. `checkState` is only updated on
+success.
+
+![CheckTx](./baseapp_state-checktx.png)
+
+### BeginBlock State Updates
+
+During `BeginBlock`, the `deliverState` is set for use in subsequent `DeliverTx` ABCI messages. The
+`deliverState` is based off of the last committed state from the root store and is cache-wrapped.
+Note, the `deliverState` is set to `nil` on [`Commit`](#commit).
+
+![BeginBlock](./baseapp_state-begin_block.png)
+
+### DeliverTx State Updates
+
+The state flow for `DeliverTx` is nearly identical to `CheckTx` except state transitions occur on
+the `deliverState` and messages in a transaction are executed. Similarly to `CheckTx`, state transitions
+occur on a doubly cache-wrapped state -- `deliverState`. Successful message execution results in
+writes being committed to `deliverState`. Note, if message execution fails, state transitions from
+the AnteHandler are persisted.
+
+![DeliverTx](./baseapp_state-deliver_tx.png)
+
+### Commit State Updates
+
+During `Commit` all the state transitions that occurred in the `deliverState` are finally written to
+the root `CommitMultiStore` which in turn is committed to disk and results in a new application
+root hash. These state transitions are now considered final. Finally, the `checkState` is set to the
+newly committed state and `deliverState` is set to `nil` to be reset on `BeginBlock`.
+
+![Commit](./baseapp_state-commit.png)
 
 ## Routing
 
@@ -222,7 +264,7 @@ Steps 2. and 3. are  performed by the [`anteHandler`](./accounts-fees-gas.md#ant
 
 ### DeliverTx
 
-When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order. 
+When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends a `DeliverTx` message to the application for each transaction in a sequential order.
 
 Before the first transaction of a given block is processed, a [volatile state](#volatile-states) called `deliverState` is intialized during [`BeginBlock`](#beginblock). This state is updated each time a transaction is processed via `DeliverTx`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what is is set to `nil`. 
 
@@ -252,11 +294,11 @@ During step 5., each read/write to the store increases the value of `GasConsumed
 
 The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a cached version of the main store instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`.  After that, two `defer func()` are called for [`gas`](./accounts-fees-gas.md#gas) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
-After that, `RunTx` calls `ValidateBasic()` on each `message`in the `Tx`, which runs prelimary *stateless* validity checks. If any `message` fails to pass `ValidateBasic()`, `RunTx` returns with an error. 
+After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `message` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the [`cacheTxContext()`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L781-L798) function. This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK. 
 
-Finally, the [`RunMsgs`](#runmsgs) function is called to process the `messages`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
+Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `messages`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function.
 
 ### AnteHandler
 
@@ -322,8 +364,4 @@ Each `query` comes with a `path`, which contains multiple `string`s. By conventi
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers. 
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `baseapp`'s [constructor](#constructor).
-- Custom queries, which encompass most [module queries](../building-modules/messages-and-queries.md#queries), are served via the [`handleQueryCustom`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/abci.go#L395-L453) method. The `handleQueryCustom` first cache-wraps the multistore. Then, it uses the second component of the path (`path[1]`) to retrieve the `queryRoute` from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's [`querier`](../building-modules/querier.md). The following elements of the `path` (`path[2:]`) are passed to the `querier` to properly process the query. Finally, the result of the `querier`'s execution is returned via `abci.ResponseQuery`.   
-
-## Next
-
-Learn more about [stores](./store.md).
+- Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's `querier`.

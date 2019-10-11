@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
@@ -17,14 +17,14 @@ var moduleAccAddr = supply.NewModuleAddress(staking.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := &auth.BaseAccount{
+	acc := auth.BaseAccount{
 		Address: addr1,
 		// Some value conceivably higher than the benchmarks would ever go
 		Coins: sdk.Coins{sdk.NewInt64Coin("foocoin", 100000000000)},
 	}
 
 	// Construct genesis state
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 
 	// Precompute all txs
@@ -46,14 +46,14 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Add an account at genesis
-	acc := &auth.BaseAccount{
+	acc := auth.BaseAccount{
 		Address: addr1,
 		// Some value conceivably higher than the benchmarks would ever go
 		Coins: sdk.Coins{sdk.NewInt64Coin("foocoin", 100000000000)},
 	}
 
 	// Construct genesis state
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{&acc}
 	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
 
 	// Precompute all txs

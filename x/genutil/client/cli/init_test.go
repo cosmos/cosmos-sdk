@@ -116,9 +116,9 @@ func TestStartStandAlone(t *testing.T) {
 	svr.Start()
 
 	timer := time.NewTimer(time.Duration(2) * time.Second)
-	select {
-	case <-timer.C:
+	for range timer.C {
 		svr.Stop()
+		break
 	}
 }
 

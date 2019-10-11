@@ -15,16 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func makeTestCodec() (cdc *codec.Codec) {
-	cdc = codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	auth.RegisterCodec(cdc)
-	return
-}
-
 func TestGetSimulationLog(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc := MakeCodec()
 
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[auth.StoreKey] = func(cdc *codec.Codec, kvAs, kvBs cmn.KVPair) string { return "10" }

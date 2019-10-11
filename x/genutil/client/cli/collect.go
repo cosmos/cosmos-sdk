@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -31,12 +32,12 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
 			name := viper.GetString(client.FlagName)
 			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to initialize node validator files")
 			}
 
 			genDoc, err := tmtypes.GenesisDocFromFile(config.GenesisFile())
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
 
 			genTxsDir := viper.GetString(flagGenTxDir)
@@ -49,7 +50,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec,
 
 			appMessage, err := genutil.GenAppStateFromConfig(cdc, config, initCfg, *genDoc, genAccIterator)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to get genesis app state from config")
 			}
 
 			toPrint.AppMessage = appMessage

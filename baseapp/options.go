@@ -29,9 +29,20 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.setMinGasPrices(gasPrices) }
 }
 
-// SetHaltHeight returns a BaseApp option function that sets the halt height.
-func SetHaltHeight(height uint64) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.setHaltHeight(height) }
+// SetHaltHeight returns a BaseApp option function that sets the halt block height.
+func SetHaltHeight(blockHeight uint64) func(*BaseApp) {
+	return func(bap *BaseApp) { bap.setHaltHeight(blockHeight) }
+}
+
+// SetHaltTime returns a BaseApp option function that sets the halt block time.
+func SetHaltTime(haltTime uint64) func(*BaseApp) {
+	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
+}
+
+// SetInterBlockCache provides a BaseApp option function that sets the
+// inter-block cache.
+func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
+	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
 func (app *BaseApp) SetName(name string) {

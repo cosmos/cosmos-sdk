@@ -20,10 +20,10 @@ import (
 func Migrate(appState genutil.AppMap) genutil.AppMap {
 	v034Codec := codec.New()
 	codec.RegisterCrypto(v034Codec)
+	v034gov.RegisterCodec(v034Codec)
 
 	v036Codec := codec.New()
 	codec.RegisterCrypto(v036Codec)
-	v034gov.RegisterCodec(v034Codec)
 	v036gov.RegisterCodec(v036Codec)
 
 	// migrate genesis accounts state

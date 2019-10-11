@@ -215,21 +215,24 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var vote types.Vote
-			if err := cdc.UnmarshalJSON(res, &vote); err != nil {
-				return err
-			}
+
+			// XXX: Allow the decoding to potentially fail as the vote may have been
+			// pruned from state. If so, decoding will fail and so we need to check the
+			// Empty() case. Consider updating Vote JSON decoding to not fail when empty.
+			_ = cdc.UnmarshalJSON(res, &vote)
 
 			if vote.Empty() {
 				res, err = gcutils.QueryVoteByTxQuery(cliCtx, params)
 				if err != nil {
 					return err
 				}
+
 				if err := cdc.UnmarshalJSON(res, &vote); err != nil {
 					return err
 				}
 			}
 
-			return cliCtx.PrintOutput(vote) //nolint:errcheck
+			return cliCtx.PrintOutput(vote)
 		},
 	}
 }

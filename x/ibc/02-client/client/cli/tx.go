@@ -3,6 +3,7 @@ package cli
 import (
 	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"

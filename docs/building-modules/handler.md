@@ -7,7 +7,7 @@
 
 ## Synopsis
 
-A `Handler` designates a function that processes [`message`s](./messages-and-queries.md#messages). `handler`s are specific to the module in which they are defined, and only process `message`s defined within said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx).
+A `Handler` designates a function that processes [`message`s](./messages-and-queries.md#messages). `Handler`s are specific to the module in which they are defined, and only process `message`s defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx).
 
 - [`handler` type](#handler-type)
 - [Implementation of a module `handler`s](#implementation-of-a-module-handlers)
@@ -22,7 +22,7 @@ type Handler func(ctx Context, msg Msg) Result
 
 Let us break it down:
 
-- The [`msg`](./messages-and-queries.md#messages) is the actual object being processed. 
+- The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
 - The [`Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38) returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/accounts-fees-gas.md#gas) consumption and [`events`](./events.md).
 

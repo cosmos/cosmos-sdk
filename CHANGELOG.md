@@ -127,11 +127,9 @@ that allows for arbitrary vesting periods.
 
 ### Improvements
 
-<<<<<<< HEAD
 * (rest) [\#5038](https://github.com/cosmos/cosmos-sdk/pull/5038) RESTful Swagger documentation is
 now handled automatically via handler annotations using the [Swag](https://github.com/swaggo/swag) library instead of a static
 configuration.
-=======
 * (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
 has been moved to the configuration file, to allow easier node configuration.
 * (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
@@ -152,7 +150,6 @@ chain ID and node URI or client set. To use a `CLIContext` with a verifier for a
   )
   ```
 
->>>>>>> master
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.

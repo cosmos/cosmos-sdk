@@ -15,6 +15,14 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(
+		"/staking/validators/{validatorAddr}",
+		createValidatorHandlerFn(cliCtx),
+	).Methods("POST")
+	r.HandleFunc(
+		"/staking/validators/{validatorAddr}",
+		editValidatorHandlerFn(cliCtx),
+	).Methods("PUT")
+	r.HandleFunc(
 		"/staking/delegators/{delegatorAddr}/delegations",
 		postDelegationsHandlerFn(cliCtx),
 	).Methods("POST")
@@ -29,6 +37,26 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 type (
+	// CreateValidatorRequest defines the properties of a create validator request's body.
+	CreateValidatorRequest struct {
+		BaseReq           rest.BaseReq          `json:"base_req" yaml:"base_req"`
+		ValidatorAddress  sdk.ValAddress        `json:"validator_address" yaml:"validator_address"` // in bech32
+		Pubkey            string                `json:"pubkey" yaml:"pubkey"`
+		Value             sdk.Coin              `json:"value" yaml:"value"`
+		Description       types.Description     `json:"description" yaml:"description"`
+		Commission        types.CommissionRates `json:"commission" yaml:"commission"`
+		MinSelfDelegation sdk.Int               `json:"min_self_delegation" yaml:"min_self_delegation"`
+	}
+
+	// EditValidatorRequest defines the properties of a edit validator request's body.
+	EditValidatorRequest struct {
+		BaseReq           rest.BaseReq      `json:"base_req" yaml:"base_req"`
+		ValidatorAddress  sdk.ValAddress    `json:"address" yaml:"address"`
+		Description       types.Description `json:"description" yaml:"description"`
+		CommissionRate    *sdk.Dec          `json:"commission_rate" yaml:"commission_rate"`
+		MinSelfDelegation *sdk.Int          `json:"min_self_delegation" yaml:"min_self_delegation"`
+	}
+
 	// DelegateRequest defines the properties of a delegation request's body.
 	DelegateRequest struct {
 		BaseReq          rest.BaseReq   `json:"base_req" yaml:"base_req"`
@@ -54,6 +82,92 @@ type (
 		Amount           sdk.Coin       `json:"amount" yaml:"amount"`
 	}
 )
+
+// createValidatorHandlerFn implements a create validator handler that is responsible
+// for constructing a properly formatted create validator transaction for signing.
+//
+// @Summary Generate a create validator transaction
+// @Description Generate a create validator transaction that is ready for signing
+// @Tags staking
+// @Accept  json
+// @Produce  json
+// @Param validatorAddr path string true "The validator address"
+// @Param body body rest.CreateValidatorRequest true "The create validator request payload"
+// @Success 200 {object} rest.createValidator "Returns the unsigned transaction"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /staking/validators/{validatorAddr} [post]
+func createValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var req CreateValidatorRequest
+
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		pk, err := sdk.GetConsPubKeyBech32(req.Pubkey)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		msg := types.NewMsgCreateValidator(req.ValidatorAddress, pk, req.Value, req.Description, req.Commission, req.MinSelfDelegation)
+		if err := msg.ValidateBasic(); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+	}
+}
+
+// editValidatorHandlerFn implements a edit validator handler that is responsible
+// for constructing a properly formatted edit validator transaction for signing.
+//
+// @Summary Generate a edit validator transaction
+// @Description Generate a edit validator transaction that is ready for signing
+// @Tags staking
+// @Accept  json
+// @Produce  json
+// @Param validatorAddr path string true "The validator address"
+// @Param body body rest.EditValidatorRequest true "The edit validator request payload"
+// @Success 200 {object} rest.editValidator "Returns the unsigned transaction"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
+// @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
+// @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /staking/validators/{validatorAddr} [put]
+func editValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var req EditValidatorRequest
+
+		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		msg := types.NewMsgEditValidator(req.ValidatorAddress, req.Description, req.CommissionRate, req.MinSelfDelegation)
+		if err := msg.ValidateBasic(); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		utils.WriteGenerateStdTxResponse(w, cliCtx, req.BaseReq, []sdk.Msg{msg})
+	}
+}
 
 // postDelegationsHandlerFn implements a delegation handler that is responsible
 // for constructing a properly formatted delegation transaction for signing.

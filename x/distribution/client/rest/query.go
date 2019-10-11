@@ -66,15 +66,9 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 }
 
 // coinsReturn helps generate documentation for REST routes
-type coinsReturn struct {
-	Height int64  `json:"height"`
-	Result []coin `json:"result"`
-}
-
-// coin helps generate documentation for REST routes
-type coin struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
+type coinsReturn struct { // nolint: deadcode unused
+	Height int64     `json:"height"`
+	Result sdk.Coins `json:"result"`
 }
 
 // delegatorRewardsHandlerFn implements a delegator rewards query route
@@ -137,7 +131,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 }
 
 // delegatorWithdrawalAddr helps generate documentation for delegatorWithdrawalAddrHandlerFn
-type delegatorWithdrawalAddr struct {
+type delegatorWithdrawalAddr struct { // nolint: deadcode unused
 	Height int64       `json:"height"`
 	Result sdk.Address `json:"result"`
 }
@@ -197,7 +191,7 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 }
 
 // validatorInfo helps generate documentation for validatorInfoHandlerFn
-type validatorInfo struct {
+type validatorInfo struct { // nolint: deadcode unused
 	Height int64             `json:"height"`
 	Result ValidatorDistInfo `json:"result"`
 }
@@ -290,7 +284,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 }
 
 // params helps generate documentation for paramsHandlerFn
-type params struct {
+type params struct { // nolint: deadcode unused
 	Height int64               `json:"height"`
 	Result common.PrettyParams `json:"result"`
 }

@@ -54,7 +54,7 @@ type (
 )
 
 // withdrawDelegatorReward is used to generate documentation for withdrawDelegatorRewardHandlerFn
-type withdrawDelegatorReward struct {
+type withdrawDelegatorReward struct { // nolint: deadcode unused
 	Msgs       []types.MsgWithdrawDelegatorReward `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee                        `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature                `json:"signatures" yaml:"signatures"`
@@ -157,7 +157,7 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 }
 
 // setDelegatorWithdrawalAddr is used to generate documentation for setDelegatorWithdrawalAddrHandllerFn
-type setDelegatorWithdrawalAddr struct {
+type setDelegatorWithdrawalAddr struct { // nolint: deadcode unused
 	Msgs       []types.MsgSetWithdrawAddress `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee                   `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature           `json:"signatures" yaml:"signatures"`
@@ -210,7 +210,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 }
 
 // withdrawValidatorRewards is used to generate documentation for withdrawValidatorRewardsHandllerFn
-type withdrawValidatorRewards struct {
+type withdrawValidatorRewards struct { // nolint: deadcode unused
 	Msgs       []types.MsgWithdrawValidatorCommission `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee                            `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature                    `json:"signatures" yaml:"signatures"`

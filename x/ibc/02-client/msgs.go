@@ -12,7 +12,7 @@ type MsgCreateClient struct {
 
 func NewMsgCreateClient(clientID string, consState ConsensusState, signer sdk.AccAddress) MsgCreateClient {
 	return MsgCreateClient{
-		ClientID: clientID,
+		ClientID:       clientID,
 		ConsensusState: consState,
 		Signer: signer,
 	}

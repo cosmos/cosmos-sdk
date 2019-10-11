@@ -137,7 +137,3 @@ func isRunningOnServer() bool {
 	backends := keyring.AvailableBackends()
 	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }
-
-func configureTestKeyringServiceName() {
-	sdk.GetConfig().SetKeyringServiceName("cosmos-sdk-test")
-}

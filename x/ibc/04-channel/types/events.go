@@ -1,4 +1,4 @@
-package channel
+package types
 
 const (
 	EventTypeSendPacket = "send_packet"

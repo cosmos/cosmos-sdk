@@ -260,8 +260,9 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.Supply'
-        type: object
+        items:
+          $ref: '#/definitions/types.Coin'
+        type: array
     type: object
   types.ABCIMessageLog:
     properties:
@@ -300,6 +301,17 @@ definitions:
       key:
         type: string
       value:
+        type: string
+    type: object
+  types.Coin:
+    properties:
+      amount:
+        description: |-
+          To allow the use of unsigned integers (see: #1273) a larger refactor will
+          need to be made. So we use signed integers for now with safety measures in
+          place preventing negative values being used.
+        type: string
+      denom:
         type: string
     type: object
   types.Content:
@@ -413,9 +425,7 @@ definitions:
       memo:
         type: string
       msg:
-        items:
-          type: string
-        type: array
+        type: string
       signatures:
         items:
           $ref: '#/definitions/types.StdSignature'
@@ -441,12 +451,6 @@ definitions:
           type: string
       type: object
     type: array
-  types.Supply:
-    properties:
-      total:
-        description: total supply of tokens registered on the chain
-        type: string
-    type: object
   types.TallyResult:
     properties:
       abstain:
@@ -1030,7 +1034,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: The total supply
           schema:
             $ref: '#/definitions/rest.totalSupply'
         "400":
@@ -1060,7 +1064,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: The total supply of a single denom
           schema:
             $ref: '#/definitions/rest.totalDenomSupply'
         "400":

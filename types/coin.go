@@ -22,7 +22,7 @@ type Coin struct {
 	// To allow the use of unsigned integers (see: #1273) a larger refactor will
 	// need to be made. So we use signed integers for now with safety measures in
 	// place preventing negative values being used.
-	Amount Int `json:"amount"`
+	Amount Int `json:"amount" swaggertype:"primitive,string"`
 }
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if

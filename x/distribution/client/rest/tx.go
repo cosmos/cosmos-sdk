@@ -70,8 +70,8 @@ type withdrawDelegatorReward struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} rest.withdrawDelegatorReward
+// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} withdrawDelegatorReward
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -115,8 +115,8 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
 // @Param validatorAddr path string true "delegator validator"
-// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} rest.withdrawDelegatorReward
+// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} withdrawDelegatorReward
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -173,8 +173,8 @@ type setDelegatorWithdrawalAddr struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body rest.setWithdrawalAddrReq true "The data required to set withdraw address"
-// @Success 200 {object} rest.setDelegatorWithdrawalAddr
+// @Param body body setWithdrawalAddrReq true "The data required to set withdraw address"
+// @Success 200 {object} setDelegatorWithdrawalAddr
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -226,8 +226,8 @@ type withdrawValidatorRewards struct {
 // @Accept  json
 // @Produce  json
 // @Param validatorAddr path string true "delegator validator"
-// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} rest.withdrawValidatorRewards
+// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} withdrawValidatorRewards
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"

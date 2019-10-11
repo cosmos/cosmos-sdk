@@ -85,7 +85,7 @@ type coin struct {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.coinsReturn
+// @Success 200 {object} coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards [get]
@@ -115,7 +115,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.coinsReturn
+// @Success 200 {object} coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr} [get]
@@ -150,7 +150,7 @@ type delegatorWithdrawalAddr struct {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.delegatorWithdrawalAddr
+// @Success 200 {object} delegatorWithdrawalAddr
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/withdraw_address [get]
@@ -210,7 +210,7 @@ type validatorInfo struct {
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.validatorInfo
+// @Success 200 {object} validatorInfo
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr} [get]
@@ -262,7 +262,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.coinsReturn
+// @Success 200 {object} coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/rewards [get]
@@ -302,7 +302,7 @@ type params struct {
 // @Tags distribution
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.params
+// @Success 200 {object} params
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/parameters [get]
@@ -330,7 +330,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 // @Tags distribution
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.coinsReturn
+// @Success 200 {object} coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/community_pool [get]
@@ -366,7 +366,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.coinsReturn
+// @Success 200 {object} coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/outstanding_rewards [get]

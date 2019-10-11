@@ -217,11 +217,11 @@ When messages and queries are received by the application, they must be routed t
 
 [`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](./handler.md). Usually, the `path` is the name of the module.
 
-The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
+The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 
 ### Query Routing
 
-Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps `paths` (`string`) to the appropriate module `querier`. Usually, the `path` is the name of the module. 
+Similar to `message`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [querier](../building-modules/querier.md). To do so, `baseapp` holds a [`query router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/queryrouter.go), which maps module names to module `querier`s. The `queryRouter` is called during the initial stages of `query` processing, which is done via the [`Query` ABCI message](#query). 
 
 Just like the `router`, the `query router` is initilalized with all the query routes using the application's [module manager](../building-modules/module-manager.md), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 
@@ -251,7 +251,7 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 
 Steps 2. and 3. are  performed by the [`anteHandler`](./accounts-fees-gas.md#antehandler) in the [`RunTx`](#runtx-antehandler-and-runmsgs) function, which `CheckTx` calls with the `runTxModeCheck` mode. During each step of `CheckTx`, a special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep track of the temporary changes triggered by the `CheckTx` calls of each transaction without modifying the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx`, the transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is received from the same account before the first is processed, and the account has consumed all its funds in `checkState` during the first transaction, the second transaction will fail `CheckTx` and be rejected. In any case, the sender's account will not actually pay the fees until the transaction is actually included in a block, because `checkState` never gets committed to the main state. `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#checktx). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful. 
 - `Data ([]byte)`: Result bytes, if any.
@@ -275,7 +275,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation [here](https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L142-L150). At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails. 
 
-`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages). The response contains:
+`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://tendermint.com/docs/spec/abci/abci.html#delivertx). The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful. 
 - `Data ([]byte)`: Result bytes, if any.
@@ -328,7 +328,7 @@ The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.htm
 - [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
 - The [block gas meter](../basics/accounts-fees-gas.md#block-gas-meter), with infinite gas to process genesis transactions. 
 
-Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the [`genesis file`](./genesis.md) and, if defined, call the `InitGenesis` function of each of the application's modules.
+Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the [`genesis file`](./genesis.md) and, if defined, call the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules.
 
 ### BeginBlock
 
@@ -336,12 +336,12 @@ The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.h
 
 - Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the [`setDeliverState`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L283-L289) function. 
 - Initialize the [block gas meter](../basics/accounts-fees-gas.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters. 
-- Run the application's [`begingBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `BeginBlocker()` method of each of the application's modules.
+- Run the application's [`beginBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
 - Set the [`VoteInfos`](https://tendermint.com/docs/app-dev/abci-spec.html#voteinfo) of the application, i.e. the list of validators whose *precommit* for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./context.md) so that it can be used during `DeliverTx` and `EndBlock`.
 
 ### EndBlock
 
-The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction n the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`endBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the `EndBlocker()` method of each of the application's modules.
+The [`EndBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules. 
 
 ### Commit
 
@@ -359,7 +359,7 @@ The [`Info` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#inf
 
 The [`Query` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.html#query) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It is the main entrypoint to build interfaces with the application. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://tendermint.com/docs/app-dev/abci-spec.html#query). 
 
-The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving 4 main categories of queries:
+Each `query` comes with a `path`, which contains multiple `string`s. By convention, the first element of the `path` (`path[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom`). The `baseapp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 - Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 - Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queryeis are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers. 

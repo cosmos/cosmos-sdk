@@ -31,10 +31,9 @@ func EmptyCollection() Collection {
 
 // GetNFT gets a NFT from the collection
 func (collection Collection) GetNFT(id string) (nft exported.NFT, err sdk.Error) {
-	for _, nft := range collection.NFTs {
-		if nft.GetID() == id {
-			return nft, nil
-		}
+	nft, found := collection.NFTs.Find(id)
+	if found {
+		return nft, nil
 	}
 	return nil, ErrUnknownNFT(DefaultCodespace,
 		fmt.Sprintf("NFT #%s doesn't exist in collection %s", id, collection.Denom),
@@ -56,7 +55,7 @@ func (collection Collection) AddNFT(nft exported.NFT) (Collection, sdk.Error) {
 			fmt.Sprintf("NFT #%s already exists in collection %s", id, collection.Denom),
 		)
 	}
-	collection.NFTs = append(collection.NFTs, nft)
+	collection.NFTs = collection.NFTs.Append(nft)
 	return collection, nil
 }
 
@@ -112,12 +111,12 @@ func NewCollections(collections ...Collection) Collections {
 	if len(collections) == 0 {
 		return Collections{}
 	}
-	return Collections(collections)
+	return Collections(collections).Sort()
 }
 
-// Add appends two sets of Collections
-func (collections Collections) Add(collectionsB Collections) Collections {
-	return append(collections, collectionsB...)
+// Append appends two sets of Collections
+func (collections Collections) Append(collectionsB ...Collection) Collections {
+	return append(collections, collectionsB...).Sort()
 }
 
 // Find returns the searched collection from the set
@@ -158,23 +157,7 @@ func (collections Collections) Empty() bool {
 }
 
 func (collections Collections) find(denom string) (idx int) {
-	if len(collections) == 0 {
-		return -1
-	}
-	// TODO: ensure this is already sorted
-	// collections.Sort()
-
-	midIdx := len(collections) / 2
-	midCollection := collections[midIdx]
-
-	switch {
-	case strings.Compare(denom, midCollection.Denom) == -1:
-		return collections[:midIdx].find(denom)
-	case midCollection.Denom == denom:
-		return midIdx
-	default:
-		return collections[midIdx+1:].find(denom)
-	}
+	return FindUtil(collections, denom)
 }
 
 // ----------------------------------------------------------------------------
@@ -212,10 +195,10 @@ func (collections *Collections) UnmarshalJSON(b []byte) error {
 }
 
 //-----------------------------------------------------------------------------
-// Sort interface
+// Sort & Findable interfaces
 
-//nolint
-func (collections Collections) Len() int { return len(collections) }
+func (collections Collections) ElAtIndex(index int) string { return collections[index].Denom }
+func (collections Collections) Len() int                   { return len(collections) }
 func (collections Collections) Less(i, j int) bool {
 	return strings.Compare(collections[i].Denom, collections[j].Denom) == -1
 }

@@ -55,7 +55,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &withdrawAddrEnabled))
 
-	return
+	return communityTax, baseProposerReward, bonusProposerReward, withdrawAddrEnabled
 }
 
 func getQueriedValidatorOutstandingRewards(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, validatorAddr sdk.ValAddress) (outstandingRewards sdk.DecCoins) {

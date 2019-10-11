@@ -52,7 +52,6 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	supply.RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
-	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
@@ -79,7 +78,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
-		mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		mApp.Cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 
 	keeper := keep.NewKeeper(
@@ -93,7 +92,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genAccs, genState,
 		[]supplyexported.ModuleAccountI{govAcc, notBondedPool, bondPool}))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov, keySupply))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, keyGov, keySupply))
 
 	var (
 		addrs    []sdk.AccAddress

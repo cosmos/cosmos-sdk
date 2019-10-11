@@ -6,6 +6,8 @@ import (
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v0_38"
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v0_36"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_36"
+	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v0_38"
 )
 
 // Migrate migrates exported state from v0.34 to a v0.36 genesis state.
@@ -33,6 +35,15 @@ func Migrate(appState genutil.AppMap) genutil.AppMap {
 
 		// delete deprecated genaccounts genesis state
 		delete(appState, v036genaccounts.ModuleName)
+	}
+
+	// migrate staking state
+	if appState[v036staking.ModuleName] != nil {
+		var stakingGenState v036staking.GenesisState
+		v036Codec.MustUnmarshalJSON(appState[v036staking.ModuleName], &stakingGenState)
+
+		delete(appState, v036staking.ModuleName) // delete old key in case the name changed
+		appState[v038staking.ModuleName] = v038Codec.MustMarshalJSON(v038staking.Migrate(stakingGenState))
 	}
 
 	return appState

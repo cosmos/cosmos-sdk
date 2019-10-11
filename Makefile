@@ -25,13 +25,11 @@ build: go.sum
 
 update-swagger-docs: swag
 	$(BINDIR)/swag init -g client/rest/root.go --output client/rest/docs
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-    	echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
 .PHONY: update-swagger-docs
+
+verify-swagger-docs: swag
+	@scripts/swag.sh $(BINDIR)/swag
+.PHONY: verify-swagger-docs
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go

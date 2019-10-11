@@ -300,7 +300,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return serrors.ErrUnknownRequest(msg).QueryResult()
 	}
 
-	return
+	return res
 }
 
 //----------------------------------------

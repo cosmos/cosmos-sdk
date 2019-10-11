@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	kities = "crypto-kities"
-	doggos = "crypto-doggos"
+	kitties = "crypto-kitties"
+	doggos  = "crypto-doggos"
 )
 
 // RandomizedGenState generates a random GenesisState for nft
 func RandomizedGenState(simState *module.SimulationState) {
-	collections := types.NewCollections(types.NewCollection(kities, types.NFTs{}), types.NewCollection(doggos, types.NFTs{}))
+	collections := types.NewCollections(types.NewCollection(kitties, types.NFTs{}), types.NewCollection(doggos, types.NFTs{}))
 	var ownerships []types.Owner
 
 	for _, acc := range simState.Accounts {
@@ -39,7 +39,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				if err != nil {
 					panic(err)
 				}
-				idCollection = types.NewIDCollection(kities, []string{baseNFT.ID})
+				idCollection = types.NewIDCollection(kitties, []string{baseNFT.ID})
 			} else {
 				collections[1], err = collections[1].AddNFT(&baseNFT)
 				if err != nil {

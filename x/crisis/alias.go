@@ -14,6 +14,10 @@ const (
 	CodeInvalidInput  = types.CodeInvalidInput
 	ModuleName        = types.ModuleName
 	DefaultParamspace = types.DefaultParamspace
+
+	EventTypeInvariant   = types.EventTypeInvariant
+	AttributeValueCrisis = types.AttributeValueCrisis
+	AttributeKeyRoute    = types.AttributeKeyRoute
 )
 
 var (

@@ -23,7 +23,6 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	supply.RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(StoreKey)
-	tkeyStaking := sdk.NewTransientStoreKey(TStoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
 	feeCollector := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
@@ -42,14 +41,14 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 		types.BondedPoolName:    {supply.Burner, supply.Staking},
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bankKeeper, maccPerms)
-	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyStaking, supplyKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, mApp.AccountKeeper, supplyKeeper,
 		[]supplyexported.ModuleAccountI{feeCollector, notBondedPool, bondPool}))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking, keySupply))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, keySupply))
 	return mApp, keeper
 }
 

@@ -57,7 +57,7 @@ type (
 )
 
 // postDelegations is used to generate documentation for postDelegationsHandlerFn
-type postDelegations struct {
+type postDelegations struct { // nolint: deadcode unused
 	Msgs       []types.MsgDelegate `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee         `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
@@ -115,7 +115,7 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // postRedelegations is used to generate documentation for postRedelegationsHandlerFn
-type postRedelegations struct {
+type postRedelegations struct { // nolint: deadcode unused
 	Msgs       []types.MsgBeginRedelegate `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee                `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature        `json:"signatures" yaml:"signatures"`
@@ -173,7 +173,7 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // postUnbondingDelegations is used to generate documentation for postUnbondingDelegationsHandlerFn
-type postUnbondingDelegations struct {
+type postUnbondingDelegations struct { // nolint: deadcode unused
 	Msgs       []types.MsgUndelegate `json:"msg" yaml:"msg"`
 	Fee        auth.StdFee           `json:"fee" yaml:"fee"`
 	Signatures []auth.StdSignature   `json:"signatures" yaml:"signatures"`

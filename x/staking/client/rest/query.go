@@ -101,7 +101,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 // delegatorDelegations used to generate documentation for delegatorDelegationsHandlerFn
-type delegatorDelegations struct {
+type delegatorDelegations struct { // nolint: deadcode unused
 	Height int64                      `json:"height"`
 	Result []types.DelegationResponse `json:"result"`
 }
@@ -123,7 +123,7 @@ func delegatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // delegatorUnbondingDelegations used to generate documentation for delegatorUnbondingDelegationsHandlerFn
-type delegatorUnbondingDelegations struct {
+type delegatorUnbondingDelegations struct { // nolint: deadcode unused
 	Height int64                       `json:"height"`
 	Result []types.UnbondingDelegation `json:"result"`
 }
@@ -145,7 +145,7 @@ func delegatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.Hand
 }
 
 // delegatorTxs used to generate documentation for delegatorTxsHandlerFn
-type delegatorTxs struct {
+type delegatorTxs struct { // nolint: deadcode unused
 	Height int64                 `json:"height"`
 	Result []sdk.SearchTxsResult `json:"result"`
 }
@@ -238,7 +238,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // unbondingDelegation used to generate documentation for unbondingDelegationHandlerFn
-type unbondingDelegation struct {
+type unbondingDelegation struct { // nolint: deadcode unused
 	Height int64                     `json:"height"`
 	Result types.UnbondingDelegation `json:"result"`
 }
@@ -261,7 +261,7 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // redelegations used to generate documentation for redelegationsHandlerFn
-type redelegations struct {
+type redelegations struct { // nolint: deadcode unused
 	Height int64                             `json:"height"`
 	Result []types.RedelegationEntryResponse `json:"result"`
 }
@@ -340,7 +340,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // delegation used to generate documentation for delegationHandlerFn
-type delegation struct {
+type delegation struct { // nolint: deadcode unused
 	Height int64                    `json:"height"`
 	Result types.DelegationResponse `json:"result"`
 }
@@ -363,7 +363,7 @@ func delegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // delegatorValidators used to generate documentation for delegatorValidatorsHandlerFn
-type delegatorValidators struct {
+type delegatorValidators struct { // nolint: deadcode unused
 	Height int64             `json:"height"`
 	Result []types.Validator `json:"result"`
 }
@@ -385,7 +385,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // delegatorValidator used to generate documentation for delegatorValidatorHandlerFn
-type delegatorValidator struct {
+type delegatorValidator struct { // nolint: deadcode unused
 	Height int64           `json:"height"`
 	Result types.Validator `json:"result"`
 }
@@ -408,7 +408,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // validators used to generate documentation for validatorsHandlerFn
-type validators struct {
+type validators struct { // nolint: deadcode unused
 	Height int64             `json:"height"`
 	Result []types.Validator `json:"result"`
 }
@@ -465,7 +465,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // validator used to generate documentation for validatorHandlerFn
-type validator struct {
+type validator struct { // nolint: deadcode unused
 	Height int64           `json:"height"`
 	Result types.Validator `json:"result"`
 }
@@ -487,7 +487,7 @@ func validatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // validatorDelegations used to generate documentation for validatorDelegationsHandlerFn
-type validatorDelegations struct {
+type validatorDelegations struct { // nolint: deadcode unused
 	Height int64                      `json:"height"`
 	Result []types.DelegationResponse `json:"result"`
 }
@@ -509,7 +509,7 @@ func validatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // validatorUnbondingDelegations used to generate documentation for validatorUnbondingDelegationsHandlerFn
-type validatorUnbondingDelegations struct {
+type validatorUnbondingDelegations struct { // nolint: deadcode unused
 	Height int64                       `json:"height"`
 	Result []types.UnbondingDelegation `json:"result"`
 }
@@ -531,7 +531,7 @@ func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.Hand
 }
 
 // pool used to generate documentation for poolHandlerFn
-type pool struct {
+type pool struct { // nolint: deadcode unused
 	Height int64      `json:"height"`
 	Result types.Pool `json:"result"`
 }
@@ -566,7 +566,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // params used to generate documentation for paramsHandlerFn
-type params struct {
+type params struct { // nolint: deadcode unused
 	Height int64      `json:"height"`
 	Result types.Pool `json:"result"`
 }

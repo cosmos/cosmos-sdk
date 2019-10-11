@@ -245,7 +245,6 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
-
 }
 
 // validatorRewardsHandlerFn implements a validator rewards query route

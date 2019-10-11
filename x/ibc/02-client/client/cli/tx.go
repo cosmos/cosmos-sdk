@@ -2,22 +2,19 @@ package cli
 
 import (
 	"io/ioutil"
-	//	"os"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
-
-	//	"github.com/tendermint/tendermint/libs/log"
 
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	//	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	//	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const (
@@ -48,22 +45,29 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create [client-id] [consensus-state]",
 		Short: "create new client with a consensus state",
+		Long: `create a new IBC client on the target chain for a chain w/ given consensus-state. Consensus state can be passed in as a filepath or a string:
+
+$ gaiacli tx ibc client create clientFoo $(gaiacli --home /path/to/chain2 q ibc client consensus-state)
+$ gaiacli tx ibc client create clientFoo ./state.json
+`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc)
 
-			contents, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
-
 			var state client.ConsensusState
-			if err := cdc.UnmarshalJSON(contents, &state); err != nil {
-				return err
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening state file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &state); err != nil {
+					return fmt.Errorf("error unmarshalling state file: %v\n", err)
+				}
 			}
 
 			msg := client.MsgCreateClient{
@@ -81,22 +85,29 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update",
+		Use:   "update [client-id] [consensus-state]",
 		Short: "update existing client with a header",
+		Long: `update an existing IBC client on the target chain for a chain w/ given consensus-state. Consensus state can be passed in as a filepath or a string:
+
+$ gaiacli tx ibc client update clientFoo $(gaiacli --home /path/to/chain2 q ibc client consensus-state)
+$ gaiacli tx ibc client update clientFoo ./state.json
+`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc)
 
-			contents, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
-
 			var header client.Header
-			if err := cdc.UnmarshalJSON(contents, &header); err != nil {
-				return err
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening header file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+					return fmt.Errorf("error unmarshalling header file: %v\n", err)
+				}
 			}
 
 			msg := client.MsgUpdateClient{

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/store/state"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -119,61 +120,72 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(6),
 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// --chain-id values for each chain
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainId2)
+
+			// --from values for each wallet
+			from1 := viper.GetString(FlagFrom1)
+			from2 := viper.GetString(FlagFrom2) 
+
+			// --node values for each RPC
 			node1 := viper.GetString(FlagNode1)
 			node2 := viper.GetString(FlagNode2)
 
-			fmt.Println("setting cid1")
-			viper.Set(flags.FlagChainID, cid1)
+			// port IDs
+			portid1 := args[0]
+			portid2 := args[3]
 
+			// channel IDs
+			chanid1 := args[1]
+			chanid2 := args[4]
+
+			// connection IDs
+			connid1 := args[2]
+			connid2 := args[5]
+
+			// Create txbldr, clictx, querier for cid1
+			viper.Set(flags.FlagChainID, cid1)
 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, node1).
-				WithCodec(cdc).
+			ctx1 := context.NewCLIContextIBC(from1, cid1, node1).WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
-			fmt.Println("setting cid2")
+			// Create txbldr, clictx, querier for cid2			
 			viper.Set(flags.FlagChainID, cid2)
-
 			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, node2).
-				WithCodec(cdc).
+			ctx2 := context.NewCLIContextIBC(from2, cid2, node2).WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
 
-			portid1 := args[0]
-			chanid1 := args[1]
-			connid1 := args[2]
-			portid2 := args[3]
-			chanid2 := args[4]
-			connid2 := args[5]
-
-			chan1 := channel.Channel{
-				Counterparty:     chanid2,
-				CounterpartyPort: portid2,
-				ConnectionHops:   []string{connid1},
+			// get passphrase for key from1
+			passphrase1, err := keys.GetPassphrase(from1)
+			if err != nil {
+				return err
+			}
+			
+			// get passphrase for key from2
+			passphrase2, err := keys.GetPassphrase(from2)
+			if err != nil {
+				return err
 			}
 
-			chan2 := channel.Channel{
-				Counterparty:     chanid1,
-				CounterpartyPort: portid1,
-				ConnectionHops:   []string{connid2},
-			}
+			// Create channel objects
+			chan1 := channel.NewChannel(chanid2, portid2, []string{connid1})
+			chan2 := channel.NewChannel(chanid1, portid1, []string{connid2})
 
-			fmt.Println("setting cid1")
+			// Fetch handshake data chain1
 			viper.Set(flags.FlagChainID, cid1)
-
 			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
 			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
 			clientid1 := conn1.Client
-
-			fmt.Println("setting cid2")
+			
+			
+			// Fetch handshake data chain2
 			viper.Set(flags.FlagChainID, cid2)
-
 			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
 			conn2, _, err := obj2.OriginConnection().ConnectionCLI(q2)
 			if err != nil {
@@ -181,21 +193,17 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 			clientid2 := conn2.Client
 
-			fmt.Println("setting cid1")
-			viper.Set(flags.FlagChainID, cid1)
-
+			
 			// TODO: check state and if not Idle continue existing process
-			msginit := channel.MsgOpenInit{
-				PortID:    portid1,
-				ChannelID: chanid1,
-				Channel:   chan1,
-				Signer:    ctx1.GetFromAddress(),
-			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, []sdk.Msg{msginit})
-			if err != nil {
+			viper.Set(flags.FlagChainID, cid1)
+			msgOpenInit := channel.NewMsgOpenInit(portid1, chanid1, chan1, ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
+			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
 				return err
 			}
+			fmt.Printf(" [OK] txid(%v) port(%v) chan(%v)\n", res.TxHash, portid1, chanid1)
 
 			// Another block has to be passed after msginit is commited
 			// to retrieve the correct proofs
@@ -206,22 +214,17 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
-
-			msgupdate := client.MsgUpdateClient{
-				ClientID: clientid2,
-				Header:   header,
-				Signer:   ctx2.GetFromAddress(),
+			msgUpdateClient := client.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
 			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, []sdk.Msg{msgupdate})
-
-			fmt.Printf("updated apphash to %X\n", header.AppHash)
-
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
+			
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-			fmt.Printf("querying from %d\n", header.Height-1)
-
 			_, pchan, err := obj1.ChannelCLI(q1)
 			if err != nil {
 				return err
@@ -230,20 +233,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			msgtry := channel.MsgOpenTry{
-				PortID:    portid2,
-				ChannelID: chanid2,
-				Channel:   chan2,
-				Proofs:    []commitment.Proof{pchan, pstate},
-				Height:    uint64(header.Height),
-				Signer:    ctx2.GetFromAddress(),
-			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, []sdk.Msg{msgtry})
-			if err != nil {
+			
+			msgOpenTry := channel.NewMsgOpenTry(portid2, chanid2, chan2, []commitment.Proof{pchan, pstate}, uint64(header.Height), ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
 				return err
 			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
 
 			// Another block has to be passed after msginit is commited
 			// to retrieve the correct proofs
@@ -254,19 +252,17 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
-
-			msgupdate = client.MsgUpdateClient{
-				ClientID: clientid1,
-				Header:   header,
-				Signer:   ctx1.GetFromAddress(),
+			msgUpdateClient = client.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
 			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, []sdk.Msg{msgupdate})
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid1)
 
 			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
-
 			_, pchan, err = obj2.ChannelCLI(q2)
 			if err != nil {
 				return err
@@ -276,18 +272,15 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msgack := channel.MsgOpenAck{
-				PortID:    portid1,
-				ChannelID: chanid1,
-				Proofs:    []commitment.Proof{pchan, pstate},
-				Height:    uint64(header.Height),
-				Signer:    ctx1.GetFromAddress(),
-			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, []sdk.Msg{msgack})
-			if err != nil {
+			msgOpenAck := channel.NewMsgOpenAck(portid1, chanid1, []commitment.Proof{pchan, pstate}, uint64(header.Height), ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
 				return err
 			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
+
 
 			// Another block has to be passed after msginit is commited
 			// to retrieve the correct proofs
@@ -298,36 +291,30 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
-
-			msgupdate = client.MsgUpdateClient{
-				ClientID: clientid2,
-				Header:   header,
-				Signer:   ctx2.GetFromAddress(),
+			msgUpdateClient = client.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
 			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, []sdk.Msg{msgupdate})
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
 
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-
 			_, pstate, err = obj1.StageCLI(q1)
 			if err != nil {
 				return err
 			}
 
-			msgconfirm := channel.MsgOpenConfirm{
-				PortID:    portid2,
-				ChannelID: chanid2,
-				Proofs:    []commitment.Proof{pstate},
-				Height:    uint64(header.Height),
-				Signer:    ctx2.GetFromAddress(),
-			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, []sdk.Msg{msgconfirm})
-			if err != nil {
+			msgOpenConfirm := channel.NewMsgOpenConfirm(portid2, chanid2, []commitment.Proof{pstate}, uint64(header.Height), ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgOpenConfirm.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
 				return err
 			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
 
 			return nil
 		},

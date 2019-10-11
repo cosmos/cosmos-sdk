@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -60,9 +59,7 @@ func GetCmdQueryClient(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
-
-			return nil
+			return ctx.PrintOutput(state)
 		},
 	}
 }
@@ -88,9 +85,7 @@ func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, root))
-
-			return nil
+			return ctx.PrintOutput(root)
 		},
 	}
 }
@@ -131,9 +126,7 @@ func GetCmdQueryConsensusState(storeKey string, cdc *codec.Codec) *cobra.Command
 				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
-
-			return nil
+			return ctx.PrintOutput(state)
 		},
 	}
 }
@@ -143,10 +136,10 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "path",
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCLIContext().WithCodec(cdc)
 			mapp := mapping(cdc, storeName, version.Version)
 			path := merkle.NewPrefix([][]byte{[]byte(storeName)}, mapp.PrefixBytes())
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, path))
-			return nil
+			return ctx.PrintOutput(path)
 		},
 	}
 }
@@ -192,9 +185,7 @@ func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 				NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, header))
-
-			return nil
+			return ctx.PrintOutput(header)
 		},
 	}
 }

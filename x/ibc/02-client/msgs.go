@@ -10,6 +10,14 @@ type MsgCreateClient struct {
 	Signer         sdk.AccAddress
 }
 
+func NewMsgCreateClient(clientID string, consState ConsensusState, signer sdk.AccAddress) MsgCreateClient {
+	return MsgCreateClient{
+		ClientID: clientID,
+		ConsensusState: consState,
+		Signer: signer,
+	}
+}
+
 var _ sdk.Msg = MsgCreateClient{}
 
 func (msg MsgCreateClient) Route() string {
@@ -40,6 +48,14 @@ type MsgUpdateClient struct {
 	ClientID string
 	Header   Header
 	Signer   sdk.AccAddress
+}
+
+func NewMsgUpdateClient(cid string, h Header, s sdk.AccAddress) MsgUpdateClient {
+	return MsgUpdateClient{
+		ClientID: cid,
+		Header: h,
+		Signer: s,
+	}
 }
 
 var _ sdk.Msg = MsgUpdateClient{}

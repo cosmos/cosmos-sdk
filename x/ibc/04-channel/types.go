@@ -33,6 +33,14 @@ type Channel struct {
 	ConnectionHops   []string
 }
 
+func NewChannel(cp string, cpp string, cph []string) Channel {
+	return Channel {
+		Counterparty: cp,
+		CounterpartyPort: cpp,
+		ConnectionHops: cph,
+	}
+}
+
 func (ch Channel) CounterpartyHops() (res []string) {
 	res = make([]string, len(ch.ConnectionHops))
 	for i, hop := range ch.ConnectionHops {

@@ -100,32 +100,20 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 }
 
-// delegatorDelegations used to generate documentation for delegatorDelegationsHandlerFn
-type delegatorDelegations struct { // nolint: deadcode unused
-	Height int64                      `json:"height"`
-	Result []types.DelegationResponse `json:"result"`
-}
-
 // delegatorDelegationsHandlerFn implements a delegator delegations query route
 //
 // @Summary Query all delegations from a delegator
 // @Description Query all delegations from a single delegator address
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
+// @Param delegatorAddr path string true "The delegator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} delegatorDelegations
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.delegatorDelegations
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/delegations [get]
 func delegatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryDelegator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegatorDelegations))
-}
-
-// delegatorUnbondingDelegations used to generate documentation for delegatorUnbondingDelegationsHandlerFn
-type delegatorUnbondingDelegations struct { // nolint: deadcode unused
-	Height int64                       `json:"height"`
-	Result []types.UnbondingDelegation `json:"result"`
 }
 
 // delegatorUnbondingDelegationsHandlerFn implements a delegator unbonding delegations query route
@@ -134,20 +122,14 @@ type delegatorUnbondingDelegations struct { // nolint: deadcode unused
 // @Description Query all unbonding delegations from a single delegator address
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
+// @Param delegatorAddr path string true "The delegator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} delegatorUnbondingDelegations
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.delegatorUnbondingDelegations
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/unbonding_delegations [get]
 func delegatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryDelegator(cliCtx, "custom/staking/delegatorUnbondingDelegations")
-}
-
-// delegatorTxs used to generate documentation for delegatorTxsHandlerFn
-type delegatorTxs struct { // nolint: deadcode unused
-	Height int64                 `json:"height"`
-	Result []sdk.SearchTxsResult `json:"result"`
 }
 
 // delegatorTxsHandlerFn implements a delegator transactions query route
@@ -159,11 +141,11 @@ type delegatorTxs struct { // nolint: deadcode unused
 // @Description node that is not pruning transaction history
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
+// @Param delegatorAddr path string true "The delegator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Param type query string false "type of staking transaction, either (bond | unbond | redelegate)"
-// @Success 200 {object} delegatorTxs
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Param type query string false "Type of staking transaction, either (bond | unbond | redelegate)"
+// @Success 200 {object} rest.delegatorTxs
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/txs [get]
 func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -237,33 +219,21 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// unbondingDelegation used to generate documentation for unbondingDelegationHandlerFn
-type unbondingDelegation struct { // nolint: deadcode unused
-	Height int64                     `json:"height"`
-	Result types.UnbondingDelegation `json:"result"`
-}
-
 // unbondingDelegationHandlerFn implements a delegator/validator unbonding delegations query route
 //
 // @Summary Query all unbonding delegations from a delegator/validator pair
 // @Description Query all unbonding delegations from a single delegator/validator pair
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
-// @Param validatorAddr path string true "The address of the validator"
+// @Param delegatorAddr path string true "The delegator address"
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} unbondingDelegation
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.unbondingDelegation
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} [get]
 func unbondingDelegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryBonds(cliCtx, "custom/staking/unbondingDelegation")
-}
-
-// redelegations used to generate documentation for redelegationsHandlerFn
-type redelegations struct { // nolint: deadcode unused
-	Height int64                             `json:"height"`
-	Result []types.RedelegationEntryResponse `json:"result"`
 }
 
 // redelegationsHandlerFn implements a redelegations query route
@@ -272,13 +242,11 @@ type redelegations struct { // nolint: deadcode unused
 // @Description Query all redelegations filtered by delegator, validator_from, and/or validator_to
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
-// @Param validatorAddr path string true "The address of the validator"
-// @Param delegator query string false "delegator address"
-// @Param validator_from query string false "validator_from address"
-// @Param validator_to query string false "validator_to address"
+// @Param delegator query string false "The delegator address"
+// @Param validator_from query string false "The source validator address"
+// @Param validator_to query string false "The destination validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} redelegations
+// @Success 200 {object} rest.redelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/redelegations [get]
@@ -339,33 +307,21 @@ func redelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// delegation used to generate documentation for delegationHandlerFn
-type delegation struct { // nolint: deadcode unused
-	Height int64                    `json:"height"`
-	Result types.DelegationResponse `json:"result"`
-}
-
 // delegationHandlerFn implements an individual delegation query route
 //
 // @Summary Query an individual delegation
 // @Description Query an individual delegation
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
-// @Param validatorAddr path string true "The address of the validator"
+// @Param delegatorAddr path string true "The delegator address"
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} delegation
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.delegation
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/delegations/{validatorAddr} [get]
 func delegationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryBonds(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryDelegation))
-}
-
-// delegatorValidators used to generate documentation for delegatorValidatorsHandlerFn
-type delegatorValidators struct { // nolint: deadcode unused
-	Height int64             `json:"height"`
-	Result []types.Validator `json:"result"`
 }
 
 // delegatorValidatorsHandlerFn implements a delegator's bonded validators query route
@@ -374,20 +330,14 @@ type delegatorValidators struct { // nolint: deadcode unused
 // @Description Query a delegator's bonded validators
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
+// @Param delegatorAddr path string true "The delegator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} delegatorValidators
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.delegatorValidators
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/validators [get]
 func delegatorValidatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryDelegator(cliCtx, "custom/staking/delegatorValidators")
-}
-
-// delegatorValidator used to generate documentation for delegatorValidatorHandlerFn
-type delegatorValidator struct { // nolint: deadcode unused
-	Height int64           `json:"height"`
-	Result types.Validator `json:"result"`
 }
 
 // delegatorValidatorHandlerFn implements a delegator's bonded validator query route
@@ -396,34 +346,28 @@ type delegatorValidator struct { // nolint: deadcode unused
 // @Description Query a delegator's bonded validator
 // @Tags staking
 // @Produce json
-// @Param delegatorAddr path string true "The address of the delegator"
-// @Param validatorAddr path string true "The address of the validator"
+// @Param delegatorAddr path string true "The delegator address"
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.delegatorValidator
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/validators/{validatorAddr} [get]
 func delegatorValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryBonds(cliCtx, "custom/staking/delegatorValidator")
 }
 
-// validators used to generate documentation for validatorsHandlerFn
-type validators struct { // nolint: deadcode unused
-	Height int64             `json:"height"`
-	Result []types.Validator `json:"result"`
-}
-
 // validatorsHandlerFn implements a validators query route
 //
 // @Summary Query validators
-// @Description Query validators
+// @Description Query paginated validators filtering by status
 // @Tags staking
 // @Produce json
-// @Param status query string false "validator status, (bonded | unbonded | unbonding). Default bonded"
-// @Param page query int false "the page number to query, default 0"
-// @Param limit query int false "the number of results per page, default 20"
+// @Param status query string false "The validator status (bonded | unbonded | unbonding)" default(bonded)
+// @Param page query int false "The page number to query" default(1)
+// @Param limit query int false "The number of results per page" default(100)
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} validators
+// @Success 200 {object} rest.validators
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators [get]
@@ -464,87 +408,63 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// validator used to generate documentation for validatorHandlerFn
-type validator struct { // nolint: deadcode unused
-	Height int64           `json:"height"`
-	Result types.Validator `json:"result"`
-}
-
 // validatorHandlerFn implements a validator query route.
 //
 // @Summary Query a validator
-// @Description Query a validator
+// @Description Query a validator by operator address
 // @Tags staking
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator."
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} validator
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid heigh."
+// @Success 200 {object} rest.validator
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr} [get]
 func validatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryValidator(cliCtx, "custom/staking/validator")
 }
 
-// validatorDelegations used to generate documentation for validatorDelegationsHandlerFn
-type validatorDelegations struct { // nolint: deadcode unused
-	Height int64                      `json:"height"`
-	Result []types.DelegationResponse `json:"result"`
-}
-
 // validatorDelegationsHandlerFn implements a validator delegations query route.
 //
 // @Summary Query a validator's delegations
-// @Description Query a validator's delegations
+// @Description Query a validator's delegations by operator address
 // @Tags staking
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator"
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
 // @Success 200 {object} validatorDelegations
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr}/delegations [get]
 func validatorDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryValidator(cliCtx, fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryValidatorDelegations))
 }
 
-// validatorUnbondingDelegations used to generate documentation for validatorUnbondingDelegationsHandlerFn
-type validatorUnbondingDelegations struct { // nolint: deadcode unused
-	Height int64                       `json:"height"`
-	Result []types.UnbondingDelegation `json:"result"`
-}
-
 // validatorUnbondingDelegationsHandlerFn implements a validator unbonding delegations query route
 //
 // @Summary Query a validator's unbonding delegations
-// @Description Query a validator's unbonding delegations
+// @Description Query a validator's unbonding delegations by operator address
 // @Tags staking
 // @Produce json
-// @Param validatorAddr path string true "The address of the validator"
+// @Param validatorAddr path string true "The validator address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} validatorUnbondingDelegations
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.validatorUnbondingDelegations
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr}/unbonding_delegations [get]
 func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return queryValidator(cliCtx, "custom/staking/validatorUnbondingDelegations")
 }
 
-// pool used to generate documentation for poolHandlerFn
-type pool struct { // nolint: deadcode unused
-	Height int64      `json:"height"`
-	Result types.Pool `json:"result"`
-}
-
 // poolHandlerFn implements a staking pool query route
 //
-// @Summary Query the staking pools
+// @Summary Query the staking pool
 // @Description Query the staking pools
 // @Tags staking
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} pool
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.pool
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/pool [get]
 func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -565,12 +485,6 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// params used to generate documentation for paramsHandlerFn
-type params struct { // nolint: deadcode unused
-	Height int64      `json:"height"`
-	Result types.Pool `json:"result"`
-}
-
 // paramsHandlerFn implements a staking parameters query route.
 //
 // @Summary Query the staking parameters
@@ -578,8 +492,8 @@ type params struct { // nolint: deadcode unused
 // @Tags staking
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} params
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.params
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/parameters [get]
 func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

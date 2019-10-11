@@ -178,7 +178,9 @@ definitions:
       height:
         type: integer
       result:
-        type: string
+        items:
+          type: string
+        type: array
     type: object
   rest.delegatorUnbondingDelegations:
     properties:
@@ -188,6 +190,14 @@ definitions:
         items:
           $ref: '#/definitions/types.UnbondingDelegation'
         type: array
+    type: object
+  rest.delegatorValidator:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Validator'
+        type: object
     type: object
   rest.delegatorValidators:
     properties:
@@ -203,7 +213,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.Pool'
+        $ref: '#/definitions/types.Params'
         type: object
     type: object
   rest.pool:
@@ -388,9 +398,8 @@ definitions:
       height:
         type: integer
       result:
-        items:
-          $ref: '#/definitions/types.RedelegationEntryResponse'
-        type: array
+        $ref: '#/definitions/types.RedelegationResponses'
+        type: object
     type: object
   rest.sendResponse:
     properties:
@@ -445,9 +454,8 @@ definitions:
       height:
         type: integer
       result:
-        items:
-          $ref: '#/definitions/types.DelegationResponse'
-        type: array
+        $ref: '#/definitions/types.DelegationResponses'
+        type: object
     type: object
   rest.validatorUnbondingDelegations:
     properties:
@@ -546,6 +554,19 @@ definitions:
       validator_address:
         type: string
     type: object
+  types.DelegationResponses:
+    items:
+      properties:
+        balance:
+          type: string
+        delegator_address:
+          type: string
+        shares:
+          type: string
+        validator_address:
+          type: string
+      type: object
+    type: array
   types.Deposit:
     properties:
       amount:
@@ -650,6 +671,21 @@ definitions:
         description: address of the voter
         type: string
     type: object
+  types.Params:
+    properties:
+      downtime_jail_duration:
+        type: string
+      max_evidence_age:
+        type: string
+      min_signed_per_window:
+        type: string
+      signed_blocks_window:
+        type: integer
+      slash_fraction_double_sign:
+        type: string
+      slash_fraction_downtime:
+        type: string
+    type: object
   types.Pool:
     properties:
       bonded_tokens:
@@ -689,6 +725,21 @@ definitions:
           is not reached
         type: string
     type: object
+  types.RedelegationEntry:
+    properties:
+      completion_time:
+        description: time at which the redelegation will complete
+        type: string
+      creation_height:
+        description: height at which the redelegation took place
+        type: integer
+      initial_balance:
+        description: initial balance when redelegation started
+        type: string
+      shares_dst:
+        description: amount of destination-validator shares created by redelegation
+        type: string
+    type: object
   types.RedelegationEntryResponse:
     properties:
       balance:
@@ -706,6 +757,42 @@ definitions:
         description: amount of destination-validator shares created by redelegation
         type: string
     type: object
+  types.RedelegationResponse:
+    properties:
+      delegator_address:
+        description: delegator
+        type: string
+      entries:
+        description: 'nolint: structtag'
+        items:
+          $ref: '#/definitions/types.RedelegationEntryResponse'
+        type: array
+      validator_dst_address:
+        description: validator redelegation destination operator addr
+        type: string
+      validator_src_address:
+        description: validator redelegation source operator addr
+        type: string
+    type: object
+  types.RedelegationResponses:
+    items:
+      properties:
+        delegator_address:
+          description: delegator
+          type: string
+        entries:
+          description: 'nolint: structtag'
+          items:
+            $ref: '#/definitions/types.RedelegationEntryResponse'
+          type: array
+        validator_dst_address:
+          description: validator redelegation destination operator addr
+          type: string
+        validator_src_address:
+          description: validator redelegation source operator addr
+          type: string
+      type: object
+    type: array
   types.StdFee:
     properties:
       amount:
@@ -963,7 +1050,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.queryBalance'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -995,7 +1082,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.ResponseWithHeight'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "404":
@@ -1397,7 +1484,7 @@ paths:
     get:
       description: Query all delegations from a single delegator address
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
@@ -1414,7 +1501,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.delegatorDelegations'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1472,12 +1559,12 @@ paths:
     get:
       description: Query an individual delegation
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
         type: string
-      - description: The address of the validator
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1494,7 +1581,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.delegation'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1557,7 +1644,7 @@ paths:
         record must be available otherwise the query will fail. This requires a
         node that is not pruning transaction history
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
@@ -1566,7 +1653,7 @@ paths:
         in: query
         name: height
         type: string
-      - description: type of staking transaction, either (bond | unbond | redelegate)
+      - description: Type of staking transaction, either (bond | unbond | redelegate)
         in: query
         name: type
         type: string
@@ -1578,7 +1665,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.delegatorTxs'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1592,7 +1679,7 @@ paths:
     get:
       description: Query all unbonding delegations from a single delegator address
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
@@ -1609,7 +1696,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.delegatorUnbondingDelegations'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1668,12 +1755,12 @@ paths:
       description: Query all unbonding delegations from a single delegator/validator
         pair
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
         type: string
-      - description: The address of the validator
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1690,7 +1777,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.unbondingDelegation'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1704,7 +1791,7 @@ paths:
     get:
       description: Query a delegator's bonded validators
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
@@ -1721,7 +1808,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.delegatorValidators'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1735,12 +1822,12 @@ paths:
     get:
       description: Query a delegator's bonded validator
       parameters:
-      - description: The address of the delegator
+      - description: The delegator address
         in: path
         name: delegatorAddr
         required: true
         type: string
-      - description: The address of the validator
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1755,9 +1842,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.ResponseWithHeight'
+            $ref: '#/definitions/rest.delegatorValidator'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1783,7 +1870,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.params'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1809,14 +1896,14 @@ paths:
           schema:
             $ref: '#/definitions/rest.pool'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
           description: Returned on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Query the staking pools
+      summary: Query the staking pool
       tags:
       - staking
   /staking/redelegations:
@@ -1824,25 +1911,15 @@ paths:
       description: Query all redelegations filtered by delegator, validator_from,
         and/or validator_to
       parameters:
-      - description: The address of the delegator
-        in: path
-        name: delegatorAddr
-        required: true
-        type: string
-      - description: The address of the validator
-        in: path
-        name: validatorAddr
-        required: true
-        type: string
-      - description: delegator address
+      - description: The delegator address
         in: query
         name: delegator
         type: string
-      - description: validator_from address
+      - description: The source validator address
         in: query
         name: validator_from
         type: string
-      - description: validator_to address
+      - description: The destination validator address
         in: query
         name: validator_to
         type: string
@@ -1870,17 +1947,20 @@ paths:
       - staking
   /staking/validators:
     get:
-      description: Query validators
+      description: Query paginated validators filtering by status
       parameters:
-      - description: validator status, (bonded | unbonded | unbonding). Default bonded
+      - default: bonded
+        description: The validator status (bonded | unbonded | unbonding)
         in: query
         name: status
         type: string
-      - description: the page number to query, default 0
+      - default: 1
+        description: The page number to query
         in: query
         name: page
         type: integer
-      - description: the number of results per page, default 20
+      - default: 100
+        description: The number of results per page
         in: query
         name: limit
         type: integer
@@ -1908,9 +1988,9 @@ paths:
       - staking
   /staking/validators/{validatorAddr}:
     get:
-      description: Query a validator
+      description: Query a validator by operator address
       parameters:
-      - description: The address of the validator.
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1927,7 +2007,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.validator'
         "400":
-          description: Returned if the request doesn't have a valid heigh.
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1939,9 +2019,9 @@ paths:
       - staking
   /staking/validators/{validatorAddr}/delegations:
     get:
-      description: Query a validator's delegations
+      description: Query a validator's delegations by operator address
       parameters:
-      - description: The address of the validator
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1958,7 +2038,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.validatorDelegations'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -1970,9 +2050,9 @@ paths:
       - staking
   /staking/validators/{validatorAddr}/unbonding_delegations:
     get:
-      description: Query a validator's unbonding delegations
+      description: Query a validator's unbonding delegations by operator address
       parameters:
-      - description: The address of the validator
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
@@ -1989,7 +2069,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.validatorUnbondingDelegations'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -2002,6 +2082,16 @@ paths:
   /supply/total:
     get:
       parameters:
+      - default: 1
+        description: The page number to query
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: The number of results per page
+        in: query
+        name: limit
+        type: integer
       - description: Block height to execute query (defaults to chain tip)
         in: query
         name: height
@@ -2014,7 +2104,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.totalSupply'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
@@ -2044,7 +2134,7 @@ paths:
           schema:
             $ref: '#/definitions/rest.totalDenomSupply'
         "400":
-          description: Returned if the request doesn't have a valid height
+          description: Returned if the request doesn't have valid query params
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":

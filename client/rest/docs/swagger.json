@@ -92,7 +92,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -139,7 +139,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -710,7 +710,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
@@ -730,7 +730,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -821,14 +821,14 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "The address of the validator",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -848,7 +848,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -941,7 +941,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
@@ -954,7 +954,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "type of staking transaction, either (bond | unbond | redelegate)",
+                        "description": "Type of staking transaction, either (bond | unbond | redelegate)",
                         "name": "type",
                         "in": "query"
                     }
@@ -967,7 +967,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -994,7 +994,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
@@ -1014,7 +1014,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1105,14 +1105,14 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "The address of the validator",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -1132,7 +1132,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1159,7 +1159,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
@@ -1179,7 +1179,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1206,14 +1206,14 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
+                        "description": "The delegator address",
                         "name": "delegatorAddr",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "The address of the validator",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -1229,11 +1229,11 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.ResponseWithHeight"
+                            "$ref": "#/definitions/rest.delegatorValidator"
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1273,7 +1273,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1296,7 +1296,7 @@
                 "tags": [
                     "staking"
                 ],
-                "summary": "Query the staking pools",
+                "summary": "Query the staking pool",
                 "parameters": [
                     {
                         "type": "string",
@@ -1313,7 +1313,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1340,33 +1340,19 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the delegator",
-                        "name": "delegatorAddr",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "The address of the validator",
-                        "name": "validatorAddr",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "delegator address",
+                        "description": "The delegator address",
                         "name": "delegator",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "validator_from address",
+                        "description": "The source validator address",
                         "name": "validator_from",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "validator_to address",
+                        "description": "The destination validator address",
                         "name": "validator_to",
                         "in": "query"
                     },
@@ -1401,7 +1387,7 @@
         },
         "/staking/validators": {
             "get": {
-                "description": "Query validators",
+                "description": "Query paginated validators filtering by status",
                 "produces": [
                     "application/json"
                 ],
@@ -1412,19 +1398,22 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "validator status, (bonded | unbonded | unbonding). Default bonded",
+                        "default": "bonded",
+                        "description": "The validator status (bonded | unbonded | unbonding)",
                         "name": "status",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "the page number to query, default 0",
+                        "default": 1,
+                        "description": "The page number to query",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "the number of results per page, default 20",
+                        "default": 100,
+                        "description": "The number of results per page",
                         "name": "limit",
                         "in": "query"
                     },
@@ -1459,7 +1448,7 @@
         },
         "/staking/validators/{validatorAddr}": {
             "get": {
-                "description": "Query a validator",
+                "description": "Query a validator by operator address",
                 "produces": [
                     "application/json"
                 ],
@@ -1470,7 +1459,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the validator.",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -1490,7 +1479,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid heigh.",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1506,7 +1495,7 @@
         },
         "/staking/validators/{validatorAddr}/delegations": {
             "get": {
-                "description": "Query a validator's delegations",
+                "description": "Query a validator's delegations by operator address",
                 "produces": [
                     "application/json"
                 ],
@@ -1517,7 +1506,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the validator",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -1537,7 +1526,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1553,7 +1542,7 @@
         },
         "/staking/validators/{validatorAddr}/unbonding_delegations": {
             "get": {
-                "description": "Query a validator's unbonding delegations",
+                "description": "Query a validator's unbonding delegations by operator address",
                 "produces": [
                     "application/json"
                 ],
@@ -1564,7 +1553,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "The address of the validator",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
@@ -1584,7 +1573,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1609,6 +1598,20 @@
                 "summary": "Query total supply of coins",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "The page number to query",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "The number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Block height to execute query (defaults to chain tip)",
                         "name": "height",
@@ -1623,7 +1626,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1669,7 +1672,7 @@
                         }
                     },
                     "400": {
-                        "description": "Returned if the request doesn't have a valid height",
+                        "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
                         }
@@ -1994,7 +1997,10 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2009,6 +2015,18 @@
                     "items": {
                         "$ref": "#/definitions/types.UnbondingDelegation"
                     }
+                }
+            }
+        },
+        "rest.delegatorValidator": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Validator"
                 }
             }
         },
@@ -2034,7 +2052,7 @@
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/types.Pool"
+                    "$ref": "#/definitions/types.Params"
                 }
             }
         },
@@ -2312,10 +2330,8 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.RedelegationEntryResponse"
-                    }
+                    "type": "object",
+                    "$ref": "#/definitions/types.RedelegationResponses"
                 }
             }
         },
@@ -2399,10 +2415,8 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.DelegationResponse"
-                    }
+                    "type": "object",
+                    "$ref": "#/definitions/types.DelegationResponses"
                 }
             }
         },
@@ -2536,6 +2550,26 @@
                 },
                 "validator_address": {
                     "type": "string"
+                }
+            }
+        },
+        "types.DelegationResponses": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "balance": {
+                        "type": "string"
+                    },
+                    "delegator_address": {
+                        "type": "string"
+                    },
+                    "shares": {
+                        "type": "string"
+                    },
+                    "validator_address": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2691,6 +2725,29 @@
                 }
             }
         },
+        "types.Params": {
+            "type": "object",
+            "properties": {
+                "downtime_jail_duration": {
+                    "type": "string"
+                },
+                "max_evidence_age": {
+                    "type": "string"
+                },
+                "min_signed_per_window": {
+                    "type": "string"
+                },
+                "signed_blocks_window": {
+                    "type": "integer"
+                },
+                "slash_fraction_double_sign": {
+                    "type": "string"
+                },
+                "slash_fraction_downtime": {
+                    "type": "string"
+                }
+            }
+        },
         "types.Pool": {
             "type": "object",
             "properties": {
@@ -2742,6 +2799,27 @@
                 }
             }
         },
+        "types.RedelegationEntry": {
+            "type": "object",
+            "properties": {
+                "completion_time": {
+                    "description": "time at which the redelegation will complete",
+                    "type": "string"
+                },
+                "creation_height": {
+                    "description": "height at which the redelegation took place",
+                    "type": "integer"
+                },
+                "initial_balance": {
+                    "description": "initial balance when redelegation started",
+                    "type": "string"
+                },
+                "shares_dst": {
+                    "description": "amount of destination-validator shares created by redelegation",
+                    "type": "string"
+                }
+            }
+        },
         "types.RedelegationEntryResponse": {
             "type": "object",
             "properties": {
@@ -2763,6 +2841,57 @@
                 "shares_dst": {
                     "description": "amount of destination-validator shares created by redelegation",
                     "type": "string"
+                }
+            }
+        },
+        "types.RedelegationResponse": {
+            "type": "object",
+            "properties": {
+                "delegator_address": {
+                    "description": "delegator",
+                    "type": "string"
+                },
+                "entries": {
+                    "description": "nolint: structtag",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.RedelegationEntryResponse"
+                    }
+                },
+                "validator_dst_address": {
+                    "description": "validator redelegation destination operator addr",
+                    "type": "string"
+                },
+                "validator_src_address": {
+                    "description": "validator redelegation source operator addr",
+                    "type": "string"
+                }
+            }
+        },
+        "types.RedelegationResponses": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "delegator_address": {
+                        "description": "delegator",
+                        "type": "string"
+                    },
+                    "entries": {
+                        "description": "nolint: structtag",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/types.RedelegationEntryResponse"
+                        }
+                    },
+                    "validator_dst_address": {
+                        "description": "validator redelegation destination operator addr",
+                        "type": "string"
+                    },
+                    "validator_src_address": {
+                        "description": "validator redelegation source operator addr",
+                        "type": "string"
+                    }
                 }
             }
         },

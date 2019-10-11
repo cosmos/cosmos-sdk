@@ -38,24 +38,24 @@ type keyringKeybase struct {
 var maxPassphraseEntryAttempts = 3
 
 // NewKeyring creates a new instance of a keyring.
-func NewKeyring(name string, dir string, userInput io.Reader) Keybase {
+func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return newKeyringKeybase(db)
+	return newKeyringKeybase(db), nil
 }
 
 // NewTestKeyring creates a new instance of a keyring for
 // testing purposes that  does not prompt users for password.
-func NewTestKeyring(name string, dir string) Keybase {
+func NewTestKeyring(name string, dir string) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return newKeyringKeybase(db)
+	return newKeyringKeybase(db), nil
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted

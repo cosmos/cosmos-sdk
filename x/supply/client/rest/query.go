@@ -30,7 +30,21 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods("GET")
 }
 
+type totalSupply struct { //nolint: deadcode unsued
+	Height int64        `json:"height"`
+	Result types.Supply `json:"result"`
+}
+
 // HTTP request handler to query the total supply of coins
+//
+// @Summary Query total supply of coins
+// @Tags supply
+// @Produce json
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} totalSupply
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /supply/total [get]
 func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
@@ -63,6 +77,22 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the supply of a single denom
+type totalDenomSupply struct { //nolint: deadcode unsued
+	Height int64  `json:"height"`
+	Result string `json:"result"`
+}
+
+// HTTP request handler to query the supply of a denomination
+//
+// @Summary Query the supply of a denomination
+// @Tags supply
+// @Produce json
+// @Param denom path string true "denomination"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} totalDenomSupply
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /supply/total/{denomination} [get]
 func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		denom := mux.Vars(r)["denom"]

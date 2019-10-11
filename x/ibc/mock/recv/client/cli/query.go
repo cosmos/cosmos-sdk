@@ -66,12 +66,10 @@ func GetCmdQueryNextSequence(storeName string, cdc *codec.Codec) *cobra.Command 
 			}
 
 			var res uint64
-			if val == nil {
-				res = 1
-			} else {
+			if val != nil {
 				cdc.MustUnmarshalBinaryBare(val, &res)
 			}
-			fmt.Println(res+1)
+			fmt.Println(res + 1)
 
 			return nil
 		},

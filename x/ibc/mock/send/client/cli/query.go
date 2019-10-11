@@ -53,7 +53,7 @@ func GetCmdQuerySequence(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 func GetCmdQueryNextSequence(storeName string, cdc *codec.Codec) *cobra.Command {
-		return &cobra.Command{
+	return &cobra.Command{
 		Use:   "next [channel-id]",
 		Short: "Query the next sequence for the channel, meant to be used for scripting",
 		Args:  cobra.ExactArgs(1),
@@ -66,12 +66,10 @@ func GetCmdQueryNextSequence(storeName string, cdc *codec.Codec) *cobra.Command 
 			}
 
 			var res uint64
-			if val == nil {
-				res = 1
-			} else {
+			if val != nil {
 				cdc.MustUnmarshalBinaryBare(val, &res)
 			}
-			fmt.Println(res+1)
+			fmt.Println(res + 1)
 
 			return nil
 		},

@@ -11,7 +11,7 @@ require (
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/golang-lru v0.5.3
-	github.com/mattn/go-isatty v0.0.9
+	github.com/mattn/go-isatty v0.0.10
 	github.com/pelletier/go-toml v1.5.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
@@ -26,7 +26,7 @@ require (
 	github.com/tendermint/crypto v0.0.0-20190823183015-45b1026d81ae
 	github.com/tendermint/go-amino v0.15.0
 	github.com/tendermint/iavl v0.12.4
-	github.com/tendermint/tendermint v0.32.5
+	github.com/tendermint/tendermint v0.32.6
 	github.com/tendermint/tm-db v0.2.0
 	gopkg.in/yaml.v2 v2.2.4
 )

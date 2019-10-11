@@ -13,37 +13,26 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // run the tx through the anteHandler and ensure its valid
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
-	_, result, abort := anteHandler(ctx, tx, simulate)
-	require.Equal(t, "", result.Log)
-	require.False(t, abort)
-	require.Equal(t, sdk.CodeOK, result.Code)
-	require.True(t, result.IsOK())
+	_, err := anteHandler(ctx, tx, simulate)
+	require.Nil(t, err)
 }
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
-	newCtx, result, abort := anteHandler(ctx, tx, simulate)
-	require.True(t, abort)
+	_, err := anteHandler(ctx, tx, simulate)
+	require.NotNil(t, err)
+
+	result := sdk.ResultFromError(err)
 
 	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))
 	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
-
-	if code == sdk.CodeOutOfGas {
-		stdTx, ok := tx.(types.StdTx)
-		require.True(t, ok, "tx must be in form auth.types.StdTx")
-		// GasWanted set correctly
-		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
-		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
-		// Check that context is set correctly
-		require.Equal(t, result.GasUsed, newCtx.GasMeter().GasConsumed(), "Context not updated correctly")
-	}
 }
 
 // Test various error cases in the AnteHandler control flow.
@@ -354,12 +343,12 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
@@ -481,7 +470,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// test wrong signer if public key exist
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{0}, []uint64{1}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	// test wrong signer if public doesn't exist
 	msg = types.NewTestMsg(addr2)
@@ -528,7 +517,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	msg = types.NewTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	tx = types.NewTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	sigs := tx.(types.StdTx).GetSignatures()
+	sigs := tx.(types.StdTx).Signatures
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
@@ -541,84 +530,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
 	require.Nil(t, acc2.GetPubKey())
-}
-
-func TestProcessPubKey(t *testing.T) {
-	app, ctx := createTestApp(true)
-
-	// keys
-	_, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-
-	acc2.SetPubKey(priv2.PubKey())
-
-	type args struct {
-		acc      exported.Account
-		sig      types.StdSignature
-		simulate bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"no sigs, simulate off", args{acc1, types.StdSignature{}, false}, true},
-		{"no sigs, simulate on", args{acc1, types.StdSignature{}, true}, false},
-		{"no sigs, account with pub, simulate on", args{acc2, types.StdSignature{}, true}, false},
-		{"pubkey doesn't match addr, simulate off", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, false}, true},
-		{"pubkey doesn't match addr, simulate on", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, true}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := ante.ProcessPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
-			require.Equal(t, tt.wantErr, !err.IsOK())
-		})
-	}
-}
-
-func TestConsumeSignatureVerificationGas(t *testing.T) {
-	params := types.DefaultParams()
-	msg := []byte{1, 2, 3, 4}
-
-	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
-	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
-	multisignature1 := multisig.NewMultisig(len(pkSet1))
-	expectedCost1 := expectedGasCostByKeys(pkSet1)
-	for i := 0; i < len(pkSet1); i++ {
-		multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
-	}
-
-	type args struct {
-		meter  sdk.GasMeter
-		sig    []byte
-		pubkey crypto.PubKey
-		params types.Params
-	}
-	tests := []struct {
-		name        string
-		args        args
-		gasConsumed uint64
-		shouldErr   bool
-	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1.Marshal(), multisigKey1, params}, expectedCost1, false},
-		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			res := ante.DefaultSigVerificationGasConsumer(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
-
-			if tt.shouldErr {
-				require.False(t, res.IsOK())
-			} else {
-				require.True(t, res.IsOK())
-				require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
-			}
-		})
-	}
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte, keyTypeed25519 bool) (pubkeys []crypto.PubKey, signatures [][]byte) {
@@ -702,14 +613,15 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	priv7, _, addr7 := types.KeyTestPubAddr()
 	priv8, _, addr8 := types.KeyTestPubAddr()
 
+	addrs := []sdk.AccAddress{addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8}
+
 	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
+	for i, addr := range addrs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		acc.SetCoins(types.NewTestCoins())
+		acc.SetAccountNumber(uint64(i))
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
 
 	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
@@ -718,60 +630,9 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 
 	// test rejection logic
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
-		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
+		[]uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
-}
-
-func TestEnsureSufficientMempoolFees(t *testing.T) {
-	// setup
-	_, ctx := createTestApp(true)
-	ctx = ctx.WithMinGasPrices(
-		sdk.DecCoins{
-			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001stake
-		},
-	)
-
-	testCases := []struct {
-		input      types.StdFee
-		expectedOK bool
-	}{
-		{types.NewStdFee(200000, sdk.Coins{}), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 10))), true},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("atom", 5),
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-	}
-
-	for i, tc := range testCases {
-		res := ante.EnsureSufficientMempoolFees(ctx, tc.input)
-		require.Equal(
-			t, tc.expectedOK, res.IsOK(),
-			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
-		)
-	}
 }
 
 // Test custom SignatureVerificationGasConsumer
@@ -780,13 +641,13 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) sdk.Result {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-			return sdk.Result{}
+			return nil
 		default:
-			return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %T", pubkey)).Result()
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
 	})
 

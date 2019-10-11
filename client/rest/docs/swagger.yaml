@@ -217,6 +217,21 @@ definitions:
         $ref: '#/definitions/types.Votes'
         type: object
     type: object
+  rest.totalDenomSupply:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
+  rest.totalSupply:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Supply'
+        type: object
+    type: object
   types.ABCIMessageLog:
     properties:
       events:
@@ -384,6 +399,12 @@ definitions:
           type: string
       type: object
     type: array
+  types.Supply:
+    properties:
+      total:
+        description: total supply of tokens registered on the chain
+        type: string
+    type: object
   types.TallyResult:
     properties:
       abstain:
@@ -889,6 +910,61 @@ paths:
       summary: Query a governance proposal's individual vote
       tags:
       - governance
+  /supply/total:
+    get:
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.totalSupply'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query total supply of coins
+      tags:
+      - supply
+  /supply/total/{denomination}:
+    get:
+      parameters:
+      - description: denomination
+        in: path
+        name: denom
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.totalDenomSupply'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query the supply of a denomination
+      tags:
+      - supply
   /txs:
     post:
       consumes:

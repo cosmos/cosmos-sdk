@@ -5,6 +5,107 @@
         "license": {}
     },
     "paths": {
+        "/bank/accounts/{address}/transfers": {
+            "post": {
+                "description": "Transfer tokens to another account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bank"
+                ],
+                "summary": "Token Transfer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account address in bech32 format",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Signed transaction along with the broadcasting mode",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.SendReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the unsigned transaction",
+                        "schema": {
+                            "$ref": "#/definitions/rest.sendResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid.",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned if the transaction cannot be decoded.",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/bank/balances/{address}": {
+            "get": {
+                "description": "Query an accounts balance",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bank"
+                ],
+                "summary": "Query account balances",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account address to query",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.queryBalance"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid height",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/gov/parameters/{type}": {
             "get": {
                 "description": "Query either (deposit | tallying | voting) parameters of the governance module",
@@ -866,6 +967,18 @@
                 }
             }
         },
+        "rest.SendReq": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                }
+            }
+        },
         "rest.VoteReq": {
             "type": "object",
             "properties": {
@@ -952,6 +1065,17 @@
                     "items": {
                         "$ref": "#/definitions/auth.StdSignature"
                     }
+                }
+            }
+        },
+        "rest.queryBalance": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
                 }
             }
         },
@@ -1052,6 +1176,30 @@
                 "result": {
                     "type": "object",
                     "$ref": "#/definitions/types.Votes"
+                }
+            }
+        },
+        "rest.sendResponse": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgSend"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
                 }
             }
         },
@@ -1167,6 +1315,20 @@
                 }
             }
         },
+        "types.MsgSend": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "from_address": {
+                    "type": "string"
+                },
+                "to_address": {
+                    "type": "string"
+                }
+            }
+        },
         "types.MsgSubmitProposal": {
             "type": "object",
             "properties": {
@@ -1271,7 +1433,10 @@
                     "type": "string"
                 },
                 "msg": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "signatures": {
                     "type": "array",

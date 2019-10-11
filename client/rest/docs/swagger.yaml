@@ -91,6 +91,14 @@ definitions:
       result:
         type: string
     type: object
+  rest.SendReq:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+    type: object
   rest.VoteReq:
     properties:
       base_req:
@@ -150,6 +158,13 @@ definitions:
         items:
           $ref: '#/definitions/auth.StdSignature'
         type: array
+    type: object
+  rest.queryBalance:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
     type: object
   rest.queryDeposit:
     properties:
@@ -216,6 +231,22 @@ definitions:
       result:
         $ref: '#/definitions/types.Votes'
         type: object
+    type: object
+  rest.sendResponse:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgSend'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
     type: object
   rest.totalDenomSupply:
     properties:
@@ -297,6 +328,15 @@ definitions:
         description: ID of the proposal
         type: integer
     type: object
+  types.MsgSend:
+    properties:
+      amount:
+        type: string
+      from_address:
+        type: string
+      to_address:
+        type: string
+    type: object
   types.MsgSubmitProposal:
     properties:
       content:
@@ -373,7 +413,9 @@ definitions:
       memo:
         type: string
       msg:
-        type: string
+        items:
+          type: string
+        type: array
       signatures:
         items:
           $ref: '#/definitions/types.StdSignature'
@@ -490,6 +532,73 @@ info:
   contact: {}
   license: {}
 paths:
+  /bank/accounts/{address}/transfers:
+    post:
+      consumes:
+      - application/json
+      description: Transfer tokens to another account
+      parameters:
+      - description: Account address in bech32 format
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Signed transaction along with the broadcasting mode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/rest.SendReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.sendResponse'
+        "400":
+          description: Returned if the request is invalid.
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned if the transaction cannot be decoded.
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Token Transfer
+      tags:
+      - bank
+  /bank/balances/{address}:
+    get:
+      description: Query an accounts balance
+      parameters:
+      - description: Account address to query
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.queryBalance'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query account balances
+      tags:
+      - bank
   /gov/parameters/{type}:
     get:
       description: Query either (deposit | tallying | voting) parameters of the governance

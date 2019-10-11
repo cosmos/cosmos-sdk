@@ -168,6 +168,15 @@ definitions:
           $ref: '#/definitions/types.Deposit'
         type: array
     type: object
+  rest.queryParams:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.Params'
+        type: array
+    type: object
   rest.queryProposal:
     properties:
       height:
@@ -216,6 +225,37 @@ definitions:
       result:
         $ref: '#/definitions/types.Votes'
         type: object
+    type: object
+  rest.stdTx:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        type: string
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
+  rest.validatorSignInfo:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.ValidatorSigningInfo'
+        type: object
+    type: object
+  rest.validatorsSigningInfo:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.ValidatorSigningInfo'
+        type: array
     type: object
   types.ABCIMessageLog:
     properties:
@@ -304,6 +344,27 @@ definitions:
         type: integer
       voter:
         description: address of the voter
+        type: string
+    type: object
+  types.Params:
+    properties:
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
+        type: string
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
         type: string
     type: object
   types.Proposal:
@@ -431,6 +492,28 @@ definitions:
         type: object
       txhash:
         type: string
+    type: object
+  types.ValidatorSigningInfo:
+    properties:
+      address:
+        description: validator consensus address
+        type: string
+      index_offset:
+        description: index offset into signed block bit array
+        type: integer
+      jailed_until:
+        description: timestamp validator cannot be unjailed until
+        type: string
+      missed_blocks_counter:
+        description: missed blocks counter (to avoid scanning the array every time)
+        type: integer
+      start_height:
+        description: height at which validator was first a candidate OR was unjailed
+        type: integer
+      tombstoned:
+        description: whether or not a validator has been tombstoned (killed out of
+          validator set)
+        type: boolean
     type: object
   types.Vote:
     properties:
@@ -889,6 +972,127 @@ paths:
       summary: Query a governance proposal's individual vote
       tags:
       - governance
+  /slashing/parameters:
+    get:
+      description: Get the current slashing parameters
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.queryParams'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Get the current slashing parameters
+      tags:
+      - slashing
+  /slashing/validators/{validatorAddr}/unjai:
+    post:
+      consumes:
+      - application/json
+      description: Send transaction to unjail a jailed validator
+      parameters:
+      - description: bech32 validator address
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: The data required to unjail
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UnjailReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.stdTx'
+        "400":
+          description: Invalid validator address or base_req
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Validator address incorrect
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Unjail a jailed validator
+      tags:
+      - slashing
+  /slashing/validators/{validatorPubKey}/signing_info:
+    get:
+      description: Get sign info of given validator
+      parameters:
+      - description: Bech32 validator public key
+        in: path
+        name: validatorPubKey
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorSignInfo'
+        "400":
+          description: 'Returned if the request doesn''t have a valid height or invalid
+            validator public key '
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Get sign info of given validator
+      tags:
+      - slashing
+  /staking/signing_infos:
+    get:
+      description: Get sign info of all validator
+      parameters:
+      - description: Bech32 validator public key
+        in: path
+        name: validatorPubKey
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorsSigningInfo'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Get sign info of all validator
+      tags:
+      - slashing
   /txs:
     post:
       consumes:

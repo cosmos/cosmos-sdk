@@ -47,4 +47,4 @@ See the [`handler` concept doc](../building-modules/handler.md) for a more detai
 
 ## Next
 
-Learn about [encoding](./encoding.md)
+Learn about [object-capabilities](./ocap.md)

@@ -262,4 +262,4 @@ in `[]byte` form, is stored in a block and appended to the blockchain.
 
 ## Next
 
-Learn about [Baseapp](../core/baseapp.md).
+Learn about [accounts, fees and gas](../accounts-fees-gas.md).

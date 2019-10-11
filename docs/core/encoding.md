@@ -63,4 +63,4 @@ func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 
 ## Next
 
-Learn about next concept 
+Learn about [events](./events.md).

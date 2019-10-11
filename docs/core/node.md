@@ -75,4 +75,4 @@ Upon starting, the node will bootstrap its RPC and P2P server and start dialing 
 
 ## Next
 
-Read more about the next core concept. 
+Learn about the [store](./store.md).

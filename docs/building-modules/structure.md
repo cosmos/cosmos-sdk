@@ -79,3 +79,7 @@ allows for greater freedom of development while maintaining API stability.
 - `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
 interfaces.
 - `simulation.go`: The module's simulation messages and related types (if any).
+
+## Next
+
+Learn about [interfaces](../interfaces/interfaces-intro.md).

@@ -85,4 +85,4 @@ Typically, this interface is implemented in the module's `keeper`. You can see a
 
 ## Next
 
-Learn about the recommended [structure for modules](./structure.md). 
+Learn about [genesis functionalities](./genesis.md). 

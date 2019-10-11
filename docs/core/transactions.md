@@ -78,3 +78,7 @@ Every message in a transaction must be signed by the addresses specified by `Get
 ## Handlers
 
 The final components developers must implement to enable transactions are handlers and keepers. Since messages are module types, each module needs a Handler to process all of its message types and enact the state changes within the module's scope. This design puts more responsibility in module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To read more about handlers, visit the documentation for building modules [here](../building-modules/handler.md).
+
+## Next
+
+Learn about the [context](./context.md).

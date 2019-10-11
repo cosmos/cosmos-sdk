@@ -45,3 +45,7 @@ See an [example of `InitGenesis` from the nameservice tutorial](https://github.c
 The `ExportGenesis` method is executed whenever an export of the state is made. It takes the latest known version of the subset of the state managed by the module and creates a new `GenesisState` out of it. This is mainly used when the chain needs to be upgraded via a hard fork. 
 
 See an [example of `ExportGenesis` from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L46-L57).
+
+## Next
+
+Learn about [modules interfaces](#module-interfaces.md).

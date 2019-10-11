@@ -463,3 +463,6 @@ When `Store.{Get, Set}()` is called, the store forwards the call to its parent, 
 
 When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
 
+## Next
+
+Learn about [encoding](./encoding.md).

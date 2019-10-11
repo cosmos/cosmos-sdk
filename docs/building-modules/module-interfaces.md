@@ -279,4 +279,4 @@ A few things to note:
 
 ## Next
 
-Read about the next topic in building modules.
+Read about the recommended [module structure](./structure.md).

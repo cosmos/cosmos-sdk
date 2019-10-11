@@ -1091,6 +1091,29 @@ var doc = `{
                 }
             }
         },
+        "rest.totalDenomSupply": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.totalSupply": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Supply"
+                }
+            }
+        },
         "types.ABCIMessageLog": {
             "type": "object",
             "properties": {

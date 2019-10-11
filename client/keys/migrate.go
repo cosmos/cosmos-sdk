@@ -2,12 +2,14 @@ package keys
 
 import (
 	"bufio"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,10 +50,16 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	// instantiate keyring
 	var keyring keys.Keybase
 	buf := bufio.NewReader(cmd.InOrStdin())
+	keyringServiceName := types.GetConfig().GetKeyringServiceName()
 	if viper.GetBool(flags.FlagDryRun) {
-		keyring = keys.NewTestKeyring(types.GetConfig().GetKeyringServiceName(), rootDir)
+		keyring, err = keys.NewTestKeyring(keyringServiceName, rootDir)
 	} else {
-		keyring = keys.NewKeyring(types.GetConfig().GetKeyringServiceName(), rootDir, buf)
+		keyring, err = keys.NewKeyring(keyringServiceName, rootDir, buf)
+	}
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf(
+			"failed to initialize keyring for service %s at directory %s",
+			keyringServiceName, rootDir))
 	}
 
 	for _, key := range oldKeys {

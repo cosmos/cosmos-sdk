@@ -196,7 +196,7 @@ func printAndValidateSigs(
 	}
 
 	success := true
-	sigs := stdTx.GetSignatures()
+	sigs := stdTx.Signatures
 
 	fmt.Println("")
 	fmt.Println("Signatures:")

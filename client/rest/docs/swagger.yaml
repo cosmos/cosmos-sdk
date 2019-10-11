@@ -44,6 +44,20 @@ definitions:
         $ref: '#/definitions/types.StdTx'
         type: object
     type: object
+  rest.DelegateRequest:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      delegator_address:
+        description: in bech32
+        type: string
+      validator_address:
+        description: in bech32
+        type: string
+    type: object
   rest.DepositReq:
     properties:
       amount:
@@ -84,6 +98,23 @@ definitions:
         description: Title of the proposal
         type: string
     type: object
+  rest.RedelegateRequest:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      delegator_address:
+        description: in bech32
+        type: string
+      validator_dst_address:
+        description: in bech32
+        type: string
+      validator_src_address:
+        description: in bech32
+        type: string
+    type: object
   rest.ResponseWithHeight:
     properties:
       height:
@@ -99,6 +130,20 @@ definitions:
         $ref: '#/definitions/rest.BaseReq'
         type: object
     type: object
+  rest.UndelegateRequest:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      delegator_address:
+        description: in bech32
+        type: string
+      validator_address:
+        description: in bech32
+        type: string
+    type: object
   rest.VoteReq:
     properties:
       base_req:
@@ -110,6 +155,80 @@ definitions:
       voter:
         description: address of the voter
         type: string
+    type: object
+  rest.delegation:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.DelegationResponse'
+        type: object
+    type: object
+  rest.delegatorDelegations:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.DelegationResponse'
+        type: array
+    type: object
+  rest.delegatorTxs:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
+  rest.delegatorUnbondingDelegations:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.UnbondingDelegation'
+        type: array
+    type: object
+  rest.delegatorValidators:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.Validator'
+        type: array
+    type: object
+  rest.params:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Pool'
+        type: object
+    type: object
+  rest.pool:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Pool'
+        type: object
+    type: object
+  rest.postDelegation:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgDelegate'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
     type: object
   rest.postDeposit:
     properties:
@@ -141,6 +260,38 @@ definitions:
       signatures:
         items:
           $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.postRedelegation:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgBeginRedelegate'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
+  rest.postUndelegate:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgUndelegate'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
         type: array
     type: object
   rest.postVote:
@@ -232,6 +383,15 @@ definitions:
         $ref: '#/definitions/types.Votes'
         type: object
     type: object
+  rest.redelegations:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.RedelegationEntryResponse'
+        type: array
+    type: object
   rest.sendResponse:
     properties:
       fee:
@@ -262,6 +422,49 @@ definitions:
       result:
         items:
           $ref: '#/definitions/types.Coin'
+        type: array
+    type: object
+  rest.unbondingDelegation:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.UnbondingDelegation'
+        type: object
+    type: object
+  rest.validator:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Validator'
+        type: object
+    type: object
+  rest.validatorDelegations:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.DelegationResponse'
+        type: array
+    type: object
+  rest.validatorUnbondingDelegations:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.UnbondingDelegation'
+        type: array
+    type: object
+  rest.validators:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/types.Validator'
         type: array
     type: object
   types.ABCIMessageLog:
@@ -314,7 +517,34 @@ definitions:
       denom:
         type: string
     type: object
+  types.Commission:
+    properties:
+      max_change_rate:
+        description: maximum daily increase of the validator commission, as a fraction
+        type: string
+      max_rate:
+        description: maximum commission rate which validator can ever charge, as a
+          fraction
+        type: string
+      rate:
+        description: the commission rate charged to delegators, as a fraction
+        type: string
+      update_time:
+        description: the last time the commission rate was changed
+        type: string
+    type: object
   types.Content:
+    type: object
+  types.DelegationResponse:
+    properties:
+      balance:
+        type: string
+      delegator_address:
+        type: string
+      shares:
+        type: string
+      validator_address:
+        type: string
     type: object
   types.Deposit:
     properties:
@@ -327,6 +557,44 @@ definitions:
       proposal_id:
         description: proposalID of the proposal
         type: integer
+    type: object
+  types.Description:
+    properties:
+      details:
+        description: optional details
+        type: string
+      identity:
+        description: optional identity signature (ex. UPort or Keybase)
+        type: string
+      moniker:
+        description: name
+        type: string
+      security_contact:
+        description: optional security contact info
+        type: string
+      website:
+        description: optional website link
+        type: string
+    type: object
+  types.MsgBeginRedelegate:
+    properties:
+      amount:
+        type: string
+      delegator_address:
+        type: string
+      validator_dst_address:
+        type: string
+      validator_src_address:
+        type: string
+    type: object
+  types.MsgDelegate:
+    properties:
+      amount:
+        type: string
+      delegator_address:
+        type: string
+      validator_address:
+        type: string
     type: object
   types.MsgDeposit:
     properties:
@@ -361,6 +629,15 @@ definitions:
         description: Address of the proposer
         type: string
     type: object
+  types.MsgUndelegate:
+    properties:
+      amount:
+        type: string
+      delegator_address:
+        type: string
+      validator_address:
+        type: string
+    type: object
   types.MsgVote:
     properties:
       option:
@@ -371,6 +648,15 @@ definitions:
         type: integer
       voter:
         description: address of the voter
+        type: string
+    type: object
+  types.Pool:
+    properties:
+      bonded_tokens:
+        description: tokens which are currently bonded to a validator
+        type: string
+      not_bonded_tokens:
+        description: tokens which are not bonded to a validator (unbonded or unbonding)
         type: string
     type: object
   types.Proposal:
@@ -401,6 +687,23 @@ definitions:
       voting_start_time:
         description: Time of the block where MinDeposit was reached. -1 if MinDeposit
           is not reached
+        type: string
+    type: object
+  types.RedelegationEntryResponse:
+    properties:
+      balance:
+        type: string
+      completion_time:
+        description: time at which the redelegation will complete
+        type: string
+      creation_height:
+        description: height at which the redelegation took place
+        type: integer
+      initial_balance:
+        description: initial balance when redelegation started
+        type: string
+      shares_dst:
+        description: amount of destination-validator shares created by redelegation
         type: string
     type: object
   types.StdFee:
@@ -497,6 +800,73 @@ definitions:
         $ref: '#/definitions/types.Tx'
         type: object
       txhash:
+        type: string
+    type: object
+  types.UnbondingDelegation:
+    properties:
+      delegator_address:
+        description: delegator
+        type: string
+      entries:
+        description: unbonding delegation entries
+        items:
+          $ref: '#/definitions/types.UnbondingDelegationEntry'
+        type: array
+      validator_address:
+        description: validator unbonding from operator addr
+        type: string
+    type: object
+  types.UnbondingDelegationEntry:
+    properties:
+      balance:
+        description: atoms to receive at completion
+        type: string
+      completion_time:
+        description: time at which the unbonding delegation will complete
+        type: string
+      creation_height:
+        description: height which the unbonding took place
+        type: integer
+      initial_balance:
+        description: atoms initially scheduled to receive at completion
+        type: string
+    type: object
+  types.Validator:
+    properties:
+      commission:
+        $ref: '#/definitions/types.Commission'
+        description: commission parameters
+        type: object
+      consensus_pubkey:
+        description: the consensus public key of the validator; bech encoded in JSON
+        type: string
+      delegator_shares:
+        description: total shares issued to a validator's delegators
+        type: string
+      description:
+        $ref: '#/definitions/types.Description'
+        description: description terms for the validator
+        type: object
+      jailed:
+        description: has the validator been jailed from bonded status?
+        type: boolean
+      min_self_delegation:
+        description: validator's self declared minimum self delegation
+        type: string
+      operator_address:
+        description: address of the validator's operator; bech encoded in JSON
+        type: string
+      status:
+        description: validator status (bonded/unbonding/unbonded)
+        type: integer
+      tokens:
+        description: delegated tokens (incl. self-delegation)
+        type: string
+      unbonding_height:
+        description: if unbonding, height at which this validator has begun unbonding
+        type: integer
+      unbonding_time:
+        description: if unbonding, min time for the validator to complete unbonding
         type: string
     type: object
   types.Vote:
@@ -1023,6 +1393,612 @@ paths:
       summary: Query a governance proposal's individual vote
       tags:
       - governance
+  /staking/delegators/{delegatorAddr}/delegations:
+    get:
+      description: Query all delegations from a single delegator address
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegatorDelegations'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all delegations from a delegator
+      tags:
+      - staking
+    post:
+      consumes:
+      - application/json
+      description: Generate a delegation transaction that is ready for signing
+      parameters:
+      - description: The delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The delegate request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DelegateRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.postDelegation'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present, or delegation
+            address incorrect
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a delegation transaction
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+    get:
+      description: Query an individual delegation
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegation'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query an individual delegation
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/redelegations:
+    post:
+      consumes:
+      - application/json
+      description: Generate a redelegation transaction that is ready for signing
+      parameters:
+      - description: The delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The redelegate request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.RedelegateRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.postRedelegation'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present, or delegation
+            address incorrect
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a redelegation transaction
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/txs:
+    get:
+      description: |-
+        Query all staking transactions from a single delegator address
+        NOTE: In order to query staking transactions, the transaction
+        record must be available otherwise the query will fail. This requires a
+        node that is not pruning transaction history
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      - description: type of staking transaction, either (bond | unbond | redelegate)
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegatorTxs'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all staking transactions from a delegator
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/unbonding_delegations:
+    get:
+      description: Query all unbonding delegations from a single delegator address
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegatorUnbondingDelegations'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all unbonding delegations from a delegator
+      tags:
+      - staking
+    post:
+      consumes:
+      - application/json
+      description: Generate an unbonding transaction that is ready for signing
+      parameters:
+      - description: The delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The undelegate request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.UndelegateRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.postUndelegate'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present, or delegation
+            address incorrect
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate an unbonding transaction
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+    get:
+      description: Query all unbonding delegations from a single delegator/validator
+        pair
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.unbondingDelegation'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all unbonding delegations from a delegator/validator pair
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/validators:
+    get:
+      description: Query a delegator's bonded validators
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegatorValidators'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query a delegator's bonded validators
+      tags:
+      - staking
+  /staking/delegators/{delegatorAddr}/validators/{validatorAddr}:
+    get:
+      description: Query a delegator's bonded validator
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.ResponseWithHeight'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query a delegator's bonded validator
+      tags:
+      - staking
+  /staking/parameters:
+    get:
+      description: Query the staking parameters
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.params'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query the staking parameters
+      tags:
+      - staking
+  /staking/pool:
+    get:
+      description: Query the staking pools
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.pool'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query the staking pools
+      tags:
+      - staking
+  /staking/redelegations:
+    get:
+      description: Query all redelegations filtered by delegator, validator_from,
+        and/or validator_to
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: delegator address
+        in: query
+        name: delegator
+        type: string
+      - description: validator_from address
+        in: query
+        name: validator_from
+        type: string
+      - description: validator_to address
+        in: query
+        name: validator_to
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.redelegations'
+        "400":
+          description: Returned if the request doesn't have valid query params
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all redelegations with filters
+      tags:
+      - staking
+  /staking/validators:
+    get:
+      description: Query validators
+      parameters:
+      - description: validator status, (bonded | unbonded | unbonding). Default bonded
+        in: query
+        name: status
+        type: string
+      - description: the page number to query, default 0
+        in: query
+        name: page
+        type: integer
+      - description: the number of results per page, default 20
+        in: query
+        name: limit
+        type: integer
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validators'
+        "400":
+          description: Returned if the request doesn't have valid query params
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query validators
+      tags:
+      - staking
+  /staking/validators/{validatorAddr}:
+    get:
+      description: Query a validator
+      parameters:
+      - description: The address of the validator.
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validator'
+        "400":
+          description: Returned if the request doesn't have a valid heigh.
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query a validator
+      tags:
+      - staking
+  /staking/validators/{validatorAddr}/delegations:
+    get:
+      description: Query a validator's delegations
+      parameters:
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorDelegations'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query a validator's delegations
+      tags:
+      - staking
+  /staking/validators/{validatorAddr}/unbonding_delegations:
+    get:
+      description: Query a validator's unbonding delegations
+      parameters:
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorUnbondingDelegations'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query a validator's unbonding delegations
+      tags:
+      - staking
   /supply/total:
     get:
       parameters:

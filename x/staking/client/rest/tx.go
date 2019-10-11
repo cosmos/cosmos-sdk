@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -56,14 +55,6 @@ type (
 	}
 )
 
-// postDelegations is used to generate documentation for postDelegationsHandlerFn
-type postDelegations struct { // nolint: deadcode unused
-	Msgs       []types.MsgDelegate `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee         `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature `json:"signatures" yaml:"signatures"`
-	Memo       string              `json:"memo" yaml:"memo"`
-}
-
 // postDelegationsHandlerFn implements a delegation handler that is responsible
 // for constructing a properly formatted delegation transaction for signing.
 //
@@ -72,9 +63,9 @@ type postDelegations struct { // nolint: deadcode unused
 // @Tags staking
 // @Accept  json
 // @Produce  json
-// @Param delegatorAddr path string true "delegator address"
-// @Param body body DelegateRequest true "The data required to delegate"
-// @Success 200 {object} postDelegations
+// @Param delegatorAddr path string true "The delegator address"
+// @Param body body rest.DelegateRequest true "The delegate request payload"
+// @Success 200 {object} rest.postDelegation "Returns the unsigned transaction"
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -114,14 +105,6 @@ func postDelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// postRedelegations is used to generate documentation for postRedelegationsHandlerFn
-type postRedelegations struct { // nolint: deadcode unused
-	Msgs       []types.MsgBeginRedelegate `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee                `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature        `json:"signatures" yaml:"signatures"`
-	Memo       string                     `json:"memo" yaml:"memo"`
-}
-
 // postRedelegationsHandlerFn implements a redelegation handler that is responsible
 // for constructing a properly formatted redelegation transaction for signing.
 //
@@ -130,14 +113,14 @@ type postRedelegations struct { // nolint: deadcode unused
 // @Tags staking
 // @Accept  json
 // @Produce  json
-// @Param delegatorAddr path string true "delegator address"
-// @Param body body RedelegateRequest true "The data required to delegate"
-// @Success 200 {object} postRedelegations
+// @Param delegatorAddr path string true "The delegator address"
+// @Param body body rest.RedelegateRequest true "The redelegate request payload"
+// @Success 200 {object} rest.postRedelegation "Returns the unsigned transaction"
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
-// @Router /staking/delegators/{delegatorAddr}/delegations [post]
+// @Router /staking/delegators/{delegatorAddr}/redelegations [post]
 func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RedelegateRequest
@@ -172,25 +155,17 @@ func postRedelegationsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// postUnbondingDelegations is used to generate documentation for postUnbondingDelegationsHandlerFn
-type postUnbondingDelegations struct { // nolint: deadcode unused
-	Msgs       []types.MsgUndelegate `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee           `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature   `json:"signatures" yaml:"signatures"`
-	Memo       string                `json:"memo" yaml:"memo"`
-}
-
 // postUnbondingDelegationsHandlerFn implements an unbonding_delegation handler that is responsible
 // for constructing a properly formatted unbonding_delegation transaction for signing.
 //
-// @Summary Generate an unbonding_delegation transaction
-// @Description Generate an unbonding_delegation transaction that is ready for signing
+// @Summary Generate an unbonding transaction
+// @Description Generate an unbonding transaction that is ready for signing
 // @Tags staking
 // @Accept  json
 // @Produce  json
-// @Param delegatorAddr path string true "delegator address"
-// @Param body body UndelegateRequest true "The data required to undelegate"
-// @Success 200 {object} postUnbondingDelegations
+// @Param delegatorAddr path string true "The delegator address"
+// @Param body body rest.UndelegateRequest true "The undelegate request payload"
+// @Success 200 {object} rest.postUndelegate "Returns the unsigned transaction"
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"

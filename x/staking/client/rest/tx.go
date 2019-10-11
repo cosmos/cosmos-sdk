@@ -73,8 +73,8 @@ type postDelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body rest.DelegateRequest true "The data required to delegate"
-// @Success 200 {object} rest.postDelegations
+// @Param body body DelegateRequest true "The data required to delegate"
+// @Success 200 {object} postDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -131,8 +131,8 @@ type postRedelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body rest.RedelegateRequest true "The data required to delegate"
-// @Success 200 {object} rest.postRedelegations
+// @Param body body RedelegateRequest true "The data required to delegate"
+// @Success 200 {object} postRedelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -189,8 +189,8 @@ type postUnbondingDelegations struct {
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body rest.UndelegateRequest true "The data required to undelegate"
-// @Success 200 {object} rest.postUnbondingDelegations
+// @Param body body UndelegateRequest true "The data required to undelegate"
+// @Success 200 {object} postUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present, or delegation address incorrect"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"

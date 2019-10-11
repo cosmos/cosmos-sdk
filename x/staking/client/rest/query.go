@@ -114,7 +114,7 @@ type delegatorDelegations struct {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.delegatorDelegations
+// @Success 200 {object} delegatorDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/delegations [get]
@@ -136,7 +136,7 @@ type delegatorUnbondingDelegations struct {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.delegatorUnbondingDelegations
+// @Success 200 {object} delegatorUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/unbonding_delegations [get]
@@ -162,7 +162,7 @@ type delegatorTxs struct {
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
 // @Param type query string false "type of staking transaction, either (bond | unbond | redelegate)"
-// @Success 200 {object} rest.delegatorTxs
+// @Success 200 {object} delegatorTxs
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/txs [get]
@@ -252,7 +252,7 @@ type unbondingDelegation struct {
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.unbondingDelegation
+// @Success 200 {object} unbondingDelegation
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} [get]
@@ -278,7 +278,7 @@ type redelegations struct {
 // @Param validator_from query string false "validator_from address"
 // @Param validator_to query string false "validator_to address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.redelegations
+// @Success 200 {object} redelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/redelegations [get]
@@ -354,7 +354,7 @@ type delegation struct {
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.delegation
+// @Success 200 {object} delegation
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/delegations/{validatorAddr} [get]
@@ -376,7 +376,7 @@ type delegatorValidators struct {
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.delegatorValidators
+// @Success 200 {object} delegatorValidators
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/delegators/{delegatorAddr}/validators [get]
@@ -423,7 +423,7 @@ type validators struct {
 // @Param page query int false "the page number to query, default 0"
 // @Param limit query int false "the number of results per page, default 20"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.validators
+// @Success 200 {object} validators
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators [get]
@@ -478,7 +478,7 @@ type validator struct {
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator."
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.validator
+// @Success 200 {object} validator
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid heigh."
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr} [get]
@@ -500,7 +500,7 @@ type validatorDelegations struct {
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.validatorDelegations
+// @Success 200 {object} validatorDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr}/delegations [get]
@@ -522,7 +522,7 @@ type validatorUnbondingDelegations struct {
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.validatorUnbondingDelegations
+// @Success 200 {object} validatorUnbondingDelegations
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/validators/{validatorAddr}/unbonding_delegations [get]
@@ -543,7 +543,7 @@ type pool struct {
 // @Tags staking
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.pool
+// @Success 200 {object} pool
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/pool [get]
@@ -578,7 +578,7 @@ type params struct {
 // @Tags staking
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.params
+// @Success 200 {object} params
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/parameters [get]

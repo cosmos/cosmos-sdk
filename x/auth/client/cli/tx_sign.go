@@ -72,7 +72,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().Bool(
 		flagOffline, false,
-		"Offline mode; Do not query a full node. --account and --sequence options would be ignored if offline is set",
+		"Offline mode; Do not query a full node. --account and --sequence options would be required if offline is set",
 	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 

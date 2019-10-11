@@ -169,10 +169,6 @@ $ %s query %s collection cripto-kitties
 	}
 }
 
-type stringArray []string
-
-func (s stringArray) String() string { return strings.Join(s[:], ",") }
-
 // GetCmdQueryDenoms queries all denoms
 func GetCmdQueryDenoms(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
@@ -196,7 +192,7 @@ func GetCmdQueryDenoms(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out stringArray
+			var out types.SortedStringArray
 			err = cdc.UnmarshalJSON(res, &out)
 			if err != nil {
 				return err
@@ -216,7 +212,7 @@ func GetCmdQueryNFT(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			fmt.Sprintf(`Get an NFT from a collection that has the given ID (SHA-256 hex hash).
 
 Example:
-$ %s query %s token cripto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa
+$ %s query %s token crypto-kitties d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa
 `, version.ClientName, types.ModuleName,
 			),
 		),

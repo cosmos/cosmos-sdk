@@ -20,6 +20,11 @@ const (
 	RouterKey                = types.RouterKey
 	DefaultParamspace        = types.DefaultParamspace
 	DefaultSendEnabled       = types.DefaultSendEnabled
+
+	EventTypeTransfer      = types.EventTypeTransfer
+	AttributeKeyRecipient  = types.AttributeKeyRecipient
+	AttributeKeySender     = types.AttributeKeySender
+	AttributeValueCategory = types.AttributeValueCategory
 )
 
 var (

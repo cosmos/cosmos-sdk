@@ -30,6 +30,12 @@ func setupCmd(genesisTime string, chainID string) *cobra.Command {
 	return c
 }
 
+func TestGetMigrationCallback(t *testing.T) {
+	for _, version := range GetMigrationVersions() {
+		require.NotNil(t, GetMigrationCallback(version))
+	}
+}
+
 func TestMigrateGenesis(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	viper.Set(cli.HomeFlag, home)

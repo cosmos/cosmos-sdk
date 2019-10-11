@@ -26,6 +26,18 @@ type SendReq struct {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address.
+//
+// @Summary Token Transfer
+// @Description Transfer tokens to another account
+// @Tags bank
+// @Accept  json
+// @Produce  json
+// @Param address path string true "Account address in bech32 format"
+// @Param tx body sendReq true "Signed transaction along with the broadcasting mode"
+// @Success 200 {object} auth.TxResponse
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
+// @Failure 500 {object} rest.ErrorResponse "Returned if the transaction cannot be decoded."
+// @Router /bank/accounts/{address}/transfers [post]
 func SendRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

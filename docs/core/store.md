@@ -172,6 +172,8 @@ type MultiStore interface { //nolint
 }
 ```
 
+If tracing is enabled, then cache-wrapping the multistore will wrap all the underlying `KVStore` in [`TraceKv.Store`](#tracekv-store) before caching them. 
+
 ### CommitMultiStore
 
 The main type of `Multistore` used in the Cosmos SDK is `CommitMultiStore`, which is an extension of the `Multistore` interface:
@@ -331,6 +333,18 @@ type Store struct {
 
 `Transient.Store` is a `dbadapter.Store` with a `dbm.NewMemDB()`. All `KVStore` methods are reused. When `Store.Commit()` is called, a new `dbadapter.Store` is assigned, discarding previous reference and making it garbage collected.
 
+This type of store is useful to persist information that is only relevant per-block. One example would be to store [parameter changes](https://github.com/cosmos/cosmos-sdk/blob/master/x/params/subspace/subspace.go#L27) (i.e. a bool set to `true` if a parameter changed in a block). 
+
+Transient stores are typically accessed via the [`context`](./context.md) via the `TransientStore()` method:
+
+```go
+// TransientStore fetches a TransientStore from the MultiStore.
+
+func (c Context) TransientStore(key StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
+}
+```
+
 ## KVStore Wrappers
 
 ### CacheKVStore
@@ -411,7 +425,7 @@ func KVGasConfig() GasConfig {
 
 ### `TraceKv` Store
 
-`tracekv.Store` is a wrapper `KVStore` which provides operation tracing functionalities over the underlying `KVStore`.
+`tracekv.Store` is a wrapper `KVStore` which provides operation tracing functionalities over the underlying `KVStore`. It is applied automatically by the Cosmos SDK on all `KVStore` if tracing is enabled on the parent `MultiStore`. 
 
 ```go
 type Store struct {

@@ -3,6 +3,7 @@ package keys
 import (
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
@@ -42,11 +43,14 @@ func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 // NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
 func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
-	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), viper.GetString(flags.FlagHome), input)
+	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.
 func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
+		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
+	}
 	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
 }
 

@@ -26,7 +26,9 @@ Types of changes (Stanzas):
 "Improvements" for changes in existing functionality.
 "Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
-"Breaking" for breaking API changes.
+"Client Breaking" for breaking CLI commands and REST routes used by end-users.
+"API Breaking" for breaking exported APIs used by developers building on SDK.
+"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
 
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
@@ -35,21 +37,116 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Breaking Changes
+### State Machine Breaking
 
+* (genesis) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
+deprecated and all components removed except the `legacy/` package. This requires changes to the
+genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
+logic has been implemented for v0.38 target version. Applications can migrate via:
+`$ {appd} migrate v0.38 genesis.json`.
+
+### API Breaking Changes
+
+* (store) [\#4748](https://github.com/cosmos/cosmos-sdk/pull/4748) The `CommitMultiStore` interface
+now requires a `SetInterBlockCache` method. Applications that do not wish to support this can simply
+have this method perform a no-op.
 * (modules) [\#4665](https://github.com/cosmos/cosmos-sdk/issues/4665) Refactored `x/gov` module structure and dev-UX:
   * Prepare for module spec integration
   * Update gov keys to use big endian encoding instead of little endian
+* (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/genaccounts` module has been
+deprecated and all components removed except the `legacy/` package.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Vesting account types decoupled from the `x/auth` module and
+now live under `x/auth/vesting`. Applications wishing to use vesting account types must be sure to register types via
+`RegisterCodec` under the new vesting package.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) The `NewBaseVestingAccount` constructor returns an error
+if the provided arguments are invalid.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteHandler` interface now returns `(newCtx Context, err error)` instead of `(newCtx Context, result sdk.Result, abort bool)`
+  * The `NewAnteHandler` function returns an `AnteHandler` function that returns the new `AnteHandler`
+  interface and has been moved into the `auth/ante` directory.
+  * `ValidateSigCount`, `ValidateMemo`, `ProcessPubKey`, `EnsureSufficientMempoolFee`, and `GetSignBytes`
+  have all been removed as public functions.
+  * Invalid Signatures may return `InvalidPubKey` instead of `Unauthorized` error, since the transaction
+  will first hit `SetPubKeyDecorator` before the `SigVerificationDecorator` runs.
+  * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
+  returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
+  `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
+
+### Client Breaking Changes
+
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
+increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 
 ### Features
 
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.
+* [\#4972](https://github.com/cosmos/cosmos-sdk/issues/4972) A `TxResponse` with a corresponding code
+and tx hash will be returned for specific Tendermint errors:
+  * `CodeTxInMempoolCache`
+  * `CodeMempoolIsFull`
+  * `CodeTxTooLarge`
+* [\#3872](https://github.com/cosmos/cosmos-sdk/issues/3872) Implement a RESTful endpoint and cli command to decode transactions.
+* (keys) [\#4754](https://github.com/cosmos/cosmos-sdk/pull/4754) Introduce new Keybase implementation that can
+leverage operating systems' built-in functionalities to securely store secrets. MacOS users may encounter
+the following [issue](https://github.com/keybase/go-keychain/issues/47) with the `go-keychain` library. If
+you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
+upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
+correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
+* (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
+to the new keyring.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
+that allows for arbitrary vesting periods.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteDecorator` interface has been introduced to allow users to implement modular `AnteHandler`
+  functionality that can be composed together to create a single `AnteHandler` rather than implementing
+  a custom `AnteHandler` completely from scratch, where each `AnteDecorator` allows for custom behavior in
+  tightly defined and logically isolated manner. These custom `AnteDecorator` can then be chained together
+  with default `AnteDecorator` or third-party `AnteDecorator` to create a modularized `AnteHandler`
+  which will run each `AnteDecorator` in the order specified in `ChainAnteDecorators`. For details
+  on the new architecture, refer to the [ADR](docs/architecture/adr-010-modular-antehandler.md).
+  * `ChainAnteDecorators` function has been introduced to take in a list of `AnteDecorators` and chain
+  them in sequence and return a single `AnteHandler`:
+    * `SetUpContextDecorator`: Sets `GasMeter` in context and creates defer clause to recover from any
+    `OutOfGas` panics in future AnteDecorators and return `OutOfGas` error to `BaseApp`. It MUST be the
+    first `AnteDecorator` in the chain for any application that uses gas (or another one that sets the gas meter).
+    * `ValidateBasicDecorator`: Calls tx.ValidateBasic and returns any non-nil error.
+    * `ValidateMemoDecorator`: Validates tx memo with application parameters and returns any non-nil error.
+    * `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the tx size based on application parameters.
+    * `MempoolFeeDecorator`: Checks if fee is above local mempool `minFee` parameter during `CheckTx`.
+    * `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction.
+    * `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
+    * `SigGasConsumeDecorator`: Consume parameter-defined amount of gas for each signature.
+    * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
+    * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
+    * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 ### Improvements
 
+* (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
+has been moved to the configuration file, to allow easier node configuration.
+* (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
+when connecting to multiple chains. The connecting chain's `CLIContext` will have to have the correct
+chain ID and node URI or client set. To use a `CLIContext` with a verifier for another chain:
+
+  ```go
+  // main or parent chain (chain as if you're running without IBC)
+  mainCtx := context.NewCLIContext()
+
+  // connecting IBC chain
+  sideCtx := context.NewCLIContext().
+    WithChainID(sideChainID).
+    WithNodeURI(sideChainNodeURI) // or .WithClient(...)
+
+  sideCtx = sideCtx.WithVerifier(
+    context.CreateVerifier(sideCtx, context.DefaultVerifierCacheSize),
+  )
+  ```
+
+* (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
+generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
 * (modules) [\#4760](https://github.com/cosmos/cosmos-sdk/issues/4760) update `x/auth` to match module spec.
 * (modules) [\#4814](https://github.com/cosmos/cosmos-sdk/issues/4814) Add security contact to Validator description.
@@ -61,28 +158,81 @@ longer panics if the store to load contains substores that we didn't explicitly 
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
-* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847) `SimApp` and simulation refactors
+* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) `SimApp` and simulation refactors
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
-  * Add `DecodeStore` to the `SimulationManager` for decoding each module's types
+  * Add `RegisterStoreDecoders` to the `SimulationManager` for decoding each module's types
+  * Add `GenerateGenesisStates` to the `SimulationManager` to generate a randomized `GenState` for each module
+  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
+  `ParamChangeProposal`s
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
+* (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
+* (store) [\#1947](https://github.com/cosmos/cosmos-sdk/issues/1947) Implement inter-block (persistent)
+caching through `CommitKVStoreCacheManager`. Any application wishing to utilize an inter-block cache
+must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
+to detail this new feature and how state transitions occur.
+* (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+
+### Bug Fixes
+
+* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
+* (keys) Fix ledger custom coin type support bug
+
+## [v0.37.2] - 2019-10-10
+
+### Bug Fixes
+
+* (genesis) [\#5095](https://github.com/cosmos/cosmos-sdk/issues/5095) Fix genesis file migration from v0.34 to
+v0.36/v0.37 not converting validator consensus pubkey to bech32 format.
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.6](https://github.com/tendermint/tendermint/releases/tag/v0.32.6)
+
+## [v0.37.1] - 2019-09-19
+
+### Features
+
+* (cli) [\#4973](https://github.com/cosmos/cosmos-sdk/pull/4973) Enable application CPU profiling
+via the `--cpu-profile` flag.
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Introduce a new `halt-time` config and
+CLI option to the `start` command. When provided, an application will halt during `Commit` when the
+block time is >= the `halt-time`.
+
+### Improvements
+
+* [\#4990](https://github.com/cosmos/cosmos-sdk/issues/4990) Add `Events` to the `ABCIMessageLog` to
+provide context and grouping of events based on the messages they correspond to. The `Events` field
+in `TxResponse` is deprecated and will be removed in the next major release.
+
+### Bug Fixes
+
+* [\#4979](https://github.com/cosmos/cosmos-sdk/issues/4979) Use `Signal(os.Interrupt)` over
+`os.Exit(0)` during configured halting to allow any `defer` calls to be executed.
+* [\#5034](https://github.com/cosmos/cosmos-sdk/issues/5034) Binary search in NFT Module wasn't working on larger sets.
+
+## [v0.37.0] - 2019-08-21
+
+### Bug Fixes
+
+* (baseapp) [\#4903](https://github.com/cosmos/cosmos-sdk/issues/4903) Various height query fixes:
+  * Move height with proof check from `CLIContext` to `BaseApp` as the height
+  can automatically be injected there.
+  * Update `handleQueryStore` to resemble `handleQueryCustom`
+* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs
+to properly return black listed addresses for bank keeper initialization.
+* (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash CLI
+if user doesn't answer y/n confirmation request.
+* (cli) [\#4927](https://github.com/cosmos/cosmos-sdk/issues/4927) Fix the `q gov vote`
+command to handle empty (pruned) votes correctly.
+
+### Improvements
+
 * (rest) [\#4924](https://github.com/cosmos/cosmos-sdk/pull/4924) Return response
 height even upon error as it may be useful for the downstream caller and have
 `/auth/accounts/{address}` return a 200 with an empty account upon error when
 that error is that the account doesn't exist.
-* (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
-
-### Bug Fixes
-
-* (baseapp) \#4903 Various height query fixes:
-  * Move height with proof check from `CLIContext` to `BaseApp` as the height
-  can automatically be injected there.
-  * Update `handleQueryStore` to resemble `handleQueryCustom`
-* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
-* (keys) Fix ledger custom coin type support bug
-* (simulation) [\#4912](https://github.com/cosmos/cosmos-sdk/issues/4912) Fix SimApp ModuleAccountAddrs to properly return black listed addresses for bank keeper initialization
-* (cli) [\#4919](https://github.com/cosmos/cosmos-sdk/pull/4919) Don't crash cli if user doesn't answer y/n confirmation request
 
 ## [v0.36.0] - 2019-08-13
 
@@ -322,6 +472,19 @@ that error is that the account doesn't exist.
 
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
+
+## 0.34.9
+
+### Bug Fixes
+
+* Bump Tendermint version to [v0.31.10](https://github.com/tendermint/tendermint/releases/tag/v0.31.10) to address p2p panic errors.
+
+## 0.34.8
+
+### Bug Fixes
+
+* Bump Tendermint version to v0.31.9 to fix the p2p panic error.
+* Update gaiareplay's use of an internal Tendermint API
 
 ## 0.34.7
 
@@ -2562,5 +2725,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.2...HEAD
+[v0.37.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.2
+[v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
+[v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

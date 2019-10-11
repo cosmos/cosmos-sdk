@@ -32,12 +32,14 @@ type Store struct {
 	lastCommitID types.CommitID
 	pruningOpts  types.PruningOptions
 	storesParams map[types.StoreKey]storeParams
-	stores       map[types.StoreKey]types.CommitStore
+	stores       map[types.StoreKey]types.CommitKVStore
 	keysByName   map[string]types.StoreKey
 	lazyLoading  bool
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
+
+	interBlockCache types.MultiStorePersistentCache
 }
 
 var _ types.CommitMultiStore = (*Store)(nil)
@@ -48,7 +50,7 @@ func NewStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
 		storesParams: make(map[types.StoreKey]storeParams),
-		stores:       make(map[types.StoreKey]types.CommitStore),
+		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 	}
 }
@@ -90,14 +92,25 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db db
 	rs.keysByName[key.Name()] = key
 }
 
-// Implements CommitMultiStore.
+// GetCommitStore returns a mounted CommitStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.stores[key]
+	return rs.GetCommitKVStore(key)
 }
 
-// Implements CommitMultiStore.
+// GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
+// store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	return rs.stores[key].(types.CommitKVStore)
+	// If the Store has an inter-block cache, first attempt to lookup and unwrap
+	// the underlying CommitKVStore by StoreKey. If it does not exist, fallback to
+	// the main mapping of CommitKVStores.
+	if rs.interBlockCache != nil {
+		if store := rs.interBlockCache.Unwrap(key); store != nil {
+			return store
+		}
+	}
+
+	return rs.stores[key]
 }
 
 // LoadLatestVersionAndUpgrade implements CommitMultiStore
@@ -141,7 +154,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	}
 
 	// load each Store (note this doesn't panic on unmounted keys now)
-	var newStores = make(map[types.StoreKey]types.CommitStore)
+	var newStores = make(map[types.StoreKey]types.CommitKVStore)
 	for key, storeParams := range rs.storesParams {
 
 		// Load it
@@ -220,6 +233,13 @@ func moveKVStoreData(oldDB types.KVStore, newDB types.KVStore) error {
 	return deleteKVStore(oldDB)
 }
 
+// SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
+// When this is defined, all CommitKVStores will be wrapped with their respective
+// inter-block cache.
+func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
+	rs.interBlockCache = c
+}
+
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
 func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
@@ -292,7 +312,8 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 //----------------------------------------
 // +MultiStore
 
-// Implements MultiStore.
+// CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
+// It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
@@ -311,6 +332,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	for key, store := range rs.stores {
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
 			iavlStore, err := store.(*iavl.Store).GetImmutable(version)
@@ -328,20 +353,27 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
 }
 
-// Implements MultiStore.
-// If the store does not exist, panics.
+// GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
+// not exist, it will panic. If the Store is wrapped in an inter-block cache, it
+// will be unwrapped prior to being returned.
+//
+// TODO: This isn't used directly upstream. Consider returning the Store as-is
+// instead of unwrapping.
 func (rs *Store) GetStore(key types.StoreKey) types.Store {
-	store := rs.stores[key]
+	store := rs.GetCommitKVStore(key)
 	if store == nil {
-		panic("Could not load store " + key.String())
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
+
 	return store
 }
 
-// GetKVStore implements the MultiStore interface. If tracing is enabled on the
-// Store, a wrapped TraceKVStore will be returned with the given
-// tracer, otherwise, the original KVStore will be returned.
-// If the store does not exist, panics.
+// GetKVStore returns a mounted KVStore for a given StoreKey. If tracing is
+// enabled on the KVStore, a wrapped TraceKVStore will be returned with the root
+// store's tracer, otherwise, the original KVStore will be returned.
+//
+// NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
+// set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := rs.stores[key].(types.KVStore)
 
@@ -352,19 +384,17 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return store
 }
 
-// Implements MultiStore
-
-// getStoreByName will first convert the original name to
-// a special key, before looking up the CommitStore.
-// This is not exposed to the extensions (which will need the
-// StoreKey), but is useful in main, and particularly app.Query,
-// in order to convert human strings into CommitStores.
+// getStoreByName performs a lookup of a StoreKey given a store name typically
+// provided in a path. The StoreKey is then used to perform a lookup and return
+// a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
+// prior to being returned. If the StoreKey does not exist, nil is returned.
 func (rs *Store) getStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
 	}
-	return rs.stores[key]
+
+	return rs.GetCommitKVStore(key)
 }
 
 //---------------------- Query ------------------
@@ -389,7 +419,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
+		msg := fmt.Sprintf("store %s (type %T) doesn't support queries", storeName, store)
 		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 
@@ -442,7 +472,7 @@ func parsePath(path string) (storeName string, subpath string, err errors.Error)
 
 //----------------------------------------
 // Note: why do we use key and params.key in different places. Seems like there should be only one key used.
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitStore, err error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
 	var db dbm.DB
 
 	if params.db != nil {
@@ -457,7 +487,19 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		return iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading)
+		store, err := iavl.LoadStore(db, id, rs.pruningOpts, rs.lazyLoading)
+		if err != nil {
+			return nil, err
+		}
+
+		if rs.interBlockCache != nil {
+			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
+			// only wrap the primary CommitKVStore, not any store that is already
+			// cache-wrapped as that will create unexpected behavior.
+			store = rs.interBlockCache.GetStoreCache(key, store)
+		}
+
+		return store, err
 
 	case types.StoreTypeDB:
 		return commitDBStoreAdapter{Store: dbadapter.Store{DB: db}}, nil
@@ -465,7 +507,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 	case types.StoreTypeTransient:
 		_, ok := key.(*types.TransientStoreKey)
 		if !ok {
-			return store, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
+			return nil, fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
 		}
 
 		return transient.NewStore(), nil
@@ -573,7 +615,7 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore) commitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) commitInfo {
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {

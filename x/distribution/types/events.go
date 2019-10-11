@@ -1,7 +1,7 @@
 package types
 
-// Distribution module event types
-var (
+// distribution module event types
+const (
 	EventTypeSetWithdrawAddress = "set_withdraw_address"
 	EventTypeRewards            = "rewards"
 	EventTypeCommission         = "commission"

@@ -108,7 +108,7 @@ func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, queryRoute string, d
 	}
 
 	// build multi-message transaction
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, 0, len(validators))
 	for _, valAddr := range validators {
 		msg := types.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
 		if err := msg.ValidateBasic(); err != nil {

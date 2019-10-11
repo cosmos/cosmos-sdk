@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -67,7 +68,7 @@ func MakeTestCodec() *codec.Codec {
 	cdc.RegisterConcrete(types.MsgBeginRedelegate{}, "test/staking/BeginRedelegate", nil)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterInterface((*authexported.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/staking/BaseAccount", nil)
 	supply.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
@@ -80,7 +81,6 @@ func MakeTestCodec() *codec.Codec {
 // If `initPower` is 0, no addrs get created.
 func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context, auth.AccountKeeper, Keeper, types.SupplyKeeper) {
 	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
-	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
@@ -88,7 +88,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -145,7 +144,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetParams(ctx, types.DefaultParams())
 
 	// set module accounts

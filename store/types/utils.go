@@ -51,7 +51,7 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []c
 			kvBs = append(kvBs, kvB)
 		}
 	}
-	return
+	return kvAs, kvBs
 }
 
 // PrefixEndBytes returns the []byte that would end a

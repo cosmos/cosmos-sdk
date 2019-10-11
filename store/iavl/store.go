@@ -22,8 +22,34 @@ const (
 	defaultIAVLCacheSize = 10000
 )
 
-// LoadStore loads the iavl store
-func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitStore, error) {
+var (
+	_ types.KVStore       = (*Store)(nil)
+	_ types.CommitStore   = (*Store)(nil)
+	_ types.CommitKVStore = (*Store)(nil)
+	_ types.Queryable     = (*Store)(nil)
+)
+
+// Store Implements types.KVStore and CommitKVStore.
+type Store struct {
+	tree Tree
+
+	// How many old versions we hold onto.
+	// A value of 0 means keep no recent states.
+	numRecent int64
+
+	// This is the distance between state-sync waypoint states to be stored.
+	// See https://github.com/tendermint/tendermint/issues/828
+	// A value of 1 means store every state.
+	// A value of 0 means store no waypoints. (node cannot assist in state-sync)
+	// By default this value should be set the same across all nodes,
+	// so that nodes can know the waypoints their peers store.
+	storeEvery int64
+}
+
+// LoadStore returns an IAVL Store as a CommitKVStore. Internally it will load the
+// store's version (id) from the provided DB. An error is returned if the version
+// fails to load.
+func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 
 	var err error
@@ -43,38 +69,15 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 	return iavl, nil
 }
 
-//----------------------------------------
-
-var _ types.KVStore = (*Store)(nil)
-var _ types.CommitStore = (*Store)(nil)
-var _ types.Queryable = (*Store)(nil)
-
-// Store Implements types.KVStore and CommitStore.
-type Store struct {
-	tree Tree
-
-	// How many old versions we hold onto.
-	// A value of 0 means keep no recent states.
-	numRecent int64
-
-	// This is the distance between state-sync waypoint states to be stored.
-	// See https://github.com/tendermint/tendermint/issues/828
-	// A value of 1 means store every state.
-	// A value of 0 means store no waypoints. (node cannot assist in state-sync)
-	// By default this value should be set the same across all nodes,
-	// so that nodes can know the waypoints their peers store.
-	storeEvery int64
-}
-
-// CONTRACT: tree should be fully loaded.
-// nolint: unparam
+// UnsafeNewStore returns a reference to a new IAVL Store.
+//
+// CONTRACT: The IAVL tree should be fully loaded.
 func UnsafeNewStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *Store {
-	st := &Store{
+	return &Store{
 		tree:       tree,
 		numRecent:  numRecent,
 		storeEvery: storeEvery,
 	}
-	return st
 }
 
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
@@ -167,9 +170,9 @@ func (st *Store) Set(key, value []byte) {
 }
 
 // Implements types.KVStore.
-func (st *Store) Get(key []byte) (value []byte) {
-	_, v := st.tree.Get(key)
-	return v
+func (st *Store) Get(key []byte) []byte {
+	_, value := st.tree.Get(key)
+	return value
 }
 
 // Implements types.KVStore.
@@ -297,7 +300,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		return serrors.ErrUnknownRequest(msg).QueryResult()
 	}
 
-	return
+	return res
 }
 
 //----------------------------------------

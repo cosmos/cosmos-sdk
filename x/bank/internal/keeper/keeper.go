@@ -7,7 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -380,24 +381,22 @@ func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackDelegation(acc exported.Account, blockTime time.Time, amt sdk.Coins) error {
-	vacc, ok := acc.(exported.VestingAccount)
+func trackDelegation(acc authexported.Account, blockTime time.Time, amt sdk.Coins) error {
+	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(blockTime, amt)
-		return nil
 	}
 
 	return acc.SetCoins(acc.GetCoins().Sub(amt))
 }
 
 // CONTRACT: assumes that amt is valid.
-func trackUndelegation(acc exported.Account, amt sdk.Coins) error {
-	vacc, ok := acc.(exported.VestingAccount)
+func trackUndelegation(acc authexported.Account, amt sdk.Coins) error {
+	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)
-		return nil
 	}
 
 	return acc.SetCoins(acc.GetCoins().Add(amt))

@@ -57,10 +57,28 @@ have this method perform a no-op.
 deprecated and all components removed except the `legacy/` package.
 * (rest) [\#5038](https://github.com/cosmos/cosmos-sdk/pull/5038) RESTful Swagger documentation is
 now mounted under `/swagger/` instead of `/swagger-ui/`.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Vesting account types decoupled from the `x/auth` module and
+now live under `x/auth/vesting`. Applications wishing to use vesting account types must be sure to register types via
+`RegisterCodec` under the new vesting package.
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) The `NewBaseVestingAccount` constructor returns an error
+if the provided arguments are invalid.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteHandler` interface now returns `(newCtx Context, err error)` instead of `(newCtx Context, result sdk.Result, abort bool)`
+  * The `NewAnteHandler` function returns an `AnteHandler` function that returns the new `AnteHandler`
+  interface and has been moved into the `auth/ante` directory.
+  * `ValidateSigCount`, `ValidateMemo`, `ProcessPubKey`, `EnsureSufficientMempoolFee`, and `GetSignBytes`
+  have all been removed as public functions.
+  * Invalid Signatures may return `InvalidPubKey` instead of `Unauthorized` error, since the transaction
+  will first hit `SetPubKeyDecorator` before the `SigVerificationDecorator` runs.
+  * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
+  returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
+  `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 
 ### Client Breaking Changes
 
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
+increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 
 ### Features
 
@@ -81,13 +99,57 @@ upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --in
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
-
+* [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
+that allows for arbitrary vesting periods.
+* (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
+  * The `AnteDecorator` interface has been introduced to allow users to implement modular `AnteHandler`
+  functionality that can be composed together to create a single `AnteHandler` rather than implementing
+  a custom `AnteHandler` completely from scratch, where each `AnteDecorator` allows for custom behavior in
+  tightly defined and logically isolated manner. These custom `AnteDecorator` can then be chained together
+  with default `AnteDecorator` or third-party `AnteDecorator` to create a modularized `AnteHandler`
+  which will run each `AnteDecorator` in the order specified in `ChainAnteDecorators`. For details
+  on the new architecture, refer to the [ADR](docs/architecture/adr-010-modular-antehandler.md).
+  * `ChainAnteDecorators` function has been introduced to take in a list of `AnteDecorators` and chain
+  them in sequence and return a single `AnteHandler`:
+    * `SetUpContextDecorator`: Sets `GasMeter` in context and creates defer clause to recover from any
+    `OutOfGas` panics in future AnteDecorators and return `OutOfGas` error to `BaseApp`. It MUST be the
+    first `AnteDecorator` in the chain for any application that uses gas (or another one that sets the gas meter).
+    * `ValidateBasicDecorator`: Calls tx.ValidateBasic and returns any non-nil error.
+    * `ValidateMemoDecorator`: Validates tx memo with application parameters and returns any non-nil error.
+    * `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the tx size based on application parameters.
+    * `MempoolFeeDecorator`: Checks if fee is above local mempool `minFee` parameter during `CheckTx`.
+    * `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction.
+    * `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
+    * `SigGasConsumeDecorator`: Consume parameter-defined amount of gas for each signature.
+    * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
+    * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
+    * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 ### Improvements
 
 * (rest) [\#5038](https://github.com/cosmos/cosmos-sdk/pull/5038) RESTful Swagger documentation is
 now handled automatically via handler annotations using the [Swag](https://github.com/swaggo/swag) library instead of a static
 configuration.
+* (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
+has been moved to the configuration file, to allow easier node configuration.
+* (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
+when connecting to multiple chains. The connecting chain's `CLIContext` will have to have the correct
+chain ID and node URI or client set. To use a `CLIContext` with a verifier for another chain:
+
+  ```go
+  // main or parent chain (chain as if you're running without IBC)
+  mainCtx := context.NewCLIContext()
+
+  // connecting IBC chain
+  sideCtx := context.NewCLIContext().
+    WithChainID(sideChainID).
+    WithNodeURI(sideChainNodeURI) // or .WithClient(...)
+
+  sideCtx = sideCtx.WithVerifier(
+    context.CreateVerifier(sideCtx, context.DefaultVerifierCacheSize),
+  )
+  ```
+
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.
@@ -116,6 +178,7 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+* (tendermint) Bump Tendermint version to [v0.32.6](https://github.com/tendermint/tendermint/releases/tag/v0.32.6)
 
 ### Bug Fixes
 
@@ -405,6 +468,19 @@ that error is that the account doesn't exist.
 
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
+
+## 0.34.9
+
+### Bug Fixes
+
+* Bump Tendermint version to [v0.31.10](https://github.com/tendermint/tendermint/releases/tag/v0.31.10) to address p2p panic errors.
+
+## 0.34.8
+
+### Bug Fixes
+
+* Bump Tendermint version to v0.31.9 to fix the p2p panic error.
+* Update gaiareplay's use of an internal Tendermint API
 
 ## 0.34.7
 

@@ -1497,6 +1497,15 @@ var doc = `{
                 }
             }
         },
+        "types.Supply": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "description": "total supply of tokens registered on the chain",
+                    "type": "string"
+                }
+            }
+        },
         "types.TallyResult": {
             "type": "object",
             "properties": {

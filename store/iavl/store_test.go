@@ -42,7 +42,7 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	}
 	hash, ver, err := tree.SaveVersion()
 	require.Nil(t, err)
-	return tree, types.CommitID{ver, hash}
+	return tree, types.CommitID{Version: ver, Hash: hash}
 }
 
 func TestGetImmutable(t *testing.T) {
@@ -52,7 +52,7 @@ func TestGetImmutable(t *testing.T) {
 
 	require.True(t, tree.Set([]byte("hello"), []byte("adios")))
 	hash, ver, err := tree.SaveVersion()
-	cID = types.CommitID{ver, hash}
+	cID = types.CommitID{Version: ver, Hash: hash}
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)

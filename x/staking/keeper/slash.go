@@ -137,8 +137,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"validator %s slashed by slash factor of %s; burned %v tokens",
 		validator.GetOperator(), slashFactor.String(), tokensToBurn))
 
-	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
-	return
 }
 
 // jail a validator
@@ -147,8 +145,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
-	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
-	return
 }
 
 // unjail a validator
@@ -157,8 +153,6 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.unjailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
-	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
-	return
 }
 
 // slash an unbonding delegation and update the pool

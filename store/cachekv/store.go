@@ -34,7 +34,6 @@ type Store struct {
 
 var _ types.CacheKVStore = (*Store)(nil)
 
-// nolint
 func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
@@ -53,6 +52,7 @@ func (store *Store) GetStoreType() types.StoreType {
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 
 	cacheValue, ok := store.cache[string(key)]
@@ -70,6 +70,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
@@ -86,6 +87,7 @@ func (store *Store) Has(key []byte) bool {
 func (store *Store) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 
 	store.setCacheValue(key, nil, true, true)

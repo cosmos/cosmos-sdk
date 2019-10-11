@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -43,7 +43,7 @@ type testInput struct {
 	privKeys []crypto.PrivKey
 }
 
-func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []auth.Account,
+func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []authexported.Account,
 	handler func(ctx sdk.Context, c types.Content) sdk.Error) testInput {
 	mApp := mock.NewApp()
 
@@ -52,7 +52,6 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	supply.RegisterCodec(mApp.Cdc)
 
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
-	tKeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 
@@ -79,7 +78,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
-		mApp.Cdc, keyStaking, tKeyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		mApp.Cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
 	)
 
 	keeper := keep.NewKeeper(
@@ -93,7 +92,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	mApp.SetInitChainer(getInitChainer(mApp, keeper, sk, supplyKeeper, genAccs, genState,
 		[]supplyexported.ModuleAccountI{govAcc, notBondedPool, bondPool}))
 
-	require.NoError(t, mApp.CompleteSetup(keyStaking, tKeyStaking, keyGov, keySupply))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, keyGov, keySupply))
 
 	var (
 		addrs    []sdk.AccAddress
@@ -119,7 +118,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and staking initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []auth.Account, genState GenesisState,
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, supplyKeeper supply.Keeper, accs []authexported.Account, genState GenesisState,
 	blacklistedAddrs []supplyexported.ModuleAccountI) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)

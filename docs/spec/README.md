@@ -23,10 +23,7 @@ block.
 - [Mint](./mint) - Staking token provision creation.
 - [Params](./params) - Globally available parameter store.
 - [Supply](./supply) - Total supply of the chain.
-
-## Interchain standards
-
-- [ICS30](./_ics/ics-030-signed-messages.md) - Signed messages standard.
+- [NFT](./nft) - Non-fungible tokens.
 
 For details on the underlying blockchain and p2p protocols, see
 the [Tendermint specification](https://github.com/tendermint/tendermint/tree/master/docs/spec).

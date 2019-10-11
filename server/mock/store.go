@@ -19,7 +19,7 @@ func (ms multiStore) CacheMultiStore() sdk.CacheMultiStore {
 	panic("not implemented")
 }
 
-func (kv multiStore) CacheMultiStoreWithVersion(_ int64) (sdk.CacheMultiStore, error) {
+func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (sdk.CacheMultiStore, error) {
 	panic("not implemented")
 }
 
@@ -92,6 +92,10 @@ func (ms multiStore) GetStore(key sdk.StoreKey) sdk.Store {
 }
 
 func (ms multiStore) GetStoreType() sdk.StoreType {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
 

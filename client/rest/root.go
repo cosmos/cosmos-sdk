@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/rest/docs"
 	"github.com/cosmos/cosmos-sdk/codec"
-	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -33,9 +32,8 @@ var (
 
 // RestServer represents the Light Client Rest server
 type RestServer struct {
-	Mux     *mux.Router
-	CliCtx  context.CLIContext
-	KeyBase keybase.Keybase
+	Mux    *mux.Router
+	CliCtx context.CLIContext
 
 	log      log.Logger
 	listener net.Listener

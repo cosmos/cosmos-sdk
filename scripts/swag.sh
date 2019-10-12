@@ -18,7 +18,12 @@ NC='\033[0m'
 # by replacing it with the original after the command is executed.
 cp client/rest/docs/docs.go client/rest/docs/docs_bak.go
 ${swag_cmd} init -g client/rest/root.go --output client/rest/docs
+exit_status=$?
 mv client/rest/docs/docs_bak.go client/rest/docs/docs.go
+
+if [ $exit_status -ne 0 ]; then
+    exit $exit_status
+fi
 
 if (($(git status --porcelain 2>/dev/null | grep 'client/rest/docs/swagger.yaml' | wc -l) > 0)); then
   echo -e "${RED}Swagger docs are out of sync!!!${NC}"

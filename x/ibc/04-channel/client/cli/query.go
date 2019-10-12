@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -101,9 +99,7 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, jsonobj))
-
-			return nil
+			return ctx.PrintOutput(jsonobj)
 		},
 	}
 
@@ -112,31 +108,3 @@ func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-/*
-func object(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string, connids []string) channel.Stage {
-	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-	climan := client.NewManager(base)
-	connman := connection.NewManager(base, climan)
-	man := channel.NewManager(base, connman)
-	return man.CLIState(portid, chanid, connids)
-}
-*/
-/*
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ibcQueryCmd := &cobra.Command{
-		Use:                        "connection",
-		Short:                      "Channel query subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ibcQueryCmd.AddCommand(cli.GetCommands(
-	//		GetCmdQueryChannel(storeKey, cdc),
-	)...)
-	return ibcQueryCmd
-}
-*/
-/*
-
-
- */

@@ -15,6 +15,16 @@ type MsgOpenInit struct {
 	Signer             sdk.AccAddress `json:"signer"`
 }
 
+func NewMsgOpenInit(connectionID string, connection Connection, counterpartyClient string, nextTimeout uint64, signer sdk.AccAddress) MsgOpenInit {
+	return MsgOpenInit{
+		ConnectionID: connectionID,
+		Connection: connection,
+		CounterpartyClient: counterpartyClient,
+		NextTimeout: nextTimeout,
+		Signer: signer,
+	}
+}
+
 var _ sdk.Msg = MsgOpenInit{}
 
 func (msg MsgOpenInit) Route() string {
@@ -48,6 +58,19 @@ type MsgOpenTry struct {
 	Signer             sdk.AccAddress     `json:"signer"`
 }
 
+func NewMsgOpenTry(connectionID string, connection Connection, counterpartyClient string, timeout uint64, nextTimeout uint64, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenTry {
+	return MsgOpenTry{
+		ConnectionID: connectionID,
+		Connection: connection,
+		CounterpartyClient: counterpartyClient,
+		Timeout: timeout,
+		NextTimeout: nextTimeout,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
 var _ sdk.Msg = MsgOpenTry{}
 
 func (msg MsgOpenTry) Route() string {
@@ -79,6 +102,19 @@ type MsgOpenAck struct {
 	Signer       sdk.AccAddress     `json:"signer"`
 }
 
+
+func NewMsgOpenAck(connectionID string, timeout uint64, nextTimeout uint64, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenAck {
+	return MsgOpenAck{
+		ConnectionID: connectionID,
+		Timeout: timeout,
+		NextTimeout: nextTimeout,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
+
 var _ sdk.Msg = MsgOpenAck{}
 
 func (msg MsgOpenAck) Route() string {
@@ -108,6 +144,17 @@ type MsgOpenConfirm struct {
 	Height       uint64             `json:"height"`
 	Signer       sdk.AccAddress     `json:"signer"`
 }
+
+func NewMsgOpenConfirm(connectionID string, timeout uint64, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenConfirm {
+	return MsgOpenConfirm{
+		ConnectionID: connectionID,
+		Timeout: timeout,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
 
 var _ sdk.Msg = MsgOpenConfirm{}
 

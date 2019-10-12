@@ -20,6 +20,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 	queryCmd.AddCommand(client.GetCommands(
 		GetCmdQuerySequence(queryRoute, cdc),
+		GetCmdQueryNextSequence(queryRoute, cdc),
 	)...)
 
 	return queryCmd
@@ -45,6 +46,32 @@ func GetCmdQuerySequence(storeName string, cdc *codec.Codec) *cobra.Command {
 				cdc.MustUnmarshalBinaryBare(val, &res)
 			}
 			fmt.Println(res)
+
+			return nil
+		},
+	}
+}
+
+func GetCmdQueryNextSequence(storeName string, cdc *codec.Codec) *cobra.Command {
+		return &cobra.Command{
+		Use:   "next [channel-id]",
+		Short: "Query the next sequence for the channel, meant to be used for scripting",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCLIContext().WithCodec(cdc)
+
+			val, _, err := ctx.QueryStore(types.SequenceKey(args[0]), storeName)
+			if err != nil {
+				return err
+			}
+
+			var res uint64
+			if val == nil {
+				res = 1
+			} else {
+				cdc.MustUnmarshalBinaryBare(val, &res)
+			}
+			fmt.Println(res+1)
 
 			return nil
 		},

@@ -14,6 +14,14 @@ type Connection struct {
 	Path         commitment.Prefix `json:"path"`
 }
 
+func NewConnection(client string, counterParty string, path commitment.Prefix) Connection {
+	return Connection{
+		Client: client,
+		Counterparty: counterParty,
+		Path: path,
+	}
+}
+
 /*
 func (conn Connection) MarshalAmino() (string, error) {
 	return strings.Join([]string{conn.Client, conn.Counterparty}, "/"), nil

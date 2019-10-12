@@ -14,6 +14,15 @@ type MsgOpenInit struct {
 	Signer    sdk.AccAddress `json:"signer"`
 }
 
+func NewMsgOpenInit(portID string, channelID string, channel Channel, signer sdk.AccAddress) MsgOpenInit {
+	return MsgOpenInit{
+		PortID: portID,
+		ChannelID: channelID,
+		Channel: channel,
+		Signer: signer,
+	}
+}
+
 var _ sdk.Msg = MsgOpenInit{}
 
 func (msg MsgOpenInit) Route() string {
@@ -45,6 +54,19 @@ type MsgOpenTry struct {
 	Signer    sdk.AccAddress     `json:"signer"`
 }
 
+func NewMsgOpenTry(portID string, channelID string, channel Channel, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenTry {
+	return MsgOpenTry{
+		PortID: portID,
+		ChannelID: channelID,
+		Channel: channel,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
+
+
 var _ sdk.Msg = MsgOpenTry{}
 
 func (msg MsgOpenTry) Route() string {
@@ -75,6 +97,16 @@ type MsgOpenAck struct {
 	Signer    sdk.AccAddress     `json:"signer"`
 }
 
+func NewMsgOpenAck(portID string, channelID string, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenAck {
+	return MsgOpenAck {
+		PortID: portID,
+		ChannelID: channelID,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
 var _ sdk.Msg = MsgOpenAck{}
 
 func (msg MsgOpenAck) Route() string {
@@ -103,6 +135,16 @@ type MsgOpenConfirm struct {
 	Proofs    []commitment.Proof `json:"proofs"`
 	Height    uint64             `json:"height"`
 	Signer    sdk.AccAddress     `json:"signer"`
+}
+
+func NewMsgOpenConfirm(portID string, channelID string, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgOpenConfirm {
+	return MsgOpenConfirm{
+		PortID: portID,
+		ChannelID: channelID,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
 }
 
 var _ sdk.Msg = MsgOpenConfirm{}

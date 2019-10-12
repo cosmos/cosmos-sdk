@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -76,20 +74,19 @@ func QueryConnection(ctx context.CLIContext, obj connection.State, prove bool) (
 
 func GetCmdQueryConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "connection",
+		Use:   "connection [connection-id]",
 		Short: "Query stored connection",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
 			state := state(cdc, storeKey, version.Prefix(version.Version), args[0], "")
+
 			jsonObj, err := QueryConnection(ctx, state, viper.GetBool(FlagProve))
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, jsonObj))
-
-			return nil
+			return ctx.PrintOutput(jsonObj)
 		},
 	}
 

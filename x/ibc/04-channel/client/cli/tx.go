@@ -2,7 +2,6 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -67,7 +66,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdHandshake(storeKey, cdc),
-		GetCmdFlushPackets(storeKey, cdc),
+		GetCmdPullPackets(storeKey, cdc),
 	)
 
 	return cmd
@@ -124,7 +123,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			node1 := viper.GetString(FlagNode1)
 			node2 := viper.GetString(FlagNode2)
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -133,7 +131,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
 			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -161,7 +158,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				ConnectionHops:   []string{connid2},
 			}
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
@@ -171,7 +167,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 			clientid1 := conn1.Client
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
 			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
@@ -181,7 +176,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 			clientid2 := conn2.Client
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			// TODO: check state and if not Idle continue existing process
@@ -206,7 +200,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
 			msgupdate := client.MsgUpdateClient{
@@ -217,10 +210,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, []sdk.Msg{msgupdate})
 
-			fmt.Printf("updated apphash to %X\n", header.AppHash)
-
 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-			fmt.Printf("querying from %d\n", header.Height-1)
 
 			_, pchan, err := obj1.ChannelCLI(q1)
 			if err != nil {
@@ -254,7 +244,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			msgupdate = client.MsgUpdateClient{
@@ -298,7 +287,6 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
 			msgupdate = client.MsgUpdateClient{
@@ -345,10 +333,10 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "flush",
-		Short: "flush packets on queue",
+		Use:   "pull",
+		Short: "pull packets from the counterparty channel",
 		Args:  cobra.ExactArgs(2),
 		// Args: []string{portid, chanid}
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -357,19 +345,16 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			node1 := viper.GetString(FlagNode1)
 			node2 := viper.GetString(FlagNode2)
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
-			// txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, node1).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
-			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, node2).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
@@ -388,7 +373,6 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// 	WithBroadcastMode(flags.BroadcastBlock)
 			// q2 := state.NewCLIQuerier(ctx2)
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			portid1, chanid1 := args[0], args[1]
@@ -405,7 +389,6 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
 
-			fmt.Println("setting cid2")
 			viper.Set(flags.FlagChainID, cid2)
 
 			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
@@ -413,29 +396,24 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			chan2, _, err := obj2.ChannelCLI(q2)
+			connobj1, err := conn(q1, cdc, storeKey, version.DefaultPrefix(), chan1.ConnectionHops[0])
 			if err != nil {
 				return err
 			}
 
-			connobj2, err := conn(q2, cdc, storeKey, version.DefaultPrefix(), chan2.ConnectionHops[0])
+			conn1, _, err := connobj1.ConnectionCLI(q1)
 			if err != nil {
 				return err
 			}
 
-			conn2, _, err := connobj2.ConnectionCLI(q2)
+			client1 := conn1.Client
+
+			seqrecv, _, err := obj1.SeqRecvCLI(q1)
 			if err != nil {
 				return err
 			}
 
-			client2 := conn2.Client
-
-			seqrecv, _, err := obj2.SeqRecvCLI(q2)
-			if err != nil {
-				return err
-			}
-
-			seqsend, _, err := obj1.SeqSendCLI(q1)
+			seqsend, _, err := obj2.SeqSendCLI(q2)
 			if err != nil {
 				return err
 			}
@@ -446,46 +424,49 @@ func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return errors.New("no unsent packets")
 			}
 
-			fmt.Println("setting cid1")
 			viper.Set(flags.FlagChainID, cid1)
 
 			// TODO: optimize, don't updateclient if already updated
-			header, err := getHeader(ctx1)
+			header, err := getHeader(ctx2)
 			if err != nil {
 				return err
 			}
 
-			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
 
-			fmt.Println("setting cid2")
-			viper.Set(flags.FlagChainID, cid2)
+			viper.Set(flags.FlagChainID, cid1)
 
 			msgupdate := client.MsgUpdateClient{
-				ClientID: client2,
+				ClientID: client1,
 				Header:   header,
-				Signer:   ctx2.GetFromAddress(),
+				Signer:   ctx1.GetFromAddress(),
 			}
 
-			msgs := []sdk.Msg{msgupdate}
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, []sdk.Msg{msgupdate})
+			if err != nil {
+				return err
+			}
+
+			msgs := []sdk.Msg{}
 
 			for i := seqrecv + 1; i <= seqsend; i++ {
-				packet, proof, err := obj1.PacketCLI(q1, i)
+				packet, proof, err := obj2.PacketCLI(q2, i)
 				if err != nil {
 					return err
 				}
 
 				msg := channel.MsgPacket{
 					packet,
-					chanid2,
+					chanid1,
 					[]commitment.Proof{proof},
 					uint64(header.Height),
-					ctx2.GetFromAddress(),
+					ctx1.GetFromAddress(),
 				}
 
 				msgs = append(msgs, msg)
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr2, msgs)
+			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, msgs)
 			if err != nil {
 				return err
 			}

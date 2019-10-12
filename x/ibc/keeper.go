@@ -28,6 +28,10 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	}
 }
 
+func (k Keeper) Channel() channel.Manager {
+	return k.channel.Manager
+}
+
 func (k Keeper) Port(id string) channel.Port {
 	return k.channel.Port(id)
 }

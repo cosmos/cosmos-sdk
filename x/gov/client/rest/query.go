@@ -36,7 +36,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Param type path string true "Type of param (deposit | tallying | voting)"
 // @Param height query string false "Block height (defaults to chain tip)"
 // @Success 200 {object} rest.ResponseWithHeight
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 404 {object} rest.ErrorResponse "Returned if the type of parameter doesn't exist"
 // @Router /gov/parameters/{type} [get]
 func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

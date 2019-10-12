@@ -59,9 +59,6 @@ func NewSetPubKeyDecorator(ak keeper.AccountKeeper) SetPubKeyDecorator {
 }
 
 func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	if simulate {
-		return next(ctx, tx, simulate)
-	}
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -75,7 +72,8 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if pk == nil {
 			continue
 		}
-		if !bytes.Equal(pk.Address(), signers[i]) {
+		// Only make check if simulate=false
+		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
 		}

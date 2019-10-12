@@ -53,8 +53,8 @@ type (
 		BaseReq           rest.BaseReq      `json:"base_req" yaml:"base_req"`
 		ValidatorAddress  sdk.ValAddress    `json:"address" yaml:"address"`
 		Description       types.Description `json:"description" yaml:"description"`
-		CommissionRate    *sdk.Dec          `json:"commission_rate" yaml:"commission_rate"`
-		MinSelfDelegation *sdk.Int          `json:"min_self_delegation" yaml:"min_self_delegation"`
+		CommissionRate    sdk.Dec           `json:"commission_rate" yaml:"commission_rate"`
+		MinSelfDelegation sdk.Int           `json:"min_self_delegation" yaml:"min_self_delegation"`
 	}
 
 	// DelegateRequest defines the properties of a delegation request's body.

@@ -17,22 +17,15 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	// Query the total supply of coins
 	r.HandleFunc(
 		"/supply/total",
 		totalSupplyHandlerFn(cliCtx),
 	).Methods("GET")
 
-	// Query the supply of a single denom
 	r.HandleFunc(
 		"/supply/total/{denom}",
 		supplyOfHandlerFn(cliCtx),
 	).Methods("GET")
-}
-
-type totalSupply struct { //nolint: deadcode unsued
-	Height int64        `json:"height"`
-	Result types.Supply `json:"result"`
 }
 
 // HTTP request handler to query the total supply of coins
@@ -40,9 +33,11 @@ type totalSupply struct { //nolint: deadcode unsued
 // @Summary Query total supply of coins
 // @Tags supply
 // @Produce json
+// @Param page query int false "The page number to query" default(1)
+// @Param limit query int false "The number of results per page" default(100)
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} totalSupply
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.totalSupply "The total supply"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /supply/total [get]
 func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -76,12 +71,6 @@ func totalSupplyHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// HTTP request handler to query the supply of a single denom
-type totalDenomSupply struct { //nolint: deadcode unsued
-	Height int64  `json:"height"`
-	Result string `json:"result"`
-}
-
 // HTTP request handler to query the supply of a denomination
 //
 // @Summary Query the supply of a denomination
@@ -89,8 +78,8 @@ type totalDenomSupply struct { //nolint: deadcode unsued
 // @Produce json
 // @Param denom path string true "denomination"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} totalDenomSupply
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
+// @Success 200 {object} rest.totalDenomSupply "The total supply of a single denom"
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /supply/total/{denomination} [get]
 func supplyOfHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

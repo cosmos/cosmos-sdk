@@ -130,7 +130,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}
-	if !msg.Value.Amount.IsPositive() {
+	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
@@ -247,7 +247,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil
@@ -298,7 +298,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorDstAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil
@@ -338,7 +338,7 @@ func (msg MsgUndelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddress.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !msg.Amount.Amount.IsPositive() {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadSharesAmount(DefaultCodespace)
 	}
 	return nil

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"io/ioutil"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,11 +10,11 @@ import (
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 )
 
 const (
@@ -53,7 +52,7 @@ func GetCmdCreateClient(cdc *codec.Codec) *cobra.Command {
 $ gaiacli tx ibc client create clientFoo $(gaiacli --home /path/to/chain2 q ibc client consensus-state)
 $ gaiacli tx ibc client create clientFoo ./state.json
 `,
-		Args:  cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -93,7 +92,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 $ gaiacli tx ibc client update clientFoo $(gaiacli --home /path/to/chain2 q ibc client consensus-state)
 $ gaiacli tx ibc client update clientFoo ./state.json
 `,
-		Args:  cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().

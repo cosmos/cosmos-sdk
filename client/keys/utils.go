@@ -137,7 +137,7 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 	fmt.Println(ko.PubKey)
 }
 
-func isRunningOnServer() bool {
+func isRunningUnattended() bool {
 	backends := keyring.AvailableBackends()
 	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func Test_runListCmd(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	type args struct {
 		cmd  *cobra.Command
 		args []string
@@ -32,7 +32,7 @@ func Test_runListCmd(t *testing.T) {
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
 	kb, err := NewKeyringFromHomeFlag(mockIn)
 	require.NoError(t, err)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 
@@ -53,7 +53,7 @@ func Test_runListCmd(t *testing.T) {
 	}
 	for _, tt := range testData {
 		t.Run(tt.name, func(t *testing.T) {
-			if runningOnServer {
+			if runningUnattended {
 				mockIn.Reset("testpass1\ntestpass1\n")
 			}
 			viper.Set(flags.FlagHome, tt.kbDir)

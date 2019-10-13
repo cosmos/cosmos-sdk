@@ -14,7 +14,7 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
@@ -25,7 +25,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	} else {
 		mockIn.Reset("y\n")
@@ -38,14 +38,14 @@ func Test_runAddCmdBasic(t *testing.T) {
 	}
 	assert.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\nN\n")
 	} else {
 		mockIn.Reset("N\n")
 	}
 	assert.Error(t, runAddCmd(cmd, []string{"keyname1"}))
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\nN\n")
 	} else {
 		mockIn.Reset("y\n")

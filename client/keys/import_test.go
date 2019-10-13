@@ -13,7 +13,7 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	importKeyCommand := importKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
 
@@ -22,7 +22,7 @@ func Test_runImportCmd(t *testing.T) {
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
-	if !runningOnServer {
+	if !runningUnattended {
 		kb, err := NewKeyringFromHomeFlag(mockIn)
 		require.NoError(t, err)
 		defer func() {
@@ -43,7 +43,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 	// Now enter password
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("123456789\n12345678\n12345678\n")
 	} else {
 		mockIn.Reset("123456789\n")

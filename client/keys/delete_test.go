@@ -13,7 +13,7 @@ import (
 )
 
 func Test_runDeleteCmd(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	deleteKeyCommand := deleteKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
 
@@ -24,7 +24,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
-	if !runningOnServer {
+	if !runningUnattended {
 		kb, err := NewKeyringFromHomeFlag(mockIn)
 		require.NoError(t, err)
 		defer func() {
@@ -41,19 +41,19 @@ func Test_runDeleteCmd(t *testing.T) {
 	// Now
 	kb, err := NewKeyringFromHomeFlag(mockIn)
 	require.NoError(t, err)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	require.NoError(t, err)
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	require.NoError(t, err)
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
@@ -63,14 +63,14 @@ func Test_runDeleteCmd(t *testing.T) {
 	// User confirmation missing
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
-	if runningOnServer {
+	if runningUnattended {
 		require.Equal(t, "aborted", err.Error())
 	} else {
 		require.Equal(t, "EOF", err.Error())
 	}
 
 	{
-		if runningOnServer {
+		if runningUnattended {
 			mockIn.Reset("testpass1\n")
 		}
 		_, err = kb.Get(fakeKeyName1)
@@ -78,7 +78,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 		// Now there is a confirmation
 		viper.Set(flagYes, true)
-		if runningOnServer {
+		if runningUnattended {
 			mockIn.Reset("testpass1\ntestpass1\n")
 		}
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
@@ -88,12 +88,12 @@ func Test_runDeleteCmd(t *testing.T) {
 	}
 
 	viper.Set(flagYes, true)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ny\ntestpass1\n")
 	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})

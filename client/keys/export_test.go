@@ -11,7 +11,7 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	exportKeyCommand := exportKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
 
@@ -23,20 +23,20 @@ func Test_runExportCmd(t *testing.T) {
 	// create a key
 	kb, err := NewKeyringFromHomeFlag(mockIn)
 	require.NoError(t, err)
-	if !runningOnServer {
+	if !runningUnattended {
 		defer func() {
 			kb.Delete("keyname1", "", false)
 		}()
 	}
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	_, err = kb.CreateAccount("keyname1", tests.TestMnemonic, "", "123456789", 0, 0)
 	require.NoError(t, err)
 
 	// Now enter password
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("123456789\n123456789\ntestpass1\n")
 	} else {
 		mockIn.Reset("123456789\n123456789\n")

@@ -35,7 +35,7 @@ func Test_showKeysCmd(t *testing.T) {
 }
 
 func Test_runShowCmd(t *testing.T) {
-	runningOnServer := isRunningOnServer()
+	runningUnattended := isRunningUnattended()
 	cmd := showKeysCmd()
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
@@ -55,34 +55,34 @@ func Test_runShowCmd(t *testing.T) {
 		kb.Delete("runShowCmd_Key1", "", false)
 		kb.Delete("runShowCmd_Key2", "", false)
 	}()
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	require.NoError(t, err)
 
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	require.NoError(t, err)
 
 	// Now try single key
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
 	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1}), "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\n")
 	}
 	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2}), "threshold must be a positive integer")
@@ -90,7 +90,7 @@ func Test_runShowCmd(t *testing.T) {
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
@@ -100,21 +100,21 @@ func Test_runShowCmd(t *testing.T) {
 	viper.Set(FlagBechPrefix, "acc")
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
 	require.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
-	if runningOnServer {
+	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})

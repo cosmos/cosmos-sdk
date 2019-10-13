@@ -86,6 +86,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if err != nil {
 			return ctx, err
 		}
+		// account already has pubkey set,no need to reset
+		if acc.GetPubKey() != nil {
+			continue
+		}
 		err = acc.SetPubKey(pk)
 		if err != nil {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())

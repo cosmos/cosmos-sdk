@@ -12,6 +12,7 @@ const (
 	CodeConnectionNotFound            sdk.CodeType = 102
 	CodeClientConnectionPathsNotFound sdk.CodeType = 103
 	CodeConnectionPath                sdk.CodeType = 104
+	CodeInvalidCounterpartyConnection sdk.CodeType = 105
 )
 
 // ErrConnectionExists implements sdk.Error
@@ -32,4 +33,9 @@ func ErrClientConnectionPathsNotFound(codespace sdk.CodespaceType) sdk.Error {
 // ErrConnectionPath implements sdk.Error
 func ErrConnectionPath(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeConnectionPath, "connection path is not associated to the client")
+}
+
+// ErrInvalidCounterpartyConnection implements sdk.Error
+func ErrInvalidCounterpartyConnection(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidCounterpartyConnection, "couldn't verify connection membership on counterparty's client")
 }

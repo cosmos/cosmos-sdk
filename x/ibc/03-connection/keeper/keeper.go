@@ -114,7 +114,8 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 	return nil
 }
 
-func (k Keeper) verifyMembership(
+// VerifyMembership helper function for state membership verification
+func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
@@ -130,7 +131,8 @@ func (k Keeper) verifyMembership(
 	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
 }
 
-func (k Keeper) verifyNonMembership(
+// VerifyNonMembership helper function for state non-membership verification
+func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,

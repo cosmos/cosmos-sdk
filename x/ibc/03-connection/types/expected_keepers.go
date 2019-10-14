@@ -5,10 +5,12 @@ import (
 	ics02exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ics02types "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
+	GetCommitmentPath() ics23.Prefix
 	GetConsensusState(ctx sdk.Context, clientID string) (ics02exported.ConsensusState, bool)
 	GetClientState(ctx sdk.Context, clientID string) (ics02types.ClientState, bool)
 	VerifyMembership(

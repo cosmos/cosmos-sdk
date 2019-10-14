@@ -53,7 +53,7 @@ type (
 )
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct {
+type BaseApp struct { // nolint: maligned
 	// initialized on creation
 	logger      log.Logger
 	name        string               // application name from abci.Info
@@ -631,7 +631,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 }
 
 // runMsgs iterates through all the messages and executes them.
-// nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 

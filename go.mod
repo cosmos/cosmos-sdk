@@ -24,7 +24,7 @@ require (
 	github.com/stumble/gorocksdb v0.0.3 // indirect
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20190823183015-45b1026d81ae
-	github.com/tendermint/go-amino v0.15.0
+	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.12.4
 	github.com/tendermint/tendermint v0.32.6
 	github.com/tendermint/tm-db v0.2.0

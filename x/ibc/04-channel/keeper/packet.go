@@ -78,7 +78,7 @@ import (
 //     return packet
 // }
 
-func (k Keeper) SendPacket(ctx sdk.Context, channelID string, packet exported.Packet) error {
+func (k Keeper) SendPacket(ctx sdk.Context, channelID string, packet exported.PacketI) error {
 	// obj, err := man.Query(ctx, packet.SenderPort(), chanId)
 	// if err != nil {
 	// 	return err
@@ -93,7 +93,7 @@ func (k Keeper) SendPacket(ctx sdk.Context, channelID string, packet exported.Pa
 	return nil
 }
 
-func (k Keeper) RecvPacket(ctx sdk.Context, proofs []ics23.Proof, height uint64, portID, channelID string, packet exported.Packet) error {
+func (k Keeper) RecvPacket(ctx sdk.Context, proofs []ics23.Proof, height uint64, portID, channelID string, packet exported.PacketI) error {
 	// obj, err := man.Query(ctx, portid, chanid)
 	// if err != nil {
 	// 	return err

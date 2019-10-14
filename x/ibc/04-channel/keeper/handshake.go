@@ -108,6 +108,27 @@ func (k Keeper) ChanOpenTry(
 	// hops
 	channel := types.NewChannel(types.OPENTRY, order, counterparty, connectionHops, version)
 
+	// expectedCounterpaty is the counterparty of the counterparty's channel end
+	// (i.e self)
+	expectedCounterparty := types.NewCounterparty(portID, channelID)
+	expectedChannel := types.NewChannel(
+		types.INIT, channel.Ordering, expectedCounterparty,
+		channel.CounterpartyHops(), channel.Version,
+	)
+
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	if err != nil {
+		return "", errors.New("failed to marshal expected channel")
+	}
+
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connection, proofHeight, proofInit,
+		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
+		bz,
+	) {
+		return "", errors.New("counterparty channel doesn't match the expected one")
+	}
+
 	// TODO:
 	// if !connection.verifyMembership(
 	// 	proofHeight,
@@ -167,16 +188,25 @@ func (k Keeper) ChanOpenAck(
 		return errors.New("connection is not open")
 	}
 
-	// TODO:
-	// if !connection.verifyMembership(
-	// 	proofHeight,
-	// 	proofInit,
-	// 	channelPath(counterpartyPortIdentifier, counterpartyChannelIdentifier),
-	// 	Channel{INIT, order, portIdentifier,
-	// 					channelIdentifier, channel.CounterpartyHops(), counterpartyVersion}
-	// ) {
-	// return err
-	// }
+	// counterparty of the counterparty channel end (i.e self)
+	counterparty := types.NewCounterparty(portID, channelID)
+	expectedChannel := types.NewChannel(
+		types.INIT, channel.Ordering, counterparty,
+		channel.CounterpartyHops(), channel.Version,
+	)
+
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	if err != nil {
+		return errors.New("failed to marshal expected channel")
+	}
+
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connection, proofHeight, proofTry,
+		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		bz,
+	) {
+		return errors.New("counterparty channel doesn't match the expected one")
+	}
 
 	channel.State = types.OPEN
 	channel.Version = counterpartyVersion
@@ -221,16 +251,24 @@ func (k Keeper) ChanOpenConfirm(
 		return errors.New("connection is not open")
 	}
 
-	// TODO:
-	// if !connection.verifyMembership(
-	//   proofHeight,
-	//   proofAck,
-	//   channelPath(channel.counterpartyPortIdentifier, channel.counterpartyChannelIdentifier),
-	//   Channel{OPEN, channel.order, portIdentifier,
-	//           channelIdentifier, channel.CounterpartyHops(), channel.version}
-	// ) {
-	// return err
-	// }
+	counterparty := types.NewCounterparty(portID, channelID)
+	expectedChannel := types.NewChannel(
+		types.OPEN, channel.Ordering, counterparty,
+		channel.CounterpartyHops(), channel.Version,
+	)
+
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	if err != nil {
+		return errors.New("failed to marshal expected channel")
+	}
+
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connection, proofHeight, proofAck,
+		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		bz,
+	) {
+		return errors.New("counterparty channel doesn't match the expected one")
+	}
 
 	channel.State = types.OPEN
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -315,20 +353,24 @@ func (k Keeper) ChanCloseConfirm(
 		return errors.New("connection is not open")
 	}
 
-	// counterparty := types.NewCounterparty(portID, channelID)
-	// expectedChannel := types.NewChannel(
-	// 	types.CLOSED, channel.Ordering, counterparty,
-	// 	channel.CounterpartyHops(), channel.Version,
-	// )
+	counterparty := types.NewCounterparty(portID, channelID)
+	expectedChannel := types.NewChannel(
+		types.CLOSED, channel.Ordering, counterparty,
+		channel.CounterpartyHops(), channel.Version,
+	)
 
-	// if !connection.verifyMembership(
-	// 	proofHeight,
-	// 	proofInit,
-	// 	channelPath(channel.counterpartyPortIdentifier, channel.counterpartyChannelIdentifier),
-	// 	expectedChannel
-	// ) {
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	if err != nil {
+		return errors.New("failed to marshal expected channel")
+	}
 
-	// }
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connection, proofHeight, proofInit,
+		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		bz,
+	) {
+		return errors.New("counterparty channel doesn't match the expected one")
+	}
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)

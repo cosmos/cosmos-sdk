@@ -157,11 +157,11 @@ var _ sdk.Msg = MsgPacket{}
 // ChannelID can be empty if batched & not first MsgPacket
 // Height uint64 // height of the commitment root for the proofs
 type MsgPacket struct {
-	Packet    exported.Packet `json:"packet" yaml:"packet"`
-	ChannelID string          `json:"channel_id,omitempty" yaml:"channel_id"`
-	Proofs    []ics23.Proof   `json:"proofs" yaml:"proofs"`
-	Height    uint64          `json:"height" yaml:"height"`
-	Signer    sdk.AccAddress  `json:"signer,omitempty" yaml:"signer"`
+	Packet    exported.PacketI `json:"packet" yaml:"packet"`
+	ChannelID string           `json:"channel_id,omitempty" yaml:"channel_id"`
+	Proofs    []ics23.Proof    `json:"proofs" yaml:"proofs"`
+	Height    uint64           `json:"height" yaml:"height"`
+	Signer    sdk.AccAddress   `json:"signer,omitempty" yaml:"signer"`
 }
 
 // Route implements sdk.Msg

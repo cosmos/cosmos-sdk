@@ -23,7 +23,7 @@ import (
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec         *codec.Codec
+	FromAddress   sdk.AccAddress
 	Client        rpcclient.Client
 	ChainID       string
 	Keybase       cryptokeys.Keybase
@@ -33,14 +33,14 @@ type CLIContext struct {
 	HomeDir       string
 	NodeURI       string
 	From          string
-	TrustNode     bool
-	UseLedger     bool
 	BroadcastMode string
 	Verifier      tmlite.Verifier
+	FromName      string
+	Codec         *codec.Codec
+	TrustNode     bool
+	UseLedger     bool
 	Simulate      bool
 	GenerateOnly  bool
-	FromAddress   sdk.AccAddress
-	FromName      string
 	Indent        bool
 	SkipConfirm   bool
 }

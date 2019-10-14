@@ -1,7 +1,10 @@
 package types
 
 import (
+	"fmt"
 	"testing"
+
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -153,4 +156,48 @@ func TestMsgUndelegate(t *testing.T) {
 			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		}
 	}
+}
+
+//test to validate if NewMsgCreateValidator implements yaml marshaller
+func TestMsgMarshalYAML(t *testing.T) {
+	commission1 := NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	tc := struct {
+		name, moniker, identity, website, securityContact, details string
+		CommissionRates                                            CommissionRates
+		minSelfDelegation                                          sdk.Int
+		validatorAddr                                              sdk.ValAddress
+		pubkey                                                     crypto.PubKey
+		bond                                                       sdk.Coin
+		expectPass                                                 bool
+	}{"basic good", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, pk1, coinPos, true}
+
+	description := NewDescription(tc.moniker, tc.identity, tc.website, tc.securityContact, tc.details)
+	msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
+	bs, err := yaml.Marshal(msg)
+	require.NoError(t, err)
+	bechifiedPub, err := sdk.Bech32ifyConsPub(msg.PubKey)
+	require.NoError(t, err)
+
+	want := fmt.Sprintf(`|
+  description:
+    moniker: a
+    identity: b
+    website: c
+    security_contact: d
+    details: e
+  commission:
+    rate: "0.000000000000000000"
+    max_rate: "0.000000000000000000"
+    max_change_rate: "0.000000000000000000"
+  minselfdelegation: "1"
+  delegatoraddress: %s
+  validatoraddress: %s
+  pubkey: %s
+  value:
+    denom: stake
+    amount: "1000"
+`, msg.DelegatorAddress, msg.ValidatorAddress, bechifiedPub)
+
+	require.Equal(t, want, string(bs))
+
 }

@@ -22,17 +22,17 @@ func (k Keeper) ChanOpenInit(
 ) (string, error) {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
 	if len(connectionHops) != 1 {
-		return "", errors.New("connection hops length must be 1") // TODO: sdk.Error
+		return "", types.ErrInvalidConnectionHops(k.codespace)
 	}
 
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return "", errors.New("channel already exists") // TODO: sdk.Error
+		return "", types.ErrChannelExists(k.codespace)
 	}
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return "", errors.New("connection not found") // TODO: ics03 sdk.Error
+		return "", ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	// TODO: inconsistency on ICS03 (`none`) and ICS04 (`CLOSED`)
@@ -77,12 +77,12 @@ func (k Keeper) ChanOpenTry(
 ) (string, error) {
 
 	if len(connectionHops) != 1 {
-		return "", errors.New("ConnectionHops length must be 1")
+		return "", types.ErrInvalidConnectionHops(k.codespace)
 	}
 
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return "", errors.New("channel already exists") // TODO: sdk.Error
+		return "", types.ErrChannelExists(k.codespace)
 	}
 
 	// TODO: Blocked - ICS05 Not implemented yet
@@ -97,7 +97,7 @@ func (k Keeper) ChanOpenTry(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return "", errors.New("connection not found") // TODO: ics03 sdk.Error
+		return "", ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -126,19 +126,8 @@ func (k Keeper) ChanOpenTry(
 		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
 		bz,
 	) {
-		return "", errors.New("counterparty channel doesn't match the expected one")
+		return "", types.ErrInvalidCounterpartyChannel(k.codespace)
 	}
-
-	// TODO:
-	// if !connection.verifyMembership(
-	// 	proofHeight,
-	// 	proofInit,
-	// 	channelPath(counterpartyPortIdentifier, counterpartyChannelIdentifier),
-	// 	Channel{INIT, order, portIdentifier,
-	// 					channelIdentifier, channel.CounterpartyHops(), counterpartyVersion}
-	// ) {
-	// return err
-	// }
 
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -163,7 +152,7 @@ func (k Keeper) ChanOpenAck(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel not found") // TODO: sdk.Error
+		return types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.INIT {
@@ -172,7 +161,7 @@ func (k Keeper) ChanOpenAck(
 
 	_, found = k.GetChannelCapability(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel capability key not found") // TODO: sdk.Error
+		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -181,7 +170,7 @@ func (k Keeper) ChanOpenAck(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return errors.New("connection not found") // TODO: ics03 sdk.Error
+		return ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -205,7 +194,7 @@ func (k Keeper) ChanOpenAck(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return errors.New("counterparty channel doesn't match the expected one")
+		return types.ErrInvalidCounterpartyChannel(k.codespace)
 	}
 
 	channel.State = types.OPEN
@@ -226,7 +215,7 @@ func (k Keeper) ChanOpenConfirm(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel not found") // TODO: sdk.Error
+		return types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.OPENTRY {
@@ -235,7 +224,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	_, found = k.GetChannelCapability(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel capability key not found") // TODO: sdk.Error
+		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -244,7 +233,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return errors.New("connection not found") // TODO: ics03 sdk.Error
+		return ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -267,7 +256,7 @@ func (k Keeper) ChanOpenConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return errors.New("counterparty channel doesn't match the expected one")
+		return types.ErrInvalidCounterpartyChannel(k.codespace)
 	}
 
 	channel.State = types.OPEN
@@ -286,7 +275,7 @@ func (k Keeper) ChanOpenConfirm(
 func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	_, found := k.GetChannelCapability(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel capability key not found") // TODO: sdk.Error
+		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -295,7 +284,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel not found") // TODO: sdk.Error
+		return types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State == types.CLOSED {
@@ -304,7 +293,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return errors.New("connection not found") // TODO: ics03 sdk.Error
+		return ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -328,7 +317,7 @@ func (k Keeper) ChanCloseConfirm(
 ) error {
 	_, found := k.GetChannelCapability(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel capability key not found") // TODO: sdk.Error
+		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -337,7 +326,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return errors.New("channel not found") // TODO: sdk.Error
+		return types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State == types.CLOSED {
@@ -346,7 +335,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return errors.New("connection not found") // TODO: ics03 sdk.Error
+		return ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -369,19 +358,11 @@ func (k Keeper) ChanCloseConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return errors.New("counterparty channel doesn't match the expected one")
+		return types.ErrInvalidCounterpartyChannel(k.codespace)
 	}
 
 	channel.State = types.CLOSED
 	k.SetChannel(ctx, portID, channelID, channel)
-
-	return nil
-}
-
-func assertTimeout(ctx sdk.Context, timeoutHeight uint64) error {
-	if uint64(ctx.BlockHeight()) > timeoutHeight {
-		return errors.New("timeout")
-	}
 
 	return nil
 }

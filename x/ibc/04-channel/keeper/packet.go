@@ -31,7 +31,7 @@ func (k Keeper) CleanupPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel not found") // TODO: sdk.Error
+		return nil, types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.OPEN {
@@ -40,7 +40,7 @@ func (k Keeper) CleanupPacket(
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -53,7 +53,7 @@ func (k Keeper) CleanupPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+		return nil, ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
@@ -140,16 +140,16 @@ func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 	}
 
 	if consensusState.GetHeight() >= packet.TimeoutHeight() {
-		return errors.New("invalid height") // TODO: sdk.Error
+		return types.ErrPacketTimeout(k.codespace)
 	}
 
 	nextSequenceSend, found := k.GetNextSequenceSend(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return errors.New("next seq send counter not found") // TODO: sdk.Error
+		return types.ErrSequenceNotFound(k.codespace, "send")
 	}
 
 	if packet.Sequence() != nextSequenceSend {
-		return errors.New("invalid packet sequence")
+		return types.ErrInvalidPacketSequence(k.codespace)
 	}
 
 	nextSequenceSend++
@@ -171,7 +171,7 @@ func (k Keeper) RecvPacket(
 
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel not found") // TODO: sdk.Error
+		return nil, types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.OPEN {
@@ -180,7 +180,7 @@ func (k Keeper) RecvPacket(
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -198,7 +198,7 @@ func (k Keeper) RecvPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+		return nil, ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -206,7 +206,7 @@ func (k Keeper) RecvPacket(
 	}
 
 	if uint64(ctx.BlockHeight()) >= packet.TimeoutHeight() {
-		return nil, errors.New("packet receive timeout")
+		return nil, types.ErrPacketTimeout(k.codespace)
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
@@ -214,7 +214,7 @@ func (k Keeper) RecvPacket(
 		types.PacketCommitmentPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
 		packet.Data(), // TODO: hash data
 	) {
-		return nil, errors.New("counterparty channel doesn't match the expected one")
+		return nil, errors.New("couldn't verify counterparty packet commitment")
 	}
 
 	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
@@ -227,11 +227,11 @@ func (k Keeper) RecvPacket(
 	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.DestPort(), packet.DestChannel())
 		if !found {
-			return nil, errors.New("next seq receive counter not found") // TODO: sdk.Error
+			return nil, types.ErrSequenceNotFound(k.codespace, "receive")
 		}
 
 		if packet.Sequence() != nextSequenceRecv {
-			return nil, errors.New("invalid packet sequence")
+			return nil, types.ErrInvalidPacketSequence(k.codespace)
 		}
 
 		nextSequenceRecv++
@@ -255,7 +255,7 @@ func (k Keeper) AcknowledgePacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel not found") // TODO: sdk.Error
+		return nil, types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.OPEN {
@@ -264,7 +264,7 @@ func (k Keeper) AcknowledgePacket(
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -282,7 +282,7 @@ func (k Keeper) AcknowledgePacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+		return nil, ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if connection.State != ics03types.OPEN {

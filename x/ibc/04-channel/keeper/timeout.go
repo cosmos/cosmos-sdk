@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ics03types "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -24,7 +25,7 @@ func (k Keeper) TimoutPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel not found") // TODO: sdk.Error
+		return nil, types.ErrChannelNotFound(k.codespace)
 	}
 
 	if channel.State != types.OPEN {
@@ -33,7 +34,7 @@ func (k Keeper) TimoutPacket(
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -46,7 +47,7 @@ func (k Keeper) TimoutPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+		return nil, ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
@@ -54,7 +55,7 @@ func (k Keeper) TimoutPacket(
 	}
 
 	if proofHeight < packet.TimeoutHeight() {
-		return nil, errors.New("timeout on counterparty connection end")
+		return nil, types.ErrPacketTimeout(k.codespace)
 	}
 
 	if nextSequenceRecv >= packet.Sequence() {
@@ -109,12 +110,12 @@ func (k Keeper) TimeoutOnClose(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel not found") // TODO: sdk.Error
+		return nil, types.ErrChannelNotFound(k.codespace)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
@@ -127,7 +128,7 @@ func (k Keeper) TimeoutOnClose(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+		return nil, ics03types.ErrConnectionNotFound(k.codespace)
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
@@ -158,7 +159,7 @@ func (k Keeper) TimeoutOnClose(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return nil, errors.New("counterparty channel doesn't match the expected one")
+		return nil, types.ErrInvalidCounterpartyChannel(k.codespace)
 	}
 
 	if !k.connectionKeeper.VerifyNonMembership(

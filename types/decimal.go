@@ -45,7 +45,6 @@ func precisionInt() *big.Int {
 	return new(big.Int).Set(precisionReuse)
 }
 
-// nolint - common values
 func ZeroDec() Dec     { return Dec{new(big.Int).Set(zeroInt)} }
 func OneDec() Dec      { return Dec{precisionInt()} }
 func SmallestDec() Dec { return Dec{new(big.Int).Set(oneInt)} }
@@ -394,7 +393,6 @@ func (d Dec) String() string {
 // |_____:  /   | $$$    |
 //              |________|
 
-// nolint - go-cyclo
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
 //

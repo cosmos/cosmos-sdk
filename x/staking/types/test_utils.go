@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// nolint: deadcode unused
+// nolint:deadcode,unused
 var (
 	pk1      = ed25519.GenPrivKey().PubKey()
 	pk2      = ed25519.GenPrivKey().PubKey()

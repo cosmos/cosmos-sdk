@@ -12,11 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-var (
-	stakeDenom = "stake"
-	feeDenom   = "fee"
-)
-
 func TestBaseAddressPubKey(t *testing.T) {
 	_, pub1, addr1 := KeyTestPubAddr()
 	_, pub2, addr2 := KeyTestPubAddr()

@@ -8,40 +8,24 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    # - dupl
-    # - errcheck
-    # - funlen
-    # - gochecknoglobals
-    # - gochecknoinits
     - goconst
     - gocritic
-    # - gocyclo
-    # - godox
     - gofmt
     - goimports
-    # - golint
+    - golint
     - gosec
     - gosimple
     - govet
     - ineffassign
-    # - interfacer
-    # - lll
     - maligned
     - misspell
     - nakedret
-    # - prealloc
-    # - scopelint
+    - prealloc
     - staticcheck
     - structcheck
-    # - stylecheck
     - typecheck
     - unconvert
-    # - unparam
     - unused
-    # - varcheck
-    # - whitespace
-    # - wsl
-    # - gocognit
   disable:
     - errcheck
 

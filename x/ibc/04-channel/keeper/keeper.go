@@ -90,3 +90,15 @@ func (k Keeper) SetNextSequenceRecv(ctx sdk.Context, portID, channelID string, s
 	bz := sdk.Uint64ToBigEndian(sequence)
 	store.Set(types.KeyNextSequenceRecv(portID, channelID), bz)
 }
+
+// GetPacketCommitment gets the packet commitment hash from the store
+func (k Keeper) GetPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) []byte {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyPacketCommitment(portID, channelID, sequence))
+	return bz
+}
+
+func (k Keeper) deletePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store.Delete(types.KeyPacketCommitment(portID, channelID, sequence))
+}

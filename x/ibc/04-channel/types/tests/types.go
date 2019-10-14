@@ -11,7 +11,7 @@ import (
 
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/tests"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -20,7 +20,7 @@ const PortName = "port-test"
 type Node struct {
 	*connection.Node
 	Counterparty *Node
-	Channel      channel.Channel
+	Channel      ics04.Channel
 	Cdc          *codec.Codec
 }
 
@@ -36,13 +36,13 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 		Cdc:          cdc,
 	}
 
-	res.Channel = channel.Channel{
+	res.Channel = ics04.Channel{
 		Counterparty:     res.Counterparty.Name,
 		CounterpartyPort: PortName,
 		ConnectionHops:   []string{res.Name},
 	}
 
-	res.Counterparty.Channel = channel.Channel{
+	res.Counterparty.Channel = ics04.Channel{
 		Counterparty:     res.Name,
 		CounterpartyPort: PortName,
 		ConnectionHops:   []string{res.Counterparty.Name},
@@ -51,18 +51,18 @@ func NewNode(self, counter tendermint.MockValidators, cdc *codec.Codec) *Node {
 	return res
 }
 
-func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, channel.Handshaker) {
+func (node *Node) Handshaker(t *testing.T, proofs []commitment.Proof) (sdk.Context, ics04.Handshaker) {
 	ctx := node.Context()
 	store, err := commitment.NewStore(node.Counterparty.Root(), node.Counterparty.Prefix(), proofs)
 	require.NoError(t, err)
 	ctx = commitment.WithStore(ctx, store)
 	man := node.Manager()
-	return ctx, channel.NewHandshaker(man)
+	return ctx, ics04.NewHandshaker(man)
 }
 
-func (node *Node) CLIState() channel.HandshakeState {
+func (node *Node) CLIState() ics04.HandshakeState {
 	man := node.Manager()
-	return channel.NewHandshaker(man).CLIState(PortName, node.Name, []string{node.Name})
+	return ics04.NewHandshaker(man).CLIState(PortName, node.Name, []string{node.Name})
 }
 
 func base(cdc *codec.Codec, key sdk.StoreKey) (state.Mapping, state.Mapping) {
@@ -71,17 +71,17 @@ func base(cdc *codec.Codec, key sdk.StoreKey) (state.Mapping, state.Mapping) {
 	return protocol, free
 }
 
-func (node *Node) Manager() channel.Manager {
+func (node *Node) Manager() ics04.Manager {
 	protocol, _ := base(node.Cdc, node.Key)
 	_, connman := node.Node.Manager()
-	return channel.NewManager(protocol, connman)
+	return ics04.NewManager(protocol, connman)
 }
 
 func (node *Node) OpenInit(t *testing.T, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenInit(ctx, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
-	require.Equal(t, channel.Init, obj.Stage.Get(ctx))
+	require.Equal(t, ics04.Init, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.False(t, obj.Available.Get(ctx))
 }
@@ -90,30 +90,30 @@ func (node *Node) OpenTry(t *testing.T, height uint64, proofs ...commitment.Proo
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenTry(ctx, proofs, height, PortName, node.Name, node.Channel)
 	require.NoError(t, err)
-	require.Equal(t, channel.OpenTry, obj.Stage.Get(ctx))
+	require.Equal(t, ics04.OpenTry, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.False(t, obj.Available.Get(ctx))
-	node.SetState(channel.OpenTry)
+	node.SetState(ics04.OpenTry)
 }
 
 func (node *Node) OpenAck(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenAck(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, channel.Open, obj.Stage.Get(ctx))
+	require.Equal(t, ics04.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.True(t, obj.Available.Get(ctx))
-	node.SetState(channel.Open)
+	node.SetState(ics04.Open)
 }
 
 func (node *Node) OpenConfirm(t *testing.T, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Handshaker(t, proofs)
 	obj, err := man.OpenConfirm(ctx, proofs, height, PortName, node.Name)
 	require.NoError(t, err)
-	require.Equal(t, channel.Open, obj.Stage.Get(ctx))
+	require.Equal(t, ics04.Open, obj.Stage.Get(ctx))
 	require.Equal(t, node.Channel, obj.GetChannel(ctx))
 	require.True(t, obj.Available.Get(ctx))
-	node.SetState(channel.CloseTry)
+	node.SetState(ics04.CloseTry)
 }
 
 func (node *Node) Handshake(t *testing.T) {
@@ -146,7 +146,7 @@ func (node *Node) Handshake(t *testing.T) {
 	node.Counterparty.OpenConfirm(t, uint64(header.Height), pstate)
 }
 
-func (node *Node) Send(t *testing.T, packet channel.Packet) {
+func (node *Node) Send(t *testing.T, packet ics04.Packet) {
 	ctx, man := node.Context(), node.Manager()
 	obj, err := man.Query(ctx, PortName, node.Name)
 	require.NoError(t, err)
@@ -157,7 +157,7 @@ func (node *Node) Send(t *testing.T, packet channel.Packet) {
 	require.Equal(t, node.Cdc.MustMarshalBinaryBare(packet), obj.PacketCommit(ctx, seq+1))
 }
 
-func (node *Node) Receive(t *testing.T, packet channel.Packet, height uint64, proofs ...commitment.Proof) {
+func (node *Node) Receive(t *testing.T, packet ics04.Packet, height uint64, proofs ...commitment.Proof) {
 	ctx, man := node.Context(), node.Manager()
 	obj, err := man.Query(ctx, PortName, node.Name)
 	require.NoError(t, err)

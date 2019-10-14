@@ -1,4 +1,4 @@
-package channel
+package test
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	tmclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/02-client/tendermint/tests"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
@@ -20,7 +20,7 @@ func registerCodec(cdc *codec.Codec) {
 	commitment.RegisterCodec(cdc)
 	merkle.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	channel.RegisterCodec(cdc)
+	ics04.RegisterCodec(cdc)
 	cdc.RegisterConcrete(MyPacket{}, "test/MyPacket", nil)
 }
 

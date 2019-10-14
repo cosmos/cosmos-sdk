@@ -7,9 +7,9 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-var _ sdk.Msg = MsgChanOpenInit{}
+var _ sdk.Msg = MsgChannelOpenInit{}
 
-type MsgChanOpenInit struct {
+type MsgChannelOpenInit struct {
 	PortID    string         `json:"port_id"`
 	ChannelID string         `json:"channel_id"`
 	Channel   Channel        `json:"channel"`
@@ -17,165 +17,237 @@ type MsgChanOpenInit struct {
 }
 
 // Route implements sdk.Msg
-func (msg MsgChanOpenInit) Route() string {
+func (msg MsgChannelOpenInit) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgChanOpenInit) Type() string {
-	return "chan_open_init"
+func (msg MsgChannelOpenInit) Type() string {
+	return "channel_open_init"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChanOpenInit) ValidateBasic() sdk.Error {
+func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
 	// TODO:
 	return nil
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgChanOpenInit) GetSignBytes() []byte {
+func (msg MsgChannelOpenInit) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgChanOpenInit) GetSigners() []sdk.AccAddress {
+func (msg MsgChannelOpenInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChanOpenTry{}
+var _ sdk.Msg = MsgChannelOpenTry{}
 
-type MsgChanOpenTry struct {
+type MsgChannelOpenTry struct {
+	PortID              string         `json:"port_id"`
+	ChannelID           string         `json:"channel_id"`
+	Channel             Channel        `json:"channel"`
+	CounterpartyVersion string         `json:"counterparty_version"`
+	ProofInit           ics23.Proof    `json:"proof_init"`
+	ProofHeight         uint64         `json:"proof_height"`
+	Signer              sdk.AccAddress `json:"signer"`
+}
+
+// Route implements sdk.Msg
+func (msg MsgChannelOpenTry) Route() string {
+	return ibctypes.RouterKey
+}
+
+// Type implements sdk.Msg
+func (msg MsgChannelOpenTry) Type() string {
+	return "channel_open_try"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
+	// TODO:
+	return nil
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgChannelOpenTry) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgChannelOpenTry) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgChannelOpenAck{}
+
+type MsgChannelOpenAck struct {
+	PortID              string         `json:"port_id"`
+	ChannelID           string         `json:"channel_id"`
+	CounterpartyVersion string         `json:"counterparty_version"`
+	ProofTry            ics23.Proof    `json:"proof_try"`
+	ProofHeight         uint64         `json:"proof_height"`
+	Signer              sdk.AccAddress `json:"signer"`
+}
+
+// Route implements sdk.Msg
+func (msg MsgChannelOpenAck) Route() string {
+	return ibctypes.RouterKey
+}
+
+// Type implements sdk.Msg
+func (msg MsgChannelOpenAck) Type() string {
+	return "channel_open_ack"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
+	// TODO:
+	return nil
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgChannelOpenAck) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgChannelOpenAck) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgChannelOpenConfirm{}
+
+type MsgChannelOpenConfirm struct {
+	PortID      string         `json:"port_id"`
+	ChannelID   string         `json:"channel_id"`
+	ProofAck    ics23.Proof    `json:"proof_ack"`
+	ProofHeight uint64         `json:"proof_height"`
+	Signer      sdk.AccAddress `json:"signer"`
+}
+
+// Route implements sdk.Msg
+func (msg MsgChannelOpenConfirm) Route() string {
+	return ibctypes.RouterKey
+}
+
+// Type implements sdk.Msg
+func (msg MsgChannelOpenConfirm) Type() string {
+	return "channel_open_confirm"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
+	// TODO:
+	return nil
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgChannelOpenConfirm) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgChannelOpenConfirm) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgChannelCloseInit{}
+
+type MsgChannelCloseInit struct {
 	PortID    string         `json:"port_id"`
 	ChannelID string         `json:"channel_id"`
-	Channel   Channel        `json:"channel"`
-	Proofs    []ics23.Proof  `json:"proofs"`
-	Height    uint64         `json:"height"`
 	Signer    sdk.AccAddress `json:"signer"`
 }
 
 // Route implements sdk.Msg
-func (msg MsgChanOpenTry) Route() string {
+func (msg MsgChannelCloseInit) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgChanOpenTry) Type() string {
-	return "chan_open_try"
+func (msg MsgChannelCloseInit) Type() string {
+	return "channel_close_init"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChanOpenTry) ValidateBasic() sdk.Error {
+func (msg MsgChannelCloseInit) ValidateBasic() sdk.Error {
 	// TODO:
 	return nil
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgChanOpenTry) GetSignBytes() []byte {
+func (msg MsgChannelCloseInit) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgChanOpenTry) GetSigners() []sdk.AccAddress {
+func (msg MsgChannelCloseInit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChanOpenAck{}
+var _ sdk.Msg = MsgChannelCloseConfirm{}
 
-type MsgChanOpenAck struct {
-	PortID    string         `json:"port_id"`
-	ChannelID string         `json:"channel_id"`
-	Proofs    []ics23.Proof  `json:"proofs"`
-	Height    uint64         `json:"height"`
-	Signer    sdk.AccAddress `json:"signer"`
+type MsgChannelCloseConfirm struct {
+	PortID      string         `json:"port_id"`
+	ChannelID   string         `json:"channel_id"`
+	ProofInit   ics23.Proof    `json:"proof_init"`
+	ProofHeight uint64         `json:"proof_height"`
+	Signer      sdk.AccAddress `json:"signer"`
 }
 
 // Route implements sdk.Msg
-func (msg MsgChanOpenAck) Route() string {
+func (msg MsgChannelCloseConfirm) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgChanOpenAck) Type() string {
-	return "chan_open_ack"
+func (msg MsgChannelCloseConfirm) Type() string {
+	return "channel_close_confirm"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChanOpenAck) ValidateBasic() sdk.Error {
+func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
 	// TODO:
 	return nil
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgChanOpenAck) GetSignBytes() []byte {
+func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgChanOpenAck) GetSigners() []sdk.AccAddress {
+func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
-var _ sdk.Msg = MsgChanOpenConfirm{}
+var _ sdk.Msg = MsgSendPacket{}
 
-type MsgChanOpenConfirm struct {
-	PortID    string         `json:"port_id"`
-	ChannelID string         `json:"channel_id"`
-	Proofs    []ics23.Proof  `json:"proofs"`
-	Height    uint64         `json:"height"`
-	Signer    sdk.AccAddress `json:"signer"`
-}
-
-// Route implements sdk.Msg
-func (msg MsgChanOpenConfirm) Route() string {
-	return ibctypes.RouterKey
-}
-
-// Type implements sdk.Msg
-func (msg MsgChanOpenConfirm) Type() string {
-	return "chan_open_confirm"
-}
-
-// ValidateBasic implements sdk.Msg
-func (msg MsgChanOpenConfirm) ValidateBasic() sdk.Error {
-	// TODO:
-	return nil
-}
-
-// GetSignBytes implements sdk.Msg
-func (msg MsgChanOpenConfirm) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
-}
-
-// GetSigners implements sdk.Msg
-func (msg MsgChanOpenConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
-}
-
-var _ sdk.Msg = MsgPacket{}
-
-// MsgPacket PortID dependent on type
-// ChannelID can be empty if batched & not first MsgPacket
+// MsgSendPacket PortID dependent on type
+// ChannelID can be empty if batched & not first MsgSendPacket
 // Height uint64 // height of the commitment root for the proofs
-type MsgPacket struct {
+type MsgSendPacket struct {
 	Packet    exported.PacketI `json:"packet" yaml:"packet"`
-	ChannelID string           `json:"channel_id,omitempty" yaml:"channel_id"`
+	ChannelID string           `json:"channel_id" yaml:"channel_id"`
 	Proofs    []ics23.Proof    `json:"proofs" yaml:"proofs"`
 	Height    uint64           `json:"height" yaml:"height"`
-	Signer    sdk.AccAddress   `json:"signer,omitempty" yaml:"signer"`
+	Signer    sdk.AccAddress   `json:"signer" yaml:"signer"`
 }
 
 // Route implements sdk.Msg
-func (msg MsgPacket) Route() string {
+func (msg MsgSendPacket) Route() string {
 	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg
-func (msg MsgPacket) Type() string {
-	return "packet"
+func (msg MsgSendPacket) Type() string {
+	return "send_packet"
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgPacket) ValidateBasic() sdk.Error {
+func (msg MsgSendPacket) ValidateBasic() sdk.Error {
 	// TODO:
 	// Check PortID ChannelID len
 	// Check packet != nil
@@ -185,11 +257,11 @@ func (msg MsgPacket) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes implements sdk.Msg
-func (msg MsgPacket) GetSignBytes() []byte {
+func (msg MsgSendPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+func (msg MsgSendPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

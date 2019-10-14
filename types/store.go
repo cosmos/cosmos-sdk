@@ -69,6 +69,7 @@ const (
 // nolint - reexport
 type (
 	StoreKey          = types.StoreKey
+	CapabilityKey     = types.CapabilityKey
 	KVStoreKey        = types.KVStoreKey
 	TransientStoreKey = types.TransientStoreKey
 )

@@ -1,1 +1,0 @@
-#3705 Return `[]` instead of `null` when querying delegator rewards.

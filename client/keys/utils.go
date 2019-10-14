@@ -69,7 +69,7 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 
 	passphrase, err := input.GetPassword(prompt, buf)
 	if err != nil {
-		return passphrase, fmt.Errorf("Error reading passphrase: %v", err)
+		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
 	}
 
 	return passphrase, nil

@@ -7,7 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -43,8 +43,8 @@ type testParams struct {
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		{[]byte(keyMaxValidators), &tp.MaxValidators},
-		{[]byte(keySlashingRate), &tp.SlashingRate},
+		{Key: []byte(keyMaxValidators), Value: &tp.MaxValidators},
+		{Key: []byte(keySlashingRate), Value: &tp.SlashingRate},
 	}
 }
 

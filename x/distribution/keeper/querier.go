@@ -210,7 +210,7 @@ func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery
 	k.stakingKeeper.IterateDelegations(
 		ctx, params.DelegatorAddress,
 		func(_ int64, del exported.DelegationI) (stop bool) {
-			validators = append(validators[:], del.GetValidatorAddr())
+			validators = append(validators, del.GetValidatorAddr())
 			return false
 		},
 	)

@@ -17,13 +17,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var config = sdk.GetConfig()
 var bech32Prefixes = []string{
-	sdk.Bech32PrefixAccAddr,
-	sdk.Bech32PrefixAccPub,
-	sdk.Bech32PrefixValAddr,
-	sdk.Bech32PrefixValPub,
-	sdk.Bech32PrefixConsAddr,
-	sdk.Bech32PrefixConsPub,
+	config.GetBech32AccountAddrPrefix(),
+	config.GetBech32AccountPubPrefix(),
+	config.GetBech32ValidatorAddrPrefix(),
+	config.GetBech32ValidatorPubPrefix(),
+	config.GetBech32ConsensusAddrPrefix(),
+	config.GetBech32ConsensusPubPrefix(),
 }
 
 type hexOutput struct {

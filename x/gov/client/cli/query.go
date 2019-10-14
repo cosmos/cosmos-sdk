@@ -152,7 +152,7 @@ $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 			}
 
 			if len(matchingProposals) == 0 {
-				return fmt.Errorf("No matching proposals found")
+				return fmt.Errorf("no matching proposals found")
 			}
 
 			return cliCtx.PrintOutput(matchingProposals) // nolint:errcheck
@@ -215,21 +215,24 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var vote types.Vote
-			if err := cdc.UnmarshalJSON(res, &vote); err != nil {
-				return err
-			}
+
+			// XXX: Allow the decoding to potentially fail as the vote may have been
+			// pruned from state. If so, decoding will fail and so we need to check the
+			// Empty() case. Consider updating Vote JSON decoding to not fail when empty.
+			_ = cdc.UnmarshalJSON(res, &vote)
 
 			if vote.Empty() {
 				res, err = gcutils.QueryVoteByTxQuery(cliCtx, params)
 				if err != nil {
 					return err
 				}
+
 				if err := cdc.UnmarshalJSON(res, &vote); err != nil {
 					return err
 				}
 			}
 
-			return cliCtx.PrintOutput(vote) //nolint:errcheck
+			return cliCtx.PrintOutput(vote)
 		},
 	}
 }
@@ -319,7 +322,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			// check to see if the proposal is in the store
 			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
 			depositorAddr, err := sdk.AccAddressFromBech32(args[1])
@@ -545,7 +548,7 @@ $ %s query gov param deposit
 				cdc.MustUnmarshalJSON(res, &param)
 				out = param
 			default:
-				return fmt.Errorf("Argument must be one of (voting|tallying|deposit), was %s", args[0])
+				return fmt.Errorf("argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
 			return cliCtx.PrintOutput(out)

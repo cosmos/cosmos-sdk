@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var codeTypes = []CodeType{
@@ -91,5 +93,45 @@ func TestAppendMsgToErr(t *testing.T) {
 			),
 			msg,
 			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+	}
+}
+
+func TestResultFromError(t *testing.T) {
+	cases := map[string]struct {
+		err    error
+		expect Result
+	}{
+		"sdk.Error": {
+			err: ErrUnauthorized("not owner"),
+			expect: Result{
+				Codespace: CodespaceRoot,
+				Code:      CodeUnauthorized,
+				Log:       `{"codespace":"sdk","code":4,"message":"not owner"}`,
+			},
+		},
+		"types/errors": {
+			err: sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not owner"),
+			expect: Result{
+				Codespace: CodespaceRoot,
+				Code:      CodeUnauthorized,
+				Log:       `{"codespace":"sdk","code":4,"message":"not owner: unauthorized"}`,
+			},
+		},
+		"stdlib errors": {
+			err: fmt.Errorf("not owner"),
+			expect: Result{
+				Codespace: CodespaceType("undefined"),
+				Code:      CodeInternal,
+				// note that we redact the internal errors in the new package to not leak eg. panics
+				Log: `{"codespace":"undefined","code":1,"message":"internal error"}`,
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			res := ResultFromError(tc.err)
+			require.Equal(t, tc.expect, res)
+		})
 	}
 }

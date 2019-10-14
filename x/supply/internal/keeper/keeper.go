@@ -21,9 +21,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
-	codespace sdk.CodespaceType, maccPerms map[string][]string) Keeper {
-
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, maccPerms map[string][]string) Keeper {
 	// set the addresses
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -45,7 +43,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetSupply retrieves the Supply from store
-func (k Keeper) GetSupply(ctx sdk.Context) (supply types.Supply) {
+func (k Keeper) GetSupply(ctx sdk.Context) (supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(SupplyKey)
 	if b == nil {
@@ -56,7 +54,7 @@ func (k Keeper) GetSupply(ctx sdk.Context) (supply types.Supply) {
 }
 
 // SetSupply sets the Supply to store
-func (k Keeper) SetSupply(ctx sdk.Context, supply types.Supply) {
+func (k Keeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(supply)
 	store.Set(SupplyKey, b)

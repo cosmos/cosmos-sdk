@@ -13,7 +13,6 @@ import (
 
 // query accountREST Handler
 func QueryBalancesRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)

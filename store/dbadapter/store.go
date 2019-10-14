@@ -3,7 +3,7 @@ package dbadapter
 import (
 	"io"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"

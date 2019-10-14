@@ -14,10 +14,13 @@ import (
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
+
 		case types.QueryTotalSupply:
 			return queryTotalSupply(ctx, req, k)
+
 		case types.QuerySupplyOf:
 			return querySupplyOf(ctx, req, k)
+
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown supply query endpoint")
 		}
@@ -32,7 +35,7 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	totalSupply := k.GetSupply(ctx).Total
+	totalSupply := k.GetSupply(ctx).GetTotal()
 
 	start, end := client.Paginate(len(totalSupply), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
@@ -57,7 +60,7 @@ func querySupplyOf(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sd
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	supply := k.GetSupply(ctx).Total.AmountOf(params.Denom)
+	supply := k.GetSupply(ctx).GetTotal().AmountOf(params.Denom)
 
 	res, err := supply.MarshalJSON()
 	if err != nil {

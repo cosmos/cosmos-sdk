@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 
 	// unnamed import of statik for swagger UI support
@@ -26,9 +25,8 @@ import (
 
 // RestServer represents the Light Client Rest server
 type RestServer struct {
-	Mux     *mux.Router
-	CliCtx  context.CLIContext
-	KeyBase keybase.Keybase
+	Mux    *mux.Router
+	CliCtx context.CLIContext
 
 	log      log.Logger
 	listener net.Listener
@@ -54,11 +52,10 @@ func (rs *RestServer) Start(listenAddr string, maxOpen int, readTimeout, writeTi
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	cfg := &rpcserver.Config{
-		MaxOpenConnections: maxOpen,
-		ReadTimeout:        time.Duration(readTimeout) * time.Second,
-		WriteTimeout:       time.Duration(writeTimeout) * time.Second,
-	}
+	cfg := rpcserver.DefaultConfig()
+	cfg.MaxOpenConnections = maxOpen
+	cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
+	cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
 
 	rs.listener, err = rpcserver.Listen(listenAddr, cfg)
 	if err != nil {

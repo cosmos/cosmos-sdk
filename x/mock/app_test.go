@@ -14,9 +14,9 @@ import (
 const msgRoute = "testMsg"
 
 var (
-	numAccts                       = 2
-	genCoins                       = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
-	accs, addrs, pubKeys, privKeys = CreateGenAccounts(numAccts, genCoins)
+	numAccts                 = 2
+	genCoins                 = sdk.Coins{sdk.NewInt64Coin("foocoin", 77)}
+	accs, addrs, _, privKeys = CreateGenAccounts(numAccts, genCoins)
 )
 
 // testMsg is a mock transaction that has a validation which can fail.
@@ -77,7 +77,8 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 		true, false, privKeys[1],
 	)
 
-	require.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	// Will fail on SetPubKey decorator
+	require.Equal(t, sdk.CodeInvalidPubKey, res.Code, res.Log)
 	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 
 	// Resigning the tx with the correct privKey should result in an OK result

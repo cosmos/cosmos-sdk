@@ -12,7 +12,6 @@ import (
 
 // ExecuteT executes the command, pipes any input to STDIN and return STDOUT,
 // logging STDOUT/STDERR to t.
-// nolint: errcheck
 func ExecuteT(t *testing.T, cmd, input string) (stdout, stderr string) {
 	t.Log("Running", cmd)
 
@@ -52,7 +51,7 @@ func ExecuteT(t *testing.T, cmd, input string) (stdout, stderr string) {
 	stdout = strings.Trim(string(outbz), "\n")
 	stderr = strings.Trim(string(errbz), "\n")
 
-	return
+	return stdout, stderr
 }
 
 // Execute the command, launch goroutines to log stdout/err to t.

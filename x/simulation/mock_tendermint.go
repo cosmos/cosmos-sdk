@@ -158,7 +158,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 
 	// return if no past times
-	if len(pastTimes) <= 0 {
+	if len(pastTimes) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,
 			LastCommitInfo: abci.LastCommitInfo{

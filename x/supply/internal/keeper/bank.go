@@ -105,7 +105,8 @@ func (k Keeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 
 	// update total supply
 	supply := k.GetSupply(ctx)
-	supply.Inflate(amt)
+	supply = supply.Inflate(amt)
+
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
@@ -135,7 +136,7 @@ func (k Keeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk
 
 	// update total supply
 	supply := k.GetSupply(ctx)
-	supply.Deflate(amt)
+	supply = supply.Deflate(amt)
 	k.SetSupply(ctx, supply)
 
 	logger := k.Logger(ctx)

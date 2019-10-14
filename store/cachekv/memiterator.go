@@ -4,7 +4,7 @@ import (
 	"container/list"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // Iterates over iterKVCache items.

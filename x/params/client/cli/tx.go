@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -75,7 +75,7 @@ Where proposal.json contains:
 			from := cliCtx.GetFromAddress()
 			content := types.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
-			msg := gov.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

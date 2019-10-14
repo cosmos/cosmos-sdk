@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
@@ -8,11 +8,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	keep "github.com/cosmos/cosmos-sdk/x/supply/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/supply/internal/types"
 )
 
 func TestNewQuerier(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 1000, 2)
+	app, ctx := createTestApp(false)
+	keeper := app.SupplyKeeper
+	cdc := app.Codec()
 
 	supplyCoins := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -28,14 +31,14 @@ func TestNewQuerier(t *testing.T) {
 		Data: []byte{},
 	}
 
-	querier := NewQuerier(keeper)
+	querier := keep.NewQuerier(keeper)
 
 	bz, err := querier(ctx, []string{"other"}, query)
 	require.Error(t, err)
 	require.Nil(t, bz)
 
 	queryTotalSupplyParams := types.NewQueryTotalSupplyParams(1, 20)
-	bz, errRes := keeper.cdc.MarshalJSON(queryTotalSupplyParams)
+	bz, errRes := cdc.MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
@@ -45,7 +48,7 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, err)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
-	bz, errRes = keeper.cdc.MarshalJSON(querySupplyParams)
+	bz, errRes = cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)
@@ -56,7 +59,9 @@ func TestNewQuerier(t *testing.T) {
 }
 
 func TestQuerySupply(t *testing.T) {
-	ctx, _, keeper := createTestInput(t, false, 1000, 2)
+	app, ctx := createTestApp(false)
+	keeper := app.SupplyKeeper
+	cdc := app.Codec()
 
 	supplyCoins := sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
@@ -65,10 +70,12 @@ func TestQuerySupply(t *testing.T) {
 		sdk.NewCoin("btc", sdk.NewInt(21000000)),
 	)
 
+	querier := keep.NewQuerier(keeper)
+
 	keeper.SetSupply(ctx, types.NewSupply(supplyCoins))
 
 	queryTotalSupplyParams := types.NewQueryTotalSupplyParams(1, 10)
-	bz, errRes := keeper.cdc.MarshalJSON(queryTotalSupplyParams)
+	bz, errRes := cdc.MarshalJSON(queryTotalSupplyParams)
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
@@ -79,22 +86,22 @@ func TestQuerySupply(t *testing.T) {
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QueryTotalSupply)
 	query.Data = bz
 
-	res, err := queryTotalSupply(ctx, query, keeper)
+	res, err := querier(ctx, []string{types.QueryTotalSupply}, query)
 	require.Nil(t, err)
 
 	var totalCoins sdk.Coins
-	errRes = keeper.cdc.UnmarshalJSON(res, &totalCoins)
+	errRes = cdc.UnmarshalJSON(res, &totalCoins)
 	require.Nil(t, errRes)
 	require.Equal(t, supplyCoins, totalCoins)
 
 	querySupplyParams := types.NewQuerySupplyOfParams(sdk.DefaultBondDenom)
-	bz, errRes = keeper.cdc.MarshalJSON(querySupplyParams)
+	bz, errRes = cdc.MarshalJSON(querySupplyParams)
 	require.Nil(t, errRes)
 
 	query.Path = fmt.Sprintf("/custom/supply/%s", types.QuerySupplyOf)
 	query.Data = bz
 
-	res, err = querySupplyOf(ctx, query, keeper)
+	res, err = querier(ctx, []string{types.QuerySupplyOf}, query)
 	require.Nil(t, err)
 
 	var supply sdk.Int

@@ -1,7 +1,0 @@
-# Multistore
-
-## Prerequisites
-
-
-## Synopsis
-

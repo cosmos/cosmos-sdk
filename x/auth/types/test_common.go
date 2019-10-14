@@ -13,7 +13,7 @@ func NewTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 }
 
 func NewTestStdFee() StdFee {
-	return NewStdFee(50000,
+	return NewStdFee(100000,
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
 	)
 }

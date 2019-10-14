@@ -316,7 +316,6 @@ func (keeper BaseSendKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 }
 
 // GetSendEnabled returns the current SendEnabled
-// nolint: errcheck
 func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 	var enabled bool
 	keeper.paramSpace.Get(ctx, types.ParamStoreKeySendEnabled, &enabled)

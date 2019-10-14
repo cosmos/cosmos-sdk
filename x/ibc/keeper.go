@@ -33,5 +33,6 @@ func (k Keeper) Channel() channel.Manager {
 }
 
 func (k Keeper) Port(id string) channel.Port {
-	return k.channel.Port(id)
+	key := channel.NewStoreKey(id)
+	return k.channel.Port(key)
 }

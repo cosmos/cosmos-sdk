@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/state"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -20,7 +21,8 @@ type Manager struct {
 
 	counterParty CounterpartyManager
 
-	ports map[string]struct{}
+	portKeyByName map[string]types.StoreKey
+	ports         map[types.StoreKey]struct{}
 }
 
 type CounterpartyManager struct {
@@ -34,7 +36,7 @@ func NewManager(protocol state.Mapping, connection connection.Manager) Manager {
 		protocol:     protocol.Prefix(LocalRoot()),
 		connection:   connection,
 		counterParty: NewCounterpartyManager(protocol.Cdc()),
-		ports:        make(map[string]struct{}),
+		ports:        make(map[types.StoreKey]struct{}),
 	}
 }
 

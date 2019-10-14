@@ -5,22 +5,29 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ics03types "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// TimoutPacket  is called by a module which originally attempted to send a
-// packet to a counterparty module, where the timeout height has passed on the
-// counterparty chain without the packet being committed, to prove that the
-// packet can no longer be executed and to allow the calling module to safely
-// perform appropriate state transitions.
-func (k Keeper) TimoutPacket(
+// CleanupPacket is called by a module to remove a received packet commitment
+// from storage. The receiving end must have already processed the packet
+// (whether regularly or past timeout).
+//
+// In the ORDERED channel case, CleanupPacket cleans-up a packet on an ordered
+// channel by proving that the packet has been received on the other end.
+//
+// In the UNORDERED channel case, CleanupPacket cleans-up a packet on an
+// unordered channel by proving that the associated acknowledgement has been
+//written.
+func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	proof ics23.Proof,
-	proofHeight uint64,
+	proofHeight,
 	nextSequenceRecv uint64,
+	acknowledgement []byte,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
@@ -40,13 +47,17 @@ func (k Keeper) TimoutPacket(
 	//  return errors.New("invalid capability key") // TODO: sdk.Error
 	// }
 
+	if packet.DestChannel() != channel.Counterparty.ChannelID {
+		return nil, errors.New("invalid packet destination channel")
+	}
+
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
 	}
 
-	if proofHeight < packet.TimeoutHeight() {
-		return nil, errors.New("timeout on counterparty connection end")
+	if packet.DestPort() != channel.Counterparty.PortID {
+		return nil, errors.New("invalid packet destination port")
 	}
 
 	if nextSequenceRecv >= packet.Sequence() {
@@ -67,9 +78,10 @@ func (k Keeper) TimoutPacket(
 			sdk.Uint64ToBigEndian(nextSequenceRecv),
 		)
 	case types.UNORDERED:
-		ok = k.connectionKeeper.VerifyNonMembership(
+		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connection, proofHeight, proof,
 			types.PacketAcknowledgementPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
+			acknowledgement,
 		)
 	default:
 		panic("invalid channel ordering type")
@@ -80,28 +92,90 @@ func (k Keeper) TimoutPacket(
 	}
 
 	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
-
-	if channel.Ordering == types.ORDERED {
-		channel.State = types.CLOSED
-		k.SetChannel(ctx, packet.SourcePort(), packet.SourceChannel(), channel)
-	}
-
 	return packet, nil
 }
 
-// TimeoutOnClose is called by a module in order to prove that the channel to
-// which an unreceived packet was addressed has been closed, so the packet will
-// never be received (even if the timeoutHeight has not yet been reached).
-func (k Keeper) TimeoutOnClose(
+// SendPacket  is called by a module in order to send an IBC packet on a channel
+// end owned by the calling module to the corresponding module on the counterparty
+// chain.
+func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
+	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
+	if !found {
+		return errors.New("channel not found") // TODO: sdk.Error
+	}
+
+	if channel.State == types.CLOSED {
+		return errors.New("channel is closed") // TODO: sdk.Error
+	}
+
+	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
+	if !found {
+		return errors.New("channel capability key not found") // TODO: sdk.Error
+	}
+
+	// if !AuthenticateCapabilityKey(capabilityKey) {
+	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	// }
+
+	if packet.DestPort() != channel.Counterparty.PortID {
+		return errors.New("invalid packet destination port")
+	}
+
+	if packet.DestChannel() != channel.Counterparty.ChannelID {
+		return errors.New("invalid packet destination channel")
+	}
+
+	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	if !found {
+		return errors.New("connection not found") // TODO: ics03 sdk.Error
+	}
+
+	if connection.State == ics03types.NONE {
+		return errors.New("connection is closed") // TODO: sdk.Error
+	}
+
+	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	if !found {
+		return errors.New("consensus state not found") // TODO: sdk.Error
+	}
+
+	if consensusState.GetHeight() >= packet.TimeoutHeight() {
+		return errors.New("invalid height") // TODO: sdk.Error
+	}
+
+	nextSequenceSend, found := k.GetNextSequenceSend(ctx, packet.SourcePort(), packet.SourceChannel())
+	if !found {
+		return errors.New("next seq send counter not found") // TODO: sdk.Error
+	}
+
+	if packet.Sequence() != nextSequenceSend {
+		return errors.New("invalid packet sequence")
+	}
+
+	nextSequenceSend++
+	k.SetNextSequenceSend(ctx, packet.SourcePort(), packet.SourceChannel(), nextSequenceSend)
+	k.SetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence(), packet.Data()) // TODO: hash packet data
+
+	return nil
+}
+
+// RecvPacket is called by a module in order to receive & process an IBC packet
+// sent on the corresponding channel end on the counterparty chain.
+func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proofNonMembership,
-	proofClosed ics23.Proof,
+	proof ics23.Proof,
 	proofHeight uint64,
+	acknowledgement []byte,
 ) (exported.PacketI, error) {
+
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
 		return nil, errors.New("channel not found") // TODO: sdk.Error
+	}
+
+	if channel.State != types.OPEN {
+		return nil, errors.New("channel not open") // TODO: sdk.Error
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -113,162 +187,56 @@ func (k Keeper) TimeoutOnClose(
 	//  return errors.New("invalid capability key") // TODO: sdk.Error
 	// }
 
+	// packet must come from the channel's counterparty
+	if packet.SourcePort() != channel.Counterparty.PortID {
+		return nil, errors.New("invalid packet source port")
+	}
+
+	if packet.SourceChannel() != channel.Counterparty.ChannelID {
+		return nil, errors.New("invalid packet source channel")
+	}
+
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
 	}
 
-	if packet.DestPort() != channel.Counterparty.PortID {
-		return nil, errors.New("port id doesn't match with counterparty's")
+	if connection.State != ics03types.OPEN {
+		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
 	}
 
-	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
-	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
-		return nil, errors.New("packet hasn't been sent")
-	}
-
-	counterparty := types.NewCounterparty(packet.SourcePort(), packet.SourceChannel())
-	expectedChannel := types.NewChannel(
-		types.CLOSED, channel.Ordering, counterparty, channel.CounterpartyHops(), channel.Version,
-	)
-
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
-	if err != nil {
-		return nil, errors.New("failed to marshal expected channel")
+	if uint64(ctx.BlockHeight()) >= packet.TimeoutHeight() {
+		return nil, errors.New("packet receive timeout")
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proofClosed,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
+		ctx, connection, proofHeight, proof,
+		types.ChannelPath(packet.SourcePort(), packet.SourceChannel()),
+		packet.Data(), // TODO: hash data
 	) {
 		return nil, errors.New("counterparty channel doesn't match the expected one")
 	}
 
-	if !k.connectionKeeper.VerifyNonMembership(
-		ctx, connection, proofHeight, proofNonMembership,
-		types.PacketAcknowledgementPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
-	) {
-		return nil, errors.New("cannot verify absence of acknowledgement at packet index")
+	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
+		k.SetPacketAcknowledgement(
+			ctx, packet.DestPort(), packet.DestChannel(), packet.Sequence(),
+			acknowledgement, // TODO: hash ACK
+		)
 	}
 
-	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.DestPort(), packet.DestChannel())
+		if !found {
+			return nil, errors.New("next seq receive counter not found") // TODO: sdk.Error
+		}
+
+		if packet.Sequence() != nextSequenceRecv {
+			return nil, errors.New("invalid packet sequence")
+		}
+
+		nextSequenceRecv++
+		k.SetNextSequenceRecv(ctx, packet.DestPort(), packet.DestChannel(), nextSequenceRecv)
+	}
 
 	return packet, nil
-}
-
-// function sendPacket(packet: Packet) {
-// 	channel = provableStore.get(channelPath(packet.sourcePort, packet.sourceChannel))
-
-// 	// optimistic sends are permitted once the handshake has started
-// 	abortTransactionUnless(channel !== null)
-// 	abortTransactionUnless(channel.state !== CLOSED)
-// 	abortTransactionUnless(authenticate(privateStore.get(channelCapabilityPath(packet.sourcePort, packet.sourceChannel))))
-// 	abortTransactionUnless(packet.destPort === channel.counterpartyPortIdentifier)
-// 	abortTransactionUnless(packet.destChannel === channel.counterpartyChannelIdentifier)
-// 	connection = provableStore.get(connectionPath(channel.connectionHops[0]))
-
-// 	abortTransactionUnless(connection !== null)
-// 	abortTransactionUnless(connection.state !== CLOSED)
-
-// 	consensusState = provableStore.get(consensusStatePath(connection.clientIdentifier))
-// 	abortTransactionUnless(consensusState.getHeight() < packet.timeoutHeight)
-
-// 	nextSequenceSend = provableStore.get(nextSequenceSendPath(packet.sourcePort, packet.sourceChannel))
-// 	abortTransactionUnless(packet.sequence === nextSequenceSend)
-
-// 	// all assertions passed, we can alter state
-
-// 	nextSequenceSend = nextSequenceSend + 1
-// 	provableStore.set(nextSequenceSendPath(packet.sourcePort, packet.sourceChannel), nextSequenceSend)
-// 	provableStore.set(packetCommitmentPath(packet.sourcePort, packet.sourceChannel, packet.sequence), hash(packet.data))
-// }
-
-// function recvPacket(
-//   packet: OpaquePacket,
-//   proof: CommitmentProof,
-//   proofHeight: uint64,
-//   acknowledgement: bytes): Packet {
-
-//     channel = provableStore.get(channelPath(packet.destPort, packet.destChannel))
-//     abortTransactionUnless(channel !== null)
-//     abortTransactionUnless(channel.state === OPEN)
-//     abortTransactionUnless(authenticate(privateStore.get(channelCapabilityPath(packet.destPort, packet.destChannel))))
-//     abortTransactionUnless(packet.sourcePort === channel.counterpartyPortIdentifier)
-//     abortTransactionUnless(packet.sourceChannel === channel.counterpartyChannelIdentifier)
-
-//     connection = provableStore.get(connectionPath(channel.connectionHops[0]))
-//     abortTransactionUnless(connection !== null)
-//     abortTransactionUnless(connection.state === OPEN)
-
-//     abortTransactionUnless(getConsensusHeight() < packet.timeoutHeight)
-
-//     abortTransactionUnless(connection.verifyMembership(
-//       proofHeight,
-//       proof,
-//       packetCommitmentPath(packet.sourcePort, packet.sourceChannel, packet.sequence),
-//       hash(packet.data)
-//     ))
-
-//     // all assertions passed (except sequence check), we can alter state
-
-//     if (acknowledgement.length > 0 || channel.order === UNORDERED)
-//       provableStore.set(
-//         packetAcknowledgementPath(packet.destPort, packet.destChannel, packet.sequence),
-//         hash(acknowledgement)
-//       )
-
-//     if (channel.order === ORDERED) {
-//       nextSequenceRecv = provableStore.get(nextSequenceRecvPath(packet.destPort, packet.destChannel))
-//       abortTransactionUnless(packet.sequence === nextSequenceRecv)
-//       nextSequenceRecv = nextSequenceRecv + 1
-//       provableStore.set(nextSequenceRecvPath(packet.destPort, packet.destChannel), nextSequenceRecv)
-//     }
-
-//     // return transparent packet
-//     return packet
-// }
-
-func (k Keeper) SendPacket(ctx sdk.Context, channelID string, packet exported.PacketI) error {
-	// obj, err := man.Query(ctx, packet.SenderPort(), chanId)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if obj.OriginConnection().Client.GetConsensusState(ctx).GetHeight() >= packet.Timeout() {
-	// 	return errors.New("timeout height higher than the latest known")
-	// }
-
-	// obj.Packets.SetRaw(ctx, obj.SeqSend.Increment(ctx), packet.Marshal())
-
-	return nil
-}
-
-func (k Keeper) RecvPacket(ctx sdk.Context, proofs []ics23.Proof, height uint64, portID, channelID string, packet exported.PacketI) error {
-	// obj, err := man.Query(ctx, portid, chanid)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// /*
-	// 	if !obj.Receivable(ctx) {
-	// 		return errors.New("cannot receive Packets on this channel")
-	// 	}
-	// */
-
-	// ctx, err = obj.Context(ctx, proofs, height)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = assertTimeout(ctx, packet.Timeout())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if !obj.counterParty.Packets.Value(obj.SeqRecv.Increment(ctx)).IsRaw(ctx, packet.Marshal()) {
-	// 	return errors.New("verification failed")
-	// }
-
-	return nil
 }

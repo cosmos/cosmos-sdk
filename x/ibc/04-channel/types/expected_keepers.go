@@ -2,9 +2,15 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ics02exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ics03types "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
+
+// ClientKeeper expected account IBC client keeper
+type ClientKeeper interface {
+	GetConsensusState(ctx sdk.Context, clientID string) (ics02exported.ConsensusState, bool)
+}
 
 // ConnectionKeeper expected account IBC connection keeper
 type ConnectionKeeper interface {

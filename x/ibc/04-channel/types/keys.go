@@ -77,3 +77,9 @@ func KeyNextSequenceRecv(portID, channelID string) []byte {
 func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
 	return []byte(PacketCommitmentPath(portID, channelID, sequence))
 }
+
+// KeyPacketAcknowledgement returns the store key of under which a packet
+// acknowledgement is stored
+func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte {
+	return []byte(PacketAcknowledgementPath(portID, channelID, sequence))
+}

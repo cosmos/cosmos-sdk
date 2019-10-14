@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"enconding/binary"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -19,8 +20,8 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 	prefix    []byte // prefix bytes for accessing the store
 
+	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
-	// TODO: portKeeper
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
@@ -77,11 +78,33 @@ func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, 
 	store.Set(types.KeyChannelCapabilityPath(portID, channelID), []byte(key))
 }
 
+// GetNextSequenceSend gets a channel's next send sequence from the store
+func (k Keeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyNextSequenceSend(portID, channelID))
+	if bz == nil {
+		return 0, false
+	}
+
+	return binary.BigEndian(bz), true
+}
+
 // SetNextSequenceSend sets a channel's next send sequence to the store
 func (k Keeper) SetNextSequenceSend(ctx sdk.Context, portID, channelID string, sequence uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := sdk.Uint64ToBigEndian(sequence)
 	store.Set(types.KeyNextSequenceSend(portID, channelID), bz)
+}
+
+// GetNextSequenceRecv gets a channel's next receive sequence from the store
+func (k Keeper) GetNextSequenceRecv(ctx sdk.Context, portID, channelID string) (uint64, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyNextSequenceRecv(portID, channelID))
+	if bz == nil {
+		return 0, false
+	}
+
+	return binary.BigEndian(bz), true
 }
 
 // SetNextSequenceRecv sets a channel's next receive sequence to the store
@@ -98,7 +121,19 @@ func (k Keeper) GetPacketCommitment(ctx sdk.Context, portID, channelID string, s
 	return bz
 }
 
+// SetPacketCommitment sets the packet commitment hash to the store
+func (k Keeper) SetPacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64, commitmentHash []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store.Set(types.KeyPacketCommitment(portID, channelID, sequence), commitmentHash)
+}
+
 func (k Keeper) deletePacketCommitment(ctx sdk.Context, portID, channelID string, sequence uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	store.Delete(types.KeyPacketCommitment(portID, channelID, sequence))
+}
+
+// SetPacketAcknowledgement sets the packet ack hash to the store
+func (k Keeper) SetPacketAcknowledgement(ctx sdk.Context, portID, channelID string, sequence uint64, ackHash []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store.Set(types.KeyPacketAcknowledgement(portID, channelID, sequence), ackHash)
 }

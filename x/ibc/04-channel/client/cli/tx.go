@@ -201,7 +201,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 				fmt.Println(res)
 				return err
 			}
-			fmt.Printf(" [OK] txid(%v) port(%v) chan(%v)\n", res.TxHash, portid1, chanid1)
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
 
 			// Another block has to be passed after msginit is commited
 			// to retrieve the correct proofs

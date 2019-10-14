@@ -33,10 +33,11 @@ type CounterpartyManager struct {
 
 func NewManager(protocol state.Mapping, connection connection.Manager) Manager {
 	return Manager{
-		protocol:     protocol.Prefix(LocalRoot()),
-		connection:   connection,
-		counterParty: NewCounterpartyManager(protocol.Cdc()),
-		ports:        make(map[types.StoreKey]struct{}),
+		protocol:      protocol.Prefix(LocalRoot()),
+		connection:    connection,
+		counterParty:  NewCounterpartyManager(protocol.Cdc()),
+		ports:         make(map[types.StoreKey]struct{}),
+		portKeyByName: make(map[string]types.StoreKey),
 	}
 }
 

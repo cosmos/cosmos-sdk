@@ -31,8 +31,8 @@ var _ Keybase = keyringKeybase{}
 // keyringKeybase implements the Keybase interface by using the Keyring library
 // for account key persistence.
 type keyringKeybase struct {
-	db   keyring.Keyring
 	base baseKeybase
+	db   keyring.Keyring
 }
 
 var maxPassphraseEntryAttempts = 3

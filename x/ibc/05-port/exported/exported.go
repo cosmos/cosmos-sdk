@@ -6,8 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Generate
+// Generate creates a new object-capability key, which must
+// be returned by the outer-layer function.
 type Generate func() sdk.CapabilityKey
 
-// Authenticate
+// Authenticate defines an authentication function defined by
+// each module to authenticate their own.
 type Authenticate func(key sdk.CapabilityKey) bool

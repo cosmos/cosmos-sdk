@@ -70,11 +70,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	for i, pk := range pubkeys {
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
-			if simulate {
-				pk = simSecp256k1Pubkey
-			} else {
+			if !simulate {
 				continue
 			}
+			pk = simSecp256k1Pubkey
 		}
 		// Only make check if simulate=false
 		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {

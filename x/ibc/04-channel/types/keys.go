@@ -24,7 +24,7 @@ func ChannelPath(portID, channelID string) string {
 }
 
 // ChannelCapabilityPath defines the path under which capability keys associated
-// with a channel are stores
+// with a channel are stored
 func ChannelCapabilityPath(portID, channelID string) string {
 	return fmt.Sprintf("%s/key", ChannelPath(portID, channelID))
 }

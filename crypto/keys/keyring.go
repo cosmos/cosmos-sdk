@@ -453,7 +453,6 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	}
 }
 
-//nolint: funlen
 func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Config {
 	if test {
 		return keyring.Config{

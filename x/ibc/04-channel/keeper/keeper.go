@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"enconding/binary"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -25,13 +25,16 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ConnectionKeeper) Keeper {
+func NewKeeper(
+	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper) Keeper {
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
 		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
 		prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
-		connectionKeeper: ck,
+		clientKeeper:     clientKeeper,
+		connectionKeeper: connectionKeeper,
 	}
 }
 
@@ -86,7 +89,7 @@ func (k Keeper) GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian(bz), true
+	return binary.BigEndian.Uint64(bz), true
 }
 
 // SetNextSequenceSend sets a channel's next send sequence to the store
@@ -104,7 +107,7 @@ func (k Keeper) GetNextSequenceRecv(ctx sdk.Context, portID, channelID string) (
 		return 0, false
 	}
 
-	return binary.BigEndian(bz), true
+	return binary.BigEndian.Uint64(bz), true
 }
 
 // SetNextSequenceRecv sets a channel's next receive sequence to the store

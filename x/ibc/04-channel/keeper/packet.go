@@ -80,7 +80,7 @@ func (k Keeper) CleanupPacket(
 	case types.UNORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connection, proofHeight, proof,
-			types.PacketAcknowledgementPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
+			types.PacketAcknowledgementPath(packet.DestPort(), packet.DestChannel(), packet.Sequence()),
 			acknowledgement,
 		)
 	default:
@@ -211,7 +211,7 @@ func (k Keeper) RecvPacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connection, proofHeight, proof,
-		types.ChannelPath(packet.SourcePort(), packet.SourceChannel()),
+		types.PacketCommitmentPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
 		packet.Data(), // TODO: hash data
 	) {
 		return nil, errors.New("counterparty channel doesn't match the expected one")
@@ -238,5 +238,70 @@ func (k Keeper) RecvPacket(
 		k.SetNextSequenceRecv(ctx, packet.DestPort(), packet.DestChannel(), nextSequenceRecv)
 	}
 
+	return packet, nil
+}
+
+// AcknowledgePacket is called by a module to process the acknowledgement of a
+// packet previously sent by the calling module on a channel to a counterparty
+// module on the counterparty chain. acknowledgePacket also cleans up the packet
+// commitment, which is no longer necessary since the packet has been received
+// and acted upon.
+func (k Keeper) AcknowledgePacket(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	acknowledgement []byte,
+	proof ics23.Proof,
+	proofHeight uint64,
+) (exported.PacketI, error) {
+	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
+	if !found {
+		return nil, errors.New("channel not found") // TODO: sdk.Error
+	}
+
+	if channel.State != types.OPEN {
+		return nil, errors.New("channel not open") // TODO: sdk.Error
+	}
+
+	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
+	if !found {
+		return nil, errors.New("channel capability key not found") // TODO: sdk.Error
+	}
+
+	// if !AuthenticateCapabilityKey(capabilityKey) {
+	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	// }
+
+	// packet must come from the channel's counterparty
+	if packet.SourcePort() != channel.Counterparty.PortID {
+		return nil, errors.New("invalid packet source port")
+	}
+
+	if packet.SourceChannel() != channel.Counterparty.ChannelID {
+		return nil, errors.New("invalid packet source channel")
+	}
+
+	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	if !found {
+		return nil, errors.New("connection not found") // TODO: ics03 sdk.Error
+	}
+
+	if connection.State != ics03types.OPEN {
+		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
+	}
+
+	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
+	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
+		return nil, errors.New("packet hasn't been sent")
+	}
+
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connection, proofHeight, proof,
+		types.PacketAcknowledgementPath(packet.DestPort(), packet.DestChannel(), packet.Sequence()),
+		acknowledgement, // TODO: hash ACK
+	) {
+		return nil, errors.New("invalid acknowledgement on counterparty chain") // TODO: sdk.Error
+	}
+
+	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
 	return packet, nil
 }

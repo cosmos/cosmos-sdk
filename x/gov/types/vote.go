@@ -143,7 +143,7 @@ func (vo VoteOption) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+// nolint:errcheck
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

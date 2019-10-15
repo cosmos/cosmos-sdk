@@ -1,4 +1,4 @@
-package ics02
+package client
 
 import (
 	"fmt"

@@ -49,7 +49,7 @@ type Header interface {
 
 // Client types
 const (
-	ClientTypeTendermint string = "Tendermint"
+	ClientTypeTendermint string = "tendermint"
 )
 
 // ClientType defines the type of the consensus algorithm

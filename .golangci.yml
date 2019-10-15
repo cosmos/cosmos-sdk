@@ -1,23 +1,33 @@
-run:
-  deadline: 1m
+# run:
+#   # timeout for analysis, e.g. 30s, 5m, default is 1m
+#   timeout: 5m
 
 linters:
-  enable-all: true
-  disable:
-    - gocyclo
-    - gochecknoinits
-    - gochecknoglobals
-    - dupl
-    - interfacer
-    - unparam
-    - lll
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - golint
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
     - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - unused
+  disable:
     - errcheck
-    - scopelint
-    - varcheck
-    - godox
-    - funlen
-    - whitespace
 
 issues:
   exclude-rules:
@@ -37,3 +47,9 @@ issues:
 linters-settings:
   dogsled:
     max-blank-identifiers: 3
+  maligned:
+    # print struct with more effective memory layout or not, false by default
+    suggest-new: true
+
+service:
+  golangci-lint-version: 1.19.x

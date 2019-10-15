@@ -99,7 +99,7 @@ func waitForHeight(height int64, url string) {
 
 	for {
 		// Since this is in a testing file we are accepting nolint to be passed
-		res, err = http.Get(url) //nolint:gosec
+		res, err = http.Get(url) // nolint:gosec
 		if err != nil {
 			panic(err)
 		}
@@ -151,7 +151,7 @@ func WaitForStart(url string) {
 		time.Sleep(time.Millisecond * 100)
 
 		var res *http.Response
-		res, err = http.Get(url) //nolint:gosec Error is arising in testing files, accepting nolint
+		res, err = http.Get(url) // nolint:gosec
 		if err != nil || res == nil {
 			continue
 		}

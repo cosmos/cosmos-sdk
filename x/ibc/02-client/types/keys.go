@@ -6,7 +6,7 @@ import (
 
 const (
 	// SubModuleName defines the IBC client name
-	SubModuleName = "clients"
+	SubModuleName = "client"
 
 	// StoreKey is the store key string for IBC client
 	StoreKey = SubModuleName

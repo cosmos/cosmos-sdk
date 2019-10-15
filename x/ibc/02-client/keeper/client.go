@@ -79,7 +79,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	k.SetConsensusState(ctx, clientID, consensusState)
 	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated at height %d", clientID, consensusState.GetHeight()))
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))
 	return nil
 }
 

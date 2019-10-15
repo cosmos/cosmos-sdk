@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/tendermint/tendermint/crypto"
+	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -112,6 +113,33 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// custom marshal yaml function due to consensus pubkey
+func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
+	bs, err := yaml.Marshal(struct {
+		Description       Description
+		Commission        CommissionRates
+		MinSelfDelegation sdk.Int
+		DelegatorAddress  sdk.AccAddress
+		ValidatorAddress  sdk.ValAddress
+		PubKey            string
+		Value             sdk.Coin
+	}{
+		Description:       msg.Description,
+		Commission:        msg.Commission,
+		MinSelfDelegation: msg.MinSelfDelegation,
+		DelegatorAddress:  msg.DelegatorAddress,
+		ValidatorAddress:  msg.ValidatorAddress,
+		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
+		Value:             msg.Value,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bs), nil
+}
+
 // GetSignBytes returns the message bytes to sign over.
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
@@ -142,7 +170,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if err := msg.Commission.Validate(); err != nil {
 		return err
 	}
-	if !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
@@ -198,12 +226,12 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 
 	if msg.CommissionRate != nil {
-		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.LT(sdk.ZeroDec()) {
+		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
 			return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission rate must be between 0 and 1, inclusive")
 		}
 	}

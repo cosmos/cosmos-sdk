@@ -37,6 +37,7 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the staking module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
+	channel.RegisterCodec(cdc)
 	ics23.RegisterCodec(cdc)
 }
 

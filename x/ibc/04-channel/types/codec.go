@@ -9,6 +9,7 @@ var SubModuleCdc *codec.Codec
 
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.PacketI)(nil), nil)
+	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 
 	cdc.RegisterConcrete(MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
 	cdc.RegisterConcrete(MsgChannelOpenTry{}, "ibc/channel/MsgChannelOpenTry", nil)

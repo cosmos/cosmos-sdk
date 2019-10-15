@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ics03types "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -31,7 +31,7 @@ func (k Keeper) CleanupPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -53,7 +53,7 @@ func (k Keeper) CleanupPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, ics03types.ErrConnectionNotFound(k.codespace)
+		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
@@ -130,7 +130,7 @@ func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 		return errors.New("connection not found") // TODO: ics03 sdk.Error
 	}
 
-	if connection.State == ics03types.NONE {
+	if connection.State == connectiontypes.NONE {
 		return errors.New("connection is closed") // TODO: sdk.Error
 	}
 
@@ -171,7 +171,7 @@ func (k Keeper) RecvPacket(
 
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -198,10 +198,10 @@ func (k Keeper) RecvPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, ics03types.ErrConnectionNotFound(k.codespace)
+		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != ics03types.OPEN {
+	if connection.State != connectiontypes.OPEN {
 		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
 	}
 
@@ -255,7 +255,7 @@ func (k Keeper) AcknowledgePacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -282,10 +282,10 @@ func (k Keeper) AcknowledgePacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, ics03types.ErrConnectionNotFound(k.codespace)
+		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != ics03types.OPEN {
+	if connection.State != connectiontypes.OPEN {
 		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
 	}
 

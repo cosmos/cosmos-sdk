@@ -32,7 +32,7 @@ func queryClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 
 	channel, found := k.GetChannel(ctx, params.PortID, params.ChannelID)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, params.ChannelID)
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(channel)

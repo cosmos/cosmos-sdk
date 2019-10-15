@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ics03types "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -25,7 +25,7 @@ func (k Keeper) TimoutPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -47,7 +47,7 @@ func (k Keeper) TimoutPacket(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, ics03types.ErrConnectionNotFound(k.codespace)
+		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
@@ -110,7 +110,7 @@ func (k Keeper) TimeoutOnClose(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace)
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -128,7 +128,7 @@ func (k Keeper) TimeoutOnClose(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, ics03types.ErrConnectionNotFound(k.codespace)
+		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {

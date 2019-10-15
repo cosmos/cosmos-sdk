@@ -22,12 +22,15 @@ type Keeper struct {
 
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
+	portKeeper       types.PortKeeper
 }
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper) Keeper {
+	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
+	// portKeeper types.PortKeeper,
+) Keeper {
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
@@ -35,6 +38,7 @@ func NewKeeper(
 		prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
+		// portKeeper:       portKeeper,
 	}
 }
 
@@ -75,7 +79,6 @@ func (k Keeper) GetChannelCapability(ctx sdk.Context, portID, channelID string) 
 }
 
 // SetChannelCapability sets a channel's capability key to the store
-// TODO: is the key a string ?
 func (k Keeper) SetChannelCapability(ctx sdk.Context, portID, channelID string, key string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	store.Set(types.KeyChannelCapabilityPath(portID, channelID), []byte(key))

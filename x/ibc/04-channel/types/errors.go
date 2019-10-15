@@ -21,13 +21,13 @@ const (
 )
 
 // ErrChannelExists implements sdk.Error
-func ErrChannelExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeChannelExists, "channel already exists")
+func ErrChannelExists(codespace sdk.CodespaceType, channelID string) sdk.Error {
+	return sdk.NewError(codespace, CodeChannelExists, fmt.Sprintf("channel with ID %s already exists", channelID))
 }
 
 // ErrChannelNotFound implements sdk.Error
-func ErrChannelNotFound(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeChannelNotFound, "channel not found")
+func ErrChannelNotFound(codespace sdk.CodespaceType, channelID string) sdk.Error {
+	return sdk.NewError(codespace, CodeChannelNotFound, fmt.Sprintf("channel with ID %s not found", channelID))
 }
 
 // ErrInvalidConnectionHops implements sdk.Error

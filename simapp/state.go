@@ -29,14 +29,23 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			genesisTimestamp = time.Unix(FlagGenesisTimeValue, 0)
 		}
 
-		chainID = config.ChainID
+		// chainID = config.ChainID
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
 			// override the default chain-id from simapp to set it later to the config
-			appState, simAccs, chainID = AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+
+			if FlagGenesisTimeValue == 0 {
+				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
+				genesisTimestamp = genesisDoc.GenesisTime
+			}
+
+			appState = genesisDoc.AppState
+			chainID = genesisDoc.ChainID
+			simAccs = accounts
 
 		case config.ParamsFile != "":
 			appParams := make(simulation.AppParams)
@@ -113,10 +122,8 @@ func AppStateRandomizedFn(
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
-// from a genesis.json file
-func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (
-	genState json.RawMessage, newAccs []simulation.Account, chainID string) {
-
+// from a genesis.json file.
+func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile string) (tmtypes.GenesisDoc, []simulation.Account) {
 	bytes, err := ioutil.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
@@ -133,7 +140,8 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile strin
 		cdc.MustUnmarshalJSON(appState[auth.ModuleName], &authGenesis)
 	}
 
-	for _, acc := range authGenesis.Accounts {
+	newAccs := make([]simulation.Account, len(authGenesis.Accounts))
+	for i, acc := range authGenesis.Accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
 		// and these keys are never actually used to sign by mock Tendermint.
@@ -146,8 +154,8 @@ func AppStateFromGenesisFileFn(r *rand.Rand, cdc *codec.Codec, genesisFile strin
 
 		// create simulator accounts
 		simAcc := simulation.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: acc.GetAddress()}
-		newAccs = append(newAccs, simAcc)
+		newAccs[i] = simAcc
 	}
 
-	return genesis.AppState, newAccs, genesis.ChainID
+	return genesis, newAccs
 }

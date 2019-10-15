@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -35,6 +36,8 @@ type BaseConfig struct {
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	Pruning string `mapstructure:"pruning"`
 }
 
 // Config defines the server's top level configuration
@@ -75,6 +78,7 @@ func DefaultConfig() *Config {
 		BaseConfig{
 			MinGasPrices:    defaultMinGasPrices,
 			InterBlockCache: true,
+			Pruning:         store.PruningStrategySyncable,
 		},
 	}
 }

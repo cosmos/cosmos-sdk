@@ -69,16 +69,16 @@ var (
 //
 // NOTE: dbKeybase will be deprecated in favor of keyringKeybase.
 type dbKeybase struct {
-	db   dbm.DB
 	base baseKeybase
+	db   dbm.DB
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
 func newDBKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
-		db:   db,
 		base: baseKeybase{},
+		db:   db,
 	}
 }
 

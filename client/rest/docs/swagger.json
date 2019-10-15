@@ -2629,23 +2629,6 @@
                 }
             }
         },
-        "common.PrettyParams": {
-            "type": "object",
-            "properties": {
-                "base_proposer_reward": {
-                    "type": "string"
-                },
-                "bonus_proposer_reward": {
-                    "type": "string"
-                },
-                "community_tax": {
-                    "type": "string"
-                },
-                "withdraw_addr_enabled": {
-                    "type": "string"
-                }
-            }
-        },
         "rest.BaseReq": {
             "type": "object",
             "properties": {
@@ -3021,7 +3004,7 @@
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/common.PrettyParams"
+                    "$ref": "#/definitions/types.Params"
                 }
             }
         },

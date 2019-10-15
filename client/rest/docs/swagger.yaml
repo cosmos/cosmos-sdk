@@ -13,17 +13,6 @@ definitions:
         format: base64
         type: string
     type: object
-  common.PrettyParams:
-    properties:
-      base_proposer_reward:
-        type: string
-      bonus_proposer_reward:
-        type: string
-      community_tax:
-        type: string
-      withdraw_addr_enabled:
-        type: string
-    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -275,7 +264,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/common.PrettyParams'
+        $ref: '#/definitions/types.Params'
         type: object
     type: object
   rest.pool:

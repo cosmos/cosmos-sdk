@@ -15,6 +15,7 @@ var (
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
 // If ValidateBasic passes, decorator calls next AnteHandler in chain.
+// This decorator will not get run on ReCheck since it is not dependent on application state
 type ValidateBasicDecorator struct{}
 
 func NewValidateBasicDecorator() ValidateBasicDecorator {
@@ -22,7 +23,7 @@ func NewValidateBasicDecorator() ValidateBasicDecorator {
 }
 
 func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to validate basic on recheck tx
+	// no need to validate basic on recheck tx, call next antehandler
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
 	}

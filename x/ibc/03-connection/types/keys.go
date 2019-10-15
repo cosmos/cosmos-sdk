@@ -6,7 +6,7 @@ import (
 
 const (
 	// SubModuleName defines the IBC connection name
-	SubModuleName = "connections"
+	SubModuleName = "connection"
 
 	// StoreKey is the store key string for IBC connections
 	StoreKey = SubModuleName

@@ -12,23 +12,23 @@ import (
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
+//
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenInit(
 	ctx sdk.Context,
 	connectionID, // identifier
 	clientID string,
 	counterparty types.Counterparty, // desiredCounterpartyConnectionIdentifier, counterpartyPrefix, counterpartyClientIdentifier
 ) error {
-	// TODO: validateConnectionIdentifier(identifier)
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace), "cannot initialize connection")
+		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot initialize connection")
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(clientID, counterparty, k.getCompatibleVersions())
-	connection.State = types.INIT
-
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
+
 	err := k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
 		sdkerrors.Wrap(err, "cannot initialize connection")
@@ -41,7 +41,9 @@ func (k Keeper) ConnOpenInit(
 // ConnOpenTry relays notice of a connection attempt on chain A to chain B (this
 // code is executed on chain B).
 //
-// NOTE: here chain A acts as the counterparty
+// NOTE:
+//  - Here chain A acts as the counterparty
+//  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
 	connectionID string, // desiredIdentifier
@@ -52,7 +54,6 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// TODO: validateConnectionIdentifier(identifier)
 	if consensusHeight > uint64(ctx.BlockHeight()) {
 		return errors.New("invalid consensus height") // TODO: sdk.Error
 	}
@@ -64,28 +65,37 @@ func (k Keeper) ConnOpenTry(
 
 	// expectedConn defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
-	// TODO: prefix should be `getCommitmentPrefix()`
-	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, counterparty.Prefix)
-	expectedConn := types.NewConnectionEnd(clientID, expectedCounterparty, counterpartyVersions)
-	expectedConn.State = types.INIT
+	prefix := k.clientKeeper.GetCommitmentPath() // i.e `getCommitmentPrefix()`
+	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, prefix)
+	expectedConn := types.NewConnectionEnd(types.INIT, clientID, expectedCounterparty, counterpartyVersions)
 
-	// chain B picks a version from Chain A's available versions
-	version := k.pickVersion(counterpartyVersions)
+	// chain B picks a version from Chain A's available versions that is compatible
+	// with the supported IBC versions
+	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.NONE, clientID, counterparty, []string{version})
+	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	if err != nil {
+		return err
+	}
 
-	ok := k.verifyMembership(
+	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
-		types.ConnectionPath(connectionID), expectedConn,
+		types.ConnectionPath(connectionID), expConnBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	ok = k.verifyMembership(
+	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+	if err != nil {
+		return err
+	}
+
+	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
-		ics02types.ConsensusStatePath(counterparty.ClientID), expectedConsensusState,
+		ics02types.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
@@ -93,15 +103,11 @@ func (k Keeper) ConnOpenTry(
 
 	_, found = k.GetConnection(ctx, connectionID)
 	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace), "cannot relay connection attempt")
-	}
-
-	if !checkVersion(version, counterpartyVersions[0]) {
-		return errors.New("versions don't match") // TODO: sdk.Error
+		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
 	}
 
 	connection.State = types.TRYOPEN
-	err := k.addConnectionToClient(ctx, clientID, connectionID)
+	err = k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
@@ -113,6 +119,8 @@ func (k Keeper) ConnOpenTry(
 
 // ConnOpenAck relays acceptance of a connection open attempt from chain B back
 // to chain A (this code is executed on chain A).
+//
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
@@ -121,22 +129,27 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// TODO: validateConnectionIdentifier(identifier)
 	if consensusHeight > uint64(ctx.BlockHeight()) {
 		return errors.New("invalid consensus height") // TODO: sdk.Error
 	}
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace), "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace, connectionID), "cannot relay ACK of open attempt")
 	}
 
 	if connection.State != types.INIT {
-		return errors.New("connection is in a non valid state") // TODO: sdk.Error
+		return types.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not INIT (got %s)", types.ConnectionStateToString(connection.State)),
+		)
 	}
 
-	if !checkVersion(connection.Versions[0], version) {
-		return errors.New("versions don't match") // TODO: sdk.Error
+	if types.LatestVersion(connection.Versions) != version {
+		return types.ErrInvalidVersion(
+			k.codespace,
+			fmt.Sprintf("connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version),
+		)
 	}
 
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
@@ -144,36 +157,37 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("client consensus state not found") // TODO: use ICS02 error
 	}
 
-	prefix := getCommitmentPrefix()
+	prefix := k.clientKeeper.GetCommitmentPath()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(connection.ClientID, expectedCounterparty, []string{version})
-	expectedConn.State = types.TRYOPEN
+	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.ClientID, expectedCounterparty, []string{version})
 
-	ok := k.verifyMembership(
+	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	if err != nil {
+		return err
+	}
+
+	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofTry,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expectedConn,
+		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	ok = k.verifyMembership(
+	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+	if err != nil {
+		return err
+	}
+
+	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofTry,
-		ics02types.ConsensusStatePath(connection.Counterparty.ClientID), expectedConsensusState,
+		ics02types.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 	}
 
 	connection.State = types.OPEN
-
-	// abort if version is the last one
-	// TODO: what does this suppose to mean ?
-	compatibleVersions := getCompatibleVersions()
-	if compatibleVersions[len(compatibleVersions)-1] == version {
-		return errors.New("versions don't match") // TODO: sdk.Error
-	}
-
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: INIT -> OPEN ", connectionID))
@@ -182,33 +196,41 @@ func (k Keeper) ConnOpenAck(
 
 // ConnOpenConfirm confirms opening of a connection on chain A to chain B, after
 // which the connection is open on both chains (this code is executed on chain B).
+//
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
 	proofAck ics23.Proof,
 	proofHeight uint64,
 ) error {
-	// TODO: validateConnectionIdentifier(identifier)
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace), "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace, connectionID), "cannot relay ACK of open attempt")
 	}
 
 	if connection.State != types.TRYOPEN {
-		return errors.New("connection is in a non valid state") // TODO: sdk.Error
+		return types.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not TRYOPEN (got %s)", types.ConnectionStateToString(connection.State)),
+		)
 	}
 
-	prefix := getCommitmentPrefix()
+	prefix := k.clientKeeper.GetCommitmentPath()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(connection.ClientID, expectedCounterparty, connection.Versions)
-	expectedConn.State = types.OPEN
+	expectedConn := types.NewConnectionEnd(types.OPEN, connection.ClientID, expectedCounterparty, connection.Versions)
 
-	ok := k.verifyMembership(
+	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	if err != nil {
+		return err
+	}
+
+	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofAck,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expectedConn,
+		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
 	)
 	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
+		return types.ErrInvalidCounterpartyConnection(k.codespace)
 	}
 
 	connection.State = types.OPEN

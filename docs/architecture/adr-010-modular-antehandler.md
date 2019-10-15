@@ -191,16 +191,16 @@ type AnteDecorator interface {
 ```
 
 ```go
-// ChainDecorators will recursively link all of the AnteDecorators in the chain and return a final AnteHandler function
+// ChainAnteDecorators will recursively link all of the AnteDecorators in the chain and return a final AnteHandler function
 // This is done to preserve the ability to set a single AnteHandler function in the baseapp.
-func ChainDecorators(chain ...AnteDecorator) AnteHandler {
+func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
     if len(chain) == 1 {
         return func(ctx Context, tx Tx, simulate bool) {
             chain[0].AnteHandle(ctx, tx, simulate, nil)
         }
     }
     return func(ctx Context, tx Tx, simulate bool) {
-        chain[0].AnteHandle(ctx, tx, simulate, ChainDecorators(chain[1:]))
+        chain[0].AnteHandle(ctx, tx, simulate, ChainAnteDecorators(chain[1:]))
     }
 }
 ```
@@ -211,9 +211,9 @@ Define AnteDecorator functions
 
 ```go
 // Setup GasMeter, catch OutOfGasPanic and handle appropriately
-type SetupDecorator struct{}
+type SetUpContextDecorator struct{}
 
-func (sud SetupDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
+func (sud SetUpContextDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error) {
     ctx.GasMeter = NewGasMeter(tx.Gas)
 
     defer func() {
@@ -251,7 +251,7 @@ Link AnteDecorators to create a final AnteHandler. Set this AnteHandler in basea
 
 ```go
 // Create final antehandler by chaining the decorators together
-antehandler := ChainDecorators(NewSetupDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
+antehandler := ChainAnteDecorators(NewSetUpContextDecorator(), NewSigVerifyDecorator(), NewUserDefinedDecorator())
 
 // Set chained Antehandler in the baseapp
 bapp.SetAnteHandler(antehandler)
@@ -264,7 +264,7 @@ Pros:
 
 Cons:
 
-1. Decorator pattern may have a deeply nested structure that is hard to understand, this is mitigated by having the decorator order explicitly listed in the `ChainDecorators` function.
+1. Decorator pattern may have a deeply nested structure that is hard to understand, this is mitigated by having the decorator order explicitly listed in the `ChainAnteDecorators` function.
 2. Does not make use of the ModuleManager design. Since this is already being used for BeginBlocker/EndBlocker, this proposal seems unaligned with that design pattern.
 
 ## Status

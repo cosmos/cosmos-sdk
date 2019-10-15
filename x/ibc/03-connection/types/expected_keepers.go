@@ -9,6 +9,7 @@ import (
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
+	GetCommitmentPath() ics23.Prefix
 	GetConsensusState(ctx sdk.Context, clientID string) (ics02exported.ConsensusState, bool)
 	GetClientState(ctx sdk.Context, clientID string) (ics02types.ClientState, bool)
 	VerifyMembership(

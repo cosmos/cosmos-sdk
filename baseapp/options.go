@@ -1,4 +1,3 @@
-// nolint: golint
 package baseapp
 
 import (

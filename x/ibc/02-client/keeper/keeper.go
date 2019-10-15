@@ -42,7 +42,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetCommitmentPath returns the commitment path of the client
-func (k Keeper) GetCommitmentPath() merkle.Prefix {
+func (k Keeper) GetCommitmentPath() ics23.Prefix {
 	return merkle.NewPrefix([][]byte{[]byte(k.storeKey.Name())}, k.prefix)
 }
 

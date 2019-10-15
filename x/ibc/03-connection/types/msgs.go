@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -44,7 +46,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() sdk.Error {
-	// TODO:
+	// TODO: validate IDs; Blocked on ICS24
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
 	return nil
 }
 
@@ -105,7 +110,28 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
-	// TODO:
+	// TODO: validate IDs; Blocked on ICS24
+	if len(msg.CounterpartyVersions) == 0 {
+		return ErrInvalidVersion(DefaultCodespace, "missing counterparty versions")
+	}
+
+	for _, version := range msg.CounterpartyVersions {
+		if strings.TrimSpace(version) == "" {
+			return ErrInvalidVersion(DefaultCodespace, "version can't be blank")
+		}
+	}
+
+	if msg.ProofHeight == 0 {
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+	}
+
+	if msg.ConsensusHeight == 0 {
+		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
 	return nil
 }
 
@@ -160,7 +186,21 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
-	// TODO:
+	if strings.TrimSpace(msg.Version) == "" {
+		return ErrInvalidVersion(DefaultCodespace, "version can't be blank")
+	}
+
+	if msg.ProofHeight == 0 {
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+	}
+
+	if msg.ConsensusHeight == 0 {
+		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
 	return nil
 }
 
@@ -209,7 +249,14 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() sdk.Error {
-	// TODO:
+	// TODO: validate IDs; Blocked on ICS24
+	if msg.ProofHeight == 0 {
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
 	return nil
 }
 

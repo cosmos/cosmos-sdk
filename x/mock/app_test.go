@@ -77,7 +77,8 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 		true, false, privKeys[1],
 	)
 
-	require.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	// Will fail on SetPubKey decorator
+	require.Equal(t, sdk.CodeInvalidPubKey, res.Code, res.Log)
 	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 
 	// Resigning the tx with the correct privKey should result in an OK result

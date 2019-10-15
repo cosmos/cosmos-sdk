@@ -92,9 +92,15 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	params := cgts.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
 
-	// simulate gas cost if the signature array is empty
-	if simulate && len(sigTx.GetSignatures()) == 0 {
-		for _, signer := range sigTx.GetSigners() {
+	// simulate gas cost for signatures in simulate mode
+	if simulate {
+		// in simulate mode, each element should be a nil signature
+		sigs := sigTx.GetSignatures()
+		for i, signer := range sigTx.GetSigners() {
+			// if signature is already filled in, no need to simulate gas cost
+			if sigs[i] != nil {
+				continue
+			}
 			acc := cgts.ak.GetAccount(ctx, signer)
 
 			var pubkey crypto.PubKey

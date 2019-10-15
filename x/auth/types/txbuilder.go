@@ -237,7 +237,7 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 	}
 
 	// the ante handler will populate with a sentinel pubkey
-	sigs := []StdSignature{}
+	sigs := []StdSignature{{}}
 	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
 }
 

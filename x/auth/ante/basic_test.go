@@ -115,7 +115,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 	// simulation must not underestimate gas of this decorator even with nil signatures
 	sigTx := tx.(types.StdTx)
-	sigTx.Signatures = []types.StdSignature{}
+	sigTx.Signatures = []types.StdSignature{{}}
 
 	simTxBytes, err := json.Marshal(sigTx)
 	require.Nil(t, err)

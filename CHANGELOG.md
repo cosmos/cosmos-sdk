@@ -122,6 +122,9 @@ that allows for arbitrary vesting periods.
     * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+    * Baseapp has a new `runTxModeReCheck` to allow applications to skip expensive and unnecessary re-checking of transaction
+    * Context has new `IsRecheckTx() bool` and `WithIsReCheckTx(bool) Context` methods to allow recheck boolean to be available for antehandler
+    * AnteDecorators have been updated to avoid unnecessary checks when `ctx.IsReCheckTx() == true`
 
 ### Improvements
 

@@ -95,7 +95,7 @@ $ %s query ibc client root [client-id] [height]
 			id := args[0]
 			height, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("expected integer height, got: %v\n", args[1])
 			}
 
 			bz, err := cdc.MarshalJSON(types.NewQueryCommitmentRootParams(id, height))

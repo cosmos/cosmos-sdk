@@ -291,6 +291,7 @@ func TestDecMarshalJSON(t *testing.T) {
 		{"12340Int", NewDec(12340), "\"12340.000000000000000000\"", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.d.MarshalJSON()
 			if (err != nil) != tt.wantErr {

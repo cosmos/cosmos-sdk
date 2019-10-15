@@ -29,7 +29,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods("GET")
 }
 
-// http request handler to query signing info
+// http request handler to query signing info for a specific validator
+//
+// @Summary Get the signing info of a given validator
+// @Description Get the signing info of a given validator by public key
+// @Tags slashing
+// @Produce json
+// @Param validatorPubKey path string true "Bech32 validator public key"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.validatorSignInfo
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height or invalid validator public key "
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /slashing/validators/{validatorPubKey}/signing_info [get]
 func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -64,7 +75,16 @@ func signingInfoHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-// http request handler to query signing info
+// http request handler to query signing info for all validators
+//
+// @Summary Get the signing info of all validators
+// @Description Get the signing info of all validators
+// @Tags slashing
+// @Produce json
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.validatorsSigningInfo
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /slashing/signing_infos [get]
 func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, page, limit, err := rest.ParseHTTPArgsWithLimit(r, 0)
@@ -97,6 +117,16 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// http request handler to query params for the slashing module
+//
+// @Summary Get the current slashing parameters
+// @Description Get the current slashing parameters
+// @Tags slashing
+// @Produce json
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.queryParams
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /slashing/parameters [get]
 func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)

@@ -28,18 +28,13 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	).Methods("GET")
 }
 
-type mintParams struct { // nolint: deadcode unused
-	Height int64        `json:"height"`
-	Result types.Params `json:"result"`
-}
-
 // queryParamsHandlerFn implements a query route for params of the mint module
 //
-// @Summary Minting module parameters
+// @Summary Retrieve the minting module parameters
 // @Tags mint
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} mintParams
+// @Success 200 {object} rest.mintParams
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /minting/parameters [get]
 func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -62,18 +57,13 @@ func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type mintInflation struct { // nolint: deadcode unused
-	Height int64  `json:"height"`
-	Result string `json:"result"`
-}
-
 // queryInflationHandlerFn implements a query for current minting inflation value
 //
-// @Summary Current minting inflation value
+// @Summary Retrieve current minting inflation value
 // @Tags mint
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} mintInflation
+// @Success 200 {object} rest.mintInflation
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /minting/inflation [get]
 func queryInflationHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

@@ -13,6 +13,25 @@ definitions:
         format: base64
         type: string
     type: object
+  distribution.MsgSetWithdrawAddress:
+    properties:
+      delegator_address:
+        type: string
+      withdraw_address:
+        type: string
+    type: object
+  distribution.MsgWithdrawDelegatorReward:
+    properties:
+      delegator_address:
+        type: string
+      validator_address:
+        type: string
+    type: object
+  distribution.MsgWithdrawValidatorCommission:
+    properties:
+      validator_address:
+        type: string
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -176,7 +195,8 @@ definitions:
       height:
         type: integer
       result:
-        type: string
+        $ref: '#/definitions/types.Coins'
+        type: object
     type: object
   rest.delegation:
     properties:
@@ -235,7 +255,8 @@ definitions:
       height:
         type: integer
       result:
-        type: string
+        $ref: '#/definitions/types.Address'
+        type: object
     type: object
   rest.mintAnnualProvisions:
     properties:
@@ -502,7 +523,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/types.MsgSetWithdrawAddress'
+          $ref: '#/definitions/distribution.MsgSetWithdrawAddress'
         type: array
       signatures:
         items:
@@ -609,7 +630,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/types.MsgWithdrawDelegatorReward'
+          $ref: '#/definitions/distribution.MsgWithdrawDelegatorReward'
         type: array
       signatures:
         items:
@@ -631,7 +652,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/types.MsgWithdrawValidatorCommission'
+          $ref: '#/definitions/distribution.MsgWithdrawValidatorCommission'
         type: array
       signatures:
         items:
@@ -670,6 +691,8 @@ definitions:
           type: boolean
       type: object
     type: array
+  types.Address:
+    type: object
   types.Attribute:
     properties:
       key:
@@ -688,6 +711,19 @@ definitions:
       denom:
         type: string
     type: object
+  types.Coins:
+    items:
+      properties:
+        amount:
+          description: |-
+            To allow the use of unsigned integers (see: #1273) a larger refactor will
+            need to be made. So we use signed integers for now with safety measures in
+            place preventing negative values being used.
+          type: string
+        denom:
+          type: string
+      type: object
+    type: array
   types.Commission:
     properties:
       max_change_rate:
@@ -861,16 +897,18 @@ definitions:
     type: object
   types.Params:
     properties:
-      max_memo_characters:
+      downtime_jail_duration:
+        type: string
+      max_evidence_age:
+        type: string
+      min_signed_per_window:
+        type: string
+      signed_blocks_window:
         type: integer
-      sig_verify_cost_ed25519:
-        type: integer
-      sig_verify_cost_secp256k1:
-        type: integer
-      tx_sig_limit:
-        type: integer
-      tx_size_cost_per_byte:
-        type: integer
+      slash_fraction_double_sign:
+        type: string
+      slash_fraction_downtime:
+        type: string
     type: object
   types.Pool:
     properties:

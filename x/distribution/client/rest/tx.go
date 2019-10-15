@@ -58,8 +58,8 @@ type (
 // @Summary Generate a withdraw delegator rewards transaction
 // @Description Generate a withdraw delegator rewards transaction that is ready for signing
 // @Tags distribution
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param delegatorAddr path string true "delegator address"
 // @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
 // @Success 200 {object} rest.withdrawDelegatorReward
@@ -102,8 +102,8 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 // @Summary Generate a withdraw delegation rewards transaction
 // @Description Generate a withdraw delegation rewards transaction that is ready for signing
 // @Tags distribution
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param delegatorAddr path string true "delegator address"
 // @Param validatorAddr path string true "delegator validator"
 // @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
@@ -153,8 +153,8 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 // @Summary Generate a withdraw address change transaction
 // @Description Generate a withdraw address change transaction that is ready for signing
 // @Tags distribution
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param delegatorAddr path string true "delegator address"
 // @Param body body rest.setWithdrawalAddrReq true "The data required to set withdraw address"
 // @Success 200 {object} rest.setDelegatorWithdrawalAddr
@@ -198,8 +198,8 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 // @Summary Generate a withdraw validator rewards transaction
 // @Description Generate a withdraw validator rewards transaction that is ready for signing
 // @Tags distribution
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Param validatorAddr path string true "delegator validator"
 // @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
 // @Success 200 {object} rest.withdrawValidatorRewards

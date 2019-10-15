@@ -2629,6 +2629,36 @@
                 }
             }
         },
+        "distribution.MsgSetWithdrawAddress": {
+            "type": "object",
+            "properties": {
+                "delegator_address": {
+                    "type": "string"
+                },
+                "withdraw_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "distribution.MsgWithdrawDelegatorReward": {
+            "type": "object",
+            "properties": {
+                "delegator_address": {
+                    "type": "string"
+                },
+                "validator_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "distribution.MsgWithdrawValidatorCommission": {
+            "type": "object",
+            "properties": {
+                "validator_address": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.BaseReq": {
             "type": "object",
             "properties": {
@@ -2867,7 +2897,8 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Coins"
                 }
             }
         },
@@ -2958,7 +2989,8 @@
                     "type": "integer"
                 },
                 "result": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Address"
                 }
             }
         },
@@ -3362,7 +3394,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.MsgSetWithdrawAddress"
+                        "$ref": "#/definitions/distribution.MsgSetWithdrawAddress"
                     }
                 },
                 "signatures": {
@@ -3525,7 +3557,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.MsgWithdrawDelegatorReward"
+                        "$ref": "#/definitions/distribution.MsgWithdrawDelegatorReward"
                     }
                 },
                 "signatures": {
@@ -3558,7 +3590,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/types.MsgWithdrawValidatorCommission"
+                        "$ref": "#/definitions/distribution.MsgWithdrawValidatorCommission"
                     }
                 },
                 "signatures": {
@@ -3610,6 +3642,9 @@
                 }
             }
         },
+        "types.Address": {
+            "type": "object"
+        },
         "types.Attribute": {
             "type": "object",
             "properties": {
@@ -3630,6 +3665,21 @@
                 },
                 "denom": {
                     "type": "string"
+                }
+            }
+        },
+        "types.Coins": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "description": "To allow the use of unsigned integers (see: #1273) a larger refactor will\nneed to be made. So we use signed integers for now with safety measures in\nplace preventing negative values being used.",
+                        "type": "string"
+                    },
+                    "denom": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -3888,20 +3938,23 @@
         "types.Params": {
             "type": "object",
             "properties": {
-                "max_memo_characters": {
+                "downtime_jail_duration": {
+                    "type": "string"
+                },
+                "max_evidence_age": {
+                    "type": "string"
+                },
+                "min_signed_per_window": {
+                    "type": "string"
+                },
+                "signed_blocks_window": {
                     "type": "integer"
                 },
-                "sig_verify_cost_ed25519": {
-                    "type": "integer"
+                "slash_fraction_double_sign": {
+                    "type": "string"
                 },
-                "sig_verify_cost_secp256k1": {
-                    "type": "integer"
-                },
-                "tx_sig_limit": {
-                    "type": "integer"
-                },
-                "tx_size_cost_per_byte": {
-                    "type": "integer"
+                "slash_fraction_downtime": {
+                    "type": "string"
                 }
             }
         },

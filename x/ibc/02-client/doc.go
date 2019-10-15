@@ -1,5 +1,5 @@
 /*
-Package ics02 implements the ICS 02 - Client Semenatics specification
+Package client implements the ICS 02 - Client Semenatics specification
 https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics.  This
 concrete implementations defines types and method to store and update light
 clients which tracks on other chain's state.
@@ -51,4 +51,4 @@ each corresponds to `spec: Header.{height, proof, state, root}`.
 
 `spec: interface ClientState` is implemented by `type State`.
 */
-package ics02
+package client

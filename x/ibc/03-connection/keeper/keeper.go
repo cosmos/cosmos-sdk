@@ -28,8 +28,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, 
 	return Keeper{
 		storeKey:     key,
 		cdc:          cdc,
-		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connections",
-		prefix:       []byte(types.SubModuleName + "/"),                                          // "connections/"
+		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
+		prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
 		clientKeeper: ck,
 	}
 }
@@ -87,7 +87,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace)
+		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
 	}
 
 	conns = append(conns, connectionID)
@@ -102,7 +102,7 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace)
+		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
 	}
 
 	conns, ok := removePath(conns, connectionID)
@@ -114,7 +114,8 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 	return nil
 }
 
-func (k Keeper) verifyMembership(
+// VerifyMembership helper function for state membership verification
+func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
@@ -130,7 +131,8 @@ func (k Keeper) verifyMembership(
 	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
 }
 
-func (k Keeper) verifyNonMembership(
+// VerifyNonMembership helper function for state non-membership verification
+func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
@@ -146,26 +148,9 @@ func (k Keeper) verifyNonMembership(
 	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
 }
 
-func (k Keeper) getCompatibleVersions() []string {
-	// TODO:
-	return nil
-}
-
-func (k Keeper) pickVersion(counterpartyVersions []string) string {
-	// TODO:
-	return ""
-}
-
 func (k Keeper) applyPrefix(prefix ics23.Prefix, path string) string {
 	// TODO:
 	return path
-}
-
-// checkVersion is an opaque function defined by the host state machine which
-// determines if two versions are compatible
-func checkVersion(version, counterpartyVersion string) bool {
-	// TODO:
-	return true
 }
 
 // removePath is an util function to remove a path from a set.

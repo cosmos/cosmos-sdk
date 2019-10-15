@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -55,14 +56,17 @@ $ %s query ibc client state [client-id]
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			id := args[0]
+			clientID := args[0]
+			if strings.TrimSpace(clientID) == "" {
+				return errors.New("client ID can't be blank")
+			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(id))
+			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(clientID))
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(types.ClientStatePath(id), bz)
+			res, _, err := cliCtx.QueryWithData(types.ClientStatePath(clientID), bz)
 			if err != nil {
 				return err
 			}
@@ -92,18 +96,22 @@ $ %s query ibc client root [client-id] [height]
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			id := args[0]
+			clientID := args[0]
+			if strings.TrimSpace(clientID) == "" {
+				return errors.New("client ID can't be blank")
+			}
+
 			height, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
-				return err
+				return fmt.Errorf("expected integer height, got: %v", args[1])
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryCommitmentRootParams(id, height))
+			bz, err := cdc.MarshalJSON(types.NewQueryCommitmentRootParams(clientID, height))
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(types.RootPath(id, height), bz)
+			res, _, err := cliCtx.QueryWithData(types.RootPath(clientID, height), bz)
 			if err != nil {
 				return err
 			}
@@ -134,14 +142,17 @@ $ %s query ibc client consensus-state [client-id]
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			id := args[0]
+			clientID := args[0]
+			if strings.TrimSpace(clientID) == "" {
+				return errors.New("client ID can't be blank")
+			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(id))
+			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(clientID))
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(types.ConsensusStatePath(id), bz)
+			res, _, err := cliCtx.QueryWithData(types.ConsensusStatePath(clientID), bz)
 			if err != nil {
 				return err
 			}

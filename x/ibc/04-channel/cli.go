@@ -1,4 +1,4 @@
-package ics04
+package channel
 
 // import (
 // 	"bytes"

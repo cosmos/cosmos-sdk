@@ -27,12 +27,12 @@ func (k Keeper) ChanOpenInit(
 
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return "", types.ErrChannelExists(k.codespace)
+		return "", types.ErrChannelExists(k.codespace, channelID)
 	}
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return "", ics03types.ErrConnectionNotFound(k.codespace)
+		return "", ics03types.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
 	// TODO: inconsistency on ICS03 (`none`) and ICS04 (`CLOSED`)
@@ -40,7 +40,6 @@ func (k Keeper) ChanOpenInit(
 		return "", errors.New("connection is closed")
 	}
 
-	// TODO: Blocked - ICS05 Not implemented yet
 	// port, found := k.portKeeper.GetPort(ctx, portID)
 	// if !found {
 	// 	return errors.New("port not found") // TODO: ics05 sdk.Error
@@ -82,10 +81,9 @@ func (k Keeper) ChanOpenTry(
 
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return "", types.ErrChannelExists(k.codespace)
+		return "", types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	// TODO: Blocked - ICS05 Not implemented yet
 	// port, found := k.portKeeper.GetPort(ctx, portID)
 	// if !found {
 	// 	return errors.New("port not found") // TODO: ics05 sdk.Error
@@ -97,7 +95,7 @@ func (k Keeper) ChanOpenTry(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return "", ics03types.ErrConnectionNotFound(k.codespace)
+		return "", ics03types.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -152,7 +150,7 @@ func (k Keeper) ChanOpenAck(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace)
+		return types.ErrChannelNotFound(k.codespace, channelID)
 	}
 
 	if channel.State != types.INIT {
@@ -170,7 +168,7 @@ func (k Keeper) ChanOpenAck(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return ics03types.ErrConnectionNotFound(k.codespace)
+		return ics03types.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -215,7 +213,7 @@ func (k Keeper) ChanOpenConfirm(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace)
+		return types.ErrChannelNotFound(k.codespace, channelID)
 	}
 
 	if channel.State != types.OPENTRY {
@@ -233,7 +231,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return ics03types.ErrConnectionNotFound(k.codespace)
+		return ics03types.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -284,7 +282,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace)
+		return types.ErrChannelNotFound(k.codespace, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -293,7 +291,7 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return ics03types.ErrConnectionNotFound(k.codespace)
+		return ics03types.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if connection.State != ics03types.OPEN {
@@ -326,7 +324,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace)
+		return types.ErrChannelNotFound(k.codespace, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -335,7 +333,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return ics03types.ErrConnectionNotFound(k.codespace)
+		return ics03types.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if connection.State != ics03types.OPEN {

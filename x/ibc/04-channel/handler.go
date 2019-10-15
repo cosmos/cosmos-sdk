@@ -1,46 +1,12 @@
-package ics04
+package channel
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// NewHandler creates a new Handler instance for IBC connection
-// transactions
-func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-		switch msg := msg.(type) {
-		case types.MsgChannelOpenInit:
-			return handleMsgChannelOpenInit(ctx, k, msg)
-
-		case types.MsgChannelOpenTry:
-			return handleMsgChannelOpenTry(ctx, k, msg)
-
-		case types.MsgChannelOpenAck:
-			return handleMsgChannelOpenAck(ctx, k, msg)
-
-		case types.MsgChannelOpenConfirm:
-			return handleMsgChannelOpenConfirm(ctx, k, msg)
-
-		case types.MsgChannelCloseInit:
-			return handleMsgChannelCloseInit(ctx, k, msg)
-
-		case types.MsgChannelCloseConfirm:
-			return handleMsgChannelCloseConfirm(ctx, k, msg)
-
-		default:
-			errMsg := fmt.Sprintf("unrecognized IBC connection message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
-	}
-}
-
-func handleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenInit) sdk.Result {
+func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenInit) sdk.Result {
 	_, err := k.ChanOpenInit(
 		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		msg.Channel.Counterparty, msg.Channel.Version,
@@ -65,7 +31,7 @@ func handleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenTry) sdk.Result {
+func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenTry) sdk.Result {
 	_, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
@@ -90,7 +56,7 @@ func handleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenAck) sdk.Result {
+func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenAck) sdk.Result {
 	err := k.ChanOpenAck(
 		ctx, msg.PortID, msg.ChannelID, msg.CounterpartyVersion, msg.ProofTry, msg.ProofHeight,
 	)
@@ -114,7 +80,7 @@ func handleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenConfirm) sdk.Result {
+func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenConfirm) sdk.Result {
 	err := k.ChanOpenConfirm(ctx, msg.PortID, msg.ChannelID, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -136,7 +102,7 @@ func handleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseInit) sdk.Result {
+func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseInit) sdk.Result {
 	err := k.ChanCloseInit(ctx, msg.PortID, msg.ChannelID)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -158,7 +124,7 @@ func handleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCh
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseConfirm) sdk.Result {
+func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelCloseConfirm) sdk.Result {
 	err := k.ChanCloseConfirm(ctx, msg.PortID, msg.ChannelID, msg.ProofInit, msg.ProofHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)

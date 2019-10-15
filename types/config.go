@@ -10,14 +10,14 @@ const DefaultKeyringServiceName = "cosmos"
 // Config is the structure that holds the SDK configuration parameters.
 // This could be used to initialize certain configuration parameters for the SDK.
 type Config struct {
-	mtx                 sync.RWMutex
-	sealed              bool
-	bech32AddressPrefix map[string]string
-	coinType            uint32
 	fullFundraiserPath  string
+	keyringServiceName  string
+	bech32AddressPrefix map[string]string
 	txEncoder           TxEncoder
 	addressVerifier     func([]byte) error
-	keyringServiceName  string
+	mtx                 sync.RWMutex
+	coinType            uint32
+	sealed              bool
 }
 
 // cosmos-sdk wide global singleton

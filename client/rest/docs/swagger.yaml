@@ -144,6 +144,12 @@ definitions:
         description: in bech32
         type: string
     type: object
+  rest.UnjailReq:
+    properties:
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+    type: object
   rest.VoteReq:
     properties:
       base_req:
@@ -326,6 +332,22 @@ definitions:
           $ref: '#/definitions/types.StdSignature'
         type: array
     type: object
+  rest.postUnjail:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgUnjail'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
   rest.postVote:
     properties:
       fee:
@@ -443,20 +465,6 @@ definitions:
         items:
           $ref: '#/definitions/types.MsgSend'
         type: array
-      signatures:
-        items:
-          $ref: '#/definitions/types.StdSignature'
-        type: array
-    type: object
-  rest.stdTx:
-    properties:
-      fee:
-        $ref: '#/definitions/types.StdFee'
-        type: object
-      memo:
-        type: string
-      msg:
-        type: string
       signatures:
         items:
           $ref: '#/definitions/types.StdSignature'
@@ -719,6 +727,12 @@ definitions:
       delegator_address:
         type: string
       validator_address:
+        type: string
+    type: object
+  types.MsgUnjail:
+    properties:
+      address:
+        description: address of the validator operator
         type: string
     type: object
   types.MsgVote:
@@ -1648,23 +1662,23 @@ paths:
       summary: Get the signing info of all validators
       tags:
       - slashing
-  /slashing/validators/{validatorAddr}/unjai:
+  /slashing/validators/{validatorAddr}/unjail:
     post:
       consumes:
       - application/json
-      description: Send transaction to unjail a jailed validator
+      description: Generate an unjail transaction that is ready for signing
       parameters:
-      - description: bech32 validator address
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
         type: string
-      - description: The data required to unjail
+      - description: The unjail request payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/UnjailReq'
+          $ref: '#/definitions/rest.UnjailReq'
           type: object
       produces:
       - application/json
@@ -1672,7 +1686,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.stdTx'
+            $ref: '#/definitions/rest.postUnjail'
         "400":
           description: Invalid validator address or base_req
           schema:
@@ -1685,7 +1699,7 @@ paths:
           description: Internal on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Unjail a jailed validator
+      summary: Generate an unjail transaction
       tags:
       - slashing
   /slashing/validators/{validatorPubKey}/signing_info:

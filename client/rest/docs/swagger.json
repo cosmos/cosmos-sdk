@@ -831,9 +831,9 @@
                 }
             }
         },
-        "/slashing/validators/{validatorAddr}/unjai": {
+        "/slashing/validators/{validatorAddr}/unjail": {
             "post": {
-                "description": "Send transaction to unjail a jailed validator",
+                "description": "Generate an unjail transaction that is ready for signing",
                 "consumes": [
                     "application/json"
                 ],
@@ -843,23 +843,23 @@
                 "tags": [
                     "slashing"
                 ],
-                "summary": "Unjail a jailed validator",
+                "summary": "Generate an unjail transaction",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "bech32 validator address",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "The data required to unjail",
+                        "description": "The unjail request payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/UnjailReq"
+                            "$ref": "#/definitions/rest.UnjailReq"
                         }
                     }
                 ],
@@ -867,7 +867,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.stdTx"
+                            "$ref": "#/definitions/rest.postUnjail"
                         }
                     },
                     "400": {
@@ -2188,6 +2188,15 @@
                 }
             }
         },
+        "rest.UnjailReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                }
+            }
+        },
         "rest.VoteReq": {
             "type": "object",
             "properties": {
@@ -2463,6 +2472,30 @@
                 }
             }
         },
+        "rest.postUnjail": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgUnjail"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
+                }
+            }
+        },
         "rest.postVote": {
             "type": "object",
             "properties": {
@@ -2639,27 +2672,6 @@
                     "items": {
                         "$ref": "#/definitions/types.MsgSend"
                     }
-                },
-                "signatures": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.StdSignature"
-                    }
-                }
-            }
-        },
-        "rest.stdTx": {
-            "type": "object",
-            "properties": {
-                "fee": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.StdFee"
-                },
-                "memo": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
                 },
                 "signatures": {
                     "type": "array",
@@ -3040,6 +3052,15 @@
                     "type": "string"
                 },
                 "validator_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.MsgUnjail": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "address of the validator operator",
                     "type": "string"
                 }
             }

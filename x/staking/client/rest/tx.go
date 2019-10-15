@@ -101,7 +101,6 @@ type (
 // @Router /staking/validators/{validatorAddr} [post]
 func createValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		var req CreateValidatorRequest
 
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {

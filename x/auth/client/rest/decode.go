@@ -30,7 +30,7 @@ type (
 // @Accept  json
 // @Produce json
 // @Param tx body rest.DecodeReq true "The tx to decode"
-// @Success 200 {object} rest.DecodeReq
+// @Success 200 {object} rest.DecodeResp
 // @Failure 400 {object} rest.ErrorResponse "The tx was malformated"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs/decode [post]

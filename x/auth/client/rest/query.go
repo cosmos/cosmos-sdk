@@ -16,6 +16,10 @@ import (
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
+type queryAccount struct { // nolint:unused,deadcode
+	Result types.BaseAccount `json:"result"`
+}
+
 // query accountREST Handler
 //
 // @Summary Query account balances

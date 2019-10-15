@@ -42,7 +42,7 @@ func (cs ConsensusState) GetRoot() ics23.Root {
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
-		return nil, errors.New("header is not from a tendermint consensus")
+		return nil, errors.New("header not a valid tendermint header")
 	}
 
 	if err := cs.checkValidity(tmHeader); err != nil {

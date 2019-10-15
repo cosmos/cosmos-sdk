@@ -1,393 +1,406 @@
 package cli
 
-// import (
-// 	"errors"
-// 	"fmt"
-// 	"time"
-
-// 	"github.com/spf13/cobra"
-// 	"github.com/spf13/viper"
-
-// 	"github.com/cosmos/cosmos-sdk/client/context"
-// 	"github.com/cosmos/cosmos-sdk/client/flags"
-// 	"github.com/cosmos/cosmos-sdk/codec"
-// 	"github.com/cosmos/cosmos-sdk/store/state"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-// 	"github.com/cosmos/cosmos-sdk/x/auth"
-// 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-
-// 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-// 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-// 	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-// 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-// 	"github.com/cosmos/cosmos-sdk/x/ibc/version"
-// )
-
-// const (
-// 	FlagNode1 = "node1"
-// 	FlagNode2 = "node2"
-// 	FlagFrom1 = "from1"
-// 	FlagFrom2 = "from2"
-// )
-
-// func handshake(cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid, connid string) channel.HandshakeState {
-// 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-// 	climan := client.NewManager(base)
-// 	connman := connection.NewManager(base, climan)
-// 	man := channel.NewHandshaker(channel.NewManager(base, connman))
-// 	return man.CLIState(portid, chanid, []string{connid})
-// }
-
-// func flush(q state.ABCIQuerier, cdc *codec.Codec, storeKey string, prefix []byte, portid, chanid string) (channel.HandshakeState, error) {
-// 	base := state.NewMapping(sdk.NewKVStoreKey(storeKey), cdc, prefix)
-// 	climan := client.NewManager(base)
-// 	connman := connection.NewManager(base, climan)
-// 	man := channel.NewHandshaker(channel.NewManager(base, connman))
-// 	return man.CLIQuery(q, portid, chanid)
-// }
-
-// func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "channel",
-// 		Short: "IBC channel transaction subcommands",
-// 	}
-
-// 	cmd.AddCommand(
-// 		GetCmdHandshake(storeKey, cdc),
-// 		GetCmdFlushPackets(storeKey, cdc),
-// 	)
-
-// 	return cmd
-// }
-
-// func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "handshake",
-// 		Short: "initiate connection handshake between two chains",
-// 		Args:  cobra.ExactArgs(6),
-// 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-// 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
-// 				WithCodec(cdc).
-// 				WithNodeURI(viper.GetString(FlagNode1)).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-// 			q1 := state.NewCLIQuerier(ctx1)
-
-// 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
-// 				WithCodec(cdc).
-// 				WithNodeURI(viper.GetString(FlagNode2)).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-// 			q2 := state.NewCLIQuerier(ctx2)
-
-// 			portid1 := args[0]
-// 			chanid1 := args[1]
-// 			connid1 := args[2]
-// 			portid2 := args[3]
-// 			chanid2 := args[4]
-// 			connid2 := args[5]
-
-// 			chan1 := channel.Channel{
-// 				Counterparty:     chanid2,
-// 				CounterpartyPort: portid2,
-// 				ConnectionHops:   []string{connid1},
-// 			}
-
-// 			chan2 := channel.Channel{
-// 				Counterparty:     chanid1,
-// 				CounterpartyPort: portid1,
-// 				ConnectionHops:   []string{connid2},
-// 			}
-
-// 			obj1 := handshake(cdc, storeKey, version.DefaultPrefix(), portid1, chanid1, connid1)
-// 			obj2 := handshake(cdc, storeKey, version.DefaultPrefix(), portid2, chanid2, connid2)
-
-// 			conn1, _, err := obj1.OriginConnection().ConnectionCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			clientid1 := conn1.Client
-
-// 			conn2, _, err := obj2.OriginConnection().ConnectionCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			clientid2 := conn2.Client
-
-// 			// TODO: check state and if not Idle continue existing process
-// 			msginit := channel.MsgOpenInit{
-// 				PortID:    portid1,
-// 				ChannelID: chanid1,
-// 				Channel:   chan1,
-// 				Signer:    ctx1.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msginit})
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, err := getHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgupdate := client.MsgUpdateClient{
-// 				ClientID: clientid2,
-// 				Header:   header,
-// 				Signer:   ctx2.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
-
-// 			fmt.Printf("updated apphash to %X\n", header.AppHash)
-
-// 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-// 			fmt.Printf("querying from %d\n", header.Height-1)
-
-// 			_, pchan, err := obj1.ChannelCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			_, pstate, err := obj1.StageCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgtry := channel.MsgOpenTry{
-// 				PortID:    portid2,
-// 				ChannelID: chanid2,
-// 				Channel:   chan2,
-// 				Proofs:    []commitment.Proof{pchan, pstate},
-// 				Height:    uint64(header.Height),
-// 				Signer:    ctx2.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgtry})
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, err = getHeader(ctx2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgupdate = client.MsgUpdateClient{
-// 				ClientID: clientid1,
-// 				Header:   header,
-// 				Signer:   ctx1.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgupdate})
-
-// 			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
-
-// 			_, pchan, err = obj2.ChannelCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			_, pstate, err = obj2.StageCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgack := channel.MsgOpenAck{
-// 				PortID:    portid1,
-// 				ChannelID: chanid1,
-// 				Proofs:    []commitment.Proof{pchan, pstate},
-// 				Height:    uint64(header.Height),
-// 				Signer:    ctx1.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr, []sdk.Msg{msgack})
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, err = getHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgupdate = client.MsgUpdateClient{
-// 				ClientID: clientid2,
-// 				Header:   header,
-// 				Signer:   ctx2.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgupdate})
-
-// 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-
-// 			_, pstate, err = obj1.StageCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgconfirm := channel.MsgOpenConfirm{
-// 				PortID:    portid2,
-// 				ChannelID: chanid2,
-// 				Proofs:    []commitment.Proof{pstate},
-// 				Height:    uint64(header.Height),
-// 				Signer:    ctx2.GetFromAddress(),
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, []sdk.Msg{msgconfirm})
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			return nil
-// 		},
-// 	}
-
-// 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
-// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
-// 	cmd.Flags().String(FlagFrom1, "", "")
-// 	cmd.Flags().String(FlagFrom2, "", "")
-
-// 	cmd.MarkFlagRequired(FlagFrom1)
-// 	cmd.MarkFlagRequired(FlagFrom2)
-
-// 	return cmd
-// }
-
-// func GetCmdFlushPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "flush",
-// 		Short: "flush packets on queue",
-// 		Args:  cobra.ExactArgs(2),
-// 		// Args: []string{portid, chanid}
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-// 			ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
-// 				WithCodec(cdc).
-// 				WithNodeURI(viper.GetString(FlagNode1)).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-// 			q1 := state.NewCLIQuerier(ctx1)
-
-// 			ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
-// 				WithCodec(cdc).
-// 				WithNodeURI(viper.GetString(FlagNode2)).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-// 			q2 := state.NewCLIQuerier(ctx2)
-
-// 			portid1, chanid1 := args[0], args[1]
-
-// 			obj1, err := flush(q1, cdc, storeKey, version.DefaultPrefix(), portid1, chanid1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			chan1, _, err := obj1.ChannelCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
-
-// 			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			chan2, _, err := obj2.ChannelCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			connobj2, err := conn(q2, cdc, storeKey, version.DefaultPrefix(), chan2.ConnectionHops[0])
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			conn2, _, err := connobj2.ConnectionCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			client2 := conn2.Client
-
-// 			seqrecv, _, err := obj2.SeqRecvCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			seqsend, _, err := obj1.SeqSendCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// SeqRecv is the latest received packet index(0 if not exists)
-// 			// SeqSend is the latest sent packet index (0 if not exists)
-// 			if !(seqsend > seqrecv) {
-// 				return errors.New("no unsent packets")
-// 			}
-
-// 			// TODO: optimize, don't updateclient if already updated
-// 			header, err := getHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-
-// 			msgupdate := client.MsgUpdateClient{
-// 				ClientID: client2,
-// 				Header:   header,
-// 				Signer:   ctx2.GetFromAddress(),
-// 			}
-
-// 			msgs := []sdk.Msg{msgupdate}
-
-// 			for i := seqrecv + 1; i <= seqsend; i++ {
-// 				packet, proof, err := obj1.PacketCLI(q1, i)
-// 				if err != nil {
-// 					return err
-// 				}
-
-// 				msg := channel.MsgPacket{
-// 					packet,
-// 					chanid2,
-// 					[]commitment.Proof{proof},
-// 					uint64(header.Height),
-// 					ctx2.GetFromAddress(),
-// 				}
-
-// 				msgs = append(msgs, msg)
-// 			}
-
-// 			err = utils.GenerateOrBroadcastMsgs(ctx2, txBldr, msgs)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			return nil
-// 		},
-// 	}
-
-// 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "")
-// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "")
-// 	cmd.Flags().String(FlagFrom1, "", "")
-// 	cmd.Flags().String(FlagFrom2, "", "")
-
-// 	cmd.MarkFlagRequired(FlagFrom1)
-// 	cmd.MarkFlagRequired(FlagFrom2)
-
-// 	return cmd
-
-// }
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var (
+	FlagUnordered = "unordered"
+	IBCVersion    = "version"
+)
+
+// GetTxCmd returns the transaction commands for IBC Connections
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	ics04ChannelTxCmd := &cobra.Command{
+		Use:   "connection",
+		Short: "IBC connection transaction subcommands",
+	}
+
+	ics04ChannelTxCmd.AddCommand(client.PostCommands(
+		GetMsgChannelOpenInitCmd(storeKey, cdc),
+		GetMsgChannelOpenTryCmd(storeKey, cdc),
+		GetMsgChannelOpenAckCmd(storeKey, cdc),
+		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
+		GetMsgChannelCloseInitCmd(storeKey, cdc),
+		GetMsgChannelCloseConfirmCmd(storeKey, cdc),
+		GetMsgSendPacketCmd(storeKey, cdc),
+	)...)
+
+	return ics04ChannelTxCmd
+}
+
+// GetMsgChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
+func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-init [port-id] [channel-id] [cp-port-id] [cp-channel-id] [connection-hops]",
+		Short: "Creates and sends a ChannelOpenInit message",
+		Args:  cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			channel, err := createChannelFromArgs(args[2], args[3], args[4])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelOpenInit(portID, channelID, channel, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().Bool(FlagUnordered, false, "Pass flag for opening unordered channels")
+
+	return cmd
+}
+
+// GetMsgChannelOpenTryCmd returns the command to create a MsgChannelOpenTry transaction
+func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-try [port-id] [channel-id] [cp-port-id] [cp-channel-id] [connection-hops] [/path/to/proof-init.json] [proof-height]",
+		Short: "Creates and sends a ChannelOpenTry message",
+		Args:  cobra.ExactArgs(7),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			channel, err := createChannelFromArgs(args[2], args[3], args[4])
+			if err != nil {
+				return err
+			}
+
+			var proof ics23.Proof
+			if err := cdc.UnmarshalJSON([]byte(args[5]), &proof); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[5])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
+					return fmt.Errorf("error unmarshalling proof file: %v\n", err)
+				}
+			}
+
+			proofHeight, err := validateProofHeight(args[6])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelOpenTry(portID, channelID, channel, IBCVersion, proof, proofHeight, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+
+	cmd.Flags().Bool(FlagUnordered, false, "Pass flag for opening unordered channels")
+
+	return cmd
+}
+
+// GetMsgChannelOpenAckCmd returns the command to create a MsgChannelOpenAck transaction
+func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-ack [port-id] [channel-id] [/path/to/proof-try.json] [proof-height]",
+		Short: "Creates and sends a ChannelOpenAck message",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			var proof ics23.Proof
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[2])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
+					return fmt.Errorf("error unmarshalling proof file: %v\n", err)
+				}
+			}
+
+			proofHeight, err := validateProofHeight(args[3])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelOpenAck(portID, channelID, IBCVersion, proof, proofHeight, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+// GetMsgChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
+func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof-ack.json] [proof-height]",
+		Short: "Creates and sends a ChannelOpenConfirm message",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			var proof ics23.Proof
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[2])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
+					return fmt.Errorf("error unmarshalling proof file: %v\n", err)
+				}
+			}
+
+			proofHeight, err := validateProofHeight(args[3])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelOpenConfirm(portID, channelID, proof, proofHeight, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+// GetMsgChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
+func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "close-init [port-id] [channel-id]",
+		Short: "Creates and sends a ChannelCloseInit message",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelCloseInit(portID, channelID, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+// GetMsgChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
+func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof-init.json] [proof-height]",
+		Short: "Creates and sends a ChannelCloseConfirm message",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			portID, err := validatePortID(args[0])
+			if err != nil {
+				return err
+			}
+
+			channelID, err := validateChannelID(args[1])
+			if err != nil {
+				return err
+			}
+
+			var proof ics23.Proof
+			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[2])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
+					return fmt.Errorf("error unmarshalling proof file: %v\n", err)
+				}
+			}
+
+			proofHeight, err := validateProofHeight(args[3])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgChannelCloseConfirm(portID, channelID, proof, proofHeight, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+// GetMsgSendPacketCmd returns the command to create a MsgChannelCloseConfirm transaction
+func GetMsgSendPacketCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send-packet [channel-id] [/path/to/packet-proof.json] [proof-height] [/path/to/packet-data.json]",
+		Short: "Creates and sends a SendPacket message",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			channelID, err := validateChannelID(args[0])
+			if err != nil {
+				return err
+			}
+
+			var proofs []ics23.Proof
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &proofs); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening proofs file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &proofs); err != nil {
+					return fmt.Errorf("error unmarshalling proofs file: %v\n", err)
+				}
+			}
+
+			proofHeight, err := validateProofHeight(args[2])
+			if err != nil {
+				return err
+			}
+
+			var packet exported.PacketI
+			if err := cdc.UnmarshalJSON([]byte(args[3]), &packet); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+				contents, err := ioutil.ReadFile(args[3])
+				if err != nil {
+					return fmt.Errorf("error opening packet file: %v\n", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &packet); err != nil {
+					return fmt.Errorf("error unmarshalling packet file: %v\n", err)
+				}
+			}
+
+			msg := types.NewMsgSendPacket(packet, channelID, proofs, proofHeight, cliCtx.GetFromAddress())
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+func channelOrder() types.ChannelOrder {
+	if viper.GetBool(FlagUnordered) {
+		return types.UNORDERED
+	}
+	return types.ORDERED
+}
+
+func validatePortID(pid string) (string, error) {
+	// TODO: Add validation here
+	return pid, nil
+}
+
+func validateChannelID(cid string) (string, error) {
+	// TODO: Add validation here
+	return cid, nil
+}
+
+func validateChannelHops(hops string) ([]string, error) {
+	// TODO: Add validation here
+	return strings.Split(hops, ","), nil
+}
+
+func validateProofHeight(height string) (uint64, error) {
+	// TODO: More validation?
+	i, err := strconv.ParseInt(height, 10, 64)
+	return uint64(i), err
+}
+
+func createChannelFromArgs(pid string, cid string, hops string) (types.Channel, error) {
+	var channel types.Channel
+	portID, err := validatePortID(pid)
+	if err != nil {
+		return channel, err
+	}
+
+	channelID, err := validateChannelID(cid)
+	if err != nil {
+		return channel, err
+	}
+
+	channelHops, err := validateChannelHops(hops)
+	if err != nil {
+		return channel, err
+	}
+
+	channel = types.Channel{
+		State:          types.INIT,
+		Ordering:       channelOrder(),
+		Counterparty:   types.Counterparty{portID, channelID},
+		ConnectionHops: channelHops,
+		Version:        IBCVersion,
+	}
+
+	return channel, nil
+}

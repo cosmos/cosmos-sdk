@@ -28,8 +28,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, 
 	return Keeper{
 		storeKey:     key,
 		cdc:          cdc,
-		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connections",
-		prefix:       []byte(types.SubModuleName + "/"),                                          // "connections/"
+		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
+		prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
 		clientKeeper: ck,
 	}
 }
@@ -148,25 +148,9 @@ func (k Keeper) VerifyNonMembership(
 	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
 }
 
-func (k Keeper) getCompatibleVersions() []string {
-	// TODO:
-	return nil
-}
-
-func (k Keeper) pickVersion(counterpartyVersions []string) string {
-	// TODO:
-	return ""
-}
-
 func (k Keeper) applyPrefix(prefix ics23.Prefix, path string) string {
 	// TODO:
 	return path
-}
-
-// checkVersion is an opaque function defined by the host state machine which
-// determines if two versions are compatible
-func checkVersion(version, counterpartyVersion string) bool {
-	return version == counterpartyVersion
 }
 
 // removePath is an util function to remove a path from a set.

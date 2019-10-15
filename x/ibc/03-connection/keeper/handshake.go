@@ -13,7 +13,7 @@ import (
 
 // ConnOpenInit initialises a connection attempt on chain A.
 //
-// CONTRACT: Must provide a valid identifiers
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenInit(
 	ctx sdk.Context,
 	connectionID, // identifier
@@ -26,7 +26,7 @@ func (k Keeper) ConnOpenInit(
 	}
 
 	// connection defines chain A's ConnectionEnd
-	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, k.getCompatibleVersions())
+	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
 	err := k.addConnectionToClient(ctx, clientID, connectionID)
@@ -41,9 +41,9 @@ func (k Keeper) ConnOpenInit(
 // ConnOpenTry relays notice of a connection attempt on chain A to chain B (this
 // code is executed on chain B).
 //
-// NOTE: here chain A acts as the counterparty
-//
-// CONTRACT: Must provide a valid identifiers
+// NOTE:
+//  - Here chain A acts as the counterparty
+//  - Identifiers are checked on msg validation
 func (k Keeper) ConnOpenTry(
 	ctx sdk.Context,
 	connectionID string, // desiredIdentifier
@@ -69,8 +69,9 @@ func (k Keeper) ConnOpenTry(
 	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.INIT, clientID, expectedCounterparty, counterpartyVersions)
 
-	// chain B picks a version from Chain A's available versions
-	version := k.pickVersion(counterpartyVersions)
+	// chain B picks a version from Chain A's available versions that is compatible
+	// with the supported IBC versions
+	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(types.NONE, clientID, counterparty, []string{version})
@@ -105,10 +106,6 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
 	}
 
-	if !checkVersion(version, counterpartyVersions[0]) {
-		return errors.New("versions don't match") // TODO: sdk.Error
-	}
-
 	connection.State = types.TRYOPEN
 	err = k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
@@ -123,7 +120,7 @@ func (k Keeper) ConnOpenTry(
 // ConnOpenAck relays acceptance of a connection open attempt from chain B back
 // to chain A (this code is executed on chain A).
 //
-// CONTRACT: Must provide a valid identifiers
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
@@ -132,7 +129,6 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	// TODO: validateConnectionIdentifier(identifier)
 	if consensusHeight > uint64(ctx.BlockHeight()) {
 		return errors.New("invalid consensus height") // TODO: sdk.Error
 	}
@@ -146,10 +142,10 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("connection is in a non valid state") // TODO: sdk.Error
 	}
 
-	if !checkVersion(connection.LatestVersion(), version) {
+	if types.LatestVersion(connection.Versions) != version {
 		return types.ErrInvalidVersion(
 			k.codespace,
-			fmt.Sprintf("connection version does't match provided one (%s ≠ %s)", connection.LatestVersion(), version),
+			fmt.Sprintf("connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version),
 		)
 	}
 
@@ -198,7 +194,7 @@ func (k Keeper) ConnOpenAck(
 // ConnOpenConfirm confirms opening of a connection on chain A to chain B, after
 // which the connection is open on both chains (this code is executed on chain B).
 //
-// CONTRACT: Must provide a valid identifiers
+// NOTE: Identifiers are checked on msg validation.
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,

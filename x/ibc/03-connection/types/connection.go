@@ -31,14 +31,6 @@ func NewConnectionEnd(state ConnectionState, clientID string, counterparty Count
 	}
 }
 
-// LatestVersion gets the latest version of a connection protocol
-func (ce ConnectionEnd) LatestVersion() string {
-	if len(ce.Versions) == 0 {
-		return ""
-	}
-	return ce.Versions[len(ce.Versions)-1]
-}
-
 // TODO: create a custom JSON marshaler
 
 // Counterparty defines the counterparty chain associated with a connection end.

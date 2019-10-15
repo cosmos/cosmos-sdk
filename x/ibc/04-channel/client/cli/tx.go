@@ -332,48 +332,33 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pull",
+		Use:   "pull [channel-type] [chan-id]",
 		Short: "pull packets from the counterparty channel",
 		Args:  cobra.ExactArgs(2),
-		// Args: []string{portid, chanid}
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// --chain-id values for each chain
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainId2)
+
+			// --node values for each RPC
 			node1 := viper.GetString(FlagNode1)
 			node2 := viper.GetString(FlagNode2)
 
 			viper.Set(flags.FlagChainID, cid1)
-
 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx1 := context.NewCLIContextIBC(viper.GetString(FlagFrom1), cid1, node1).
+			ctx1 := context.NewCLIContextIBC(viper.GetString(flags.FlagFrom), cid1, node1).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q1 := state.NewCLIQuerier(ctx1)
 
 			viper.Set(flags.FlagChainID, cid2)
-
-			ctx2 := context.NewCLIContextIBC(viper.GetString(FlagFrom2), cid2, node2).
+			ctx2 := context.NewCLIContextIBC(viper.GetString(flags.FlagFrom), cid2, node2).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 			q2 := state.NewCLIQuerier(ctx2)
 
-			// txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			// ctx1 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom1)).
-			// 	WithCodec(cdc).
-			// 	WithNodeURI(viper.GetString(FlagNode1)).
-			// 	WithBroadcastMode(flags.BroadcastBlock)
-			// q1 := state.NewCLIQuerier(ctx1)₩
-
-			// ctx2 := context.NewCLIContextWithFrom(viper.GetString(FlagFrom2)).
-			// 	WithCodec(cdc).
-			// 	WithNodeURI(viper.GetString(FlagNode2)).
-			// 	WithBroadcastMode(flags.BroadcastBlock)
-			// q2 := state.NewCLIQuerier(ctx2)
-
 			viper.Set(flags.FlagChainID, cid1)
-
 			portid1, chanid1 := args[0], args[1]
-
 			obj1, err := flush(q1, cdc, storeKey, version.DefaultPrefix(), portid1, chanid1)
 			if err != nil {
 				return err
@@ -385,9 +370,7 @@ func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			portid2, chanid2 := chan1.CounterpartyPort, chan1.Counterparty
-
 			viper.Set(flags.FlagChainID, cid2)
-
 			obj2, err := flush(q2, cdc, storeKey, version.DefaultPrefix(), portid2, chanid2)
 			if err != nil {
 				return err
@@ -421,28 +404,29 @@ func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return errors.New("no unsent packets")
 			}
 
-			viper.Set(flags.FlagChainID, cid1)
-
 			// TODO: optimize, don't updateclient if already updated
+			viper.Set(flags.FlagChainID, cid2)
 			header, err := getHeader(ctx2)
 			if err != nil {
 				return err
 			}
 
-			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
-
-			viper.Set(flags.FlagChainID, cid1)
-
-			msgupdate := client.MsgUpdateClient{
-				ClientID: client1,
-				Header:   header,
-				Signer:   ctx1.GetFromAddress(),
-			}
-
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, []sdk.Msg{msgupdate})
+			// get passphrase for key from1
+			passphrase1, err := keys.GetPassphrase(viper.GetString(flags.FlagFrom))
 			if err != nil {
 				return err
 			}
+
+			viper.Set(flags.FlagChainID, cid1)
+			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
+			msgUpdateClient := client.NewMsgUpdateClient(client1, header, ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
+			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, client1)
 
 			msgs := []sdk.Msg{}
 
@@ -463,10 +447,12 @@ func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 				msgs = append(msgs, msg)
 			}
 
-			err = utils.GenerateOrBroadcastMsgs(ctx1, txBldr1, msgs)
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid1, msgs[0].Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, msgs, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
+			fmt.Printf(" [OK] txid(%v) packets(%v)\n", res.TxHash, len(msgs))
 
 			return nil
 		},
@@ -474,12 +460,10 @@ func GetCmdPullPackets(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
-	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(flags.FlagFrom, "", "Key to use on chain recieving the packets")
 	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 
-	cmd.MarkFlagRequired(FlagFrom1)
-	cmd.MarkFlagRequired(FlagFrom2)
+	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }

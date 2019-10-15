@@ -1,8 +1,8 @@
 package rest
 
 import (
-	"github.com/cosmos/cosmos-sdk/auth/exported"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
 // Concrete Swagger types used to generate REST documentation. Note, these types
@@ -12,15 +12,15 @@ import (
 //nolint:deadcode,unused
 type (
 	txEvents struct {
-		Height int64               `json:"height"`
-		Result sdk.SearchTxsResult `json:"result"`
+		Height int64                 `json:"height"`
+		Result types.SearchTxsResult `json:"result"`
 	}
 	txSearch struct {
-		Height int64          `json:"height"`
-		Result sdk.TxResponse `json:"result"`
+		Height int64            `json:"height"`
+		Result types.TxResponse `json:"result"`
 	}
 	queryAccount struct {
-		Height int64 `json:"height"`
+		Height int64            `json:"height"`
 		Result exported.Account `json:"result"`
 	}
 )

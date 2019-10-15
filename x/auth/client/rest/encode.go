@@ -15,7 +15,6 @@ type (
 	EncodeResp struct {
 		Tx string `json:"tx" yaml:"tx"`
 	}
-	EncodeReq types.StdTx
 )
 
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,
@@ -27,7 +26,7 @@ type (
 // @Tags Transactions
 // @Accept  json
 // @Produce json
-// @Param tx body rest.EncodeReq true "The tx to encode"
+// @Param tx body types.StdTx true "The tx to encode"
 // @Success 200 {object} rest.EncodeResp
 // @Failure 400 {object} rest.ErrorResponse "The tx was malformated"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"

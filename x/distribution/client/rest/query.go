@@ -66,10 +66,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 }
 
 // coinsReturn helps generate documentation for REST routes
-type coinsReturn struct { // nolint: deadcode unused
-	Height int64     `json:"height"`
-	Result sdk.Coins `json:"result"`
-}
 
 // delegatorRewardsHandlerFn implements a delegator rewards query route
 //
@@ -79,7 +75,7 @@ type coinsReturn struct { // nolint: deadcode unused
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} coinsReturn
+// @Success 200 {object} rest.coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards [get]
@@ -109,7 +105,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} coinsReturn
+// @Success 200 {object} rest.coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr} [get]
@@ -130,12 +126,6 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 	}
 }
 
-// delegatorWithdrawalAddr helps generate documentation for delegatorWithdrawalAddrHandlerFn
-type delegatorWithdrawalAddr struct { // nolint: deadcode unused
-	Height int64       `json:"height"`
-	Result sdk.Address `json:"result"`
-}
-
 // delegatorWithdrawalAddrHandlerFn implements a delegator withdraw address query route
 //
 // @Summary Query delegator withdraw address
@@ -144,7 +134,7 @@ type delegatorWithdrawalAddr struct { // nolint: deadcode unused
 // @Produce json
 // @Param delegatorAddr path string true "The address of the delegator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} delegatorWithdrawalAddr
+// @Success 200 {object} rest.delegatorWithdrawalAddr
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/delegators/{delegatorAddr}/withdraw_address [get]
@@ -190,12 +180,6 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 	}
 }
 
-// validatorInfo helps generate documentation for validatorInfoHandlerFn
-type validatorInfo struct { // nolint: deadcode unused
-	Height int64             `json:"height"`
-	Result ValidatorDistInfo `json:"result"`
-}
-
 // validatorInfoHandlerFn implements a validator distribution information route
 //
 // @Summary Query validator distribution information
@@ -204,7 +188,7 @@ type validatorInfo struct { // nolint: deadcode unused
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} validatorInfo
+// @Success 200 {object} rest.validatorInfo
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr} [get]
@@ -282,12 +266,6 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 	}
 }
 
-// params helps generate documentation for paramsHandlerFn
-type params struct { // nolint: deadcode unused
-	Height int64               `json:"height"`
-	Result common.PrettyParams `json:"result"`
-}
-
 // paramsHandlerFn implements a params query route
 //
 // @Summary Query distribution params data
@@ -295,7 +273,7 @@ type params struct { // nolint: deadcode unused
 // @Tags distribution
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} params
+// @Success 200 {object} rest.params
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/parameters [get]
@@ -359,7 +337,7 @@ func communityPoolHandler(cliCtx context.CLIContext, queryRoute string) http.Han
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} coinsReturn
+// @Success 200 {object} rest.coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/outstanding_rewards [get]

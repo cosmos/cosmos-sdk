@@ -64,4 +64,4 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 ## Next
 
-Learn about [`handler`s](./handler.go).
+Learn about [`handler`s](./handler.md).

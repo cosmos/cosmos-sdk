@@ -2,8 +2,6 @@ package rest
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 )
 
@@ -33,30 +31,5 @@ type (
 	params struct {
 		Height int64               `json:"height"`
 		Result common.PrettyParams `json:"result"`
-	}
-
-	// >----------------
-	// setDelegatorWithdrawalAddr is used to generate documentation for setDelegatorWithdrawalAddrHandllerFn
-	setDelegatorWithdrawalAddr struct {
-		Msgs       []distribution.MsgSetWithdrawAddress `json:"msg"`
-		Fee        auth.StdFee                          `json:"fee"`
-		Signatures []auth.StdSignature                  `json:"signatures"`
-		Memo       string                               `json:"memo"`
-	}
-
-	// withdrawDelegatorReward is used to generate documentation for withdrawDelegatorRewardHandlerFn
-	withdrawDelegatorReward struct {
-		Msgs       []distribution.MsgWithdrawDelegatorReward `json:"msg"`
-		Fee        auth.StdFee                               `json:"fee"`
-		Signatures []auth.StdSignature                       `json:"signatures"`
-		Memo       string                                    `json:"memo"`
-	}
-
-	// withdrawValidatorRewards is used to generate documentation for withdrawValidatorRewardsHandllerFn
-	withdrawValidatorRewards struct {
-		Msgs       []distribution.MsgWithdrawValidatorCommission `json:"msg"`
-		Fee        auth.StdFee                                   `json:"fee"`
-		Signatures []auth.StdSignature                           `json:"signatures"`
-		Memo       string                                        `json:"memo"`
 	}
 )

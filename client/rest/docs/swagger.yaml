@@ -13,23 +13,15 @@ definitions:
         format: base64
         type: string
     type: object
-  distribution.MsgSetWithdrawAddress:
+  common.PrettyParams:
     properties:
-      delegator_address:
+      base_proposer_reward:
         type: string
-      withdraw_address:
+      bonus_proposer_reward:
         type: string
-    type: object
-  distribution.MsgWithdrawDelegatorReward:
-    properties:
-      delegator_address:
+      community_tax:
         type: string
-      validator_address:
-        type: string
-    type: object
-  distribution.MsgWithdrawValidatorCommission:
-    properties:
-      validator_address:
+      withdraw_addr_enabled:
         type: string
     type: object
   rest.BaseReq:
@@ -285,7 +277,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.Params'
+        $ref: '#/definitions/common.PrettyParams'
         type: object
     type: object
   rest.pool:
@@ -523,7 +515,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/distribution.MsgSetWithdrawAddress'
+          $ref: '#/definitions/types.MsgSetWithdrawAddress'
         type: array
       signatures:
         items:
@@ -630,7 +622,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/distribution.MsgWithdrawDelegatorReward'
+          $ref: '#/definitions/types.MsgWithdrawDelegatorReward'
         type: array
       signatures:
         items:
@@ -652,7 +644,7 @@ definitions:
         type: string
       msg:
         items:
-          $ref: '#/definitions/distribution.MsgWithdrawValidatorCommission'
+          $ref: '#/definitions/types.MsgWithdrawValidatorCommission'
         type: array
       signatures:
         items:
@@ -897,17 +889,19 @@ definitions:
     type: object
   types.Params:
     properties:
-      downtime_jail_duration:
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
         type: string
-      max_evidence_age:
-        type: string
-      min_signed_per_window:
-        type: string
-      signed_blocks_window:
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
         type: integer
-      slash_fraction_double_sign:
-        type: string
-      slash_fraction_downtime:
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
         type: string
     type: object
   types.Pool:

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -38,7 +39,6 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute strin
 		"/distribution/validators/{validatorAddr}/rewards",
 		withdrawValidatorRewardsHandlerFn(cliCtx),
 	).Methods("POST")
-
 }
 
 type (
@@ -49,6 +49,31 @@ type (
 	setWithdrawalAddrReq struct {
 		BaseReq         rest.BaseReq   `json:"base_req" yaml:"base_req"`
 		WithdrawAddress sdk.AccAddress `json:"withdraw_address" yaml:"withdraw_address"`
+	}
+
+	// >----------------
+	// setDelegatorWithdrawalAddr is used to generate documentation for setDelegatorWithdrawalAddrHandllerFn
+	setDelegatorWithdrawalAddr struct { // nolint:unused,deadcode
+		Msgs       []types.MsgSetWithdrawAddress `json:"msg"`
+		Fee        auth.StdFee                   `json:"fee"`
+		Signatures []auth.StdSignature           `json:"signatures"`
+		Memo       string                        `json:"memo"`
+	}
+
+	// withdrawDelegatorReward is used to generate documentation for withdrawDelegatorRewardHandlerFn
+	withdrawDelegatorReward struct { // nolint:unused,deadcode
+		Msgs       []types.MsgWithdrawDelegatorReward `json:"msg"`
+		Fee        auth.StdFee                        `json:"fee"`
+		Signatures []auth.StdSignature                `json:"signatures"`
+		Memo       string                             `json:"memo"`
+	}
+
+	// withdrawValidatorRewards is used to generate documentation for withdrawValidatorRewardsHandllerFn
+	withdrawValidatorRewards struct { // nolint:unused,deadcode
+		Msgs       []types.MsgWithdrawValidatorCommission `json:"msg"`
+		Fee        auth.StdFee                            `json:"fee"`
+		Signatures []auth.StdSignature                    `json:"signatures"`
+		Memo       string                                 `json:"memo"`
 	}
 )
 

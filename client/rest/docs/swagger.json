@@ -2629,32 +2629,19 @@
                 }
             }
         },
-        "distribution.MsgSetWithdrawAddress": {
+        "common.PrettyParams": {
             "type": "object",
             "properties": {
-                "delegator_address": {
+                "base_proposer_reward": {
                     "type": "string"
                 },
-                "withdraw_address": {
-                    "type": "string"
-                }
-            }
-        },
-        "distribution.MsgWithdrawDelegatorReward": {
-            "type": "object",
-            "properties": {
-                "delegator_address": {
+                "bonus_proposer_reward": {
                     "type": "string"
                 },
-                "validator_address": {
+                "community_tax": {
                     "type": "string"
-                }
-            }
-        },
-        "distribution.MsgWithdrawValidatorCommission": {
-            "type": "object",
-            "properties": {
-                "validator_address": {
+                },
+                "withdraw_addr_enabled": {
                     "type": "string"
                 }
             }
@@ -3036,7 +3023,7 @@
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/types.Params"
+                    "$ref": "#/definitions/common.PrettyParams"
                 }
             }
         },
@@ -3394,7 +3381,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/distribution.MsgSetWithdrawAddress"
+                        "$ref": "#/definitions/types.MsgSetWithdrawAddress"
                     }
                 },
                 "signatures": {
@@ -3557,7 +3544,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/distribution.MsgWithdrawDelegatorReward"
+                        "$ref": "#/definitions/types.MsgWithdrawDelegatorReward"
                     }
                 },
                 "signatures": {
@@ -3590,7 +3577,7 @@
                 "msg": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/distribution.MsgWithdrawValidatorCommission"
+                        "$ref": "#/definitions/types.MsgWithdrawValidatorCommission"
                     }
                 },
                 "signatures": {
@@ -3938,22 +3925,20 @@
         "types.Params": {
             "type": "object",
             "properties": {
-                "downtime_jail_duration": {
+                "bond_denom": {
+                    "description": "note: we need to be a bit careful about potential overflow here, since this is user-determined",
                     "type": "string"
                 },
-                "max_evidence_age": {
-                    "type": "string"
-                },
-                "min_signed_per_window": {
-                    "type": "string"
-                },
-                "signed_blocks_window": {
+                "max_entries": {
+                    "description": "max entries for either unbonding delegation or redelegation (per pair/trio)",
                     "type": "integer"
                 },
-                "slash_fraction_double_sign": {
-                    "type": "string"
+                "max_validators": {
+                    "description": "maximum number of validators (max uint16 = 65535)",
+                    "type": "integer"
                 },
-                "slash_fraction_downtime": {
+                "unbonding_time": {
+                    "description": "time duration of unbonding",
                     "type": "string"
                 }
             }

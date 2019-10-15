@@ -859,9 +859,43 @@ var doc = `{
                 }
             }
         },
-        "/slashing/validators/{validatorAddr}/unjai": {
+        "/slashing/signing_infos": {
+            "get": {
+                "description": "Get the signing info of all validators",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "slashing"
+                ],
+                "summary": "Get the signing info of all validators",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.validatorsSigningInfo"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/slashing/validators/{validatorAddr}/unjail": {
             "post": {
-                "description": "Send transaction to unjail a jailed validator",
+                "description": "Generate an unjail transaction that is ready for signing",
                 "consumes": [
                     "application/json"
                 ],
@@ -871,23 +905,23 @@ var doc = `{
                 "tags": [
                     "slashing"
                 ],
-                "summary": "Unjail a jailed validator",
+                "summary": "Generate an unjail transaction",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "bech32 validator address",
+                        "description": "The validator address",
                         "name": "validatorAddr",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "The data required to unjail",
+                        "description": "The unjail request payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/UnjailReq"
+                            "$ref": "#/definitions/rest.UnjailReq"
                         }
                     }
                 ],
@@ -895,7 +929,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.stdTx"
+                            "$ref": "#/definitions/rest.postUnjail"
                         }
                     },
                     "400": {
@@ -921,14 +955,14 @@ var doc = `{
         },
         "/slashing/validators/{validatorPubKey}/signing_info": {
             "get": {
-                "description": "Get sign info of given validator",
+                "description": "Get the signing info of a given validator by public key",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "slashing"
                 ],
-                "summary": "Get sign info of given validator",
+                "summary": "Get the signing info of a given validator",
                 "parameters": [
                     {
                         "type": "string",
@@ -1643,47 +1677,6 @@ var doc = `{
                         "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Returned on server error",
-                        "schema": {
-                            "$ref": "#/definitions/rest.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/staking/signing_infos": {
-            "get": {
-                "description": "Get sign info of all validator",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "slashing"
-                ],
-                "summary": "Get sign info of all validator",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bech32 validator public key",
-                        "name": "validatorPubKey",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Block height to execute query (defaults to chain tip)",
-                        "name": "height",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.validatorsSigningInfo"
                         }
                     },
                     "500": {
@@ -2477,6 +2470,15 @@ var doc = `{
                 }
             }
         },
+        "rest.UnjailReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                }
+            }
+        },
         "rest.VoteReq": {
             "type": "object",
             "properties": {
@@ -2752,6 +2754,30 @@ var doc = `{
                 }
             }
         },
+        "rest.postUnjail": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgUnjail"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
+                }
+            }
+        },
         "rest.postVote": {
             "type": "object",
             "properties": {
@@ -2937,27 +2963,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/types.MsgSend"
                     }
-                },
-                "signatures": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.StdSignature"
-                    }
-                }
-            }
-        },
-        "rest.stdTx": {
-            "type": "object",
-            "properties": {
-                "fee": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.StdFee"
-                },
-                "memo": {
-                    "type": "string"
-                },
-                "msg": {
-                    "type": "string"
                 },
                 "signatures": {
                     "type": "array",
@@ -3382,6 +3387,15 @@ var doc = `{
                     "type": "string"
                 },
                 "validator_address": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.MsgUnjail": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "address of the validator operator",
                     "type": "string"
                 }
             }

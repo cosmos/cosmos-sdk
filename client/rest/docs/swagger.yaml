@@ -155,6 +155,12 @@ definitions:
         description: in bech32
         type: string
     type: object
+  rest.UnjailReq:
+    properties:
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+    type: object
   rest.VoteReq:
     properties:
       base_req:
@@ -337,6 +343,22 @@ definitions:
           $ref: '#/definitions/types.StdSignature'
         type: array
     type: object
+  rest.postUnjail:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgUnjail'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
   rest.postVote:
     properties:
       fee:
@@ -460,20 +482,6 @@ definitions:
         items:
           $ref: '#/definitions/types.MsgSend'
         type: array
-      signatures:
-        items:
-          $ref: '#/definitions/types.StdSignature'
-        type: array
-    type: object
-  rest.stdTx:
-    properties:
-      fee:
-        $ref: '#/definitions/types.StdFee'
-        type: object
-      memo:
-        type: string
-      msg:
-        type: string
       signatures:
         items:
           $ref: '#/definitions/types.StdSignature'
@@ -775,6 +783,12 @@ definitions:
       delegator_address:
         type: string
       validator_address:
+        type: string
+    type: object
+  types.MsgUnjail:
+    properties:
+      address:
+        description: address of the validator operator
         type: string
     type: object
   types.MsgVote:
@@ -1752,23 +1766,45 @@ paths:
       summary: Get the current slashing parameters
       tags:
       - slashing
-  /slashing/validators/{validatorAddr}/unjai:
+  /slashing/signing_infos:
+    get:
+      description: Get the signing info of all validators
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorsSigningInfo'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Get the signing info of all validators
+      tags:
+      - slashing
+  /slashing/validators/{validatorAddr}/unjail:
     post:
       consumes:
       - application/json
-      description: Send transaction to unjail a jailed validator
+      description: Generate an unjail transaction that is ready for signing
       parameters:
-      - description: bech32 validator address
+      - description: The validator address
         in: path
         name: validatorAddr
         required: true
         type: string
-      - description: The data required to unjail
+      - description: The unjail request payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/UnjailReq'
+          $ref: '#/definitions/rest.UnjailReq'
           type: object
       produces:
       - application/json
@@ -1776,7 +1812,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.stdTx'
+            $ref: '#/definitions/rest.postUnjail'
         "400":
           description: Invalid validator address or base_req
           schema:
@@ -1789,12 +1825,12 @@ paths:
           description: Internal on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Unjail a jailed validator
+      summary: Generate an unjail transaction
       tags:
       - slashing
   /slashing/validators/{validatorPubKey}/signing_info:
     get:
-      description: Get sign info of given validator
+      description: Get the signing info of a given validator by public key
       parameters:
       - description: Bech32 validator public key
         in: path
@@ -1821,7 +1857,7 @@ paths:
           description: Returned on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Get sign info of given validator
+      summary: Get the signing info of a given validator
       tags:
       - slashing
   /staking/delegators/{delegatorAddr}/delegations:
@@ -2289,33 +2325,6 @@ paths:
       summary: Query all redelegations with filters
       tags:
       - staking
-  /staking/signing_infos:
-    get:
-      description: Get sign info of all validator
-      parameters:
-      - description: Bech32 validator public key
-        in: path
-        name: validatorPubKey
-        required: true
-        type: string
-      - description: Block height to execute query (defaults to chain tip)
-        in: query
-        name: height
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.validatorsSigningInfo'
-        "500":
-          description: Returned on server error
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      summary: Get sign info of all validator
-      tags:
-      - slashing
   /staking/validators:
     get:
       description: Query paginated validators filtering by status

@@ -115,12 +115,23 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 	// simulation must not underestimate gas of this decorator even with nil signatures
 	sigTx := tx.(types.StdTx)
-	sigTx.Signatures = []types.StdSignature{{}}
+	sigTx.Signatures = []types.StdSignature{}
+
+	simTxBytes, err := json.Marshal(sigTx)
+	require.Nil(t, err)
+	// require that simulated tx is smaller than tx with signatures
+	require.True(t, len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
+
+	// Set ctx with smaller simulated TxBytes manually
+	ctx = ctx.WithTxBytes(txBytes)
+
 	beforeSimGas := ctx.GasMeter().GasConsumed()
 
 	// run antehandler with simulate=true
-	ctx, err = antehandler(ctx, tx, true)
+	ctx, err = antehandler(ctx, sigTx, true)
 	consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
+
+	// require that antehandler passes and does not underestimate decorator cost
 	require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 	require.True(t, consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 }

@@ -5,6 +5,7 @@ import (
 	err "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -95,10 +96,13 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	if simulate && len(sigTx.GetSignatures()) == 0 {
 		for _, signer := range sigTx.GetSigners() {
 			acc := cgts.ak.GetAccount(ctx, signer)
-			pubkey := acc.GetPubKey()
+
+			var pubkey crypto.PubKey
 			// use placeholder simSecp256k1Pubkey if sig is nil
-			if pubkey == nil {
+			if acc == nil || acc.GetPubKey() == nil {
 				pubkey = simSecp256k1Pubkey
+			} else {
+				pubkey = acc.GetPubKey()
 			}
 			simSig := types.StdSignature{
 				Signature: simSecp256k1Sig[:],

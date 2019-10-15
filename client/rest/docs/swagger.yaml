@@ -649,6 +649,16 @@ definitions:
         description: proposalID of the proposal
         type: integer
     type: object
+  types.DepositParams:
+    properties:
+      max_deposit_period:
+        description: 'Maximum period for Atom holders to deposit on a proposal. Initial
+          value: 2 months'
+        type: string
+      min_deposit:
+        description: Minimum deposit for a proposal to enter voting period.
+        type: string
+    type: object
   types.Description:
     properties:
       details:
@@ -749,16 +759,15 @@ definitions:
     type: object
   types.Params:
     properties:
-      max_memo_characters:
-        type: integer
-      sig_verify_cost_ed25519:
-        type: integer
-      sig_verify_cost_secp256k1:
-        type: integer
-      tx_sig_limit:
-        type: integer
-      tx_size_cost_per_byte:
-        type: integer
+      deposit_params:
+        $ref: '#/definitions/types.DepositParams'
+        type: object
+      tally_params:
+        $ref: '#/definitions/types.TallyParams'
+        type: object
+      voting_params:
+        $ref: '#/definitions/types.VotingParams'
+        type: object
     type: object
   types.Pool:
     properties:
@@ -915,6 +924,21 @@ definitions:
           type: string
       type: object
     type: array
+  types.TallyParams:
+    properties:
+      quorum:
+        description: Minimum percentage of total stake needed to vote for a result
+          to be considered valid
+        type: string
+      threshold:
+        description: 'Minimum proportion of Yes votes for proposal to pass. Initial
+          value: 0.5'
+        type: string
+      veto:
+        description: 'Minimum value of Veto votes to Total votes ratio for proposal
+          to be vetoed. Initial value: 1/3'
+        type: string
+    type: object
   types.TallyResult:
     properties:
       abstain:
@@ -1078,6 +1102,12 @@ definitions:
           type: string
       type: object
     type: array
+  types.VotingParams:
+    properties:
+      voting_period:
+        description: Length of the voting period.
+        type: string
+    type: object
   utils.Proposer:
     properties:
       proposal_id:

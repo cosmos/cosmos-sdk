@@ -1,4 +1,4 @@
-// nolint: deadcode unused
+// nolint:deadcode,unused
 package params
 
 import (

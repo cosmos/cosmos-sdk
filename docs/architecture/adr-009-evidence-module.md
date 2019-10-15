@@ -29,11 +29,11 @@ functionality:
 - Provide developers with the abstractions and interfaces necessary to define
 custom evidence messages and types along with their slashing penalties
 - Support the ability to route evidence messages to handlers in any module to
- determine the validity of submitted misbehaviour
+ determine the validity of submitted misbehavior
 - Support the ability through governance to modify slashing penalties of any
 evidence type
 - Querier implementation to support querying params, evidence types, params, and
-all submitted valid misbehaviour
+all submitted valid misbehavior
 
 ### Types
 
@@ -47,8 +47,8 @@ an infraction time. We want the `Evidence` type to remain as flexible as possibl
 However, when submitting evidence to the `x/evidence` module, it must be submitted
 as an `Infraction` which includes mandatory fields outlined below. The `Infraction`
 type must include the validator's consensus address, which should be known by the
-`x/slashing` module, the height at which the infraction occured and the validator's
-power at same height in which the infraction occured.
+`x/slashing` module, the height at which the infraction occurred and the validator's
+power at same height in which the infraction occurred.
 
 ```go
 type Evidence interface {

@@ -17,6 +17,16 @@ import (
 )
 
 // query accountREST Handler
+//
+// @Summary Query account balances
+// @Description Get the account information on blockchain
+// @Tags Auth
+// @Produce json
+// @Param address path string true "Account address to query"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.queryAccount
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /auth/accounts/{address} [get]
 func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -57,6 +67,22 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 // QueryTxsHandlerFn implements a REST handler that searches for transactions.
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
+//
+// @Summary Query txs by events
+// @Description Search transactions by events.
+// @Description Genesis transactions are returned if the height parameter is set to zero,
+// @Description otherwise the transactions are searched for by events.
+// @Tags Transactions
+// @Produce json
+// @Param messageAction path string false "transaction events such as 'message.action=send'. note that each module documents its own events."
+// @Param messageSender path string false "transaction tags with sender: 'GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
+// @Param page path integer false "Page Number"
+// @Param limit path integer false "Maximum number of items per page"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.txEvents
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /txs [get]
 func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -109,6 +135,17 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 // QueryTxRequestHandlerFn implements a REST handler that queries a transaction
 // by hash in a committed block.
+//
+// @Summary Query tx by hash
+// @Description Retrieve a transaction using its hash.
+// @Tags Transactions
+// @Produce json
+// @Param hash path string true "tx hash"
+// @Param height query string false "Block height to execute query (defaults to chain tip)"
+// @Success 200 {object} rest.txSearch
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /txs/{hash} [get]
 func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

@@ -13,6 +13,8 @@ definitions:
         format: base64
         type: string
     type: object
+  exported.Account:
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -44,6 +46,11 @@ definitions:
         $ref: '#/definitions/types.StdTx'
         type: object
     type: object
+  rest.DecodeReq:
+    properties:
+      tx:
+        type: string
+    type: object
   rest.DelegateRequest:
     properties:
       amount:
@@ -68,6 +75,25 @@ definitions:
         type: object
       depositor:
         description: Address of the depositor
+        type: string
+    type: object
+  rest.EncodeReq:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        type: string
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
+  rest.EncodeResp:
+    properties:
+      tx:
         type: string
     type: object
   rest.ErrorResponse:
@@ -342,6 +368,14 @@ definitions:
           $ref: '#/definitions/auth.StdSignature'
         type: array
     type: object
+  rest.queryAccount:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/exported.Account'
+        type: object
+    type: object
   rest.queryBalance:
     properties:
       height:
@@ -454,6 +488,20 @@ definitions:
         items:
           $ref: '#/definitions/types.Coin'
         type: array
+    type: object
+  rest.txEvents:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
+  rest.txSearch:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
     type: object
   rest.unbondingDelegation:
     properties:
@@ -1043,6 +1091,33 @@ info:
   contact: {}
   license: {}
 paths:
+  /auth/accounts/{address}:
+    get:
+      description: Get the account information on blockchain
+      parameters:
+      - description: Account address to query
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.queryAccount'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query account balances
+      tags:
+      - auth
   /bank/accounts/{address}/transfers:
     post:
       consumes:
@@ -2237,6 +2312,51 @@ paths:
       tags:
       - supply
   /txs:
+    get:
+      description: |-
+        Search transactions by events.
+        Genesis transactions are returned if the height parameter is set to zero,
+        otherwise the transactions are searched for by events.
+      parameters:
+      - description: transaction events such as 'message.action=send'. note that each
+          module documents its own events.
+        in: path
+        name: messageAction
+        type: string
+      - description: 'transaction tags with sender: ''GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'''
+        in: path
+        name: messageSender
+        type: string
+      - description: Page Number
+        in: path
+        name: page
+        type: integer
+      - description: Maximum number of items per page
+        in: path
+        name: limit
+        type: integer
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.txEvents'
+        "400":
+          description: Returned if the request doesn't have valid query params
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query txs by events
+      tags:
+      - Transactions
     post:
       consumes:
       - application/json
@@ -2272,4 +2392,99 @@ paths:
       summary: Broadcast a signed transaction
       tags:
       - transactions
+  /txs/{hash}:
+    get:
+      description: Retrieve a transaction using its hash.
+      parameters:
+      - description: tx hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.txSearch'
+        "400":
+          description: Returned if the request doesn't have valid query params
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query tx by hash
+      tags:
+      - Transactions
+  /txs/decode:
+    post:
+      consumes:
+      - application/json
+      description: Decode a transaction (signed or not) from base64-encoded Amino
+        serialized bytes to JSON
+      parameters:
+      - description: The tx to decode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DecodeReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.DecodeReq'
+        "400":
+          description: The tx was malformated
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Decode a transaction from the Amino wire format
+      tags:
+      - Transactions
+  /txs/encode:
+    post:
+      consumes:
+      - application/json
+      description: Encode a transaction (signed or not) from JSON to base64-encoded
+        Amino serialized bytes
+      parameters:
+      - description: The tx to encode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/rest.EncodeReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.EncodeResp'
+        "400":
+          description: The tx was malformated
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Encode a transaction to the Amino wire format
+      tags:
+      - Transactions
 swagger: "2.0"

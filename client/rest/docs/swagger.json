@@ -5,6 +5,47 @@
         "license": {}
     },
     "paths": {
+        "/auth/accounts/{address}": {
+            "get": {
+                "description": "Get the account information on blockchain",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Query account balances",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account address to query",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.queryAccount"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/bank/accounts/{address}/transfers": {
             "post": {
                 "description": "Transfer tokens to another account",
@@ -1753,6 +1794,68 @@
             }
         },
         "/txs": {
+            "get": {
+                "description": "Search transactions by events.\nGenesis transactions are returned if the height parameter is set to zero,\notherwise the transactions are searched for by events.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Query txs by events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "transaction events such as 'message.action=send'. note that each module documents its own events.",
+                        "name": "messageAction",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "transaction tags with sender: 'GET /txs?message.action=send\u0026message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'",
+                        "name": "messageSender",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page Number",
+                        "name": "page",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Maximum number of items per page",
+                        "name": "limit",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.txEvents"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have valid query params",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Broadcast a signed transaction with the broadcasting mode. The\nmode must either be sync, async, or block. The use of block mode\nis not advised. The sync mode will broadcast and wait for a\nCheckTx response, whereas async mode will broadcast and return\nimmediately.",
                 "consumes": [
@@ -1798,6 +1901,147 @@
                     }
                 }
             }
+        },
+        "/txs/decode": {
+            "post": {
+                "description": "Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Decode a transaction from the Amino wire format",
+                "parameters": [
+                    {
+                        "description": "The tx to decode",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.DecodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.DecodeReq"
+                        }
+                    },
+                    "400": {
+                        "description": "The tx was malformated",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/txs/encode": {
+            "post": {
+                "description": "Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Encode a transaction to the Amino wire format",
+                "parameters": [
+                    {
+                        "description": "The tx to encode",
+                        "name": "tx",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.EncodeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.EncodeResp"
+                        }
+                    },
+                    "400": {
+                        "description": "The tx was malformated",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/txs/{hash}": {
+            "get": {
+                "description": "Retrieve a transaction using its hash.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Query tx by hash",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tx hash",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.txSearch"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have valid query params",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1821,6 +2065,9 @@
                     "example": "U3dhZ2dlciByb2Nrcw=="
                 }
             }
+        },
+        "exported.Account": {
+            "type": "object"
         },
         "rest.BaseReq": {
             "type": "object",
@@ -1869,6 +2116,14 @@
                 }
             }
         },
+        "rest.DecodeReq": {
+            "type": "object",
+            "properties": {
+                "tx": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.DelegateRequest": {
             "type": "object",
             "properties": {
@@ -1902,6 +2157,35 @@
                 },
                 "depositor": {
                     "description": "Address of the depositor",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.EncodeReq": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
+                }
+            }
+        },
+        "rest.EncodeResp": {
+            "type": "object",
+            "properties": {
+                "tx": {
                     "type": "string"
                 }
             }
@@ -2312,6 +2596,18 @@
                 }
             }
         },
+        "rest.queryAccount": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/exported.Account"
+                }
+            }
+        },
         "rest.queryBalance": {
             "type": "object",
             "properties": {
@@ -2481,6 +2777,28 @@
                     "items": {
                         "$ref": "#/definitions/types.Coin"
                     }
+                }
+            }
+        },
+        "rest.txEvents": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
+                }
+            }
+        },
+        "rest.txSearch": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
                 }
             }
         },

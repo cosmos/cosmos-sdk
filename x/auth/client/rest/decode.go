@@ -23,6 +23,17 @@ type (
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
 // it takes base64-decoded bytes, decodes it from the Amino wire protocol,
 // and responds with a json-formatted transaction.
+//
+// @Summary Decode a transaction from the Amino wire format
+// @Description Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
+// @Tags Transactions
+// @Accept  json
+// @Produce json
+// @Param tx body rest.DecodeReq true "The tx to decode"
+// @Success 200 {object} rest.DecodeReq
+// @Failure 400 {object} rest.ErrorResponse "The tx was malformated"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
+// @Router /txs/decode [post]
 func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req DecodeReq

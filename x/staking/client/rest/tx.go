@@ -42,7 +42,7 @@ type (
 		BaseReq           rest.BaseReq          `json:"base_req" yaml:"base_req"`
 		ValidatorAddress  sdk.ValAddress        `json:"validator_address" yaml:"validator_address"` // in bech32
 		Pubkey            string                `json:"pubkey" yaml:"pubkey"`
-		Amount             sdk.Coin              `json:"amount" yaml:"amount"`
+		Amount            sdk.Coin              `json:"amount" yaml:"amount"`
 		Description       types.Description     `json:"description" yaml:"description"`
 		Commission        types.CommissionRates `json:"commission" yaml:"commission"`
 		MinSelfDelegation sdk.Int               `json:"min_self_delegation" yaml:"min_self_delegation"`
@@ -118,7 +118,7 @@ func createValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgCreateValidator(req.ValidatorAddress, pk, req.Value, req.Description, req.Commission, req.MinSelfDelegation)
+		msg := types.NewMsgCreateValidator(req.ValidatorAddress, pk, req.Amount, req.Description, req.Commission, req.MinSelfDelegation)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -157,7 +157,17 @@ func editValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgEditValidator(req.ValidatorAddress, req.Description, &req.CommissionRate, &req.MinSelfDelegation)
+		var newRate *sdk.Dec
+		if !req.CommissionRate.IsNil() {
+			newRate = &req.CommissionRate
+		}
+		
+		var newMinSelfDelegation *sdk.Int
+		if !req.MinSelfDelegation.IsZero() {
+			newMinSelfDelegation = &req.MinSelfDelegation
+		}
+
+		msg := types.NewMsgEditValidator(req.ValidatorAddress, req.Description, newRate, newMinSelfDelegation)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

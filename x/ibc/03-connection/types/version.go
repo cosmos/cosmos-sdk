@@ -31,7 +31,7 @@ func PickVersion(counterpartyVersions, compatibleVersions []string) string {
 	var supportedVersions []string
 
 	switch {
-	case n == 0:
+	case n == 0 || m == 0:
 		return ""
 	case n == m:
 		for i := n - 1; i >= 0; i-- {

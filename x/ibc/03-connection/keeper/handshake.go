@@ -139,7 +139,10 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	if connection.State != types.INIT {
-		return errors.New("connection is in a non valid state") // TODO: sdk.Error
+		return types.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not INIT (got %s)", types.ConnectionStateToString(connection.State)),
+		)
 	}
 
 	if types.LatestVersion(connection.Versions) != version {
@@ -207,7 +210,10 @@ func (k Keeper) ConnOpenConfirm(
 	}
 
 	if connection.State != types.TRYOPEN {
-		return errors.New("connection is in a non valid state") // TODO: sdk.Error
+		return types.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not TRYOPEN (got %s)", types.ConnectionStateToString(connection.State)),
+		)
 	}
 
 	prefix := k.clientKeeper.GetCommitmentPath()

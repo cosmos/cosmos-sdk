@@ -86,7 +86,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 // Test logic around account number checking with one signer and many signers.
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -143,7 +143,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 // Test logic around account number checking with many signers when BlockHeight is 0.
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -199,7 +199,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -355,7 +355,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 

@@ -763,6 +763,147 @@
                 }
             }
         },
+        "/slashing/parameters": {
+            "get": {
+                "description": "Get the current slashing parameters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "slashing"
+                ],
+                "summary": "Get the current slashing parameters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.queryParams"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/slashing/validators/{validatorAddr}/unjai": {
+            "post": {
+                "description": "Send transaction to unjail a jailed validator",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "slashing"
+                ],
+                "summary": "Unjail a jailed validator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "bech32 validator address",
+                        "name": "validatorAddr",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The data required to unjail",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/UnjailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.stdTx"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid validator address or base_req",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Validator address incorrect",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/slashing/validators/{validatorPubKey}/signing_info": {
+            "get": {
+                "description": "Get sign info of given validator",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "slashing"
+                ],
+                "summary": "Get sign info of given validator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bech32 validator public key",
+                        "name": "validatorPubKey",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.validatorSignInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request doesn't have a valid height or invalid validator public key ",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/staking/delegators/{delegatorAddr}/delegations": {
             "get": {
                 "description": "Query all delegations from a single delegator address",
@@ -1440,6 +1581,47 @@
                         "description": "Returned if the request doesn't have valid query params",
                         "schema": {
                             "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/staking/signing_infos": {
+            "get": {
+                "description": "Get sign info of all validator",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "slashing"
+                ],
+                "summary": "Get sign info of all validator",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bech32 validator public key",
+                        "name": "validatorPubKey",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Block height to execute query (defaults to chain tip)",
+                        "name": "height",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.validatorsSigningInfo"
                         }
                     },
                     "500": {
@@ -2349,6 +2531,20 @@
                 }
             }
         },
+        "rest.queryParams": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.Params"
+                    }
+                }
+            }
+        },
         "rest.queryProposal": {
             "type": "object",
             "properties": {
@@ -2459,6 +2655,27 @@
                 }
             }
         },
+        "rest.stdTx": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
+                }
+            }
+        },
         "rest.totalDenomSupply": {
             "type": "object",
             "properties": {
@@ -2520,6 +2737,18 @@
                 }
             }
         },
+        "rest.validatorSignInfo": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValidatorSigningInfo"
+                }
+            }
+        },
         "rest.validatorUnbondingDelegations": {
             "type": "object",
             "properties": {
@@ -2544,6 +2773,20 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/types.Validator"
+                    }
+                }
+            }
+        },
+        "rest.validatorsSigningInfo": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.ValidatorSigningInfo"
                     }
                 }
             }
@@ -2690,19 +2933,6 @@
                 }
             }
         },
-        "types.DepositParams": {
-            "type": "object",
-            "properties": {
-                "max_deposit_period": {
-                    "description": "Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months",
-                    "type": "string"
-                },
-                "min_deposit": {
-                    "description": "Minimum deposit for a proposal to enter voting period.",
-                    "type": "string"
-                }
-            }
-        },
         "types.Description": {
             "type": "object",
             "properties": {
@@ -2841,17 +3071,20 @@
         "types.Params": {
             "type": "object",
             "properties": {
-                "deposit_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.DepositParams"
+                "max_memo_characters": {
+                    "type": "integer"
                 },
-                "tally_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.TallyParams"
+                "sig_verify_cost_ed25519": {
+                    "type": "integer"
                 },
-                "voting_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.VotingParams"
+                "sig_verify_cost_secp256k1": {
+                    "type": "integer"
+                },
+                "tx_sig_limit": {
+                    "type": "integer"
+                },
+                "tx_size_cost_per_byte": {
+                    "type": "integer"
                 }
             }
         },
@@ -3075,23 +3308,6 @@
                 }
             }
         },
-        "types.TallyParams": {
-            "type": "object",
-            "properties": {
-                "quorum": {
-                    "description": "Minimum percentage of total stake needed to vote for a result to be considered valid",
-                    "type": "string"
-                },
-                "threshold": {
-                    "description": "Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5",
-                    "type": "string"
-                },
-                "veto": {
-                    "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3",
-                    "type": "string"
-                }
-            }
-        },
         "types.TallyResult": {
             "type": "object",
             "properties": {
@@ -3252,6 +3468,35 @@
                 }
             }
         },
+        "types.ValidatorSigningInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "description": "validator consensus address",
+                    "type": "string"
+                },
+                "index_offset": {
+                    "description": "index offset into signed block bit array",
+                    "type": "integer"
+                },
+                "jailed_until": {
+                    "description": "timestamp validator cannot be unjailed until",
+                    "type": "string"
+                },
+                "missed_blocks_counter": {
+                    "description": "missed blocks counter (to avoid scanning the array every time)",
+                    "type": "integer"
+                },
+                "start_height": {
+                    "description": "height at which validator was first a candidate OR was unjailed",
+                    "type": "integer"
+                },
+                "tombstoned": {
+                    "description": "whether or not a validator has been tombstoned (killed out of validator set)",
+                    "type": "boolean"
+                }
+            }
+        },
         "types.Vote": {
             "type": "object",
             "properties": {
@@ -3286,15 +3531,6 @@
                         "description": "address of the voter",
                         "type": "string"
                     }
-                }
-            }
-        },
-        "types.VotingParams": {
-            "type": "object",
-            "properties": {
-                "voting_period": {
-                    "description": "Length of the voting period.",
-                    "type": "string"
                 }
             }
         },

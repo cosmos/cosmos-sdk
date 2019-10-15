@@ -70,12 +70,15 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	return next(ctx, tx, simulate)
 }
 
-// ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional to the size of tx
-// before calling next AnteHandler
+// ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional
+// to the size of tx before calling next AnteHandler. Note, the gas costs will be
+// slightly over estimated due to the fact that any given signing account may need
+// to be retrieved from state.
 //
-// CONTRACT: If simulate=true, then signatures must either be completely filled in or empty
-// CONTRACT: To use this decorator, signatures of transaction must be represented as types.StdSignature
-// otherwise simulate mode will incorrectly estimate gas cost
+// CONTRACT: If simulate=true, then signatures must either be completely filled
+// in or empty.
+// CONTRACT: To use this decorator, signatures of transaction must be represented
+// as types.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
 type ConsumeTxSizeGasDecorator struct {
 	ak keeper.AccountKeeper
 }

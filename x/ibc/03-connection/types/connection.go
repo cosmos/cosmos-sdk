@@ -6,18 +6,6 @@ import (
 
 // ICS03 - Connection Data Structures as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
 
-// ConnectionState defines the state of a connection between two disctinct
-// chains
-type ConnectionState = byte
-
-// available connection states
-const (
-	NONE ConnectionState = iota // default ConnectionState
-	INIT
-	TRYOPEN
-	OPEN
-)
-
 // ConnectionEnd defines a stateful object on a chain connected to another separate
 // one.
 // NOTE: there must only be 2 defined ConnectionEnds to stablish a connection
@@ -34,14 +22,24 @@ type ConnectionEnd struct {
 }
 
 // NewConnectionEnd creates a new ConnectionEnd instance.
-func NewConnectionEnd(clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
+func NewConnectionEnd(state ConnectionState, clientID string, counterparty Counterparty, versions []string) ConnectionEnd {
 	return ConnectionEnd{
-		State:        NONE,
+		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     versions,
 	}
 }
+
+// LatestVersion gets the latest version of a connection protocol
+func (ce ConnectionEnd) LatestVersion() string {
+	if len(ce.Versions) == 0 {
+		return ""
+	}
+	return ce.Versions[len(ce.Versions)-1]
+}
+
+// TODO: create a custom JSON marshaler
 
 // Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
@@ -56,5 +54,49 @@ func NewCounterparty(clientID, connectionID string, prefix ics23.Prefix) Counter
 		ClientID:     clientID,
 		ConnectionID: connectionID,
 		Prefix:       prefix,
+	}
+}
+
+// ConnectionState defines the state of a connection between two disctinct
+// chains
+type ConnectionState = byte
+
+// available connection states
+const (
+	NONE ConnectionState = iota // default ConnectionState
+	INIT
+	TRYOPEN
+	OPEN
+)
+
+// ConnectionStateToString returns the string representation of a connection state
+func ConnectionStateToString(state ConnectionState) string {
+	switch state {
+	case NONE:
+		return "NONE"
+	case INIT:
+		return "INIT"
+	case TRYOPEN:
+		return "TRYOPEN"
+	case OPEN:
+		return "OPEN"
+	default:
+		return ""
+	}
+}
+
+// StringToConnectionState parses a string into a connection state
+func StringToConnectionState(state string) ConnectionState {
+	switch state {
+	case "NONE":
+		return NONE
+	case "INIT":
+		return INIT
+	case "TRYOPEN":
+		return TRYOPEN
+	case "OPEN":
+		return OPEN
+	default:
+		return NONE
 	}
 }

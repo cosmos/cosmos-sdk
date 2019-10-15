@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 )
 
 // NewHandler defines the IBC handler
@@ -22,8 +23,20 @@ func NewHandler(k Keeper) sdk.Handler {
 		case client.MsgSubmitMisbehaviour:
 			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
 
+		case connection.MsgConnectionOpenInit:
+			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)
+
+		case connection.MsgConnectionOpenTry:
+			return connection.HandleMsgConnectionOpenTry(ctx, k.ConnectionKeeper, msg)
+
+		case connection.MsgConnectionOpenAck:
+			return connection.HandleMsgConnectionOpenAck(ctx, k.ConnectionKeeper, msg)
+
+		case connection.MsgConnectionOpenConfirm:
+			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
+
 		default:
-			errMsg := fmt.Sprintf("unrecognized IBC Client message type: %T", msg)
+			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

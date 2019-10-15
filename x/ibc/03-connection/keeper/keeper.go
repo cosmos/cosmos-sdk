@@ -87,7 +87,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace)
+		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
 	}
 
 	conns = append(conns, connectionID)
@@ -102,7 +102,7 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace)
+		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
 	}
 
 	conns, ok := removePath(conns, connectionID)
@@ -166,8 +166,7 @@ func (k Keeper) applyPrefix(prefix ics23.Prefix, path string) string {
 // checkVersion is an opaque function defined by the host state machine which
 // determines if two versions are compatible
 func checkVersion(version, counterpartyVersion string) bool {
-	// TODO:
-	return true
+	return version == counterpartyVersion
 }
 
 // removePath is an util function to remove a path from a set.

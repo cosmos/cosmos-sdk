@@ -5,7 +5,6 @@ import (
 	ics02exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	ics02types "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 )
 
 // ClientKeeper expected account IBC client keeper

@@ -1,40 +1,13 @@
-package ics03
+package connection
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-// NewHandler creates a new Handler instance for IBC connection
-// transactions
-func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-		switch msg := msg.(type) {
-		case types.MsgConnectionOpenInit:
-			return handleMsgConnectionOpenInit(ctx, k, msg)
-
-		case types.MsgConnectionOpenTry:
-			return handleMsgConnectionOpenTry(ctx, k, msg)
-
-		case types.MsgConnectionOpenAck:
-			return handleMsgConnectionOpenAck(ctx, k, msg)
-
-		case types.MsgConnectionOpenConfirm:
-			return handleMsgConnectionOpenConfirm(ctx, k, msg)
-
-		default:
-			errMsg := fmt.Sprintf("unrecognized IBC connection message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
-	}
-}
-
-func handleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenInit) sdk.Result {
+// HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
+func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenInit) sdk.Result {
 	err := k.ConnOpenInit(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -56,7 +29,8 @@ func handleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) sdk.Result {
+// HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
+func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) sdk.Result {
 	err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofHeight, msg.ConsensusHeight)
@@ -80,7 +54,8 @@ func handleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) sdk.Result {
+// HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
+func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) sdk.Result {
 	err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry,
 		msg.ProofHeight, msg.ConsensusHeight,
@@ -104,7 +79,8 @@ func handleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) sdk.Result {
+// HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
+func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) sdk.Result {
 	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)

@@ -8,14 +8,14 @@ import (
 
 // IBC client events
 const (
-	EventTypeCreateClient       = "create_client"
-	EventTypeUpdateClient       = "update_client"
-	EventTypeSubmitMisbehaviour = "submit_misbehaviour"
-
 	AttributeKeyClientID = "client_id"
 )
 
 // IBC client events vars
 var (
+	EventTypeCreateClient       = MsgCreateClient{}.Type()
+	EventTypeUpdateClient       = MsgUpdateClient{}.Type()
+	EventTypeSubmitMisbehaviour = MsgSubmitMisbehaviour{}.Type()
+
 	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

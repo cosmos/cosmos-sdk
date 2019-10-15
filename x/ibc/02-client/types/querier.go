@@ -2,15 +2,15 @@ package types
 
 // query routes supported by the IBC client Querier
 const (
-	QueryClientState    = "clientState"
-	QueryConsensusState = "consensusState"
-	QueryCommitmentPath = "commitmentPath"
+	QueryClientState    = "client_state"
+	QueryConsensusState = "consensus_state"
+	QueryCommitmentPath = "commitment_path"
 	QueryCommitmentRoot = "roots"
 )
 
 // QueryClientStateParams defines the params for the following queries:
-// - 'custom/ibc/clients/<clientID>/clientState'
-// - 'custom/ibc/clients/<clientID>/consensusState'
+// - 'custom/ibc/clients/<clientID>/client_state'
+// - 'custom/ibc/clients/<clientID>/consensus_state'
 type QueryClientStateParams struct {
 	ClientID string
 }

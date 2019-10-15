@@ -1,35 +1,11 @@
-package ics02
+package client
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewHandler creates a new Handler instance for IBC client
-// transactions
-func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-		switch msg := msg.(type) {
-		case MsgCreateClient:
-			return handleMsgCreateClient(ctx, k, msg)
-
-		case MsgUpdateClient:
-			return handleMsgUpdateClient(ctx, k, msg)
-
-		case MsgSubmitMisbehaviour:
-			return handleMsgSubmitMisbehaviour(ctx, k, msg)
-
-		default:
-			errMsg := fmt.Sprintf("unrecognized IBC Client message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
-		}
-	}
-}
-
-func handleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
+// HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
+func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
 	_, err := k.CreateClient(ctx, msg.ClientID, msg.ClientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -50,7 +26,8 @@ func handleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.R
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.Result {
+// HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
+func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.Result {
 	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -68,11 +45,11 @@ func handleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.R
 		),
 	})
 
-	// TODO: events
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgSubmitMisbehaviour(ctx sdk.Context, k Keeper, msg MsgSubmitMisbehaviour) sdk.Result {
+// HandleMsgSubmitMisbehaviour defines the sdk.Handler for MsgSubmitMisbehaviour
+func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k Keeper, msg MsgSubmitMisbehaviour) sdk.Result {
 	err := k.CheckMisbehaviourAndUpdateState(ctx, msg.ClientID, msg.Evidence)
 	if err != nil {
 		return sdk.ResultFromError(err)

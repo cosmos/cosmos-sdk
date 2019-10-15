@@ -208,6 +208,28 @@ definitions:
           $ref: '#/definitions/types.Validator'
         type: array
     type: object
+  rest.mintAnnualProvisions:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
+  rest.mintInflation:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
+  rest.mintParams:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/types.Params'
+        type: object
+    type: object
   rest.params:
     properties:
       height:
@@ -713,24 +735,16 @@ definitions:
     type: object
   types.Params:
     properties:
-      blocks_per_year:
-        description: expected blocks per year
+      max_memo_characters:
         type: integer
-      goal_bonded:
-        description: goal of percent bonded atoms
-        type: string
-      inflation_max:
-        description: maximum inflation rate
-        type: string
-      inflation_min:
-        description: minimum inflation rate
-        type: string
-      inflation_rate_change:
-        description: maximum annual change in inflation rate
-        type: string
-      mint_denom:
-        description: type of coin to mint
-        type: string
+      sig_verify_cost_ed25519:
+        type: integer
+      sig_verify_cost_secp256k1:
+        type: integer
+      tx_sig_limit:
+        type: integer
+      tx_size_cost_per_byte:
+        type: integer
     type: object
   types.Pool:
     properties:
@@ -1548,6 +1562,48 @@ paths:
       summary: Query a governance proposal's individual vote
       tags:
       - governance
+  /minting/inflation:
+    get:
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.mintAnnualProvisions'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Current minting annual provisions value
+      tags:
+      - mint
+  /minting/parameters:
+    get:
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.mintParams'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Minting module parameters
+      tags:
+      - mint
   /slashing/parameters:
     get:
       description: Get the current slashing parameters

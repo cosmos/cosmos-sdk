@@ -735,18 +735,16 @@ definitions:
     type: object
   types.Params:
     properties:
-      downtime_jail_duration:
-        type: string
-      max_evidence_age:
-        type: string
-      min_signed_per_window:
-        type: string
-      signed_blocks_window:
+      max_memo_characters:
         type: integer
-      slash_fraction_double_sign:
-        type: string
-      slash_fraction_downtime:
-        type: string
+      sig_verify_cost_ed25519:
+        type: integer
+      sig_verify_cost_secp256k1:
+        type: integer
+      tx_sig_limit:
+        type: integer
+      tx_size_cost_per_byte:
+        type: integer
     type: object
   types.Pool:
     properties:
@@ -1628,6 +1626,28 @@ paths:
       summary: Get the current slashing parameters
       tags:
       - slashing
+  /slashing/signing_infos:
+    get:
+      description: Get the signing info of all validators
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorsSigningInfo'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Get the signing info of all validators
+      tags:
+      - slashing
   /slashing/validators/{validatorAddr}/unjai:
     post:
       consumes:
@@ -1670,7 +1690,7 @@ paths:
       - slashing
   /slashing/validators/{validatorPubKey}/signing_info:
     get:
-      description: Get sign info of given validator
+      description: Get the signing info of a given validator by public key
       parameters:
       - description: Bech32 validator public key
         in: path
@@ -1697,7 +1717,7 @@ paths:
           description: Returned on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
-      summary: Get sign info of given validator
+      summary: Get the signing info of a given validator
       tags:
       - slashing
   /staking/delegators/{delegatorAddr}/delegations:
@@ -2165,33 +2185,6 @@ paths:
       summary: Query all redelegations with filters
       tags:
       - staking
-  /staking/signing_infos:
-    get:
-      description: Get sign info of all validator
-      parameters:
-      - description: Bech32 validator public key
-        in: path
-        name: validatorPubKey
-        required: true
-        type: string
-      - description: Block height to execute query (defaults to chain tip)
-        in: query
-        name: height
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.validatorsSigningInfo'
-        "500":
-          description: Returned on server error
-          schema:
-            $ref: '#/definitions/rest.ErrorResponse'
-      summary: Get sign info of all validator
-      tags:
-      - slashing
   /staking/validators:
     get:
       description: Query paginated validators filtering by status

@@ -42,7 +42,7 @@ type (
 		BaseReq           rest.BaseReq          `json:"base_req" yaml:"base_req"`
 		ValidatorAddress  sdk.ValAddress        `json:"validator_address" yaml:"validator_address"` // in bech32
 		Pubkey            string                `json:"pubkey" yaml:"pubkey"`
-		Value             sdk.Coin              `json:"value" yaml:"value"`
+		Amount             sdk.Coin              `json:"amount" yaml:"amount"`
 		Description       types.Description     `json:"description" yaml:"description"`
 		Commission        types.CommissionRates `json:"commission" yaml:"commission"`
 		MinSelfDelegation sdk.Int               `json:"min_self_delegation" yaml:"min_self_delegation"`

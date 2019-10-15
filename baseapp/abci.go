@@ -164,8 +164,10 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) 
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
 		result = err.Result()
-	} else {
+	} else if req.Type == abci.CheckTxType_New {
 		result = app.runTx(runTxModeCheck, req.Tx, tx)
+	} else {
+		result = app.runTx(runTxModeReCheck, req.Tx, tx)
 	}
 
 	return abci.ResponseCheckTx{

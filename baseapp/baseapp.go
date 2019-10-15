@@ -24,6 +24,8 @@ import (
 const (
 	// Check a transaction
 	runTxModeCheck runTxMode = iota
+	// Recheck a transaction
+	runTxModeReCheck runTxMode = iota
 	// Simulate a transaction
 	runTxModeSimulate runTxMode = iota
 	// Deliver a transaction
@@ -481,6 +483,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 		WithVoteInfos(app.voteInfos).
 		WithConsensusParams(app.consensusParams)
 
+	if mode == runTxModeReCheck {
+		ctx = ctx.WithIsReCheckTx(true)
+	}
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
@@ -653,8 +658,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		var msgResult sdk.Result
 
-		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
+		// skip actual execution for CheckTx and ReCheckTx mode
+		if mode != runTxModeCheck && mode != runTxModeReCheck {
 			msgResult = handler(ctx, msg)
 		}
 

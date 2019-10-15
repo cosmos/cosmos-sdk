@@ -163,6 +163,10 @@ func NewSigVerificationDecorator(ak keeper.AccountKeeper) SigVerificationDecorat
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	// no need to verify signatures on recheck tx
+	if ctx.IsReCheckTx() {
+		return next(ctx, tx, simulate)
+	}
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -220,6 +224,10 @@ func NewIncrementSequenceDecorator(ak keeper.AccountKeeper) IncrementSequenceDec
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	// no need to increment sequence on check tx
+	if ctx.IsCheckTx() {
+		return next(ctx, tx, simulate)
+	}
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")

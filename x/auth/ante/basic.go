@@ -74,6 +74,8 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 // before calling next AnteHandler
 //
 // CONTRACT: If simulate=true, then signatures must either be completely filled in or empty
+// CONTRACT: To use this decorator, signatures of transaction must be represented as types.StdSignature
+// otherwise simulate mode will incorrectly estimate gas cost
 type ConsumeTxSizeGasDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -110,6 +112,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			} else {
 				pubkey = acc.GetPubKey()
 			}
+			// use stdsignature to mock the size of a full signature
 			simSig := types.StdSignature{
 				Signature: simSecp256k1Sig[:],
 				PubKey:    pubkey,

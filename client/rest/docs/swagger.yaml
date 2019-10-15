@@ -13,6 +13,17 @@ definitions:
         format: base64
         type: string
     type: object
+  common.PrettyParams:
+    properties:
+      base_proposer_reward:
+        type: string
+      bonus_proposer_reward:
+        type: string
+      community_tax:
+        type: string
+      withdraw_addr_enabled:
+        type: string
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -144,6 +155,15 @@ definitions:
         description: in bech32
         type: string
     type: object
+  rest.ValidatorDistInfo:
+    properties:
+      operator_address:
+        type: string
+      self_bond_rewards:
+        type: string
+      val_commission:
+        type: string
+    type: object
   rest.VoteReq:
     properties:
       base_req:
@@ -154,6 +174,13 @@ definitions:
         type: string
       voter:
         description: address of the voter
+        type: string
+    type: object
+  rest.coinsReturn:
+    properties:
+      height:
+        type: integer
+      result:
         type: string
     type: object
   rest.delegation:
@@ -208,6 +235,13 @@ definitions:
           $ref: '#/definitions/types.Validator'
         type: array
     type: object
+  rest.delegatorWithdrawalAddr:
+    properties:
+      height:
+        type: integer
+      result:
+        type: string
+    type: object
   rest.mintAnnualProvisions:
     properties:
       height:
@@ -235,7 +269,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.Params'
+        $ref: '#/definitions/common.PrettyParams'
         type: object
     type: object
   rest.pool:
@@ -439,6 +473,22 @@ definitions:
           $ref: '#/definitions/types.StdSignature'
         type: array
     type: object
+  rest.setDelegatorWithdrawalAddr:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgSetWithdrawAddress'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
   rest.totalDenomSupply:
     properties:
       height:
@@ -479,6 +529,14 @@ definitions:
         $ref: '#/definitions/types.DelegationResponses'
         type: object
     type: object
+  rest.validatorInfo:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/rest.ValidatorDistInfo'
+        type: object
+    type: object
   rest.validatorUnbondingDelegations:
     properties:
       height:
@@ -495,6 +553,38 @@ definitions:
       result:
         items:
           $ref: '#/definitions/types.Validator'
+        type: array
+    type: object
+  rest.withdrawDelegatorReward:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgWithdrawDelegatorReward'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
+    type: object
+  rest.withdrawValidatorRewards:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgWithdrawValidatorCommission'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
         type: array
     type: object
   types.ABCIMessageLog:
@@ -670,6 +760,13 @@ definitions:
       to_address:
         type: string
     type: object
+  types.MsgSetWithdrawAddress:
+    properties:
+      delegator_address:
+        type: string
+      withdraw_address:
+        type: string
+    type: object
   types.MsgSubmitProposal:
     properties:
       content:
@@ -701,6 +798,18 @@ definitions:
         type: integer
       voter:
         description: address of the voter
+        type: string
+    type: object
+  types.MsgWithdrawDelegatorReward:
+    properties:
+      delegator_address:
+        type: string
+      validator_address:
+        type: string
+    type: object
+  types.MsgWithdrawValidatorCommission:
+    properties:
+      validator_address:
         type: string
     type: object
   types.Params:
@@ -1110,6 +1219,430 @@ paths:
       summary: Query account balances
       tags:
       - bank
+  /distribution/community_pool:
+    get:
+      description: Query community pool data
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.coinsReturn'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query community pool data
+      tags:
+      - distribution
+  /distribution/delegators/{delegatorAddr}/rewards:
+    get:
+      description: Query all delegation rewards from a single delegator address
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.coinsReturn'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query all delegation rewards from a delegator
+      tags:
+      - distribution
+    post:
+      consumes:
+      - application/json
+      description: Generate a withdraw delegator rewards transaction that is ready
+        for signing
+      parameters:
+      - description: delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The data required to withdraw rewards
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/withdrawRewardsReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.withdrawDelegatorReward'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a withdraw delegator rewards transaction
+      tags:
+      - distribution
+  /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}:
+    get:
+      description: Query delegation rewards from a single delegator address
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.coinsReturn'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query delegation rewards
+      tags:
+      - distribution
+    post:
+      consumes:
+      - application/json
+      description: Generate a withdraw delegation rewards transaction that is ready
+        for signing
+      parameters:
+      - description: delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: delegator validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: The data required to withdraw rewards
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/withdrawRewardsReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.withdrawDelegatorReward'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a withdraw delegation rewards transaction
+      tags:
+      - distribution
+  /distribution/delegators/{delegatorAddr}/withdraw_address:
+    get:
+      description: Query withdraw address from a single delegator address
+      parameters:
+      - description: The address of the delegator
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.delegatorWithdrawalAddr'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query delegator withdraw address
+      tags:
+      - distribution
+    post:
+      consumes:
+      - application/json
+      description: Generate a withdraw address change transaction that is ready for
+        signing
+      parameters:
+      - description: delegator address
+        in: path
+        name: delegatorAddr
+        required: true
+        type: string
+      - description: The data required to set withdraw address
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/setWithdrawalAddrReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.setDelegatorWithdrawalAddr'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a withdraw address change transaction
+      tags:
+      - distribution
+  /distribution/parameters:
+    get:
+      description: Query distribution params data
+      parameters:
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.params'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query distribution params data
+      tags:
+      - distribution
+  /distribution/validators/{validatorAddr}:
+    get:
+      description: Query validator distribution information from a single validator
+      parameters:
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.validatorInfo'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query validator distribution information
+      tags:
+      - distribution
+  /distribution/validators/{validatorAddr}/outstanding_rewards:
+    get:
+      description: Query validator rewards information from a single validator
+      parameters:
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.coinsReturn'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query validator outstanding rewards information
+      tags:
+      - distribution
+  /distribution/validators/{validatorAddr}/rewards:
+    get:
+      description: Query validator rewards information from a single validator
+      parameters:
+      - description: The address of the validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.coinsReturn'
+        "400":
+          description: Returned if the request doesn't have a valid height
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query validator rewards information
+      tags:
+      - distribution
+    post:
+      consumes:
+      - application/json
+      description: Generate a withdraw validator rewards transaction that is ready
+        for signing
+      parameters:
+      - description: delegator validator
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: The data required to withdraw rewards
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/withdrawRewardsReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.withdrawValidatorRewards'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a withdraw validator rewards transaction
+      tags:
+      - distribution
   /gov/parameters/{type}:
     get:
       description: Query either (deposit | tallying | voting) parameters of the governance

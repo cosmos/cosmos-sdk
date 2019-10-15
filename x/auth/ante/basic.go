@@ -5,6 +5,8 @@ import (
 	err "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/tendermint/tendermint/crypto/multisig"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -69,6 +71,8 @@ func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 
 // ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional to the size of tx
 // before calling next AnteHandler
+//
+// CONTRACT: If simulate=true, then signatures must either be completely filled in or empty
 type ConsumeTxSizeGasDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -80,8 +84,38 @@ func NewConsumeGasForTxSizeDecorator(ak keeper.AccountKeeper) ConsumeTxSizeGasDe
 }
 
 func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	sigTx, ok := tx.(SigVerifiableTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
 	params := cgts.ak.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(ctx.TxBytes())), "txSize")
+
+	// simulate gas cost if the signature array is empty
+	if simulate && len(sigTx.GetSignatures()) == 0 {
+		for _, signer := range sigTx.GetSigners() {
+			acc := cgts.ak.GetAccount(ctx, signer)
+			pubkey := acc.GetPubKey()
+			// use placeholder simSecp256k1Pubkey if sig is nil
+			if pubkey == nil {
+				pubkey = simSecp256k1Pubkey
+			}
+			simSig := types.StdSignature{
+				Signature: simSecp256k1Sig[:],
+				PubKey:    pubkey,
+			}
+			sigBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
+			cost := sdk.Gas(len(sigBz) + 6)
+
+			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+			// number of signers.
+			if _, ok := pubkey.(multisig.PubKeyMultisigThreshold); ok {
+				cost *= params.TxSigLimit
+			}
+
+			ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
+		}
+	}
 
 	return next(ctx, tx, simulate)
 }

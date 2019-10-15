@@ -135,7 +135,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 		pubKey := signerAcc.GetPubKey()
 
-		if simulate {
+		if simulate && pubKey == nil {
 			// In simulate mode the transaction comes with no signatures, thus if the
 			// account's pubkey is nil, both signature verification and gasKVStore.Set()
 			// shall consume the largest amount, i.e. it takes more gas to verify
@@ -143,11 +143,6 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 			if pubKey == nil {
 				pubKey = simSecp256k1Pubkey
 			}
-			// Simulated txs should not contain a signature and are not required to
-			// contain a pubkey, so we must account for tx size of including a
-			// StdSignature (Amino encoding) and simulate gas consumption
-			// (assuming a SECP256k1 simulation key).
-			consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 		}
 		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
 		if err != nil {
@@ -321,29 +316,6 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 			sigIndex++
 		}
 	}
-}
-
-// Internal function that simulates gas consumption of signature verification when simulate=true
-// TODO: allow users to simulate signatures other than auth.StdSignature
-func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig []byte, params types.Params) {
-	simSig := types.StdSignature{
-		Signature: sig,
-		PubKey:    pubkey,
-	}
-	if len(sig) == 0 {
-		simSig.Signature = simSecp256k1Sig[:]
-	}
-
-	sigBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
-	cost := sdk.Gas(len(sigBz) + 6)
-
-	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
-	// number of signers.
-	if _, ok := pubkey.(multisig.PubKeyMultisigThreshold); ok {
-		cost *= params.TxSigLimit
-	}
-
-	gasmeter.ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

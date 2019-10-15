@@ -11,11 +11,9 @@ import (
 )
 
 // EncodeResp defines a tx encoding response.
-type (
-	EncodeResp struct {
-		Tx string `json:"tx" yaml:"tx"`
-	}
-)
+type EncodeResp struct {
+	Tx string `json:"tx" yaml:"tx"`
+}
 
 // EncodeTxRequestHandlerFn returns the encode tx REST handler. In particular,
 // it takes a json-formatted transaction, encodes it to the Amino wire protocol,
@@ -24,7 +22,7 @@ type (
 // @Summary Encode a transaction to the Amino wire format
 // @Description Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
 // @Tags Transactions
-// @Accept  json
+// @Accept json
 // @Produce json
 // @Param tx body types.StdTx true "The tx to encode"
 // @Success 200 {object} rest.EncodeResp

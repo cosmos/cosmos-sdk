@@ -27,7 +27,7 @@ type (
 // @Summary Decode a transaction from the Amino wire format
 // @Description Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
 // @Tags Transactions
-// @Accept  json
+// @Accept json
 // @Produce json
 // @Param tx body rest.DecodeReq true "The tx to decode"
 // @Success 200 {object} rest.DecodeResp

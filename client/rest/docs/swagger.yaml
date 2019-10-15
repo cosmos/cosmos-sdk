@@ -509,6 +509,14 @@ definitions:
           $ref: '#/definitions/auth.StdSignature'
         type: array
     type: object
+  rest.setWithdrawalAddrReq:
+    properties:
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      withdraw_address:
+        type: string
+    type: object
   rest.totalDenomSupply:
     properties:
       height:
@@ -607,6 +615,12 @@ definitions:
         items:
           $ref: '#/definitions/auth.StdSignature'
         type: array
+    type: object
+  rest.withdrawRewardsReq:
+    properties:
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
     type: object
   rest.withdrawValidatorRewards:
     properties:
@@ -847,18 +861,16 @@ definitions:
     type: object
   types.Params:
     properties:
-      downtime_jail_duration:
-        type: string
-      max_evidence_age:
-        type: string
-      min_signed_per_window:
-        type: string
-      signed_blocks_window:
+      max_memo_characters:
         type: integer
-      slash_fraction_double_sign:
-        type: string
-      slash_fraction_downtime:
-        type: string
+      sig_verify_cost_ed25519:
+        type: integer
+      sig_verify_cost_secp256k1:
+        type: integer
+      tx_sig_limit:
+        type: integer
+      tx_size_cost_per_byte:
+        type: integer
     type: object
   types.Pool:
     properties:
@@ -1329,7 +1341,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/withdrawRewardsReq'
+          $ref: '#/definitions/rest.withdrawRewardsReq'
           type: object
       produces:
       - application/json
@@ -1414,7 +1426,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/withdrawRewardsReq'
+          $ref: '#/definitions/rest.withdrawRewardsReq'
           type: object
       produces:
       - application/json
@@ -1489,7 +1501,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/setWithdrawalAddrReq'
+          $ref: '#/definitions/rest.setWithdrawalAddrReq'
           type: object
       produces:
       - application/json
@@ -1652,7 +1664,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/withdrawRewardsReq'
+          $ref: '#/definitions/rest.withdrawRewardsReq'
           type: object
       produces:
       - application/json

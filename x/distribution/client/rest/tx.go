@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -53,14 +52,6 @@ type (
 	}
 )
 
-// withdrawDelegatorReward is used to generate documentation for withdrawDelegatorRewardHandlerFn
-type withdrawDelegatorReward struct { // nolint: deadcode unused
-	Msgs       []types.MsgWithdrawDelegatorReward `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee                        `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature                `json:"signatures" yaml:"signatures"`
-	Memo       string                             `json:"memo" yaml:"memo"`
-}
-
 // withdrawDelegatorRewardsHandlerFn implements a withdraw rewards handler that is responsible
 // for constructing a properly formatted delegator withdraw transaction for signing
 //
@@ -70,8 +61,8 @@ type withdrawDelegatorReward struct { // nolint: deadcode unused
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} withdrawDelegatorReward
+// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} rest.withdrawDelegatorReward
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -115,8 +106,8 @@ func withdrawDelegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute str
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
 // @Param validatorAddr path string true "delegator validator"
-// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} withdrawDelegatorReward
+// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} rest.withdrawDelegatorReward
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -156,14 +147,6 @@ func withdrawDelegationRewardsHandlerFn(cliCtx context.CLIContext) http.HandlerF
 	}
 }
 
-// setDelegatorWithdrawalAddr is used to generate documentation for setDelegatorWithdrawalAddrHandllerFn
-type setDelegatorWithdrawalAddr struct { // nolint: deadcode unused
-	Msgs       []types.MsgSetWithdrawAddress `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee                   `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature           `json:"signatures" yaml:"signatures"`
-	Memo       string                        `json:"memo" yaml:"memo"`
-}
-
 // setDelegatorWithdrawalAddrHandlerFn implements a set withdraw address handler that is responsible
 // for constructing a properly formatted withdraw address change transaction for signing
 //
@@ -173,8 +156,8 @@ type setDelegatorWithdrawalAddr struct { // nolint: deadcode unused
 // @Accept  json
 // @Produce  json
 // @Param delegatorAddr path string true "delegator address"
-// @Param body body setWithdrawalAddrReq true "The data required to set withdraw address"
-// @Success 200 {object} setDelegatorWithdrawalAddr
+// @Param body body rest.setWithdrawalAddrReq true "The data required to set withdraw address"
+// @Success 200 {object} rest.setDelegatorWithdrawalAddr
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"
@@ -209,14 +192,6 @@ func setDelegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext) http.Handler
 	}
 }
 
-// withdrawValidatorRewards is used to generate documentation for withdrawValidatorRewardsHandllerFn
-type withdrawValidatorRewards struct { // nolint: deadcode unused
-	Msgs       []types.MsgWithdrawValidatorCommission `json:"msg" yaml:"msg"`
-	Fee        auth.StdFee                            `json:"fee" yaml:"fee"`
-	Signatures []auth.StdSignature                    `json:"signatures" yaml:"signatures"`
-	Memo       string                                 `json:"memo" yaml:"memo"`
-}
-
 // withdrawValidatorRewardsHandlerFn implements a withdraw rewards handler that is responsible
 // for constructing a properly formatted validator withdraw transaction for signing
 //
@@ -226,8 +201,8 @@ type withdrawValidatorRewards struct { // nolint: deadcode unused
 // @Accept  json
 // @Produce  json
 // @Param validatorAddr path string true "delegator validator"
-// @Param body body withdrawRewardsReq true "The data required to withdraw rewards"
-// @Success 200 {object} withdrawValidatorRewards
+// @Param body body rest.withdrawRewardsReq true "The data required to withdraw rewards"
+// @Success 200 {object} rest.withdrawValidatorRewards
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
 // @Failure 401 {object} rest.ErrorResponse "Returned if chain-id required but not present"
 // @Failure 402 {object} rest.ErrorResponse "Returned if fees or gas are invalid"

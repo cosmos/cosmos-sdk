@@ -239,7 +239,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 // @Produce json
 // @Param validatorAddr path string true "The address of the validator"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} coinsReturn
+// @Success 200 {object} rest.coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/validators/{validatorAddr}/rewards [get]
@@ -301,7 +301,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerF
 // @Tags distribution
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} coinsReturn
+// @Success 200 {object} rest.coinsReturn
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/community_pool [get]

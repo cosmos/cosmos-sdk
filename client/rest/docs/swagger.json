@@ -219,7 +219,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/withdrawRewardsReq"
+                            "$ref": "#/definitions/rest.withdrawRewardsReq"
                         }
                     }
                 ],
@@ -344,7 +344,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/withdrawRewardsReq"
+                            "$ref": "#/definitions/rest.withdrawRewardsReq"
                         }
                     }
                 ],
@@ -455,7 +455,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/setWithdrawalAddrReq"
+                            "$ref": "#/definitions/rest.setWithdrawalAddrReq"
                         }
                     }
                 ],
@@ -700,7 +700,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/withdrawRewardsReq"
+                            "$ref": "#/definitions/rest.withdrawRewardsReq"
                         }
                     }
                 ],
@@ -3373,6 +3373,18 @@
                 }
             }
         },
+        "rest.setWithdrawalAddrReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "withdraw_address": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.totalDenomSupply": {
             "type": "object",
             "properties": {
@@ -3521,6 +3533,15 @@
                     "items": {
                         "$ref": "#/definitions/auth.StdSignature"
                     }
+                }
+            }
+        },
+        "rest.withdrawRewardsReq": {
+            "type": "object",
+            "properties": {
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
                 }
             }
         },
@@ -3867,23 +3888,20 @@
         "types.Params": {
             "type": "object",
             "properties": {
-                "downtime_jail_duration": {
-                    "type": "string"
-                },
-                "max_evidence_age": {
-                    "type": "string"
-                },
-                "min_signed_per_window": {
-                    "type": "string"
-                },
-                "signed_blocks_window": {
+                "max_memo_characters": {
                     "type": "integer"
                 },
-                "slash_fraction_double_sign": {
-                    "type": "string"
+                "sig_verify_cost_ed25519": {
+                    "type": "integer"
                 },
-                "slash_fraction_downtime": {
-                    "type": "string"
+                "sig_verify_cost_secp256k1": {
+                    "type": "integer"
+                },
+                "tx_sig_limit": {
+                    "type": "integer"
+                },
+                "tx_size_cost_per_byte": {
+                    "type": "integer"
                 }
             }
         },

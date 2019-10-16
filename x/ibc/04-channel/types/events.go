@@ -8,14 +8,6 @@ import (
 
 // IBC channel events
 const (
-	EventTypeSendPacket          = "send_packet"
-	EventTypeChannelOpenInit     = "channel_open_init"
-	EventTypeChannelOpenTry      = "channel_open_try"
-	EventTypeChannelOpenAck      = "channel_open_ack"
-	EventTypeChannelOpenConfirm  = "channel_open_confirm"
-	EventTypeChannelCloseInit    = "channel_close_init"
-	EventTypeChannelCloseConfirm = "channel_close_confirm"
-
 	AttributeKeySenderPort   = "sender_port"
 	AttributeKeyReceiverPort = "receiver_port"
 	AttributeKeyChannelID    = "channel_id"
@@ -24,5 +16,13 @@ const (
 
 // IBC channel events vars
 var (
+	EventTypeSendPacket          = MsgSendPacket{}.Type()
+	EventTypeChannelOpenInit     = MsgChannelOpenInit{}.Type()
+	EventTypeChannelOpenTry      = MsgChannelOpenTry{}.Type()
+	EventTypeChannelOpenAck      = MsgChannelOpenAck{}.Type()
+	EventTypeChannelOpenConfirm  = MsgChannelOpenConfirm{}.Type()
+	EventTypeChannelCloseInit    = MsgChannelCloseInit{}.Type()
+	EventTypeChannelCloseConfirm = MsgChannelCloseConfirm{}.Type()
+
 	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

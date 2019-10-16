@@ -35,7 +35,6 @@ func (k Keeper) ChanOpenInit(
 		return "", ics03types.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
-	// TODO: inconsistency on ICS03 (`none`) and ICS04 (`CLOSED`)
 	if connection.State == ics03types.NONE {
 		return "", errors.New("connection is closed")
 	}

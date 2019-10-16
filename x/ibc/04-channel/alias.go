@@ -27,13 +27,6 @@ const (
 	CodeInvalidPacketSequence      = types.CodeInvalidPacketSequence
 	CodeSequenceNotFound           = types.CodeSequenceNotFound
 	CodePacketTimeout              = types.CodePacketTimeout
-	EventTypeSendPacket            = types.EventTypeSendPacket
-	EventTypeChannelOpenInit       = types.EventTypeChannelOpenInit
-	EventTypeChannelOpenTry        = types.EventTypeChannelOpenTry
-	EventTypeChannelOpenAck        = types.EventTypeChannelOpenAck
-	EventTypeChannelOpenConfirm    = types.EventTypeChannelOpenConfirm
-	EventTypeChannelCloseInit      = types.EventTypeChannelCloseInit
-	EventTypeChannelCloseConfirm   = types.EventTypeChannelCloseConfirm
 	AttributeKeySenderPort         = types.AttributeKeySenderPort
 	AttributeKeyReceiverPort       = types.AttributeKeyReceiverPort
 	AttributeKeyChannelID          = types.AttributeKeyChannelID
@@ -73,12 +66,18 @@ var (
 	KeyNextSequenceRecv           = types.KeyNextSequenceRecv
 	KeyPacketCommitment           = types.KeyPacketCommitment
 	KeyPacketAcknowledgement      = types.KeyPacketAcknowledgement
-	NewPacket                     = types.NewPacket
 	NewQueryChannelParams         = types.NewQueryChannelParams
 
 	// variable aliases
-	SubModuleCdc           = types.SubModuleCdc
-	AttributeValueCategory = types.AttributeValueCategory
+	SubModuleCdc                 = types.SubModuleCdc
+	EventTypeSendPacket          = types.EventTypeSendPacket
+	EventTypeChannelOpenInit     = types.EventTypeChannelOpenInit
+	EventTypeChannelOpenTry      = types.EventTypeChannelOpenTry
+	EventTypeChannelOpenAck      = types.EventTypeChannelOpenAck
+	EventTypeChannelOpenConfirm  = types.EventTypeChannelOpenConfirm
+	EventTypeChannelCloseInit    = types.EventTypeChannelCloseInit
+	EventTypeChannelCloseConfirm = types.EventTypeChannelCloseConfirm
+	AttributeValueCategory       = types.AttributeValueCategory
 )
 
 type (
@@ -96,8 +95,6 @@ type (
 	MsgChannelCloseInit    = types.MsgChannelCloseInit
 	MsgChannelCloseConfirm = types.MsgChannelCloseConfirm
 	MsgSendPacket          = types.MsgSendPacket
-	Packet                 = types.Packet
 	OpaquePacket           = types.OpaquePacket
-	Port                   = types.Port
 	QueryChannelParams     = types.QueryChannelParams
 )

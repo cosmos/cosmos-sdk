@@ -1,26 +1,5 @@
 package types
 
-// ChannelOrder defines if a channel is ORDERED or UNORDERED
-type ChannelOrder byte
-
-// channel order types
-const (
-	UNORDERED ChannelOrder = iota // packets can be delivered in any order, which may differ from the order in which they were sent.
-	ORDERED                       // packets are delivered exactly in the order which they were sent
-)
-
-// ChannelState defines if a channel is in one of the following states:
-// CLOSED, INIT, OPENTRY or OPEN
-type ChannelState byte
-
-// channel state types
-const (
-	CLOSED  ChannelState = iota // A channel end has been closed and can no longer be used to send or receive packets.
-	INIT                        // A channel end has just started the opening handshake.
-	OPENTRY                     // A channel end has acknowledged the handshake step on the counterparty chain.
-	OPEN                        // A channel end has completed the handshake and is ready to send and receive packets.
-)
-
 type Channel struct {
 	State          ChannelState `json:"state" yaml:"state"`
 	Ordering       ChannelOrder `json:"ordering" yaml:"ordering"`
@@ -53,6 +32,7 @@ func (ch Channel) CounterpartyHops() []string {
 	return counterPartyHops
 }
 
+// Counterparty defines the counterparty chain's channel and port identifiers
 type Counterparty struct {
 	PortID    string `json:"port_id" yaml:"port_id"`
 	ChannelID string `json:"channel_id" yaml:"channel_id"`
@@ -63,5 +43,83 @@ func NewCounterparty(portID, channelID string) Counterparty {
 	return Counterparty{
 		PortID:    portID,
 		ChannelID: channelID,
+	}
+}
+
+// ChannelOrder defines if a channel is ORDERED or UNORDERED
+type ChannelOrder byte
+
+// channel order types
+const (
+	NONE      ChannelOrder = iota // zero-value for channel ordering
+	UNORDERED                     // packets can be delivered in any order, which may differ from the order in which they were sent.
+	ORDERED                       // packets are delivered exactly in the order which they were sent
+)
+
+// ChannelOrderToString returns the string representation of a channel order
+func ChannelOrderToString(order ChannelOrder) string {
+	switch order {
+	case UNORDERED:
+		return "UNORDERED"
+	case ORDERED:
+		return "ORDERED"
+	default:
+		return ""
+	}
+}
+
+// StringToChannelOrder parses a string into a channel order byte
+func StringToChannelOrder(order string) ChannelOrder {
+	switch order {
+	case "UNORDERED":
+		return UNORDERED
+	case "ORDERED":
+		return ORDERED
+	default:
+		return NONE
+	}
+}
+
+// ChannelState defines if a channel is in one of the following states:
+// CLOSED, INIT, OPENTRY or OPEN
+type ChannelState byte
+
+// channel state types
+const (
+	CLOSED  ChannelState = iota + 1 // A channel end has been closed and can no longer be used to send or receive packets.
+	INIT                            // A channel end has just started the opening handshake.
+	OPENTRY                         // A channel end has acknowledged the handshake step on the counterparty chain.
+	OPEN                            // A channel end has completed the handshake and is ready to send and receive packets.
+)
+
+// ChannelStateToString returns the string representation of a channel state
+func ChannelStateToString(state ChannelState) string {
+	switch state {
+	case CLOSED:
+		return "CLOSED"
+	case INIT:
+		return "INIT"
+	case OPENTRY:
+		return "OPENTRY"
+	case OPEN:
+		return "OPEN"
+	default:
+		return "CLOSED"
+	}
+}
+
+// StringToChannelState parses a string into a channel state byte
+func StringToChannelState(state string) ChannelState {
+	switch state {
+	case "CLOSED":
+		return CLOSED
+	case "INIT":
+		return INIT
+	case "OPENTRY":
+		return OPENTRY
+	case "OPEN":
+		return OPEN
+	default:
+		return CLOSED
 	}
 }

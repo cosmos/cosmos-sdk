@@ -57,6 +57,9 @@ func NewHandler(k Keeper) sdk.Handler {
 		case channel.MsgChannelCloseConfirm:
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, msg)
 
+		case channel.MsgSendPacket:
+			return channel.HandleMsgSendPacket(ctx, k.ChannelKeeper, msg)
+
 		default:
 			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()

@@ -74,6 +74,12 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
 
+	sum := sdk.ZeroDec()
+
+	k.IterateDoubleSignQueue(ctx, func(slashEvent types.SlashEvent) bool {
+		sum = sum.Add(slashEvent.Power.RoughSqrt())
+	})
+
 	// Slash validator
 	// `power` is the int64 power of the validator as provided to/by
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
@@ -109,6 +115,8 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+
+	k.InsertDoubleSignQueue(ctx, types.NewSlashEvent(validator.GetOperator()), timestamp.Add(k.sk.UnbondingTime(ctx)))
 }
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.

@@ -3,6 +3,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -42,6 +44,9 @@ type StakingKeeper interface {
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint16
+
+	// UnbondingTime returns the unbonding period duration
+	UnbondingTime(sdk.Context) time.Duration
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

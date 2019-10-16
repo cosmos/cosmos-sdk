@@ -318,6 +318,28 @@ func (d Dec) QuoInt64(i int64) Dec {
 	return Dec{mul}
 }
 
+// Takes a fast sqrt estimation using Newton's Method
+// Returns -(sqrt(abs(d)) if input is negative
+func (d Dec) RoughSqrt() Dec {
+	if d.IsNegative() {
+		return d.MulInt64(-1).RoughSqrt().MulInt64(-1)
+	}
+
+	if d.IsZero() {
+		return ZeroDec()
+	}
+
+	z := OneDec()
+	// First guess
+	z = z.Sub((z.Mul(z).Sub(d)).Quo(z.MulInt64(2)))
+	// Iterate until change is very small
+	for zNew, delta := z, z; delta.GT(SmallestDec()); z = zNew {
+		zNew = zNew.Sub((zNew.Mul(zNew).Sub(d)).Quo(zNew.MulInt64(2)))
+		delta = z.Sub(zNew)
+	}
+	return z
+}
+
 // is integer, e.g. decimals are zero
 func (d Dec) IsInteger() bool {
 	return new(big.Int).Rem(d.Int, precisionReuse).Sign() == 0

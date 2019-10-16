@@ -45,157 +45,106 @@ manner in which governance is extensible. It is important to note any concrete
 type implementing the `Evidence` interface may include arbitrary fields such as
 an infraction time. We want the `Evidence` type to remain as flexible as possible.
 
-However, when submitting evidence to the `x/evidence` module, it must be submitted
-as an `Infraction` which includes mandatory fields outlined below. The `Infraction`
-type must include the validator's consensus address, which should be known by the
-`x/slashing` module, the height at which the infraction occurred and the validator's
-power at same height in which the infraction occurred.
+When submitting evidence to the `x/evidence` module, the concrete type must provide
+the validator's consensus address, which should be known by the `x/slashing`
+module (assuming the infraction is valid), the height at which the infraction
+occurred and the validator's power at same height in which the infraction occurred.
 
 ```go
 type Evidence interface {
   Route() string
   Type() string
-  ValidateBasic() sdk.Error
   String() string
-}
-
-type Infraction struct {
-  Evidence
-
-  ConsensusAddress    sdk.ConsAddress
-  InfractionHeight    int64
-  Power               int64
+  
+  GetConsensusAddress() ConsAddress
+  GetInfractionHeight() int64
+  GetValidatorPower() int64
+  GetTotalPower() int64
+  
+  ValidateBasic() Error
 }
 ```
 
 ### Routing & Handling
 
 Each `Evidence` type must map to a specific unique route and be registered with
-the `x/evidence` module. It accomplishes this through the `Router` implementation. 
+the `x/evidence` module. It accomplishes this through the `Router` implementation.
 
 ```go
 type Router interface {
-  AddRoute(r string, h Handler) (rtr Router)
+  AddRoute(r string, h Handler) Router
   HasRoute(r string) bool
-  GetRoute(path string) (h Handler)
+  GetRoute(path string) Handler
   Seal()
 }
 ```
 
 Upon successful routing through the `x/evidence` module, the `Evidence` type
 is passed through a `Handler`. This `Handler` is responsible for executing all
-corresponding business logic necessary for verifying the evidence. If no error
-is returned, the `Evidence` is considered valid.
+corresponding business logic necessary for verifying the evidence as valid. In
+addition, the `Handler` may execute any necessary slashing and potential jailing.
+Since slashing fractions will typically result from some form of static functions,
+allow the `Handler` to do this provides the greatest flexibility. An example could
+be `k * evidence.GetValidatorPower()` where `k` is an on-chain parameter controlled
+by governance. The `Evidence` type should provide all the external information
+necessary in order for the `Handler` to make the necessary state transitions.
+If no error is returned, the `Evidence` is considered valid.
 
 ```go
-type Handler func(ctx sdk.Context, evidence Evidence) sdk.Error
+type Handler func(Context, Evidence) Error
 ```
 
 ### Submission
 
-Assuming the `Evidence` is valid, the corresponding slashing penalty is invoked
-for the `Evidence`'s `Type`. Keep in mind the slashing penalty for any `Type` can
-be configured through governance.
+`Evidence` is submitted through a `MsgSubmitEvidence` message type which is internally
+handled by the `x/evidence` module's `SubmitEvidence`.
 
 ```go
-type MsgSubmitInfraction struct {
-  Infraction
+type MsgSubmitEvidence struct {
+  Evidence
 }
 
-func handleMsgSubmitInfraction(ctx sdk.Context, keeper Keeper, msg MsgSubmitEvidence) sdk.Result {
-  if err := keeper.SubmitInfraction(ctx, msg.Infraction); err != nil {
+func handleMsgSubmitEvidence(ctx Context, keeper Keeper, msg MsgSubmitEvidence) Result {
+  if err := keeper.SubmitEvidence(ctx, msg.Evidence); err != nil {
     return err.Result()
   }
 
   // emit events...
 
-  return sdk.Result{
+  return Result{
     // ...
   }
 }
 ```
 
 The `x/evidence` module's keeper is responsible for matching the `Evidence` against
-the module's router. Upon success the validator is slashed and the infraction is
-persisted. In addition, the validator is jailed is the `Evidence` type is configured
-to do so.
+the module's router and invoking the corresponding `Handler` which may include
+slashing and jailing the validator. Upon success, the submitted evidence is persisted.
 
 ```go
-func (k Keeper) SubmitInfraction(ctx sdk.Context, infraction Infraction) sdk.Error {
-  handler := keeper.router.GetRoute(infraction.Evidence.Route())
-  if err := handler(cacheCtx, infraction.Evidence); err != nil {
-    return ErrInvalidEvidence(keeper.codespace, err.Result().Log)
+func (k Keeper) SubmitEvidence(ctx Context, evidence Evidence) Error {
+  handler := keeper.router.GetRoute(evidence.Route())
+  if err := handler(ctx, evidence); err != nil {
+    return ErrInvalidEvidence(keeper.codespace, err)
   }
 
-  penalty := keeper.GetSlashingPenalty(ctx, infraction.Evidence.Type())
-
-  keeper.stakingKeeper.Slash(
-    ctx,
-    infraction.ConsensusAddress,
-    infraction.InfractionHeight,
-    infraction.Power,
-    penalty.SlashFraction,
-  )
-
-  if penalty.Jailable {
-    keeper.stakingKeeper.Jail(ctx, infraction.ConsensusAddress)
-  }
-
-  keeper.setInfraction(ctx, infraction)
+  keeper.setEvidence(ctx, evidence)
+  return nil
 }
 ```
 
 ### Genesis
 
-We require the the `x/evidence` module's keeper to keep an internal persistent
-mapping between `Evidence` types and slashing penalties represented as `InfractionPenalty`.
-
-```go
-var slashingPenaltyPrefixKey = []byte{0x01}
-
-type InfractionPenalty struct {
-  EvidenceType    string
-  Penalty         sdk.Dec
-}
-
-func GetSlashingPenaltyKey(evidenceType string) []byte {
-  return append(slashingPenaltyPrefixKey, []byte(evidenceType)...)
-}
-
-func (k Keeper) GetSlashingPenalty(ctx sdk.Context, evidenceType string) sdk.Dec {
-  store := ctx.KVStore(k.storeKey)
-
-  bz := store.Get(GetSlashingPenaltyKey(evidenceType))
-  if len(bz) == 0 {
-    return sdk.ZeroDec()
-  }
-
-  var ip InfractionPenalty
-  k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &ip)
-
-  return ip.Penalty
-}
-```
-
 Finally, we need to represent the genesis state of the `x/evidence` module. The
-module only needs a list of all submitted valid infractions and the infraction
-penalties which we represent through parameters managed by the `x/params` module.
+module only needs a list of all submitted valid infractions and any necessary params
+for which the module needs in order to handle submitted evidence. The `x/evidence`
+module will naturally define and route native evidence types for which it'll most
+likely need slashing penalty constants for.
 
 ```go
-type PenaltyParam struct {
-  SlashFraction  sdk.Dec
-  Jailable       bool
-}
-
-type PenaltyParams struct {
-  // A series of misbehaviour penalties all of which are of type PenaltyParam
-  // and these can individually be changed through a governance parameter change
-  // proposal.
-}
-
 type GenesisState struct {
-  Params       PenaltyParams
-  Infractions  []Infraction
+  Params       Params
+  Infractions  []Evidence
 }
 ```
 
@@ -203,9 +152,11 @@ type GenesisState struct {
 
 ### Positive
 
-- Allows the state machine to process equivocations submitted on-chain and penalize
-validators based on agreed upon slashing parameters
-- Does not solely rely on Tendermint to submit evidence
+- Allows the state machine to process misbehavior submitted on-chain and penalize
+validators based on agreed upon slashing parameters.
+- Allows evidence types to be defined and handled by any module. This further allows
+slashing and jailing to be defined by more complex mechanisms.
+- Does not solely rely on Tendermint to submit evidence.
 
 ### Negative
 

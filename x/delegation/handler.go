@@ -10,7 +10,7 @@ func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case MsgDelegateFeeAllowance:
-			grant := FeeAllowanceGrant{Granter: msg.Granter, Grantee: msg.Grantee, Allowance: msg.Allowance}
+			grant := FeeAllowanceGrant(msg)
 			k.DelegateFeeAllowance(ctx, grant)
 			return sdk.Result{}
 		case MsgRevokeFeeAllowance:

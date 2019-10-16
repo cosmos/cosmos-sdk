@@ -92,7 +92,7 @@ func (k Keeper) GetAllFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]
 func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress, fee sdk.Coins) bool {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
 	if err != nil {
-		// we should acknowlegde a db issue somehow (better?)
+		// we should acknowledge a db issue somehow (better?)
 		ctx.Logger().Error(err.Error())
 		return false
 	}
@@ -108,7 +108,7 @@ func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter sdk.AccAddress, grante
 
 	// if we accepted, store the updated state of the allowance
 	if err := k.DelegateFeeAllowance(ctx, *grant); err != nil {
-		// we should acknowlegde a db issue somehow (better?)
+		// we should acknowledge a db issue somehow (better?)
 		ctx.Logger().Error(err.Error())
 		return false
 	}

@@ -66,7 +66,7 @@ func (e *ExpiresAt) Step(p Period) error {
 	if !e.Time.IsZero() {
 		e.Time = e.Time.Add(p.Clock)
 	} else {
-		e.Height = e.Height + p.Block
+		e.Height += p.Block
 	}
 	return nil
 }

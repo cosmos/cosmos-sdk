@@ -17,11 +17,11 @@ func TestBasicFeeValidAllow(t *testing.T) {
 
 	cases := map[string]struct {
 		allow BasicFeeAllowance
-		valid bool
-		// all below checks are ignored if invalid
+		// all other checks are ignored if valid=false
 		fee         sdk.Coins
 		blockTime   time.Time
 		blockHeight int64
+		valid       bool
 		accept      bool
 		remove      bool
 		remains     sdk.Coins

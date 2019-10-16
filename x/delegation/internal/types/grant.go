@@ -20,5 +20,8 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	if a.Grantee.Empty() {
 		return sdk.ErrInvalidAddress("missing grantee address")
 	}
+	if a.Grantee.Equals(a.Granter) {
+		return sdk.ErrInvalidAddress("cannot self-grant fees")
+	}
 	return a.Allowance.ValidateBasic()
 }

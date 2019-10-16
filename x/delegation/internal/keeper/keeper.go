@@ -42,10 +42,10 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter sdk.AccAddress, gran
 // Returns an error on parsing issues
 func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (exported.FeeAllowance, error) {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
-	if err != nil {
+	if grant == nil {
 		return nil, err
 	}
-	return grant.Allowance, nil
+	return grant.Allowance, err
 }
 
 // GetFeeGrant returns entire grant between both accounts

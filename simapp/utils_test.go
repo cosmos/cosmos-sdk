@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,23 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	delPk1    = ed25519.GenPrivKey().PubKey()
-	delAddr1  = sdk.AccAddress(delPk1.Address())
-	valAddr1  = sdk.ValAddress(delPk1.Address())
-	consAddr1 = sdk.ConsAddress(delPk1.Address().Bytes())
-)
-
-func makeTestCodec() (cdc *codec.Codec) {
-	cdc = codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	auth.RegisterCodec(cdc)
-	return
-}
-
 func TestGetSimulationLog(t *testing.T) {
-	cdc := makeTestCodec()
+	cdc := MakeCodec()
 
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[auth.StoreKey] = func(cdc *codec.Codec, kvAs, kvBs cmn.KVPair) string { return "10" }

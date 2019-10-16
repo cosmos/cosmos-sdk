@@ -229,7 +229,7 @@ See an example of an application's main command-line file [here](https://github.
 
 ## Dependencies and Makefile
 
-This section is optional, as developers are free to choose their depencency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version. An example can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/go.mod).
+This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version. An example can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/go.mod).
 
 For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefile) is generally used. The Makefile primarily ensures that the `go.mod` is run before building the two entrypoints to the application, [`appd`](#node-client) and [`appcli`](#application-interface). An example of Makefile can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/Makefile).
 

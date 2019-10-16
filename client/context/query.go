@@ -95,7 +95,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, height, errors.New(resp.Log)
+		return res, resp.Height, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -105,7 +105,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height i
 
 	err = ctx.verifyProof(path, resp)
 	if err != nil {
-		return res, height, err
+		return res, resp.Height, err
 	}
 
 	return resp.Value, resp.Height, nil

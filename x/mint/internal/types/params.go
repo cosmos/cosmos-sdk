@@ -59,7 +59,7 @@ func DefaultParams() Params {
 
 // validate params
 func ValidateParams(params Params) error {
-	if params.GoalBonded.LT(sdk.ZeroDec()) {
+	if params.GoalBonded.IsNegative() {
 		return fmt.Errorf("mint parameter GoalBonded should be positive, is %s ", params.GoalBonded.String())
 	}
 	if params.GoalBonded.GT(sdk.OneDec()) {
@@ -91,11 +91,11 @@ func (p Params) String() string {
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		{KeyMintDenom, &p.MintDenom},
-		{KeyInflationRateChange, &p.InflationRateChange},
-		{KeyInflationMax, &p.InflationMax},
-		{KeyInflationMin, &p.InflationMin},
-		{KeyGoalBonded, &p.GoalBonded},
-		{KeyBlocksPerYear, &p.BlocksPerYear},
+		{Key: KeyMintDenom, Value: &p.MintDenom},
+		{Key: KeyInflationRateChange, Value: &p.InflationRateChange},
+		{Key: KeyInflationMax, Value: &p.InflationMax},
+		{Key: KeyInflationMin, Value: &p.InflationMin},
+		{Key: KeyGoalBonded, Value: &p.GoalBonded},
+		{Key: KeyBlocksPerYear, Value: &p.BlocksPerYear},
 	}
 }

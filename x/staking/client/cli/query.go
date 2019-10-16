@@ -71,7 +71,7 @@ $ %s query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhff
 			}
 
 			if len(res) == 0 {
-				return fmt.Errorf("No validator found with address %s", addr)
+				return fmt.Errorf("no validator found with address %s", addr)
 			}
 
 			return cliCtx.PrintOutput(types.MustUnmarshalValidator(cdc, res))

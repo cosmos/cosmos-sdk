@@ -150,10 +150,8 @@ func TestABCIInfoStacktrace(t *testing.T) {
 				if !strings.Contains(log, tc.wantErrMsg) {
 					t.Errorf("log does not contain expected error message: %s", log)
 				}
-			} else {
-				if log != tc.wantErrMsg {
-					t.Fatalf("unexpected log message: %s", log)
-				}
+			} else if log != tc.wantErrMsg {
+				t.Fatalf("unexpected log message: %s", log)
 			}
 		})
 	}

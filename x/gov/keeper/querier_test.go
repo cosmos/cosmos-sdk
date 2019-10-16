@@ -54,22 +54,6 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	return depositParams, votingParams, tallyParams
 }
 
-func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) types.Proposal {
-	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposal}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryProposalParams(proposalID)),
-	}
-
-	bz, err := querier(ctx, []string{types.QueryProposal}, query)
-	require.NoError(t, err)
-	require.NotNil(t, bz)
-
-	var proposal types.Proposal
-	require.NoError(t, cdc.UnmarshalJSON(bz, proposal))
-
-	return proposal
-}
-
 func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status types.ProposalStatus, limit uint64) []types.Proposal {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposals}, "/"),
@@ -150,22 +134,6 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 	return votes
 }
 
-func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) types.TallyResult {
-	query := abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryTally}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryProposalParams(proposalID)),
-	}
-
-	bz, err := querier(ctx, []string{types.QueryTally}, query)
-	require.NoError(t, err)
-	require.NotNil(t, bz)
-
-	var tally types.TallyResult
-	require.NoError(t, cdc.UnmarshalJSON(bz, &tally))
-
-	return tally
-}
-
 func TestQueries(t *testing.T) {
 	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
 	querier := NewQuerier(keeper)
@@ -235,11 +203,6 @@ func TestQueries(t *testing.T) {
 	require.Len(t, deposits, 2)
 	// NOTE order of deposits is determined by the addresses
 	require.Equal(t, deposit2, deposits[0])
-	require.Equal(t, deposit4, deposits[1])
-
-	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[0])
-	require.Equal(t, deposit2, deposits[0])
-	deposit = getQueriedDeposit(t, ctx, keeper.cdc, querier, proposal2.ProposalID, TestAddrs[1])
 	require.Equal(t, deposit4, deposits[1])
 
 	// check deposits on proposal3 match individual deposits

@@ -45,7 +45,6 @@ func precisionInt() *big.Int {
 	return new(big.Int).Set(precisionReuse)
 }
 
-// nolint - common values
 func ZeroDec() Dec     { return Dec{new(big.Int).Set(zeroInt)} }
 func OneDec() Dec      { return Dec{precisionInt()} }
 func SmallestDec() Dec { return Dec{new(big.Int).Set(oneInt)} }
@@ -149,7 +148,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 		if lenDecs == 0 || len(combinedStr) == 0 {
 			return d, ErrUnknownRequest("bad decimal length")
 		}
-		combinedStr = combinedStr + strs[1]
+		combinedStr += strs[1]
 
 	} else if len(strs) > 2 {
 		return d, ErrUnknownRequest("too many periods to be a decimal string")
@@ -163,7 +162,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	// add some extra zero's to correct to the Precision factor
 	zerosToAdd := Precision - lenDecs
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
-	combinedStr = combinedStr + zeros
+	combinedStr += zeros
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
@@ -394,7 +393,6 @@ func (d Dec) String() string {
 // |_____:  /   | $$$    |
 //              |________|
 
-// nolint - go-cyclo
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
 //

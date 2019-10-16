@@ -153,23 +153,23 @@ func (e Error) Codespace() string {
 
 // Is check if given error instance is of a given kind/type. This involves
 // unwrapping given error using the Cause method if available.
-func (kind *Error) Is(err error) bool {
+func (e *Error) Is(err error) bool {
 	// Reflect usage is necessary to correctly compare with
 	// a nil implementation of an error.
-	if kind == nil {
+	if e == nil {
 		return isNilErr(err)
 	}
 
 	for {
-		if err == kind {
+		if err == e {
 			return true
 		}
 
 		// If this is a collection of errors, this function must return
 		// true if at least one from the group match.
 		if u, ok := err.(unpacker); ok {
-			for _, e := range u.Unpack() {
-				if kind.Is(e) {
+			for _, er := range u.Unpack() {
+				if e.Is(er) {
 					return true
 				}
 			}

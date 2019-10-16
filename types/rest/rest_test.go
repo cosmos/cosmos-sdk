@@ -18,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-type mockResponseWriter struct{}
-
 func TestBaseReqValidateBasic(t *testing.T) {
 	fromAddr := "cosmos1cq0sxam6x4l0sv9yz3a2vlqhdhvt2k6jtgcse0"
 	tenstakes, err := types.ParseCoins("10stake")
@@ -210,6 +208,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	PostProcessResponse(w, ctx, obj)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp := w.Result()
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)
@@ -227,6 +226,7 @@ func runPostProcessResponse(t *testing.T, ctx context.CLIContext, obj interface{
 	PostProcessResponse(w, ctx, marshalled)
 	require.Equal(t, http.StatusOK, w.Code, w.Body)
 	resp = w.Result()
+	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
 	require.Nil(t, err)
 	require.Equal(t, expectedBody, body)

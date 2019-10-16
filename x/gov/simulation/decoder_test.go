@@ -17,10 +17,8 @@ import (
 )
 
 var (
-	delPk1    = ed25519.GenPrivKey().PubKey()
-	delAddr1  = sdk.AccAddress(delPk1.Address())
-	valAddr1  = sdk.ValAddress(delPk1.Address())
-	consAddr1 = sdk.ConsAddress(delPk1.Address().Bytes())
+	delPk1   = ed25519.GenPrivKey().PubKey()
+	delAddr1 = sdk.AccAddress(delPk1.Address())
 )
 
 func makeTestCodec() (cdc *codec.Codec) {
@@ -66,9 +64,9 @@ func TestDecodeStore(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:
-				require.Panics(t, func() { DecodeStore(cdc, cdc, kvPairs[i], kvPairs[i]) }, tt.name)
+				require.Panics(t, func() { DecodeStore(cdc, kvPairs[i], kvPairs[i]) }, tt.name)
 			default:
-				require.Equal(t, tt.expectedLog, DecodeStore(cdc, cdc, kvPairs[i], kvPairs[i]), tt.name)
+				require.Equal(t, tt.expectedLog, DecodeStore(cdc, kvPairs[i], kvPairs[i]), tt.name)
 			}
 		})
 	}

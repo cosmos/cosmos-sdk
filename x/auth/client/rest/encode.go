@@ -21,12 +21,12 @@ type EncodeResp struct {
 //
 // @Summary Encode a transaction to the Amino wire format
 // @Description Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
-// @Tags Transactions
+// @Tags transactions
 // @Accept json
 // @Produce json
-// @Param tx body types.StdTx true "The tx to encode"
+// @Param tx body types.StdTx true "The transaction to encode"
 // @Success 200 {object} rest.EncodeResp
-// @Failure 400 {object} rest.ErrorResponse "The tx was malformated"
+// @Failure 400 {object} rest.ErrorResponse "The transaction was malformated"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs/encode [post]
 func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

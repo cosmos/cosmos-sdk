@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -17,7 +17,7 @@ type (
 	}
 
 	// DecodeResp defines a tx decoding response.
-	DecodeResp authtypes.StdTx
+	DecodeResp types.StdTx
 )
 
 // DecodeTxRequestHandlerFn returns the decode tx REST handler. In particular,
@@ -26,12 +26,12 @@ type (
 //
 // @Summary Decode a transaction from the Amino wire format
 // @Description Decode a transaction (signed or not) from base64-encoded Amino serialized bytes to JSON
-// @Tags Transactions
+// @Tags transactions
 // @Accept json
 // @Produce json
-// @Param tx body rest.DecodeReq true "The tx to decode"
+// @Param tx body rest.DecodeReq true "The transaction to decode"
 // @Success 200 {object} rest.DecodeResp
-// @Failure 400 {object} rest.ErrorResponse "The tx was malformated"
+// @Failure 400 {object} rest.ErrorResponse "The transaction was malformated"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs/decode [post]
 func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -56,7 +56,8 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		var stdTx authtypes.StdTx
+		var stdTx types.StdTx
+
 		err = cliCtx.Codec.UnmarshalBinaryLengthPrefixed(txBytes, &stdTx)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -64,6 +65,6 @@ func DecodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		response := DecodeResp(stdTx)
-		rest.PostProcessResponse(w, cliCtx, response)
+		rest.PostProcessResponseBare(w, cliCtx, response)
 	}
 }

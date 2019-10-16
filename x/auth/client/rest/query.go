@@ -16,19 +16,15 @@ import (
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
-type queryAccount struct { // nolint:unused,deadcode
-	Result types.BaseAccount `json:"result"`
-}
-
 // query accountREST Handler
 //
-// @Summary Query account balances
-// @Description Get the account information on blockchain
-// @Tags Auth
+// @Summary Query for an account by address
+// @Description Query for an account by address
+// @Tags auth
 // @Produce json
-// @Param address path string true "Account address to query"
+// @Param address path string true "The account address"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.queryAccount
+// @Success 200 {object} rest.accountQuery
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /auth/accounts/{address} [get]
 func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) http.HandlerFunc {
@@ -72,18 +68,17 @@ func QueryAccountRequestHandlerFn(storeName string, cliCtx context.CLIContext) h
 // Genesis transactions are returned if the height parameter is set to zero,
 // otherwise the transactions are searched for by events.
 //
-// @Summary Query txs by events
-// @Description Search transactions by events.
+// @Summary Query transactions by events
+// @Description Search transactions by events
 // @Description Genesis transactions are returned if the height parameter is set to zero,
 // @Description otherwise the transactions are searched for by events.
-// @Tags Transactions
+// @Tags transactions
 // @Produce json
-// @Param messageAction path string false "transaction events such as 'message.action=send'. note that each module documents its own events."
-// @Param messageSender path string false "transaction tags with sender: 'GET /txs?message.action=send&message.sender=cosmos16xyempempp92x9hyzz9wrgf94r6j9h5f06pxxv'"
-// @Param page path integer false "Page Number"
-// @Param limit path integer false "Maximum number of items per page"
+// @Param events query string true "Events to query for joined by ',' (e.g. 'message.action=send,...')"
+// @Param page query int false "The page number to query" default(1)
+// @Param limit query int false "The number of results per page" default(100)
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.txEvents
+// @Success 200 {object} types.SearchTxsResult
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs [get]
@@ -91,8 +86,10 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest,
-				sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			rest.WriteErrorResponse(
+				w, http.StatusBadRequest,
+				sdk.AppendMsgToErr("could not parse query parameters", err.Error()),
+			)
 			return
 		}
 
@@ -140,14 +137,14 @@ func QueryTxsRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // QueryTxRequestHandlerFn implements a REST handler that queries a transaction
 // by hash in a committed block.
 //
-// @Summary Query tx by hash
-// @Description Retrieve a transaction using its hash.
-// @Tags Transactions
+// @Summary Query transaction by hash
+// @Description Query transaction by hash
+// @Tags transactions
 // @Produce json
-// @Param hash path string true "tx hash"
+// @Param hash path string true "The transaction hash"
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.txSearch
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
+// @Success 200 {object} types.TxResponse
+// @Failure 404 {object} rest.ErrorResponse "Returned if the transaction does not exist"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs/{hash} [get]
 func QueryTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

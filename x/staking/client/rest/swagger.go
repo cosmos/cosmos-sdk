@@ -2,7 +2,7 @@ package rest
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -12,6 +12,16 @@ import (
 //
 //nolint:deadcode,unused
 type (
+	createValidator struct {
+		auth.StdTx
+		Msgs []types.MsgCreateValidator `json:"msg"`
+	}
+
+	editValidator struct {
+		auth.StdTx
+		Msgs []types.MsgEditValidator `json:"msg"`
+	}
+
 	postDelegation struct {
 		auth.StdTx
 		Msgs []types.MsgDelegate `json:"msg"`

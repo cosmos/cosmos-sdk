@@ -149,7 +149,7 @@ func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) e
 // freeze updates the state of the client in the event of a misbehaviour
 func (k Keeper) freeze(ctx sdk.Context, clientState types.ClientState) (types.ClientState, error) {
 	if clientState.Frozen {
-		return types.ClientState{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "already frozen")
+		return types.ClientState{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientState.ID()), "already frozen")
 	}
 
 	clientState.Frozen = true

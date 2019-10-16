@@ -31,8 +31,8 @@ var _ Keybase = keyringKeybase{}
 // keyringKeybase implements the Keybase interface by using the Keyring library
 // for account key persistence.
 type keyringKeybase struct {
-	db   keyring.Keyring
 	base baseKeybase
+	db   keyring.Keyring
 }
 
 var maxPassphraseEntryAttempts = 3
@@ -453,7 +453,6 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 	}
 }
 
-//nolint: funlen
 func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Config {
 	if test {
 		return keyring.Config{

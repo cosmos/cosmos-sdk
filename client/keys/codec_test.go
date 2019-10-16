@@ -56,6 +56,7 @@ func TestMarshalJSON(t *testing.T) {
 		{"empty object", args{data.Keys[3]}, data.JSON[3], false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := MarshalJSON(tt.args.o)
 			if (err != nil) != tt.wantErr {

@@ -25,9 +25,11 @@ linters:
     - scopelint
     - staticcheck
     - structcheck
+    - stylecheck
     - typecheck
     - unconvert
     - unused
+    - misspell
   disable:
     - errcheck
 

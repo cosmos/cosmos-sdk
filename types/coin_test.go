@@ -40,6 +40,7 @@ func TestIsEqualCoin(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
+		tc := tc
 		if tc.panics {
 			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
@@ -82,6 +83,7 @@ func TestAddCoin(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
+		tc := tc
 		if tc.shouldPanic {
 			require.Panics(t, func() { tc.inputOne.Add(tc.inputTwo) })
 		} else {
@@ -106,6 +108,7 @@ func TestSubCoin(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
+		tc := tc
 		if tc.shouldPanic {
 			require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
@@ -136,6 +139,7 @@ func TestIsGTECoin(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
+		tc := tc
 		if tc.panics {
 			require.Panics(t, func() { tc.inputOne.IsGTE(tc.inputTwo) })
 		} else {
@@ -161,6 +165,7 @@ func TestIsLTCoin(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
+		tc := tc
 		if tc.panics {
 			require.Panics(t, func() { tc.inputOne.IsLT(tc.inputTwo) })
 		} else {
@@ -218,6 +223,7 @@ func TestEqualCoins(t *testing.T) {
 	}
 
 	for tcnum, tc := range cases {
+		tc := tc
 		if tc.panics {
 			require.Panics(t, func() { tc.inputOne.IsEqual(tc.inputTwo) })
 		} else {
@@ -270,6 +276,7 @@ func TestSubCoins(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		if tc.shouldPanic {
 			require.Panics(t, func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
@@ -661,6 +668,7 @@ func TestMarshalJSONCoins(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			bz, err := cdc.MarshalJSON(tc.input)
 			require.NoError(t, err)

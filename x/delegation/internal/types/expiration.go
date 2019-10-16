@@ -80,19 +80,11 @@ type Period struct {
 
 // ClockPeriod creates an period by clock time
 func ClockPeriod(d time.Duration) Period {
-	// assert nothing negative
-	if d < 0 {
-		panic("Cannot use a negative duration")
-	}
 	return Period{Clock: d}
 }
 
 // BlockPeriod creates an period by block height
 func BlockPeriod(h int64) Period {
-	// assert nothing negative
-	if h < 0 {
-		panic("Cannot use a negative block step")
-	}
 	return Period{Block: h}
 }
 

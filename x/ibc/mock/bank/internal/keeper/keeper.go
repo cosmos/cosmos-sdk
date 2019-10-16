@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	chantypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/mock/bank/internal/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -25,22 +26,37 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ibck ibc.Keeper, bk types.Ban
 	}
 }
 
-// Transfer handles transfer logic
-func (k Keeper) Transfer(ctx sdk.Context, srcPort, srcChan, dstPort, dstChan string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool) sdk.Error {
-	// TODO
-	if source {
-		// escrow tokens
-		escrowAddress := k.GetEscrowAddress(srcChan)
-		k.bk.SendCoins(ctx, sender, escrowAddress, sdk.Coins{amount})
-	} else {
-		// burn vouchers from sender
-		k.bk.BurnCoins(ctx, sender, sdk.Coins{amount})
+// SendTransfer handles transfer sending logic
+func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool, timeout uint64) sdk.Error {
+	// get the port and channel of the counterparty
+	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
+	if !ok {
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidChannel, "failed to get channel")
 	}
+
+	dstPort := channel.Counterparty.PortID
+	dstChan := channel.Counterparty.ChannelID
 
 	// get the next sequence
 	sequence, ok := k.ibck.ChannelKeeper.GetNextSequenceSend(ctx, srcPort, srcChan)
 	if !ok {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrGetSequence, "failed to retrieve sequence")
+	}
+
+	if source {
+		// escrow tokens
+		escrowAddress := k.GetEscrowAddress(srcChan)
+		err := k.bk.SendCoins(ctx, sender, escrowAddress, sdk.Coins{amount})
+		if err != nil {
+			return err
+		}
+
+	} else {
+		// burn vouchers from sender
+		err := k.bk.BurnCoins(ctx, sender, sdk.Coins{amount})
+		if err != nil {
+			return err
+		}
 	}
 
 	// build packet
@@ -51,11 +67,57 @@ func (k Keeper) Transfer(ctx sdk.Context, srcPort, srcChan, dstPort, dstChan str
 		Source:   source,
 	}
 
-	packet := chantypes.NewPacket(sequence, 0, srcPort, srcChan, dstPort, dstChan, packetData.Marshal())
+	packet := chantypes.NewPacket(sequence, timeout, srcPort, srcChan, dstPort, dstChan, packetData.Marshal())
 
 	err := k.ibck.ChannelKeeper.SendPacket(ctx, packet)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrSendPacket, "failed to send packet")
+	}
+
+	return nil
+}
+
+// ReceiveTransfer handles transfer receiving logic
+func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool, timeout uint64, proof ics23.Proof, proofHeight uint64) sdk.Error {
+	// get the port and channel of the counterparty
+	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
+	if !ok {
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidChannel, "failed to get channel")
+	}
+
+	dstPort := channel.Counterparty.PortID
+	dstChan := channel.Counterparty.ChannelID
+
+	if source {
+		// mint tokens
+		_, err := k.bk.AddCoins(ctx, receiver, sdk.Coins{amount})
+		if err != nil {
+			return err
+		}
+
+	} else {
+		// unescrow tokens
+		escrowAddress := k.GetEscrowAddress(dstChan)
+		err := k.bk.SendCoins(ctx, escrowAddress, receiver, sdk.Coins{amount})
+		if err != nil {
+			return err
+		}
+	}
+
+	// build packet
+	packetData := types.TransferPacketData{
+		Amount:   amount,
+		Sender:   sender,
+		Receiver: receiver,
+		Source:   source,
+	}
+
+	sequence := uint64(0) // unordered channel
+	packet := chantypes.NewPacket(sequence, timeout, srcPort, srcChan, dstPort, dstChan, packetData.Marshal())
+
+	_, err := k.ibck.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight, nil)
+	if err != nil {
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrReceivePacket, "failed to receive packet")
 	}
 
 	return nil

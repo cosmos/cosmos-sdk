@@ -20,4 +20,6 @@ var (
 	RouterKey    = types.RouterKey
 
 	RegisterCdc = types.RegisterCodec
+
+	NewMsgTransfer = types.NewMsgTransfer
 )

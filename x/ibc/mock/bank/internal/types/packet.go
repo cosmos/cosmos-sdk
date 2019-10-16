@@ -33,14 +33,6 @@ func (packet *TransferPacketData) UnmarshalJSON(bz []byte) (err error) {
 	return MouduleCdc.UnmarshalJSON(bz, packet)
 }
 
-func (TransferPacketData) SourcePort() string {
-	return "ibcmockbank"
-}
-
-func (TransferPacketData) DestPort() string {
-	return "ibcmockbank"
-}
-
 func (packet TransferPacketData) String() string {
 	return fmt.Sprintf(`TransferPacketData:
 	Amount:               %s

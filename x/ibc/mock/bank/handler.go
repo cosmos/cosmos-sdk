@@ -16,9 +16,18 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Result) {
-	err := k.Transfer(ctx, msg.SrcPort, msg.SrcChannel, msg.DstPort, msg.DstChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
-	if err != nil {
-		return err.Result()
+	if msg.Proof != nil {
+		// send packet
+		err := k.SendTransfer(ctx, msg.SrcPort, msg.SrcChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source, msg.Timeout)
+		if err != nil {
+			return err.Result()
+		}
+	} else {
+		// receive packet
+		err := k.ReceiveTransfer(ctx, msg.SrcPort, msg.SrcChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source, msg.Timeout, msg.Proof, msg.ProofHeight)
+		if err != nil {
+			return err.Result()
+		}
 	}
 
 	return sdk.Result{Events: ctx.EventManager().Events()}

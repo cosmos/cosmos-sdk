@@ -15,11 +15,10 @@ import (
 )
 
 // TODO:
+// * ante handler
 // * genesis
-// * querier
 // * cli
 // * rest
-// * ante handler
 // -> changes to auth, etc
 
 var (

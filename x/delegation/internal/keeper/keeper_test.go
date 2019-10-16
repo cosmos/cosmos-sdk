@@ -150,9 +150,7 @@ func TestKeeperCrud(t *testing.T) {
 				return
 			}
 			require.NotNil(t, allow)
-			b, ok := allow.(*types.BasicFeeAllowance)
-			require.True(t, ok)
-			require.Equal(t, tc.allowance, b)
+			require.Equal(t, tc.allowance, allow)
 		})
 	}
 
@@ -181,6 +179,93 @@ func TestKeeperCrud(t *testing.T) {
 			grants, err := k.GetAllFeeAllowances(ctx, tc.grantee)
 			require.NoError(t, err)
 			assert.Equal(t, tc.grants, grants)
+		})
+	}
+}
+
+func TestUseDelegatedFee(t *testing.T) {
+	input := setupTestInput()
+	ctx := input.ctx
+	k := input.dk
+
+	// some helpers
+	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
+	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	future := types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(5678),
+	}
+	expired := types.BasicFeeAllowance{
+		SpendLimit: eth,
+		Expiration: types.ExpiresAtHeight(55),
+	}
+
+	// for testing limits of the contract
+	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
+	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
+	futureAfterSmall := types.BasicFeeAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
+		Expiration: types.ExpiresAtHeight(5678),
+	}
+
+	// then lots of queries
+	cases := map[string]struct {
+		grantee sdk.AccAddress
+		granter sdk.AccAddress
+		fee     sdk.Coins
+		allowed bool
+		final   exported.FeeAllowance
+	}{
+		"use entire pot": {
+			granter: addr,
+			grantee: addr2,
+			fee:     atom,
+			allowed: true,
+			final:   nil,
+		},
+		"expired and removed": {
+			granter: addr,
+			grantee: addr3,
+			fee:     eth,
+			allowed: false,
+			final:   nil,
+		},
+		"too high": {
+			granter: addr,
+			grantee: addr2,
+			fee:     hugeAtom,
+			allowed: false,
+			final:   &future,
+		},
+		"use a little": {
+			granter: addr,
+			grantee: addr2,
+			fee:     smallAtom,
+			allowed: true,
+			final:   &futureAfterSmall,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// let's set up some initial state here
+			// addr -> addr2 (future)
+			// addr -> addr3 (expired)
+			err := k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+				Granter: addr, Grantee: addr2, Allowance: &future,
+			})
+			require.NoError(t, err)
+			err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+				Granter: addr, Grantee: addr3, Allowance: &expired,
+			})
+			require.NoError(t, err)
+
+			allowed := k.UseDelegatedFees(ctx, tc.granter, tc.grantee, tc.fee)
+			require.Equal(t, tc.allowed, allowed)
+
+			loaded, err := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
+			require.NoError(t, err)
+			require.Equal(t, tc.final, loaded)
 		})
 	}
 }

@@ -913,23 +913,19 @@ definitions:
     type: object
   types.Params:
     properties:
-      blocks_per_year:
-        description: expected blocks per year
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
+        type: string
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
         type: integer
-      goal_bonded:
-        description: goal of percent bonded atoms
-        type: string
-      inflation_max:
-        description: maximum inflation rate
-        type: string
-      inflation_min:
-        description: minimum inflation rate
-        type: string
-      inflation_rate_change:
-        description: maximum annual change in inflation rate
-        type: string
-      mint_denom:
-        description: type of coin to mint
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
         type: string
     type: object
   types.Pool:

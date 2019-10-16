@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
@@ -25,11 +26,16 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string,
-	overwrite bool) (sdk.AccAddress, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool, in io.Reader) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
-	keybase, err := clkeys.NewKeyBaseFromDir(clientRoot)
+	var keybase keys.Keybase
+	var err error
+	if in != nil {
+		keybase, err = clkeys.NewKeyringFromDir(clientRoot, in)
+	} else {
+		keybase, err = keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), clientRoot)
+	}
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

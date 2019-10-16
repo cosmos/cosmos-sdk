@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
@@ -29,11 +31,11 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	// Remove the dir to that GenerateSaveCoinKey creates it automatically
 	os.RemoveAll(dir)
 
-	addr, mnemonic, err := server.GenerateSaveCoinKey(dir, "keyname", "012345678", false)
+	addr, mnemonic, err := server.GenerateSaveCoinKey(dir, "keyname", "012345678", false, nil)
 	require.NoError(t, err)
 
 	// Test key was actually saved
-	kb, err := keys.NewKeyBaseFromDir(dir)
+	kb, err := keys2.NewTestKeyring(types.GetConfig().GetKeyringServiceName(), dir)
 	require.NoError(t, err)
 	info, err := kb.Get("keyname")
 	require.NoError(t, err)
@@ -53,15 +55,15 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	os.RemoveAll(dir)
 
 	keyname := "justakey"
-	addr1, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", false)
+	addr1, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", false, nil)
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = server.GenerateSaveCoinKey(dir, keyname, "012345678", false)
+	_, _, err = server.GenerateSaveCoinKey(dir, keyname, "012345678", false, nil)
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", true)
+	addr2, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", true, nil)
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)

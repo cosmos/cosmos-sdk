@@ -121,8 +121,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the delegation module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	panic("not implemented!")
-	// return NewQuerier(am.keeper)
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the delegation module. It returns

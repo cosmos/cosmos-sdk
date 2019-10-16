@@ -11,14 +11,15 @@ import (
 )
 
 const (
-	DefaultCodespace     = types.DefaultCodespace
-	CodeFeeLimitExceeded = types.CodeFeeLimitExceeded
-	CodeFeeLimitExpired  = types.CodeFeeLimitExpired
-	CodeInvalidPeriod    = types.CodeInvalidPeriod
-	ModuleName           = types.ModuleName
-	StoreKey             = types.StoreKey
-	RouterKey            = types.RouterKey
-	QuerierRoute         = types.QuerierRoute
+	DefaultCodespace      = types.DefaultCodespace
+	CodeFeeLimitExceeded  = types.CodeFeeLimitExceeded
+	CodeFeeLimitExpired   = types.CodeFeeLimitExpired
+	CodeInvalidPeriod     = types.CodeInvalidPeriod
+	ModuleName            = types.ModuleName
+	StoreKey              = types.StoreKey
+	RouterKey             = types.RouterKey
+	QuerierRoute          = types.QuerierRoute
+	QueryGetFeeAllowances = keeper.QueryGetFeeAllowances
 )
 
 var (
@@ -36,6 +37,7 @@ var (
 	NewMsgDelegateFeeAllowance  = types.NewMsgDelegateFeeAllowance
 	NewMsgRevokeFeeAllowance    = types.NewMsgRevokeFeeAllowance
 	NewKeeper                   = keeper.NewKeeper
+	NewQuerier                  = keeper.NewQuerier
 
 	// variable aliases
 	ModuleCdc             = types.ModuleCdc

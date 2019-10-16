@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,13 +17,13 @@ const (
 )
 
 // ErrPortExists implements sdk.Error
-func ErrPortExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodePortExists, "port already binded")
+func ErrPortExists(codespace sdk.CodespaceType, portID string) sdk.Error {
+	return sdk.NewError(codespace, CodePortExists, fmt.Sprintf("port with ID %s is already binded", portID))
 }
 
 // ErrPortNotFound implements sdk.Error
-func ErrPortNotFound(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodePortNotFound, "port not found")
+func ErrPortNotFound(codespace sdk.CodespaceType, portID string) sdk.Error {
+	return sdk.NewError(codespace, CodePortNotFound, fmt.Sprintf("port with ID %s not found", portID))
 }
 
 // ErrPortNotAuthenticated implements sdk.Error

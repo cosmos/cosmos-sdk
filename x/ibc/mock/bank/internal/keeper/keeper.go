@@ -31,7 +31,7 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sd
 	// get the port and channel of the counterparty
 	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidChannel, "failed to get channel")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), chantypes.CodeChannelNotFound, "failed to get channel")
 	}
 
 	dstPort := channel.Counterparty.PortID
@@ -40,7 +40,7 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sd
 	// get the next sequence
 	sequence, ok := k.ibck.ChannelKeeper.GetNextSequenceSend(ctx, srcPort, srcChan)
 	if !ok {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrGetSequence, "failed to retrieve sequence")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), chantypes.CodeSequenceNotFound, "failed to retrieve sequence")
 	}
 
 	if source {
@@ -82,7 +82,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount
 	// get the port and channel of the counterparty
 	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidChannel, "failed to get channel")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), chantypes.CodeChannelNotFound, "failed to get channel")
 	}
 
 	dstPort := channel.Counterparty.PortID

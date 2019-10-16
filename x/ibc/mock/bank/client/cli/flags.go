@@ -5,12 +5,14 @@ import (
 )
 
 const (
-	FlagSrcPort    = "src-port"
-	FlagSrcChannel = "src-channel"
-	FlagAmount     = "amount"
-	FlagReceiver   = "receiver"
-	FlagSource     = "source"
-	FlagTimeout    = "timeout"
+	FlagSrcPort     = "src-port"
+	FlagSrcChannel  = "src-channel"
+	FlagAmount      = "amount"
+	FlagReceiver    = "receiver"
+	FlagSource      = "source"
+	FlagTimeout     = "timeout"
+	FlagProofPath   = "proof-path"
+	FlagProofHeight = "proof-height"
 )
 
 var (
@@ -24,4 +26,6 @@ func init() {
 	FsTransfer.String(FlagReceiver, "", "the recipient")
 	FsTransfer.Bool(FlagSource, true, "indicate if the sender is the source chain of the token")
 	FsTransfer.Uint64(FlagTimeout, 0, "the block height after which the packet will expire")
+	FsTransfer.String(FlagProofPath, "", "the path of the proof file")
+	FsTransfer.Uint64(FlagProofHeight, 0, "the block height at which the proof is generated")
 }

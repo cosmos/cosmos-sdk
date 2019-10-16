@@ -1,5 +1,5 @@
 ---
-order: false
+order: 8
 ---
 
 # Object-Capability Model

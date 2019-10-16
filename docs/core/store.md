@@ -1,3 +1,7 @@
+---
+order: 5
+---
+
 # Store
 
 ## Pre-requisite Reading

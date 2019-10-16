@@ -1,3 +1,7 @@
+---
+order: 9
+---
+
 # Module Genesis
 
 ## Pre-requisite Reading

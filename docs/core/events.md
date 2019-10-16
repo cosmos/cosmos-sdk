@@ -1,3 +1,7 @@
+---
+order: 7
+---
+
 # Events
 
 ## Pre-Requisite Reading

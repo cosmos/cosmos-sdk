@@ -1,3 +1,7 @@
+---
+order: 8
+---
+
 # Invariants
 
 ## Pre-requisite Reading

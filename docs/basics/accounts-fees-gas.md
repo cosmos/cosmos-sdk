@@ -1,3 +1,7 @@
+---
+order: 3
+---
+
 # Accounts, Fees and Gas
 
 ## Pre-requisite Reading

@@ -1,3 +1,7 @@
+---
+order: 6
+---
+
 # Encoding
 
 ## Pre-requisite Reading

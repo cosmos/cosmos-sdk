@@ -1,3 +1,7 @@
+---
+order: 6
+---
+
 # BeginBlocker and EndBlocker
 
 ## Pre-requisite Reading

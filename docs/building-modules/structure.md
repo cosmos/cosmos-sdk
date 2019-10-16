@@ -1,3 +1,7 @@
+---
+order: 12
+---
+
 # Module Structure Specification
 
 This document outlines the recommended structure of Cosmos SDK modules. These

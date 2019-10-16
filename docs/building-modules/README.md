@@ -1,3 +1,9 @@
+---
+order: false
+parent:
+  order: 4
+---
+
 # Building Modules
 
 This repository contains documentation on concepts developers need to know in order to build modules for Cosmos SDK applications. 

@@ -1,3 +1,9 @@
+---
+order: false
+parent:
+  order: 3
+---
+
 # Core 
 
 This repository contains reference documentation on the core conepts of the Cosmos SDK. 

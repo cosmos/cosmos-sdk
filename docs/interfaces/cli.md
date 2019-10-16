@@ -1,3 +1,7 @@
+---
+order: 3
+---
+
 # Command-Line Interface
 
 ## Prerequisites
@@ -291,6 +295,3 @@ rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
 }
 ```
 
-## Next
-
-Read about how to build a module CLI [here](./module-interfaces#cli)

@@ -1,3 +1,8 @@
+---
+parent:
+  order: 1
+---
+
 # SDK - Intro Material
 
 This folder contains introduction material on the Cosmos SDK.

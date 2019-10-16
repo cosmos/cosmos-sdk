@@ -1,3 +1,7 @@
+---
+order: 1
+---
+
 # BaseApp
 
 ## Pre-requisite Reading

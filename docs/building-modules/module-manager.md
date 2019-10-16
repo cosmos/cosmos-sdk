@@ -1,3 +1,8 @@
+---
+order: 2
+---
+
+
 # Module Manager and `AppModule` Interface
 
 ## Pre-requisite Reading

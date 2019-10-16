@@ -1,3 +1,7 @@
+---
+order: 2
+---
+
 # Transaction Lifecycle
 
 ## Prerequisite Reading

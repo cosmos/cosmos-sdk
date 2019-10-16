@@ -51,7 +51,7 @@ func ErrInvalidProposalType(codespace sdk.CodespaceType, proposalType string) sd
 }
 
 // ErrInvalidVote error for an invalid vote option
-func ErrInvalidVote(codespace sdk.CodespaceType, voteOption fmt.Stringer) sdk.Error {
+func ErrInvalidVote(codespace sdk.CodespaceType, voteOption string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidVote, fmt.Sprintf("'%v' is not a valid voting option", voteOption.String()))
 }
 

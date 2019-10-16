@@ -35,6 +35,58 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
 }
 
+// Test that simulate transaction accurately estimates gas cost
+func TestSimulateGasCost(t *testing.T) {
+	// setup
+	app, ctx := createTestApp(true)
+	ctx = ctx.WithBlockHeight(1)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+
+	// keys and addresses
+	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv2, _, addr2 := types.KeyTestPubAddr()
+	priv3, _, addr3 := types.KeyTestPubAddr()
+
+	// set the accounts
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc1.SetAccountNumber(0))
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc2.SetAccountNumber(1))
+	app.AccountKeeper.SetAccount(ctx, acc2)
+	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
+	acc3.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc3.SetAccountNumber(2))
+	app.AccountKeeper.SetAccount(ctx, acc3)
+
+	// set up msgs and fee
+	var tx sdk.Tx
+	msg1 := types.NewTestMsg(addr1, addr2)
+	msg2 := types.NewTestMsg(addr3, addr1)
+	msg3 := types.NewTestMsg(addr2, addr3)
+	msgs := []sdk.Msg{msg1, msg2, msg3}
+	fee := types.NewTestStdFee()
+
+	// signers in order. accnums are all 0 because it is in genesis block
+	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
+
+	cc, _ := ctx.CacheContext()
+	newCtx, err := anteHandler(cc, tx, true)
+	require.Nil(t, err, "transaction failed on simulate mode")
+
+	simulatedGas := newCtx.GasMeter().GasConsumed()
+	fee.Gas = simulatedGas
+
+	// update tx with simulated gas estimate
+	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	_, err = anteHandler(ctx, tx, false)
+
+	require.Nil(t, err, "transaction failed with gas estimate")
+}
+
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup

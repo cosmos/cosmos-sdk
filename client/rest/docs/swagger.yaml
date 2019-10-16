@@ -44,6 +44,27 @@ definitions:
         $ref: '#/definitions/types.StdTx'
         type: object
     type: object
+  rest.CreateValidatorRequest:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      commission:
+        $ref: '#/definitions/types.CommissionRates'
+        type: object
+      description:
+        $ref: '#/definitions/types.Description'
+        type: object
+      min_self_delegation:
+        type: string
+      pubkey:
+        type: string
+      validator_address:
+        description: in bech32
+        type: string
+    type: object
   rest.DelegateRequest:
     properties:
       amount:
@@ -68,6 +89,21 @@ definitions:
         type: object
       depositor:
         description: Address of the depositor
+        type: string
+    type: object
+  rest.EditValidatorRequest:
+    properties:
+      address:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      commission_rate:
+        type: string
+      description:
+        $ref: '#/definitions/types.Description'
+        type: object
+      min_self_delegation:
         type: string
     type: object
   rest.ErrorResponse:
@@ -162,6 +198,22 @@ definitions:
         description: address of the voter
         type: string
     type: object
+  rest.createValidator:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgCreateValidator'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
   rest.delegation:
     properties:
       height:
@@ -212,6 +264,22 @@ definitions:
       result:
         items:
           $ref: '#/definitions/types.Validator'
+        type: array
+    type: object
+  rest.editValidator:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.MsgEditValidator'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
         type: array
     type: object
   rest.mintAnnualProvisions:
@@ -611,6 +679,19 @@ definitions:
         description: the last time the commission rate was changed
         type: string
     type: object
+  types.CommissionRates:
+    properties:
+      max_change_rate:
+        description: maximum daily increase of the validator commission, as a fraction
+        type: string
+      max_rate:
+        description: maximum commission rate which validator can ever charge, as a
+          fraction
+        type: string
+      rate:
+        description: the commission rate charged to delegators, as a fraction
+        type: string
+    type: object
   types.Content:
     type: object
   types.DelegationResponse:
@@ -649,16 +730,6 @@ definitions:
         description: proposalID of the proposal
         type: integer
     type: object
-  types.DepositParams:
-    properties:
-      max_deposit_period:
-        description: 'Maximum period for Atom holders to deposit on a proposal. Initial
-          value: 2 months'
-        type: string
-      min_deposit:
-        description: Minimum deposit for a proposal to enter voting period.
-        type: string
-    type: object
   types.Description:
     properties:
       details:
@@ -688,6 +759,25 @@ definitions:
       validator_src_address:
         type: string
     type: object
+  types.MsgCreateValidator:
+    properties:
+      commission:
+        $ref: '#/definitions/types.CommissionRates'
+        type: object
+      delegator_address:
+        type: string
+      description:
+        $ref: '#/definitions/types.Description'
+        type: object
+      min_self_delegation:
+        type: string
+      pubkey:
+        type: string
+      validator_address:
+        type: string
+      value:
+        type: string
+    type: object
   types.MsgDelegate:
     properties:
       amount:
@@ -708,6 +798,36 @@ definitions:
       proposal_id:
         description: ID of the proposal
         type: integer
+    type: object
+  types.MsgEditValidator:
+    properties:
+      address:
+        type: string
+      commission_rate:
+        description: |-
+          We pass a reference to the new commission rate and min self delegation as it's not mandatory to
+          update. If not updated, the deserialized rate will be zero with no way to
+          distinguish if an update was intended.
+
+          REF: #2373
+        type: string
+      details:
+        description: optional details
+        type: string
+      identity:
+        description: optional identity signature (ex. UPort or Keybase)
+        type: string
+      min_self_delegation:
+        type: string
+      moniker:
+        description: name
+        type: string
+      security_contact:
+        description: optional security contact info
+        type: string
+      website:
+        description: optional website link
+        type: string
     type: object
   types.MsgSend:
     properties:
@@ -759,15 +879,20 @@ definitions:
     type: object
   types.Params:
     properties:
-      deposit_params:
-        $ref: '#/definitions/types.DepositParams'
-        type: object
-      tally_params:
-        $ref: '#/definitions/types.TallyParams'
-        type: object
-      voting_params:
-        $ref: '#/definitions/types.VotingParams'
-        type: object
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
+        type: string
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
+        type: integer
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
+        type: string
     type: object
   types.Pool:
     properties:
@@ -924,21 +1049,6 @@ definitions:
           type: string
       type: object
     type: array
-  types.TallyParams:
-    properties:
-      quorum:
-        description: Minimum percentage of total stake needed to vote for a result
-          to be considered valid
-        type: string
-      threshold:
-        description: 'Minimum proportion of Yes votes for proposal to pass. Initial
-          value: 0.5'
-        type: string
-      veto:
-        description: 'Minimum value of Veto votes to Total votes ratio for proposal
-          to be vetoed. Initial value: 1/3'
-        type: string
-    type: object
   types.TallyResult:
     properties:
       abstain:
@@ -1102,12 +1212,6 @@ definitions:
           type: string
       type: object
     type: array
-  types.VotingParams:
-    properties:
-      voting_period:
-        description: Length of the voting period.
-        type: string
-    type: object
   utils.Proposer:
     properties:
       proposal_id:
@@ -2299,6 +2403,92 @@ paths:
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
       summary: Query a validator
+      tags:
+      - staking
+    post:
+      consumes:
+      - application/json
+      description: Generate a create validator transaction that is ready for signing
+      parameters:
+      - description: The validator address
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: The create validator request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.CreateValidatorRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.createValidator'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a create validator transaction
+      tags:
+      - staking
+    put:
+      consumes:
+      - application/json
+      description: Generate a edit validator transaction that is ready for signing
+      parameters:
+      - description: The validator address
+        in: path
+        name: validatorAddr
+        required: true
+        type: string
+      - description: The edit validator request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.EditValidatorRequest'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns the unsigned transaction
+          schema:
+            $ref: '#/definitions/rest.editValidator'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Returned if chain-id required but not present
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "402":
+          description: Returned if fees or gas are invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Generate a edit validator transaction
       tags:
       - staking
   /staking/validators/{validatorAddr}/delegations:

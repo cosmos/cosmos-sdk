@@ -1732,6 +1732,134 @@
                         }
                     }
                 }
+            },
+            "put": {
+                "description": "Generate a edit validator transaction that is ready for signing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "staking"
+                ],
+                "summary": "Generate a edit validator transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The validator address",
+                        "name": "validatorAddr",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The edit validator request payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.EditValidatorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the unsigned transaction",
+                        "schema": {
+                            "$ref": "#/definitions/rest.editValidator"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Returned if chain-id required but not present",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "402": {
+                        "description": "Returned if fees or gas are invalid",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Generate a create validator transaction that is ready for signing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "staking"
+                ],
+                "summary": "Generate a create validator transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The validator address",
+                        "name": "validatorAddr",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The create validator request payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.CreateValidatorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the unsigned transaction",
+                        "schema": {
+                            "$ref": "#/definitions/rest.createValidator"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Returned if chain-id required but not present",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "402": {
+                        "description": "Returned if fees or gas are invalid",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/staking/validators/{validatorAddr}/delegations": {
@@ -2044,6 +2172,36 @@
                 }
             }
         },
+        "rest.CreateValidatorRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "commission": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.CommissionRates"
+                },
+                "description": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Description"
+                },
+                "min_self_delegation": {
+                    "type": "string"
+                },
+                "pubkey": {
+                    "type": "string"
+                },
+                "validator_address": {
+                    "description": "in bech32",
+                    "type": "string"
+                }
+            }
+        },
         "rest.DelegateRequest": {
             "type": "object",
             "properties": {
@@ -2077,6 +2235,28 @@
                 },
                 "depositor": {
                     "description": "Address of the depositor",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.EditValidatorRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "commission_rate": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Description"
+                },
+                "min_self_delegation": {
                     "type": "string"
                 }
             }
@@ -2214,6 +2394,30 @@
                 }
             }
         },
+        "rest.createValidator": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgCreateValidator"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
+                    }
+                }
+            }
+        },
         "rest.delegation": {
             "type": "object",
             "properties": {
@@ -2290,6 +2494,30 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/types.Validator"
+                    }
+                }
+            }
+        },
+        "rest.editValidator": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.MsgEditValidator"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.StdSignature"
                     }
                 }
             }
@@ -2881,6 +3109,23 @@
                 }
             }
         },
+        "types.CommissionRates": {
+            "type": "object",
+            "properties": {
+                "max_change_rate": {
+                    "description": "maximum daily increase of the validator commission, as a fraction",
+                    "type": "string"
+                },
+                "max_rate": {
+                    "description": "maximum commission rate which validator can ever charge, as a fraction",
+                    "type": "string"
+                },
+                "rate": {
+                    "description": "the commission rate charged to delegators, as a fraction",
+                    "type": "string"
+                }
+            }
+        },
         "types.Content": {
             "type": "object"
         },
@@ -2938,19 +3183,6 @@
                 }
             }
         },
-        "types.DepositParams": {
-            "type": "object",
-            "properties": {
-                "max_deposit_period": {
-                    "description": "Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months",
-                    "type": "string"
-                },
-                "min_deposit": {
-                    "description": "Minimum deposit for a proposal to enter voting period.",
-                    "type": "string"
-                }
-            }
-        },
         "types.Description": {
             "type": "object",
             "properties": {
@@ -2993,6 +3225,34 @@
                 }
             }
         },
+        "types.MsgCreateValidator": {
+            "type": "object",
+            "properties": {
+                "commission": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.CommissionRates"
+                },
+                "delegator_address": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "object",
+                    "$ref": "#/definitions/types.Description"
+                },
+                "min_self_delegation": {
+                    "type": "string"
+                },
+                "pubkey": {
+                    "type": "string"
+                },
+                "validator_address": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "types.MsgDelegate": {
             "type": "object",
             "properties": {
@@ -3021,6 +3281,41 @@
                 "proposal_id": {
                     "description": "ID of the proposal",
                     "type": "integer"
+                }
+            }
+        },
+        "types.MsgEditValidator": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "commission_rate": {
+                    "description": "We pass a reference to the new commission rate and min self delegation as it's not mandatory to\nupdate. If not updated, the deserialized rate will be zero with no way to\ndistinguish if an update was intended.\n\nREF: #2373",
+                    "type": "string"
+                },
+                "details": {
+                    "description": "optional details",
+                    "type": "string"
+                },
+                "identity": {
+                    "description": "optional identity signature (ex. UPort or Keybase)",
+                    "type": "string"
+                },
+                "min_self_delegation": {
+                    "type": "string"
+                },
+                "moniker": {
+                    "description": "name",
+                    "type": "string"
+                },
+                "security_contact": {
+                    "description": "optional security contact info",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "optional website link",
+                    "type": "string"
                 }
             }
         },
@@ -3098,17 +3393,21 @@
         "types.Params": {
             "type": "object",
             "properties": {
-                "deposit_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.DepositParams"
+                "bond_denom": {
+                    "description": "note: we need to be a bit careful about potential overflow here, since this is user-determined",
+                    "type": "string"
                 },
-                "tally_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.TallyParams"
+                "max_entries": {
+                    "description": "max entries for either unbonding delegation or redelegation (per pair/trio)",
+                    "type": "integer"
                 },
-                "voting_params": {
-                    "type": "object",
-                    "$ref": "#/definitions/types.VotingParams"
+                "max_validators": {
+                    "description": "maximum number of validators (max uint16 = 65535)",
+                    "type": "integer"
+                },
+                "unbonding_time": {
+                    "description": "time duration of unbonding",
+                    "type": "string"
                 }
             }
         },
@@ -3329,23 +3628,6 @@
                     "type": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "types.TallyParams": {
-            "type": "object",
-            "properties": {
-                "quorum": {
-                    "description": "Minimum percentage of total stake needed to vote for a result to be considered valid",
-                    "type": "string"
-                },
-                "threshold": {
-                    "description": "Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5",
-                    "type": "string"
-                },
-                "veto": {
-                    "description": "Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3",
-                    "type": "string"
                 }
             }
         },
@@ -3572,15 +3854,6 @@
                         "description": "address of the voter",
                         "type": "string"
                     }
-                }
-            }
-        },
-        "types.VotingParams": {
-            "type": "object",
-            "properties": {
-                "voting_period": {
-                    "description": "Length of the voting period.",
-                    "type": "string"
                 }
             }
         },

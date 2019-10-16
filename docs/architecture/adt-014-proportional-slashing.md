@@ -6,7 +6,6 @@
 
 ## Context
 
-> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
 In Proof of Stake-based chains, centralization of consensus power amongst a small set of validators causes harm to the network due to increased risk of censorship, liveness failure, fork attacks, etc.  However, while this centralization causes a negative externality to the network, it is not directly felt by the stakers contributing towards delegating towards already large validators.  We would like a way to pass on the negative externality cost of centralization onto those large validators and their stakers.
 
 ## Decision
@@ -67,6 +66,8 @@ Once we have the `NewSlashPercent`, we then iterate over all the `SlashEvent`s i
 Proposed
 
 ## Consequences
+
+> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
 ### Positive
 

@@ -2,7 +2,7 @@
 
 ## Changelog
 
-- 31-07-2019: Initial draft
+- 2019 July 31: Initial draft
 
 ## Status
 
@@ -27,13 +27,14 @@ We will implement an evidence module in the Cosmos SDK supporting the following
 functionality:
 
 - Provide developers with the abstractions and interfaces necessary to define
-custom evidence messages and types along with their slashing penalties
+custom evidence messages, message handlers, and methods to slash and penalize
+accordingly for misbehavior.
 - Support the ability to route evidence messages to handlers in any module to
- determine the validity of submitted misbehavior
-- Support the ability through governance to modify slashing penalties of any
-evidence type
+determine the validity of submitted misbehavior.
+- Support the ability, through governance, to modify slashing penalties of any
+evidence type.
 - Querier implementation to support querying params, evidence types, params, and
-all submitted valid misbehavior
+all submitted valid misbehavior.
 
 ### Types
 

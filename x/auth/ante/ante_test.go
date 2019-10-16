@@ -513,7 +513,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	for _, cs := range cases {
 		tx := types.NewTestTxWithSignBytes(
 			msgs, privs, accnums, seqs, fee,
-			types.StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, ""),
+			types.StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, "", nil),
 			"",
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, false, cs.code)

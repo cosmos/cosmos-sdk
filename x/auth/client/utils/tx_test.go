@@ -98,7 +98,9 @@ func TestReadStdTxFromFile(t *testing.T) {
 
 	// Build a test transaction
 	fee := authtypes.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo")
+	feeAccount, err := sdk.AccAddressFromBech32("cosmos1zxcxurm8gwp43n4efqms6484gkdnnq763w03t6")
+	require.NoError(t, err)
+	stdTx := authtypes.NewStdTx([]sdk.Msg{}, fee, []authtypes.StdSignature{}, "foomemo", feeAccount)
 
 	// Write it to the file
 	encodedTx, _ := cdc.MarshalJSON(stdTx)
@@ -109,11 +111,13 @@ func TestReadStdTxFromFile(t *testing.T) {
 	decodedTx, err := ReadStdTxFromFile(cdc, jsonTxFile.Name())
 	require.NoError(t, err)
 	require.Equal(t, decodedTx.Memo, "foomemo")
+	require.Equal(t, decodedTx.FeeAccount, feeAccount)
+	require.Equal(t, decodedTx.Fee, fee)
 }
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
-	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "")
+	tx := authtypes.NewStdTx(msgs, authtypes.StdFee{}, []authtypes.StdSignature{}, "", nil)
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

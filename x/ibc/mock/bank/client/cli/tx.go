@@ -32,7 +32,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "transfer <src-port> <src-channel> <amount> <receiver> <source> <timeout> [proof-path] [proof-height]",
-		Short: "Transfer",
+		Short: "Transfer tokens across chains through IBC",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
@@ -79,6 +79,12 @@ func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(ctx, txBldr, []sdk.Msg{msg})
 		},
 	}
+
+	cmd.MarkFlagRequired(FlagSrcPort)
+	cmd.MarkFlagRequired(FlagSrcChannel)
+	cmd.MarkFlagRequired(FlagAmount)
+	cmd.MarkFlagRequired(FlagReceiver)
+	cmd.MarkFlagRequired(FlagTimeout)
 
 	cmd = client.PostCommands(cmd)[0]
 

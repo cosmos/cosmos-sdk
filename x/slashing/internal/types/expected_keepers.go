@@ -47,6 +47,9 @@ type StakingKeeper interface {
 
 	// UnbondingTime returns the unbonding period duration
 	UnbondingTime(sdk.Context) time.Duration
+
+	// GetLastTotalPower returns the total voting power at the previous block
+	GetLastTotalPower(ctx sdk.Context) (power sdk.Int)
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

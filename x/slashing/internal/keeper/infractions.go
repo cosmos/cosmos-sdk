@@ -12,7 +12,7 @@ import (
 
 // HandleDoubleSign handles a validator signing two blocks at the same height.
 // power: power of the double-signing validator at the height of infraction
-func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
+func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64, totalPower int64) {
 	logger := k.Logger(ctx)
 
 	// calculate the age of the evidence
@@ -71,16 +71,45 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
 
-	// get the percentage slash penalty fraction
-	fraction := k.SlashFractionDoubleSign(ctx)
+	// Insert slash event into the recent double signs iterator
+	k.InsertDoubleSignQueue(ctx, types.NewSlashEvent(
+		validator.GetConsAddr(),
+		power,
+		distributionHeight,
+		sdk.NewDec(power).QuoInt64(totalPower),
+		sdk.ZeroDec(),
+		timestamp.Add(k.sk.UnbondingTime(ctx)),
+	))
 
-	sum := sdk.ZeroDec()
+	// iterate over all recent slashes to get the sum of the roots of all the powers
+	squareOfSumOfRoots := sdk.ZeroDec()
+	k.IterateDoubleSignQueue(ctx, func(slashEvent types.SlashEvent) bool {
+		squareOfSumOfRoots = squareOfSumOfRoots.Add(slashEvent.PercentPower.RoughSqrt())
+		return false
+	})
+	// square the sum of the roots
+	squareOfSumOfRoots = squareOfSumOfRoots
+	// get the percentage slash penalty fraction by multiplying by constant scalar from param store
+	fraction := k.SlashFractionDoubleSign(ctx).Mul(squareOfSumOfRoots)
 
 	k.IterateDoubleSignQueue(ctx, func(slashEvent types.SlashEvent) bool {
-		sum = sum.Add(slashEvent.Power.RoughSqrt())
+		// If a validator needs to be further slashed
+		if fraction.GT(slashEvent.SlashedSoFar) {
+			// how much additional to slash the validator
+			leftToSlash := fraction.Sub(slashEvent.SlashedSoFar)
+
+			// slash the validator at leftToSlash amount
+			k.sk.Slash(ctx, slashEvent.Address, slashEvent.InfractionHeight, slashEvent.Power, leftToSlash)
+
+			// update slash so far amount in slash event
+			slashEvent.SlashedSoFar = fraction
+			k.InsertDoubleSignQueue(ctx, slashEvent)
+		}
+
+		return false
 	})
 
-	// Slash validator
+	// Emit Double Sign Slash validator Event
 	// `power` is the int64 power of the validator as provided to/by
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
@@ -93,7 +122,6 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
 		),
 	)
-	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
 	// begin unbonding validator if not already unbonding (tombstone)
@@ -115,8 +143,6 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
-
-	k.InsertDoubleSignQueue(ctx, types.NewSlashEvent(validator.GetOperator()), timestamp.Add(k.sk.UnbondingTime(ctx)))
 }
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
@@ -191,6 +217,44 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+
+			// Insert slash event into the recent liveness faults iterator
+			k.InsertLivenessQueue(ctx, types.NewSlashEvent(
+				validator.GetConsAddr(),
+				power,
+				distributionHeight,
+				sdk.NewDec(power).QuoInt(k.sk.GetLastTotalPower(ctx)),
+				sdk.ZeroDec(),
+				ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx)),
+			))
+
+			// iterate over all recent slashes to get the sum of the roots of all the powers
+			squareOfSumOfRoots := sdk.ZeroDec()
+			k.IterateLivenessQueue(ctx, func(slashEvent types.SlashEvent) bool {
+				squareOfSumOfRoots = squareOfSumOfRoots.Add(slashEvent.PercentPower.RoughSqrt())
+				return false
+			})
+			// square the sum of the roots
+			squareOfSumOfRoots = squareOfSumOfRoots
+			// get the percentage slash penalty fraction by multiplying by constant scalar from param store
+			fraction := k.SlashFractionDoubleSign(ctx).Mul(squareOfSumOfRoots)
+
+			k.IterateLivenessQueue(ctx, func(slashEvent types.SlashEvent) bool {
+				// If a validator needs to be further slashed
+				if fraction.GT(slashEvent.SlashedSoFar) {
+					// how much additional to slash the validator
+					leftToSlash := fraction.Sub(slashEvent.SlashedSoFar)
+
+					// slash the validator at leftToSlash amount
+					k.sk.Slash(ctx, slashEvent.Address, slashEvent.InfractionHeight, slashEvent.Power, leftToSlash)
+
+					// update slash so far amount in slash event
+					slashEvent.SlashedSoFar = fraction
+					k.InsertDoubleSignQueue(ctx, slashEvent)
+				}
+
+				return false
+			})
 
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(

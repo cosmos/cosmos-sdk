@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
@@ -15,23 +13,23 @@ func (k Keeper) DoubleSignQueueStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte("dsqueue"))
 }
 
-// InsertDoubleSignQueue inserts a double sign event into the queue at time of doublesign
-func (k Keeper) InsertDoubleSignQueue(ctx sdk.Context, slashEvent types.SlashEvent, removeTime time.Time) {
+// InsertDoubleSignQueue inserts a double sign event into the queue at unbonding period after the double sign
+func (k Keeper) InsertDoubleSignQueue(ctx sdk.Context, slashEvent types.SlashEvent) {
 	dsStore := k.DoubleSignQueueStore(ctx)
 	bz := k.cdc.MustMarshalBinaryBare(slashEvent)
-	dsStore.Set(sdk.FormatTimeBytes(removeTime), bz)
+	dsStore.Set(slashEvent.StoreKey(), bz)
 }
 
-// Get the prefix store for the Recent Liveness Faults Queue
+// Get the prefix store for the Recent Liveness Faults Queue at jail period after the liveness fault
 func (k Keeper) LivenessQueueStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte("livequeue"))
 }
 
-// InsertDoubleSignQueue inserts a double sign event into the queue at time of doublesign
-func (k Keeper) InsertLivenessQueue(ctx sdk.Context, slashEvent types.SlashEvent, removeTime time.Time) {
+// InsertLivenessQueue inserts a liveness slash event into the queue
+func (k Keeper) InsertLivenessQueue(ctx sdk.Context, slashEvent types.SlashEvent) {
 	liveStore := k.LivenessQueueStore(ctx)
 	bz := k.cdc.MustMarshalBinaryBare(slashEvent)
-	liveStore.Set(sdk.FormatTimeBytes(removeTime), bz)
+	liveStore.Set(slashEvent.StoreKey(), bz)
 }
 
 // Iterators

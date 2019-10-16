@@ -9,7 +9,7 @@ import (
 type TransferPacketData struct {
 	Amount   sdk.Coin
 	Sender   sdk.AccAddress
-	Receiver sdk.AccAddress
+	Receiver string
 	Source   bool
 }
 
@@ -41,7 +41,7 @@ func (packet TransferPacketData) String() string {
 	Source:               %v`,
 		packet.Amount.String(),
 		packet.Sender.String(),
-		packet.Receiver.String(),
+		packet.Receiver,
 		packet.Source,
 	)
 }

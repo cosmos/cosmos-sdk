@@ -10,14 +10,14 @@ type MsgTransfer struct {
 	SrcChannel  string
 	Amount      sdk.Coin
 	Sender      sdk.AccAddress
-	Receiver    sdk.AccAddress
+	Receiver    string
 	Source      bool
 	Timeout     uint64
 	Proof       ics23.Proof
 	ProofHeight uint64
 }
 
-func NewMsgTransfer(srcPort, srcChannel string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool, timeout uint64, proof ics23.Proof, proofHeight uint64) MsgTransfer {
+func NewMsgTransfer(srcPort, srcChannel string, amount sdk.Coin, sender sdk.AccAddress, receiver string, source bool, timeout uint64, proof ics23.Proof, proofHeight uint64) MsgTransfer {
 	return MsgTransfer{
 		SrcPort:     srcPort,
 		SrcChannel:  srcChannel,
@@ -44,7 +44,7 @@ func (msg MsgTransfer) ValidateBasic() sdk.Error {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAmount, "invalid amount")
 	}
 
-	if msg.Sender.Empty() || msg.Receiver.Empty() {
+	if msg.Sender.Empty() || len(msg.Receiver) == 0 {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid address")
 	}
 

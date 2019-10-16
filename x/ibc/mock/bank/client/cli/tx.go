@@ -31,13 +31,15 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "transfer <src-port> <src-channel> <amount> <receiver> <source> <timeout> [proof-path] [proof-height]",
+		Use: "transfer --src-port <src port> --src-channel <src channel> --amount <amount> --receiver <receiver> --source <source> --timeout <timeout> " +
+			"[--proof-path <proof-path> --proof-height <proof-height>]",
 		Short: "Transfer tokens across chains through IBC",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			ctx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			sender := ctx.GetFromAddress()
+			receiver := viper.GetString(FlagReceiver)
 			srcPort := viper.GetString(FlagSrcPort)
 			srcChan := viper.GetString(FlagSrcChannel)
 			source := viper.GetBool(FlagSource)
@@ -45,11 +47,6 @@ func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			amountStr := viper.GetString(FlagAmount)
 			amount, err := sdk.ParseCoin(amountStr)
-			if err != nil {
-				return err
-			}
-
-			receiver, err := sdk.AccAddressFromBech32(viper.GetString(FlagReceiver))
 			if err != nil {
 				return err
 			}

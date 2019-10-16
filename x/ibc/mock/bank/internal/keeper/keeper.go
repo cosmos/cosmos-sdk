@@ -27,7 +27,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ibck ibc.Keeper, bk types.Ban
 }
 
 // SendTransfer handles transfer sending logic
-func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool, timeout uint64) sdk.Error {
+func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender sdk.AccAddress, receiver string, source bool, timeout uint64) sdk.Error {
 	// get the port and channel of the counterparty
 	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
@@ -78,7 +78,7 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, amount sd
 }
 
 // ReceiveTransfer handles transfer receiving logic
-func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender, receiver sdk.AccAddress, source bool, timeout uint64, proof ics23.Proof, proofHeight uint64) sdk.Error {
+func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount sdk.Coin, sender sdk.AccAddress, receiver string, source bool, timeout uint64, proof ics23.Proof, proofHeight uint64) sdk.Error {
 	// get the port and channel of the counterparty
 	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
@@ -88,9 +88,14 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount
 	dstPort := channel.Counterparty.PortID
 	dstChan := channel.Counterparty.ChannelID
 
+	receiverAddr, err := sdk.AccAddressFromBech32(receiver)
+	if err != nil {
+		sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidReceiver, "invalid receiver address")
+	}
+
 	if source {
 		// mint tokens
-		_, err := k.bk.AddCoins(ctx, receiver, sdk.Coins{amount})
+		_, err := k.bk.AddCoins(ctx, receiverAddr, sdk.Coins{amount})
 		if err != nil {
 			return err
 		}
@@ -98,7 +103,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount
 	} else {
 		// unescrow tokens
 		escrowAddress := k.GetEscrowAddress(dstChan)
-		err := k.bk.SendCoins(ctx, escrowAddress, receiver, sdk.Coins{amount})
+		err := k.bk.SendCoins(ctx, escrowAddress, receiverAddr, sdk.Coins{amount})
 		if err != nil {
 			return err
 		}
@@ -115,7 +120,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, srcPort, srcChan string, amount
 	sequence := uint64(0) // unordered channel
 	packet := chantypes.NewPacket(sequence, timeout, srcPort, srcChan, dstPort, dstChan, packetData.Marshal())
 
-	_, err := k.ibck.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight, nil)
+	_, err = k.ibck.ChannelKeeper.RecvPacket(ctx, packet, proof, proofHeight, nil)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrReceivePacket, "failed to receive packet")
 	}

@@ -17,4 +17,8 @@ type FeeAllowance interface {
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 	// (eg. when it expires)
 	Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (remove bool, err error)
+
+	// ValidateBasic should evaluate this FeeAllowance for internal consistency.
+	// Don't allow negative amounts, or negative periods for example.
+	ValidateBasic() error
 }

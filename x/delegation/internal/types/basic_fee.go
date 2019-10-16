@@ -35,9 +35,13 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 	return left.IsZero(), nil
 }
 
+// ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a BasicFeeAllowance) ValidateBasic() error {
-	if a.SpendLimit.Empty() || !a.SpendLimit.IsAllPositive() {
-		return ErrNonPositiveCoins()
+	if !a.SpendLimit.IsValid() {
+		return sdk.ErrInvalidCoins("send amount is invalid: " + a.SpendLimit.String())
+	}
+	if !a.SpendLimit.IsAllPositive() {
+		return sdk.ErrInvalidCoins("spend limit must be positive")
 	}
 	return a.Expiration.ValidateBasic()
 }

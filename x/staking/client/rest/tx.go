@@ -161,7 +161,6 @@ func editValidatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		if !req.CommissionRate.IsNil() {
 			newRate = &req.CommissionRate
 		}
-		
 		var newMinSelfDelegation *sdk.Int
 		if !req.MinSelfDelegation.IsZero() {
 			newMinSelfDelegation = &req.MinSelfDelegation

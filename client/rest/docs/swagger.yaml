@@ -13,6 +13,8 @@ definitions:
         format: base64
         type: string
     type: object
+  exported.Account:
+    type: object
   rest.BaseReq:
     properties:
       account_number:
@@ -65,6 +67,25 @@ definitions:
         description: in bech32
         type: string
     type: object
+  rest.DecodeReq:
+    properties:
+      tx:
+        type: string
+    type: object
+  rest.DecodeResp:
+    properties:
+      fee:
+        $ref: '#/definitions/types.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        type: string
+      signatures:
+        items:
+          $ref: '#/definitions/types.StdSignature'
+        type: array
+    type: object
   rest.DelegateRequest:
     properties:
       amount:
@@ -104,6 +125,11 @@ definitions:
         $ref: '#/definitions/types.Description'
         type: object
       min_self_delegation:
+        type: string
+    type: object
+  rest.EncodeResp:
+    properties:
+      tx:
         type: string
     type: object
   rest.ErrorResponse:
@@ -197,6 +223,14 @@ definitions:
       voter:
         description: address of the voter
         type: string
+    type: object
+  rest.accountQuery:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/exported.Account'
+        type: object
     type: object
   rest.createValidator:
     properties:
@@ -879,19 +913,23 @@ definitions:
     type: object
   types.Params:
     properties:
-      bond_denom:
-        description: 'note: we need to be a bit careful about potential overflow here,
-          since this is user-determined'
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
         type: string
-      max_entries:
-        description: max entries for either unbonding delegation or redelegation (per
-          pair/trio)
-        type: integer
-      max_validators:
-        description: maximum number of validators (max uint16 = 65535)
-        type: integer
-      unbonding_time:
-        description: time duration of unbonding
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
         type: string
     type: object
   types.Pool:
@@ -1001,6 +1039,29 @@ definitions:
           type: string
       type: object
     type: array
+  types.SearchTxsResult:
+    properties:
+      count:
+        description: Count of txs in current page
+        type: integer
+      limit:
+        description: Max count txs per page
+        type: integer
+      page_number:
+        description: Index of current page, start from 1
+        type: integer
+      page_total:
+        description: Count of total pages
+        type: integer
+      total_count:
+        description: Count of all txs
+        type: integer
+      txs:
+        description: List of txs in current page
+        items:
+          $ref: '#/definitions/types.TxResponse'
+        type: array
+    type: object
   types.StdFee:
     properties:
       amount:
@@ -1223,6 +1284,33 @@ info:
   contact: {}
   license: {}
 paths:
+  /auth/accounts/{address}:
+    get:
+      description: Query for an account by address
+      parameters:
+      - description: The account address
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.accountQuery'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query for an account by address
+      tags:
+      - auth
   /bank/accounts/{address}/transfers:
     post:
       consumes:
@@ -2619,6 +2707,49 @@ paths:
       tags:
       - supply
   /txs:
+    get:
+      description: |-
+        Search transactions by events
+        Genesis transactions are returned if the height parameter is set to zero,
+        otherwise the transactions are searched for by events.
+      parameters:
+      - description: Events to query for joined by ',' (e.g. 'message.action=send,...')
+        in: query
+        name: events
+        required: true
+        type: string
+      - default: 1
+        description: The page number to query
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: The number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.SearchTxsResult'
+        "400":
+          description: Returned if the request doesn't have valid query params
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query transactions by events
+      tags:
+      - transactions
     post:
       consumes:
       - application/json
@@ -2644,14 +2775,109 @@ paths:
           schema:
             $ref: '#/definitions/types.TxResponse'
         "400":
-          description: Returned if the request is invalid.
+          description: Returned if the request is invalid
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
         "500":
-          description: Returned if the transaction cannot be decoded.
+          description: Returned on server error
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
       summary: Broadcast a signed transaction
+      tags:
+      - transactions
+  /txs/{hash}:
+    get:
+      description: Query transaction by hash
+      parameters:
+      - description: The transaction hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      - description: Block height to execute query (defaults to chain tip)
+        in: query
+        name: height
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.TxResponse'
+        "404":
+          description: Returned if the transaction does not exist
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Query transaction by hash
+      tags:
+      - transactions
+  /txs/decode:
+    post:
+      consumes:
+      - application/json
+      description: Decode a transaction (signed or not) from base64-encoded Amino
+        serialized bytes to JSON
+      parameters:
+      - description: The transaction to decode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/rest.DecodeReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.DecodeResp'
+        "400":
+          description: The transaction was malformated
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Decode a transaction from the Amino wire format
+      tags:
+      - transactions
+  /txs/encode:
+    post:
+      consumes:
+      - application/json
+      description: Encode a transaction (signed or not) from JSON to base64-encoded
+        Amino serialized bytes
+      parameters:
+      - description: The transaction to encode
+        in: body
+        name: tx
+        required: true
+        schema:
+          $ref: '#/definitions/types.StdTx'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.EncodeResp'
+        "400":
+          description: The transaction was malformated
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Encode a transaction to the Amino wire format
       tags:
       - transactions
 swagger: "2.0"

@@ -66,7 +66,8 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			return
 		}
 
-		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		keybase, err := keys.NewKeyringFromDir(viper.GetString(cli.HomeFlag), inBuf)
 		if err != nil {
 			return
 		}
@@ -79,7 +80,6 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			return fmt.Errorf("%q must be of type %s: %s", args[1], crkeys.TypeMulti, multisigInfo.GetType())
 		}
 
-		inBuf := bufio.NewReader(cmd.InOrStdin())
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)

@@ -24,6 +24,7 @@ type TxBuilder struct {
 	simulateAndExecute bool
 	chainID            string
 	memo               string
+	feeAccount         sdk.AccAddress
 	fees               sdk.Coins
 	gasPrices          sdk.DecCoins
 }
@@ -31,7 +32,7 @@ type TxBuilder struct {
 // NewTxBuilder returns a new initialized TxBuilder.
 func NewTxBuilder(
 	txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64,
-	simulateAndExecute bool, chainID, memo string, fees sdk.Coins, gasPrices sdk.DecCoins,
+	simulateAndExecute bool, chainID, memo string, feeAccount sdk.AccAddress, fees sdk.Coins, gasPrices sdk.DecCoins,
 ) TxBuilder {
 
 	return TxBuilder{
@@ -44,6 +45,7 @@ func NewTxBuilder(
 		simulateAndExecute: simulateAndExecute,
 		chainID:            chainID,
 		memo:               memo,
+		feeAccount:         feeAccount,
 		fees:               fees,
 		gasPrices:          gasPrices,
 	}
@@ -101,6 +103,9 @@ func (bldr TxBuilder) ChainID() string { return bldr.chainID }
 // Memo returns the memo message
 func (bldr TxBuilder) Memo() string { return bldr.memo }
 
+// FeeAccount returns an alternate account to pay fees
+func (bldr *TxBuilder) FeeAccount() sdk.AccAddress { return bldr.feeAccount }
+
 // Fees returns the fees for the transaction
 func (bldr TxBuilder) Fees() sdk.Coins { return bldr.fees }
 
@@ -122,6 +127,12 @@ func (bldr TxBuilder) WithChainID(chainID string) TxBuilder {
 // WithGas returns a copy of the context with an updated gas.
 func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 	bldr.gas = gas
+	return bldr
+}
+
+// WithFeeAccount returns a copy of the context with an updated FeeAccount.
+func (bldr TxBuilder) WithFeeAccount(feeAccount sdk.AccAddress) TxBuilder {
+	bldr.feeAccount = feeAccount
 	return bldr
 }
 
@@ -201,6 +212,7 @@ func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 		AccountNumber: bldr.accountNumber,
 		Sequence:      bldr.sequence,
 		Memo:          bldr.memo,
+		FeeAccount:    bldr.feeAccount,
 		Msgs:          msgs,
 		Fee:           NewStdFee(bldr.gas, fees),
 	}, nil
@@ -214,7 +226,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo))
+	return bldr.txEncoder(NewStdTx(msg.Msgs, msg.Fee, []StdSignature{sig}, msg.Memo, msg.FeeAccount))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -238,7 +250,7 @@ func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 
 	// the ante handler will populate with a sentinel pubkey
 	sigs := []StdSignature{{}}
-	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
+	return bldr.txEncoder(NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo, signMsg.FeeAccount))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of it. If append
@@ -255,6 +267,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 		Fee:           stdTx.Fee,
 		Msgs:          stdTx.GetMsgs(),
 		Memo:          stdTx.GetMemo(),
+		FeeAccount:    stdTx.FeeAccount,
 	})
 	if err != nil {
 		return
@@ -266,7 +279,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
-	signedStdTx = NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	signedStdTx = NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo(), bldr.feeAccount)
 	return
 }
 

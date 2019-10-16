@@ -20,6 +20,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		SimulateGas   bool
 		ChainID       string
 		Memo          string
+		FeeAccount    sdk.AccAddress
 		Fees          sdk.Coins
 		GasPrices     sdk.DecCoins
 	}
@@ -135,7 +136,8 @@ func TestTxBuilderBuild(t *testing.T) {
 			bldr := NewTxBuilder(
 				tt.fields.TxEncoder, tt.fields.AccountNumber, tt.fields.Sequence,
 				tt.fields.Gas, tt.fields.GasAdjustment, tt.fields.SimulateGas,
-				tt.fields.ChainID, tt.fields.Memo, tt.fields.Fees, tt.fields.GasPrices,
+				tt.fields.ChainID, tt.fields.Memo, tt.fields.FeeAccount,
+				tt.fields.Fees, tt.fields.GasPrices,
 			)
 			got, err := bldr.BuildSignMsg(tt.msgs)
 			require.Equal(t, tt.wantErr, (err != nil))

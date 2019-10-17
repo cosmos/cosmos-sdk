@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -272,9 +273,12 @@ func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
 }
 
 func MsgsToString(msgs []sdk.Msg) string {
-	outStr := "["
+	outStrings := make([]string, len(msgs))
+	outStrings = append(outStrings, "[")
 	for _, msg := range msgs {
-		outStr = outStr + string(msg.GetSignBytes())
+		outStrings = append(outStrings, string(msg.GetSignBytes()))
 	}
-	return outStr + "]"
+	outStrings = append(outStrings, "]")
+
+	return strings.Join(outStrings, ",")
 }

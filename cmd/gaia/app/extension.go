@@ -273,14 +273,12 @@ func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
 }
 
 func MsgsToString(msgs []sdk.Msg) string {
-	outStrings := make([]string, len(msgs))
-	outStrings = append(outStrings, "[")
+	outStrings := []string{}
 	for _, msg := range msgs {
 		outStrings = append(outStrings, string(msg.GetSignBytes()))
 	}
-	outStrings = append(outStrings, "]")
 
-	retval := strings.Join(outStrings, ",")
+	retval := fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
 	fmt.Println(retval)
 	return retval
 }

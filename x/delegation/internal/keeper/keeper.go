@@ -65,13 +65,33 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	return &grant, nil
 }
 
-// GetAllFeeAllowances returns a list of all the grants from anyone to the given grantee.
-func (k Keeper) GetAllFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]types.FeeAllowanceGrant, error) {
+// GetAllMyFeeAllowances returns a list of all the grants from anyone to the given grantee.
+func (k Keeper) GetAllMyFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]types.FeeAllowanceGrant, error) {
 	store := ctx.KVStore(k.storeKey)
 	var grants []types.FeeAllowanceGrant
 
 	prefix := types.FeeAllowancePrefixByGrantee(grantee)
 	iter := sdk.KVStorePrefixIterator(store, prefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		bz := iter.Value()
+		var grant types.FeeAllowanceGrant
+		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
+		if err != nil {
+			return nil, err
+		}
+		grants = append(grants, grant)
+	}
+	return grants, nil
+}
+
+// GetAllFeeAllowances returns a list of all the grants in the store.
+// This is very expensive and only designed for export genesis
+func (k Keeper) GetAllFeeAllowances(ctx sdk.Context) ([]types.FeeAllowanceGrant, error) {
+	store := ctx.KVStore(k.storeKey)
+	var grants []types.FeeAllowanceGrant
+
+	iter := sdk.KVStorePrefixIterator(store, types.FeeAllowanceKeyPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		bz := iter.Value()

@@ -28,7 +28,7 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("invalid address", err.Error()))
 	}
 
-	fees, err := keeper.GetAllFeeAllowances(ctx, granteeAddr)
+	fees, err := keeper.GetAllMyFeeAllowances(ctx, granteeAddr)
 	if err != nil {
 		return nil, sdk.ConvertError(err)
 	}

@@ -176,7 +176,7 @@ func TestKeeperCrud(t *testing.T) {
 
 	for name, tc := range allCases {
 		t.Run(name, func(t *testing.T) {
-			grants, err := k.GetAllFeeAllowances(ctx, tc.grantee)
+			grants, err := k.GetAllMyFeeAllowances(ctx, tc.grantee)
 			require.NoError(t, err)
 			assert.Equal(t, tc.grants, grants)
 		})

@@ -133,14 +133,20 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 	if err != nil {
 		panic(err)
 	}
-	InitGenesis(ctx, am.keeper, genesisState)
+	err = InitGenesis(ctx, am.keeper, genesisState)
+	if err != nil {
+		panic(err)
+	}
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the delegation
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs, err := ExportGenesis(ctx, am.keeper)
+	if err != nil {
+		panic(err)
+	}
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 

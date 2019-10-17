@@ -88,6 +88,22 @@ func RandIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min) + min
 }
 
+func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
+	var subset sdk.Coins
+	for _, c := range coins {
+		if r.Intn(1) == 0 {
+			continue
+		}
+
+		amt, err := RandPositiveInt(r, c.Amount)
+		if err != nil {
+			continue
+		}
+		subset = append(subset, sdk.NewCoin(c.Denom, amt))
+	}
+	return subset
+}
+
 // DeriveRand derives a new Rand deterministically from another random source.
 // Unlike rand.New(rand.NewSource(seed)), the result is "more random"
 // depending on the source and state of r.

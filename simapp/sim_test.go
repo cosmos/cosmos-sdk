@@ -69,13 +69,13 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgMultiSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 40
 					})
 				return v
 			}(nil),
-			banksim.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
+			banksim.SimulateMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {

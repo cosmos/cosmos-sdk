@@ -88,7 +88,7 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -235,7 +235,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -249,6 +249,8 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 
 // Pick a random deposit with a random denomination with a
 // deposit amount between (0, min(balance, minDepositAmount))
+// This is to simulate multiple users depositing to get the
+// proposal above the minimum deposit amount
 func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {

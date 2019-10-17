@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -22,6 +23,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+		fmt.Println("here")
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -90,14 +92,15 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+		// fmt.Println("there")
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
 
 		// random number of inputs/outputs between [1, 3]
-		inputs := make([]types.Input, rand.Intn(3)+1)
-		outputs := make([]types.Output, rand.Intn(3)+1)
+		inputs := make([]types.Input, r.Intn(3)+1)
+		outputs := make([]types.Output, r.Intn(3)+1)
 
 		// collect signer privKeys
 		privs := make([]crypto.PrivKey, len(inputs))
@@ -130,7 +133,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 
 			// set next input and accumulate total sent coins
 			inputs[i] = types.NewInput(simAccount.Address, coins)
-			totalSentCoins.Add(coins)
+			totalSentCoins = totalSentCoins.Add(coins)
 		}
 
 		for o := range outputs {
@@ -230,11 +233,12 @@ func randomSendFields(
 	}
 
 	coins := acc.SpendableCoins(ctx.BlockHeader().Time)
-	if coins.Empty() {
-		return simAccount, toSimAcc, nil, true, nil // skip error
-	}
 
 	sendCoins := simulation.RandSubsetCoins(r, coins)
+	if sendCoins.Empty() {
+		fmt.Println("hello")
+		return simAccount, toSimAcc, nil, true, nil // skip error
+	}
 
 	return simAccount, toSimAcc, sendCoins, false, nil
 }

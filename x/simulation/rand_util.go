@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
@@ -88,10 +89,14 @@ func RandIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min) + min
 }
 
+// returns random subset of the provided coins
+// may return empty sdk.Coins
 func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	var subset sdk.Coins
 	for _, c := range coins {
-		if r.Intn(1) == 0 {
+		// coin flip if multiple coins
+		// if there is single coin then return random amount of it
+		if r.Intn(2) == 0 && len(coins) != 1 {
 			continue
 		}
 
@@ -101,6 +106,7 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 		}
 		subset = append(subset, sdk.NewCoin(c.Denom, amt))
 	}
+	fmt.Printf("\nSUBSET COINS: %v\n", subset)
 	return subset
 }
 

@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
@@ -90,10 +89,26 @@ func RandIntBetween(r *rand.Rand, min, max int) int {
 }
 
 // returns random subset of the provided coins
-// may return empty sdk.Coins
+// will return at least one coin unless coins argument is empty or malformed
+// i.e. 0 amt in coins
 func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
-	var subset sdk.Coins
-	for _, c := range coins {
+	if len(coins) == 0 {
+		return sdk.Coins{}
+	}
+	// make sure at least one coin added
+	denomIdx := r.Intn(len(coins))
+	coin := coins[denomIdx]
+	amt, err := RandPositiveInt(r, coin.Amount)
+	// malformed coin. 0 amt in coins
+	if err != nil {
+		return sdk.Coins{}
+	}
+	subset := sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
+	for i, c := range coins {
+		// skip denom that we already chose earlier
+		if i == denomIdx {
+			continue
+		}
 		// coin flip if multiple coins
 		// if there is single coin then return random amount of it
 		if r.Intn(2) == 0 && len(coins) != 1 {
@@ -101,12 +116,12 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 		}
 
 		amt, err := RandPositiveInt(r, c.Amount)
+		// ignore errors and try another denom
 		if err != nil {
 			continue
 		}
 		subset = append(subset, sdk.NewCoin(c.Denom, amt))
 	}
-	fmt.Printf("\nSUBSET COINS: %v\n", subset)
 	return subset
 }
 

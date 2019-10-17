@@ -42,7 +42,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns default genesis state as raw bytes for the delegation
 // module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	panic("not implemented!")
+	return []byte("{}")
 	// return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
@@ -137,7 +137,8 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // ExportGenesis returns the exported genesis state as raw bytes for the delegation
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	panic("not implemented!")
+	// TODO
+	return []byte("{}")
 	// gs := ExportGenesis(ctx, am.keeper)
 	// return ModuleCdc.MustMarshalJSON(gs)
 }

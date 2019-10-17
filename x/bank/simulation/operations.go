@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -23,7 +22,6 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.Operat
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-		fmt.Println("here")
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -92,7 +90,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-		// fmt.Println("there")
 
 		if !bk.GetSendEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -151,6 +148,18 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simulation.O
 			}
 
 			outputs[o] = types.NewOutput(outAddr.Address, outCoins)
+		}
+
+		// remove any output that has no coins
+		i := 0
+		for i < len(outputs) {
+			if outputs[i].Coins.Empty() {
+				outputs[i] = outputs[len(outputs)-1]
+				outputs = outputs[:len(outputs)-1]
+			} else {
+				// continue onto next coin
+				i++
+			}
 		}
 
 		msg := types.MsgMultiSend{
@@ -236,7 +245,6 @@ func randomSendFields(
 
 	sendCoins := simulation.RandSubsetCoins(r, coins)
 	if sendCoins.Empty() {
-		fmt.Println("hello")
 		return simAccount, toSimAcc, nil, true, nil // skip error
 	}
 

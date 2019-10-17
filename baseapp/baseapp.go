@@ -648,7 +648,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
+			return sdk.ErrUnknownRequest("unrecognized message type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result
@@ -662,20 +662,25 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// each result.
 		data = append(data, msgResult.Data...)
 
+		msgEvents := msgResult.Events
+
 		// append events from the message's execution and a message action event
-		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
-		events = events.AppendEvents(msgResult.Events)
+		msgEvents = msgEvents.AppendEvent(
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+		)
+
+		events = events.AppendEvents(msgEvents)
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, msgEvents))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, msgEvents))
 	}
 
 	result = sdk.Result{

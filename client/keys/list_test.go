@@ -52,6 +52,7 @@ func Test_runListCmd(t *testing.T) {
 		{"keybase: w/key", kbHome2, args{cmdBasic, []string{}}, false},
 	}
 	for _, tt := range testData {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if runningUnattended {
 				mockIn.Reset("testpass1\ntestpass1\n")

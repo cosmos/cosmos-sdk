@@ -72,6 +72,7 @@ func TestDecodeDistributionStore(t *testing.T) {
 		{"other", ""},
 	}
 	for i, tt := range tests {
+		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:

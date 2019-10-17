@@ -123,6 +123,7 @@ func Test_confirmDeletion(t *testing.T) {
 		{"BAD", args{answerInvalid}, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := confirmDeletion(tt.args.buf); (err != nil) != tt.wantErr {
 				t.Errorf("confirmDeletion() error = %v, wantErr %v", err, tt.wantErr)

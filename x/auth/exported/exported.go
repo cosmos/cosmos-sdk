@@ -43,7 +43,7 @@ type GenesisAccounts []GenesisAccount
 
 // Contains returns true if the given address exists in a slice of GenesisAccount
 // objects.
-func (ga GenesisAccounts) Contains(addr sdk.AccAddress) bool {
+func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 	for _, acc := range ga {
 		if acc.GetAddress().Equals(addr) {
 			return true

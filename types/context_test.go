@@ -194,6 +194,7 @@ func TestContextHeaderClone(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := types.NewContext(nil, tc.h, false, nil)
 			require.Equal(t, tc.h.Height, ctx.BlockHeight())

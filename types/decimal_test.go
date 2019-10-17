@@ -189,6 +189,7 @@ func TestArithmetic(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
+		tc := tc
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
@@ -291,6 +292,7 @@ func TestDecMarshalJSON(t *testing.T) {
 		{"12340Int", NewDec(12340), "\"12340.000000000000000000\"", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.d.MarshalJSON()
 			if (err != nil) != tt.wantErr {

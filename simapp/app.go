@@ -54,6 +54,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		delegation.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -124,7 +125,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey)
+		gov.StoreKey, params.StoreKey, delegation.StoreKey)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
 	app := &SimApp{

@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/delegation/internal/ante"
+	"github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
 	// delTypes "github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
 )
 
@@ -38,8 +39,34 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
 	// Set delegation from addr2 to addr3 (plenty to pay)
+	err := app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+		Granter: addr2,
+		Grantee: addr3,
+		Allowance: &types.BasicFeeAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		},
+	})
+	require.NoError(t, err)
 
-	// Set delegation from addr1 to addr4 (insufficient funds)
+	// Set low delegation from addr2 to addr4 (delegation will reject)
+	err = app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+		Granter: addr2,
+		Grantee: addr4,
+		Allowance: &types.BasicFeeAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
+		},
+	})
+	require.NoError(t, err)
+
+	// Set delegation from addr1 to addr4 (cannot cover this )
+	err = app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+		Granter: addr2,
+		Grantee: addr3,
+		Allowance: &types.BasicFeeAllowance{
+			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
+		},
+	})
+	require.NoError(t, err)
 
 	cases := map[string]struct {
 		signerKey  crypto.PrivKey
@@ -77,6 +104,34 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			signer:    addr4,
 			fee:       0,
 			valid:     true,
+		},
+		"valid delegation": {
+			signerKey:  priv3,
+			signer:     addr3,
+			feeAccount: addr2,
+			fee:        50,
+			valid:      true,
+		},
+		"no delegation": {
+			signerKey:  priv3,
+			signer:     addr3,
+			feeAccount: addr1,
+			fee:        2,
+			valid:      false,
+		},
+		"allowance smaller than requested fee": {
+			signerKey:  priv4,
+			signer:     addr4,
+			feeAccount: addr2,
+			fee:        50,
+			valid:      false,
+		},
+		"granter cannot cover allowed delegation": {
+			signerKey:  priv4,
+			signer:     addr4,
+			feeAccount: addr1,
+			fee:        50,
+			valid:      false,
 		},
 	}
 

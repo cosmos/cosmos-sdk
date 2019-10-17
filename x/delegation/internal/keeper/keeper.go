@@ -96,6 +96,9 @@ func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter sdk.AccAddress, grante
 		ctx.Logger().Error(err.Error())
 		return false
 	}
+	if grant == nil || grant.Allowance == nil {
+		return false
+	}
 
 	remove, err := grant.Allowance.Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
 	if remove {

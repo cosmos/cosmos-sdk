@@ -16,20 +16,28 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		switch path[0] {
 		case types.QueryParams:
 			return queryParams(ctx, path[1:], req, keeper)
+
 		case types.QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
+
 		case types.QueryProposal:
 			return queryProposal(ctx, path[1:], req, keeper)
+
 		case types.QueryDeposits:
 			return queryDeposits(ctx, path[1:], req, keeper)
+
 		case types.QueryDeposit:
 			return queryDeposit(ctx, path[1:], req, keeper)
+
 		case types.QueryVotes:
 			return queryVotes(ctx, path[1:], req, keeper)
+
 		case types.QueryVote:
 			return queryVote(ctx, path[1:], req, keeper)
+
 		case types.QueryTally:
 			return queryTally(ctx, path[1:], req, keeper)
+
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown gov query endpoint")
 		}

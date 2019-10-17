@@ -190,19 +190,18 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	return bz, nil
 }
 
-// nolint: unparam
-func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var params types.QueryProposalsParams
+
 	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("failed to parse params", err.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
-
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
+	bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetProposalsFiltered(ctx, params))
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
 	}
+
 	return bz, nil
 }

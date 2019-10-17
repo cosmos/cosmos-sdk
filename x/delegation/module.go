@@ -15,11 +15,11 @@ import (
 )
 
 // TODO:
-// * ante handler
 // * genesis
 // * cli
 // * rest
-// -> changes to auth, etc
+// * periodic fee
+// -> change StdFee instead of StdTx, etc?
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -42,20 +42,25 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns default genesis state as raw bytes for the delegation
 // module.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return []byte("{}")
-	// return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+	return []byte("[]")
 }
 
 // ValidateGenesis performs genesis state validation for the delegation module.
-func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	// TODO
-	return nil
-	// var data GenesisState
-	// err := ModuleCdc.UnmarshalJSON(bz, &data)
-	// if err != nil {
-	// 	return err
-	// }
-	// return ValidateGenesis(data)
+func (a AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
+	_, err := a.getValidatedGenesis(bz)
+	return err
+}
+
+func (a AppModuleBasic) getValidatedGenesis(bz json.RawMessage) (GenesisState, error) {
+	cdc := codec.New()
+	a.RegisterCodec(cdc)
+
+	var data GenesisState
+	err := cdc.UnmarshalJSON(bz, &data)
+	if err != nil {
+		return nil, err
+	}
+	return data, data.ValidateBasic()
 }
 
 // RegisterRESTRoutes registers the REST routes for the delegation module.
@@ -99,10 +104,7 @@ func (AppModule) Name() string {
 }
 
 // RegisterInvariants registers the delegation module invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO?
-	// RegisterInvariants(ir, am.keeper)
-}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the delegation module.
 func (AppModule) Route() string {
@@ -127,20 +129,19 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // InitGenesis performs genesis initialization for the delegation module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	// TODO
-	// var genesisState GenesisState
-	// ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	// InitGenesis(ctx, am.keeper, am.ak, genesisState)
+	genesisState, err := am.getValidatedGenesis(data)
+	if err != nil {
+		panic(err)
+	}
+	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the delegation
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	// TODO
-	return []byte("{}")
-	// gs := ExportGenesis(ctx, am.keeper)
-	// return ModuleCdc.MustMarshalJSON(gs)
+	gs := ExportGenesis(ctx, am.keeper)
+	return ModuleCdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock returns the begin blocker for the delegation module.

@@ -280,5 +280,7 @@ func MsgsToString(msgs []sdk.Msg) string {
 	}
 	outStrings = append(outStrings, "]")
 
-	return strings.Join(outStrings, ",")
+	retval := strings.Join(outStrings, ",")
+	fmt.Println(retval)
+	return retval
 }

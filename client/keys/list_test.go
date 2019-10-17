@@ -44,6 +44,7 @@ func Test_runListCmd(t *testing.T) {
 		{"keybase: w/key", kbHome2, args{cmdBasic, []string{}}, false},
 	}
 	for _, tt := range testData {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			viper.Set(flags.FlagHome, tt.kbDir)
 			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {

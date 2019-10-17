@@ -89,6 +89,7 @@ func TestABCInfo(t *testing.T) {
 	}
 
 	for testName, tc := range cases {
+		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			space, code, log := ABCIInfo(tc.err, tc.debug)
 			if space != tc.wantSpace {
@@ -140,6 +141,7 @@ func TestABCIInfoStacktrace(t *testing.T) {
 	const thisTestSrc = "github.com/cosmos/cosmos-sdk/types/errors.TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
+		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			_, _, log := ABCIInfo(tc.err, tc.debug)
 			if tc.wantStacktrace {
@@ -250,6 +252,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		// 		},
 	}
 	for msg, spec := range specs {
+		spec := spec
 		t.Run(msg, func(t *testing.T) {
 			_, _, log := ABCIInfo(spec.src, spec.debug)
 			if exp, got := spec.exp, log; exp != got {

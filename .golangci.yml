@@ -17,15 +17,19 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - interfacer
     - maligned
     - misspell
     - nakedret
     - prealloc
+    - scopelint
     - staticcheck
     - structcheck
+    - stylecheck
     - typecheck
     - unconvert
     - unused
+    - misspell
   disable:
     - errcheck
 

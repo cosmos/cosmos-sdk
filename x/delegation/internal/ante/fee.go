@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	// we depend on the auth module internals... maybe some more of this can be exported?
@@ -28,50 +30,57 @@ type DelegatedFeeTx interface {
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement DelegatedFeeTx interface to use DeductDelegatedFeeDecorator
 type DeductDelegatedFeeDecorator struct {
-	base authAnte.DeductFeeDecorator
-	ak   authKeeper.AccountKeeper
-	dk   keeper.Keeper
-	sk   authTypes.SupplyKeeper
+	ak authKeeper.AccountKeeper
+	dk keeper.Keeper
+	sk authTypes.SupplyKeeper
 }
 
 func NewDeductDelegatedFeeDecorator(ak authKeeper.AccountKeeper, sk authTypes.SupplyKeeper, dk keeper.Keeper) DeductDelegatedFeeDecorator {
 	return DeductDelegatedFeeDecorator{
-		base: authAnte.NewDeductFeeDecorator(ak, sk),
-		ak:   ak,
-		dk:   dk,
-		sk:   sk,
+		ak: ak,
+		dk: dk,
+		sk: sk,
 	}
 }
 
 func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	// make sure there is a delegation, if not, default to the standard DeductFeeDecorator behavior
-	var granter sdk.AccAddress
-	delTx, ok := tx.(DelegatedFeeTx)
-	if ok {
-		granter = delTx.GetFeeAccount()
-	}
-	if granter == nil {
-		// just defer to the basic DeductFeeHandler
-		return d.base.AnteHandle(ctx, tx, simulate, next)
+	feeTx, ok := tx.(authAnte.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	// short-circuit on zero fee
-	fee := delTx.GetFee()
+	fee := feeTx.GetFee()
 	if fee.IsZero() {
 		return next(ctx, tx, simulate)
 	}
-
-	// ensure the delegation is allowed
-	grantee := delTx.FeePayer()
-	allowed := d.dk.UseDelegatedFees(ctx, granter, grantee, fee)
-	if !allowed {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", grantee, granter)
+	// sanity check from DeductFeeDecorator
+	if addr := d.sk.GetModuleAddress(authTypes.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", authTypes.FeeCollectorName))
 	}
 
-	// now deduct fees from the granter
-	feePayerAcc := d.ak.GetAccount(ctx, granter)
+	// see if there is a delegation
+	var feePayer sdk.AccAddress
+	if delTx, ok := tx.(DelegatedFeeTx); ok {
+		feePayer = delTx.GetFeeAccount()
+	}
+
+	txSigner := feeTx.FeePayer()
+	if feePayer == nil {
+		// if this is not explicitly set, use the first signer as always
+		feePayer = txSigner
+	} else {
+		// ensure the delegation is allowed
+		allowed := d.dk.UseDelegatedFees(ctx, feePayer, txSigner, fee)
+		if !allowed {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", txSigner, feePayer)
+		}
+	}
+
+	// now, either way, we know that we are authorized to deduct the fees from the feePayer account
+	feePayerAcc := d.ak.GetAccount(ctx, feePayer)
 	if feePayerAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "granter address: %s does not exist", granter)
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
 	}
 	err = authAnte.DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {

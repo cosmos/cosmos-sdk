@@ -18,8 +18,8 @@ const (
 	CodeInvalidPacketSequence      sdk.CodeType = 106
 	CodeSequenceNotFound           sdk.CodeType = 107
 	CodePacketTimeout              sdk.CodeType = 108
-	CodeChanIDLen                  sdk.CodeType = 109
-	CodePortIDLen                  sdk.CodeType = 110
+	CodeInvalidPortID              sdk.CodeType = 109
+	CodeInvalidChannelID           sdk.CodeType = 110
 )
 
 // ErrChannelExists implements sdk.Error
@@ -62,12 +62,12 @@ func ErrPacketTimeout(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodePacketTimeout, "packet timeout")
 }
 
-// ErrChanIDLen implements sdk.Error
-func ErrLenChanID(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeChanIDLen, "chanid too long")
+// ErrInvalidPortID implements sdk.Error
+func ErrInvalidPortID(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidPortID, msg)
 }
 
-// ErrLenPortID implements sdk.Error
-func ErrLenPortID(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodePortIDLen, "portid too long")
+// ErrInvalidChannelID implements sdk.Error
+func ErrInvalidChannelID(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidChannelID, msg)
 }

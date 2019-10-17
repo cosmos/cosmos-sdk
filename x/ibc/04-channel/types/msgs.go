@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -8,6 +11,7 @@ import (
 )
 
 const (
+	// TODO: double check lenght. Eventually move to ICS24
 	lenPortID = 64
 	lenChanID = 64
 )
@@ -21,8 +25,16 @@ type MsgChannelOpenInit struct {
 	Signer    sdk.AccAddress `json:"signer"`
 }
 
-func NewMsgChannelOpenInit(portID string, channelID string, channel Channel, signer sdk.AccAddress) MsgChannelOpenInit {
-	return MsgChannelOpenInit{portID, channelID, channel, signer}
+// NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
+func NewMsgChannelOpenInit(
+	portID, channelID string, channel Channel, signer sdk.AccAddress,
+) MsgChannelOpenInit {
+	return MsgChannelOpenInit{
+		PortID:    portID,
+		ChannelID: channelID,
+		Channel:   channel,
+		Signer:    signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -32,19 +44,25 @@ func (msg MsgChannelOpenInit) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelOpenInit) Type() string {
-	return EventTypeChannelOpenInit
+	return "channel_open_init"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Signer can be empty
@@ -73,8 +91,20 @@ type MsgChannelOpenTry struct {
 	Signer              sdk.AccAddress `json:"signer"`
 }
 
-func NewMsgChannelOpenTry(portID string, channelID string, channel Channel, cpv string, proofInit ics23.Proof, proofHeight uint64, signer sdk.AccAddress) MsgChannelOpenTry {
-	return MsgChannelOpenTry{portID, channelID, channel, cpv, proofInit, proofHeight, signer}
+// NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
+func NewMsgChannelOpenTry(
+	portID, channelID string, channel Channel, cpv string, proofInit ics23.Proof,
+	proofHeight uint64, signer sdk.AccAddress,
+) MsgChannelOpenTry {
+	return MsgChannelOpenTry{
+		PortID:              portID,
+		ChannelID:           channelID,
+		Channel:             channel,
+		CounterpartyVersion: cpv,
+		ProofInit:           proofInit,
+		ProofHeight:         proofHeight,
+		Signer:              signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -84,19 +114,26 @@ func (msg MsgChannelOpenTry) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelOpenTry) Type() string {
-	return EventTypeChannelOpenTry
+	return "channel_open_try"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Check proofs != nil
@@ -126,8 +163,19 @@ type MsgChannelOpenAck struct {
 	Signer              sdk.AccAddress `json:"signer"`
 }
 
-func NewMsgChannelOpenAck(port string, channelID string, cpv string, proofTry ics23.Proof, proofHeight uint64, signer sdk.AccAddress) MsgChannelOpenAck {
-	return MsgChannelOpenAck{port, channelID, cpv, proofTry, proofHeight, signer}
+// NewMsgChannelOpenAck creates a new MsgChannelOpenAck instance
+func NewMsgChannelOpenAck(
+	portID, channelID string, cpv string, proofTry ics23.Proof, proofHeight uint64,
+	signer sdk.AccAddress,
+) MsgChannelOpenAck {
+	return MsgChannelOpenAck{
+		PortID:              portID,
+		ChannelID:           channelID,
+		CounterpartyVersion: cpv,
+		ProofTry:            proofTry,
+		ProofHeight:         proofHeight,
+		Signer:              signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -137,19 +185,25 @@ func (msg MsgChannelOpenAck) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelOpenAck) Type() string {
-	return EventTypeChannelOpenAck
+	return "channel_open_ack"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Check proofs != nil
@@ -177,8 +231,18 @@ type MsgChannelOpenConfirm struct {
 	Signer      sdk.AccAddress `json:"signer"`
 }
 
-func NewMsgChannelOpenConfirm(portID string, channelID string, proofAck ics23.Proof, proofHeight uint64, signer sdk.AccAddress) MsgChannelOpenConfirm {
-	return MsgChannelOpenConfirm{portID, channelID, proofAck, proofHeight, signer}
+// NewMsgChannelOpenConfirm creates a new MsgChannelOpenConfirm instance
+func NewMsgChannelOpenConfirm(
+	portID, channelID string, proofAck ics23.Proof, proofHeight uint64,
+	signer sdk.AccAddress,
+) MsgChannelOpenConfirm {
+	return MsgChannelOpenConfirm{
+		PortID:      portID,
+		ChannelID:   channelID,
+		ProofAck:    proofAck,
+		ProofHeight: proofHeight,
+		Signer:      signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -188,19 +252,25 @@ func (msg MsgChannelOpenConfirm) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelOpenConfirm) Type() string {
-	return EventTypeChannelOpenConfirm
+	return "channel_open_confirm"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Check proofs != nil
@@ -226,8 +296,13 @@ type MsgChannelCloseInit struct {
 	Signer    sdk.AccAddress `json:"signer"`
 }
 
+// NewMsgChannelCloseInit creates a new MsgChannelCloseInit instance
 func NewMsgChannelCloseInit(portID string, channelID string, signer sdk.AccAddress) MsgChannelCloseInit {
-	return MsgChannelCloseInit{portID, channelID, signer}
+	return MsgChannelCloseInit{
+		PortID:    portID,
+		ChannelID: channelID,
+		Signer:    signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -237,19 +312,25 @@ func (msg MsgChannelCloseInit) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelCloseInit) Type() string {
-	return EventTypeChannelCloseInit
+	return "channel_close_init"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseInit) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Signer can be empty
@@ -276,8 +357,18 @@ type MsgChannelCloseConfirm struct {
 	Signer      sdk.AccAddress `json:"signer"`
 }
 
-func NewMsgChannelCloseConfirm(portID string, channelID string, proofInit ics23.Proof, proofHeight uint64, signer sdk.AccAddress) MsgChannelCloseConfirm {
-	return MsgChannelCloseConfirm{portID, channelID, proofInit, proofHeight, signer}
+// NewMsgChannelCloseConfirm creates a new MsgChannelCloseConfirm instance
+func NewMsgChannelCloseConfirm(
+	portID, channelID string, proofInit ics23.Proof, proofHeight uint64,
+	signer sdk.AccAddress,
+) MsgChannelCloseConfirm {
+	return MsgChannelCloseConfirm{
+		PortID:      portID,
+		ChannelID:   channelID,
+		ProofInit:   proofInit,
+		ProofHeight: proofHeight,
+		Signer:      signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -287,19 +378,25 @@ func (msg MsgChannelCloseConfirm) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgChannelCloseConfirm) Type() string {
-	return EventTypeChannelCloseConfirm
+	return "channel_close_confirm"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
-	// Check PortID
-	if len(msg.PortID) > lenPortID {
-		return ErrLenPortID(DefaultCodespace)
+	if strings.TrimSpace(msg.PortID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "port ID can't be blank")
 	}
 
-	// Check ChanID
+	if len(msg.PortID) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.ChannelID) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "channel ID can't be blank")
+	}
+
 	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("channel ID length can't be > %d", lenChanID))
 	}
 
 	// Check proofs != nil
@@ -330,8 +427,12 @@ type MsgSendPacket struct {
 	Signer    sdk.AccAddress   `json:"signer" yaml:"signer"`
 }
 
-func NewMsgSendPacket(packet exported.PacketI, channelID string, proofs []ics23.Proof, height uint64, signer sdk.AccAddress) MsgSendPacket {
-	return MsgSendPacket{packet, channelID, proofs, height, signer}
+// NewMsgSendPacket creates a new MsgSendPacket instance
+func NewMsgSendPacket(packet exported.PacketI, signer sdk.AccAddress) MsgSendPacket {
+	return MsgSendPacket{
+		Packet: packet,
+		Signer: signer,
+	}
 }
 
 // Route implements sdk.Msg
@@ -341,14 +442,42 @@ func (msg MsgSendPacket) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgSendPacket) Type() string {
-	return EventTypeSendPacket
+	return "send_packet"
 }
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSendPacket) ValidateBasic() sdk.Error {
-	// Check ChanID
-	if len(msg.ChannelID) > lenChanID {
-		return ErrLenChanID(DefaultCodespace)
+	// TODO: move to Packet validation function
+	if strings.TrimSpace(msg.Packet.SourcePort()) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "packet source port ID can't be blank")
+	}
+
+	if len(msg.Packet.SourcePort()) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("packet source port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.Packet.DestPort()) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "packet destination port ID can't be blank")
+	}
+
+	if len(msg.Packet.DestPort()) > lenPortID {
+		return ErrInvalidPortID(DefaultCodespace, fmt.Sprintf("packet destination port ID length can't be > %d", lenPortID))
+	}
+
+	if strings.TrimSpace(msg.Packet.SourceChannel()) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "packet source channel ID can't be blank")
+	}
+
+	if len(msg.Packet.SourceChannel()) > lenChanID {
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("packet source channel ID length can't be > %d", lenChanID))
+	}
+
+	if strings.TrimSpace(msg.Packet.DestChannel()) == "" {
+		return ErrInvalidPortID(DefaultCodespace, "packet destination channel ID can't be blank")
+	}
+
+	if len(msg.Packet.DestChannel()) > lenChanID {
+		return ErrInvalidChannelID(DefaultCodespace, fmt.Sprintf("packet destination channel ID length can't be > %d", lenChanID))
 	}
 
 	// Check proofs != nil

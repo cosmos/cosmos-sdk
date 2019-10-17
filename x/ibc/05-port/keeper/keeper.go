@@ -23,8 +23,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 	return Keeper{
 		storeKey:  key,
 		cdc:       cdc,
-		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/ports",
-		prefix:    []byte(types.SubModuleName + "/"),                                          // "ports/"
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
+		prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
 	}
 }
 
@@ -63,7 +63,7 @@ func (k Keeper) BindPort(ctx sdk.Context, portID string, generateFn exported.Gen
 
 	_, found := k.GetPort(ctx, portID)
 	if found {
-		return types.ErrPortExists(k.codespace)
+		return types.ErrPortExists(k.codespace, portID)
 	}
 	key := generateFn()
 	k.SetPort(ctx, portID, key)
@@ -83,7 +83,7 @@ func (k Keeper) TransferPort(
 ) sdk.Error {
 	port, found := k.GetPort(ctx, portID)
 	if !found {
-		return types.ErrPortNotFound(k.codespace)
+		return types.ErrPortNotFound(k.codespace, portID)
 	}
 
 	if !authenticateFn(port) {
@@ -107,7 +107,7 @@ func (k Keeper) ReleasePort(
 	authenticateFn exported.Authenticate) sdk.Error {
 	port, found := k.GetPort(ctx, portID)
 	if !found {
-		return types.ErrPortNotFound(k.codespace)
+		return types.ErrPortNotFound(k.codespace, portID)
 	}
 
 	if !authenticateFn(port) {

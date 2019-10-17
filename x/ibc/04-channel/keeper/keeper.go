@@ -29,7 +29,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
-	// portKeeper types.PortKeeper,
+	portKeeper types.PortKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -38,7 +38,7 @@ func NewKeeper(
 		prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
-		// portKeeper:       portKeeper,
+		portKeeper:       portKeeper,
 	}
 }
 

@@ -8,9 +8,4 @@ type PacketI interface {
 	DestPort() string
 	DestChannel() string
 	Data() []byte
-
-	// // Non ICS04 interface functions
-	// Type() string
-	// ValidateBasic() sdk.Error
-	// Marshal() []byte // Should exclude PortID/ChannelID info
 }

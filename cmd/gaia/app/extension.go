@@ -213,7 +213,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 				fmt.Printf("EXECUTING TX %s FOR %d\n", txHash, block.Header.Height)
 				result := app.BaseApp.DeliverTx(tx) // cause transaction to be applied to snapshotted db, so we can interrogate results.
 				jsonTags, _ := app.GetCodec().MarshalJSON(sdk.TagsToStringTags(result.GetTags()))
-				jsonMsgs, _ := app.GetCodec().MarshalJSON(sdktx.GetMsgs())
+				jsonMsgs, _ := MsgsToString(sdktx.GetMsgs())
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
 				if _, err := transactionStatement.Exec(
@@ -269,4 +269,12 @@ func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
 		}
 	}
 
+}
+
+func MsgsToString(msgs []sdk.Msg) string {
+	outStr := "["
+	for _, msg := range msgs {
+		outStr = outStr + string(msg.GetSignBytes())
+	}
+	return outStr + "]"
 }

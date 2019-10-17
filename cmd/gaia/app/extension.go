@@ -279,6 +279,6 @@ func MsgsToString(msgs []sdk.Msg) string {
 	}
 
 	retval := fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
-	fmt.Println(retval)
+	fmt.Sprintf("Messages: %s", retval)
 	return retval
 }

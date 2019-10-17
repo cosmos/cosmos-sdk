@@ -8,13 +8,13 @@ import (
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
 	cdc      *codec.Codec
+	storeKey sdk.StoreKey
 }
 
 // NewKeeper creates a DelegationKeeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
-	return Keeper{storeKey, cdc}
+func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
+	return Keeper{cdc: cdc, storeKey: storeKey}
 }
 
 // DelegateFeeAllowance creates a new grant

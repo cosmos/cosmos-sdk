@@ -37,7 +37,7 @@ func setupTestInput() testInput {
 	ms.MountStoreWithDB(delCapKey, sdk.StoreTypeIAVL, db)
 	ms.LoadLatestVersion()
 
-	dk := keeper.NewKeeper(delCapKey, cdc)
+	dk := keeper.NewKeeper(cdc, delCapKey)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id", Time: time.Now().UTC(), Height: 1234}, false, log.NewNopLogger())
 	return testInput{cdc: cdc, ctx: ctx, dk: dk}

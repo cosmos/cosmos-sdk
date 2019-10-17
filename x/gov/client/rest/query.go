@@ -403,11 +403,37 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		voterAddr := r.URL.Query().Get(RestVoter)
-		depositorAddr := r.URL.Query().Get(RestDepositor)
-		propStatus := r.URL.Query().Get(RestProposalStatus)
+		var (
+			voterAddr      sdk.AccAddress
+			depositorAddr  sdk.AccAddress
+			proposalStatus types.ProposalStatus
+		)
 
-		params := types.NewQueryProposalsParams(page, limit, voterAddr, depositorAddr, propStatus)
+		if v := r.URL.Query().Get(RestVoter); len(v) != 0 {
+			voterAddr, err = sdk.AccAddressFromBech32(v)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
+		if v := r.URL.Query().Get(RestDepositor); len(v) != 0 {
+			depositorAddr, err = sdk.AccAddressFromBech32(v)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
+		if v := r.URL.Query().Get(RestProposalStatus); len(v) != 0 {
+			proposalStatus, err = types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(v))
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
+
+		params := types.NewQueryProposalsParams(page, limit, proposalStatus, voterAddr, depositorAddr)
 		bz, err := cliCtx.Codec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -423,69 +449,6 @@ func queryProposalsWithParameterFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
-
-		// =======================================================================
-
-		// bechVoterAddr := r.URL.Query().Get(RestVoter)
-		// bechDepositorAddr := r.URL.Query().Get(RestDepositor)
-		// strProposalStatus := r.URL.Query().Get(RestProposalStatus)
-		// strNumLimit := r.URL.Query().Get(RestNumLimit)
-
-		// params := types.QueryProposalsParams{}
-
-		// if len(bechVoterAddr) != 0 {
-		// 	voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
-		// 	if err != nil {
-		// 		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 		return
-		// 	}
-		// 	params.Voter = voterAddr
-		// }
-
-		// if len(bechDepositorAddr) != 0 {
-		// 	depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
-		// 	if err != nil {
-		// 		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 		return
-		// 	}
-		// 	params.Depositor = depositorAddr
-		// }
-
-		// if len(strProposalStatus) != 0 {
-		// 	proposalStatus, err := types.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
-		// 	if err != nil {
-		// 		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 		return
-		// 	}
-		// 	params.ProposalStatus = proposalStatus
-		// }
-		// if len(strNumLimit) != 0 {
-		// 	numLimit, ok := rest.ParseUint64OrReturnBadRequest(w, strNumLimit)
-		// 	if !ok {
-		// 		return
-		// 	}
-		// 	params.Limit = numLimit
-		// }
-
-		// cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		// if !ok {
-		// 	return
-		// }
-
-		// bz, err := cliCtx.Codec.MarshalJSON(params)
-		// if err != nil {
-		// 	rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 	return
-		// }
-
-		// res, height, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
-		// if err != nil {
-		// 	rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		// 	return
-		// }
-
-		// cliCtx = cliCtx.WithHeight(height)
-		// rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
 

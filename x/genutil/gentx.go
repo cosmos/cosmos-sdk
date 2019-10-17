@@ -39,7 +39,7 @@ func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]jso
 // coins in the genesis accounts
 func ValidateAccountInGenesis(appGenesisState map[string]json.RawMessage,
 	genAccIterator types.GenesisAccountsIterator,
-	key sdk.AccAddress, coins sdk.Coins, cdc *codec.Codec) error {
+	key sdk.Address, coins sdk.Coins, cdc *codec.Codec) error {
 
 	accountIsInGenesis := false
 

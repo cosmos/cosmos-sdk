@@ -54,6 +54,7 @@ func TestBaseReqValidateBasic(t *testing.T) {
 		{"fees and gasprices provided", req4, httptest.NewRecorder(), false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, tt.req.ValidateBasic(tt.w))
 		})
@@ -90,6 +91,7 @@ func TestParseHTTPArgs(t *testing.T) {
 		{"tags", req4, httptest.NewRecorder(), []string{"foo='faa'"}, DefaultPage, DefaultLimit, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			tags, page, limit, err := ParseHTTPArgs(tt.req)
 			if tt.err {
@@ -127,6 +129,7 @@ func TestParseQueryHeight(t *testing.T) {
 		{"negative height", req3, httptest.NewRecorder(), context.CLIContext{}, emptyHeight, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cliCtx, ok := ParseQueryHeightOrReturnBadRequest(tt.w, tt.cliCtx, tt.req)
 			if tt.expectedOk {

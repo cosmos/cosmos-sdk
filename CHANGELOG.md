@@ -97,9 +97,7 @@ upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --in
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
-<<<<<<< HEAD
 * (modules) [\#4233](https://github.com/cosmos/cosmos-sdk/pull/4233) Add upgrade module that coordinates software upgrades of live chains.
-=======
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
 that allows for arbitrary vesting periods.
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) Modular `AnteHandler` via composable decorators:
@@ -125,7 +123,6 @@ that allows for arbitrary vesting periods.
     * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
->>>>>>> origin/master
 
 ### Improvements
 

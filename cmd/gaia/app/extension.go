@@ -40,22 +40,22 @@ type (
 )
 
 var (
-	balanceTable       = "balance"
-	balanceFields      = "address,balance,denom,height,timestamp"
-	rewardsTable       = "rewards"
-	rewardsFields      = "address,validator,rewards,denom,height,timestamp"
-	valRewardsTable    = "val_rewards"
-	valRewardsFields   = "validator,rewards,denom,height,timestamp"
-	delegationsTable   = "delegations"
-	unbondingsTable    = "unbondings"
-	delegationsFields  = "address,validator,shares,height,timestamp"
-	unbondingsFields   = "address,validator,tokens,height,completion_timestamp,timestamp"
-	messagesFields     = "hash,idx,msgtype,msg,timestamp"
-	messagesTable      = "messages"
-	transactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp"
-	transactionsTable  = "transactions"
-	addressesFields    = "hash,idx,address"
-	addressesTable     = "message_addresses"
+	BalanceTable       = "balance"
+	BalanceFields      = "address,balance,denom,height,timestamp"
+	RewardsTable       = "rewards"
+	RewardsFields      = "address,validator,rewards,denom,height,timestamp"
+	ValRewardsTable    = "val_rewards"
+	ValRewardsFields   = "validator,rewards,denom,height,timestamp"
+	DelegationsTable   = "delegations"
+	UnbondingsTable    = "unbondings"
+	DelegationsFields  = "address,validator,shares,height,timestamp"
+	UnbondingsFields   = "address,validator,tokens,height,completion_timestamp,timestamp"
+	MessagesFields     = "hash,idx,msgtype,msg,timestamp"
+	MessagesTable      = "messages"
+	TransactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp"
+	TransactionsTable  = "transactions"
+	AddressesFields    = "hash,idx,address"
+	AddressesTable     = "message_addresses"
 )
 
 func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, types.RequestBeginBlock)) sdk.BeginBlocker {
@@ -75,7 +75,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		for _, coin := range balance {
 			obj := RabbitInsert{
 				Values: fmt.Sprintf("\"%s\",%d,\"%s\",%d,\"%s\"", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
-				Table:  balanceTable,
+				Table:  BalanceTable,
 			}
 			obj.Insert(rabbit)
 		}
@@ -88,7 +88,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 			for _, coin := range rewards {
 				obj := RabbitInsert{
 					Values: fmt.Sprintf("\"%s\",\"%s\",%d,\"%s\",%d,\"%s\"", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
-					Table:  rewardsTable,
+					Table:  RewardsTable,
 				}
 				obj.Insert(rabbit)
 			}
@@ -107,7 +107,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		for _, coin := range commission {
 			obj := RabbitInsert{
 				Values: fmt.Sprintf("\"%s\",%d,\"%s\",%d,\"%s\"", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
-				Table:  valRewardsTable,
+				Table:  ValRewardsTable,
 			}
 			obj.Insert(rabbit)
 		}
@@ -120,7 +120,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
 			Values: fmt.Sprintf("\"%s\",\"%s\",%d,%d,\"%s\"", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time),
-			Table:  delegationsTable,
+			Table:  DelegationsTable,
 		}
 		obj.Insert(rabbit)
 	}
@@ -132,7 +132,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 			for _, entry := range unbond.Entries {
 				obj := RabbitInsert{
 					Values: fmt.Sprintf("\"%s\",\"%s\",%d,%d,\"%s\",\"%s\"", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime, req.Header.Time),
-					Table:  unbondingsTable,
+					Table:  UnbondingsTable,
 				}
 				obj.Insert(rabbit)
 			}
@@ -153,7 +153,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 
 					obj := RabbitInsert{
 						Values: fmt.Sprintf("\"%s\",%d,%s,\"%s\",\"%s\"", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time),
-						Table:  messagesTable,
+						Table:  MessagesTable,
 					}
 					obj.Insert(rabbit)
 
@@ -184,7 +184,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 						string(jsonTags),
 						string(jsonMsgs),
 						block.Header.Time),
-					Table: transactionsTable,
+					Table: TransactionsTable,
 				}
 				obj.Insert(rabbit)
 			} else {
@@ -208,7 +208,7 @@ func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel) {
 			a[sdkAddr.String()] = true
 			obj := RabbitInsert{
 				Values: fmt.Sprintf("\"%s\",%d,\"%s\"", hash, idx, sdkAddr.String()),
-				Table:  addressesTable,
+				Table:  AddressesTable,
 			}
 			obj.Insert(rabbit)
 		}

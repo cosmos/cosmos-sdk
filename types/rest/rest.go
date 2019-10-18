@@ -320,27 +320,41 @@ func PostProcessResponse(w http.ResponseWriter, cliCtx context.CLIContext, resp 
 }
 
 // ParseHTTPArgsWithLimit parses the request's URL and returns a slice containing
-// all arguments pairs. It separates page and limit used for pagination where a
-// default limit can be provided.
-func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, page, limit int, err error) {
-	tags = make([]string, 0, len(r.Form))
-	for key, values := range r.Form {
-		if key == "page" || key == "limit" {
-			continue
-		}
-		var value string
-		value, err = url.QueryUnescape(values[0])
-		if err != nil {
-			return tags, page, limit, err
-		}
+// all event pairs. It separates page and limit used for pagination where a
+// default limit can be provided. Events consist of the form
+// {eventType}.{attributeKey}={attributeValue} and can be provided in one of two ways:
+//
+// 1. as query params separated by '&'
+// e.g.
+// ?message.action=send&message.sender=cosmos1...
+//
+// 2. as a single query param string separated by ','
+// e.g.
+// ?events="message.action=send,message.sender=cosmos1..."
+func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (events []string, page, limit int, err error) {
+	events = make([]string, 0, len(r.Form))
 
-		var tag string
-		if key == types.TxHeightKey {
-			tag = fmt.Sprintf("%s=%s", key, value)
-		} else {
-			tag = fmt.Sprintf("%s='%s'", key, value)
+	if rawEvents := r.Form["events"]; len(rawEvents) > 0 {
+		events = parseEventsFromQuery(rawEvents[0])
+	} else {
+		for key, values := range r.Form {
+			if key == "page" || key == "limit" {
+				continue
+			}
+
+			var value string
+
+			value, err = url.QueryUnescape(values[0])
+			if err != nil {
+				return events, page, limit, err
+			}
+
+			if key == types.TxHeightKey {
+				events = append(events, fmt.Sprintf("%s=%s", key, value))
+			} else {
+				events = append(events, fmt.Sprintf("%s='%s'", key, value))
+			}
 		}
-		tags = append(tags, tag)
 	}
 
 	pageStr := r.FormValue("page")
@@ -349,9 +363,9 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 	} else {
 		page, err = strconv.Atoi(pageStr)
 		if err != nil {
-			return tags, page, limit, err
+			return events, page, limit, err
 		} else if page <= 0 {
-			return tags, page, limit, errors.New("page must greater than 0")
+			return events, page, limit, errors.New("page must greater than 0")
 		}
 	}
 
@@ -361,13 +375,40 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 	} else {
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil {
-			return tags, page, limit, err
+			return events, page, limit, err
 		} else if limit <= 0 {
-			return tags, page, limit, errors.New("limit must greater than 0")
+			return events, page, limit, errors.New("limit must greater than 0")
 		}
 	}
 
-	return tags, page, limit, nil
+	return events, page, limit, nil
+}
+
+func parseEventsFromQuery(rawEvents string) []string {
+	eventStrs := strings.Split(rawEvents, ",")
+	events := make([]string, 0, len(rawEvents))
+
+	for _, e := range eventStrs {
+		event := strings.Split(e, "=")
+		if len(event) != 2 {
+			return []string{}
+		}
+
+		key := event[0]
+
+		value, err := url.QueryUnescape(event[1])
+		if err != nil {
+			return []string{}
+		}
+
+		if key == types.TxHeightKey {
+			events = append(events, fmt.Sprintf("%s=%s", key, value))
+		} else {
+			events = append(events, fmt.Sprintf("%s='%s'", key, value))
+		}
+	}
+
+	return events
 }
 
 // ParseHTTPArgs parses the request's URL and returns a slice containing all

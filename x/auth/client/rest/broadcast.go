@@ -30,8 +30,8 @@ type BroadcastReq struct {
 // @Produce  json
 // @Param tx body rest.BroadcastReq true "Signed transaction along with the broadcasting mode"
 // @Success 200 {object} types.TxResponse
-// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid."
-// @Failure 500 {object} rest.ErrorResponse "Returned if the transaction cannot be decoded."
+// @Failure 400 {object} rest.ErrorResponse "Returned if the request is invalid"
+// @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /txs [post]
 func BroadcastTxRequest(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

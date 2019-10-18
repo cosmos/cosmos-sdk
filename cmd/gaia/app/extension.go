@@ -74,7 +74,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		balance := account.GetCoins()
 		for _, coin := range balance {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,'%s'", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
 				Table:  BalanceTable,
 			}
 			obj.Insert(rabbit)
@@ -87,7 +87,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 
 			for _, coin := range rewards {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,'%s',%d,'%s'", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+					Values: fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
 					Table:  RewardsTable,
 				}
 				obj.Insert(rabbit)
@@ -106,7 +106,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,'%s'", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
 				Table:  ValRewardsTable,
 			}
 			obj.Insert(rabbit)
@@ -119,7 +119,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 	delegations := app.stakingKeeper.GetAllDelegations(ctx)
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
-			Values: fmt.Sprintf("'%s','%s',%d,%d,'%s'", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time),
+			Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s')", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time),
 			Table:  DelegationsTable,
 		}
 		obj.Insert(rabbit)
@@ -131,7 +131,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,%d,'%s','%s'", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime, req.Header.Time),
+					Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s')", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime, req.Header.Time),
 					Table:  UnbondingsTable,
 				}
 				obj.Insert(rabbit)
@@ -152,7 +152,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				for msgidx, msg := range sdktx.GetMsgs() {
 
 					obj := RabbitInsert{
-						Values: fmt.Sprintf("'%s',%d,%s,'%s','%s'", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time),
+						Values: fmt.Sprintf("'%s',%d,%s,'%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time),
 						Table:  MessagesTable,
 					}
 					obj.Insert(rabbit)
@@ -172,7 +172,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s',%d,%d,%d,%d,'%s','%s','%s','%s','%s','%s'",
+					Values: fmt.Sprintf("'%s',%d,%d,%d,%d,'%s','%s','%s','%s','%s',toDateTime('%s')",
 						txHash,
 						block.Header.Height,
 						result.GetCode(),

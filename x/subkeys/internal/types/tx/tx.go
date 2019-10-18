@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	// _ sdk.Tx = (*DelegatedTx)(nil)
+	_ sdk.Tx = DelegatedTx{}
 
 	maxGasWanted = uint64((1 << 63) - 1)
 )

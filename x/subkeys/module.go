@@ -12,13 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	tx "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 )
 
 // TODO:
-// * cli
-// * rest
+// * docs
 // * periodic fee
-// -> change StdFee instead of StdTx, etc?
 
 var (
 	_ module.AppModule      = AppModule{}
@@ -36,6 +35,7 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the delegation module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
+	tx.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the delegation

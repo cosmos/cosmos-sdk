@@ -76,12 +76,23 @@ func RegisterClientType(ty string) {
 
 // ClientTypeFromStr returns a byte that corresponds to the registered client
 // type. It returns 0 if the type is not found/registered.
-func ClientTypeFromStr(ty string) ClientType {
-	switch ty {
+func ClientTypeFromStr(clientType string) ClientType {
+	switch clientType {
 	case ClientTypeTendermint:
 		return Tendermint
 
 	default:
 		return 0
+	}
+}
+
+// ClientTypeToString returns the string representation of a client type
+func ClientTypeToString(clientType ClientType) string {
+	switch clientType {
+	case Tendermint:
+		return ClientTypeTendermint
+
+	default:
+		return ""
 	}
 }

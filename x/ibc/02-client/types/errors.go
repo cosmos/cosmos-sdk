@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,18 +21,18 @@ const (
 )
 
 // ErrClientExists implements sdk.Error
-func ErrClientExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientExists, "client already exists")
+func ErrClientExists(codespace sdk.CodespaceType, clientID string) sdk.Error {
+	return sdk.NewError(codespace, CodeClientExists, fmt.Sprintf("client with ID %s already exists", clientID))
 }
 
 // ErrClientNotFound implements sdk.Error
-func ErrClientNotFound(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientNotFound, "client not found")
+func ErrClientNotFound(codespace sdk.CodespaceType, clientID string) sdk.Error {
+	return sdk.NewError(codespace, CodeClientNotFound, fmt.Sprintf("client with ID %s not found", clientID))
 }
 
 // ErrClientFrozen implements sdk.Error
-func ErrClientFrozen(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeClientFrozen, "client is frozen due to misbehaviour")
+func ErrClientFrozen(codespace sdk.CodespaceType, clientID string) sdk.Error {
+	return sdk.NewError(codespace, CodeClientFrozen, fmt.Sprintf("client with ID %s is frozen due to misbehaviour", clientID))
 }
 
 // ErrConsensusStateNotFound implements sdk.Error

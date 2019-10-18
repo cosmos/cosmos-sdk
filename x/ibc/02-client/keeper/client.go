@@ -17,7 +17,7 @@ func (k Keeper) CreateClient(
 ) (types.ClientState, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.ClientState{}, types.ErrClientExists(k.codespace)
+		return types.ClientState{}, types.ErrClientExists(k.codespace, clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -51,11 +51,11 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrClientNotFound(k.codespace), "cannot update client")
+		return sdkerrors.Wrap(types.ErrClientNotFound(k.codespace, clientID), "cannot update client")
 	}
 
 	if clientState.Frozen {
-		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace), "cannot update client")
+		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientID), "cannot update client")
 	}
 
 	consensusState, found := k.GetConsensusState(ctx, clientID)
@@ -88,7 +88,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string, evidence exported.Evidence) error {
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		sdk.ResultFromError(types.ErrClientNotFound(k.codespace))
+		sdk.ResultFromError(types.ErrClientNotFound(k.codespace, clientID))
 	}
 
 	err := k.checkMisbehaviour(ctx, evidence)

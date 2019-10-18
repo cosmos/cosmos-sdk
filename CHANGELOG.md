@@ -80,6 +80,7 @@ increased significantly due to modular `AnteHandler` support. Increase GasLimit 
 
 ### Features
 
+* (cli) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) The `q gov proposals` command now supports pagination.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
 longer panics if the store to load contains substores that we didn't explicitly mount.
@@ -180,6 +181,7 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
+* (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 
 ## [v0.37.2] - 2019-10-10
 

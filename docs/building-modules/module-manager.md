@@ -13,15 +13,6 @@ order: 2
 
 Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../core/baseapp.md#routing), and allows the application developer to set the order of execution of a variety of functions like [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#begingblocker-and-endblocker). 
 
-- [Application Module Interfaces](#application-module-interfaces)
-	+ [`AppModuleBasic`](#appmodulebasic)
-	+ [`AppModuleGenesis`](#appmodulegenesis)
-	+ [`AppModule`](#appmodule)
-	+ [Implementing the Application Module Interfaces](#implementing-the-application-module-interfaces)
-- [Module Managers](#module-managers)
-	+ [`BasicManager`](#basicmanager)
-	+ [`Manager`](#manager)
-
 ## Application Module Interfaces
 
 [Application module interfaces](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go) exist to facilitate the composition of modules together to form a functional SDK application. There are 3 main application module interfaces: 

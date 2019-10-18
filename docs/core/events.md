@@ -12,9 +12,6 @@ order: 7
 
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. 
 
-- [Events](#events)
-- [EventManager](#eventmanager)
-
 ## Events
 
 `Event`s are implemented in the Cosmos SDK as an alias of the [ABCI `event` type](https://github.com/tendermint/tendermint/blob/master/abci/types/types.pb.go#L2661-L2667). They contain:

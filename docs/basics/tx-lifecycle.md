@@ -12,12 +12,6 @@ order: 2
 
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/tx-msgs.md#transactions). The transaction will be referred to as `Tx`.
 
-- [Creation](#creation)
-- [Addition to Mempool](#addition-to-mempool)
-- [Inclusion in a Block](#inclusion-in-a-block)
-- [State Changes](#state-changes)
-- [Consensus and Commit](#consensus-and-commit)
-
 ## Creation
 
 ### Transaction Creation

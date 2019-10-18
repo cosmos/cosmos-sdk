@@ -12,17 +12,6 @@ order: 3
 
 This document describes the in-built accounts system of the Cosmos SDK, as well as the default strategies to handle fees and gas within a Cosmos SDK application.
 
-- [Accounts](#accounts)
-    + [KeyBase](#keybase)
-    + [Addresses and Pubkeys](#addresses-and-pubkeys)
-        * [Pubkeys](#pubkeys)
-        * [Addresses](#addresses)
-- [Fees and Gas](#fees-and-gas)
-    + [Gas Meter](#gas-meter)
-        * [Main Gas Meter](#main-gas-meter)
-        * [Block Gas Meter](#block-gas-meter)
-    + [AnteHandler](#antehandler)
-
 ## Accounts
 
 In the Cosmos SDK, an *account* designates a pair of *public key* `PubKey` and *private key* `PrivKey`. The `PubKey` can be derived to generate various `Addresses`, which are used to identify users (among other parties) in the application. `Addresses` are also associated with [`message`s](../building-modules/messages-and-queries.md#messages) to identify the sender of the `message`. The `PrivKey` is used to generate [digital signatures](#signatures) to prove that an `Address` associated with the `PrivKey` approved of a given `message`. 

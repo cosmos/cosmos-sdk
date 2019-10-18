@@ -14,36 +14,6 @@ order: 1
 This document describes `BaseApp`, the abstraction that implements the core
 functionalities of an SDK application.
 
-- [BaseApp](#baseapp)
-  - [Pre-requisite Reading](#pre-requisite-reading)
-  - [Synopsis](#synopsis)
-  - [Introduction](#introduction)
-  - [Type Definition](#type-definition)
-  - [Constructor](#constructor)
-  - [State Updates](#state-updates)
-    - [InitChain State Updates](#initchain-state-updates)
-    - [CheckState State Updates-](#checktx-state-updates)
-    - [BeginBlock State Updates](#beginblock-state-updates)
-    - [DeliverTx State Updates](#delivertx-state-updates)
-    - [Commit State Updates](#commit-state-updates)
-  - [Routing](#routing)
-    - [Message Routing](#message-routing)
-    - [Query Routing](#query-routing)
-  - [Main ABCI Messages](#main-abci-messages)
-    - [CheckTx](#checktx)
-    - [DeliverTx](#delivertx)
-  - [RunTx, AnteHandler and RunMsgs](#runtx-antehandler-and-runmsgs)
-    - [RunTx](#runtx)
-    - [AnteHandler](#antehandler)
-    - [RunMsgs](#runmsgs)
-  - [Other ABCI Messages](#other-abci-messages)
-    - [InitChain](#initchain)
-    - [BeginBlock](#beginblock)
-    - [EndBlock](#endblock)
-    - [Commit](#commit)
-    - [Info](#info)
-    - [Query](#query)
-
 ## Introduction
 
 `BaseApp` is a base type that implements the core of an SDK application, namely:

@@ -12,9 +12,6 @@ order: 4
 
 The main endpoint of an SDK application is the daemon client, otherwise known as the full-node client. The full-node runs the state-machine, starting from a genesis file. It connects to peers running the same client in order to receive and relay transactions, block proposals and signatures. The full-node is constituted of the application, defined with the Cosmos SDK, and of a consensus engine connected to the application via the ABCI. 
 
-- [`main` function](#main-function)
-- [`start` command](#start-command)
-
 ## `main` function
 
 The full-node client of any SDK application is built by running a `main` function. The client is generally named by appending the `-d` suffix to the application name (e.g. `appd` for an application named `app`), and the `main` function is defined in a `cmd/appd/main.go` file. Running this function creates an executable `.appd` that comes with a set of commands. For an app named `app`, the main command is [`appd start`](#start-command), which starts the full-node. 

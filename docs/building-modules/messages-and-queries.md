@@ -13,9 +13,6 @@ order: 3
 
 `Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`. 
 
-- [Messages](#messages)
-- [Queries](#queries)
-
 ## Messages
 
 `Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions], which may contain one or multiple of them. 
@@ -34,7 +31,7 @@ type MsgSubmitProposal struct {
 }
 ```
 
-The `Msg` is typically accompagnied by a standard constructor function, that is called from one of the [module's interface](./module-interface). `message`s also need to implement the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29) interface, which contains the following methods:
+The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interface). `message`s also need to implement the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29) interface, which contains the following methods:
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
 - `Type() string`: Type of the message, used primarly in [events](./events.md). This should return a message-specific `string`, typically the denomination of the message itself.

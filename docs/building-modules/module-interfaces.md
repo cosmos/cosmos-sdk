@@ -12,14 +12,6 @@ order: 11
 
 This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules will be included.
 
-- [CLI](#cli)
-  + [Transaction Commands](#tx-commands)
-  + [Query Commands](#query-commands)
-- [REST](#rest)
-  + [Request Types](#request-types)
-  + [Request Handlers](#request-handlers)
-  + [Register Routes](#register-routes)
-
 ## CLI
 
 One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint created by the application developer will add commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.

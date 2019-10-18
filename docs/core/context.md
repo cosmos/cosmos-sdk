@@ -8,14 +8,6 @@ order: 3
 
 This document details the SDK `Context` type.
 
-- [Context](#context)
-	- [Synopsis](#synopsis)
-	- [Prerequisites](#prerequisites)
-	- [Context Definition](#context-definition)
-	- [Go Context Package](#go-context-package)
-	- [Cache Wrapping](#cache-wrapping)
-	- [Next](#next)
-
 ## Prerequisites
 
 - [Anatomy of an SDK Application](../basics/app-anatomy.md)

@@ -11,15 +11,7 @@ order: 1
 
 ## Synopsis
 
-This document describes the core parts of a Cosmos SDK application. The placeholder name for this application will be `app`.
-
-- [Node Client](#node-client)
-- [Core Application File](#core-application-file)
-- [Modules](#modules)
-- [Interfaces](#interfaces)
-- [Dependencies and Makefile](#dependencies-and-makefile)
-
-The core parts listed above will generally translate to the following directory tree:
+This document describes the core parts of a Cosmos SDK application. The placeholder name for this application will be `app`. The core parts listed above will generally translate to the following directory tree:
 
 ```
 ./app

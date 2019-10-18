@@ -10,7 +10,7 @@ order: 6
 
 ## Synopsis
 
-`BeginBlocker` and `EndBlocker` are optional methods module developers can implement in their module. They will be triggered at the beginning and at the end of each block respectively. 
+`BeginBlocker` and `EndBlocker` are optional methods module developers can implement in their module. They will be triggered at the beginning and at the end of each block respectively, when the [`BeginBlock`](../core/baseapp.md#beginblock) and [`EndBlock`](../core/baseapp.md#endblock) ABCI messages are received from the underlying consensus engine. 
 
 ## BeginBlocker and EndBlocker
 
@@ -25,6 +25,8 @@ The actual implementation of `BeginBlocker` and `EndBlocker` are very similar to
 - If needed, they can emit [`events`](../core/events.md) via the `ctx`'s `EventManager`. 
 
 A specificity of the `EndBlocker` is that it can return validator updates to the underlying consensus engine in the form of an [`[]abci.ValidatorUpdates`](https://tendermint.com/docs/app-dev/abci-spec.html#validatorupdate). This is the preferred way to implement custom validator changes. 
+
+It is possible for developers to defined the order of execution between the `BeginBlocker`/`EndBlocker` functions of each of their application's modules via the module's manager `SetOrderBeginBlocker`/`SetOrderEndBlocker` methods. For more on the module manager, click [here](./module-manager.md#manager). 
 
 For more, see an [example implementation of `BeginBlocker` from the `distr` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/abci.go) and an [example implementation of `EndBlocker`]( https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/handler.go#L44)
 

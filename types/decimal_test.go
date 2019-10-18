@@ -425,7 +425,7 @@ func TestDecCeil(t *testing.T) {
 	}
 }
 
-func TestDecSqrt(t *testing.T) {
+func TestApproxSqrt(t *testing.T) {
 	testCases := []struct {
 		input    Dec
 		expected Dec

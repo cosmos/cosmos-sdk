@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/delegation"
+	"github.com/cosmos/cosmos-sdk/x/subkeys"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -54,7 +54,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-		delegation.AppModuleBasic{},
+		subkeys.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -101,7 +101,7 @@ type SimApp struct {
 	DistrKeeper      distr.Keeper
 	GovKeeper        gov.Keeper
 	CrisisKeeper     crisis.Keeper
-	DelegationKeeper delegation.Keeper
+	DelegationKeeper subkeys.Keeper
 	ParamsKeeper     params.Keeper
 
 	// the module manager
@@ -125,7 +125,7 @@ func NewSimApp(
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, delegation.StoreKey)
+		gov.StoreKey, params.StoreKey, subkeys.StoreKey)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
 	app := &SimApp{
@@ -159,7 +159,7 @@ func NewSimApp(
 	app.SlashingKeeper = slashing.NewKeeper(app.cdc, keys[slashing.StoreKey], &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.CrisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName)
-	app.DelegationKeeper = delegation.NewKeeper(app.cdc, keys[delegation.StoreKey])
+	app.DelegationKeeper = subkeys.NewKeeper(app.cdc, keys[subkeys.StoreKey])
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -188,7 +188,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		delegation.NewAppModule(app.DelegationKeeper),
+		subkeys.NewAppModule(app.DelegationKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -204,7 +204,7 @@ func NewSimApp(
 		auth.ModuleName, distr.ModuleName, staking.ModuleName,
 		bank.ModuleName, slashing.ModuleName, gov.ModuleName,
 		mint.ModuleName, supply.ModuleName, crisis.ModuleName,
-		genutil.ModuleName, delegation.ModuleName,
+		genutil.ModuleName, subkeys.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -223,7 +223,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-		// delegation.NewAppModule(app.DelegationKeeper),
+		// subkeys.NewAppModule(app.DelegationKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()

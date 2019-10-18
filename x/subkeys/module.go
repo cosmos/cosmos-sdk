@@ -1,4 +1,4 @@
-package delegation
+package subkeys
 
 import (
 	"encoding/json"
@@ -15,7 +15,6 @@ import (
 )
 
 // TODO:
-// * genesis
 // * cli
 // * rest
 // * periodic fee

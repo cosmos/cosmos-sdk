@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/ante"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
-	// delTypes "github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/ante"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
+	// delTypes "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
 )
 
 func TestDeductFeesNoDelegation(t *testing.T) {

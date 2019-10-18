@@ -9,8 +9,8 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
 )
 
 func TestQuery(t *testing.T) {

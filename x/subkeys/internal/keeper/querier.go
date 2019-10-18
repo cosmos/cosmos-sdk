@@ -16,7 +16,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		case QueryGetFeeAllowances:
 			return queryGetFeeAllowances(ctx, path[1:], keeper)
 		default:
-			return nil, sdk.ErrUnknownRequest("Unknown package delegation query endpoint")
+			return nil, sdk.ErrUnknownRequest("Unknown package subkeys query endpoint")
 		}
 	}
 }

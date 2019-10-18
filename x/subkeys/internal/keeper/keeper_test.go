@@ -13,9 +13,9 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/delegation/exported"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/delegation/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/exported"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
 )
 
 type testInput struct {

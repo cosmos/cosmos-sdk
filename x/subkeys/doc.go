@@ -1,6 +1,6 @@
 /*
-Package delegation provides functionality for delegating sub-permissions
-from one account to another account.
+Package subkeys provides functionality for delegating sub-permissions
+from one account (key) to another account (key).
 
 The first implementation allows the delegation for the payment of transaction fees.
 Effectively, this allows for a user to pay fees using the balance of an account
@@ -29,4 +29,4 @@ to the first signer of the transaction. An example usage would be:
 
 allow := feeDelegationKeeper.AllowDelegatedFees(ctx, signers[0], stdTx.FeeAccount, stdTx.Fee.Amount)
 */
-package delegation
+package subkeys

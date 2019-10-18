@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/delegation/exported"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/exported"
 )
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context

@@ -438,7 +438,7 @@ func TestApproxSqrt(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		res := tc.input.RoughSqrt()
+		res := tc.input.ApproxSqrt()
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }

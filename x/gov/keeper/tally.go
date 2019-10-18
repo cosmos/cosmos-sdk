@@ -35,19 +35,19 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
 		// if validator, just record it in the map
-		voteValAddrStr := sdk.ValAddress(vote.Voter).String()
-		if val, ok := currValidators[voteValAddrStr]; ok {
+		valAddrStr := sdk.ValAddress(vote.Voter).String()
+		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Option
-			currValidators[voteValAddrStr] = val
+			currValidators[valAddrStr] = val
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
 		keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation exported.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr().String()
 
-			val, ok := currValidators[valAddrStr]
-			// there is no need to deduct amounts from their own validator
-			if ok && valAddrStr != voteValAddrStr {
+			if val, ok := currValidators[valAddrStr]; ok {
+				// There is no need to handle the special case that validator address equal to voter address.
+				// Because voter's voting power will tally again even if there will deduct voter's voting power from validator.
 				val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
 				currValidators[valAddrStr] = val
 

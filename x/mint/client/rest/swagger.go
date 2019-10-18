@@ -8,9 +8,10 @@ import "github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 //
 //nolint:deadcode,unused
 type (
+	mintParams = types.Params
 	mintParams struct {
-		Height int64        `json:"height"`
-		Result types.Params `json:"result"`
+		Height int64      `json:"height"`
+		Result mintParams `json:"result"`
 	}
 
 	mintInflation struct {

@@ -382,7 +382,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.Params'
+        $ref: '#/definitions/rest.mintParams'
         type: object
     type: object
   rest.params:
@@ -537,15 +537,6 @@ definitions:
           $ref: '#/definitions/types.Deposit'
         type: array
     type: object
-  rest.queryParams:
-    properties:
-      height:
-        type: integer
-      result:
-        items:
-          $ref: '#/definitions/types.Params'
-        type: array
-    type: object
   rest.queryProposal:
     properties:
       height:
@@ -642,6 +633,23 @@ definitions:
         type: object
       withdraw_address:
         type: string
+    type: object
+  rest.slashingParams:
+    properties:
+      height:
+        type: integer
+      result:
+        items:
+          $ref: '#/definitions/rest.slashingParams'
+        type: array
+    type: object
+  rest.stakingParams:
+    properties:
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/rest.stakingParams'
+        type: object
     type: object
   rest.totalDenomSupply:
     properties:
@@ -1060,21 +1068,6 @@ definitions:
   types.MsgWithdrawValidatorCommission:
     properties:
       validator_address:
-        type: string
-    type: object
-  types.Params:
-    properties:
-      downtime_jail_duration:
-        type: string
-      max_evidence_age:
-        type: string
-      min_signed_per_window:
-        type: string
-      signed_blocks_window:
-        type: integer
-      slash_fraction_double_sign:
-        type: string
-      slash_fraction_downtime:
         type: string
     type: object
   types.Pool:
@@ -2423,7 +2416,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.queryParams'
+            $ref: '#/definitions/rest.slashingParams'
         "500":
           description: Returned on server error
           schema:
@@ -2913,7 +2906,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.params'
+            $ref: '#/definitions/rest.stakingParams'
         "400":
           description: Returned if the request doesn't have valid query params
           schema:

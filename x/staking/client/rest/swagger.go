@@ -106,8 +106,10 @@ type (
 		Result types.Pool `json:"result"`
 	}
 
-	params struct {
-		Height int64        `json:"height"`
-		Result types.Params `json:"result"`
+	stakingParams = types.Params
+
+	stakingParams struct {
+		Height int64         `json:"height"`
+		Result stakingParams `json:"result"`
 	}
 )

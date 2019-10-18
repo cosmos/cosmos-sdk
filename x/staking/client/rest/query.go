@@ -492,7 +492,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags staking
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.params
+// @Success 200 {object} rest.stakingParams
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have valid query params"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /staking/parameters [get]

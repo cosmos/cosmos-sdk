@@ -1458,7 +1458,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.queryParams"
+                            "$ref": "#/definitions/rest.slashingParams"
                         }
                     },
                     "500": {
@@ -2183,7 +2183,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.params"
+                            "$ref": "#/definitions/rest.stakingParams"
                         }
                     },
                     "400": {
@@ -3549,7 +3549,7 @@
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/types.Params"
+                    "$ref": "#/definitions/rest.mintParams"
                 }
             }
         },
@@ -3782,20 +3782,6 @@
                 }
             }
         },
-        "rest.queryParams": {
-            "type": "object",
-            "properties": {
-                "height": {
-                    "type": "integer"
-                },
-                "result": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/types.Params"
-                    }
-                }
-            }
-        },
         "rest.queryProposal": {
             "type": "object",
             "properties": {
@@ -3939,6 +3925,32 @@
                 },
                 "withdraw_address": {
                     "type": "string"
+                }
+            }
+        },
+        "rest.slashingParams": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rest.slashingParams"
+                    }
+                }
+            }
+        },
+        "rest.stakingParams": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.stakingParams"
                 }
             }
         },
@@ -4536,29 +4548,6 @@
             "type": "object",
             "properties": {
                 "validator_address": {
-                    "type": "string"
-                }
-            }
-        },
-        "types.Params": {
-            "type": "object",
-            "properties": {
-                "downtime_jail_duration": {
-                    "type": "string"
-                },
-                "max_evidence_age": {
-                    "type": "string"
-                },
-                "min_signed_per_window": {
-                    "type": "string"
-                },
-                "signed_blocks_window": {
-                    "type": "integer"
-                },
-                "slash_fraction_double_sign": {
-                    "type": "string"
-                },
-                "slash_fraction_downtime": {
                     "type": "string"
                 }
             }

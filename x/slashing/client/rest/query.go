@@ -124,7 +124,7 @@ func signingInfoHandlerListFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags slashing
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.queryParams
+// @Success 200 {object} rest.slashingParams
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /slashing/parameters [get]
 func queryParamsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

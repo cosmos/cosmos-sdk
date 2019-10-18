@@ -74,7 +74,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		balance := account.GetCoins()
 		for _, coin := range balance {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
 				Table:  BalanceTable,
 			}
 			obj.Insert(rabbit)
@@ -87,7 +87,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 
 			for _, coin := range rewards {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+					Values: fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
 					Table:  RewardsTable,
 				}
 				obj.Insert(rabbit)
@@ -106,7 +106,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
 				Table:  ValRewardsTable,
 			}
 			obj.Insert(rabbit)
@@ -119,7 +119,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 	delegations := app.stakingKeeper.GetAllDelegations(ctx)
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
-			Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s')", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time),
+			Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s')", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
 			Table:  DelegationsTable,
 		}
 		obj.Insert(rabbit)
@@ -131,7 +131,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s')", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime, req.Header.Time),
+					Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s')", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime.Format("2006-01-02 15:04:05"), req.Header.Time.Format("2006-01-02 15:04:05")),
 					Table:  UnbondingsTable,
 				}
 				obj.Insert(rabbit)
@@ -152,7 +152,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				for msgidx, msg := range sdktx.GetMsgs() {
 
 					obj := RabbitInsert{
-						Values: fmt.Sprintf("'%s',%d,%s,'%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time),
+						Values: fmt.Sprintf("'%s',%d,%s,'%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05")),
 						Table:  MessagesTable,
 					}
 					obj.Insert(rabbit)
@@ -183,7 +183,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 						string(jsonFee),
 						string(jsonTags),
 						string(jsonMsgs),
-						block.Header.Time),
+						block.Header.Time.Format("2006-01-02 15:04:05")),
 					Table: TransactionsTable,
 				}
 				obj.Insert(rabbit)

@@ -434,7 +434,7 @@ func TestDecSqrt(t *testing.T) {
 		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},          // 0.25 => 0.5
 		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},           // 0.09 => 0.3
 		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},   // 9 => 3
-		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))}, // 9 => 3
+		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))}, // -9 => -3
 	}
 
 	for i, tc := range testCases {

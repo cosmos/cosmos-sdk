@@ -7,8 +7,9 @@ import (
 
 // nolint
 type (
-	MsgTransfer = types.MsgTransfer
-	Keeper      = keeper.Keeper
+	MsgTransfer           = types.MsgTransfer
+	MsgSendTransferPacket = types.MsgSendTransferPacket
+	Keeper                = keeper.Keeper
 )
 
 // nolint
@@ -21,5 +22,6 @@ var (
 
 	RegisterCdc = types.RegisterCodec
 
-	NewMsgTransfer = types.NewMsgTransfer
+	NewMsgTransfer           = types.NewMsgTransfer
+	NewMsgSendTransferPacket = types.NewMsgSendTransferPacket
 )

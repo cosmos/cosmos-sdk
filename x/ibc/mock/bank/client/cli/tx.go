@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"io/ioutil"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	mockbank "github.com/cosmos/cosmos-sdk/x/ibc/mock/bank"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -31,8 +30,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "transfer --src-port <src port> --src-channel <src channel> --amount <amount> --receiver <receiver> --source <source> --timeout <timeout> " +
-			"[--proof-path <proof-path> --proof-height <proof-height>]",
+		Use:   "transfer --src-port <src port> --src-channel <src channel> --denom <denomination> --amount <amount> --receiver <receiver> --source <source>",
 		Short: "Transfer tokens across chains through IBC",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -40,35 +38,17 @@ func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			sender := ctx.GetFromAddress()
 			receiver := viper.GetString(FlagReceiver)
+			denom := viper.GetString(FlagDenom)
 			srcPort := viper.GetString(FlagSrcPort)
 			srcChan := viper.GetString(FlagSrcChannel)
 			source := viper.GetBool(FlagSource)
-			timeout := viper.GetUint64(FlagTimeout)
 
-			amountStr := viper.GetString(FlagAmount)
-			amount, err := sdk.ParseCoin(amountStr)
-			if err != nil {
-				return err
+			amount, ok := sdk.NewIntFromString(viper.GetString(FlagAmount))
+			if !ok {
+				return fmt.Errorf("invalid amount")
 			}
 
-			var proof ics23.Proof
-			var proofHeight uint64
-
-			proofPath := viper.GetString(FlagProofPath)
-			if proofPath != "" {
-				proofBz, err := ioutil.ReadFile(proofPath)
-				if err != nil {
-					return err
-				}
-
-				if err := cdc.UnmarshalJSON(proofBz, &proof); err != nil {
-					return err
-				}
-
-				proofHeight = viper.GetUint64(FlagProofHeight)
-			}
-
-			msg := mockbank.NewMsgTransfer(srcPort, srcChan, amount, sender, receiver, source, timeout, proof, proofHeight)
+			msg := mockbank.NewMsgTransfer(srcPort, srcChan, denom, amount, sender, receiver, source)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -79,9 +59,9 @@ func TransferTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	cmd.MarkFlagRequired(FlagSrcPort)
 	cmd.MarkFlagRequired(FlagSrcChannel)
+	cmd.MarkFlagRequired(FlagDenom)
 	cmd.MarkFlagRequired(FlagAmount)
 	cmd.MarkFlagRequired(FlagReceiver)
-	cmd.MarkFlagRequired(FlagTimeout)
 
 	cmd = client.PostCommands(cmd)[0]
 

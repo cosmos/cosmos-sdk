@@ -324,7 +324,7 @@ func (d Dec) QuoInt64(i int64) Dec {
 // Returns -(sqrt(abs(d)) if input is negative
 func (d Dec) ApproxSqrt() Dec {
 	if d.IsNegative() {
-		return d.MulInt64(-1).RoughSqrt().MulInt64(-1)
+		return d.MulInt64(-1).ApproxSqrt().MulInt64(-1)
 	}
 
 	if d.IsZero() {

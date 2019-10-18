@@ -26,16 +26,14 @@ type StdTx struct {
 	Fee        StdFee         `json:"fee" yaml:"fee"`
 	Signatures []StdSignature `json:"signatures" yaml:"signatures"`
 	Memo       string         `json:"memo" yaml:"memo"`
-	FeeAccount sdk.AccAddress `json:"fee_account" yaml:"fee_account"`
 }
 
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string, feeAccount sdk.AccAddress) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: sigs,
 		Memo:       memo,
-		FeeAccount: feeAccount,
 	}
 }
 
@@ -100,9 +98,6 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 // GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }
 
-// GetFeeAccount returns the account paying the fees (often nil, default ot first signer)
-func (tx StdTx) GetFeeAccount() sdk.AccAddress { return tx.FeeAccount }
-
 // GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
 // pubkeys returned from MsgKeySigners, and the order
@@ -138,7 +133,7 @@ func (tx StdTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
 	}
 
 	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo, tx.FeeAccount,
+		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
 	)
 }
 
@@ -215,11 +210,10 @@ type StdSignDoc struct {
 	Memo          string            `json:"memo" yaml:"memo"`
 	Msgs          []json.RawMessage `json:"msgs" yaml:"msgs"`
 	Sequence      uint64            `json:"sequence" yaml:"sequence"`
-	FeeAccount    sdk.AccAddress    `json:"fee_account" yaml:"fee_account"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string, feeAccount sdk.AccAddress) []byte {
+func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
@@ -231,7 +225,6 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 		Memo:          memo,
 		Msgs:          msgsBytes,
 		Sequence:      sequence,
-		FeeAccount:    feeAccount,
 	})
 	if err != nil {
 		panic(err)
@@ -241,9 +234,8 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 
 // StdSignature represents a sig
 type StdSignature struct {
-	// Pubkey is optional
-	crypto.PubKey `json:"pub_key" yaml:"pub_key"`
-	Signature     []byte `json:"signature" yaml:"signature"`
+	crypto.PubKey `json:"pub_key" yaml:"pub_key"` // optional
+	Signature     []byte                          `json:"signature" yaml:"signature"`
 }
 
 // DefaultTxDecoder logic for standard transaction decoding

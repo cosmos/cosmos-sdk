@@ -35,7 +35,7 @@ func KeyTestPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "", nil)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -45,14 +45,14 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, "", nil)
+	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
 }
 
 func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, memo string) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo, nil)
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -62,24 +62,7 @@ func NewTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, memo, nil)
-	return tx
-}
-
-func NewTestTxWithFeeAccount(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, feeAccount sdk.AccAddress) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
-	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "", feeAccount)
-
-		sig, err := priv.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
-	}
-
-	tx := NewStdTx(msgs, fee, sigs, "", feeAccount)
+	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }
 
@@ -94,6 +77,6 @@ func NewTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []ui
 		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewStdTx(msgs, fee, sigs, memo, nil)
+	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }

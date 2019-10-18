@@ -120,7 +120,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 
 	for i, p := range priv {
 		// use a empty chainID for ease of testing
-		sig, err := p.Sign(auth.StdSignBytes("", accnums[i], seq[i], fee, msgs, memo, nil))
+		sig, err := p.Sign(auth.StdSignBytes("", accnums[i], seq[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}
@@ -131,7 +131,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 		}
 	}
 
-	return auth.NewStdTx(msgs, fee, sigs, memo, nil)
+	return auth.NewStdTx(msgs, fee, sigs, memo)
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a

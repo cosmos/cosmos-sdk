@@ -27,11 +27,11 @@ type Header struct {
 	// embed original type
 	types.Header
 
-	// override fields from original type
+	// override fields so json.Marshal will marshal in accordance with amino JSON format
 	Version         Consensus      `json:"version"`
-	Height          int64          `json:"height,string"`    // Override int64 fields do to json.Marshal not converting them to string
-	NumTxs          int64          `json:"num_txs,string"`   // Override int64 fields do to json.Marshal not converting them to string
-	TotalTxs        int64          `json:"total_txs,string"` // Override int64 fields do to json.Marshal not converting them to string
+	Height          int64          `json:"height,string"`
+	NumTxs          int64          `json:"num_txs,string"`
+	TotalTxs        int64          `json:"total_txs,string"`
 	LastBlockID     BlockID        `json:"last_block_id"`
 	ProposerAddress sdk.ValAddress `json:"proposer_address"`
 }
@@ -40,8 +40,7 @@ type Header struct {
 // does not respect the JSON stdlib embedding semantics.
 func (h Header) MarshalJSON() ([]byte, error) {
 	type headerJSON Header
-	_h := headerJSON(h)
-	return json.Marshal(_h)
+	return json.Marshal(headerJSON(h))
 }
 
 // BlockID defines a wrapper around Tendermint's BlockID type overriding various fields.
@@ -58,8 +57,7 @@ type BlockID struct {
 // does not respect the JSON stdlib embedding semantics.
 func (b BlockID) MarshalJSON() ([]byte, error) {
 	type blockIDJson BlockID
-	_h := blockIDJson(b)
-	return json.Marshal(_h)
+	return json.Marshal(blockIDJson(b))
 }
 
 // PartSetHeader defines a wrapper around Tendermint's PartSetHeader type overriding various fields.
@@ -76,8 +74,7 @@ type PartSetHeader struct {
 // does not respect the JSON stdlib embedding semantics.
 func (b PartSetHeader) MarshalJSON() ([]byte, error) {
 	type partSetHeadJson PartSetHeader
-	_h := partSetHeadJson(b)
-	return json.Marshal(_h)
+	return json.Marshal(partSetHeadJson(b))
 }
 
 // Consensus defines a wrapper around Tendermint's Consensus type overriding various fields.
@@ -86,17 +83,16 @@ type Consensus struct {
 	// embed original type
 	version.Consensus
 
-	// override fields from original type
-	App   uint64 `json:"app,string"`   // Override uint64 fields do to json.Marshal not converting them to string
-	Block uint64 `json:"block,string"` // Override uint64 fields do to json.Marshal not converting them to string
+	// override fields so json.Marshal will marshal in accordance with amino JSON format
+	App   uint64 `json:"app,string"`
+	Block uint64 `json:"block,string"`
 }
 
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (b Consensus) MarshalJSON() ([]byte, error) {
 	type consensusJson Consensus
-	_h := consensusJson(b)
-	return json.Marshal(_h)
+	return json.Marshal(consensusJson(b))
 }
 
 // Block defines the atomic unit of a Tendermint blockchain.
@@ -113,8 +109,7 @@ type Block struct {
 // does not respect the JSON stdlib embedding semantics.
 func (b Block) MarshalJSON() ([]byte, error) {
 	type blockJSON Block
-	_b := blockJSON(b)
-	return json.Marshal(_b)
+	return json.Marshal(blockJSON(b))
 }
 
 // Commit defines a wrapper around Tendermint's Commit type overriding various fields.
@@ -134,21 +129,19 @@ type CommitSig struct {
 	// embed original type
 	types.CommitSig
 
-	// override fields
-	Height           int64          `json:"height,string"` // Override int64 fields do to json.Marshal not converting them to string
-	Round            int            `json:"round,string"`  // Override int fields do to json.Marshal not converting them to string
+	// override fields so json.Marshal will marshal in accordance with amino JSON format
+	Height           int64          `json:"height,string"`
+	Round            int            `json:"round,string"`
 	BlockID          BlockID        `json:"block_id"`
 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-	ValidatorIndex   int            `json:"validator_index,string"` // Override int fields do to json.Marshal not converting them to string
+	ValidatorIndex   int            `json:"validator_index,string"`
 }
 
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (c CommitSig) MarshalJSON() ([]byte, error) {
 	type commitSigJson CommitSig
-	_h := commitSigJson(c)
-
-	return json.Marshal(_h)
+	return json.Marshal(commitSigJson(c))
 }
 
 // ConvertBlockResult allows to convert the given standard ResultBlock into a new ResultBlock having all the

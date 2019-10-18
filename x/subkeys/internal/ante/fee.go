@@ -79,6 +79,15 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
 	}
 
+	// if there was a valid delegation, ensure that the txSigner account exists (we create it if needed)
+	if !txSigner.Equals(feePayer) {
+		signerAcc := d.ak.GetAccount(ctx, txSigner)
+		if signerAcc == nil {
+			signerAcc = d.ak.NewAccountWithAddress(ctx, txSigner)
+			d.ak.SetAccount(ctx, signerAcc)
+		}
+	}
+
 	// deduct fee if non-zero
 	if fee.IsZero() {
 		return next(ctx, tx, simulate)

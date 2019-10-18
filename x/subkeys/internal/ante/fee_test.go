@@ -114,9 +114,9 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			signer:    addr4,
 			fee:       0,
 			handler:   ourAnteHandler,
-			valid:     true,
+			valid:     false,
 		},
-		"valid delegation (only ours)": {
+		"valid delegation without account (only ours)": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
@@ -177,23 +177,21 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:   anteHandlerStack,
 			valid:     true,
 		},
-		// TODO: cannot pay zero fees if account doesn't exist (is this good?)
-		// "no fee with no account (whole stack)": {
-		// 	signerKey: priv4,
-		// 	signer:    addr4,
-		// 	fee:       0,
-		// 	handler:   anteHandlerStack,
-		// 	valid:     true,
-		// },
-		// TODO: cannot delegate fees if account doesn't exist (this must change for delegation)
-		// "valid delegation (whole stack)": {
-		// 	signerKey:  priv3,
-		// 	signer:     addr3,
-		// 	feeAccount: addr2,
-		// 	fee:        50,
-		// 	handler:    anteHandlerStack,
-		// 	valid:      true,
-		// },
+		"no fee with no account (whole stack)": {
+			signerKey: priv4,
+			signer:    addr4,
+			fee:       0,
+			handler:   anteHandlerStack,
+			valid:     false,
+		},
+		"valid delegation without account (whole stack)": {
+			signerKey:  priv3,
+			signer:     addr3,
+			feeAccount: addr2,
+			fee:        50,
+			handler:    anteHandlerStack,
+			valid:      true,
+		},
 		"no delegation (whole stack)": {
 			signerKey:  priv3,
 			signer:     addr3,

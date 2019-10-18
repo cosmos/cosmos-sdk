@@ -49,17 +49,13 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	// short-circuit on zero fee
-	fee := feeTx.GetFee()
-	if fee.IsZero() {
-		return next(ctx, tx, simulate)
-	}
 	// sanity check from DeductFeeDecorator
 	if addr := d.sk.GetModuleAddress(authTypes.FeeCollectorName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", authTypes.FeeCollectorName))
 	}
 
 	// see if there is a delegation
+	fee := feeTx.GetFee()
 	var feePayer sdk.AccAddress
 	if delTx, ok := tx.(DelegatedFeeTx); ok {
 		feePayer = delTx.GetFeeAccount()
@@ -81,6 +77,11 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	feePayerAcc := d.ak.GetAccount(ctx, feePayer)
 	if feePayerAcc == nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
+	}
+
+	// deduct fee if non-zero
+	if fee.IsZero() {
+		return next(ctx, tx, simulate)
 	}
 	err = authAnte.DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {

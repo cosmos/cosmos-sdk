@@ -12,11 +12,6 @@ order: 3
 
 This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/interfaces.md#cli).
 
-- [Application CLI Components](#application-cli-components)
-- [Commands](#commands)
-- [Flags](#flags)
-- [Configurations](#configurations)
-
 ## Application CLI Components
 
 One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `./cmd/cli` folder. The CLI for an application is typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`. Here is where the interfaces docs lie in the directory from the [nameservice tutorial](https://cosmos.network/docs/tutorial)

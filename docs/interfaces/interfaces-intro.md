@@ -14,12 +14,6 @@ order: 1
 
 Typically, SDK applications include some type of interface that users interact with to utilize the application's functionalities. This document introduces user command-line and REST interfaces.
 
-- [Types of Application Interfaces](#types-of-application-interfaces)
-- [Module vs Application Interfaces](#module-vs-application-interfaces)
-  + [Module Developer Responsibilities](#module-developer-responsibilities)
-  + [Application Developer Responsibilities](#application-developer-responsibilities)
-
-
 ## Types of Application Interfaces
 
 SDK applications generally have a Command-Line Interface (CLI) and REST Interface to support interactions with a [full-node](../core/node.md). The SDK is opinionated about how to create these two interfaces; all modules specify [Cobra commands](https://github.com/spf13/cobra) and register routes using [Gorilla Mux routers](https://github.com/gorilla/mux). The CLI and REST Interface are conventionally defined in the application `app/cmd/cli` folder.

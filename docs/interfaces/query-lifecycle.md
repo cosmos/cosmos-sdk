@@ -12,12 +12,6 @@ order: 2
 
 This document describes SDK interfaces in detail through the lifecycle of a query, from the user interface to application stores and back. The query will be referred to as `Query`.
 
-- [Query Creation](#query-creation)
-- [Query Preparation](#query-preparation)
-- [RPC](#rpc)
-- [Application Query Handling](#application-query-handling)
-- [Response](#response)
-
 ## Query Creation
 
 A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed; they can be fully handled by one full-node.

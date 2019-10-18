@@ -4,14 +4,14 @@ order: 3
 
 # Context
 
-## Synopsis
-
-This document details the SDK `Context` type.
-
-## Prerequisites
+## Pre-requisites Readings
 
 - [Anatomy of an SDK Application](../basics/app-anatomy.md)
 - [Lifecycle of a Transaction](../basics/tx-lifecycle.md)
+
+## Synopsis
+
+This document details the SDK `Context` type.
 
 ## Context Definition
 

@@ -12,14 +12,6 @@ order: 2
 
 This document describes how various components are defined to enable transactions. It also describes how transactions are generated.
 
-1. [Transactions](#transactions)
-2. [Transaction Definition](#transaction-definition)
-3. [CLI and REST Interfaces](#cli-and-rest-interfaces)
-4. [Messages](#messages)
-5. [Transaction Generation](#transaction-generation)
-6. [Handlers](#handlers)
-
-
 ## Transactions
 
 [**Transactions**](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L36-L43)  are objects created by end-users to trigger state changes in the application. Specifically, they are comprised of metadata held in [contexts](./context.md) and [messages](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [Handler](../building-modules/handler.md).

@@ -13,10 +13,6 @@ order: 4
 
 This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest).
 
-- [Application REST Interface](#application-rest-interface)
-- [REST Server](#rest-server)
-- [Registering Routes](#registering-routes)
-
 ## Application REST Interface
 
 Building the REST Interface for an application involves creating a [REST server](./rest.md#rest-server) to route requests and output responses. The SDK has its own REST Server type used for LCDs (light-client daemons). It has a `ServeCommand` that takes in an application's `codec` and `RegisterRoutes()` function, starts up a new REST Server, and registers routes using function provided from the application. To enable this command, it should be added as a subcommand of the root command in the `main()` function of the CLI interface:

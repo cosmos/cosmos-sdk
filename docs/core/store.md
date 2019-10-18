@@ -12,24 +12,6 @@ order: 5
 
 A store is a data structure that holds the state of the application. 
 
-- [Introduction to SDK Stores](#introduction-to-sdk-stores)
-    + [Store Interface](#store-interface)
-    + [Commit Store](#commit-store)
-- [Multistore](#multistore)
-    + [Multistore Interface](#multistore-interface)
-    + [CommitMultiStore](#commitmultistore)
-    + [CacheMultiStore](#cachemultistore)
-- [Base Layer KvStores](#base-layer-kvstores)
-    + [`KVStore` and `CommitKVStore` Interfaces](#kvstore-and-commitkvstore-interfaces)
-    + [`IAVL` Store](#iavl-store)
-    + [`DBAdapter` Store](#dbadapter-store)
-    + [`Transient` Store](#transient-store)
-- [KVStore Wrappers](#kvstore-wrappers)
-    + [CacheKVStore](#cachekvstore)
-    + [`GasKv` Store](#gaskv-store)
-    + [`TraceKV` Store](#tracekv-store)
-    + [`Prefix` Store](#prefix-store)
-
 ## Introduction to SDK Stores
 
 The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of SDK applications is a multistore, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can be accessed with a specific `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store. 

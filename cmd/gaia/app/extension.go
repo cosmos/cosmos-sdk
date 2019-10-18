@@ -1,15 +1,16 @@
 package app
 
 import (
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/streadway/amqp"
 	"github.com/tendermint/tendermint/abci/types"
 	tm "github.com/tendermint/tendermint/types"
 )
@@ -31,44 +32,44 @@ type (
 		Type  string                  `json:"type"`
 		Value AddressContainingStruct `json:"value"`
 	}
+
+	RabbitInsert struct {
+		Fields string `json:"fields"`
+		Values string `json:"values"`
+		Table  string `json:"table"`
+	}
 )
 
-func (app *GaiaApp) BeginBlockHook(Database *sql.DB, blockerFunctions []func(*GaiaApp, *sql.DB, sdk.Context, types.RequestBeginBlock)) sdk.BeginBlocker {
+func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, types.RequestBeginBlock)) sdk.BeginBlocker {
 	return func(ctx sdk.Context, req types.RequestBeginBlock) types.ResponseBeginBlock {
 		res := app.BeginBlocker(ctx, req)
 		// fucntions
 		for _, fn := range blockerFunctions {
-			fn(app, Database, ctx, req)
+			fn(app, rabbit, ctx, req)
 		}
 		return res
 	}
 }
 
-func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
+func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
 	var (
-		tx, _                  = Database.Begin()
-		tx2, _                 = Database.Begin()
-		tx3, _                 = Database.Begin()
-		balanceStatement, _    = tx.Prepare("INSERT INTO balance (address,balance,denom,height,timestamp) VALUES (?,?,?,?,?)")
-		rewardsStatement, _    = tx2.Prepare("INSERT INTO rewards (address,validator,rewards,denom,height,timestamp) VALUES (?,?,?,?,?,?)")
-		valRewardsStatement, _ = tx3.Prepare("INSERT INTO val_rewards (validator,rewards,denom,height,timestamp) VALUES (?,?,?,?,?)")
+		balanceTable     = "balance"
+		balanceFields    = "address,balance,denom,height,timestamp"
+		rewardsTable     = "rewards"
+		rewardsFields    = "address,validator,rewards,denom,height,timestamp"
+		valRewardsTable  = "val_rewards"
+		valRewardsFields = "validator,rewards,denom,height,timestamp"
 	)
-	defer balanceStatement.Close()
-	defer rewardsStatement.Close()
-	defer valRewardsStatement.Close()
 
 	processAcc := func(account auth.Account) bool {
 		balance := account.GetCoins()
 		for _, coin := range balance {
-			if _, err := balanceStatement.Exec(
-				account.GetAddress().String(),
-				uint64(coin.Amount.Int64()),
-				coin.Denom,
-				uint64(req.Header.Height),
-				req.Header.Time,
-			); err != nil {
-				panic(err)
+			obj := RabbitInsert{
+				Fields: balanceFields,
+				Values: fmt.Sprintf("\"%s\",%d,\"%s\",%d,\"%s\"", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Table:  balanceTable,
 			}
+			obj.Insert(rabbit)
 		}
 		wrap, _ := ctx.CacheContext()
 		app.stakingKeeper.IterateDelegations(wrap, account.GetAddress(), func(index int64, del sdk.Delegation) (stop bool) {
@@ -77,16 +78,12 @@ func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.
 			rewards := app.distrKeeper.CalculateDelegationRewards(wrap, val, del, rew)
 
 			for _, coin := range rewards {
-				if _, err := rewardsStatement.Exec(
-					account.GetAddress().String(),
-					del.GetValidatorAddr().String(),
-					uint64(coin.Amount.TruncateInt64()),
-					coin.Denom,
-					uint64(req.Header.Height),
-					req.Header.Time,
-				); err != nil {
-					panic(err)
+				obj := RabbitInsert{
+					Fields: rewardsFields,
+					Values: fmt.Sprintf("\"%s\",\"%s\",%d,\"%s\",%d,\"%s\"", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+					Table:  rewardsTable,
 				}
+				obj.Insert(rabbit)
 			}
 			return false
 		})
@@ -101,51 +98,32 @@ func BalancesBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.
 	for _, valObj := range vals {
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
-			if _, err := valRewardsStatement.Exec(
-				valObj.OperatorAddress.String(),
-				uint64(coin.Amount.TruncateInt64()),
-				coin.Denom,
-				uint64(req.Header.Height),
-				req.Header.Time,
-			); err != nil {
-				panic(err)
+			obj := RabbitInsert{
+				Fields: valRewardsFields,
+				Values: fmt.Sprintf("\"%s\",%d,\"%s\",%d,\"%s\"", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time),
+				Table:  valRewardsTable,
 			}
+			obj.Insert(rabbit)
 		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		panic(err)
-	}
-	if err := tx2.Commit(); err != nil {
-		panic(err)
-	}
-	if err := tx3.Commit(); err != nil {
-		panic(err)
 	}
 }
 
-func DelegationsBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
+func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
 	var (
-		tx, _                   = Database.Begin()
-		tx2, _                  = Database.Begin()
-		delegationsStatement, _ = tx.Prepare("INSERT INTO delegations (address,validator,shares,height,timestamp) VALUES (?,?,?,?,?)")
-		unbondingsStatement, _  = tx2.Prepare("INSERT INTO unbondings (address,validator,tokens,height,completion_timestamp,timestamp) VALUES (?,?,?,?,?,?)")
+		delegationsTable  = "delegations"
+		unbondingsTable   = "unbondings"
+		delegationsFields = "address,validator,shares,height,timestamp"
+		unbondingsFields  = "address,validator,tokens,height,completion_timestamp,timestamp"
 	)
-
-	defer delegationsStatement.Close()
-	defer unbondingsStatement.Close()
 
 	delegations := app.stakingKeeper.GetAllDelegations(ctx)
 	for _, delegation := range delegations {
-		if _, err := delegationsStatement.Exec(
-			delegation.GetDelegatorAddr().String(),
-			delegation.GetValidatorAddr().String(),
-			uint64(delegation.GetShares().TruncateInt64()),
-			uint64(req.Header.Height),
-			req.Header.Time,
-		); err != nil {
-			panic(err)
+		obj := RabbitInsert{
+			Fields: delegationsFields,
+			Values: fmt.Sprintf("\"%s\",\"%s\",%d,%d,\"%s\"", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time),
+			Table:  delegationsTable,
 		}
+		obj.Insert(rabbit)
 	}
 
 	vals := app.stakingKeeper.GetValidators(ctx, 500)
@@ -153,43 +131,26 @@ func DelegationsBlocker(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req typ
 		unbondings := app.stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, valObj.OperatorAddress)
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
-				if _, err := unbondingsStatement.Exec(
-					unbond.DelegatorAddress.String(),
-					unbond.ValidatorAddress.String(),
-					uint64(entry.Balance.Int64()),
-					uint64(req.Header.Height),
-					entry.CompletionTime,
-					req.Header.Time,
-				); err != nil {
-					fmt.Printf("%v", err)
+				obj := RabbitInsert{
+					Fields: unbondingsFields,
+					Values: fmt.Sprintf("\"%s\",\"%s\",%d,%d,\"%s\",\"%s\"", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime, req.Header.Time),
+					Table:  unbondingsTable,
 				}
+				obj.Insert(rabbit)
 			}
 		}
 	}
-
-	if err := tx.Commit(); err != nil {
-		panic(err)
-	}
-
-	if err := tx2.Commit(); err != nil {
-		panic(err)
-	}
 }
 
-func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, types.RequestBeginBlock) {
+func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Context, types.RequestBeginBlock) {
 
-	return func(app *GaiaApp, Database *sql.DB, ctx sdk.Context, req types.RequestBeginBlock) {
+	return func(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
 		var (
-			dbtx, _                 = Database.Begin()
-			dbtx2, _                = Database.Begin()
-			dbtx3, _                = Database.Begin()
-			messagesStatement, _    = dbtx.Prepare("INSERT INTO messages (hash,idx,msgtype,msg,timestamp) VALUES (?,?,?,?,?)")
-			addressesStatement, _   = dbtx3.Prepare("INSERT INTO message_addresses (hash,idx,address) VALUES (?,?,?)")
-			transactionStatement, _ = dbtx2.Prepare("INSERT INTO transactions (hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+			messagesFields     = "hash,idx,msgtype,msg,timestamp"
+			messagesTable      = "messages"
+			transactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp"
+			transactionsTable  = "transactions"
 		)
-		defer messagesStatement.Close()
-		defer transactionStatement.Close()
-		defer addressesStatement.Close()
 
 		for _, tx := range block.Data.Txs {
 			txHash := hex.EncodeToString(tx.Hash())
@@ -197,18 +158,18 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 			sdktx, ok := decoded.(auth.StdTx)
 			if ok {
 				for msgidx, msg := range sdktx.GetMsgs() {
-					fmt.Printf("Msg %d for %s\n", msgidx, txHash)
-					if _, err := messagesStatement.Exec(
-						txHash,
-						msgidx,
-						msg.Type(),
-						string(msg.GetSignBytes()),
-						block.Header.Time,
-					); err != nil {
-						panic(err)
+
+					obj := RabbitInsert{
+						Fields: messagesFields,
+						Values: fmt.Sprintf("\"%s\",%d,%s,\"%s\",\"%s\"", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time),
+						Table:  messagesTable,
 					}
+					obj.Insert(rabbit)
+
+					fmt.Printf("Msg %d for %s\n", msgidx, txHash)
+
 					fmt.Printf("Adding addresses for msg %d for %s\n", msgidx, txHash)
-					addAddresses(msg, txHash, msgidx, addressesStatement)
+					addAddresses(msg, txHash, msgidx, rabbit)
 
 				}
 				fmt.Printf("EXECUTING TX %s FOR %d\n", txHash, block.Header.Height)
@@ -219,38 +180,35 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, typ
 				fmt.Println("DEBUG 2")
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
-				if _, err := transactionStatement.Exec(
-					txHash,
-					block.Header.Height,
-					result.GetCode(),
-					result.GetGasWanted(),
-					result.GetGasUsed(),
-					result.GetLog(),
-					sdktx.GetMemo(),
-					string(jsonFee),
-					string(jsonTags),
-					string(jsonMsgs),
-					block.Header.Time,
-				); err != nil {
-					panic(err)
+				obj := RabbitInsert{
+					Fields: transactionsFields,
+					Values: fmt.Sprintf("\"%s\",%d,%d,%d,%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"",
+						txHash,
+						block.Header.Height,
+						result.GetCode(),
+						result.GetGasWanted(),
+						result.GetGasUsed(),
+						result.GetLog(),
+						sdktx.GetMemo(),
+						string(jsonFee),
+						string(jsonTags),
+						string(jsonMsgs),
+						block.Header.Time),
+					Table: transactionsTable,
 				}
+				obj.Insert(rabbit)
 			} else {
 				fmt.Println("Assertion Error")
 			}
 		}
-		if err := dbtx.Commit(); err != nil {
-			panic(err)
-		}
-		if err := dbtx2.Commit(); err != nil {
-			panic(err)
-		}
-		if err := dbtx3.Commit(); err != nil {
-			panic(err)
-		}
 	}
 }
 
-func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
+func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel) {
+	var (
+		addressesFields = "hash,idx,address"
+		addressesTable  = "message_addresses"
+	)
 	// get addresses
 	m := BasicMsgStruct{}
 	a := make(map[string]bool)
@@ -262,13 +220,12 @@ func addAddresses(msg sdk.Msg, hash string, idx int, stmt *sql.Stmt) {
 		sdkAddr, ok := addr.(sdk.Address)                   // cast to address interface so we have access to the String() method, which bech32ifies the address
 		if ok && !sdkAddr.Empty() && !a[sdkAddr.String()] { // pks in clickhouse aren't unique, so avoid dedupe here.
 			a[sdkAddr.String()] = true
-			if _, err := stmt.Exec(
-				hash,
-				idx,
-				sdkAddr.String(),
-			); err != nil {
-				panic(err)
+			obj := RabbitInsert{
+				Fields: addressesFields,
+				Values: fmt.Sprintf("\"%s\",%d,\"%s\"", hash, idx, sdkAddr.String()),
+				Table:  addressesTable,
 			}
+			obj.Insert(rabbit)
 		}
 	}
 
@@ -283,4 +240,22 @@ func MsgsToString(msgs []sdk.Msg) string {
 	retval := fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
 	fmt.Sprintf("Messages: %s", retval)
 	return retval
+}
+
+func (i RabbitInsert) Insert(c *amqp.Channel) {
+	jsonString, err := json.Marshal(i)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = c.Publish(
+		"db",  // exchange
+		"",    // routing key
+		false, // mandatory
+		false, // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(jsonString),
+		}); err != nil {
+		log.Fatal(err)
+	}
 }

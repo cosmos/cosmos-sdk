@@ -322,7 +322,7 @@ func (d Dec) QuoInt64(i int64) Dec {
 // roots x =√d for d > 0. The algorithm starts with some guess and computes the sequence of improved
 // guesses until an answer converges to an approximate answer.
 // Returns -(sqrt(abs(d)) if input is negative
-func (d Dec) RoughSqrt() Dec {
+func (d Dec) ApproxSqrt() Dec {
 	if d.IsNegative() {
 		return d.MulInt64(-1).RoughSqrt().MulInt64(-1)
 	}

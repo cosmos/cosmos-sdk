@@ -14,8 +14,8 @@ A store is a data structure that holds the state of the application.
 - [Multistore](#multistore)
     + [Multistore Interface](#multistore-interface)
     + [CommitMultiStore](#commitmultistore)
-    + [CacheMultiStore](#cachemultistore)
-- [Base Layer KvStores](#base-layer-kvstores)
+    + [CacheMuliStore](#cachemultistore)
+- [Base Layer KVStores](#base-layer-kvstores)
     + [`KVStore` and `CommitKVStore` Interfaces](#kvstore-and-commitkvstore-interfaces)
     + [`IAVL` Store](#iavl-store)
     + [`DBAdapter` Store](#dbadapter-store)
@@ -28,7 +28,7 @@ A store is a data structure that holds the state of the application.
 
 ## Introduction to SDK Stores
 
-The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of SDK applications is a multistore, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can be accessed with a specific `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store. 
+The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of SDK applications is a multistore, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../building-modules/keeper.md) of the module that declared the store. 
 
 ```
 +-----------------------------------------------------+
@@ -95,7 +95,7 @@ type CacheWrap interface {
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
 }
 
-type CacheWrapper interface { //nolint
+type CacheWrapper interface {
 	// CacheWrap cache wraps.
 	CacheWrap() CacheWrap
 
@@ -140,7 +140,7 @@ The Cosmos SDK comes with many types of stores, the most used being [`CommitMult
 Each Cosmos SDK application holds a multistore at its root to persist its state. The multistore is a store of `KVStores` that follows the `Multistore` interface:
 
 ```go
-type MultiStore interface { //nolint
+type MultiStore interface {
 	Store
 
 	// Cache wrap MultiStore.

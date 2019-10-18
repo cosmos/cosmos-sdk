@@ -28,7 +28,7 @@ bz := keeper.cdc.MustMarshalBinaryBare(object)
 keeper.cdc.MustUnmarshalBinaryBare(bz, &object)
 ```
 
-Alternatively, it is possible to use `MustMarshalBinaryLengthPrefixed`/`MustUnmarshalBinaryLengthPrefixed` instead of `MustMarshalBinaryBare`/`MustUnmarshalBinaryBare` for the same encoding prefixed by a uvarint encoding of the object to encode. 
+Alternatively, it is possible to use `MustMarshalBinaryLengthPrefixed`/`MustUnmarshalBinaryLengthPrefixed` instead of `MustMarshalBinaryBare`/`MustUnmarshalBinaryBare` for the same encoding prefixed by a `uvarint` encoding of the object to encode. 
 
 Another important use of the `codec` is the encoding and decoding of [transactions](./transactions.md). Transactions are defined at the Cosmos SDK level, but passed to the underlying consensus engine in order to be relayed to other peers. Since the underlying consensus engine is agnostic to the application, it only accepts transactions in the form of `[]byte`. The encoding is done by an object called [`TxEncoder`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L48-L49) and the decoding by an object called [`TxDecoder`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L45-L47). A [standard implementation](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go) of both these objects can be found in the `auth` module:
 

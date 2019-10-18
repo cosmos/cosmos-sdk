@@ -64,7 +64,7 @@ The first thing that is created in the execution of a CLI command is a `CLIConte
 
 * **Codec**: The [encoder/decoder](,./core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
 * **Account Decoder**: The account decoder from the [`auth`](.../spec/auth) module, which translates `[]byte`s into accounts.
-* **RPC Client**: The [Tendermint RPC Client](https://github.com/tendermint/tendermint/blob/master/rpc/client/interface.go), or node, to which the request will be relayed to.
+* **RPC Client**: The [Tendermint RPC Client](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/rpc/client/interface.go), or node, to which the request will be relayed to.
 * **Keybase**: A [Key Manager](.//core/accounts-keys.md) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.

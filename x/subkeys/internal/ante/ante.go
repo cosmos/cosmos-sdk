@@ -13,7 +13,7 @@ import (
 func NewAnteHandler(ak authKeeper.AccountKeeper, supplyKeeper authTypes.SupplyKeeper, dk keeper.Keeper, sigGasConsumer authAnte.SignatureVerificationGasConsumer) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		authAnte.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		authAnte.NewMempoolFeeDecorator(),
+		NewDelegatedMempoolFeeDecorator(),
 		authAnte.NewValidateBasicDecorator(),
 		authAnte.NewValidateMemoDecorator(ak),
 		authAnte.NewConsumeGasForTxSizeDecorator(ak),

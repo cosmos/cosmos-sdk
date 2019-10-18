@@ -51,6 +51,12 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, denom str
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), ics04.CodeSequenceNotFound, "failed to retrieve sequence")
 	}
 
+	if source {
+		// build the receiving denomination prefix
+		prefix := fmt.Sprintf("%s/%s", dstPort, dstChan)
+		denom = prefix + denom
+	}
+
 	return k.createOutgoingPacket(ctx, sequence, srcPort, srcChan, dstPort, dstChan, denom, amount, sender, receiver, source)
 }
 

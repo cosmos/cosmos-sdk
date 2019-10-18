@@ -248,10 +248,10 @@ func (i RabbitInsert) Insert(c *amqp.Channel) {
 		log.Fatal(err)
 	}
 	if err = c.Publish(
-		"db",  // exchange
-		"",    // routing key
-		false, // mandatory
-		false, // immediate
+		"",        // exchange
+		"inserts", // routing key
+		false,     // mandatory
+		false,     // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(jsonString),

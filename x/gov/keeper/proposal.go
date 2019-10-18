@@ -119,7 +119,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 		matchVoter, matchDepositor, matchStatus := true, true, true
 
 		// match status (if supplied)
-		if params.ProposalStatus != types.StatusNil {
+		if len(params.ProposalStatus.String()) > 0 {
 			matchStatus = p.Status == params.ProposalStatus
 		}
 

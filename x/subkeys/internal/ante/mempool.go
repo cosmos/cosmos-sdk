@@ -24,7 +24,7 @@ func NewDelegatedMempoolFeeDecorator() DelegatedMempoolFeeDecorator {
 func (mfd DelegatedMempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(DelegatedFeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a DelegatedFeeTx")
 	}
 	feeCoins := feeTx.GetFee()
 	gas := feeTx.GetGas()

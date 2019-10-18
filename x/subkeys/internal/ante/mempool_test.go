@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	// "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/ante"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 )
 
 func TestEnsureMempoolFees(t *testing.T) {
@@ -25,13 +25,14 @@ func TestEnsureMempoolFees(t *testing.T) {
 
 	// msg and signatures
 	msg1 := authtypes.NewTestMsg(addr1)
-	fee := authtypes.NewStdFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", 100)))
+	// TODO: try this with real delegation
+	fee := tx.NewDelegatedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", 100)), nil)
 
 	msgs := []sdk.Msg{msg1}
 
 	privs, accNums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
 	// TODO
-	tx := authtypes.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx := tx.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	// Set high gas price so standard test fee fails
 	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(200).Quo(sdk.NewDec(100000)))

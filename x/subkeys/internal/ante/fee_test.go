@@ -13,7 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/ante"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
-	// delTypes "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 )
 
 func TestDeductFeesNoDelegation(t *testing.T) {
@@ -221,10 +221,11 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// msg and signatures
-			fee := authtypes.NewStdFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)))
+			fee := tx.NewDelegatedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
 			msgs := []sdk.Msg{sdk.NewTestMsg(tc.signer)}
 			privs, accNums, seqs := []crypto.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
-			tx := authtypes.NewTestTxWithFeeAccount(ctx, msgs, privs, accNums, seqs, fee, tc.feeAccount)
+
+			tx := tx.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 			_, err := tc.handler(ctx, tx, false)
 			if tc.valid {

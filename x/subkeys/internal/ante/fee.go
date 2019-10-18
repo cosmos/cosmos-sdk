@@ -11,18 +11,22 @@ import (
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ DelegatedFeeTx = (*authTypes.StdTx)(nil) // assert StdTx implements DelegatedFeeTx
+	_ DelegatedFeeTx = (*tx.DelegatedTx)(nil) // assert StdTx implements DelegatedFeeTx
 )
 
 // DelegatedFeeTx defines the interface to be implemented by Tx to use the DelegatedFeeDecorator
 type DelegatedFeeTx interface {
-	authAnte.FeeTx
-	GetFeeAccount() sdk.AccAddress
+	sdk.Tx
+	GetGas() uint64
+	GetFee() sdk.Coins
+	FeePayer() sdk.AccAddress
+	MainSigner() sdk.AccAddress
 }
 
 // DeductDelegatedFeeDecorator deducts fees from the first signer of the tx
@@ -44,9 +48,9 @@ func NewDeductDelegatedFeeDecorator(ak authKeeper.AccountKeeper, sk authTypes.Su
 }
 
 func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(authAnte.FeeTx)
+	feeTx, ok := tx.(DelegatedFeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a DelegatedFeeTx")
 	}
 
 	// sanity check from DeductFeeDecorator
@@ -54,22 +58,21 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		panic(fmt.Sprintf("%s module account has not been set", authTypes.FeeCollectorName))
 	}
 
-	// see if there is a delegation
 	fee := feeTx.GetFee()
-	var feePayer sdk.AccAddress
-	if delTx, ok := tx.(DelegatedFeeTx); ok {
-		feePayer = delTx.GetFeeAccount()
-	}
+	feePayer := feeTx.FeePayer()
+	txSigner := feeTx.MainSigner()
 
-	txSigner := feeTx.FeePayer()
-	if feePayer == nil {
-		// if this is not explicitly set, use the first signer as always
-		feePayer = txSigner
-	} else {
-		// ensure the delegation is allowed
+	// ensure the delegation is allowed, if we request a different fee payer
+	if !txSigner.Equals(feePayer) {
 		allowed := d.dk.UseDelegatedFees(ctx, feePayer, txSigner, fee)
 		if !allowed {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", txSigner, feePayer)
+		}
+		// if there was a valid delegation, ensure that the txSigner account exists (we create it if needed)
+		signerAcc := d.ak.GetAccount(ctx, txSigner)
+		if signerAcc == nil {
+			signerAcc = d.ak.NewAccountWithAddress(ctx, txSigner)
+			d.ak.SetAccount(ctx, signerAcc)
 		}
 	}
 
@@ -77,15 +80,6 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	feePayerAcc := d.ak.GetAccount(ctx, feePayer)
 	if feePayerAcc == nil {
 		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
-	}
-
-	// if there was a valid delegation, ensure that the txSigner account exists (we create it if needed)
-	if !txSigner.Equals(feePayer) {
-		signerAcc := d.ak.GetAccount(ctx, txSigner)
-		if signerAcc == nil {
-			signerAcc = d.ak.NewAccountWithAddress(ctx, txSigner)
-			d.ak.SetAccount(ctx, signerAcc)
-		}
 	}
 
 	// deduct fee if non-zero

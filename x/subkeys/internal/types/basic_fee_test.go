@@ -82,7 +82,8 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
+	for name, stc := range cases {
+		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			err := tc.allow.ValidateBasic()
 			if !tc.valid {

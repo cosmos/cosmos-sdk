@@ -48,7 +48,8 @@ func TestExpiresAt(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
+	for name, stc := range cases {
+		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			err := tc.example.ValidateBasic()
 			assert.Equal(t, tc.zero, tc.example.IsZero())
@@ -107,7 +108,8 @@ func TestPeriodValid(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
+	for name, stc := range cases {
+		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			err := tc.period.ValidateBasic()
 			if !tc.valid {
@@ -150,7 +152,8 @@ func TestPeriodStep(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
+	for name, stc := range cases {
+		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			err := tc.period.ValidateBasic()
 			require.NoError(t, err)

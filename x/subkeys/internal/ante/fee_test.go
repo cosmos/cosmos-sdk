@@ -218,7 +218,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 	}
 
-	for name, tc := range cases {
+	for name, stc := range cases {
+		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			// msg and signatures
 			fee := tx.NewDelegatedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)

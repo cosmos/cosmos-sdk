@@ -13,14 +13,21 @@ package exported
 // can be proven with the proof.
 type RootI interface {
 	CommitmentType() string
-	Bytes() []byte
+	GetHash() []byte
 }
 
 // PrefixI implements spec:CommitmentPrefix.
-// Prefix is the additional information provided to the verification function.
 // Prefix represents the common "prefix" that a set of keys shares.
 type PrefixI interface {
 	CommitmentType() string
+	Bytes() []byte
+}
+
+// PathI implements spec:CommitmentPath.
+// A path is the additional information provided to the verification function.
+type PathI interface {
+	CommitmentType() string
+	String() string
 }
 
 // ProofI implements spec:CommitmentProof.
@@ -29,7 +36,6 @@ type PrefixI interface {
 // Proofs includes key but value is provided dynamically at the verification time.
 type ProofI interface {
 	CommitmentType() string
-	GetKey() []byte
-	VerifyMembership(RootI, PrefixI, []byte) bool
-	VerifyAbsence(RootI, PrefixI) bool
+	VerifyMembership(RootI, PathI, []byte) bool
+	VerifyAbsence(RootI, PathI) bool
 }

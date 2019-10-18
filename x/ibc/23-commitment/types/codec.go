@@ -9,9 +9,11 @@ import (
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.RootI)(nil), nil)
 	cdc.RegisterInterface((*exported.PrefixI)(nil), nil)
+	cdc.RegisterInterface((*exported.PathI)(nil), nil)
 	cdc.RegisterInterface((*exported.ProofI)(nil), nil)
 
 	cdc.RegisterConcrete(Root{}, "ibc/commitment/merkle/Root", nil)
 	cdc.RegisterConcrete(Prefix{}, "ibc/commitment/merkle/Prefix", nil)
+	cdc.RegisterConcrete(Path{}, "ibc/commitment/merkle/Path", nil)
 	cdc.RegisterConcrete(Proof{}, "ibc/commitment/merkle/Proof", nil)
 }

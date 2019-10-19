@@ -152,7 +152,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				for msgidx, msg := range sdktx.GetMsgs() {
 
 					obj := RabbitInsert{
-						Values: fmt.Sprintf("'%s',%d,%s,'%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05")),
+						Values: fmt.Sprintf("'%s',%d,'%s','%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05")),
 						Table:  MessagesTable,
 					}
 					obj.Insert(rabbit)

@@ -74,6 +74,13 @@ type Proof struct {
 	Key   []byte        `json:"key"`
 }
 
+func NewProof(proof *merkle.Proof, key []byte) Proof {
+	return Proof{
+		Proof: proof,
+		Key:   key,
+	}
+}
+
 // Implements ics23.Proof
 func (Proof) CommitmentKind() string {
 	return merkleKind

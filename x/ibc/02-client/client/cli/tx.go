@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -52,21 +53,27 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			contents, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
+			clientID := args[0]
 
 			var state exported.ConsensusState
-			if err := cdc.UnmarshalJSON(contents, &state); err != nil {
-				return err
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &state); err != nil {
+					return fmt.Errorf("error unmarshalling consensus state file: %v", err)
+				}
 			}
 
-			msg := types.MsgCreateClient{
-				ClientID: args[0],
-
-				ConsensusState: state,
-				Signer:         cliCtx.GetFromAddress(),
+			msg := types.NewMsgCreateClient(
+				clientID, exported.ClientTypeToString(state.ClientType()), state,
+				cliCtx.GetFromAddress(),
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -92,20 +99,24 @@ $ %s tx ibc client create [client-id] [path/to/header.json] --from node0 --home 
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			bz, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
+			clientID := args[0]
 
 			var header exported.Header
-			if err := cdc.UnmarshalJSON(bz, &header); err != nil {
-				return err
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
+					return fmt.Errorf("error unmarshalling header file: %v", err)
+				}
 			}
 
-			msg := types.MsgUpdateClient{
-				ClientID: args[0],
-				Header:   header,
-				Signer:   cliCtx.GetFromAddress(),
+			msg := types.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -132,20 +143,24 @@ $ %s tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			bz, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
+			clientID := args[0]
 
 			var evidence exported.Evidence
-			if err := cdc.UnmarshalJSON(bz, &evidence); err != nil {
-				return err
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &evidence); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &evidence); err != nil {
+					return fmt.Errorf("error unmarshalling evidence file: %v", err)
+				}
 			}
 
-			msg := types.MsgSubmitMisbehaviour{
-				ClientID: args[0],
-				Evidence: evidence,
-				Signer:   cliCtx.GetFromAddress(),
+			msg := types.NewMsgSubmitMisbehaviour(clientID, evidence, cliCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})

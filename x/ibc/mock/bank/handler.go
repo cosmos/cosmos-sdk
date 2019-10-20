@@ -10,8 +10,8 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
-		case MsgSendTransferPacket:
-			return handleMsgSendTransferPacket(ctx, k, msg)
+		case MsgRecvTransferPacket:
+			return handleMsgRecvTransferPacket(ctx, k, msg)
 		default:
 			return sdk.ErrUnknownRequest("failed to parse message").Result()
 		}
@@ -24,23 +24,17 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Resu
 		return err.Result()
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			ics04.EventTypeSendPacket,
-			sdk.NewAttribute(ics04.AttributeKeySenderPort, msg.SrcPort),
-			sdk.NewAttribute(ics04.AttributeKeyChannelID, msg.SrcChannel),
-		),
+	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, ics04.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
-		),
-	})
+		))
 
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgSendTransferPacket(ctx sdk.Context, k Keeper, msg MsgSendTransferPacket) (res sdk.Result) {
+func handleMsgRecvTransferPacket(ctx sdk.Context, k Keeper, msg MsgRecvTransferPacket) (res sdk.Result) {
 	err := k.ReceiveTransfer(ctx, msg.Packet, msg.Proofs[0], msg.Height)
 	if err != nil {
 		return err.Result()

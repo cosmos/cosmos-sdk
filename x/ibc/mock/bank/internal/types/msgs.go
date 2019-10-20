@@ -8,7 +8,7 @@ import (
 
 const (
 	TypeMsgTransfer           = "transfer"
-	TypeMsgSendTransferPacket = "send-transfer-packet"
+	TypeMsgRecvTransferPacket = "recv-transfer-packet"
 )
 
 type MsgTransfer struct {
@@ -20,12 +20,11 @@ type MsgTransfer struct {
 	Receiver     string         `json:"receiver" yaml:"receiver"`
 	Source       bool           `json:"source" yaml:"source"`
 }
-type MsgSendTransferPacket struct {
-	Packet    ics04.PacketI  `json:"packet" yaml:"packet"`
-	ChannelID string         `json:"channel_id" yaml:"channel_id"`
-	Proofs    []ics23.Proof  `json:"proofs" yaml:"proofs"`
-	Height    uint64         `json:"height" yaml:"height"`
-	Signer    sdk.AccAddress `json:"signer" yaml:"signer"`
+type MsgRecvTransferPacket struct {
+	Packet ics04.PacketI  `json:"packet" yaml:"packet"`
+	Proofs []ics23.Proof  `json:"proofs" yaml:"proofs"`
+	Height uint64         `json:"height" yaml:"height"`
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
 }
 
 func NewMsgTransfer(srcPort, srcChannel string, denom string, amount sdk.Int, sender sdk.AccAddress, receiver string, source bool) MsgTransfer {
@@ -68,25 +67,24 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 
-func NewMsgSendTransferPacket(packet ics04.PacketI, channelID string, proofs []ics23.Proof, height uint64, signer sdk.AccAddress) MsgSendTransferPacket {
-	return MsgSendTransferPacket{
-		Packet:    packet,
-		ChannelID: channelID,
-		Proofs:    proofs,
-		Height:    height,
-		Signer:    signer,
+func NewMsgRecvTransferPacket(packet ics04.PacketI, proofs []ics23.Proof, height uint64, signer sdk.AccAddress) MsgRecvTransferPacket {
+	return MsgRecvTransferPacket{
+		Packet: packet,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
 	}
 }
 
-func (MsgSendTransferPacket) Route() string {
+func (MsgRecvTransferPacket) Route() string {
 	return RouterKey
 }
 
-func (MsgSendTransferPacket) Type() string {
-	return TypeMsgSendTransferPacket
+func (MsgRecvTransferPacket) Type() string {
+	return TypeMsgRecvTransferPacket
 }
 
-func (msg MsgSendTransferPacket) ValidateBasic() sdk.Error {
+func (msg MsgRecvTransferPacket) ValidateBasic() sdk.Error {
 	if msg.Proofs == nil {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeProofMissing, "proof missing")
 	}
@@ -98,10 +96,10 @@ func (msg MsgSendTransferPacket) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (msg MsgSendTransferPacket) GetSignBytes() []byte {
+func (msg MsgRecvTransferPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(MouduleCdc.MustMarshalJSON(msg))
 }
 
-func (msg MsgSendTransferPacket) GetSigners() []sdk.AccAddress {
+func (msg MsgRecvTransferPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

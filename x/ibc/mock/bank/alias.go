@@ -8,20 +8,23 @@ import (
 // nolint
 type (
 	MsgTransfer           = types.MsgTransfer
-	MsgSendTransferPacket = types.MsgSendTransferPacket
+	MsgRecvTransferPacket = types.MsgRecvTransferPacket
 	Keeper                = keeper.Keeper
 )
 
-// nolint
-var (
+const (
 	ModuleName   = types.ModuleName
 	StoreKey     = types.StoreKey
 	TStoreKey    = types.TStoreKey
 	QuerierRoute = types.QuerierRoute
 	RouterKey    = types.RouterKey
+)
 
+// nolint
+var (
 	RegisterCdc = types.RegisterCodec
 
+	NewKeeper                = keeper.NewKeeper
 	NewMsgTransfer           = types.NewMsgTransfer
-	NewMsgSendTransferPacket = types.NewMsgSendTransferPacket
+	NewMsgRecvTransferPacket = types.NewMsgRecvTransferPacket
 )

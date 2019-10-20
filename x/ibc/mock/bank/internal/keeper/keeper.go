@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -19,25 +18,25 @@ const (
 )
 
 type Keeper struct {
-	cdc  *codec.Codec
-	key  sdk.StoreKey
-	ibck ibc.Keeper
-	bk   types.BankKeeper
+	cdc *codec.Codec
+	key sdk.StoreKey
+	ck  types.ChannelKeeper
+	bk  types.BankKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ibck ibc.Keeper, bk types.BankKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ChannelKeeper, bk types.BankKeeper) Keeper {
 	return Keeper{
-		cdc:  cdc,
-		key:  key,
-		ibck: ibck,
-		bk:   bk,
+		cdc: cdc,
+		key: key,
+		ck:  ck,
+		bk:  bk,
 	}
 }
 
 // SendTransfer handles transfer sending logic
 func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, denom string, amount sdk.Int, sender sdk.AccAddress, receiver string, source bool) sdk.Error {
 	// get the port and channel of the counterparty
-	channel, ok := k.ibck.ChannelKeeper.GetChannel(ctx, srcPort, srcChan)
+	channel, ok := k.ck.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), ics04.CodeChannelNotFound, "failed to get channel")
 	}
@@ -46,7 +45,7 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, denom str
 	dstChan := channel.Counterparty.ChannelID
 
 	// get the next sequence
-	sequence, ok := k.ibck.ChannelKeeper.GetNextSequenceSend(ctx, srcPort, srcChan)
+	sequence, ok := k.ck.GetNextSequenceSend(ctx, srcPort, srcChan)
 	if !ok {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), ics04.CodeSequenceNotFound, "failed to retrieve sequence")
 	}
@@ -62,7 +61,7 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, denom str
 
 // ReceiveTransfer handles transfer receiving logic
 func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet exported.PacketI, proof ics23.Proof, height uint64) sdk.Error {
-	_, err := k.ibck.ChannelKeeper.RecvPacket(ctx, packet, proof, height, nil)
+	_, err := k.ck.RecvPacket(ctx, packet, proof, height, nil)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrReceivePacket, "failed to receive packet")
 	}
@@ -75,7 +74,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet exported.PacketI, proof 
 
 	receiverAddr, err := sdk.AccAddressFromBech32(data.Receiver)
 	if err != nil {
-		sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidReceiver, "invalid receiver address")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidReceiver, "invalid receiver address")
 	}
 
 	if data.Source {
@@ -138,7 +137,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 			sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
-		err := k.bk.BurnCoins(ctx, sender, sdk.Coins{sdk.NewCoin(denom, amount)})
+		_, err := k.bk.SubtractCoins(ctx, sender, sdk.Coins{sdk.NewCoin(denom, amount)})
 		if err != nil {
 			return err
 		}
@@ -160,10 +159,18 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 
 	packet := types.NewPacket(seq, uint64(ctx.BlockHeight())+DefaultPacketTimeout, srcPort, srcChan, dstPort, dstChan, packetDataBz)
 
-	err = k.ibck.ChannelKeeper.SendPacket(ctx, packet)
+	err = k.ck.SendPacket(ctx, packet)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrSendPacket, "failed to send packet")
 	}
+
+	packetJson, _ := packet.MarshalJSON()
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		ics04.EventTypeSendPacket,
+		sdk.NewAttribute(ics04.AttributeKeySenderPort, srcPort),
+		sdk.NewAttribute(ics04.AttributeKeyChannelID, srcChan),
+		sdk.NewAttribute(ics04.AttributeKeyPacket, string(packetJson)),
+	))
 
 	return nil
 }

@@ -47,6 +47,8 @@ slash_amount = k * (sqrt(power_1) + sqrt(power_2) + ... + sqrt(power_n))^2  // w
 
 This can be used to weight different types of slashes.  For example, we may want to punish liveness faults 10% as severely as double signs.  The k factor can also be something other than a constant, there is some research on using things like inverse gini coefficients to mitigate some griefing attacks, but this an area for future research.
 
+There can also be minimum and maximums put in place in order to bound the size of the slash percent.
+
 ### Implementation
 
 In the slashing module, we will add two queues that will track all of the recent slash events.  For double sign faults, we will define "recent slashes" as ones that have occured within the last `unbonding period`.  For liveness faults, we will define "recent slashes" as ones that have occured withing the last `jail period`.
@@ -65,7 +67,7 @@ Whenever a new slash occurs, a `SlashEvent` struct is created with the faulting 
 
 We then will iterate over all the SlashEvents in the queue, adding their `SqrtValidatorVotingPercent` and squaring the result to calculate the new percent to slash all the validators in the queue at, using the "Square of Sum of Roots" formula introduced above.
 
-Once we have the `NewSlashPercent`, we then iterate over all the `SlashEvent`s in the queue once again, and if `NewSlashPercent > SlashedSoFar` for that SlashEvent, we call the `staking.Slash(slashEvent.Address, slashEvent.Power, NewSlashPercent - SlashedSoFar)` (we pass in the power of the validator before any slashes occured, so that we slash the right amount of tokens).  We then set `SlashEvent.SlashedSoFar` amount to `NewSlashPercent`.
+Once we have the `NewSlashPercent`, we then iterate over all the `SlashEvent`s in the queue once again, and if `NewSlashPercent > SlashedSoFar` for that SlashEvent, we call the `staking.Slash(slashEvent.Address, slashEvent.Power, Math.Min(Math.Max(minSlashPercent, NewSlashPercent - SlashedSoFar), maxSlashPercent)` (we pass in the power of the validator before any slashes occured, so that we slash the right amount of tokens).  We then set `SlashEvent.SlashedSoFar` amount to `NewSlashPercent`.
 
 
 ## Status

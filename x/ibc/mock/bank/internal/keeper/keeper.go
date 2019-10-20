@@ -83,7 +83,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet exported.PacketI, proof 
 		// check the denom prefix
 		prefix := fmt.Sprintf("%s/%s", packet.DestPort(), packet.DestChannel())
 		if !strings.HasPrefix(data.Denomination, prefix) {
-			sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
 		_, err := k.bk.AddCoins(ctx, receiverAddr, sdk.Coins{sdk.NewCoin(data.Denomination, data.Amount)})
@@ -97,7 +97,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, packet exported.PacketI, proof 
 		// check the denom prefix
 		prefix := fmt.Sprintf("%s/%s", packet.SourcePort(), packet.SourceChannel())
 		if !strings.HasPrefix(data.Denomination, prefix) {
-			sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
 		escrowAddress := k.GetEscrowAddress(packet.DestChannel())
@@ -120,7 +120,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 		// check the denom prefix
 		prefix := fmt.Sprintf("%s/%s", dstPort, dstChan)
 		if !strings.HasPrefix(denom, prefix) {
-			sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
 		err := k.bk.SendCoins(ctx, sender, escrowAddress, sdk.Coins{sdk.NewCoin(denom[len(prefix):], amount)})
@@ -134,7 +134,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 		// check the denom prefix
 		prefix := fmt.Sprintf("%s/%s", srcPort, srcChan)
 		if !strings.HasPrefix(denom, prefix) {
-			sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
 		_, err := k.bk.SubtractCoins(ctx, sender, sdk.Coins{sdk.NewCoin(denom, amount)})
@@ -154,7 +154,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 
 	packetDataBz, err := packetData.MarshalJSON()
 	if err != nil {
-		sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")
 	}
 
 	packet := types.NewPacket(seq, uint64(ctx.BlockHeight())+DefaultPacketTimeout, srcPort, srcChan, dstPort, dstChan, packetDataBz)

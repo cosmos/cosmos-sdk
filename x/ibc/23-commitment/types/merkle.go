@@ -138,8 +138,8 @@ func (proof Proof) VerifyMembership(root exported.RootI, path exported.PathI, va
 	return true
 }
 
-// VerifyAbsence verifies the absence of a merkle proof against the given root and path.
-func (proof Proof) VerifyAbsence(root exported.RootI, path exported.PathI) bool {
+// VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
+func (proof Proof) VerifyNonMembership(root exported.RootI, path exported.PathI) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
 	if err != nil {

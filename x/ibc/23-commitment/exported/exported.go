@@ -37,5 +37,5 @@ type PathI interface {
 type ProofI interface {
 	CommitmentType() string
 	VerifyMembership(RootI, PathI, []byte) bool
-	VerifyAbsence(RootI, PathI) bool
+	VerifyNonMembership(RootI, PathI) bool
 }

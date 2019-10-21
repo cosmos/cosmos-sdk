@@ -24,10 +24,14 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
 		prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
+		ports:     make(map[sdk.CapabilityKey]string),                                         // map of capabilities to port ids
 	}
 }
 
-// BindPort binds to a port, returning the capability key which must be given to a module
+// BindPort binds to a port and returns the associated capability.
+// Ports must be bound statically when the chain starts in `app.go`.
+// The capability must then be passed to a module which will need to pass
+// it as an extra parameter when calling functions on the IBC module.
 func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
 	if !types.ValidatePortID(portID) {
 		panic(fmt.Sprintf("invalid port id: %s", types.ErrInvalidPortID(k.codespace)))
@@ -38,7 +42,14 @@ func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
 	return key
 }
 
-// Authenticate authenticates a key against a port ID
+// Authenticate authenticates a capability key against a port ID
+// by checking if the memory address of the capability was previously
+// generated and bound to the port (provided as a parameter) which the capability
+// is being authenticated against.
 func (k Keeper) Authenticate(key sdk.CapabilityKey, portID string) bool {
+	if !types.ValidatePortID(portID) {
+		panic(fmt.Sprintf("invalid port id: %s", types.ErrInvalidPortID(k.codespace)))
+	}
+
 	return k.ports[key] == portID
 }

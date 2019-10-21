@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -101,51 +102,50 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 	return
 }
 
-// GetProposalsFiltered get Proposals from store by ProposalID
-// voterAddr will filter proposals by whether or not that address has voted on them
-// depositorAddr will filter proposals by whether or not that address has deposited to them
-// status will filter proposals by status
-// numLatest will fetch a specified number of the most recent proposals, or 0 for all proposals
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status types.ProposalStatus, numLatest uint64) []types.Proposal {
+// GetProposalsFiltered retrieves proposals filtered by a given set of params which
+// include pagination parameters along with voter and depositor addresses and a
+// proposal status. The voter address will filter proposals by whether or not
+// that address has voted on proposals. The depositor address will filter proposals
+// by whether or not that address has deposited to them. Finally, status will filter
+// proposals by status.
+//
+// NOTE: If no filters are provided, all proposals will be returned in paginated
+// form.
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) []types.Proposal {
+	proposals := keeper.GetProposals(ctx)
+	filteredProposals := make([]types.Proposal, 0, len(proposals))
 
-	maxProposalID, err := keeper.GetProposalID(ctx)
-	if err != nil {
-		return []types.Proposal{}
+	for _, p := range proposals {
+		matchVoter, matchDepositor, matchStatus := true, true, true
+
+		// match status (if supplied/valid)
+		if types.ValidProposalStatus(params.ProposalStatus) {
+			matchStatus = p.Status == params.ProposalStatus
+		}
+
+		// match voter address (if supplied)
+		if len(params.Voter) > 0 {
+			_, matchVoter = keeper.GetVote(ctx, p.ProposalID, params.Voter)
+		}
+
+		// match depositor (if supplied)
+		if len(params.Depositor) > 0 {
+			_, matchDepositor = keeper.GetDeposit(ctx, p.ProposalID, params.Depositor)
+		}
+
+		if matchVoter && matchDepositor && matchStatus {
+			filteredProposals = append(filteredProposals, p)
+		}
 	}
 
-	matchingProposals := []types.Proposal{}
-
-	if numLatest == 0 {
-		numLatest = maxProposalID
+	start, end := client.Paginate(len(filteredProposals), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		filteredProposals = []types.Proposal{}
+	} else {
+		filteredProposals = filteredProposals[start:end]
 	}
 
-	for proposalID := maxProposalID - numLatest; proposalID < maxProposalID; proposalID++ {
-		if voterAddr != nil && len(voterAddr) != 0 {
-			_, found := keeper.GetVote(ctx, proposalID, voterAddr)
-			if !found {
-				continue
-			}
-		}
-
-		if depositorAddr != nil && len(depositorAddr) != 0 {
-			_, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
-			if !found {
-				continue
-			}
-		}
-
-		proposal, ok := keeper.GetProposal(ctx, proposalID)
-		if !ok {
-			continue
-		}
-
-		if types.ValidProposalStatus(status) && proposal.Status != status {
-			continue
-		}
-
-		matchingProposals = append(matchingProposals, proposal)
-	}
-	return matchingProposals
+	return filteredProposals
 }
 
 // GetProposalID gets the highest proposal ID

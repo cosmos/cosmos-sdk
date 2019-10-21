@@ -31,7 +31,7 @@ func (k Keeper) DelegateFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGr
 }
 
 // RevokeFeeAllowance removes an existing grant
-func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) {
+func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	store.Delete(key)
@@ -40,7 +40,7 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter sdk.AccAddress, gran
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (exported.FeeAllowance, error) {
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (exported.FeeAllowance, error) {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
 	if grant == nil {
 		return nil, err
@@ -65,8 +65,8 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	return &grant, nil
 }
 
-// GetAllMyFeeAllowances returns a list of all the grants from anyone to the given grantee.
-func (k Keeper) GetAllMyFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]types.FeeAllowanceGrant, error) {
+// GetAllGranteeFeeAllowances returns a list of all the grants from anyone to the given grantee.
+func (k Keeper) GetAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]types.FeeAllowanceGrant, error) {
 	store := ctx.KVStore(k.storeKey)
 	var grants []types.FeeAllowanceGrant
 
@@ -106,10 +106,7 @@ func (k Keeper) GetAllFeeAllowances(ctx sdk.Context) ([]types.FeeAllowanceGrant,
 }
 
 // UseDelegatedFees will try to pay the given fee from the granter's account as requested by the grantee
-// (true, nil) will update the allowance, and assumes the AnteHandler deducts the given fees
-// (false, nil) rejects payment on behalf of grantee
-// (?, err) means there was a data parsing error (abort tx and log this info)
-func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress, fee sdk.Coins) bool {
+func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) bool {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
 	if err != nil {
 		// we should acknowledge a db issue somehow (better?)

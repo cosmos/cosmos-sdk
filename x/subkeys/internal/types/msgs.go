@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/exported"
 )
@@ -39,11 +37,7 @@ func (msg MsgDelegateFeeAllowance) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgDelegateFeeAllowance) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgDelegateFeeAllowance) GetSigners() []sdk.AccAddress {
@@ -79,11 +73,7 @@ func (msg MsgRevokeFeeAllowance) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgRevokeFeeAllowance) GetSignBytes() []byte {
-	b, err := json.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {

@@ -1,5 +1,10 @@
 # `msg_delegation` Module
 
+The `msg_delegation` module provides support for granting arbitrary capabilities
+from one account (the granter) to another account (the grantee). Capabilities
+must be granted for a particular type of `sdk.Msg` one by one using an implementation
+of `Capability`.
+
 ## Types
 
 Capabilities determine exactly what action is delegated. They are extensible

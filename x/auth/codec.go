@@ -32,3 +32,7 @@ func init() {
 	RegisterCodec(msgCdc)
 	codec.RegisterCrypto(msgCdc)
 }
+
+func SetMsgCodec(cdc *codec.Codec) {
+	msgCdc = cdc
+}

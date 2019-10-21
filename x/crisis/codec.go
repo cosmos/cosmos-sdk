@@ -18,3 +18,7 @@ func init() {
 	codec.RegisterCrypto(cdc)
 	MsgCdc = cdc.Seal()
 }
+
+func SetMsgCodec(cdc *codec.Codec) {
+	MsgCdc = cdc
+}

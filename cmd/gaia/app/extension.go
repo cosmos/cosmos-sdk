@@ -35,48 +35,50 @@ type (
 	}
 
 	RabbitInsert struct {
-		Values string `json:"values"`
-		Table  string `json:"table"`
+		Values   string `json:"values"`
+		Table    string `json:"table"`
+		Database string `json:"database"`
 	}
 )
 
 var (
 	BalanceTable       = "balance"
-	BalanceFields      = "address,balance,denom,height,timestamp"
+	BalanceFields      = "address,balance,denom,height,timestamp,chain"
 	RewardsTable       = "rewards"
-	RewardsFields      = "address,validator,rewards,denom,height,timestamp"
+	RewardsFields      = "address,validator,rewards,denom,height,timestamp,chain"
 	ValRewardsTable    = "val_rewards"
-	ValRewardsFields   = "validator,rewards,denom,height,timestamp"
+	ValRewardsFields   = "validator,rewards,denom,height,timestamp,chain"
 	DelegationsTable   = "delegations"
 	UnbondingsTable    = "unbondings"
-	DelegationsFields  = "address,validator,shares,height,timestamp"
-	UnbondingsFields   = "address,validator,tokens,height,completion_timestamp,timestamp"
-	MessagesFields     = "hash,idx,msgtype,msg,timestamp"
+	DelegationsFields  = "address,validator,shares,height,timestamp,chain"
+	UnbondingsFields   = "address,validator,tokens,height,completion_timestamp,timestamp,chain"
+	MessagesFields     = "hash,idx,msgtype,msg,timestamp,chain"
 	MessagesTable      = "messages"
-	TransactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp"
+	TransactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp,chain"
 	TransactionsTable  = "transactions"
-	AddressesFields    = "hash,idx,address"
+	AddressesFields    = "hash,idx,address,chain"
 	AddressesTable     = "message_addresses"
 )
 
-func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, types.RequestBeginBlock), vals []sdk.ValAddress, accs []sdk.AccAddress) sdk.BeginBlocker {
+func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, string, string, types.RequestBeginBlock), vals []sdk.ValAddress, accs []sdk.AccAddress, network string, chainid string) sdk.BeginBlocker {
 	return func(ctx sdk.Context, req types.RequestBeginBlock) types.ResponseBeginBlock {
 		res := app.BeginBlocker(ctx, req)
 		// fucntions
 		for _, fn := range blockerFunctions {
-			fn(app, rabbit, ctx, vals, accs, req)
+			fn(app, rabbit, ctx, vals, accs, network, chainid, req)
 		}
 		return res
 	}
 }
 
-func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, req types.RequestBeginBlock) {
+func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, network string, chainid string, req types.RequestBeginBlock) {
 	processAcc := func(account auth.Account) bool {
 		balance := account.GetCoins()
 		for _, coin := range balance {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
-				Table:  BalanceTable,
+				Values:   fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s'),'%s'", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+				Table:    BalanceTable,
+				Database: network,
 			}
 			obj.Insert(rabbit)
 		}
@@ -88,8 +90,9 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals [
 
 			for _, coin := range rewards {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s')", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
-					Table:  RewardsTable,
+					Values:   fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s'),'%s'", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+					Table:    RewardsTable,
+					Database: network,
 				}
 				obj.Insert(rabbit)
 			}
@@ -123,15 +126,16 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals [
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s')", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
-				Table:  ValRewardsTable,
+				Values:   fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s'),'%s'", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+				Table:    ValRewardsTable,
+				Database: network,
 			}
 			obj.Insert(rabbit)
 		}
 	}
 }
 
-func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, req types.RequestBeginBlock) {
+func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, network string, chainid string, req types.RequestBeginBlock) {
 
 	delegations := []staking.Delegation{}
 	if len(accs) > 0 {
@@ -146,8 +150,9 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, val
 
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
-			Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s')", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
-			Table:  DelegationsTable,
+			Values:   fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),'%s'", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+			Table:    DelegationsTable,
+			Database: network,
 		}
 		obj.Insert(rabbit)
 	}
@@ -169,8 +174,9 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, val
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s')", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime.Format("2006-01-02 15:04:05"), req.Header.Time.Format("2006-01-02 15:04:05")),
-					Table:  UnbondingsTable,
+					Values:   fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s'),'%s'", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime.Format("2006-01-02 15:04:05"), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+					Table:    UnbondingsTable,
+					Database: network,
 				}
 				obj.Insert(rabbit)
 			}
@@ -178,9 +184,9 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, val
 	}
 }
 
-func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, types.RequestBeginBlock) {
+func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, string, string, types.RequestBeginBlock) {
 
-	return func(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, _ []sdk.ValAddress, _ []sdk.AccAddress, req types.RequestBeginBlock) {
+	return func(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, _ []sdk.ValAddress, _ []sdk.AccAddress, network string, chainid string, req types.RequestBeginBlock) {
 
 		for _, tx := range block.Data.Txs {
 			txHash := hex.EncodeToString(tx.Hash())
@@ -190,27 +196,24 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				for msgidx, msg := range sdktx.GetMsgs() {
 
 					obj := RabbitInsert{
-						Values: fmt.Sprintf("'%s',%d,'%s','%s',toDateTime('%s')", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05")),
-						Table:  MessagesTable,
+						Values:   fmt.Sprintf("'%s',%d,'%s','%s',toDateTime('%s'),'%s'", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+						Table:    MessagesTable,
+						Database: network,
 					}
 					obj.Insert(rabbit)
 
-					fmt.Printf("Msg %d for %s\n", msgidx, txHash)
-
-					fmt.Printf("Adding addresses for msg %d for %s\n", msgidx, txHash)
-					addAddresses(msg, txHash, msgidx, rabbit)
+					fmt.Printf("Handling Msg %d for %s\n", msgidx, txHash)
+					addAddresses(msg, txHash, msgidx, rabbit, network, chainid)
 
 				}
-				fmt.Printf("EXECUTING TX %s FOR %d\n", txHash, block.Header.Height)
+
 				result := app.BaseApp.DeliverTx(tx) // cause transaction to be applied to snapshotted db, so we can interrogate results.
 				jsonTags, _ := app.GetCodec().MarshalJSON(sdk.TagsToStringTags(result.GetTags()))
-				fmt.Println("DEBUG 1")
 				jsonMsgs := MsgsToString(sdktx.GetMsgs())
-				fmt.Println("DEBUG 2")
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s',%d,%d,%d,%d,'%s','%s','%s','%s','%s',toDateTime('%s')",
+					Values: fmt.Sprintf("'%s',%d,%d,%d,%d,'%s','%s','%s','%s','%s',toDateTime('%s'),'%s'",
 						txHash,
 						block.Header.Height,
 						result.GetCode(),
@@ -221,8 +224,10 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 						string(jsonFee),
 						string(jsonTags),
 						string(jsonMsgs),
-						block.Header.Time.Format("2006-01-02 15:04:05")),
-					Table: TransactionsTable,
+						block.Header.Time.Format("2006-01-02 15:04:05"),
+						chainid),
+					Table:    TransactionsTable,
+					Database: network,
 				}
 				obj.Insert(rabbit)
 			} else {
@@ -232,7 +237,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 	}
 }
 
-func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel) {
+func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel, network string, chainid string) {
 	// get addresses
 	m := BasicMsgStruct{}
 	a := make(map[string]bool)
@@ -245,8 +250,9 @@ func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel) {
 		if ok && !sdkAddr.Empty() && !a[sdkAddr.String()] { // pks in clickhouse aren't unique, so avoid dedupe here.
 			a[sdkAddr.String()] = true
 			obj := RabbitInsert{
-				Values: fmt.Sprintf("'%s',%d,'%s'", hash, idx, sdkAddr.String()),
-				Table:  AddressesTable,
+				Values:   fmt.Sprintf("'%s',%d,'%s','%s'", hash, idx, sdkAddr.String(), chainid),
+				Table:    AddressesTable,
+				Database: network,
 			}
 			obj.Insert(rabbit)
 		}
@@ -260,9 +266,7 @@ func MsgsToString(msgs []sdk.Msg) string {
 		outStrings = append(outStrings, string(msg.GetSignBytes()))
 	}
 
-	retval := fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
-	fmt.Sprintf("Messages: %s", retval)
-	return retval
+	return fmt.Sprintf("[%s]", strings.Join(outStrings, ","))
 }
 
 func (i RabbitInsert) Insert(c *amqp.Channel) {
@@ -271,10 +275,10 @@ func (i RabbitInsert) Insert(c *amqp.Channel) {
 		log.Fatal(err)
 	}
 	if err = c.Publish(
-		"",        // exchange
-		"inserts", // routing key
-		false,     // mandatory
-		false,     // immediate
+		"",         // exchange
+		i.Database, // routing key
+		false,      // mandatory
+		false,      // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(jsonString),

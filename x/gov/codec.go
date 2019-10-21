@@ -22,5 +22,5 @@ func init() {
 }
 
 func SetMsgCodec(cdc *codec.Codec) {
-	MsgCdc = cdc
+	msgCdc = cdc
 }

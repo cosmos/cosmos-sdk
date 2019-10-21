@@ -1,7 +1,7 @@
 package types
 
 import (
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ICS03 - Connection Data Structures as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
@@ -35,13 +35,13 @@ func NewConnectionEnd(state ConnectionState, clientID string, counterparty Count
 
 // Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
-	ClientID     string       `json:"client_id" yaml:"client_id"`
-	ConnectionID string       `json:"connection_id" yaml:"connection_id"`
-	Prefix       ics23.Prefix `json:"prefix" yaml:"prefix`
+	ClientID     string            `json:"client_id" yaml:"client_id"`
+	ConnectionID string            `json:"connection_id" yaml:"connection_id"`
+	Prefix       commitment.Prefix `json:"prefix" yaml:"prefix`
 }
 
 // NewCounterparty creates a new Counterparty instance.
-func NewCounterparty(clientID, connectionID string, prefix ics23.Prefix) Counterparty {
+func NewCounterparty(clientID, connectionID string, prefix commitment.Prefix) Counterparty {
 	return Counterparty{
 		ClientID:     clientID,
 		ConnectionID: connectionID,

@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ics02types "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -50,7 +50,7 @@ func (k Keeper) ConnOpenTry(
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string,
 	counterpartyVersions []string,
-	proofInit ics23.Proof,
+	proofInit commitment.Proof,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -95,7 +95,7 @@ func (k Keeper) ConnOpenTry(
 
 	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
-		ics02types.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
+		clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
@@ -125,7 +125,7 @@ func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
 	version string,
-	proofTry ics23.Proof,
+	proofTry commitment.Proof,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -181,7 +181,7 @@ func (k Keeper) ConnOpenAck(
 
 	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofTry,
-		ics02types.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
+		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
@@ -201,7 +201,7 @@ func (k Keeper) ConnOpenAck(
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
-	proofAck ics23.Proof,
+	proofAck commitment.Proof,
 	proofHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)

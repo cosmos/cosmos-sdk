@@ -1,7 +1,7 @@
 package types
 
 import (
-	ics23merkle "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	commitmentmerkle "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
 	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
@@ -14,9 +14,9 @@ const (
 // ConnectionResponse defines the client query response for a connection which
 // also includes a proof and the height from which the proof was retrieved.
 type ConnectionResponse struct {
-	Connection  ConnectionEnd     `json:"connection" yaml:"connection"`
-	Proof       ics23merkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofHeight uint64            `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	Connection  ConnectionEnd          `json:"connection" yaml:"connection"`
+	Proof       commitmentmerkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofHeight uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConnectionResponse creates a new ConnectionResponse instance
@@ -25,7 +25,7 @@ func NewConnectionResponse(
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
-		Proof:       ics23merkle.NewProof(proof, KeyConnection(connectionID)),
+		Proof:       commitmentmerkle.NewProof(proof, KeyConnection(connectionID)),
 		ProofHeight: uint64(height),
 	}
 }
@@ -47,9 +47,9 @@ func NewQueryConnectionParams(clientID string) QueryConnectionParams {
 // connection paths which also includes a proof and the height from which the
 // proof was retrieved.
 type ClientConnectionsResponse struct {
-	ConnectionPaths []string          `json:"connection_paths" yaml:"connection_paths"`
-	Proof           ics23merkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofHeight     uint64            `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConnectionPaths []string               `json:"connection_paths" yaml:"connection_paths"`
+	Proof           commitmentmerkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofHeight     uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientConnectionsResponse creates a new ConnectionPaths instance
@@ -58,7 +58,7 @@ func NewClientConnectionsResponse(
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           ics23merkle.NewProof(proof, KeyClientConnections(clientID)),
+		Proof:           commitmentmerkle.NewProof(proof, KeyClientConnections(clientID)),
 		ProofHeight:     uint64(height),
 	}
 }

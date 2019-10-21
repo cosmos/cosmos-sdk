@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -119,7 +119,7 @@ func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof ics23.Proof,
+	proof commitment.Proof,
 	path string,
 	value []byte,
 ) bool {
@@ -136,7 +136,7 @@ func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof ics23.Proof,
+	proof commitment.Proof,
 	path string,
 ) bool {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
@@ -148,7 +148,7 @@ func (k Keeper) VerifyNonMembership(
 	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
 }
 
-func (k Keeper) applyPrefix(prefix ics23.Prefix, path string) string {
+func (k Keeper) applyPrefix(prefix commitment.Prefix, path string) string {
 	// TODO:
 	return path
 }

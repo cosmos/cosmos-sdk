@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -22,7 +22,7 @@ type MsgConnectionOpenInit struct {
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance
 func NewMsgConnectionOpenInit(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix ics23.Prefix,
+	counterpartyClientID string, counterpartyPrefix commitment.Prefix,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenInit {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -68,21 +68,21 @@ var _ sdk.Msg = MsgConnectionOpenTry{}
 // MsgConnectionOpenTry defines a msg sent by a Relayer to try to open a connection
 // on Chain B.
 type MsgConnectionOpenTry struct {
-	ConnectionID         string         `json:"connection_id"`
-	ClientID             string         `json:"client_id"`
-	Counterparty         Counterparty   `json:"counterparty"`
-	CounterpartyVersions []string       `json:"counterparty_versions"`
-	ProofInit            ics23.Proof    `json:"proof_init"` // proof of the initialization the connection on Chain A: `none -> INIT`
-	ProofHeight          uint64         `json:"proof_height"`
-	ConsensusHeight      uint64         `json:"consensus_height"`
-	Signer               sdk.AccAddress `json:"signer"`
+	ConnectionID         string           `json:"connection_id"`
+	ClientID             string           `json:"client_id"`
+	Counterparty         Counterparty     `json:"counterparty"`
+	CounterpartyVersions []string         `json:"counterparty_versions"`
+	ProofInit            commitment.Proof `json:"proof_init"` // proof of the initialization the connection on Chain A: `none -> INIT`
+	ProofHeight          uint64           `json:"proof_height"`
+	ConsensusHeight      uint64           `json:"consensus_height"`
+	Signer               sdk.AccAddress   `json:"signer"`
 }
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
-	counterpartyClientID string, counterpartyPrefix ics23.Prefix,
-	counterpartyVersions []string, proofInit ics23.Proof,
+	counterpartyClientID string, counterpartyPrefix commitment.Prefix,
+	counterpartyVersions []string, proofInit commitment.Proof,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -150,17 +150,17 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 // MsgConnectionOpenAck defines a msg sent by a Relayer to Chain A to acknowledge
 // the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
-	ConnectionID    string         `json:"connection_id"`
-	ProofTry        ics23.Proof    `json:"proof_try"` // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
-	ProofHeight     uint64         `json:"proof_height"`
-	ConsensusHeight uint64         `json:"consensus_height"`
-	Version         string         `json:"version"`
-	Signer          sdk.AccAddress `json:"signer"`
+	ConnectionID    string           `json:"connection_id"`
+	ProofTry        commitment.Proof `json:"proof_try"` // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
+	ProofHeight     uint64           `json:"proof_height"`
+	ConsensusHeight uint64           `json:"consensus_height"`
+	Version         string           `json:"version"`
+	Signer          sdk.AccAddress   `json:"signer"`
 }
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry ics23.Proof,
+	connectionID string, proofTry commitment.Proof,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenAck {
@@ -219,15 +219,15 @@ var _ sdk.Msg = MsgConnectionOpenConfirm{}
 // MsgConnectionOpenConfirm defines a msg sent by a Relayer to Chain B to acknowledge
 // the change of connection state to OPEN on Chain A.
 type MsgConnectionOpenConfirm struct {
-	ConnectionID string         `json:"connection_id"`
-	ProofAck     ics23.Proof    `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
-	ProofHeight  uint64         `json:"proof_height"`
-	Signer       sdk.AccAddress `json:"signer"`
+	ConnectionID string           `json:"connection_id"`
+	ProofAck     commitment.Proof `json:"proof_ack"` // proof for the change of the connection state on Chain A: `INIT -> OPEN`
+	ProofHeight  uint64           `json:"proof_height"`
+	Signer       sdk.AccAddress   `json:"signer"`
 }
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
 func NewMsgConnectionOpenConfirm(
-	connectionID string, proofAck ics23.Proof, proofHeight uint64, signer sdk.AccAddress,
+	connectionID string, proofAck commitment.Proof, proofHeight uint64, signer sdk.AccAddress,
 ) MsgConnectionOpenConfirm {
 	return MsgConnectionOpenConfirm{
 		ConnectionID: connectionID,

@@ -15,6 +15,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 	prefix    []byte // prefix bytes for accessing the store
 	ports     map[sdk.CapabilityKey]string
+	bound     []string
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
@@ -28,6 +29,12 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 	}
 }
 
+// GetPorts returns the list of bound ports.
+// (these ports still must have been bound statically)
+func (k Keeper) GetPorts() []string {
+	return k.bound
+}
+
 // BindPort binds to a port and returns the associated capability.
 // Ports must be bound statically when the chain starts in `app.go`.
 // The capability must then be passed to a module which will need to pass
@@ -37,8 +44,15 @@ func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
 		panic(fmt.Sprintf("invalid port id: %s", types.ErrInvalidPortID(k.codespace)))
 	}
 
+	for _, b := range k.bound {
+		if b == portID {
+			panic(fmt.Sprintf("port %s is already bound", portID))
+		}
+	}
+
 	key := sdk.NewKVStoreKey(portID)
 	k.ports[key] = portID
+	k.bound = append(k.bound, portID)
 	return key
 }
 

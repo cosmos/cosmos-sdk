@@ -131,20 +131,12 @@ func (Proof) CommitmentType() string {
 func (proof Proof) VerifyMembership(root exported.RootI, path exported.PathI, value []byte) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
 func (proof Proof) VerifyNonMembership(root exported.RootI, path exported.PathI) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }

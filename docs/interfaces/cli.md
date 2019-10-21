@@ -241,8 +241,8 @@ appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto -g
 
 Here are the flags used:
 
-* `--from` indicates which [account](../core/accounts-fees.md) the transaction originates from. This account is used to sign the transaction.
-* `--gas` refers to how much [gas](../core/gas.md), which represents computational resources, Tx consumes. Gas is dependent on the computational needs of the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for --gas.
+* `--from` indicates which [account](../basics/accounts.md) the transaction originates from. This account is used to sign the transaction.
+* `--gas` refers to how much [gas](../basics/gas-fees.md), which represents computational resources, Tx consumes. Gas is dependent on the computational needs of the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for --gas.
 * `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 * `--generate-only` (optional) instructs the application to simply generate the unsigned transaction and output or write to a file. Without this flag, the transaction is created, signed, and broadcasted all in one command.
 

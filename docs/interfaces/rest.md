@@ -34,7 +34,7 @@ A REST Server is used to receive and route HTTP Requests, obtain the results fro
 
 * **Router:** A router for HTTP requests. A new router can be instantiated for an application and used to match routes based on path, request method, headers, etc. The SDK uses the [Gorilla Mux Router](https://github.com/gorilla/mux).
 * **CLIContext:** A [`CLIContext`](./query-lifecycle.md#clicontext) created for a user interaction.
-* **Keybase:** A [Keybase](../core/keys-accounts.md) is a key manager.
+* **Keybase:** A [Keybase](../basics/accounts.md#keybase) is a key manager.
 * **Logger:** A logger from Tendermint `Log`, a log package structured around key-value pairs that allows logging level to be set differently for different keys. The logger takes `Debug()`, `Info()`, and `Error()`s.
 * **Listener:** A [listener](https://golang.org/pkg/net/#Listener) from the net package.
 

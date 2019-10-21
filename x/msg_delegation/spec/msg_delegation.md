@@ -54,7 +54,7 @@ func (cap SendCapability) Accept(msg sdk.Msg, block abci.Header) (allow bool, up
 ```
 
 A different type of capability for `MsgSend` could be implemented
-using the `Capability` interface with new need to change the underlying
+using the `Capability` interface with no need to change the underlying
 `bank` module.
 
 ## Messages
@@ -63,7 +63,7 @@ using the `Capability` interface with new need to change the underlying
 
 ```go
 // MsgGrant grants the provided capability to the grantee on the granter's
-// account with the provided expiration time
+// account with the provided expiration time.
 type MsgGrant struct {
 	Granter    sdk.AccAddress `json:"granter"`
 	Grantee    sdk.AccAddress `json:"grantee"`
@@ -76,8 +76,8 @@ type MsgGrant struct {
 ### MsgRevoke
 
 ```go
-// MsgRevoke revokes whatever any capability on the granter's account with
-// the provided msg type that has been granted to the grantee
+// MsgRevoke revokes any capability with the provided sdk.Msg type on the
+// granter's account with that has been granted to the grantee.
 type MsgRevoke struct {
 	Granter sdk.AccAddress `json:"granter"`
 	Grantee sdk.AccAddress `json:"grantee"`
@@ -90,7 +90,7 @@ type MsgRevoke struct {
 
 ```go
 // MsgExecDelegated attempts to execute the provided messages using
-// capabilities granted to the signer. Each message should have only
+// capabilities granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the capability.
 type MsgExecDelegated struct {
 	Grantee sdk.AccAddress `json:"grantee"`
@@ -100,9 +100,26 @@ type MsgExecDelegated struct {
 
 ## Keeper
 
-The message delegation keeper receives a reference to the `BaseApp` `Router`
+### Constructor: `NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keeper`
+
+The message delegation keeper receives a reference to the baseapp's `Router` in order
+to dispatch delegated messages.
 
 ### `DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result`
 
 `DispatchActions attempts to execute the provided messages via capability
-grants from the message signer to the grantee..
+grants from the message signer to the grantee.
+
+### `Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability Capability, expiration time.Time)`
+
+Grants the provided capability to the grantee on the granter's account with the provided expiration
+time. If there is an existing capability grant for the same `sdk.Msg` type, this grant
+overwrites that.
+
+### `Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg)`
+
+Revokes any capability for the provided message type granted to the grantee by the granter.
+
+### `GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap Capability, expiration time.Time)`
+
+Returns any `Capability` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type.

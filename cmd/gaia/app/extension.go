@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/streadway/amqp"
 	"github.com/tendermint/tendermint/abci/types"
 	tm "github.com/tendermint/tendermint/types"
@@ -58,18 +59,18 @@ var (
 	AddressesTable     = "message_addresses"
 )
 
-func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, types.RequestBeginBlock)) sdk.BeginBlocker {
+func (app *GaiaApp) BeginBlockHook(rabbit *amqp.Channel, blockerFunctions []func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, types.RequestBeginBlock), vals []sdk.ValAddress, accs []sdk.AccAddress) sdk.BeginBlocker {
 	return func(ctx sdk.Context, req types.RequestBeginBlock) types.ResponseBeginBlock {
 		res := app.BeginBlocker(ctx, req)
 		// fucntions
 		for _, fn := range blockerFunctions {
-			fn(app, rabbit, ctx, req)
+			fn(app, rabbit, ctx, vals, accs, req)
 		}
 		return res
 	}
 }
 
-func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
+func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, req types.RequestBeginBlock) {
 	processAcc := func(account auth.Account) bool {
 		balance := account.GetCoins()
 		for _, coin := range balance {
@@ -98,11 +99,27 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 		return false
 	}
 
-	app.accountKeeper.IterateAccounts(ctx, processAcc) // iterate over every account, every block :o
-
+	if len(accs) > 0 {
+		for _, acc := range accs {
+			account := app.accountKeeper.GetAccount(ctx, acc)
+			processAcc(account)
+		}
+	} else {
+		app.accountKeeper.IterateAccounts(ctx, processAcc) // iterate over every account, every block :o
+	}
 	wrap, _ := ctx.CacheContext()
-	vals := app.stakingKeeper.GetValidators(wrap, 500)
-	for _, valObj := range vals {
+	validators := []staking.Validator{}
+	if len(vals) > 0 {
+		for _, v := range vals {
+			vObj, found := app.stakingKeeper.GetValidator(wrap, v)
+			if found {
+				validators = append(validators, vObj)
+			}
+		}
+	} else {
+		validators = app.stakingKeeper.GetValidators(wrap, 500)
+	}
+	for _, valObj := range validators {
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
 			obj := RabbitInsert{
@@ -114,9 +131,19 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req ty
 	}
 }
 
-func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
+func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals []sdk.ValAddress, accs []sdk.AccAddress, req types.RequestBeginBlock) {
 
-	delegations := app.stakingKeeper.GetAllDelegations(ctx)
+	delegations := []staking.Delegation{}
+	if len(accs) > 0 {
+		for _, acc := range accs {
+			for _, dObj := range app.stakingKeeper.GetDelegatorDelegations(ctx, acc, 1000) {
+				delegations = append(delegations, dObj)
+			}
+		}
+	} else {
+		delegations = app.stakingKeeper.GetAllDelegations(ctx)
+	}
+
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
 			Values: fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s')", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05")),
@@ -125,8 +152,19 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 		obj.Insert(rabbit)
 	}
 
-	vals := app.stakingKeeper.GetValidators(ctx, 500)
-	for _, valObj := range vals {
+	validators := []staking.Validator{}
+	if len(vals) > 0 {
+		for _, v := range vals {
+			vObj, found := app.stakingKeeper.GetValidator(ctx, v)
+			if found {
+				validators = append(validators, vObj)
+			}
+		}
+	} else {
+		validators = app.stakingKeeper.GetValidators(ctx, 500)
+	}
+
+	for _, valObj := range validators {
 		unbondings := app.stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, valObj.OperatorAddress)
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
@@ -140,9 +178,9 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req
 	}
 }
 
-func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Context, types.RequestBeginBlock) {
+func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, types.RequestBeginBlock) {
 
-	return func(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, req types.RequestBeginBlock) {
+	return func(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, _ []sdk.ValAddress, _ []sdk.AccAddress, req types.RequestBeginBlock) {
 
 		for _, tx := range block.Data.Txs {
 			txHash := hex.EncodeToString(tx.Hash())

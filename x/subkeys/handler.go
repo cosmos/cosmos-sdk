@@ -8,6 +8,7 @@ import (
 
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
 		case MsgDelegateFeeAllowance:
 			grant := FeeAllowanceGrant(msg)

@@ -14,19 +14,20 @@ A user would delegate fees to a user using MsgDelegateFeeAllowance and revoke
 that delegation using MsgRevokeFeeAllowance. In both cases Granter is the one
 who is delegating fees and Grantee is the one who is receiving the delegation.
 So grantee would correspond to the one who is signing a transaction and the
-granter would be the address they place in StdTx.FeeAccount.
+granter would be the address they place in DelegatedFee.FeeAccount.
 
 The fee allowance that a grantee receives is specified by an implementation of
 the FeeAllowance interface. Two FeeAllowance implementations are provided in
 this package: BasicFeeAllowance and PeriodicFeeAllowance.
 
-TODO: update if needed with new modular ante handler
+In order to integrate this into an application, we must use the ante handles from
+this package instead of the default auth implementations for DeductFee
+(adding custom logic) and MempoolFee (updating it to be compatible with DelegatedTx).
+An application can do this simply by using `x/delegate_fees/internal/ante.NewAnteHandler()`
+when setting up the app instead of the version from auth.
 
-In order to integrate this into an application, the "ante handler" which deducts
-fees must call Keeper.AllowDelegatedFees to check if
-the provided StdTx.Fee can be delegated from the Std.TxFeeAccount address
-to the first signer of the transaction. An example usage would be:
-
-allow := feeDelegationKeeper.AllowDelegatedFees(ctx, signers[0], stdTx.FeeAccount, stdTx.Fee.Amount)
+I did not pull this into the top level package as it pulls in dependencies on the internals
+of `x/auth` and if I understand correctly, this is bad practice to depend on other modules
+except for the external package.
 */
 package subkeys

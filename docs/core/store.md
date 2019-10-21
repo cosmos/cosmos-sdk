@@ -374,7 +374,7 @@ This is the type used whenever an IAVL Store needs to be cache-wrapped (typicall
 
 ### `GasKv` Store
 
-Cosmos SDK applications use [`gas`](../basics/accounts-fees-gas.md#fees-and-gas) to track resources usage and prevent spam. [`GasKv.Store`](https://github.com/cosmos/cosmos-sdk/blob/master/store/gaskv/store.go) is a `KVStore` wrapper that enables automatic gas consumption each time a read or write to the store is made. It is the solution of choice to track storage usage in Cosmos SDK applications.
+Cosmos SDK applications use [`gas`](../basics/gas-fees.md) to track resources usage and prevent spam. [`GasKv.Store`](https://github.com/cosmos/cosmos-sdk/blob/master/store/gaskv/store.go) is a `KVStore` wrapper that enables automatic gas consumption each time a read or write to the store is made. It is the solution of choice to track storage usage in Cosmos SDK applications.
 
 ```go
 type Store struct {

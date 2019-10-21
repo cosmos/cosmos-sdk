@@ -26,13 +26,13 @@ One of the main application interfaces is the command-line interface. The transa
 
 This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node.
 
-There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts-fees-gas.md#accounts) the transaction is originating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
+There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./accounts.md) the transaction is originating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
 
 #### Gas and Fees
 
-Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./accounts-fees-gas.md#fees):
+Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./gas-fees.md):
 
-* `--gas` refers to how much [gas](./accounts-fees-gas.md#gas), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
+* `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
 * `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 * `--gas-prices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 * `--fees` specifies how much in fees the user is willing to pay in total.
@@ -262,4 +262,4 @@ in `[]byte` form, is stored in a block and appended to the blockchain.
 
 ## Next
 
-Learn about [accounts, fees and gas](../accounts-fees-gas.md).
+Learn about [accounts](../accounts.md).

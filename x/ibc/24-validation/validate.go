@@ -12,13 +12,13 @@ var isAlphaLower = regexp.MustCompile(`^[a-z]+$`).MatchString
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 // Validator function type to validate path and identifier bytestrings
-type Validator func([]byte) bool
+type Validator func(string) bool
 
 // Default validator function for Client, Connection, and Channel
 // identifiers
 // Valid Identifier must be between 10-20 characters and only
 // contain lowercase alphabetic characters
-func DefaultIdentifierValidator(id []byte) bool {
+func DefaultIdentifierValidator(id string) bool {
 	// valid id must be between 10 and 20 characters
 	if len(id) < 10 || len(id) > 20 {
 		return false
@@ -34,14 +34,28 @@ func DefaultIdentifierValidator(id []byte) bool {
 // a Path Validator function which requires path only has valid identifiers
 // alphanumeric character strings, and "/" separators
 func NewPathValidator(idValidator Validator) Validator {
-	return func(path []byte) bool {
-		pathArr := strings.Split(string(path), "/")
+	return func(path string) bool {
+		pathArr := strings.Split(path, "/")
 		for _, p := range pathArr {
 			// Each path element must either be valid identifier or alphanumeric
-			if !idValidator([]byte(p)) && !isAlphaNumeric(p) {
+			if !idValidator(p) && !isAlphaNumeric(p) {
 				return false
 			}
 		}
 		return true
 	}
+}
+
+// Default Path Validator takes in path string and validates
+// with default identifier rules. This is optimized by simply
+// checking that all path elements are alphanumeric
+func DefaultPathValidator(path string) bool {
+	pathArr := strings.Split(path, "/")
+	for _, p := range pathArr {
+		// Each path element must either be alphanumeric
+		if !isAlphaNumeric(p) {
+			return false
+		}
+	}
+	return true
 }

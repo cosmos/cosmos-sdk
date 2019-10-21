@@ -56,8 +56,7 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)
-
-	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
+	proposals := k.GetProposals(ctx)
 
 	var proposalsDeposits Deposits
 	var proposalsVotes Votes

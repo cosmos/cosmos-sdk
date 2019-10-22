@@ -1,5 +1,0 @@
-{
-  "error": true,
-  "title": "Found 1 link issue",
-  "message": "#### Link issue by [`awesome_bot`](https://github.com/dkhamsing/awesome_bot)\n\n  Line | Status | Link\n| ---: | :----: | --- |\n83 | [302](https://httpstatuses.com/302) | https://cosmos.network/docs/tutorial redirects to<br>https://cosmos.network/docs/tutorial/\n"
-}

@@ -1,5 +1,0 @@
-{
-  "error": true,
-  "title": "Found 2 link issues",
-  "message": "#### Link issues by [`awesome_bot`](https://github.com/dkhamsing/awesome_bot)\n\n  Line | Status | Link\n| ---: | :----: | --- |\n3 | [301](https://httpstatuses.com/301) | https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md redirects to<br>https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md\n116 | Error | https://swagger.io/docs/specification/2-0/basic-structure/ <br> incorrect header check\n"
-}

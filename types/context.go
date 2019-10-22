@@ -31,7 +31,7 @@ type Context struct {
 	gasMeter      GasMeter
 	blockGasMeter GasMeter
 	checkTx       bool
-	recheckTx     bool
+	recheckTx     bool // if recheckTx == true, checkTx must be true
 	minGasPrice   DecCoins
 	consParams    *abci.ConsensusParams
 	eventManager  *EventManager
@@ -154,7 +154,13 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
+// WithIsRecheckTx(true) will also set checkTx = true
+// in order to enforce invariant that if recheckTx = true
+// then checkTx = true as well
 func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
+	if isRecheckTx {
+		c.checkTx = true
+	}
 	c.recheckTx = isRecheckTx
 	return c
 }

@@ -469,11 +469,11 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 // Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		return app.checkState
+	if mode == runTxModeDeliver {
+		return app.deliverState
 	}
 
-	return app.deliverState
+	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.

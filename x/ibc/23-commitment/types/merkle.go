@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -103,13 +104,17 @@ func (p Path) String() string {
 //
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
-func ApplyPrefix(prefix exported.PrefixI, path string) Path {
+func ApplyPrefix(prefix exported.PrefixI, path string) (Path, error) {
+	err := host.DefaultPathValidator(path)
+	if err != nil {
+		return Path{}, err
+	}
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
 	commitmentPath := NewPath(pathSlice)
 
 	commitmentPath.KeyPath = commitmentPath.KeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
-	return commitmentPath
+	return commitmentPath, nil
 }
 
 var _ exported.ProofI = Proof{}

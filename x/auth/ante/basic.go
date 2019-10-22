@@ -17,8 +17,9 @@ var (
 )
 
 // ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
-// If ValidateBasic passes, decorator calls next AnteHandler in chain.
-// This decorator will not get run on ReCheck since it is not dependent on application state
+// If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
+// ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
+// is not dependent on application state.
 type ValidateBasicDecorator struct{}
 
 func NewValidateBasicDecorator() ValidateBasicDecorator {

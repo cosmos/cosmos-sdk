@@ -153,10 +153,9 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	return next(ctx, tx, simulate)
 }
 
-// Verify all signatures for tx and return error if any are invalid
-// increment sequence of each signer and set updated account back in store
-// Call next AnteHandler
-// This decorator will not get run on ReCheck
+// Verify all signatures for a tx and return an error if any are invalid. Note,
+// the SigVerificationDecorator decorator will not get executed on ReCheck.
+//
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
@@ -217,9 +216,11 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-// Increments sequences of all signers.
-// Use this decorator to prevent replay attacks
-// No need to run this decorator on CheckTx since it is merely updating nonce
+// IncrementSequenceDecorator handles incrementing sequences of all signers.
+// Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
+// there is no need to execute IncrementSequenceDecorator on CheckTx or RecheckTX
+// since it is merely updating the nonce.
+//
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type IncrementSequenceDecorator struct {
 	ak keeper.AccountKeeper
@@ -232,10 +233,11 @@ func NewIncrementSequenceDecorator(ak keeper.AccountKeeper) IncrementSequenceDec
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to increment sequence on check tx
+	// no need to increment sequence on CheckTx or RecheckTx
 	if ctx.IsCheckTx() {
 		return next(ctx, tx, simulate)
 	}
+
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")

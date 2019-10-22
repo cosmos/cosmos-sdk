@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	validation "github.com/cosmos/cosmos-sdk/x/ibc/24-validation"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -105,7 +105,7 @@ func (p Path) String() string {
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
 func ApplyPrefix(prefix exported.PrefixI, path string) (Path, error) {
-	err := validation.DefaultPathValidator(path)
+	err := host.DefaultPathValidator(path)
 	if err != nil {
 		return Path{}, err
 	}

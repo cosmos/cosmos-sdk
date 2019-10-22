@@ -6,7 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-commitment/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
 // NewQuerier creates a querier for the IBC client

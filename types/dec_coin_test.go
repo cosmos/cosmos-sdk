@@ -307,6 +307,7 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		if tc.panics {
 			require.Panics(t, func() { tc.coins.QuoDecTruncate(tc.input) })
 		} else {

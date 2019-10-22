@@ -30,6 +30,7 @@ func TestCause(t *testing.T) {
 	}
 
 	for testName, tc := range cases {
+		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			if got := errors.Cause(tc.err); got != tc.root {
 				t.Fatal("unexpected result")
@@ -136,6 +137,7 @@ func TestErrorIs(t *testing.T) {
 		// },
 	}
 	for testName, tc := range cases {
+		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			if got := tc.a.Is(tc.b); got != tc.wantIs {
 				t.Fatalf("unexpected result - got:%v want: %v", got, tc.wantIs)

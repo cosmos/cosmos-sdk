@@ -16,20 +16,28 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		switch path[0] {
 		case types.QueryParams:
 			return queryParams(ctx, path[1:], req, keeper)
+
 		case types.QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
+
 		case types.QueryProposal:
 			return queryProposal(ctx, path[1:], req, keeper)
+
 		case types.QueryDeposits:
 			return queryDeposits(ctx, path[1:], req, keeper)
+
 		case types.QueryDeposit:
 			return queryDeposit(ctx, path[1:], req, keeper)
+
 		case types.QueryVotes:
 			return queryVotes(ctx, path[1:], req, keeper)
+
 		case types.QueryVote:
 			return queryVote(ctx, path[1:], req, keeper)
+
 		case types.QueryTally:
 			return queryTally(ctx, path[1:], req, keeper)
+
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown gov query endpoint")
 		}
@@ -182,19 +190,18 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	return bz, nil
 }
 
-// nolint: unparam
-func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	var params types.QueryProposalsParams
+
 	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("failed to parse params", err.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
-
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
+	bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetProposalsFiltered(ctx, params))
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
 	}
+
 	return bz, nil
 }

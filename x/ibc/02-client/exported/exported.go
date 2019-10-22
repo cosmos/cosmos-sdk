@@ -3,7 +3,7 @@ package exported
 import (
 	"fmt"
 
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // Blockchain is consensus algorithm which generates valid Headers. It generates
@@ -21,7 +21,7 @@ type ConsensusState interface {
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() ics23.Root
+	GetRoot() commitmentexported.RootI
 
 	// CheckValidityAndUpdateState returns the updated consensus state
 	// only if the header is a descendent of this consensus state.

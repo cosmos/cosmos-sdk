@@ -54,10 +54,14 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	return depositParams, votingParams, tallyParams
 }
 
-func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status types.ProposalStatus, limit uint64) []types.Proposal {
+func getQueriedProposals(
+	t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier,
+	depositor, voter sdk.AccAddress, status types.ProposalStatus, page, limit int,
+) []types.Proposal {
+
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryProposals}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryProposalsParams(status, limit, voter, depositor)),
+		Data: cdc.MustMarshalJSON(types.NewQueryProposalsParams(page, limit, status, voter, depositor)),
 	}
 
 	bz, err := querier(ctx, []string{types.QueryProposals}, query)
@@ -214,12 +218,12 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, deposit5, deposit)
 
 	// Only proposal #1 should be in types.Deposit Period
-	proposals := getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusDepositPeriod, 0)
+	proposals := getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusDepositPeriod, 1, 0)
 	require.Len(t, proposals, 1)
 	require.Equal(t, proposal1, proposals[0])
 
 	// Only proposals #2 and #3 should be in Voting Period
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusVotingPeriod, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusVotingPeriod, 1, 0)
 	require.Len(t, proposals, 2)
 	require.Equal(t, proposal2, proposals[0])
 	require.Equal(t, proposal3, proposals[1])
@@ -235,7 +239,7 @@ func TestQueries(t *testing.T) {
 	keeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, TestAddrs[0], types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, TestAddrs[0], types.StatusNil, 1, 0)
 	require.Equal(t, proposal2, proposals[0])
 	require.Equal(t, proposal3, proposals[1])
 
@@ -254,25 +258,25 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, vote3, votes[1])
 
 	// Test query all proposals
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal1, proposals[0])
 	require.Equal(t, proposal2, proposals[1])
 	require.Equal(t, proposal3, proposals[2])
 
 	// Test query voted by TestAddrs[1]
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, TestAddrs[1], types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, nil, TestAddrs[1], types.StatusNil, 1, 0)
 	require.Equal(t, proposal3.ProposalID, proposals[0].ProposalID)
 
 	// Test query deposited by TestAddrs[0]
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[0], nil, types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[0], nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal1.ProposalID, proposals[0].ProposalID)
 
 	// Test query deposited by addr2
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[1], nil, types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[1], nil, types.StatusNil, 1, 0)
 	require.Equal(t, proposal2.ProposalID, proposals[0].ProposalID)
 	require.Equal(t, proposal3.ProposalID, proposals[1].ProposalID)
 
 	// Test query voted AND deposited by addr1
-	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[0], TestAddrs[0], types.StatusNil, 0)
+	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[0], TestAddrs[0], types.StatusNil, 1, 0)
 	require.Equal(t, proposal2.ProposalID, proposals[0].ProposalID)
 }

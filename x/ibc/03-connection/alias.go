@@ -25,10 +25,8 @@ const (
 	StoreKey                          = types.StoreKey
 	RouterKey                         = types.RouterKey
 	QuerierRoute                      = types.QuerierRoute
-	QueryClientState                  = types.QueryClientState
-	QueryConsensusState               = types.QueryConsensusState
-	QueryCommitmentPath               = types.QueryCommitmentPath
-	QueryCommitmentRoot               = types.QueryCommitmentRoot
+	QueryConnection                   = types.QueryConnection
+	QueryClientConnections            = types.QueryClientConnections
 )
 
 var (

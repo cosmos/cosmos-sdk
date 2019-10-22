@@ -1,4 +1,4 @@
-package tendermint
+package types
 
 func join(a, b []byte) (res []byte) {
 	res = make([]byte, len(a)+len(b))

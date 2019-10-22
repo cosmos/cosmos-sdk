@@ -167,7 +167,7 @@ func (kb baseKeybase) CreateMnemonic(
 // Derive computes a BIP39 seed from the mnemonic and bip39Passphrase. It creates
 // a private key from the seed using the BIP44 params.
 func (kb baseKeybase) Derive(
-	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params,
+	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, // nolint:interfacer
 ) (Info, error) {
 
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)

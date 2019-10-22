@@ -65,7 +65,7 @@ func NewEvent(ty string, attrs ...Attribute) Event {
 	e := Event{Type: ty}
 
 	for _, attr := range attrs {
-		e.Attributes = append(e.Attributes, NewAttribute(attr.Key, attr.Value).ToKVPair())
+		e.Attributes = append(e.Attributes, attr.ToKVPair())
 	}
 
 	return e

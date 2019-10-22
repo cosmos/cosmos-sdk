@@ -644,6 +644,7 @@ func TestCountSubkeys(t *testing.T) {
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(T *testing.T) {
 			require.Equal(t, tt.want, types.CountSubKeys(tt.args.pub))
 		})

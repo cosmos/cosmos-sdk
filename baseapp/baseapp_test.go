@@ -236,6 +236,7 @@ func TestSetLoader(t *testing.T) {
 	v := []byte("value")
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
 			db := dbm.NewMemDB()
@@ -594,7 +595,7 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
+func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
@@ -611,7 +612,7 @@ func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sd
 	}
 }
 
-func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) sdk.Handler {
+func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		var msgCount int64

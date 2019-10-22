@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -169,8 +169,8 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	prefix := commitmenttypes.NewPrefix(k.prefix)
-	path := commitmenttypes.ApplyPrefix(prefix, pathStr)
+	prefix := commitment.NewPrefix(k.prefix)
+	path := commitment.ApplyPrefix(prefix, pathStr)
 
 	return proof.VerifyMembership(root, path, value)
 }
@@ -192,8 +192,8 @@ func (k Keeper) VerifyNonMembership(
 		return false
 	}
 
-	prefix := commitmenttypes.NewPrefix(k.prefix)
-	path := commitmenttypes.ApplyPrefix(prefix, pathStr)
+	prefix := commitment.NewPrefix(k.prefix)
+	path := commitment.ApplyPrefix(prefix, pathStr)
 
 	return proof.VerifyNonMembership(root, path)
 }

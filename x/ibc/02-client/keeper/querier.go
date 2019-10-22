@@ -77,7 +77,7 @@ func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	root, found := k.GetCommitmentRoot(ctx, params.ClientID, params.Height)
+	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
 		return nil, types.ErrRootNotFound(k.codespace)
 	}

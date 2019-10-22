@@ -83,9 +83,9 @@ $ %s query ibc client state [client-id]
 func GetCmdQueryRoot(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "root [client-id] [height]",
-		Short: "Query stored root",
+		Short: "Query a verified commitment root",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a stored commitment root at a specific height for a particular client
+			fmt.Sprintf(`Query an already verified commitment root at a specific height for a particular client
 
 Example:
 $ %s query ibc client root [client-id] [height]

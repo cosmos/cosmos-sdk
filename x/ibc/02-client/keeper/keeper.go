@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -98,8 +97,9 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 	store.Set(types.KeyClientState(clientID), bz)
 }
 
-// GetCommitmentRoot gets a commitment Root from a particular height to a client
-func (k Keeper) GetCommitmentRoot(ctx sdk.Context, clientID string, height uint64) (commitmentexported.RootI, bool) {
+// GetVerifiedRoot gets a verified commitment Root from a particular height to
+// a client
+func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitmentexported.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
@@ -111,8 +111,9 @@ func (k Keeper) GetCommitmentRoot(ctx sdk.Context, clientID string, height uint6
 	return root, true
 }
 
-// SetCommitmentRoot sets a commitment Root from a particular height to a client
-func (k Keeper) SetCommitmentRoot(ctx sdk.Context, clientID string, height uint64, root commitmentexported.RootI) {
+// SetVerifiedRoot sets a verified commitment Root from a particular height to
+// a client
+func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitmentexported.RootI) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
 	store.Set(types.KeyRoot(clientID, height), bz)
@@ -157,20 +158,17 @@ func (k Keeper) VerifyMembership(
 	clientState types.ClientState,
 	height uint64, // sequence
 	proof commitmentexported.ProofI,
-	pathStr string,
+	path commitmentexported.PathI,
 	value []byte,
 ) bool {
 	if clientState.Frozen {
 		return false
 	}
 
-	root, found := k.GetCommitmentRoot(ctx, clientState.ID(), height)
+	root, found := k.GetVerifiedRoot(ctx, clientState.ID(), height)
 	if !found {
 		return false
 	}
-
-	prefix := commitment.NewPrefix(k.prefix)
-	path := commitment.ApplyPrefix(prefix, pathStr)
 
 	return proof.VerifyMembership(root, path, value)
 }
@@ -181,19 +179,16 @@ func (k Keeper) VerifyNonMembership(
 	clientState types.ClientState,
 	height uint64, // sequence
 	proof commitmentexported.ProofI,
-	pathStr string,
+	path commitmentexported.PathI,
 ) bool {
 	if clientState.Frozen {
 		return false
 	}
 
-	root, found := k.GetCommitmentRoot(ctx, clientState.ID(), height)
+	root, found := k.GetVerifiedRoot(ctx, clientState.ID(), height)
 	if !found {
 		return false
 	}
-
-	prefix := commitment.NewPrefix(k.prefix)
-	path := commitment.ApplyPrefix(prefix, pathStr)
 
 	return proof.VerifyNonMembership(root, path)
 }

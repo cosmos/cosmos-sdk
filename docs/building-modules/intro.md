@@ -19,7 +19,7 @@ The Cosmos SDK can be thought as the Ruby-on-Rails of blockchain development. It
 
 On top of this core, the SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source SDK modules, making it increasingly easier to build complex blockchain applications. 
 
-SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one ore multiple `KVStore` in the [main multistore](../core/store.md), as well as a subset of [`message` types](./message.md). These `message`s are routed by one of the main component of SDK core, [`baseapp`](../core/baseapp.md), to the [`handler`](./handler.md) of the module that define them. 
+SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one ore multiple `KVStore` in the [main multistore](../core/store.md), as well as a subset of [`message` types](./messages-and-queries.md#messages). These `message`s are routed by one of the main component of SDK core, [`baseapp`](../core/baseapp.md), to the [`handler`](./handler.md) of the module that define them. 
 
 ```
                                       +

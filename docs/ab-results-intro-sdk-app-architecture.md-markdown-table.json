@@ -1,0 +1,5 @@
+{
+  "error": true,
+  "title": "Found 1 link issue",
+  "message": "#### Link issue by [`awesome_bot`](https://github.com/dkhamsing/awesome_bot)\n\n  Line | Status | Link\n| ---: | :----: | --- |\n39 | Dupe | https://tendermint.com/docs/introduction/what-is-tendermint.html \n"
+}

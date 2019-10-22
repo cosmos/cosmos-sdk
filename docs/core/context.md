@@ -18,8 +18,8 @@ This document details the SDK `Context` type.
 The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context)
 as its base, and has many additional types within its definition that are specific to the Cosmos SDK
 and Tendermint. The `Context` is directly passed between methods and functions as an argument.
-The `Context` is integral to tx processing in that it allows modules to easily access their respective
-[state](./multistore.md) and retrieve transactional context such as the block header and gas meter.
+The `Context` is integral to transaction processing in that it allows modules to easily access their respective
+[store](./store.md#base-layer-kvstores) in the [multistore](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go
 type Context struct {
@@ -40,11 +40,11 @@ type Context struct {
 ```
 
 - **Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below. 
-- **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./multistore.md) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their
+- **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their
 respective `KVStore` using their unique `StoreKey`.
 - **ABCI Header:** The [header](https://tendermint.com/docs/spec/abci/abci.html#header) is an ABCI type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
 - **Chain ID:** The unique identification number of the blockchain a block pertains to.
-- **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./amino.md).
+- **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 - **Logger:** A [Logger](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/libs/log/logger.go) from the Tendermint libraries. Learn more about logs [here](https://tendermint.com/docs/tendermint-core/how-to-read-logs.html#how-to-read-logs). Modules call this method to create their own unique module-specific logger.
 - **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://tendermint.com/docs/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 - **Gas Meters:** Specifically, a `gasMeter` for the transaction currently being processed using the context and a `blockGasMeter` for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
@@ -88,8 +88,7 @@ goes wrong. The pattern of usage for a Context is as follows:
 
 1. A process receives a Context `ctx` from its parent process, which provides information needed to
    perform the process.
-2. The `ctx.ms` is [**cache wrapped**](./multistore.md), i.e. a cached copy of the [multistore](./multistore.md)
-is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms` state.
+2. The `ctx.ms` is **cache wrapped**, i.e. a cached copy of the [multistore](./store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution. 
 3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass
 `ctx` to it as needed.
 4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing

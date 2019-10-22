@@ -1,0 +1,204 @@
+{
+  "date": "2019-10-21 20:19:01 +0200",
+  "links": [
+    "https://en.wikipedia.org/wiki/State_machine_replication",
+    "https://tendermint.com/docs/introduction/what-is-tendermint.html",
+    "https://tendermint.com/docs/introduction/what-is-tendermint.html",
+    "https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r",
+    "https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r",
+    "https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview",
+    "https://github.com/tendermint/tendermint/tree/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci",
+    "https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality",
+    "https://tendermint.com/docs/spec/blockchain/blockchain.html#validation",
+    "https://tendermint.com/docs/spec/abci/abci.html#overview"
+  ],
+  "issues": [
+
+  ],
+  "all": [
+    {
+      "url": "https://en.wikipedia.org/wiki/State_machine_replication",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 18:19:00 GMT",
+        "content-type": "text/html; charset=UTF-8",
+        "content-length": "19769",
+        "connection": "keep-alive",
+        "server": "mw1242.eqiad.wmnet",
+        "x-powered-by": "PHP/7.2.22-1+0~20190902.26+debian9~1.gbpd64eb7+wmf1",
+        "x-content-type-options": "nosniff",
+        "p3p": "CP=\"See https://en.wikipedia.org/wiki/Special:CentralAutoLogin/P3P for more info.\"",
+        "content-language": "en",
+        "vary": "Accept-Encoding,Cookie,Authorization",
+        "last-modified": "Sun, 06 Oct 2019 15:12:00 GMT",
+        "backend-timing": "D=222419 t=1571584320183995",
+        "x-varnish": "363005810, 603756111 462141841, 274503114 566730776",
+        "age": "97620",
+        "x-cache": "cp1077 pass, cp3030 hit/5, cp3032 hit/2",
+        "x-cache-status": "hit-front",
+        "server-timing": "cache;desc=\"hit-front\"",
+        "strict-transport-security": "max-age=106384710; includeSubDomains; preload",
+        "set-cookie": "WMF-Last-Access=21-Oct-2019;Path=/;HttpOnly;secure;Expires=Fri, 22 Nov 2019 12:00:00 GMT, WMF-Last-Access-Global=21-Oct-2019;Path=/;Domain=.wikipedia.org;HttpOnly;secure;Expires=Fri, 22 Nov 2019 12:00:00 GMT, GeoIP=FR:IDF:Paris:48.85:2.35:v4; Path=/; secure; Domain=.wikipedia.org",
+        "x-analytics": "ns=0;page_id=5407093;https=1;nocookies=1",
+        "x-client-ip": "109.12.28.26",
+        "cache-control": "private, s-maxage=0, max-age=0, must-revalidate",
+        "accept-ranges": "bytes"
+      }
+    },
+    {
+      "url": "https://github.com/tendermint/tendermint/tree/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 18:19:01 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"6b46dc77514d9cbc1247ff0cf7f308d6\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 19:19:00 -0000, _octo=GH1.1.234285120.1571681941; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 18:19:01 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 18:19:01 -0000; secure; HttpOnly, _gh_sess=RTQ1aHFaa0YrV0RhaWtvZW40Y0x5TWU5aDB5NG01ZzMzd3M4SHZBVldzK0VoUUlEMlEweFhhTVl0ZVdCckR2V3JpbDBXNXVUbEtzRTZHWFpaZ3JhaEFpSGZrSmp2VlB0SWNyQkhRaklPZWJuZFBOMkFsQ0FyZ0F6UUFzSWNCZzZGL25tNnF4YlM3UFdQS1dzZ3R0cHRxNDRCa3YrUlFZY2U2RlVZQkVJUHZJMmtqVksxQ04zblpmMlAzOFI1RmFkRndUcndhdHplc1hhVnFMbzhVaWxhU21CWGs4VWNSN2RnTXJtSXJxbzd0TT0tLURINmNpS0pZQUhjenRtbTcvWVVMUFE9PQ%3D%3D--ed075a4c748c7872abc83218ced514b6890aa99b; path=/; secure; HttpOnly",
+        "x-request-id": "d6e89edc-3460-4912-9047-c9a2c7befb07",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C63E:2FD83:7BABDC8:BA16A33:5DADF694"
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 12:35:18 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 46e204a489342e831ee06d482c0e4baf.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "7H5pCxrOGD9IvJfa_kFbc7VMYnhBGpccr3SnkmUEcGG9Inpmx3TvFQ==",
+        "age": "26055"
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 15:25:19 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 a45555e8d20cb505b62dfda511e6ba6c.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "DTMK2C4tPkLb3hyob3cd_ZBlpWDE33oOZ1wGDKkuL-maHf9ib_gCxg==",
+        "age": "6116"
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 15:25:19 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 a52dcb1fed052adbd58b868375961d24.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "-vDnu4ZWFXvf1GgXZrByc1dNqi_R6MisXvuPVIelqykM3kO63nA3MQ==",
+        "age": "6116"
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/introduction/what-is-tendermint.html",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 12:35:18 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 5eb217efafd24502afe993e2379ff239.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "bmBvVPV7VBFYpo_DSOK8lWpNygFjK1CjbUYwgWZFII7bxCO1n_xEVQ==",
+        "age": "26055"
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/spec/abci/abci.html#overview",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 15:02:00 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 507f0bab9a1278d1632051db230c99d4.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "i6qwjFgjdAw9de-NGv_dkfSliHQc8PusLl9zAweXehtIErjyZVY1CA=="
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/spec/blockchain/blockchain.html#validation",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 07 Oct 2019 14:42:38 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 f649cab3bdd2f34f96be9ae3cf2c347c.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "KpDDmVZ5IZ9hDd6eEdpovt9Buqsn_utwMsNu_QkfSGMuQsZAqXJiww=="
+      }
+    },
+    {
+      "url": "https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 21 Oct 2019 18:19:02 GMT",
+        "last-modified": "Mon, 07 Oct 2019 12:24:56 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 d1de69411619c8959e836b04d8865c77.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX3-C4",
+        "x-amz-cf-id": "egxOQevLfdjvVJTwMQUtucb0-N1tVSuimSYpMUuHs7QLLj-5emtt0w=="
+      }
+    }
+  ]
+}

@@ -16,7 +16,7 @@ order: 7
 
 The Cosmos SDK is a framework that makes it easy for developers to build complex decentralised applications from scratch, mainly by composing modules together. As the ecosystem of open source modules for the Cosmos SDK expands, it will become increasingly likely that some contain vulnerabilities, as a result of the negligence or malice of their developer. 
 
-The Cosmos SDK adopts an [object-capabilities-based approach](./ocap.md) to help developers better protect their application from unwanted inter-module interactions, and `keeper`s are at the core of this approach. A `keeper` can be thought of quite literally as the gatekeeper of a module's store(s). Each store (typically an [`IAVL` Store](../core/store.md#iavl-store)) defined within a module comes with a `storeKey`, which grants unlimited access to it. The module's `keeper` holds this `storeKey` (which should otherwise remain unexposed), and defines [methods](#implementing-methods) for reading and writing to the store(s). 
+The Cosmos SDK adopts an [object-capabilities-based approach](../core/ocap.md) to help developers better protect their application from unwanted inter-module interactions, and `keeper`s are at the core of this approach. A `keeper` can be thought of quite literally as the gatekeeper of a module's store(s). Each store (typically an [`IAVL` Store](../core/store.md#iavl-store)) defined within a module comes with a `storeKey`, which grants unlimited access to it. The module's `keeper` holds this `storeKey` (which should otherwise remain unexposed), and defines [methods](#implementing-methods) for reading and writing to the store(s). 
 
 The core idea behind the object-capabilities approach is to only reveal what is necessary to get the work done. In practice, this means that instead of handling permissions of modules through access-control lists, module `keeper`s are passed a reference to the specific instance of the other modules' `keeper`s that they need to access. As a consequence, a module can only interact with the subset of state defined in another module via the methods exposed by the instance of the other module's `keeper`. This is a great way for developers to control the interactions that their own module can have with modules developed by external developers. 
 
@@ -56,7 +56,7 @@ Of course, it is possible to define different types of internal `keeper`s for th
 
 ## Implementing Methods 
 
-`Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed via the `ValidateBasic()` method of the [`message`](./messages-and-queries.md#messages) and the [`handler`](./handler.go) when `keeper`s' methods are called. 
+`Keeper`s primarily expose getter and setter methods for the store(s) managed by their module. These methods should remain as simple as possible and strictly be limited to getting or setting the requested value, as validity checks should have already been performed via the `ValidateBasic()` method of the [`message`](./messages-and-queries.md#messages) and the [`handler`](./handler.md) when `keeper`s' methods are called. 
 
 Typically, a *getter* method will present with the following signature 
 

@@ -19,7 +19,7 @@ The full-node client of any SDK application is built by running a `main` functio
 In general, developers will implement the `main.go` function with the following structure:
 
 - First, a [`codec`](./encoding.md) is instanciated for the application.
-- Then, the [`config`](https://github.com/cosmos/cosmos-sdk/blob/master/types/config.go) is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts-fees-gas.md#addresses-and-pubkeys).
+- Then, the [`config`](https://github.com/cosmos/cosmos-sdk/blob/master/types/config.go) is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`. 
 - Add default server commands to `rootCmd` using the `server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)` method. These commands are separated from the ones added above since they are standard and defined at SDK level. They should be shared by all SDK-based applications. They include the most important command: the [`start` command](#start-command).
 - Prepare and execute the [`executor`](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/libs/cli/setup.go#L75-L78).  

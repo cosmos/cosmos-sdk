@@ -16,7 +16,7 @@ This document describes SDK interfaces in detail through the lifecycle of a quer
 
 A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed; they can be fully handled by one full-node.
 
-For the purpose of explaining a query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module handles this query. But first, there are a few ways `Query` can be created by users.
+For the purpose of explaining a query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module handles this query. But first, there are a few ways `Query` can be created by users.
 
 ### CLI
 
@@ -34,7 +34,7 @@ appcli query [moduleName] [command] <arguments> --flag <flagArg>
 
 To provide values such as `--node` (the full-node the CLI connects to), the user must use the `config` command to set them or provide them as flags.
 
-This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
+This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
 
 The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command  (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 
@@ -60,8 +60,8 @@ The interactions from the users' perspective are a bit different, but the underl
 
 The first thing that is created in the execution of a CLI command is a `CLIContext`, while the REST Server directly provides a `CLIContext` for the REST Request handler. A [Context](../core/context.md) is an immutable object that stores all the data needed to process a request on the user side. In particular, a `CLIContext` stores the following:
 
-* **Codec**: The [encoder/decoder](,./core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
-* **Account Decoder**: The account decoder from the [`auth`](.../spec/auth) module, which translates `[]byte`s into accounts.
+* **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
+* **Account Decoder**: The account decoder from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, which translates `[]byte`s into accounts.
 * **RPC Client**: The [Tendermint RPC Client](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/rpc/client/interface.go), or node, to which the request will be relayed to.
 * **Keybase**: A [Key Manager](../basics/accounts.md#keybase) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
@@ -78,7 +78,7 @@ At this point in the lifecycle, the user has created a CLI command or HTTP Reque
 
 #### Parse Arguments
 
-In this case, `Query` contains an [address](../basics/accounts.m#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `CLIContext` is used to marshal the address as the type [`QueryDelegatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L30-L38). All query arguments have their own types that the application `codec` understands how to encode and decode. For example, the [`staking`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/staking) module also has [`QueryValidatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L45-L53) and [`QueryBondsParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L59-L69). The module [`querier`](.//building-modules/querier.md) declares these types and the application registers the `codec`s.
+In this case, `Query` contains an [address](../basics/accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `CLIContext` is used to marshal the address as the type [`QueryDelegatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L30-L38). All query arguments have their own types that the application `codec` understands how to encode and decode. For example, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module also has [`QueryValidatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L45-L53) and [`QueryBondsParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L59-L69). The module [`querier`](../building-modules/querier.md) declares these types and the application registers the `codec`s.
 
 Here is what the code looks like for the CLI command:
 

@@ -1,0 +1,79 @@
+{
+  "date": "2019-10-21 20:19:02 +0200",
+  "links": [
+    "https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L27",
+    "https://github.com/tendermint/go-amino",
+    "https://cosmos.network/docs/tutorial/keeper.html"
+  ],
+  "issues": [
+
+  ],
+  "all": [
+    {
+      "url": "https://github.com/tendermint/go-amino",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 18:19:02 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"fbf4e11854a122b53d0ac4517457da06\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 19:19:01 -0000, _octo=GH1.1.637342783.1571681941; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 18:19:01 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 18:19:02 -0000; secure; HttpOnly, _gh_sess=T3p0d0ZkcG9ObW1mclk0ZU56aU9xUUh3ZXdIRGF3ZDFVNnlxeFVrdkJFSDVCbVg4a0dJY1VYTW14MXdtQThjMERyTDdZTkYyYjNJWnhLQ2ZjQW5LYnNiWUJJVmdyVDNZaU1CRXJQdHRqUVdYa1VSemN4Mmg4a2laNmFsUEkxY0FEWmZDazAwQzFlVENmckFKb2UyN3pzcmozd0lXZjhsYlNvYkZzRHV3RHNBTmFiLzZBMWpqdzQvenlzWHN5d2x3ck5HSXZDc3k5aVViak9LWmo1eDBzdzFaWjFPOElSRys1R1dJZEtFREU5az0tLW16aVdLOW1zRzhFYVFKTStQbWVNYlE9PQ%3D%3D--c0ad74bf50d8aa03ee34149c69716aad0311e760; path=/; secure; HttpOnly",
+        "x-request-id": "131da760-dbda-4f2a-8e75-91b25b7506b8",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C64A:2FD82:563E006:819821A:5DADF695"
+      }
+    },
+    {
+      "url": "https://cosmos.network/docs/tutorial/keeper.html",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Mon, 21 Oct 2019 18:19:03 GMT",
+        "last-modified": "Wed, 16 Oct 2019 18:38:29 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 3ef1ef0900b588adaed9d6066e72d9f5.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LHR61-C2",
+        "x-amz-cf-id": "SUhAcQqINM3pw-Ux1V8QTE6_24mH6CiGC5NGNoUQz4XuCYh1_mZ5Sg=="
+      }
+    },
+    {
+      "url": "https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L27",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 18:19:02 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"6274d90e7d3394a71ac650b952d09657\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 19:19:02 -0000, _octo=GH1.1.579173008.1571681942; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 18:19:02 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 18:19:02 -0000; secure; HttpOnly, _gh_sess=WS9mQXNiNFFHU3g5Vi9RQ3d3WndGTnp3MjhKOVpkNDNsTmd4ek5peTBrWTEwdi9IRmZEM1hWZHlLeWJQVVRTb0hFMjBzb3owUUwzTXJEL0g1bEN1Qll0UEFiK01tZVFjODJYZXAra3NUU3g1TUFqOXUwelplU2E2bTExZnd2K0Y2dzNadnUrbEpObndOSitnemFPalpTVTFlMmtud3ZiZklmYXRLNGVHNmdmS0tQV2ZGVjYxWEJNV296am9RMGdocHFpZ0lkMVRLTFd5dVZ6N1VtNzR4MVNaOGh1OW44cHBvN2x3VW9RSXdhVHZLcjR0RjZwM2xDbWd6dlFURk4wci0tek55VENqbTYxclZXTlVCWVk5NS9pdz09--c8d155daf6b799d1f99277966723df991ea203cc; path=/; secure; HttpOnly",
+        "x-request-id": "c7405fb8-a41b-4a1b-9cb8-a5b43fc1cd46",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C649:1E6F9:BE47468:11F0DC1B:5DADF696"
+      }
+    }
+  ]
+}

@@ -4,10 +4,13 @@ order: 8
 
 # Object-Capability Model
 
+## Synopsis
+
+The Cosmos SDK uses an object-capabilities model
+
 ## Intro
 
-When thinking about security, it is good to start with a specific threat
-model. Our threat model is the following:
+When thinking about security, it is good to start with a specific threat model. Our threat model is the following:
 
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -81,7 +84,7 @@ var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
-[gaia app](../gaia/app/app.go).
+[gaia app](https://github.com/cosmos/gaia/blob/bd10ee5c62a1206c03a21d0f71a9e9308765cdb7/app/app.go).
 
 ```go
 // register message routes

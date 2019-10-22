@@ -1,0 +1,14 @@
+[
+  {
+    "loc": 33,
+    "status": 302,
+    "link": "https://cosmos.network/docs/tutorial",
+    "redirect": "https://cosmos.network/docs/tutorial/",
+    "error": ""
+  },
+  {
+    "loc": 11,
+    "link": "https://github.com/tendermint/tendermint",
+    "error": "Dupe"
+  }
+]

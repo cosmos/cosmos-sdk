@@ -10,7 +10,7 @@ order: 2
 
 ## Synopsis
 
-This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/tx-msgs.md#transactions). The transaction will be referred to as `Tx`.
+This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`.
 
 ## Creation
 
@@ -88,13 +88,13 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[Messages](../core/tx-msgs.md#messages) are extracted from `Tx` and `ValidateBasic`, a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[Messages](../core/transactions.md#messages) are extracted from `Tx` and `ValidateBasic`, a function defined by the module developer for every message, is run for each one. It should include basic stateless sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
 
 ### AnteHandler
 
 The [`AnteHandler`](../core/baseapp.md#antehandler), which is technically optional but should be defined for each application, is run. A deep copy of the internal state, `checkState`, is made and the defined `AnteHandler` performs limited checks specified for the transaction type. Using a copy allows the handler to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/auth) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
+For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 ### Gas
 
@@ -204,8 +204,8 @@ to each node - differing values across nodes would yield nondeterministic result
 * **Route and Handler:** While `CheckTx` would have exited, `DeliverTx` continues to run
 [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
 Since the transaction may have messages from different modules, `baseapp` needs to know which module
-to find the appropriate Handler. Thus, the [`Route`](../core/tx-msgs.md#route) function is called to
-retrieve the route name and find the `Handler` within the module.
+to find the appropriate Handler. Thus, the `route` function is called via the [module manager](../building-modules/module-manager.md) to
+retrieve the route name and find the [`Handler`](../building-modules/handler.md) within the module.
 
 * **Handler:** The `Handler`, a step up from `AnteHandler`, is responsible for executing each
 message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
@@ -260,4 +260,4 @@ in `[]byte` form, is stored in a block and appended to the blockchain.
 
 ## Next
 
-Learn about [accounts](../accounts.md).
+Learn about [accounts](./accounts.md).

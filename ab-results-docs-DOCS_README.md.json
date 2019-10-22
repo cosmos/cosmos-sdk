@@ -1,0 +1,245 @@
+{
+  "date": "2019-10-21 19:46:05 +0200",
+  "links": [
+    "https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md",
+    "https://cosmos.network/docs/",
+    "https://github.com/cosmos/cosmos-sdk/tree/master/docs",
+    "https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml",
+    "https://www.algolia.com",
+    "https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json",
+    "https://github.com/tendermint/tendermint/blob/master/docs/DOCS_README.md",
+    "https://editor.swagger.io/",
+    "https://swagger.io/docs/specification/2-0/basic-structure/"
+  ],
+  "issues": [
+    {
+      "url": "https://swagger.io/docs/specification/2-0/basic-structure/",
+      "status": -1,
+      "error": "incorrect header check",
+      "headers": {
+      },
+      "loc": 116
+    },
+    {
+      "url": "https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md",
+      "status": 301,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "301 Moved Permanently",
+        "vary": "X-PJAX, Accept-Encoding",
+        "location": "https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md",
+        "cache-control": "no-cache",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=dkMwbXV3RFNRM1ZGQS90UXNNTUQrNHFVbnBWelFXY2FSTHQzWHdvbG8wVk84U0FOWEpzamN1R1ZrU0Y1enpsOSsxeUVkRStyclllMWYycFA2YWtxOWVwMG45eUlKSTZyYUF1M2ZEZEl4NXUzdEVIOEJuUExqeHNzQzJWTjRuc1piU3VSZkJaQ09HQ0R6ckxiZ1QrdmZnPT0tLWUxT21PT3c1V1FYaldadnpidUlndnc9PQ%3D%3D--fa3b6a96ac9ead670fa549a53f0016e5fca5ad6a; path=/; secure; HttpOnly",
+        "x-request-id": "65e77ea4-dfc2-4e14-a66b-052128e8999f",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D1:2FD84:A003864:F18584A:5DADEEDD"
+      },
+      "loc": 3
+    }
+  ],
+  "all": [
+    {
+      "url": "https://www.algolia.com",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=UTF-8",
+        "content-length": "59156",
+        "connection": "keep-alive",
+        "set-cookie": "__cfduid=dd490b6b759a3c3a65a4391faed89c7391571679965; expires=Tue, 20-Oct-20 17:46:05 GMT; path=/; domain=.algolia.com; HttpOnly; Secure",
+        "cache-control": "public, max-age=7200",
+        "etag": "\"5515b5cbd27bbd410a814072af5a6e0d-ssl-df\"",
+        "link": "</gatsby-z4auv9va47--webpack-runtime-96eb73693997eba2e5c9.js>; rel=preload; as=script, </gatsby-z4auv9va47--commons-8caacc0396f2e693ddb5.js>; rel=preload; as=script, </gatsby-z4auv9va47--styles-f5bc6b2b767248a7b0a6.js>; rel=preload; as=script, </gatsby-z4auv9va47--app-2af19d1807687a1d29af.js>; rel=preload; as=script, </gatsby-z4auv9va47--commons-8caacc0396f2e693ddb5.js>; rel=preload; as=script, </gatsby-z4auv9va47--component---src-pages-index-js-a587de1dbbcbdf810634.js>; rel=preload; as=script",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "x-frame-options": "sameorigin, SAMEORIGIN",
+        "vary": "Accept-Encoding",
+        "x-nf-request-id": "4379555b-70a7-4551-bbe5-b9ba80457e8f-1934806",
+        "content-security-policy": "upgrade-insecure-requests; block-all-mixed-content",
+        "content-security-policy-report-only": "default-src https: 'unsafe-inline' 'unsafe-eval'; font-src 'self' https://*.chatlio.com https://maxcdn.bootstrapcdn.com https://js.intercomcdn.com data: https://fonts.gstatic.com ; connect-src https://bam.nr-data.net https://fonts.gstatic.com wss://ws.pusherapp.com https://*.chatlio.com wss://*.intercom.io https://*.intercom.io https://*.algolia.com https://insights.algolia.io https://*.algolia.net https://*.algolianet.com https://insights.hotjar.com wss://*.hotjar.com https://*.kissmetrics.com https://vimeo.com https://*.pingdom.net https://api.segment.io https://api.amplitude.com/ ; report-uri https://algolia.report-uri.io/r/default/csp/reportOnly",
+        "x-content-type-options": "nosniff",
+        "x-download-options": "noopen",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "1; mode=block",
+        "cf-cache-status": "MISS",
+        "expires": "Mon, 21 Oct 2019 19:46:05 GMT",
+        "accept-ranges": "bytes",
+        "expect-ct": "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"",
+        "server": "cloudflare",
+        "cf-ray": "52950c8749ef6936-CDG"
+      }
+    },
+    {
+      "url": "https://cosmos.network/docs/",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "content-type": "text/html",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "date": "Sun, 20 Oct 2019 18:14:03 GMT",
+        "last-modified": "Wed, 16 Oct 2019 18:38:28 GMT",
+        "server": "AmazonS3",
+        "vary": "Accept-Encoding",
+        "x-cache": "Hit from cloudfront",
+        "via": "1.1 3fb11c5fe1841d9ab25fe106cf3eca39.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "BRU50-C1",
+        "x-amz-cf-id": "hd8TBeoD8ndagDb846mokdjq9tKTPaBc3m8B_9kJbkzl9HJR6jQ-9Q==",
+        "age": "34391"
+      }
+    },
+    {
+      "url": "https://editor.swagger.io/",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "server": "nginx/1.17.4",
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html",
+        "content-length": "1379",
+        "last-modified": "Sat, 12 Oct 2019 01:07:52 GMT",
+        "vary": "Accept-Encoding",
+        "etag": "\"5da12768-563\"",
+        "x-frame-options": "deny"
+      }
+    },
+    {
+      "url": "https://github.com/cosmos/cosmos-sdk/tree/master/docs",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"6580d3c70e772b46e8527f0b1e023d07\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, _octo=GH1.1.1946527895.1571679965; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 17:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=cHR6RC82L0NaOFZiQ1VSd2dHL2lnemEzemhpTDBiY1lCNXRPMmhWbEhRWkZacHF4Y2JseENYVVo1WW5uTW1Ka0dsOEhkTm1TQk8wVW1FcWUrNGV6Z290NWY1RStaWHIya2xaQ3dtTEVGZjFMV25KN1ZCanB2K0tibU1mRjhxUjIxRW1GbjJMdlZkR2p0ei9ha1JYYTNmNzBWZi9wa0huWG82N0VaSnAvdDFZeVdhakZnTU9NWUxOd0dTSE01OFJVcUh4aXFXQTNDUnFBRXRnQThyU2lRMndiODJMcjhZQ3c5aktnSlBJUGMxND0tLTJnQnJDZDIxWDlDbWJSZERzRU41S1E9PQ%3D%3D--a7a735829f8dc928d6a88d74f8087cd29ba41d30; path=/; secure; HttpOnly",
+        "x-request-id": "cd202ae0-1134-40df-a1e0-e1feba4b800f",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D4:14840:9F7E95B:EFCDF05:5DADEEDD"
+      }
+    },
+    {
+      "url": "https://github.com/tendermint/tendermint/blob/master/docs/DOCS_README.md",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"be04688b77024998883c6787450bb540\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, _octo=GH1.1.1232461099.1571679965; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 17:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=UldtNTFWMldmZmpJWUtBQ2oyYk5OTUMrbkFRU3dwUkErNDB4MUtPaU9SSFRVRU4zTjQ1akwzaTJsczJORGlXc2YwVEpnQ3NmbS9GbUhHNkx3U21wMlhQdDlKamcxN2xOUWZzOUdVTk5XYUl6Q29TRFFLcEJFd2dUdFptU2hUR1l3WDdUSXhKek0xUXd3b09VcUhRWFgvd0FQZ0RDMFZtQ3Jwa3AzSXV3aGp4QVhEbGpZVTFPdTh4U1FPMXlIN3V4ZDdZcklGUmZLL0FwbW9xeWxQaTBNTDc2cDlnTnpIMWlNTmhlb1NNbUVEQT0tLXFsNHVubmdmR2drRHFBdU1uNFBoNmc9PQ%3D%3D--0711ae374a662f30dc49e92e184024d3b2631e82; path=/; secure; HttpOnly",
+        "x-request-id": "b9654f38-5dd7-49d4-9105-26ed16f6b453",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D5:2FD84:A003867:F18584F:5DADEEDD"
+      }
+    },
+    {
+      "url": "https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"de0b8fbac77cb6747d84b259990b94ab\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, _octo=GH1.1.286779418.1571679965; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 17:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=Y3BNVkoxenJ5WWJqcEFUQkF3Y24xUVBsVnl5aGdnYmFPY3RlYytxUUNEK1Z5ckpEdm9BaGgxdXZzZ3Jqcm5HMEpHSkduTzMwTzVudnMvck5qYlpiQWllNmtHeFNvYkRkUDhzMVUyS0lUQ2dwSVZNcVVJM29uN01vYkF0TVl6aXJ4c3VxUVhiWTNsVFBwTU5XNTNRMUY4clgrdVk3TWxCTjdURVpMUHkySlAyZVVXRk1XVXptTHRNbVJQZXZlZ1pJZ1IzZjZSQzJ2aUlNeVdZSzUzSWdHOU5sY2J2MExzT0s2a29YbWlZSjlHTT0tLXd1MGl6RnFMbStMdnl0dUdXeDh2OGc9PQ%3D%3D--290ea46df0609f11a58ea18b5bbc67cb65889d1a; path=/; secure; HttpOnly",
+        "x-request-id": "47020bf3-dd6f-488b-94f8-af79b86902ec",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D2:1E6F8:9B3AD55:EA5E92F:5DADEEDD"
+      }
+    },
+    {
+      "url": "https://swagger.io/docs/specification/2-0/basic-structure/",
+      "status": -1,
+      "error": "incorrect header check",
+      "headers": {
+      },
+      "loc": 116
+    },
+    {
+      "url": "https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md",
+      "status": 301,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "301 Moved Permanently",
+        "vary": "X-PJAX, Accept-Encoding",
+        "location": "https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md",
+        "cache-control": "no-cache",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=dkMwbXV3RFNRM1ZGQS90UXNNTUQrNHFVbnBWelFXY2FSTHQzWHdvbG8wVk84U0FOWEpzamN1R1ZrU0Y1enpsOSsxeUVkRStyclllMWYycFA2YWtxOWVwMG45eUlKSTZyYUF1M2ZEZEl4NXUzdEVIOEJuUExqeHNzQzJWTjRuc1piU3VSZkJaQ09HQ0R6ckxiZ1QrdmZnPT0tLWUxT21PT3c1V1FYaldadnpidUlndnc9PQ%3D%3D--fa3b6a96ac9ead670fa549a53f0016e5fca5ad6a; path=/; secure; HttpOnly",
+        "x-request-id": "65e77ea4-dfc2-4e14-a66b-052128e8999f",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D1:2FD84:A003864:F18584A:5DADEEDD"
+      },
+      "loc": 3
+    },
+    {
+      "url": "https://github.com/cosmos/cosmos-sdk/blob/master/client/lcd/swagger-ui/swagger.yaml",
+      "status": 200,
+      "error": null,
+      "headers": {
+        "date": "Mon, 21 Oct 2019 17:46:05 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "server": "GitHub.com",
+        "status": "200 OK",
+        "vary": "X-PJAX, Accept-Encoding",
+        "etag": "W/\"caafeac4a66094fc72d67d3a35098e19\"",
+        "cache-control": "max-age=0, private, must-revalidate",
+        "set-cookie": "has_recent_activity=1; path=/; expires=Mon, 21 Oct 2019 18:46:05 -0000, _octo=GH1.1.563782302.1571679965; domain=.github.com; path=/; expires=Thu, 21 Oct 2021 17:46:05 -0000, logged_in=no; domain=.github.com; path=/; expires=Fri, 21 Oct 2039 17:46:05 -0000; secure; HttpOnly, _gh_sess=cVJiR3RSVmhnL2VFOTdWdHdsdytJUC9DbDFKbzFmeHpad2JrSTMwcnBLbnBsR2ZDczZ0b0ROd2ZpUERhVTh4b0N4VEpkUGR2NWFNOVVuRHYxVGdRSHhuRkNwWEEvUlF6dFR5MXFmTkhtVTlpK0h1T0gyQmFrcGpoME5nUzdZTkFLcjhxWk5oaE92RjFaZDBMN1pCSnR5anpZeFkyZDVjeTR3VkRjY0MzRDhsRXNobWVjUlVnZ25KZFpTbHlQcFdyemluZ2hwdnRWRmk3a3pUc0dzbFZlbmc2dnBleE91NmVsSFJyM2x5WldFZz0tLUV3emVmc3FsWUJJMmRsZlpDYUNiK2c9PQ%3D%3D--92990a7631969217d7ec37ef9ca845c9c1fdeb67; path=/; secure; HttpOnly",
+        "x-request-id": "872c5546-5bc0-459d-a7c0-3d9e5639da44",
+        "strict-transport-security": "max-age=31536000; includeSubdomains; preload",
+        "x-frame-options": "deny",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "1; mode=block",
+        "expect-ct": "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\"",
+        "content-security-policy": "default-src 'none'; base-uri 'self'; block-all-mixed-content; connect-src 'self' uploads.github.com www.githubstatus.com collector.githubapp.com api.github.com www.google-analytics.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com wss://live.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.githubusercontent.com; manifest-src 'self'; media-src 'none'; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com",
+        "x-github-request-id": "C3D3:2FD82:560BB54:814CB30:5DADEEDD"
+      }
+    }
+  ]
+}

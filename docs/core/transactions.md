@@ -6,7 +6,7 @@ order: 2
 
 ## Prerequisites
 
-* [Anatomy of an SDK Application](./app-anatomy.md)
+* [Anatomy of an SDK Application](../basics/app-anatomy.md)
 
 ## Synopsis
 
@@ -23,7 +23,7 @@ When users want to interact with an application and make state changes (e.g. sen
 The transaction objects themselves are SDK types that implement the [`Tx`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L34-L41) interface, which contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of its message(s) - one transaction may have one or multiple [messages](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
-* **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](../basics/baseapp.md#checktx) and [`DeliverTx`](../basics/baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum (see the full implementation of `StdTx` [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go)). Note that this function is to be distinct from the `ValidateBasic` functions for *messages*, which perform basic validity checks on messages only. For example, when [`runTx`](../basics/baseapp.md#runtx-and-runmsgs) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum (see the full implementation of `StdTx` [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go)). Note that this function is to be distinct from the `ValidateBasic` functions for *messages*, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 * **TxEncoder:** Nodes running the consensus engine (e.g. Tendermint Core) are responsible for gossiping transactions and ordering them into blocks, but only handle them in the generic `[]byte` form. Transactions are always [marshaled](./encoding.md) (encoded) before they are relayed to nodes, which compacts them to facilitate gossiping and helps maintain the consensus engine's separation from from application logic. The Cosmos SDK allows developers to specify any deterministic encoding format for their applications; the default is Amino.
 * **TxDecoder:** [ABCI](https://tendermint.com/docs/spec/abci/) calls from the consensus engine to the application, such as `CheckTx` and `DeliverTx`, are used to process transaction data to determine validity and state changes. Since transactions are passed in as `txBytes []byte`, they need to first be unmarshaled (decoded) using `TxDecoder` before any logic is applied.
 
@@ -33,7 +33,7 @@ A transaction is created by an end-user through one of the possible [interfaces]
 
 Application developers create entrypoints to the application by creating a [command-line interface](../interfaces/cli.md) or [REST interface](../interfaces/rest.md), typically found in the application's `/cmd` folder. These interfaces allow users to interact with the application through command-line or through HTTP requests.
 
-In order for module messages to be utilized in transactions created through these interfaces, module developers must also specify possible user [interactions](../building-modules/interfaces.md), typically in the module's `/client` folder. For the [command-line interface](../building-modules/interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. For [HTTP requests](../building-modules/interfaces.md#rest), module developers specify acceptable request types, register REST routes, and create HTTP Request Handlers.
+For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. For [HTTP requests](../building-modules/module-interfaces.md#rest), module developers specify acceptable request types, register REST routes, and create HTTP Request Handlers.
 
 When users interact with the application's interfaces, they invoke the underlying modules' handlers or command functions, directly creating messages.
 
@@ -69,7 +69,7 @@ The [`TxBuilder`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/
 
 The `CLIContext` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `CLIContext` [here](../interfaces/query-lifecycle.md#clicontext).
 
-Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `CLIContext` is used to broadcast transactions.
+Every message in a transaction must be signed by the addresses specified by `GetSigners`. The signing process must be handled by a module, and the most widely used one is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module. Signing is automatically performed when the transaction is created, unless the user choses to generate and sign separately. The `TxBuilder` (namely, the `KeyBase`) is used to perform the signing operations, and the `CLIContext` is used to broadcast transactions.
 
 ## Handlers
 

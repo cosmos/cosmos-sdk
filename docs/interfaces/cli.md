@@ -10,7 +10,7 @@ order: 3
 
 ## Synopsis
 
-This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/interfaces.md#cli).
+This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli).
 
 ## Application CLI Components
 
@@ -49,7 +49,7 @@ Every application CLI first constructs a root command, then adds functionality b
 
 The root command (called `rootCmd`) is what the user first types into the command line to indicate which application they wish to interact with. The string used to invoke the command (the "Use" field) is typically the name of the application suffixed with `-cli`, e.g. `appcli`. The root command typically includes the following commands to support basic functionality in the application.
 
-* **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](,,/core/node.md). The Status of a node includes [`NodeInfo`](https://github.com/tendermint/tendermint/blob/master/p2p/node_info.go#L75-L92), `SyncInfo` and `ValidatorInfo`: this information includes the node ID, latest block hash, and the validator public key and voting power. Here is an example of what the `status command` outputs:
+* **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](../core/node.md). The Status of a node includes [`NodeInfo`](https://github.com/tendermint/tendermint/blob/master/p2p/node_info.go#L75-L92), `SyncInfo` and `ValidatorInfo`: this information includes the node ID, latest block hash, and the validator public key and voting power. Here is an example of what the `status command` outputs:
 ```json
 {
   "jsonrpc": "2.0",
@@ -131,10 +131,10 @@ The root-level `status`, `config`, and `keys` subcommands are common across most
 
 [Transactions](#./transactions.md) are objects wrapping [messages](../building-modules/messages-and-queries.md) that trigger state changes. To enable the creation of transactions using the CLI interface, `TxCmd` typically adds the following commands:
 
-* **Sign** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_sign.go#L30-L83) from the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module, the command that signs messages in a transaction. To enable multisig, add the `auth` module [`MultiSign`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_multisign.go#L26-L151) command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
+* **Sign** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_sign.go#L30-L83) from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, the command that signs messages in a transaction. To enable multisig, add the `auth` module [`MultiSign`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_multisign.go#L26-L151) command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
 * **Broadcast** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/broadcast.go) from the SDK client tools, which broadcasts transactions.
-* **Send** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/client/cli/tx.go#L31-L60) from the [`bank`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/bank) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
-* All [module transaction commands](../building-modules/interfaces.md) the application is dependent on, retrieved by calling [`GetTxCmd()`](../building-modules/interfaces.md#GetTxCmd) on all the modules or using the Module Manager's [`AddTxCommands()`](../building-modules/module-manager.md) function.
+* **Send** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/client/cli/tx.go#L31-L60) from the [`bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank/spec) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
+* All [module transaction commands](../building-modules/module-interfaces.md) the application is dependent on, retrieved by calling [`GetTxCmd()`](../building-modules/module-interfaces.md#GetTxCmd) on all the modules or using the Module Manager's [`AddTxCommands()`](../building-modules/module-manager.md) function.
 
 Here is an example of a `TxCmd` aggregating these subcommands from the [nameservice tutorial](https://cosmos.network/docs/tutorial).
 
@@ -170,7 +170,7 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 * **Account** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/query.go#L45-L73) from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
 * **Validator** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/rpc/validators.go) from the SDK rpc client tools, which displays the validator set of a given height.
 * **Block** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/rpc/block.go) from the SDK rpc client tools, which displays the block data for a given height.
-* All [module query commands](../building-modules/interfaces.md) the application is dependent on, retrieved by calling [`GetQueryCmd()`](../building-modules/interfaces.md#GetqueryCmd) on all the modules or using the Module Manager's `AddQueryCommands()` function.
+* All [module query commands](../building-modules/module-interfaces.md) the application is dependent on, retrieved by calling [`GetQueryCmd()`](../building-modules/module-interfaces.md#GetqueryCmd) on all the modules or using the Module Manager's `AddQueryCommands()` function.
 
 Here is an example of a `QueryCmd` aggregating subcommands, also from the nameservice tutorial (it is structurally identical to `TxCmd`):
 

@@ -4,7 +4,6 @@ package types
 const (
 	QueryClientState    = "client_state"
 	QueryConsensusState = "consensus_state"
-	QueryCommitmentPath = "commitment_path"
 	QueryCommitmentRoot = "roots"
 )
 

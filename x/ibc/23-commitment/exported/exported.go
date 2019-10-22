@@ -1,4 +1,4 @@
-package ics23
+package exported
 
 // ICS 023 Types Implementation
 //
@@ -7,27 +7,35 @@ package ics23
 
 // spec:Path and spec:Value are defined as bytestring
 
-// Root implements spec:CommitmentRoot.
+// RootI implements spec:CommitmentRoot.
 // A root is constructed from a set of key-value pairs,
 // and the inclusion or non-inclusion of an arbitrary key-value pair
 // can be proven with the proof.
-type Root interface {
-	CommitmentKind() string
+type RootI interface {
+	CommitmentType() string
+	GetHash() []byte
 }
 
-// Prefix implements spec:CommitmentPrefix.
-// Prefix is the additional information provided to the verification function.
+// PrefixI implements spec:CommitmentPrefix.
 // Prefix represents the common "prefix" that a set of keys shares.
-type Prefix interface {
-	CommitmentKind() string
+type PrefixI interface {
+	CommitmentType() string
+	Bytes() []byte
 }
 
-// Proof implements spec:CommitmentProof.
+// PathI implements spec:CommitmentPath.
+// A path is the additional information provided to the verification function.
+type PathI interface {
+	CommitmentType() string
+	String() string
+}
+
+// ProofI implements spec:CommitmentProof.
 // Proof can prove whether the key-value pair is a part of the Root or not.
 // Each proof has designated key-value pair it is able to prove.
 // Proofs includes key but value is provided dynamically at the verification time.
-type Proof interface {
-	CommitmentKind() string
-	GetKey() []byte
-	Verify(Root, Prefix, []byte) error
+type ProofI interface {
+	CommitmentType() string
+	VerifyMembership(RootI, PathI, []byte) bool
+	VerifyNonMembership(RootI, PathI) bool
 }

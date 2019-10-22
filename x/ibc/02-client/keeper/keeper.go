@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -39,11 +39,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
-}
-
-// GetCommitmentPath returns the commitment path of the client
-func (k Keeper) GetCommitmentPath() ics23.Prefix {
-	return merkle.NewPrefix([][]byte{[]byte(k.storeKey.Name())}, k.prefix)
 }
 
 // GetClientState gets a particular client from the store
@@ -104,20 +99,20 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 }
 
 // GetCommitmentRoot gets a commitment Root from a particular height to a client
-func (k Keeper) GetCommitmentRoot(ctx sdk.Context, clientID string, height uint64) (ics23.Root, bool) {
+func (k Keeper) GetCommitmentRoot(ctx sdk.Context, clientID string, height uint64) (commitmentexported.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
 		return nil, false
 	}
 
-	var root ics23.Root
+	var root commitmentexported.RootI
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &root)
 	return root, true
 }
 
 // SetCommitmentRoot sets a commitment Root from a particular height to a client
-func (k Keeper) SetCommitmentRoot(ctx sdk.Context, clientID string, height uint64, root ics23.Root) {
+func (k Keeper) SetCommitmentRoot(ctx sdk.Context, clientID string, height uint64, root commitmentexported.RootI) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
 	store.Set(types.KeyRoot(clientID, height), bz)
@@ -161,8 +156,8 @@ func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	clientState types.ClientState,
 	height uint64, // sequence
-	proof ics23.Proof,
-	path string,
+	proof commitmentexported.ProofI,
+	pathStr string,
 	value []byte,
 ) bool {
 	if clientState.Frozen {
@@ -174,12 +169,10 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	prefix := merkle.NewPrefix([][]byte{[]byte(path)}, nil) // TODO: keyprefix?
-	if err := proof.Verify(root, prefix, value); err != nil {
-		return false
-	}
+	prefix := commitment.NewPrefix(k.prefix)
+	path := commitment.ApplyPrefix(prefix, pathStr)
 
-	return true
+	return proof.VerifyMembership(root, path, value)
 }
 
 // VerifyNonMembership state non-membership function defined by the client type
@@ -187,8 +180,8 @@ func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	clientState types.ClientState,
 	height uint64, // sequence
-	proof ics23.Proof,
-	path string,
+	proof commitmentexported.ProofI,
+	pathStr string,
 ) bool {
 	if clientState.Frozen {
 		return false
@@ -199,10 +192,8 @@ func (k Keeper) VerifyNonMembership(
 		return false
 	}
 
-	prefix := merkle.NewPrefix([][]byte{[]byte(path)}, nil) // TODO: keyprefix?
-	if err := proof.Verify(root, prefix, nil); err != nil {
-		return false
-	}
+	prefix := commitment.NewPrefix(k.prefix)
+	path := commitment.ApplyPrefix(prefix, pathStr)
 
-	return true
+	return proof.VerifyNonMembership(root, path)
 }

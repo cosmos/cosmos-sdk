@@ -1,7 +1,9 @@
 package types
 
 import (
-	commitmentmerkle "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	"strings"
+
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
@@ -14,9 +16,10 @@ const (
 // ConnectionResponse defines the client query response for a connection which
 // also includes a proof and the height from which the proof was retrieved.
 type ConnectionResponse struct {
-	Connection  ConnectionEnd          `json:"connection" yaml:"connection"`
-	Proof       commitmentmerkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofHeight uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	Connection  ConnectionEnd    `json:"connection" yaml:"connection"`
+	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConnectionResponse creates a new ConnectionResponse instance
@@ -25,7 +28,8 @@ func NewConnectionResponse(
 ) ConnectionResponse {
 	return ConnectionResponse{
 		Connection:  connection,
-		Proof:       commitmentmerkle.NewProof(proof, KeyConnection(connectionID)),
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -47,9 +51,10 @@ func NewQueryConnectionParams(clientID string) QueryConnectionParams {
 // connection paths which also includes a proof and the height from which the
 // proof was retrieved.
 type ClientConnectionsResponse struct {
-	ConnectionPaths []string               `json:"connection_paths" yaml:"connection_paths"`
-	Proof           commitmentmerkle.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofHeight     uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConnectionPaths []string         `json:"connection_paths" yaml:"connection_paths"`
+	Proof           commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath       commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight     uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientConnectionsResponse creates a new ConnectionPaths instance
@@ -58,7 +63,8 @@ func NewClientConnectionsResponse(
 ) ClientConnectionsResponse {
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
-		Proof:           commitmentmerkle.NewProof(proof, KeyClientConnections(clientID)),
+		Proof:           commitment.Proof{Proof: proof},
+		ProofPath:       commitment.NewPath(strings.Split(ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}
 }

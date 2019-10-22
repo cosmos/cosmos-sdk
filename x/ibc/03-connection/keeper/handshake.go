@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -50,7 +50,7 @@ func (k Keeper) ConnOpenTry(
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string,
 	counterpartyVersions []string,
-	proofInit commitment.Proof,
+	proofInit commitmentexported.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -65,7 +65,7 @@ func (k Keeper) ConnOpenTry(
 
 	// expectedConn defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
-	prefix := k.clientKeeper.GetCommitmentPath() // i.e `getCommitmentPrefix()`
+	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.INIT, clientID, expectedCounterparty, counterpartyVersions)
 
@@ -125,7 +125,7 @@ func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
 	version string,
-	proofTry commitment.Proof,
+	proofTry commitmentexported.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -157,7 +157,7 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("client consensus state not found") // TODO: use ICS02 error
 	}
 
-	prefix := k.clientKeeper.GetCommitmentPath()
+	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.ClientID, expectedCounterparty, []string{version})
 
@@ -201,7 +201,7 @@ func (k Keeper) ConnOpenAck(
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
-	proofAck commitment.Proof,
+	proofAck commitmentexported.ProofI,
 	proofHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
@@ -216,7 +216,7 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	prefix := k.clientKeeper.GetCommitmentPath()
+	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.OPEN, connection.ClientID, expectedCounterparty, connection.Versions)
 

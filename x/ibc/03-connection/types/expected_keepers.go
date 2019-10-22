@@ -2,22 +2,21 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
-	GetCommitmentPath() commitment.Prefix
 	GetConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
-	GetClientState(ctx sdk.Context, clientID string) (clienttypes.ClientState, bool)
+	GetClientState(ctx sdk.Context, clientID string) (client.ClientState, bool)
 	VerifyMembership(
-		ctx sdk.Context, clientState clienttypes.ClientState, height uint64,
-		proof commitment.Proof, path string, value []byte,
+		ctx sdk.Context, clientState client.ClientState, height uint64,
+		proof commitmentexported.ProofI, path commitmentexported.PathI, value []byte,
 	) bool
 	VerifyNonMembership(
-		ctx sdk.Context, clientState clienttypes.ClientState, height uint64,
-		proof commitment.Proof, path string,
+		ctx sdk.Context, clientState client.ClientState, height uint64,
+		proof commitmentexported.ProofI, path commitmentexported.PathI,
 	) bool
 }

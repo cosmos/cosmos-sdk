@@ -44,6 +44,7 @@ func TestStoreUpgrades(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			for _, d := range tc.expectDelete {
 				assert.Equal(t, tc.upgrades.IsDeleted(d.key), d.delete)

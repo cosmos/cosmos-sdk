@@ -17,8 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // GetQueryCmd returns the query commands for IBC clients
@@ -32,7 +31,6 @@ func GetQueryCmd(queryRouter string, cdc *codec.Codec) *cobra.Command {
 
 	ics02ClientQueryCmd.AddCommand(client.GetCommands(
 		GetCmdQueryConsensusState(queryRouter, cdc),
-		GetCmdQueryPath(queryRouter, cdc),
 		GetCmdQueryHeader(cdc),
 		GetCmdQueryClientState(queryRouter, cdc),
 		GetCmdQueryRoot(queryRouter, cdc),
@@ -116,7 +114,7 @@ $ %s query ibc client root [client-id] [height]
 				return err
 			}
 
-			var root ics23.Root
+			var root commitmentexported.RootI
 			if err := cdc.UnmarshalJSON(res, &root); err != nil {
 				return err
 			}
@@ -163,36 +161,6 @@ $ %s query ibc client consensus-state [client-id]
 			}
 
 			return cliCtx.PrintOutput(consensusState)
-		},
-	}
-}
-
-// GetCmdQueryPath defines the command to query the commitment path
-func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "path",
-		Short: "Query the commitment path of the running chain",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query the commitment path
-		
-Example:
-$ %s query ibc client path
-		`, version.ClientName),
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			// TODO: get right path
-			res, _, err := cliCtx.Query("")
-			if err != nil {
-				return err
-			}
-
-			var path merkle.Prefix
-			if err := cdc.UnmarshalJSON(res, &path); err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(path)
 		},
 	}
 }

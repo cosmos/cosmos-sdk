@@ -6,7 +6,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
 	github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8
-	github.com/cosmos/ledger-cosmos-go v0.10.3
+	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
 	github.com/gorilla/mux v1.7.3

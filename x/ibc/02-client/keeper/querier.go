@@ -17,8 +17,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryClientState(ctx, req, k)
 		case types.QueryConsensusState:
 			return queryConsensusState(ctx, req, k)
-		case types.QueryCommitmentPath:
-			return queryCommitmentPath(k)
 		case types.QueryCommitmentRoot:
 			return queryCommitmentRoot(ctx, req, k)
 		default:
@@ -64,17 +62,6 @@ func queryConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(consensusState)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
-
-	return bz, nil
-}
-
-func queryCommitmentPath(k Keeper) ([]byte, sdk.Error) {
-	path := k.GetCommitmentPath()
-
-	bz, err := types.SubModuleCdc.MarshalJSON(path)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

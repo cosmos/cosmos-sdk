@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -37,6 +38,12 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
+}
+
+// GetCommitmentPrefix returns the IBC connection store prefix as a commitment
+// Prefix
+func (k Keeper) GetCommitmentPrefix() commitmentexported.PrefixI {
+	return commitment.NewPrefix(k.prefix)
 }
 
 // GetConnection returns a connection with a particular identifier
@@ -119,15 +126,15 @@ func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof commitment.Proof,
-	path string,
+	proof commitmentexported.ProofI,
+	pathStr string,
 	value []byte,
 ) bool {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
 		return false
 	}
-	path = k.applyPrefix(connection.Counterparty.Prefix, path)
+	path := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
 }
 
@@ -136,21 +143,16 @@ func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof commitment.Proof,
-	path string,
+	proof commitmentexported.ProofI,
+	pathStr string,
 ) bool {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
 		return false
 	}
 
-	path = k.applyPrefix(connection.Counterparty.Prefix, path)
+	path := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
-}
-
-func (k Keeper) applyPrefix(prefix commitment.Prefix, path string) string {
-	// TODO:
-	return path
 }
 
 // removePath is an util function to remove a path from a set.

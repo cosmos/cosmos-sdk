@@ -8,8 +8,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
 )
 
 var _ exported.ConsensusState = ConsensusState{}
@@ -84,7 +84,7 @@ func (cs ConsensusState) checkValidity(header Header) error {
 // update the consensus state from a new header
 func (cs ConsensusState) update(header Header) ConsensusState {
 	cs.Height = header.GetHeight()
-	cs.Root = commitmenttypes.NewRoot(header.AppHash)
+	cs.Root = commitment.NewRoot(header.AppHash)
 	cs.NextValidatorSet = header.NextValidatorSet
 	return cs
 }

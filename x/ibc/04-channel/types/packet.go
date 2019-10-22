@@ -54,7 +54,7 @@ func (p packet) DestChannel() string { return p.destinationChannel }
 // Data implements PacketI interface
 func (p packet) Data() []byte { return p.data }
 
-var _ exported.PacketI = OpaquePacket{}
+// var _ exported.PacketI = OpaquePacket{}
 
 // OpaquePacket is a packet, but cloaked in an obscuring data type by the host
 // state machine, such that a module cannot act upon it other than to pass it to

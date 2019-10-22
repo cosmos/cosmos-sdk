@@ -7,7 +7,7 @@ import (
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
@@ -71,7 +71,7 @@ func (k Keeper) ChanOpenTry(
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
-	proofInit ics23.Proof,
+	proofInit commitmentexported.ProofI,
 	proofHeight uint64,
 ) (string, error) {
 
@@ -144,7 +144,7 @@ func (k Keeper) ChanOpenAck(
 	portID,
 	channelID,
 	counterpartyVersion string,
-	proofTry ics23.Proof,
+	proofTry commitmentexported.ProofI,
 	proofHeight uint64,
 ) error {
 
@@ -208,7 +208,7 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofAck ics23.Proof,
+	proofAck commitmentexported.ProofI,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -310,7 +310,7 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofInit ics23.Proof,
+	proofInit commitmentexported.ProofI,
 	proofHeight uint64,
 ) error {
 	_, found := k.GetChannelCapability(ctx, portID, channelID)

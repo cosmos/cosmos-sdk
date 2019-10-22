@@ -28,13 +28,15 @@ const (
 	QuerierRoute               = types.QuerierRoute
 	QueryClientState           = types.QueryClientState
 	QueryConsensusState        = types.QueryConsensusState
-	QueryCommitmentRoot        = types.QueryCommitmentRoot
+	QueryVerifiedRoot          = types.QueryVerifiedRoot
 )
 
 var (
 	// functions aliases
 	NewKeeper                    = keeper.NewKeeper
-	NewQuerier                   = keeper.NewQuerier
+	QuerierClientState           = keeper.QuerierClientState
+	QuerierConsensusState        = keeper.QuerierConsensusState
+	QuerierVerifiedRoot          = keeper.QuerierVerifiedRoot
 	RegisterCodec                = types.RegisterCodec
 	ErrClientExists              = types.ErrClientExists
 	ErrClientNotFound            = types.ErrClientNotFound

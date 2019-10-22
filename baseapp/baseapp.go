@@ -24,7 +24,7 @@ import (
 const (
 	// Check a transaction
 	runTxModeCheck runTxMode = iota
-	// Recheck a transaction
+	// Recheck a (pending) transaction after a commit
 	runTxModeReCheck runTxMode = iota
 	// Simulate a transaction
 	runTxModeSimulate runTxMode = iota

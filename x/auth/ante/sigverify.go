@@ -156,7 +156,7 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 // Verify all signatures for tx and return error if any are invalid
 // increment sequence of each signer and set updated account back in store
 // Call next AnteHandler
-// This decorator will not get run on ReCheck since it is not dependent on application state
+// This decorator will not get run on ReCheck
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {

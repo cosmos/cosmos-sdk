@@ -45,7 +45,10 @@ func (k Keeper) BatchVerifyMembership(ctx sdk.Context, proof exported.ProofI, it
 			continue
 		}
 
-		path := types.ApplyPrefix(k.prefix, pathStr)
+		path, err := types.ApplyPrefix(k.prefix, pathStr)
+		if err != nil {
+			return false
+		}
 		ok = proof.VerifyMembership(root, path, value)
 		if !ok {
 			return false
@@ -69,7 +72,10 @@ func (k Keeper) BatchVerifyNonMembership(ctx sdk.Context, proof exported.ProofI,
 			continue
 		}
 
-		path := types.ApplyPrefix(k.prefix, pathStr)
+		path, err := types.ApplyPrefix(k.prefix, pathStr)
+		if err != nil {
+			return false
+		}
 		ok = proof.VerifyNonMembership(root, path)
 		if !ok {
 			return false

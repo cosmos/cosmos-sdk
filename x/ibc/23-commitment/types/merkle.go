@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -105,16 +104,17 @@ func (p Path) String() string {
 //
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
-func ApplyPrefix(prefix exported.PrefixI, path string) Path {
-	if !validation.DefaultPathValidator(path) {
-		panic(fmt.Sprintf("Path: %s is malformed", path))
+func ApplyPrefix(prefix exported.PrefixI, path string) (Path, error) {
+	err := validation.DefaultPathValidator(path)
+	if err != nil {
+		return Path{}, err
 	}
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
 	commitmentPath := NewPath(pathSlice)
 
 	commitmentPath.KeyPath = commitmentPath.KeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
-	return commitmentPath
+	return commitmentPath, nil
 }
 
 var _ exported.ProofI = Proof{}

@@ -102,4 +102,4 @@ Proposed
 
 ## References
 
-- {reference link}
+- Relevant comment: https://github.com/cosmos/ics/issues/289#issuecomment-544533583

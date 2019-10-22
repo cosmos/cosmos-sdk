@@ -28,6 +28,7 @@ func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 		{"empty validator address", args{"cosmos1zxcsu7l5qxs53lvp0fqgd09a9r2g6kqrk2cdpa", ""}, nil, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := QueryDelegationRewards(ctx, "", tt.args.delAddr, tt.args.valAddr)
 			require.True(t, err != nil, tt.wantErr)

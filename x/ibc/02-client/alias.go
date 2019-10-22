@@ -28,7 +28,6 @@ const (
 	QuerierRoute               = types.QuerierRoute
 	QueryClientState           = types.QueryClientState
 	QueryConsensusState        = types.QueryConsensusState
-	QueryCommitmentPath        = types.QueryCommitmentPath
 	QueryCommitmentRoot        = types.QueryCommitmentRoot
 )
 

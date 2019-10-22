@@ -17,8 +17,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryClientState(ctx, req, k)
 		case types.QueryConsensusState:
 			return queryConsensusState(ctx, req, k)
-		case types.QueryCommitmentPath:
-			return queryCommitmentPath(k)
 		case types.QueryCommitmentRoot:
 			return queryCommitmentRoot(ctx, req, k)
 		default:
@@ -71,17 +69,6 @@ func queryConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 	return bz, nil
 }
 
-func queryCommitmentPath(k Keeper) ([]byte, sdk.Error) {
-	path := k.GetCommitmentPath()
-
-	bz, err := types.SubModuleCdc.MarshalJSON(path)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
-
-	return bz, nil
-}
-
 func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryCommitmentRootParams
 
@@ -90,7 +77,7 @@ func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	root, found := k.GetCommitmentRoot(ctx, params.ClientID, params.Height)
+	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
 		return nil, types.ErrRootNotFound(k.codespace)
 	}

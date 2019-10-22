@@ -8,18 +8,18 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/merkle"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 var _ exported.ConsensusState = ConsensusState{}
 
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
-	ChainID          string                `json:"chain_id" yaml:"chain_id"`
-	Height           uint64                `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
-	Root             ics23.Root            `json:"root" yaml:"root"`
-	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
+	ChainID          string                   `json:"chain_id" yaml:"chain_id"`
+	Height           uint64                   `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
+	Root             commitmentexported.RootI `json:"root" yaml:"root"`
+	NextValidatorSet *tmtypes.ValidatorSet    `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 
 // ClientType returns Tendermint
@@ -33,7 +33,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 }
 
 // GetRoot returns the commitment Root for the specific
-func (cs ConsensusState) GetRoot() ics23.Root {
+func (cs ConsensusState) GetRoot() commitmentexported.RootI {
 	return cs.Root
 }
 
@@ -84,7 +84,7 @@ func (cs ConsensusState) checkValidity(header Header) error {
 // update the consensus state from a new header
 func (cs ConsensusState) update(header Header) ConsensusState {
 	cs.Height = header.GetHeight()
-	cs.Root = merkle.NewRoot(header.AppHash)
+	cs.Root = commitment.NewRoot(header.AppHash)
 	cs.NextValidatorSet = header.NextValidatorSet
 	return cs
 }

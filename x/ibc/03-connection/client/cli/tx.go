@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // GetTxCmd returns the transaction commands for IBC Connections
@@ -67,7 +67,7 @@ $ %s tx ibc connection open-init [connection-id] [client-id] [counterparty-conne
 				return err
 			}
 
-			var counterpartyPrefix ics23.Prefix
+			var counterpartyPrefix commitment.Prefix
 			if err := cdc.UnmarshalJSON(bz, &counterpartyPrefix); err != nil {
 				return err
 			}
@@ -117,7 +117,7 @@ $ %s tx ibc connection open-try connection-id] [client-id]
 				return err
 			}
 
-			var counterpartyPrefix ics23.Prefix
+			var counterpartyPrefix commitment.Prefix
 			if err := cdc.UnmarshalJSON(prefixBz, &counterpartyPrefix); err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ $ %s tx ibc connection open-try connection-id] [client-id]
 				return err
 			}
 
-			var proofInit ics23.Proof
+			var proofInit commitment.Proof
 			if err := cdc.UnmarshalJSON(proofBz, &proofInit); err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 				return err
 			}
 
-			var proofTry ics23.Proof
+			var proofTry commitment.Proof
 			if err := cdc.UnmarshalJSON(proofBz, &proofTry); err != nil {
 				return err
 			}
@@ -228,7 +228,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 				return err
 			}
 
-			var proofAck ics23.Proof
+			var proofAck commitment.Proof
 			if err := cdc.UnmarshalJSON(proofBz, &proofAck); err != nil {
 				return err
 			}

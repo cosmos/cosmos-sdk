@@ -76,5 +76,5 @@ type (
 	MsgSubmitMisbehaviour     = types.MsgSubmitMisbehaviour
 	QueryClientStateParams    = types.QueryClientStateParams
 	QueryCommitmentRootParams = types.QueryCommitmentRootParams
-	ClientState               = types.ClientState
+	State                     = types.State
 )

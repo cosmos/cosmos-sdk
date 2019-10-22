@@ -14,10 +14,10 @@ import (
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
 	clientTypeStr string, consensusState exported.ConsensusState,
-) (types.ClientState, error) {
+) (types.State, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.ClientState{}, types.ErrClientExists(k.codespace, clientID)
+		return types.State{}, types.ErrClientExists(k.codespace, clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -27,7 +27,7 @@ func (k Keeper) CreateClient(
 
 	clientType := exported.ClientTypeFromStr(clientTypeStr)
 	if clientType == 0 {
-		return types.ClientState{}, types.ErrInvalidClientType(k.codespace)
+		return types.State{}, types.ErrInvalidClientType(k.codespace)
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)

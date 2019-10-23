@@ -107,9 +107,11 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	}
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
+	keyPath := merkle.KeyPath{}
 	commitmentPath := NewPath(pathSlice)
 
-	commitmentPath.KeyPath = commitmentPath.KeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
+	keyPath = keyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
+	commitmentPath.KeyPath = append(keyPath, commitmentPath.KeyPath...)
 	return commitmentPath, nil
 }
 

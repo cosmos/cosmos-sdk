@@ -35,6 +35,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			panic("cannot provide both a genesis file and a params file")
 
 		case config.GenesisFile != "":
+			// override the default chain-id from simapp to set it later to the config
 			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
 			if FlagGenesisTimeValue == 0 {
@@ -54,11 +55,11 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			}
 
 			cdc.MustUnmarshalJSON(bz, &appParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simulation.AppParams)
-			appState, simAccs, chainID = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
 		return appState, simAccs, chainID, genesisTimestamp
@@ -70,7 +71,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 func AppStateRandomizedFn(
 	simManager *module.SimulationManager, r *rand.Rand, cdc *codec.Codec,
 	accs []simulation.Account, genesisTimestamp time.Time, appParams simulation.AppParams,
-) (json.RawMessage, []simulation.Account, string) {
+) (json.RawMessage, []simulation.Account) {
 	numAccs := int64(len(accs))
 	genesisState := NewDefaultGenesisState()
 
@@ -83,7 +84,7 @@ func AppStateRandomizedFn(
 	)
 	appParams.GetOrGenerate(
 		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(250)) },
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
 
 	if numInitiallyBonded > numAccs {
@@ -117,7 +118,7 @@ func AppStateRandomizedFn(
 		panic(err)
 	}
 
-	return appState, accs, "simulation"
+	return appState, accs
 }
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState

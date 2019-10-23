@@ -11,6 +11,7 @@ import (
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authexported.Account
 	IterateAccounts(ctx sdk.Context, process func(authexported.Account) (stop bool))
 }
 

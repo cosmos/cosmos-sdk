@@ -15,9 +15,11 @@ Modules generally handle a subset of the state and, as such, they need to define
 
 ## Type Definition 
 
-The subset of the genesis state defined from a given module is generally defined in a `internal/types/genesis.go` file, along with the `DefaultGenesis` and `ValidateGenesis` methods. The struct defining the subset of the genesis state defined by the module is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process. 
+The subset of the genesis state defined from a given module is generally defined in a `./internal/types/genesis.go` file, along with the `DefaultGenesis` and `ValidateGenesis` methods. The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process. 
 
-See an example of `GenesisState` type definition from the [nameservice tutoria](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L10-L12). 
+See an example of `GenesisState` type definition from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L10-L12). 
+
+Next we present the main genesis-related methods that need to be implemented by module developers in order for their module to be used in Cosmos SDK applications. 
 
 ### `DefaultGenesis`
 

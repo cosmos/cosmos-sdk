@@ -10,7 +10,7 @@ order: 8
 
 ## Synopsis
 
-An invariant is a property of the application that should always be true. An `Invariant` is a function that checks for a particular invariant. These functions are useful to detect bugs early on and act upon them to limit the potential consequences (e.g. by halting the chain). They are also useful in the development process of the application to detect bugs via simulations. 
+An invariant is a property of the application that should always be true. In the context of the Cosmos SDK, an `Invariant` is a function that checks for a particular invariant. These functions are useful to detect bugs early on and act upon them to limit their potential consequences (e.g. by halting the chain). They are also useful in the development process of the application to detect bugs via simulations. 
 
 ## Implementing `Invariant`s
 
@@ -22,7 +22,7 @@ type Invariant func(ctx Context) (string, bool)
 
 where the `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check. 
 
-In practice, each module implements `Invariant`s in a `internal/keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
+In practice, each module implements `Invariant`s in a `./internal/keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
 
 ```go
 // Example for an Invariant that checks balance-related invariants

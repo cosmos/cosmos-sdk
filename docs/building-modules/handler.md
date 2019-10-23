@@ -29,7 +29,7 @@ Let us break it down:
 
 ## Implementation of a module `handler`s
 
-Module `handler`s are typically implemented in a `handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
+Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
 
 ```go
 func NewHandler(keeper Keeper) sdk.Handler {

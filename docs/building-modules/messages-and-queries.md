@@ -60,7 +60,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 - A [`querier`](./querier.md), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing). 
 - [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified. 
-- `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). See an example of `query` return types from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/internal/types/querier.go). 
+- `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). See an example of `query` return types from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/types/querier.go). 
 
 ## Next
 

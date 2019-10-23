@@ -40,7 +40,7 @@ The `main.go` file needs to have a `main()` function that does the following to 
 * **Add subcommands** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
 * **Create an Executor** and [execute](https://godoc.org/github.com/spf13/cobra#Command.Execute) the root command.
 
-An example of the `main()` function for the [nameservice tutorial](https://cosmos.network/docs/tutorial) CLI can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go#L26-L67). The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the nameservice CLI `main.go` file.
+An example of the `main()` function for the [nameservice tutorial](https://cosmos.network/docs/tutorial) CLI can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/cmd/nscli/main.go#L26-L67). The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the nameservice CLI `main.go` file.
 
 ## Commands
 

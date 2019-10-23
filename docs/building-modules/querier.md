@@ -50,7 +50,7 @@ This simple switch returns a `querier` function specific to the type of the rece
 
 The `querier` functions themselves are pretty straighforward. They generally fetch a value or values from the state using the [`keeper`](./keeper.md). Then, they marshall the value(s) using the [`codec`](../core/encoding.md) and return the `[]byte` obtained as result. 
 
-For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/querier.go) from the nameservice tutorial. 
+For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/keeper/querier.go) from the nameservice tutorial. 
 
 ## Next
 

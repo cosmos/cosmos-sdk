@@ -18,10 +18,25 @@ type Member struct {
 
 ```go
 // DecisionProtocol allows for flexibility in decision policy based both on
-// weights (the tally of yes, no, abstain, and veto votes) and time (via
-// the block header proposalSubmitTime)
+// weights (the tally of yes, no, abstain, and veto votes) and votingDuration -
+// the amount of time that has been allowed for voting. A zero votingDuration
+// means this proposal is being executed as basically a single multi-sig
+// transaction with no voting window. This may be okay for some DecisionProtocol's.
+// Other protocols may stipulate that at least a few hours or days of voting
+// must occur to pass a proposal.
 type DecisionProtocol interface {
-	Allow(tally Tally, totalPower sdk.Int, header types.Header, proposalSubmitTime time.Time)
+	Allow(tally Tally, totalPower sdk.Int, votingDuration time.Duration)
+}
+```
+
+### `Tally`
+
+```go
+type Tally struct {
+	YesCount sdk.Int
+	NoCount sdk.Int
+	AbstainCount sdk.Int
+	VetoCount sdk.Int
 }
 ```
 
@@ -40,6 +55,8 @@ type MsgCreateGroup struct {
     DecisionProtocol DecisionProtocol `json:"decision_protocol"`
 }
 ```
+
+*Returns:* `sdk.AccAddress` based on an auto-incrementing `uint64`.
 
 ### `MsgGroupExec`
 
@@ -97,6 +114,12 @@ type MsgUpdateGroupDescription struct {
 ```
 
 ## Keeper
+
+### Constructor: ` NewKeeper(groupStoreKey sdk.StoreKey, cdc *codec.Codec, accountKeeper auth.AccountKeeper, dispatcher msg_delegation.Keeper)`
+
+The group keeper gets a reference to the `auth.AccountKeeper` in order to create
+accounts for new groups, and a reference to the `msg_delegation.Keeper` in order
+to authorize messages send back to the router.
 
 ### Query Methods
 

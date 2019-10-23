@@ -8,7 +8,7 @@
 type GroupPolicy uint64 
 ```
 
-The ID of a group policy, generated as an auto-incrementing integer.
+The ID of a group policy, generated as an auto-incrementing non-zero, integer.
 
 ## Messages
 
@@ -24,6 +24,8 @@ type MsgCreateGroupPolicy struct {
 	Description string `json:"Description,omitempty"`
 }
 ```
+
+*Returns:*  a new `GroupPolicyID` for this group.
 
 ### `MsgGroupPolicyGrant`
 

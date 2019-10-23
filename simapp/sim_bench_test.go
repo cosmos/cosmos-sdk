@@ -10,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
@@ -19,6 +20,7 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
 	config := NewConfigFromFlags()
+	config.ChainID = helpers.SimAppChainID
 
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
@@ -69,6 +71,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	config := NewConfigFromFlags()
 	config.AllInvariants = false
+	config.ChainID = helpers.SimAppChainID
 
 	dir, _ := ioutil.TempDir("", "goleveldb-app-invariant-bench")
 	db, _ := sdk.NewLevelDB("simulation", dir)

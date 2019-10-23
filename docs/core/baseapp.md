@@ -257,7 +257,7 @@ to do the following checks:
 3. Perform non-module related _stateful_ checks on the account. This step is mainly about checking
    that the `message` signatures are valid, that enough fees are provided and that the sending account
    has enough funds to pay for said fees. Note that no precise `gas` counting occurs here,
-   as `message`s are not processed. Usually, the `anteHandler` will check that the `gas` provided
+   as `message`s are not processed. Usually, the `AnteHandler` will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
 4. Ensure that a [`Route`](#message-routing) exists for each `message`, but do **not** actually

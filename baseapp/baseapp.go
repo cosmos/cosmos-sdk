@@ -22,14 +22,10 @@ import (
 )
 
 const (
-	// Check a transaction
-	runTxModeCheck runTxMode = iota
-	// Recheck a (pending) transaction after a commit
-	runTxModeReCheck runTxMode = iota
-	// Simulate a transaction
-	runTxModeSimulate runTxMode = iota
-	// Deliver a transaction
-	runTxModeDeliver runTxMode = iota
+	runTxModeCheck    runTxMode = iota // Check a transaction
+	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                  // Simulate a transaction
+	runTxModeDeliver                   // Deliver a transaction
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"

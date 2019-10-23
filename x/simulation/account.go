@@ -48,7 +48,7 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 
 // FindAccount iterates over all the simulation accounts to find the one that matches
 // the given address
-func FindAccount(accs []Account, address sdk.AccAddress) (Account, bool) {
+func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 	for _, acc := range accs {
 		if acc.Address.Equals(address) {
 			return acc, true

@@ -65,6 +65,12 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = Register(RootCodespace, 16, "no signatures supplied")
 
+	// ErrInvalidId to doc
+	ErrInvalidID = Register(RootCodespace, 17, "invalid identifier")
+
+	// ErrInvalidPath to doc
+	ErrInvalidPath = Register(RootCodespace, 18, "invalid path")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

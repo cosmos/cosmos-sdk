@@ -1,4 +1,4 @@
-package types_test
+package commitment_test
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
@@ -34,7 +34,7 @@ func TestVerifyMembership(t *testing.T) {
 	})
 	require.NotNil(t, res.Proof)
 
-	proof := types.Proof{
+	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
@@ -58,8 +58,8 @@ func TestVerifyMembership(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		root := types.NewRoot(tc.root)
-		path := types.NewPath(tc.pathArr)
+		root := commitment.NewRoot(tc.root)
+		path := commitment.NewPath(tc.pathArr)
 
 		ok := proof.VerifyMembership(root, path, tc.value)
 
@@ -89,7 +89,7 @@ func TestVerifyNonMembership(t *testing.T) {
 	})
 	require.NotNil(t, res.Proof)
 
-	proof := types.Proof{
+	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
@@ -111,8 +111,8 @@ func TestVerifyNonMembership(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		root := types.NewRoot(tc.root)
-		path := types.NewPath(tc.pathArr)
+		root := commitment.NewRoot(tc.root)
+		path := commitment.NewPath(tc.pathArr)
 
 		ok := proof.VerifyNonMembership(root, path)
 
@@ -122,11 +122,18 @@ func TestVerifyNonMembership(t *testing.T) {
 }
 
 func TestApplyPrefix(t *testing.T) {
-	prefix := types.NewPrefix([]byte("storePrefixKey"))
+	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
 
 	pathStr := "path1/path2/path3/key"
 
-	prefixedPath := types.ApplyPrefix(prefix, pathStr)
+	prefixedPath, err := commitment.ApplyPrefix(prefix, pathStr)
+	require.Nil(t, err, "valid prefix returns error")
 
 	require.Equal(t, "/storePrefixKey/path1/path2/path3/key", prefixedPath.String(), "Prefixed path incorrect")
+
+	// invalid prefix contains non-alphanumeric character
+	invalidPathStr := "invalid-path/doesitfail?/hopefully"
+	invalidPath, err := commitment.ApplyPrefix(prefix, invalidPathStr)
+	require.NotNil(t, err, "invalid prefix does not returns error")
+	require.Equal(t, commitment.Path{}, invalidPath, "invalid prefix returns valid Path on ApplyPrefix")
 }

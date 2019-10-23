@@ -162,10 +162,15 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) 
 	var result sdk.Result
 
 	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
+	switch {
+	case err != nil:
 		result = err.Result()
-	} else {
+	case req.Type == abci.CheckTxType_New:
 		result = app.runTx(runTxModeCheck, req.Tx, tx)
+	case req.Type == abci.CheckTxType_Recheck:
+		result = app.runTx(runTxModeReCheck, req.Tx, tx)
+	default:
+		panic(fmt.Sprintf("Unknown RequestCheckTx Type: %v", req.Type))
 	}
 
 	return abci.ResponseCheckTx{

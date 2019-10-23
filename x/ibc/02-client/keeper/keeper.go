@@ -11,7 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -128,18 +127,19 @@ func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState expo
 }
 
 func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
-	switch evidence.H1().ClientType() {
-	case exported.Tendermint:
-		var tmEvidence tendermint.Evidence
-		_, ok := evidence.(tendermint.Evidence)
-		if !ok {
-			return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
-		}
-		// TODO: pass past consensus states
-		return tendermint.CheckMisbehaviour(tmEvidence)
-	default:
-		panic("unregistered consensus type")
-	}
+	// switch evidence.H1().ClientType() {
+	// case exported.Tendermint:
+	// 	var tmEvidence tendermint.Evidence
+	// 	_, ok := evidence.(tendermint.Evidence)
+	// 	if !ok {
+	// 		return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
+	// 	}
+	// 	// TODO: pass past consensus states
+	// 	return tendermint.CheckMisbehaviour(tmEvidence)
+	// default:
+	// 	panic("unregistered consensus type")
+	// }
+	return nil
 }
 
 // freeze updates the state of the client in the event of a misbehaviour

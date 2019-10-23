@@ -12,6 +12,7 @@ var SubModuleCdc *codec.Codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.Blockchain)(nil), nil)
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
+	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterInterface((*exported.Header)(nil), nil)
 	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
 

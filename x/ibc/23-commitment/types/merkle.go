@@ -80,7 +80,7 @@ type Path struct {
 func NewPath(keyPathStr []string) Path {
 	merkleKeyPath := merkle.KeyPath{}
 	for _, keyStr := range keyPathStr {
-		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), merkle.KeyEncodingHex)
+		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), merkle.KeyEncodingURL)
 	}
 
 	return Path{
@@ -106,10 +106,19 @@ func (p Path) String() string {
 func ApplyPrefix(prefix exported.PrefixI, path string) Path {
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
-	commitmentPath := NewPath(pathSlice)
+	merkleKeyPath := merkle.KeyPath{}
 
-	commitmentPath.KeyPath = commitmentPath.KeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
-	return commitmentPath
+	// append prefix first
+	merkleKeyPath = merkleKeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingURL)
+
+	// append all path elements after
+	for _, keyStr := range pathSlice {
+		merkleKeyPath = merkleKeyPath.AppendKey([]byte(keyStr), merkle.KeyEncodingURL)
+	}
+
+	return Path{
+		KeyPath: merkleKeyPath,
+	}
 }
 
 var _ exported.ProofI = Proof{}

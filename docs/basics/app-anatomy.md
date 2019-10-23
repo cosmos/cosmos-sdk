@@ -214,7 +214,7 @@ The main interface is the [Command-Line Interface](../interfaces/cli.md). The CL
 - **Transaction commands** are added by calling the `txCmd` function. Similar to `queryCmd`, the function  returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appcli tx [tx]` of the CLI.
 - **A `registerRoutes` function**, which is called from the `main()` function when initializing the [application's light-client daemon (LCD)](../core/node.md#lcd) (i.e. `rest-server`). `registerRoutes` calls the `RegisterRoutes` function of each of the application's module, thereby registering the routes of the module to the lcd's router. The LCD can be started by running the following command `appcli rest-server`. 
 
-See an example of an application's main command-line file [here](https://github.com/cosmos/sdk-application-tutorial/blob/master/cmd/nscli/main.go).
+See an example of an application's main command-line file [here](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/cmd/nscli/main.go).
 
 To learn more about interfaces, [click here](../interfaces/interfaces-intro.md).
 

@@ -76,7 +76,7 @@ return sdk.Result{
 	}
 ```
 
-For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/handler.go) from the nameservice tutorial. 
+For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/handler.go) from the nameservice tutorial. 
 
 ## Next
 

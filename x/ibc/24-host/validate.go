@@ -22,10 +22,10 @@ var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
 
-// Default validator function for Client, Connection, and Channel
-// identifiers
-// Valid Identifier must be between 10-20 characters and only
-// contain lowercase alphabetic characters
+// DefaultIdentifierValidator is the default validator function for Client,
+// Connection and Channel identifiers.
+// A valid Identifier must be between 10-20 characters and only contain lowercase
+// alphabetic characters,
 func DefaultIdentifierValidator(id string) error {
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
@@ -59,7 +59,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 	}
 }
 
-// Default Path Validator takes in path string and validates
+// DefaultPathValidator takes in path string and validates
 // with default identifier rules. This is optimized by simply
 // checking that all path elements are alphanumeric
 func DefaultPathValidator(path string) error {

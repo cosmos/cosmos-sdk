@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -99,21 +99,21 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 
 // GetVerifiedRoot gets a verified commitment Root from a particular height to
 // a client
-func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitmentexported.RootI, bool) {
+func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
 		return nil, false
 	}
 
-	var root commitmentexported.RootI
+	var root commitment.RootI
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &root)
 	return root, true
 }
 
 // SetVerifiedRoot sets a verified commitment Root from a particular height to
 // a client
-func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitmentexported.RootI) {
+func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitment.RootI) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
 	store.Set(types.KeyRoot(clientID, height), bz)
@@ -157,8 +157,8 @@ func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	clientState types.State,
 	height uint64, // sequence
-	proof commitmentexported.ProofI,
-	path commitmentexported.PathI,
+	proof commitment.ProofI,
+	path commitment.PathI,
 	value []byte,
 ) bool {
 	if clientState.Frozen {
@@ -178,8 +178,8 @@ func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	clientState types.State,
 	height uint64, // sequence
-	proof commitmentexported.ProofI,
-	path commitmentexported.PathI,
+	proof commitment.ProofI,
+	path commitment.PathI,
 ) bool {
 	if clientState.Frozen {
 		return false

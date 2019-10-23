@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // GetQueryCmd returns the query commands for IBC clients
@@ -114,7 +114,7 @@ $ %s query ibc client root [client-id] [height]
 				return err
 			}
 
-			var root commitmentexported.RootI
+			var root commitment.RootI
 			if err := cdc.UnmarshalJSON(res, &root); err != nil {
 				return err
 			}

@@ -139,7 +139,7 @@ Finally, the module also needs a `GetQueryCmd`, which aggregates all of the quer
 
 ### Flags
 
-[Flags](../interfaces/cli.md#flags) are entered by the user and allow for command customizations. Examples include the [fees](../core/accounts-fees.md) or gas prices users are willing to pay for their transactions.
+[Flags](../interfaces/cli.md#flags) are entered by the user and allow for command customizations. Examples include the [fees](../basics/gas-fees.md) or gas prices users are willing to pay for their transactions.
 
 The flags for a module are typically found in a `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as *required* so that an error is thrown if the user does not provide values for them.
 
@@ -188,7 +188,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 
 `BaseReq` is a type defined in the SDK that encapsulates much of the transaction configurations similar to CLI command flags. Users must provide the information in the body of their requests.
 
-* `From` indicates which [account](../core/accounts-fees.md) the transaction originates from. This account is used to sign the transaction.
+* `From` indicates which [account](../basics/accounts.md) the transaction originates from. This account is used to sign the transaction.
 *	`Memo` sends a memo along with the transaction.
 *	`ChainID` specifies the unique identifier of the blockchain the transaction pertains to.
 *	`AccountNumber` is an identifier for the account.
@@ -196,7 +196,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 *	`Gas` refers to how much [gas](../core/gas.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
 *	`GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 *	`GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
-*	`Fees` specifies how much in [fees](../core/accounts-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.
+*	`Fees` specifies how much in [fees](../basics/gas-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.
 *	`Simulate` instructs the application to ignore gas and simulate the transaction running without broadcasting.
 
 ### Request Handlers
@@ -279,4 +279,4 @@ A few things to note:
 
 ## Next
 
-Read about the next topic in building modules.
+Read about the recommended [module structure](./structure.md).

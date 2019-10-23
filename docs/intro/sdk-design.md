@@ -17,7 +17,7 @@ The application also enables you to generate transactions, encode them and pass 
 
 ## `baseapp`
 
-`baseApp` is the boilerplate implementation of the ABCI of the Cosmos SDK. It comes with a `router` to route transactions to their respective module. The main `app.go` file of your application will define your custom `app` type that will embed `baseapp`. This way, your custom `app` type will automatically inherit all the ABCI methods of `baseapp`. See an example of this in the [SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/app.go#L27).
+`baseApp` is the boilerplate implementation of the ABCI of the Cosmos SDK. It comes with a `router` to route transactions to their respective module. The main `app.go` file of your application will define your custom `app` type that will embed `baseapp`. This way, your custom `app` type will automatically inherit all the ABCI methods of `baseapp`. See an example of this in the [SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L27).
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
 
@@ -25,7 +25,7 @@ For more on `baseapp`, please click [here](../concepts/baseapp.md).
 
 ## Multistore
 
- The Cosmos SDK provides a multistore for persisting state. The multistore allows developers to declare any number of [`KVStores`](https://github.com/blocklayerhq/chainkit). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
+ The Cosmos SDK provides a multistore for persisting state. The multistore allows developers to declare any number of [`KVStores`](../core/store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
 
 The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../concepts/store.md)
 

@@ -92,3 +92,7 @@ app.Router().
   AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
   AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 ```
+
+## Next
+
+Learn about [building modules](../building-modules/intro.md).

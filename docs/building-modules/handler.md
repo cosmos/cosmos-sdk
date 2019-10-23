@@ -24,7 +24,7 @@ Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
-- The [`Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38) returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/accounts-fees-gas.md#gas) consumption and [`events`](./events.md).
+- The [`Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38) returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/gas-fees.md) consumption and [`events`](./events.md).
 
 ## Implementation of a module `handler`s
 
@@ -66,7 +66,16 @@ These `events` are relayed back to the underlying consensus engine and can be us
 
 Finally, the `handler` function returns a [`sdk.Result`](https://github.com/tendermint/tendermint/blob/master/abci/types/result.go) which contains the aforementioned `events` and an optional `Data` field. 
 
-For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/handler.go) from the nameservice tutorial. 
+```go
+// Example handler result
+
+return sdk.Result{
+		Data:   GetProposalIDBytes(proposal.ProposalID),
+		Events: ctx.EventManager().Events(),
+	}
+```
+
+For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/handler.go) from the nameservice tutorial. 
 
 ## Next
 

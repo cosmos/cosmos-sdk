@@ -13,7 +13,7 @@ import (
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
-	clientTypeStr string, consensusState exported.ConsensusState,
+	clientType exported.ClientType, consensusState exported.ConsensusState,
 ) (types.State, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
@@ -23,11 +23,6 @@ func (k Keeper) CreateClient(
 	_, found = k.GetClientType(ctx, clientID)
 	if found {
 		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
-	}
-
-	clientType := exported.ClientTypeFromStr(clientTypeStr)
-	if clientType == 0 {
-		return types.State{}, types.ErrInvalidClientType(k.codespace)
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)

@@ -41,17 +41,17 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() sdk.Error {
-	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("empty address")
-	}
 	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
-	if !exported.ValidClientTypes[msg.ClientType] {
-		return ErrInvalidClientType(DefaultCodespace)
+	if _, err := exported.ClientTypeFromString(msg.ClientType); err != nil {
+		return ErrInvalidClientType(DefaultCodespace, err.Error())
 	}
 	if msg.ConsensusState == nil {
 		return ErrInvalidConsensus(DefaultCodespace)
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("empty address")
 	}
 	return nil
 }
@@ -96,14 +96,14 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() sdk.Error {
-	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("empty address")
-	}
 	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Header == nil {
 		return ErrInvalidHeader(DefaultCodespace)
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("empty address")
 	}
 	return nil
 }
@@ -146,14 +146,14 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
-	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("empty address")
-	}
 	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Evidence == nil {
 		return ErrInvalidEvidence(DefaultCodespace)
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("empty address")
 	}
 	return nil
 }

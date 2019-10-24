@@ -1,6 +1,9 @@
 package exported
 
 import (
+	"encoding/json"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -61,43 +64,58 @@ type Header interface {
 	GetHeight() uint64
 }
 
-// Client types
-const (
-	ClientTypeTendermint string = "tendermint"
-)
-
 // ClientType defines the type of the consensus algorithm
 type ClientType byte
 
-// Registered consensus types
+// available client types
 const (
 	Tendermint ClientType = iota + 1 // 1
 )
 
-// ValidClientTypes returns the registerd client types for this chain
-var ValidClientTypes = map[string]bool{
-	ClientTypeTendermint: true,
-}
+// string representation of the client types
+const (
+	ClientTypeTendermint string = "tendermint"
+)
 
-// ClientTypeFromStr returns a byte that corresponds to the registered client
-// type. It returns 0 if the type is not found/registered.
-func ClientTypeFromStr(clientType string) ClientType {
-	switch clientType {
-	case ClientTypeTendermint:
-		return Tendermint
-
+func (ct ClientType) String() string {
+	switch ct {
+	case Tendermint:
+		return ClientTypeTendermint
 	default:
-		return 0
+		return ""
 	}
 }
 
-// ClientTypeToString returns the string representation of a client type
-func ClientTypeToString(clientType ClientType) string {
+// MarshalJSON marshal to JSON using string.
+func (ct ClientType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ct.String())
+}
+
+// UnmarshalJSON decodes from JSON.
+func (ct *ClientType) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	bz2, err := ClientTypeFromString(s)
+	if err != nil {
+		return err
+	}
+
+	*ct = bz2
+	return nil
+}
+
+// ClientTypeFromString returns a byte that corresponds to the registered client
+// type. It returns 0 if the type is not found/registered.
+func ClientTypeFromString(clientType string) (ClientType, error) {
 	switch clientType {
-	case Tendermint:
-		return ClientTypeTendermint
+	case ClientTypeTendermint:
+		return Tendermint, nil
 
 	default:
-		return ""
+		return 0, fmt.Errorf("'%s' is not a valid client type", clientType)
 	}
 }

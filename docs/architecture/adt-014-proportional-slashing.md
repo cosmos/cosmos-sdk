@@ -24,7 +24,7 @@ However, this will incentivize validators with large amounts of stake to split u
 slash_amount = (power_1 + power_2 + ... + power_n) // where power_i is the voting power of the ith validator faulting in the period
 ```
 
-Now, if someone splits a validator of 10% into two validators of 5% each which both fault, then they both fault in the same window, they both will still get slashed at the sum 10% amount.
+Now, if someone splits a validator of 10% into two validators of 5% each which both fault, then they both fault in the same time frame, they both will still get slashed at the sum 10% amount.
 
 However, an operator might still choose to split up their stake across multiple accounts with hopes that if any of them fault independently, they will not get slashed at the full amount.  In the case that the validators do fault together, they will get slashed the same amount as if they were one entity.  There is no con to splitting up.  However, if operators are going to split up their stake without actually decorrelating their setups, this also causes a negative externality to the network as it fills up validator slots that could have gone to others or increases the commit size.  In order to disincentivize this, we want it to be the case such that splitting up a validator into multiple validators and they fault together is punished more heavily that keeping it as a single validator that faults.
 

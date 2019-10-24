@@ -26,7 +26,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
     - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
     - the state machine does not need any historical mapping information which is past more than unbonding period.
 - limits
-    - a validator cannot rotate its consensus key more than N time for any unbonding period, to prevent spams.
+    - a validator cannot rotate its consensus key more than N time for any unbonding period, to prevent spam.
     - a validator should contribute X atoms to community fund to rotate its consensus key, also to prevent spams.
     - parameters can be decided by governance and stored in genesis file.
 - slash module

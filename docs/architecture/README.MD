@@ -1,3 +1,9 @@
+---
+order: false
+parent:
+  order: false
+---
+
 # Architecture Decision Records (ADR)
 
 This is a location to record all high-level architecture decisions in the Cosmos-SDK.

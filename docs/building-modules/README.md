@@ -1,4 +1,9 @@
-# Auth 
+---
+parent:
+  title: Building modules
+---
+
+# Auth
 
 The `x/auth` modules is used for accounts
 

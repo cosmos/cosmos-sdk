@@ -1,95 +1,130 @@
-const glob = require("glob");
-const markdownIt = require("markdown-it");
-const meta = require("markdown-it-meta");
-const fs = require("fs");
-const _ = require("lodash");
-
-const sidebar = (directory, array) => {
-  return array.map(i => {
-    const children = _.sortBy(
-      glob
-        .sync(`./${directory}/${i[1]}/*.md`)
-        .map(path => {
-          const md = new markdownIt();
-          const file = fs.readFileSync(path, "utf8");
-          md.use(meta);
-          md.render(file);
-          const order = md.meta.order;
-          return { path, order };
-        })
-        .filter(f => f.order !== false),
-      ["order", "path"]
-    )
-      .map(f => f.path)
-      .filter(f => !f.match("readme"));
-    return {
-      title: i[0],
-      children
-    };
-  });
-};
-
 module.exports = {
+  theme: "cosmos",
   title: "Cosmos SDK",
-  base: process.env.VUEPRESS_BASE || "/",
-  locales: {
-    "/": {
-      lang: "en-US"
-    },
-    "/ru/": {
-      lang: "ru"
-    },
+  markdown: {
+    anchor: {
+      permalinkSymbol: ""
+    }
   },
+  base: process.env.VUEPRESS_BASE || "/",
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
-    docsBranch: "master",
-    locales: {
-      "/": {
-        label: "English",
-        sidebar: sidebar("", [
-          ["Intro", "intro"],
-          ["Basics", "basics"],
-          ["SDK Core", "core"],
-          ["About Modules", "modules"],
-          ["Using the SDK", "sdk"],
-          ["Interfaces", "interfaces"]
-        ])
+    logo: "/logo.svg",
+    label: "sdk",
+    sidebar: [
+      {
+        title: "Resources",
+        children: [
+          {
+            title: "Modules",
+            directory: true,
+            path: "/modules/"
+          },
+          {
+            title: "Tutorials",
+            path: "https://github.com/cosmos/sdk-application-tutorial"
+          }
+        ]
+      }
+    ],
+    gutter: {
+      title: "Help & Support",
+      editLink: true,
+      children: [
+        {
+          title: "Riot Chat",
+          text: "Chat with Tendermint developers on Riot Chat.",
+          highlighted: "500+ people chatting now"
+        },
+        {
+          title: "Cosmos SDK Forum",
+          text: "Found an Issue?",
+          highlighted:
+            "Help us improve this page by suggesting edits on GitHub."
+        }
+      ]
+    },
+    footer: {
+      logo: "/logo-bw.svg",
+      textLink: {
+        text: "cosmos.network",
+        url: "https://cosmos.network"
       },
-      "/ru/": {
-        label: "Русский",
-        sidebar: sidebar("ru", [
-          ["Введение", "intro"],
-          ["Основы", "basics"],
-          ["SDK Core", "core"],
-          ["Модули", "modules"],
-          ["Используем SDK", "sdk"],
-          ["Интерфейсы", "interfaces"]
-        ])
-      },
-      '/kr/': {
-        label: '한국어',
-        sidebar: sidebar('kr', [
-          ['소개', 'intro'],
-          ['기초', 'basics'],
-          ['SDK Core', 'core'],
-          ['모듈들', 'modules'],
-          ['프로그램 사용', 'sdk'],
-          ['인터페이스', 'interfaces'],
-        ]),
-      },
-      '/cn/': {
-        label: '中文',
-        sidebar: sidebar('cn', [
-          ['介绍', 'intro'],
-          ['基本', 'basics'],
-          ['SDK Core', 'core'],
-          ['模块', 'modules'],
-          ['使用该程序', 'sdk'],
-          ['接口', 'interfaces'],
-        ]),
-      },
+      services: [
+        {
+          service: "medium",
+          url: "https://blog.cosmos.network/"
+        },
+        {
+          service: "twitter",
+          url: "https://twitter.com/cosmos"
+        },
+        {
+          service: "linkedin",
+          url: "https://www.linkedin.com/company/tendermint/"
+        },
+        {
+          service: "reddit",
+          url: "https://reddit.com/r/cosmosnetwork"
+        },
+        {
+          service: "telegram",
+          url: "https://t.me/cosmosproject"
+        },
+        {
+          service: "youtube",
+          url: "https://www.youtube.com/c/CosmosProject"
+        }
+      ],
+      smallprint:
+        "The development of the Cosmos project is led primarily by Tendermint Inc., the for-profit entity which also maintains this website. Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
+      links: [
+        {
+          title: "Documentation",
+          children: [
+            {
+              title: "Cosmos SDK",
+              url: "https://cosmos.network/docs"
+            },
+            {
+              title: "Cosmos Hub",
+              url: "https://hub.cosmos.network/"
+            }
+          ]
+        },
+        {
+          title: "Community",
+          children: [
+            {
+              title: "Cosmos blog",
+              url: "https://blog.cosmos.network/"
+            },
+            {
+              title: "Forum",
+              url: "https://forum.cosmos.network/"
+            },
+            {
+              title: "Chat",
+              url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org"
+            }
+          ]
+        },
+        {
+          title: "Contributing",
+          children: [
+            {
+              title: "Contributing to the docs",
+              url: "https://github.com/cosmos/cosmos-sdk/tree/master/docs"
+            },
+            {
+              title: "Source code on GitHub",
+              url: "https://github.com/cosmos/cosmos-sdk/"
+            }
+          ]
+        }
+      ]
     }
   }
 };

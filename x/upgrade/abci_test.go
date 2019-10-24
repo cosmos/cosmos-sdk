@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,9 +17,12 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	keeper *Keeper
-	ctx    sdk.Context
-	cms    store.CommitMultiStore
+	keeper  *Keeper
+	querier sdk.Querier
+	handler gov.Handler
+	module  module.AppModule
+	ctx     sdk.Context
+	cms     store.CommitMultiStore
 }
 
 func (s *TestSuite) SetupTest() {
@@ -27,38 +32,41 @@ func (s *TestSuite) SetupTest() {
 	cdc := codec.New()
 	RegisterCodec(cdc)
 	s.keeper = NewKeeper(key, cdc)
+	s.handler = NewSoftwareUpgradeProposalHandler(*s.keeper)
+	s.querier = NewQuerier(s.keeper)
+	s.module = NewAppModule(s.keeper)
 	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	_ = s.cms.LoadLatestVersion()
 	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
 }
 
 func (s *TestSuite) TestRequireName() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureTime() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: s.ctx.BlockHeader().Time})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureBlock() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight()})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestCantSetBothTimeAndHeight() {
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestDoTimeUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -66,7 +74,7 @@ func (s *TestSuite) TestDoTimeUpgrade() {
 
 func (s *TestSuite) TestDoHeightUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -74,9 +82,9 @@ func (s *TestSuite) TestDoHeightUpgrade() {
 
 func (s *TestSuite) TestCanOverwriteScheduleUpgrade() {
 	s.T().Log("Can overwrite plan")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
 	s.Require().Nil(err)
-	err = s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Height: s.ctx.BlockHeight() + 1})
+	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -87,13 +95,13 @@ func (s *TestSuite) VerifyDoUpgrade() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().Panics(func() {
-		BeginBlock(s.keeper, newCtx, req)
+		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan Plan) {})
 	s.Require().NotPanics(func() {
-		BeginBlock(s.keeper, newCtx, req)
+		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.VerifyCleared(newCtx)
@@ -107,15 +115,15 @@ func (s *TestSuite) TestHaltIfTooNew() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		BeginBlock(s.keeper, newCtx, req)
+		s.module.BeginBlock(newCtx, req)
 	})
 	s.Require().Equal(0, called)
 
 	s.T().Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "future", Height: s.ctx.BlockHeight() + 3})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}})
 	s.Require().NoError(err)
 	s.Require().Panics(func() {
-		BeginBlock(s.keeper, newCtx, req)
+		s.module.BeginBlock(newCtx, req)
 	})
 	s.Require().Equal(0, called)
 
@@ -124,7 +132,7 @@ func (s *TestSuite) TestHaltIfTooNew() {
 	futCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 3, Time: time.Now()}, false, log.NewNopLogger())
 	req = abci.RequestBeginBlock{Header: futCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		BeginBlock(s.keeper, futCtx, req)
+		s.module.BeginBlock(futCtx, req)
 	})
 	s.Require().Equal(1, called)
 
@@ -133,16 +141,17 @@ func (s *TestSuite) TestHaltIfTooNew() {
 
 func (s *TestSuite) VerifyCleared(newCtx sdk.Context) {
 	s.T().Log("Verify that the upgrade plan has been cleared")
-	_, havePlan := s.keeper.GetUpgradePlan(newCtx)
-	s.Require().False(havePlan)
+	bz, err := s.querier(newCtx, []string{QueryCurrent}, abci.RequestQuery{})
+	s.Require().NoError(err)
+	s.Require().Nil(bz)
 }
 
 func (s *TestSuite) TestCanClear() {
 	s.T().Log("Verify upgrade is scheduled")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
 	s.Require().Nil(err)
 
-	s.keeper.ClearUpgradePlan(s.ctx)
+	s.handler(s.ctx, CancelSoftwareUpgradeProposal{Title: "cancel"})
 
 	s.VerifyCleared(s.ctx)
 }
@@ -150,7 +159,7 @@ func (s *TestSuite) TestCanClear() {
 func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.TestDoTimeUpgrade()
 	s.T().Log("Verify an upgrade named \"test\" can't be scheduled twice")
-	err := s.keeper.ScheduleUpgrade(s.ctx, Plan{Name: "test", Time: time.Now()})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
@@ -159,7 +168,7 @@ func (s *TestSuite) TestNoSpuriousUpgrades() {
 	s.T().Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
 	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
 	s.Require().NotPanics(func() {
-		BeginBlock(s.keeper, s.ctx, req)
+		s.module.BeginBlock(s.ctx, req)
 	})
 }
 

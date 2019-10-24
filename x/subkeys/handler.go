@@ -18,7 +18,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
 			return sdk.Result{}
 		default:
-			errMsg := fmt.Sprintf("Unrecognized data Msg type: %v", msg.Type())
+			errMsg := fmt.Sprintf("Unrecognized data Msg type: %s", ModuleName)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

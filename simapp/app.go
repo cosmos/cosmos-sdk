@@ -223,7 +223,6 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
-		// subkeys.NewAppModule(app.DelegationKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()

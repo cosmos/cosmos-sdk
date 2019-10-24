@@ -6,7 +6,7 @@
 
 ## Context
 
-In Proof of Stake-based chains, centralization of consensus power amongst a small set of validators causes harm to the network due to increased risk of censorship, liveness failure, fork attacks, etc.  However, while this centralization causes a negative externality to the network, it is not directly felt by the stakers contributing towards delegating towards already large validators.  We would like a way to pass on the negative externality cost of centralization onto those large validators and their stakers.
+In Proof of Stake-based chains, centralization of consensus power amongst a small set of validators can cause harm to the network due to increased risk of censorship, liveness failure, fork attacks, etc.  However, while this centralization causes a negative externality to the network, it is not directly felt by the delegators contributing towards delegating towards already large validators.  We would like a way to pass on the negative externality cost of centralization onto those large validators and their delegators.
 
 ## Decision
 

@@ -40,6 +40,14 @@ func TestValidateBasic(t *testing.T) {
 
 	_, err = antehandler(ctx, validTx, false)
 	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+
+	// test decorator skips on recheck
+	ctx = ctx.WithIsReCheckTx(true)
+
+	// decorator should skip processing invalidTx on recheck and thus return nil-error
+	_, err = antehandler(ctx, invalidTx, false)
+
+	require.Nil(t, err, "ValidateBasicDecorator ran on ReCheck")
 }
 
 func TestValidateMemo(t *testing.T) {

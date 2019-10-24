@@ -53,8 +53,8 @@ func ErrClientTypeNotFound(codespace sdk.CodespaceType) sdk.Error {
 }
 
 // ErrInvalidClientType implements sdk.Error
-func ErrInvalidClientType(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidClientType, "client type mismatch")
+func ErrInvalidClientType(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidClientType, msg)
 }
 
 // ErrRootNotFound implements sdk.Error

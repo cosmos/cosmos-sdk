@@ -10,7 +10,6 @@ var _ exported.Header = Header{}
 
 // Header defines the Tendermint consensus Header
 type Header struct {
-	// TODO: define Tendermint header type manually, don't use tmtypes
 	tmtypes.SignedHeader
 	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
 	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"`

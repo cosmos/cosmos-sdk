@@ -27,7 +27,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
 //
 // All expiration heights will be thrown off if we dump state and start at a new
 // chain at height 0. Thus, we allow the Allowances to "prepare themselves"
-// for export, like if they have exiry at 5000 and current is 4000, they export with
+// for export, like if they have expiry at 5000 and current is 4000, they export with
 // expiry of 1000. It would need a new method on the FeeAllowance interface.
 func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()

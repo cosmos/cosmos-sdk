@@ -55,7 +55,7 @@ func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) Ms
 }
 
 func (msg MsgRevokeFeeAllowance) Route() string {
-	return "delegation"
+	return RouterKey
 }
 
 func (msg MsgRevokeFeeAllowance) Type() string {

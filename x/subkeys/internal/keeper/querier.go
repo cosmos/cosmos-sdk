@@ -21,7 +21,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 			res, err = queryGetFeeAllowances(ctx, path[1:], keeper)
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest,
-				"Unknown package %s query endpoint", types.ModuleName)
+				"unknown package %s query endpoint", types.ModuleName)
 		}
 		return res, sdk.ConvertError(err)
 	}

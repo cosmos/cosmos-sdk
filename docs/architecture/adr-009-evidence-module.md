@@ -79,7 +79,7 @@ the `x/evidence` module. It accomplishes this through the `Router` implementatio
 
 ```go
 type Router interface {
-  AddRoute(r string, h Handler)
+  AddRoute(r string, h Handler) Router
   HasRoute(r string) bool
   GetRoute(path string) Handler
   Seal()

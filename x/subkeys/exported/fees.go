@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// FeeAllowance implementations are tied to a given delegator and delegatee,
+// FeeAllowance implementations are tied to a given fee delegator and delegatee,
 // and are used to enforce fee delegation limits.
 type FeeAllowance interface {
 	// Accept can use fee payment requested as well as timestamp/height of the current block

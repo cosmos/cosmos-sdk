@@ -15,10 +15,6 @@ import (
 	tx "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 )
 
-// TODO:
-// * docs
-// * periodic fee
-
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
@@ -51,11 +47,8 @@ func (a AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 func (a AppModuleBasic) getValidatedGenesis(bz json.RawMessage) (GenesisState, error) {
-	cdc := codec.New()
-	a.RegisterCodec(cdc)
-
 	var data GenesisState
-	err := cdc.UnmarshalJSON(bz, &data)
+	err := ModuleCdc.UnmarshalJSON(bz, &data)
 	if err != nil {
 		return nil, err
 	}

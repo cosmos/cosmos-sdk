@@ -37,27 +37,27 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // Returns an error on parsing issues
 func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (exported.FeeAllowance, error) {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
-	if grant == nil {
+	if err != nil {
 		return nil, err
 	}
-	return grant.Allowance, err
+	return grant.Allowance, nil
 }
 
 // GetFeeGrant returns entire grant between both accounts
-func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*types.FeeAllowanceGrant, error) {
+func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, nil
+		return types.FeeAllowanceGrant{}, nil
 	}
 
 	var grant types.FeeAllowanceGrant
 	err := k.cdc.UnmarshalBinaryBare(bz, &grant)
 	if err != nil {
-		return nil, err
+		return types.FeeAllowanceGrant{}, err
 	}
-	return &grant, nil
+	return grant, nil
 }
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
@@ -108,7 +108,7 @@ func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter, grantee sdk.AccAddres
 	if err != nil {
 		panic(err)
 	}
-	if grant == nil || grant.Allowance == nil {
+	if grant.Allowance == nil {
 		return false
 	}
 
@@ -122,6 +122,6 @@ func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter, grantee sdk.AccAddres
 	}
 
 	// if we accepted, store the updated state of the allowance
-	k.DelegateFeeAllowance(ctx, *grant)
+	k.DelegateFeeAllowance(ctx, grant)
 	return true
 }

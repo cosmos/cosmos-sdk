@@ -19,7 +19,7 @@ var (
 	maxGasWanted = uint64((1 << 63) - 1)
 )
 
-// DelegatedTx is wraps a Msg with Fee and Signatures,
+// DelegatedTx wraps a Msg with Fee and Signatures,
 // adding the ability to delegate the fee payment
 // NOTE: the first signature responsible for paying fees, either directly,
 // or must be authorized to spend from the provided Fee.FeeAccount

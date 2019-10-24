@@ -19,7 +19,7 @@ func NewMsgDelegateFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, 
 }
 
 func (msg MsgDelegateFeeAllowance) Route() string {
-	return "delegation"
+	return RouterKey
 }
 
 func (msg MsgDelegateFeeAllowance) Type() string {

@@ -25,9 +25,5 @@ ante handler from this package instead of the default DeductFeeDecorator from au
 To allow handling txs from empty accounts (with fees paid from an existing account),
 we have to re-order the decorators as well. You can see an example in
 `x/delegate_fees/internal/ante/fee_test.go:newAnteHandler()`
-
-I did not pull this into the top level package as it pulls in dependencies on the internals
-of `x/auth` and if I understand correctly, this is bad practice to depend on other modules
-except for the external package.
 */
 package subkeys

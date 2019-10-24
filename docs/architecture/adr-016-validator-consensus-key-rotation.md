@@ -22,7 +22,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 ### Considerations
 
 - consensus key mapping information management strategy
-    - stores history of each key mapping changes in kvstore.
+    - store history of each key mapping changes in the kvstore.
     - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
     - gaiad does not need any historical mapping information which is past more than unbonding period.
 - limits

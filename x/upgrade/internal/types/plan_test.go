@@ -98,6 +98,7 @@ func TestPlanValid(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
 			err := tc.p.ValidateBasic()
 			if tc.valid {

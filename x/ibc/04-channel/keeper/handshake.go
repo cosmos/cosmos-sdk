@@ -2,19 +2,20 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
 // a module on another chain.
 func (k Keeper) ChanOpenInit(
 	ctx sdk.Context,
-	order types.ChannelOrder,
+	order types.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
@@ -31,18 +32,21 @@ func (k Keeper) ChanOpenInit(
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, connectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
-	if connection.State == connectiontypes.NONE {
-		return errors.New("connection is closed")
+	if connectionEnd.State == connection.NONE {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state cannot be NONE"),
+		)
 	}
 
 	_, found = k.portKeeper.GetPort(ctx, portID)
 	if !found {
-		return porttypes.ErrPortNotFound(k.codespace, portID)
+		return port.ErrPortNotFound(k.codespace, portID)
 	}
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
@@ -63,14 +67,14 @@ func (k Keeper) ChanOpenInit(
 // handshake initiated by a module on another chain.
 func (k Keeper) ChanOpenTry(
 	ctx sdk.Context,
-	order types.ChannelOrder,
+	order types.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
 	counterparty types.Counterparty,
 	version,
 	counterpartyVersion string,
-	proofInit commitmentexported.ProofI,
+	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
 
@@ -85,20 +89,23 @@ func (k Keeper) ChanOpenTry(
 
 	_, found = k.portKeeper.GetPort(ctx, portID)
 	if !found {
-		return porttypes.ErrPortNotFound(k.codespace, portID)
+		return port.ErrPortNotFound(k.codespace, portID)
 	}
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
 	// 	return errors.New("port is not valid") // TODO: ics05 sdk.Error
 	// }
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, connectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return errors.New("connection is not open")
+	if connectionEnd.State != connection.OPEN {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	// NOTE: this step has been switched with the one below to reverse the connection
@@ -119,7 +126,7 @@ func (k Keeper) ChanOpenTry(
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proofInit,
+		ctx, connectionEnd, proofHeight, proofInit,
 		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
 		bz,
 	) {
@@ -142,7 +149,7 @@ func (k Keeper) ChanOpenAck(
 	portID,
 	channelID,
 	counterpartyVersion string,
-	proofTry commitmentexported.ProofI,
+	proofTry commitment.ProofI,
 	proofHeight uint64,
 ) error {
 
@@ -152,18 +159,24 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	if channel.State != types.INIT {
-		return errors.New("invalid channel state") // TODO: sdk.Error
+		return types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel state is not INIT (got %s)", channel.State.String()),
+		)
 	}
 
 	// TODO: get channel capability key and authenticate it
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return errors.New("connection is not open")
+	if connectionEnd.State != connection.OPEN {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	// counterparty of the counterparty channel end (i.e self)
@@ -179,7 +192,7 @@ func (k Keeper) ChanOpenAck(
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
+		ctx, connectionEnd, proofHeight, proofTry,
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
@@ -199,7 +212,7 @@ func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofAck commitmentexported.ProofI,
+	proofAck commitment.ProofI,
 	proofHeight uint64,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -208,18 +221,24 @@ func (k Keeper) ChanOpenConfirm(
 	}
 
 	if channel.State != types.OPENTRY {
-		return errors.New("invalid channel state") // TODO: sdk.Error
+		return types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel state is not OPENTRY (got %s)", channel.State.String()),
+		)
 	}
 
 	// TODO: get channel capability key and authenticate it
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return errors.New("connection is not open")
+	if connectionEnd.State != connection.OPEN {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	counterparty := types.NewCounterparty(portID, channelID)
@@ -234,7 +253,7 @@ func (k Keeper) ChanOpenConfirm(
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proofAck,
+		ctx, connectionEnd, proofHeight, proofAck,
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
@@ -262,16 +281,19 @@ func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	}
 
 	if channel.State == types.CLOSED {
-		return errors.New("channel already closed") // TODO: sdk.Error
+		return types.ErrInvalidChannelState(k.codespace, "channel is already CLOSED")
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return errors.New("connection is not open")
+	if connectionEnd.State != connection.OPEN {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	channel.State = types.CLOSED
@@ -286,7 +308,7 @@ func (k Keeper) ChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	proofInit commitmentexported.ProofI,
+	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
 	// TODO: get channel capability key and authenticate it
@@ -296,16 +318,19 @@ func (k Keeper) ChanCloseConfirm(
 	}
 
 	if channel.State == types.CLOSED {
-		return errors.New("channel already closed") // TODO: sdk.Error
+		return types.ErrInvalidChannelState(k.codespace, "channel is already CLOSED")
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return errors.New("connection is not open")
+	if connectionEnd.State != connection.OPEN {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	counterparty := types.NewCounterparty(portID, channelID)
@@ -320,7 +345,7 @@ func (k Keeper) ChanCloseConfirm(
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proofInit,
+		ctx, connectionEnd, proofHeight, proofInit,
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {

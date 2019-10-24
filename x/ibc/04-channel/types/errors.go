@@ -20,6 +20,8 @@ const (
 	CodePacketTimeout              sdk.CodeType = 108
 	CodeInvalidPortID              sdk.CodeType = 109
 	CodeInvalidChannelID           sdk.CodeType = 110
+	CodeInvalidChannelState        sdk.CodeType = 111
+	CodeInvalidPacketData          sdk.CodeType = 112
 )
 
 // ErrChannelExists implements sdk.Error
@@ -70,4 +72,14 @@ func ErrInvalidPortID(codespace sdk.CodespaceType, msg string) sdk.Error {
 // ErrInvalidChannelID implements sdk.Error
 func ErrInvalidChannelID(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidChannelID, msg)
+}
+
+// ErrInvalidChannelState implements sdk.Error
+func ErrInvalidChannelState(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidChannelState, msg)
+}
+
+// ErrInvalidPacketData implements sdk.Error
+func ErrInvalidPacketData(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidPacketData, msg)
 }

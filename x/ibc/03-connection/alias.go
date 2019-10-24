@@ -13,6 +13,9 @@ import (
 
 const (
 	NONE                              = types.NONE
+	INIT                              = types.INIT
+	TRYOPEN                           = types.TRYOPEN
+	OPEN                              = types.OPEN
 	DefaultCodespace                  = types.DefaultCodespace
 	CodeConnectionExists              = types.CodeConnectionExists
 	CodeConnectionNotFound            = types.CodeConnectionNotFound
@@ -43,6 +46,7 @@ var (
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
 	ErrConnectionPath                = types.ErrConnectionPath
 	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
+	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ConnectionPath                   = types.ConnectionPath
 	ClientConnectionsPath            = types.ClientConnectionsPath
 	KeyConnection                    = types.KeyConnection

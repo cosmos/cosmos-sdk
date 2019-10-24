@@ -41,7 +41,6 @@ const (
 var (
 	// functions aliases
 	NewKeeper                     = keeper.NewKeeper
-	NewQuerier                    = keeper.NewQuerier
 	NewChannel                    = types.NewChannel
 	NewCounterparty               = types.NewCounterparty
 	RegisterCodec                 = types.RegisterCodec

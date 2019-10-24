@@ -1,4 +1,4 @@
-package exported
+package commitment
 
 // ICS 023 Types Implementation
 //
@@ -12,21 +12,21 @@ package exported
 // and the inclusion or non-inclusion of an arbitrary key-value pair
 // can be proven with the proof.
 type RootI interface {
-	CommitmentType() string
+	GetCommitmentType() Type
 	GetHash() []byte
 }
 
 // PrefixI implements spec:CommitmentPrefix.
 // Prefix represents the common "prefix" that a set of keys shares.
 type PrefixI interface {
-	CommitmentType() string
+	GetCommitmentType() Type
 	Bytes() []byte
 }
 
 // PathI implements spec:CommitmentPath.
 // A path is the additional information provided to the verification function.
 type PathI interface {
-	CommitmentType() string
+	GetCommitmentType() Type
 	String() string
 }
 
@@ -35,7 +35,31 @@ type PathI interface {
 // Each proof has designated key-value pair it is able to prove.
 // Proofs includes key but value is provided dynamically at the verification time.
 type ProofI interface {
-	CommitmentType() string
+	GetCommitmentType() Type
 	VerifyMembership(RootI, PathI, []byte) bool
 	VerifyNonMembership(RootI, PathI) bool
+}
+
+// Type defines the type of the commitment
+type Type byte
+
+// Registered commitment types
+const (
+	Merkle Type = iota + 1 // 1
+)
+
+// Client types
+const (
+	TypeMerkle string = "merkle"
+)
+
+// TypeToString returns the string representation of a client type
+func TypeToString(commitmentType Type) string {
+	switch commitmentType {
+	case Merkle:
+		return TypeMerkle
+
+	default:
+		return ""
+	}
 }

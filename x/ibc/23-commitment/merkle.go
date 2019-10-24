@@ -1,4 +1,4 @@
-package types
+package commitment
 
 import (
 	"strings"
@@ -6,19 +6,16 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // ICS 023 Merkle Types Implementation
 //
 // This file defines Merkle commitment types that implements ICS 023.
 
-// TODO: use iota
-const merkleKind = "merkle"
-
-// merkle.Proof implementation of Proof
+// Merkle proof implementation of the Proof interface
 // Applied on SDK-based IBC implementation
-var _ exported.RootI = Root{}
+var _ RootI = Root{}
 
 // Root defines a merkle root hash.
 // In the Cosmos SDK, the AppHash of a block header becomes the Root.
@@ -33,9 +30,9 @@ func NewRoot(hash []byte) Root {
 	}
 }
 
-// CommitmentType implements RootI interface
-func (Root) CommitmentType() string {
-	return merkleKind
+// GetCommitmentType implements RootI interface
+func (Root) GetCommitmentType() Type {
+	return Merkle
 }
 
 // GetHash implements RootI interface
@@ -43,7 +40,7 @@ func (r Root) GetHash() []byte {
 	return r.Hash
 }
 
-var _ exported.PrefixI = Prefix{}
+var _ PrefixI = Prefix{}
 
 // Prefix is merkle path prefixed to the key.
 // The constructed key from the Path and the key will be append(Path.KeyPath, append(Path.KeyPrefix, key...))
@@ -58,9 +55,9 @@ func NewPrefix(keyPrefix []byte) Prefix {
 	}
 }
 
-// CommitmentType implements PrefixI
-func (Prefix) CommitmentType() string {
-	return merkleKind
+// GetCommitmentType implements PrefixI
+func (Prefix) GetCommitmentType() Type {
+	return Merkle
 }
 
 // Bytes returns the key prefix bytes
@@ -68,7 +65,7 @@ func (p Prefix) Bytes() []byte {
 	return p.KeyPrefix
 }
 
-var _ exported.PathI = Path{}
+var _ PathI = Path{}
 
 // Path is the path used to verify commitment proofs, which can be an arbitrary
 // structured object (defined by a commitment type).
@@ -88,9 +85,9 @@ func NewPath(keyPathStr []string) Path {
 	}
 }
 
-// CommitmentType implements PathI
-func (Path) CommitmentType() string {
-	return merkleKind
+// GetCommitmentType implements PathI
+func (Path) GetCommitmentType() Type {
+	return Merkle
 }
 
 // String implements fmt.Stringer
@@ -103,16 +100,22 @@ func (p Path) String() string {
 //
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
-func ApplyPrefix(prefix exported.PrefixI, path string) Path {
+func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
+	err := host.DefaultPathValidator(path)
+	if err != nil {
+		return Path{}, err
+	}
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
+	keyPath := merkle.KeyPath{}
 	commitmentPath := NewPath(pathSlice)
 
-	commitmentPath.KeyPath = commitmentPath.KeyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
-	return commitmentPath
+	keyPath = keyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingHex)
+	commitmentPath.KeyPath = append(keyPath, commitmentPath.KeyPath...)
+	return commitmentPath, nil
 }
 
-var _ exported.ProofI = Proof{}
+var _ ProofI = Proof{}
 
 // Proof is a wrapper type that contains a merkle proof.
 // It demonstrates membership or non-membership for an element or set of elements,
@@ -122,20 +125,20 @@ type Proof struct {
 	Proof *merkle.Proof `json:"proof" yaml:"proof"`
 }
 
-// CommitmentType implements ProofI
-func (Proof) CommitmentType() string {
-	return merkleKind
+// GetCommitmentType implements ProofI
+func (Proof) GetCommitmentType() Type {
+	return Merkle
 }
 
 // VerifyMembership verifies the membership pf a merkle proof against the given root, path, and value.
-func (proof Proof) VerifyMembership(root exported.RootI, path exported.PathI, value []byte) bool {
+func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
 	return err == nil
 }
 
 // VerifyNonMembership verifies the absence of a merkle proof against the given root and path.
-func (proof Proof) VerifyNonMembership(root exported.RootI, path exported.PathI) bool {
+func (proof Proof) VerifyNonMembership(root RootI, path PathI) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
 	return err == nil

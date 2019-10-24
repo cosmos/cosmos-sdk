@@ -11,8 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -41,20 +40,20 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetClientState gets a particular client from the store
-func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.ClientState, bool) {
+func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.State, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyClientState(clientID))
 	if bz == nil {
-		return types.ClientState{}, false
+		return types.State{}, false
 	}
 
-	var clientState types.ClientState
+	var clientState types.State
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
-func (k Keeper) SetClientState(ctx sdk.Context, clientState types.ClientState) {
+func (k Keeper) SetClientState(ctx sdk.Context, clientState types.State) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
 	store.Set(types.KeyClientState(clientState.ID()), bz)
@@ -99,53 +98,54 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 
 // GetVerifiedRoot gets a verified commitment Root from a particular height to
 // a client
-func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitmentexported.RootI, bool) {
+func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
 		return nil, false
 	}
 
-	var root commitmentexported.RootI
+	var root commitment.RootI
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &root)
 	return root, true
 }
 
 // SetVerifiedRoot sets a verified commitment Root from a particular height to
 // a client
-func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitmentexported.RootI) {
+func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitment.RootI) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
 	store.Set(types.KeyRoot(clientID, height), bz)
 }
 
-// ClientState returns a new client state with a given id as defined in
+// State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
-func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.ClientState {
+func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {
 	clientState := types.NewClientState(clientID)
 	k.SetConsensusState(ctx, clientID, consensusState)
 	return clientState
 }
 
 func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
-	switch evidence.H1().ClientType() {
-	case exported.Tendermint:
-		var tmEvidence tendermint.Evidence
-		_, ok := evidence.(tendermint.Evidence)
-		if !ok {
-			return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
-		}
-		// TODO: pass past consensus states
-		return tendermint.CheckMisbehaviour(tmEvidence)
-	default:
-		panic("unregistered consensus type")
-	}
+	// switch evidence.H1().ClientType() {
+	// case exported.Tendermint:
+	// 	var tmEvidence tendermint.Evidence
+	// 	_, ok := evidence.(tendermint.Evidence)
+	// 	if !ok {
+	// 		return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
+	// 	}
+	// 	// TODO: pass past consensus states
+	// 	return tendermint.CheckMisbehaviour(tmEvidence)
+	// default:
+	// 	panic("unregistered consensus type")
+	// }
+	return nil
 }
 
 // freeze updates the state of the client in the event of a misbehaviour
-func (k Keeper) freeze(ctx sdk.Context, clientState types.ClientState) (types.ClientState, error) {
+func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, error) {
 	if clientState.Frozen {
-		return types.ClientState{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientState.ID()), "already frozen")
+		return types.State{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientState.ID()), "already frozen")
 	}
 
 	clientState.Frozen = true
@@ -155,10 +155,10 @@ func (k Keeper) freeze(ctx sdk.Context, clientState types.ClientState) (types.Cl
 // VerifyMembership state membership verification function defined by the client type
 func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
-	clientState types.ClientState,
+	clientState types.State,
 	height uint64, // sequence
-	proof commitmentexported.ProofI,
-	path commitmentexported.PathI,
+	proof commitment.ProofI,
+	path commitment.PathI,
 	value []byte,
 ) bool {
 	if clientState.Frozen {
@@ -176,10 +176,10 @@ func (k Keeper) VerifyMembership(
 // VerifyNonMembership state non-membership function defined by the client type
 func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
-	clientState types.ClientState,
+	clientState types.State,
 	height uint64, // sequence
-	proof commitmentexported.ProofI,
-	path commitmentexported.PathI,
+	proof commitment.ProofI,
+	path commitment.PathI,
 ) bool {
 	if clientState.Frozen {
 		return false

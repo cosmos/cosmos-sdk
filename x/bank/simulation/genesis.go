@@ -18,7 +18,7 @@ const (
 
 // GenSendEnabled randomized SendEnabled
 func GenSendEnabled(r *rand.Rand) bool {
-	return r.Int63n(2) == 0
+	return r.Int63n(101) <= 95 // 95% chance of transfers being enabled
 }
 
 // RandomizedGenState generates a random GenesisState for bank

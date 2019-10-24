@@ -27,22 +27,3 @@ func (h Header) ClientType() exported.ClientType {
 func (h Header) GetHeight() uint64 {
 	return uint64(h.Height)
 }
-
-var _ exported.Evidence = Evidence{}
-
-// Evidence defines two disctinct Tendermint headers used to submit a client misbehaviour
-// TODO: use evidence module's types
-type Evidence struct {
-	Header1 Header `json:"header_one" yaml:"header_one"`
-	Header2 Header `json:"header_two" yaml:"header_two"`
-}
-
-// H1 returns the first header
-func (e Evidence) H1() exported.Header {
-	return e.Header1
-}
-
-// H2 returns the second header
-func (e Evidence) H2() exported.Header {
-	return e.Header2
-}

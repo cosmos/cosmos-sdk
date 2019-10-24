@@ -1,9 +1,9 @@
 package exported
 
 import (
-	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // Blockchain is consensus algorithm which generates valid Headers. It generates
@@ -21,18 +21,32 @@ type ConsensusState interface {
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
-	GetRoot() commitmentexported.RootI
+	GetRoot() commitment.RootI
 
 	// CheckValidityAndUpdateState returns the updated consensus state
 	// only if the header is a descendent of this consensus state.
 	CheckValidityAndUpdateState(Header) (ConsensusState, error)
 }
 
-// Evidence contains two disctict headers used to submit client equivocation
-// TODO: use evidence module type
+// Evidence from ADR 009: Evidence Module
+// TODO: use evidence module interface once merged
 type Evidence interface {
-	H1() Header
-	H2() Header
+	Route() string
+	Type() string
+	String() string
+	ValidateBasic() sdk.Error
+
+	// The consensus address of the malicious validator at time of infraction
+	GetConsensusAddress() sdk.ConsAddress
+
+	// Height at which the infraction occurred
+	GetHeight() int64
+
+	// The total power of the malicious validator at time of infraction
+	GetValidatorPower() int64
+
+	// The total validator set power at time of infraction
+	GetTotalPower() int64
 }
 
 // Misbehaviour defines a specific consensus kind and an evidence
@@ -60,18 +74,9 @@ const (
 	Tendermint ClientType = iota + 1 // 1
 )
 
-var validClientTypes = map[string]struct{}{
-	ClientTypeTendermint: {},
-}
-
-// RegisterClientType registers a client type. It will panic if the type is
-// already registered.
-func RegisterClientType(ty string) {
-	if _, ok := validClientTypes[ty]; ok {
-		panic(fmt.Sprintf("already registered client type: %s", ty))
-	}
-
-	validClientTypes[ty] = struct{}{}
+// ValidClientTypes returns the registerd client types for this chain
+var ValidClientTypes = map[string]bool{
+	ClientTypeTendermint: true,
 }
 
 // ClientTypeFromStr returns a byte that corresponds to the registered client

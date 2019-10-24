@@ -120,3 +120,57 @@ func TestSubmitProposal(t *testing.T) {
 		require.Equal(t, tc.expectedErr, err, "unexpected type of error: %s", err)
 	}
 }
+
+func TestGetProposalsFiltered(t *testing.T) {
+	proposalID := uint64(1)
+	ctx, _, keeper, _, _ := createTestInput(t, false, 100)
+	status := []types.ProposalStatus{types.StatusDepositPeriod, types.StatusVotingPeriod}
+
+	addr1 := sdk.AccAddress("foo")
+
+	for _, s := range status {
+		for i := 0; i < 50; i++ {
+			p := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p.Status = s
+
+			if i%2 == 0 {
+				d := types.NewDeposit(proposalID, addr1, nil)
+				v := types.NewVote(proposalID, addr1, types.OptionYes)
+				keeper.SetDeposit(ctx, d)
+				keeper.SetVote(ctx, v)
+			}
+
+			keeper.SetProposal(ctx, p)
+			proposalID++
+		}
+	}
+
+	testCases := []struct {
+		params             types.QueryProposalsParams
+		expectedNumResults int
+	}{
+		{types.NewQueryProposalsParams(1, 50, types.StatusNil, nil, nil), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, nil, nil), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
+		{types.NewQueryProposalsParams(1, 25, types.StatusNil, nil, nil), 25},
+		{types.NewQueryProposalsParams(2, 25, types.StatusNil, nil, nil), 25},
+		{types.NewQueryProposalsParams(1, 50, types.StatusRejected, nil, nil), 0},
+		{types.NewQueryProposalsParams(1, 50, types.StatusNil, addr1, nil), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusNil, nil, addr1), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusNil, addr1, addr1), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, addr1, addr1), 25},
+		{types.NewQueryProposalsParams(1, 50, types.StatusDepositPeriod, nil, nil), 50},
+		{types.NewQueryProposalsParams(1, 50, types.StatusVotingPeriod, nil, nil), 50},
+	}
+
+	for _, tc := range testCases {
+		proposals := keeper.GetProposalsFiltered(ctx, tc.params)
+		require.Len(t, proposals, tc.expectedNumResults)
+
+		for _, p := range proposals {
+			if len(tc.params.ProposalStatus.String()) != 0 {
+				require.Equal(t, tc.params.ProposalStatus, p.Status)
+			}
+		}
+	}
+}

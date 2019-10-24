@@ -22,12 +22,10 @@ import (
 )
 
 const (
-	// Check a transaction
-	runTxModeCheck runTxMode = iota
-	// Simulate a transaction
-	runTxModeSimulate runTxMode = iota
-	// Deliver a transaction
-	runTxModeDeliver runTxMode = iota
+	runTxModeCheck    runTxMode = iota // Check a transaction
+	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                  // Simulate a transaction
+	runTxModeDeliver                   // Deliver a transaction
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
@@ -53,7 +51,7 @@ type (
 )
 
 // BaseApp reflects the ABCI application implementation.
-type BaseApp struct {
+type BaseApp struct { // nolint: maligned
 	// initialized on creation
 	logger      log.Logger
 	name        string               // application name from abci.Info
@@ -358,7 +356,7 @@ func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() sdk.Router {
 	if app.sealed {
-		// We cannot return a router when the app is sealed because we can't have
+		// We cannot return a Router when the app is sealed because we can't have
 		// any routes modified which would cause unexpected routing behavior.
 		panic("Router() on sealed BaseApp")
 	}
@@ -467,25 +465,28 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 // Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		return app.checkState
+	if mode == runTxModeDeliver {
+		return app.deliverState
 	}
 
-	return app.deliverState
+	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	ctx = app.getState(mode).ctx.
+func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
+	ctx := app.getState(mode).ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos).
 		WithConsensusParams(app.consensusParams)
 
+	if mode == runTxModeReCheck {
+		ctx = ctx.WithIsReCheckTx(true)
+	}
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
 
-	return
+	return ctx
 }
 
 // cacheTxContext returns a new context based off of the provided context with
@@ -585,7 +586,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
-		newCtx, result, abort := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
 			// replaced by the ante handler. We want the original multistore, not one
@@ -597,10 +598,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
-		gasWanted = result.GasWanted
+		// GasMeter expected to be set in AnteHandler
+		gasWanted = ctx.GasMeter().Limit()
 
-		if abort {
-			return result
+		if err != nil {
+			res := sdk.ResultFromError(err)
+			res.GasWanted = gasWanted
+			res.GasUsed = ctx.GasMeter().GasConsumed()
+			return res
 		}
 
 		msCache.Write()
@@ -627,7 +632,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 }
 
 // runMsgs iterates through all the messages and executes them.
-// nolint: gocyclo
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 
@@ -645,13 +649,13 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("unrecognized Msg type: " + msgRoute).Result()
+			return sdk.ErrUnknownRequest("unrecognized message type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result
 
-		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
+		// skip actual execution for CheckTx and ReCheckTx mode
+		if mode != runTxModeCheck && mode != runTxModeReCheck {
 			msgResult = handler(ctx, msg)
 		}
 
@@ -659,20 +663,25 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// each result.
 		data = append(data, msgResult.Data...)
 
+		msgEvents := msgResult.Events
+
 		// append events from the message's execution and a message action event
-		events = events.AppendEvent(sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())))
-		events = events.AppendEvents(msgResult.Events)
+		msgEvents = msgEvents.AppendEvent(
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+		)
+
+		events = events.AppendEvents(msgEvents)
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, events))
+			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, msgResult.Log, msgEvents))
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, events))
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, msgResult.Log, msgEvents))
 	}
 
 	result = sdk.Result{

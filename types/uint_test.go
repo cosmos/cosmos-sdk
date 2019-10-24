@@ -208,6 +208,7 @@ func TestSafeSub(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		if tc.panic {
 			require.Panics(t, func() { tc.x.Sub(tc.y) })
 			continue
@@ -236,6 +237,7 @@ func TestParseUint(t *testing.T) {
 		{"zero", args{"0"}, ZeroUint(), false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ParseUint(tt.args.s)
 			if tt.wantErr {

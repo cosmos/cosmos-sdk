@@ -3,8 +3,8 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/exported"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
 )
 
 type Keeper struct {

@@ -1,5 +1,5 @@
 /*
-Package subkeys provides functionality for delegating sub-permissions
+Package fee_grant provides functionality for delegating sub-permissions
 from one account (key) to another account (key).
 
 The first implementation allows the delegation for the payment of transaction fees.
@@ -26,4 +26,4 @@ To allow handling txs from empty accounts (with fees paid from an existing accou
 we have to re-order the decorators as well. You can see an example in
 `x/delegate_fees/internal/ante/fee_test.go:newAnteHandler()`
 */
-package subkeys
+package fee_grant

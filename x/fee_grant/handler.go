@@ -1,4 +1,4 @@
-package subkeys
+package fee_grant
 
 import (
 	"fmt"

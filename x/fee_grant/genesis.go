@@ -1,4 +1,4 @@
-package subkeys
+package fee_grant
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 

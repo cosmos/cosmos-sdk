@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 

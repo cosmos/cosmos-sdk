@@ -10,8 +10,8 @@ import (
 	authAnte "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

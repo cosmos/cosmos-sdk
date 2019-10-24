@@ -1,4 +1,4 @@
-package subkeys
+package fee_grant
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	tx "github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
+	tx "github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
 )
 
 var (

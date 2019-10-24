@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/subkeys/exported"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 )
 
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens

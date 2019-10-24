@@ -65,44 +65,46 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	return &grant, nil
 }
 
-// GetAllGranteeFeeAllowances returns a list of all the grants from anyone to the given grantee.
-func (k Keeper) GetAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress) ([]types.FeeAllowanceGrant, error) {
+// IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
+// Callback to get all data, returns true to stop, false to keep reading
+func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(types.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
-	var grants []types.FeeAllowanceGrant
-
 	prefix := types.FeeAllowancePrefixByGrantee(grantee)
 	iter := sdk.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
+
+	stop := false
+	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var grant types.FeeAllowanceGrant
 		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		grants = append(grants, grant)
+		stop = cb(grant)
 	}
-	return grants, nil
+	return nil
 }
 
-// GetAllFeeAllowances returns a list of all the grants in the store.
-// This is very expensive and only designed for export genesis
-func (k Keeper) GetAllFeeAllowances(ctx sdk.Context) ([]types.FeeAllowanceGrant, error) {
+// IterateAllFeeAllowances iterates over all the grants in the store.
+// Callback to get all data, returns true to stop, false to keep reading
+// Calling this without pagination is very expensive and only designed for export genesis
+func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowanceGrant) bool) error {
 	store := ctx.KVStore(k.storeKey)
-	var grants []types.FeeAllowanceGrant
-
 	iter := sdk.KVStorePrefixIterator(store, types.FeeAllowanceKeyPrefix)
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
+
+	stop := false
+	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var grant types.FeeAllowanceGrant
 		err := k.cdc.UnmarshalBinaryBare(bz, &grant)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		grants = append(grants, grant)
+		stop = cb(grant)
 	}
-	return grants, nil
+	return nil
 }
 
 // UseDelegatedFees will try to pay the given fee from the granter's account as requested by the grantee

@@ -35,5 +35,12 @@ func ExportGenesis(ctx sdk.Context, k Keeper) (GenesisState, error) {
 	// expiry of 1000. It would need a new method on the FeeAllowance interface.
 	//
 	// Currently, we handle expirations naively
-	return k.GetAllFeeAllowances(ctx)
+
+	var grants []FeeAllowanceGrant
+	err := k.IterateAllFeeAllowances(ctx, func(grant FeeAllowanceGrant) bool {
+		// TODO: modify each one
+		grants = append(grants, grant)
+		return false
+	})
+	return grants, err
 }

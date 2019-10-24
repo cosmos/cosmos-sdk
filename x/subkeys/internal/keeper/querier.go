@@ -34,15 +34,19 @@ func queryGetFeeAllowances(ctx sdk.Context, args []string, keeper Keeper) ([]byt
 		return nil, sdkerrors.Wrapf(err, "invalid address")
 	}
 
-	fees, err := keeper.GetAllGranteeFeeAllowances(ctx, granteeAddr)
+	var grants []types.FeeAllowanceGrant
+	err = keeper.IterateAllGranteeFeeAllowances(ctx, granteeAddr, func(grant types.FeeAllowanceGrant) bool {
+		grants = append(grants, grant)
+		return false
+	})
 	if err != nil {
-		return nil, sdk.ConvertError(err)
+		return nil, err
 	}
-	if fees == nil {
+	if grants == nil {
 		return []byte("[]"), nil
 	}
 
-	bz, err := keeper.cdc.MarshalJSON(fees)
+	bz, err := keeper.cdc.MarshalJSON(grants)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "could not marshal query result to JSON")
 	}

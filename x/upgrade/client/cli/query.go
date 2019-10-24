@@ -15,7 +15,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "plan",
 		Short: "get upgrade plan (if one exists)",
-		Long:  "This gets the currently scheduled upgrade plan",
+		Long:  "Gets the currently scheduled upgrade plan, if one exists",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

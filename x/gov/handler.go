@@ -48,15 +48,13 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		),
 	)
 
-	submitAttrs := []sdk.Attribute{sdk.NewAttribute(types.AttributeKeyProposalType, msg.Content.ProposalType())}
+	submitEvent := sdk.NewEvent(types.EventTypeSubmitProposal, sdk.NewAttribute(types.AttributeKeyProposalType, msg.Content.ProposalType()))
 	if votingStarted {
-		submitAttrs = append(submitAttrs,
+		submitEvent.AppendAttributes(
 			sdk.NewAttribute(types.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.ProposalID)),
 		)
 	}
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeSubmitProposal, submitAttrs...),
-	)
+	ctx.EventManager().EmitEvent(submitEvent)
 
 	return sdk.Result{
 		Data:   GetProposalIDBytes(proposal.ProposalID),

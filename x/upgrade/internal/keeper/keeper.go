@@ -36,7 +36,7 @@ func (k *Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHand
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
-// It there is another Plan already scheduled, it will overwrite it
+// If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
 func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	err := plan.ValidateBasic()

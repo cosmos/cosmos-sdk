@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -48,10 +47,8 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 		return nil, err
 	}
 
-	if height != 0 {
-		if len(timeStr) != 0 {
-			return nil, fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
-		}
+	if height != 0 && len(timeStr) != 0 {
+		return nil, fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
 	}
 
 	var upgradeTime time.Time
@@ -126,11 +123,7 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit a software upgrade proposal",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Cancel a software upgrade along with an initial deposit.
-`,
-			),
-		),
+		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

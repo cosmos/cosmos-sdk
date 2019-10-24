@@ -12,20 +12,20 @@ General Workflow
 Let's assume we are running v0.34.0 of our software in our testnet and want to upgrade to v0.36.0.
 How would this look in practice? First of all, we want to finalize the v0.36.0 release candidate
 and there install a specially named upgrade handler (eg. "testnet-v2" or even "v0.36.0"). Once
-this code is public, we can have a governance vote to approve this upgrade at some future blocktime
-or blockheight (known as an upgrade.Plan). The v0.34.0 code will not know of this handler, but will
-continue to run until block 200000, when the plan kicks in at BeginBlock. It will check for existence
-of the handler, and finding it missing, know that it is running the obsolete software, and kill itself.
-Shortly before killing itself, it will check if there is a script in `<home_dir>/config/do-upgrade`
-and run it if present.
+this code is public, we can have a governance vote to approve this upgrade at some future block time
+or block height (e.g. 200000). This is known as an upgrade.Plan. The v0.34.0 code will not know of this
+handler, but will continue to run until block 200000, when the plan kicks in at BeginBlock. It will check
+for existence of the handler, and finding it missing, know that it is running the obsolete software,
+and gracefully exit.
 
-Generally the gaiad/regend/etc binary will restart on crash, but then will execute this BeginBlocker
-again and crash, causing a restart loop. Either the operator can manually install the new software,
-or you can make use of the `do-upgrade` script to eg. dump state to json (backup), download new binary
-(from a location I trust - script written by operator), install binary.
+Generally the application binary will restart on exit, but then will execute this BeginBlocker
+again and exit, causing a restart loop. Either the operator can manually install the new software,
+or you can make use of an external watcher daemon to possibly download and then switch binaries,
+also potentially doing a backup. An example of such a daemon is https://github.com/regen-network/cosmosd/
+described below under "Automation".
 
 When the binary restarts with the upgraded version (here v0.36.0), it will detect we have registered the
-"testnet-v2" upgrade handler in the code, and realize it is the new version. It then will run the script
+"testnet-v2" upgrade handler in the code, and realize it is the new version. It then will run the upgrade handler
 and *migrate the database in-place*. Once finished, it marks the upgrade as done, and continues processing
 the rest of the block as normal. Once 2/3 of the voting power has upgraded, the blockchain will immediately
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
@@ -64,7 +64,7 @@ that looks like:
 	UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
 where Name are Info are the values of the respective fields on the upgrade Plan.
 
-To perform the actual halt of the blockchain, the upgrade keeper simply panic's which prevents the ABCI state machine
+To perform the actual halt of the blockchain, the upgrade keeper simply panics which prevents the ABCI state machine
 from proceeding but doesn't actually exit the process. Exiting the process can cause issues for other nodes that start
 to lose connectivity with the exiting nodes, thus this module prefers to just halt but not exit.
 
@@ -76,5 +76,6 @@ to swap binaries as needed. You can pass in information into Plan.Info according
 specified here https://github.com/regen-network/cosmosd/blob/master/README.md#auto-download .
 This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
 As noted there, this is intended more for full nodes than validators.
+
 */
 package upgrade

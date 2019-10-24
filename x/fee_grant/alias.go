@@ -34,7 +34,7 @@ var (
 	BlockPeriod                 = types.BlockPeriod
 	FeeAllowanceKey             = types.FeeAllowanceKey
 	FeeAllowancePrefixByGrantee = types.FeeAllowancePrefixByGrantee
-	NewMsgDelegateFeeAllowance  = types.NewMsgDelegateFeeAllowance
+	NewMsgGrantFeeAllowance     = types.NewMsgGrantFeeAllowance
 	NewMsgRevokeFeeAllowance    = types.NewMsgRevokeFeeAllowance
 	NewKeeper                   = keeper.NewKeeper
 	NewQuerier                  = keeper.NewQuerier
@@ -45,11 +45,11 @@ var (
 )
 
 type (
-	BasicFeeAllowance       = types.BasicFeeAllowance
-	ExpiresAt               = types.ExpiresAt
-	Period                  = types.Period
-	FeeAllowanceGrant       = types.FeeAllowanceGrant
-	MsgDelegateFeeAllowance = types.MsgDelegateFeeAllowance
-	MsgRevokeFeeAllowance   = types.MsgRevokeFeeAllowance
-	Keeper                  = keeper.Keeper
+	BasicFeeAllowance     = types.BasicFeeAllowance
+	ExpiresAt             = types.ExpiresAt
+	Period                = types.Period
+	FeeAllowanceGrant     = types.FeeAllowanceGrant
+	MsgGrantFeeAllowance  = types.MsgGrantFeeAllowance
+	MsgRevokeFeeAllowance = types.MsgRevokeFeeAllowance
+	Keeper                = keeper.Keeper
 )

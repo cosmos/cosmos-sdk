@@ -5,28 +5,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 )
 
-// MsgDelegateFeeAllowance adds permission for Grantee to spend up to Allowance
+// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
 // If there was already an existing grant, this overwrites it.
-type MsgDelegateFeeAllowance struct {
+type MsgGrantFeeAllowance struct {
 	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
 	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`
 	Allowance exported.FeeAllowance `json:"allowance" yaml:"allowance"`
 }
 
-func NewMsgDelegateFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance exported.FeeAllowance) MsgDelegateFeeAllowance {
-	return MsgDelegateFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
+func NewMsgGrantFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress, allowance exported.FeeAllowance) MsgGrantFeeAllowance {
+	return MsgGrantFeeAllowance{Granter: granter, Grantee: grantee, Allowance: allowance}
 }
 
-func (msg MsgDelegateFeeAllowance) Route() string {
+func (msg MsgGrantFeeAllowance) Route() string {
 	return RouterKey
 }
 
-func (msg MsgDelegateFeeAllowance) Type() string {
+func (msg MsgGrantFeeAllowance) Type() string {
 	return "delegate-fee-allowance"
 }
 
-func (msg MsgDelegateFeeAllowance) ValidateBasic() sdk.Error {
+func (msg MsgGrantFeeAllowance) ValidateBasic() sdk.Error {
 	if msg.Granter.Empty() {
 		return sdk.ErrInvalidAddress("missing granter address")
 	}
@@ -36,11 +36,11 @@ func (msg MsgDelegateFeeAllowance) ValidateBasic() sdk.Error {
 	return sdk.ConvertError(msg.Allowance.ValidateBasic())
 }
 
-func (msg MsgDelegateFeeAllowance) GetSignBytes() []byte {
+func (msg MsgGrantFeeAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
-func (msg MsgDelegateFeeAllowance) GetSigners() []sdk.AccAddress {
+func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Granter}
 }
 

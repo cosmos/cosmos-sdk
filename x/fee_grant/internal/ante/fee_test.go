@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
 )
 
-// newAnteHandler is just like auth.NewAnteHandler, except we use the DeductDelegatedFeeDecorator
+// newAnteHandler is just like auth.NewAnteHandler, except we use the DeductGrantedFeeDecorator
 // in order to allow payment of fees via a grant.
 //
 // This is used for our full-stack tests
@@ -30,9 +30,9 @@ func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKe
 		authante.NewValidateBasicDecorator(),
 		authante.NewValidateMemoDecorator(ak),
 		authante.NewConsumeGasForTxSizeDecorator(ak),
-		// DeductDelegatedFeeDecorator will create an empty account if we sign with no tokens but valid validation
+		// DeductGrantedFeeDecorator will create an empty account if we sign with no tokens but valid validation
 		// This must be before SetPubKey, ValidateSigCount, SigVerification, which error if account doesn't exist yet
-		ante.NewDeductDelegatedFeeDecorator(ak, supplyKeeper, dk),
+		ante.NewDeductGrantedFeeDecorator(ak, supplyKeeper, dk),
 		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewValidateSigCountDecorator(ak),
 		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
@@ -46,7 +46,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app, ctx := createTestApp(true)
 
 	// this just tests our handler
-	dfd := ante.NewDeductDelegatedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper)
+	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper)
 	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
@@ -69,7 +69,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
 	// Set grant from addr2 to addr3 (plenty to pay)
-	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
@@ -78,7 +78,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	})
 
 	// Set low grant from addr2 to addr4 (keeper will reject)
-	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr4,
 		Allowance: &types.BasicFeeAllowance{
@@ -87,7 +87,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	})
 
 	// Set grant from addr1 to addr4 (cannot cover this )
-	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.FeeGrantKeeper.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
@@ -244,7 +244,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			// msg and signatures
-			fee := tx.NewDelegatedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
+			fee := tx.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
 			msgs := []sdk.Msg{sdk.NewTestMsg(tc.signer)}
 			privs, accNums, seqs := []crypto.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 

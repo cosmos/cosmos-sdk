@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	_ DelegatedFeeTx = (*tx.DelegatedTx)(nil) // assert StdTx implements DelegatedFeeTx
+	_ GrantedFeeTx = (*tx.FeeGrantTx)(nil) // assert StdTx implements GrantedFeeTx
 )
 
-// DelegatedFeeTx defines the interface to be implemented by Tx to use the DelegatedFeeDecorator
-type DelegatedFeeTx interface {
+// GrantedFeeTx defines the interface to be implemented by Tx to use the GrantedFeeDecorator
+type GrantedFeeTx interface {
 	sdk.Tx
 	GetGas() uint64
 	GetFee() sdk.Coins
@@ -29,28 +29,28 @@ type DelegatedFeeTx interface {
 	MainSigner() sdk.AccAddress
 }
 
-// DeductDelegatedFeeDecorator deducts fees from the first signer of the tx
+// DeductGrantedFeeDecorator deducts fees from the first signer of the tx
 // If the first signer does not have the funds to pay for the fees, return with InsufficientFunds error
 // Call next AnteHandler if fees successfully deducted
-// CONTRACT: Tx must implement DelegatedFeeTx interface to use DeductDelegatedFeeDecorator
-type DeductDelegatedFeeDecorator struct {
+// CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
+type DeductGrantedFeeDecorator struct {
 	ak authKeeper.AccountKeeper
 	dk keeper.Keeper
 	sk authTypes.SupplyKeeper
 }
 
-func NewDeductDelegatedFeeDecorator(ak authKeeper.AccountKeeper, sk authTypes.SupplyKeeper, dk keeper.Keeper) DeductDelegatedFeeDecorator {
-	return DeductDelegatedFeeDecorator{
+func NewDeductGrantedFeeDecorator(ak authKeeper.AccountKeeper, sk authTypes.SupplyKeeper, dk keeper.Keeper) DeductGrantedFeeDecorator {
+	return DeductGrantedFeeDecorator{
 		ak: ak,
 		dk: dk,
 		sk: sk,
 	}
 }
 
-func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-	feeTx, ok := tx.(DelegatedFeeTx)
+func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	feeTx, ok := tx.(GrantedFeeTx)
 	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a DelegatedFeeTx")
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a GrantedFeeTx")
 	}
 
 	// sanity check from DeductFeeDecorator
@@ -64,7 +64,7 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	// ensure the grant is allowed, if we request a different fee payer
 	if !txSigner.Equals(feePayer) {
-		allowed := d.dk.UseDelegatedFees(ctx, feePayer, txSigner, fee)
+		allowed := d.dk.UseGrantedFees(ctx, feePayer, txSigner, fee)
 		if !allowed {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", txSigner, feePayer)
 		}

@@ -17,8 +17,8 @@ func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
 	return Keeper{cdc: cdc, storeKey: storeKey}
 }
 
-// DelegateFeeAllowance creates a new grant
-func (k Keeper) DelegateFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
+// GrantFeeAllowance creates a new grant
+func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz := k.cdc.MustMarshalBinaryBare(grant)
@@ -102,8 +102,8 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 	return nil
 }
 
-// UseDelegatedFees will try to pay the given fee from the granter's account as requested by the grantee
-func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) bool {
+// UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
+func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) bool {
 	grant, err := k.GetFeeGrant(ctx, granter, grantee)
 	if err != nil {
 		panic(err)
@@ -122,6 +122,6 @@ func (k Keeper) UseDelegatedFees(ctx sdk.Context, granter, grantee sdk.AccAddres
 	}
 
 	// if we accepted, store the updated state of the allowance
-	k.DelegateFeeAllowance(ctx, grant)
+	k.GrantFeeAllowance(ctx, grant)
 	return true
 }

@@ -8,7 +8,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee DelegatedFee) sdk.Tx {
+func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee GrantedFee) sdk.Tx {
 	sigs := make([]authtypes.StdSignature, len(privs))
 	for i, priv := range privs {
 		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
@@ -21,6 +21,6 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		sigs[i] = authtypes.StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 
-	tx := NewDelegatedTx(msgs, fee, sigs, "")
+	tx := NewFeeGrantTx(msgs, fee, sigs, "")
 	return tx
 }

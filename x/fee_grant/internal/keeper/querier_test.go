@@ -40,8 +40,8 @@ func TestQuery(t *testing.T) {
 	}
 
 	// let's set up some initial state here
-	k.DelegateFeeAllowance(ctx, grant1)
-	k.DelegateFeeAllowance(ctx, grant2)
+	k.GrantFeeAllowance(ctx, grant1)
+	k.GrantFeeAllowance(ctx, grant2)
 
 	// now try some queries
 	cases := map[string]struct {

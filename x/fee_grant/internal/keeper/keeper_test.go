@@ -77,29 +77,29 @@ func TestKeeperCrud(t *testing.T) {
 	}
 
 	// let's set up some initial state here
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr2, Allowance: &basic,
 	})
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr3, Allowance: &basic2,
 	})
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr3, Allowance: &basic,
 	})
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr4, Allowance: &basic,
 	})
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr4, Grantee: addr, Allowance: &basic2,
 	})
 
 	// remove some, overwrite other
 	k.RevokeFeeAllowance(ctx, addr, addr2)
 	k.RevokeFeeAllowance(ctx, addr, addr3)
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr3, Allowance: &basic,
 	})
-	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr3, Allowance: &basic2,
 	})
 
@@ -180,7 +180,7 @@ func TestKeeperCrud(t *testing.T) {
 	}
 }
 
-func TestUseDelegatedFee(t *testing.T) {
+func TestUseGrantedFee(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx
 	k := input.dk
@@ -248,14 +248,14 @@ func TestUseDelegatedFee(t *testing.T) {
 			// let's set up some initial state here
 			// addr -> addr2 (future)
 			// addr -> addr3 (expired)
-			k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+			k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 				Granter: addr, Grantee: addr2, Allowance: &future,
 			})
-			k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+			k.GrantFeeAllowance(ctx, types.FeeAllowanceGrant{
 				Granter: addr, Grantee: addr3, Allowance: &expired,
 			})
 
-			allowed := k.UseDelegatedFees(ctx, tc.granter, tc.grantee, tc.fee)
+			allowed := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
 			require.Equal(t, tc.allowed, allowed)
 
 			loaded, err := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)

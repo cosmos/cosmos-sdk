@@ -14,25 +14,25 @@ import (
 )
 
 var (
-	_ sdk.Tx = DelegatedTx{}
+	_ sdk.Tx = FeeGrantTx{}
 
 	maxGasWanted = uint64((1 << 63) - 1)
 )
 
-// DelegatedTx wraps a Msg with Fee and Signatures,
+// FeeGrantTx wraps a Msg with Fee and Signatures,
 // adding the ability to delegate the fee payment
 // NOTE: the first signature responsible for paying fees, either directly,
 // or must be authorized to spend from the provided Fee.FeeAccount
-type DelegatedTx struct {
+type FeeGrantTx struct {
 	Msgs       []sdk.Msg                `json:"msg" yaml:"msg"`
-	Fee        DelegatedFee             `json:"fee" yaml:"fee"`
+	Fee        GrantedFee               `json:"fee" yaml:"fee"`
 	Signatures []authtypes.StdSignature `json:"signatures" yaml:"signatures"`
 	Memo       string                   `json:"memo" yaml:"memo"`
 	FeeAccount sdk.AccAddress           `json:"fee_account" yaml:"fee_account"`
 }
 
-func NewDelegatedTx(msgs []sdk.Msg, fee DelegatedFee, sigs []authtypes.StdSignature, memo string) DelegatedTx {
-	return DelegatedTx{
+func NewFeeGrantTx(msgs []sdk.Msg, fee GrantedFee, sigs []authtypes.StdSignature, memo string) FeeGrantTx {
+	return FeeGrantTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: sigs,
@@ -41,11 +41,11 @@ func NewDelegatedTx(msgs []sdk.Msg, fee DelegatedFee, sigs []authtypes.StdSignat
 }
 
 // GetMsgs returns the all the transaction's messages.
-func (tx DelegatedTx) GetMsgs() []sdk.Msg { return tx.Msgs }
+func (tx FeeGrantTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
-func (tx DelegatedTx) ValidateBasic() sdk.Error {
+func (tx FeeGrantTx) ValidateBasic() sdk.Error {
 	stdSigs := tx.GetSignatures()
 
 	if tx.Fee.Gas > maxGasWanted {
@@ -84,7 +84,7 @@ func CountSubKeys(pub crypto.PubKey) int {
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.
-func (tx DelegatedTx) GetSigners() []sdk.AccAddress {
+func (tx FeeGrantTx) GetSigners() []sdk.AccAddress {
 	seen := map[string]bool{}
 	var signers []sdk.AccAddress
 	for _, msg := range tx.GetMsgs() {
@@ -99,7 +99,7 @@ func (tx DelegatedTx) GetSigners() []sdk.AccAddress {
 }
 
 // GetMemo returns the memo
-func (tx DelegatedTx) GetMemo() string { return tx.Memo }
+func (tx FeeGrantTx) GetMemo() string { return tx.Memo }
 
 // GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
@@ -108,7 +108,7 @@ func (tx DelegatedTx) GetMemo() string { return tx.Memo }
 // CONTRACT: If the signature is missing (ie the Msg is
 // invalid), then the corresponding signature is
 // .Empty().
-func (tx DelegatedTx) GetSignatures() [][]byte {
+func (tx FeeGrantTx) GetSignatures() [][]byte {
 	sigs := make([][]byte, len(tx.Signatures))
 	for i, stdSig := range tx.Signatures {
 		sigs[i] = stdSig.Signature
@@ -118,7 +118,7 @@ func (tx DelegatedTx) GetSignatures() [][]byte {
 
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
-func (tx DelegatedTx) GetPubKeys() []crypto.PubKey {
+func (tx FeeGrantTx) GetPubKeys() []crypto.PubKey {
 	pks := make([]crypto.PubKey, len(tx.Signatures))
 	for i, stdSig := range tx.Signatures {
 		pks[i] = stdSig.PubKey
@@ -127,7 +127,7 @@ func (tx DelegatedTx) GetPubKeys() []crypto.PubKey {
 }
 
 // GetSignBytes returns the signBytes of the tx for a given signer
-func (tx DelegatedTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
+func (tx FeeGrantTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte {
 	genesis := ctx.BlockHeight() == 0
 	chainID := ctx.ChainID()
 	var accNum uint64
@@ -137,15 +137,15 @@ func (tx DelegatedTx) GetSignBytes(ctx sdk.Context, acc exported.Account) []byte
 	return StdSignBytes(chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo)
 }
 
-// GetGas returns the Gas in DelegatedFee
-func (tx DelegatedTx) GetGas() uint64 { return tx.Fee.Gas }
+// GetGas returns the Gas in GrantedFee
+func (tx FeeGrantTx) GetGas() uint64 { return tx.Fee.Gas }
 
-// GetFee returns the FeeAmount in DelegatedFee
-func (tx DelegatedTx) GetFee() sdk.Coins { return tx.Fee.Amount }
+// GetFee returns the FeeAmount in GrantedFee
+func (tx FeeGrantTx) GetFee() sdk.Coins { return tx.Fee.Amount }
 
 // FeePayer returns the address that is responsible for paying fee
-// This can be explicily set in DelegatedFee, or defaults to MainSigner
-func (tx DelegatedTx) FeePayer() sdk.AccAddress {
+// This can be explicily set in GrantedFee, or defaults to MainSigner
+func (tx FeeGrantTx) FeePayer() sdk.AccAddress {
 	if len(tx.Fee.FeeAccount) != 0 {
 		return tx.Fee.FeeAccount
 	}
@@ -154,25 +154,25 @@ func (tx DelegatedTx) FeePayer() sdk.AccAddress {
 
 // MainSigner returns the first signer of the tx, by default this
 // account is responsible for fees, if not explicitly set.
-func (tx DelegatedTx) MainSigner() sdk.AccAddress {
+func (tx FeeGrantTx) MainSigner() sdk.AccAddress {
 	if len(tx.GetSigners()) != 0 {
 		return tx.GetSigners()[0]
 	}
 	return sdk.AccAddress{}
 }
 
-// DelegatedFee includes the amount of coins paid in fees and the maximum
+// GrantedFee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
 // which must be above some miminum to be accepted into the mempool.
-type DelegatedFee struct {
+type GrantedFee struct {
 	Amount     sdk.Coins      `json:"amount" yaml:"amount"`
 	Gas        uint64         `json:"gas" yaml:"gas"`
 	FeeAccount sdk.AccAddress `json:"fee_account,omitempty" yaml:"fee_account"`
 }
 
-// NewDelegatedFee returns a new instance of DelegatedFee
-func NewDelegatedFee(gas uint64, amount sdk.Coins, feeAccount sdk.AccAddress) DelegatedFee {
-	return DelegatedFee{
+// NewGrantedFee returns a new instance of GrantedFee
+func NewGrantedFee(gas uint64, amount sdk.Coins, feeAccount sdk.AccAddress) GrantedFee {
+	return GrantedFee{
 		Amount:     amount,
 		Gas:        gas,
 		FeeAccount: feeAccount,
@@ -180,7 +180,7 @@ func NewDelegatedFee(gas uint64, amount sdk.Coins, feeAccount sdk.AccAddress) De
 }
 
 // Bytes for signing later
-func (fee DelegatedFee) Bytes() []byte {
+func (fee GrantedFee) Bytes() []byte {
 	// normalize. XXX
 	// this is a sign of something ugly
 	// (in the lcd_test, client side its null,
@@ -196,12 +196,12 @@ func (fee DelegatedFee) Bytes() []byte {
 	return bz
 }
 
-// GasPrices returns the gas prices for a DelegatedFee.
+// GasPrices returns the gas prices for a GrantedFee.
 //
 // NOTE: The gas prices returned are not the true gas prices that were
 // originally part of the submitted transaction because the fee is computed
 // as fee = ceil(gasWanted * gasPrices).
-func (fee DelegatedFee) GasPrices() sdk.DecCoins {
+func (fee GrantedFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoins(fee.Amount).QuoDec(sdk.NewDec(int64(fee.Gas)))
 }
 
@@ -220,7 +220,7 @@ type DelegatedSignDoc struct {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee DelegatedFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee GrantedFee, msgs []sdk.Msg, memo string) []byte {
 	cdc := codec.New()
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {

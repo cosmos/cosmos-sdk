@@ -10,9 +10,9 @@ func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
-		case MsgDelegateFeeAllowance:
+		case MsgGrantFeeAllowance:
 			grant := FeeAllowanceGrant(msg)
-			k.DelegateFeeAllowance(ctx, grant)
+			k.GrantFeeAllowance(ctx, grant)
 			return sdk.Result{}
 		case MsgRevokeFeeAllowance:
 			k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)

@@ -4,12 +4,16 @@
   "description": "## Get Started",
   "main": "index.js",
   "scripts": {
-    "serve": "./modules.sh && vuepress dev",
-    "build": "./modules.sh && vuepress build"
+    "preserve": "./pre.sh",
+    "serve": "trap 'exit 0' SIGINT; vuepress dev",
+    "postserve": "./post.sh",
+    "prebuild": "./pre.sh",
+    "build": "trap 'exit 0' SIGINT; vuepress build",
+    "postbuild": "./post.sh"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.4"
+    "vuepress-theme-cosmos": "^1.0.35"
   }
 }

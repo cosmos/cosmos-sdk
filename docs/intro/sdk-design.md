@@ -4,16 +4,16 @@ order: 4
 
 # Cosmos SDK design overview
 
-The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the SDK is a boilerplate implementation of the ABCI in Golang. It comes with a `multistore` to persist data and a `router` to handle transactions. 
+The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the SDK is a boilerplate implementation of the ABCI in Golang. It comes with a `multistore` to persist data and a `router` to handle transactions.
 
 Here is a simplified view of how transactions are handled by an application built on top of the Cosmos SDK when transferred from Tendermint via `DeliverTx`:
 
-1. Decode `transactions` received from the Tendermint consensus engine (remember that Tendermint only deals with `[]bytes`). 
+1. Decode `transactions` received from the Tendermint consensus engine (remember that Tendermint only deals with `[]bytes`).
 2. Extract `messages` from `transactions` and do basic sanity checks.
-3. Route each message to the appropriate module so that it can be processed. 
+3. Route each message to the appropriate module so that it can be processed.
 4. Commit state changes.
 
-The application also enables you to generate transactions, encode them and pass them to the underlying Tendermint engine to broadcast them. 
+The application also enables you to generate transactions, encode them and pass them to the underlying Tendermint engine to broadcast them.
 
 ## `baseapp`
 
@@ -25,7 +25,7 @@ For more on `baseapp`, please click [here](../concepts/baseapp.md).
 
 ## Multistore
 
- The Cosmos SDK provides a multistore for persisting state. The multistore allows developers to declare any number of [`KVStores`](https://github.com/blocklayerhq/chainkit). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
+The Cosmos SDK provides a multistore for persisting state. The multistore allows developers to declare any number of [`KVStores`](https://github.com/blocklayerhq/chainkit). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
 
 The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../concepts/store.md)
 
@@ -38,9 +38,9 @@ Here is a simplified view of how a transaction is processed by the application o
 ```
                                       +
                                       |
-                                      |  Transaction relayed from the full-node's Tendermint engine 
+                                      |  Transaction relayed from the full-node's Tendermint engine
                                       |  to the node's application via DeliverTx
-                                      |  
+                                      |
                                       |
                                       |
                 +---------------------v--------------------------+
@@ -80,7 +80,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                        v
 ```
 
-Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* `messages` are extracted from `transactions` using `baseapp`). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](../coore/ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called `keepers` that can be passed to other modules to grant a pre-defined set of capabilities. 
+Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (_Note:_ `messages` are extracted from `transactions` using `baseapp`). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](../coore/ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called `keepers` that can be passed to other modules to grant a pre-defined set of capabilities.
 
 SDK modules are defined in the `x/` folder of the SDK. Some core modules include:
 
@@ -88,7 +88,6 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 - `x/bank`: Used to enable tokens and token transfers.
 - `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 
-In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
-
+In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html).
 
 ### Next, learn more about the security model of the Cosmos SDK, [ocap](./ocap.md)

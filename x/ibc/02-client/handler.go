@@ -2,11 +2,18 @@ package client
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
-	_, err := k.CreateClient(ctx, msg.ClientID, msg.ClientType, msg.ConsensusState)
+	clientType, err := exported.ClientTypeFromString(msg.ClientType)
+	if err != nil {
+		return sdk.ResultFromError(ErrInvalidClientType(DefaultCodespace, err.Error()))
+	}
+
+	// TODO: should we create an event with the new client state id ?
+	_, err = k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}

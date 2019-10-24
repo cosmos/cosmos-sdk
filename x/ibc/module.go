@@ -106,8 +106,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the staking module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	// return NewQuerier(am.keeper
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns

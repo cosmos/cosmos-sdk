@@ -1,8 +1,8 @@
 package types
 
-// ClientState is a type that represents the state of a client.
+// State is a type that represents the state of a client.
 // Any actor holding the Stage can access on and modify that client information.
-type ClientState struct {
+type State struct {
 	// Client ID
 	id string
 	// Boolean that states if the client is frozen when a misbehaviour proof is
@@ -11,14 +11,14 @@ type ClientState struct {
 }
 
 // NewClientState creates a new ClientState instance
-func NewClientState(id string) ClientState {
-	return ClientState{
+func NewClientState(id string) State {
+	return State{
 		id:     id,
 		Frozen: false,
 	}
 }
 
 // ID returns the client identifier
-func (cs ClientState) ID() string {
-	return cs.id
+func (s State) ID() string {
+	return s.id
 }

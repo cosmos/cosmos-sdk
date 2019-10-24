@@ -20,7 +20,8 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper = keeper.NewKeeper
+	NewKeeper  = keeper.NewKeeper
+	NewQuerier = keeper.NewQuerier
 )
 
 type (

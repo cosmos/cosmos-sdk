@@ -18,6 +18,8 @@ const (
 	CodeClientTypeNotFound     sdk.CodeType = 106
 	CodeInvalidClientType      sdk.CodeType = 107
 	CodeRootNotFound           sdk.CodeType = 108
+	CodeInvalidHeader          sdk.CodeType = 109
+	CodeInvalidEvidence        sdk.CodeType = 110
 )
 
 // ErrClientExists implements sdk.Error
@@ -51,11 +53,21 @@ func ErrClientTypeNotFound(codespace sdk.CodespaceType) sdk.Error {
 }
 
 // ErrInvalidClientType implements sdk.Error
-func ErrInvalidClientType(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidClientType, "client type mismatch")
+func ErrInvalidClientType(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidClientType, msg)
 }
 
 // ErrRootNotFound implements sdk.Error
 func ErrRootNotFound(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeRootNotFound, "commitment root not found")
+}
+
+// ErrInvalidHeader implements sdk.Error
+func ErrInvalidHeader(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidHeader, "invalid header")
+}
+
+// ErrInvalidEvidence implements sdk.Error
+func ErrInvalidEvidence(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidEvidence, "invalid evidence")
 }

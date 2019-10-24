@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -50,7 +50,7 @@ func (k Keeper) ConnOpenTry(
 	counterparty types.Counterparty, // counterpartyConnectionIdentifier, counterpartyPrefix and counterpartyClientIdentifier
 	clientID string,
 	counterpartyVersions []string,
-	proofInit commitmentexported.ProofI,
+	proofInit commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -125,7 +125,7 @@ func (k Keeper) ConnOpenAck(
 	ctx sdk.Context,
 	connectionID string,
 	version string,
-	proofTry commitmentexported.ProofI,
+	proofTry commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -141,7 +141,7 @@ func (k Keeper) ConnOpenAck(
 	if connection.State != types.INIT {
 		return types.ErrInvalidConnectionState(
 			k.codespace,
-			fmt.Sprintf("connection state is not INIT (got %s)", types.ConnectionStateToString(connection.State)),
+			fmt.Sprintf("connection state is not INIT (got %s)", connection.State.String()),
 		)
 	}
 
@@ -201,7 +201,7 @@ func (k Keeper) ConnOpenAck(
 func (k Keeper) ConnOpenConfirm(
 	ctx sdk.Context,
 	connectionID string,
-	proofAck commitmentexported.ProofI,
+	proofAck commitment.ProofI,
 	proofHeight uint64,
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
@@ -212,7 +212,7 @@ func (k Keeper) ConnOpenConfirm(
 	if connection.State != types.TRYOPEN {
 		return types.ErrInvalidConnectionState(
 			k.codespace,
-			fmt.Sprintf("connection state is not TRYOPEN (got %s)", types.ConnectionStateToString(connection.State)),
+			fmt.Sprintf("connection state is not TRYOPEN (got %s)", connection.State.String()),
 		)
 	}
 

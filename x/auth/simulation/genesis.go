@@ -30,8 +30,11 @@ func GenMaxMemoChars(r *rand.Rand) uint64 {
 }
 
 // GenTxSigLimit randomized TxSigLimit
+// make sure that sigLimit is always high
+// so that arbitrarily simulated messages from other
+// modules can still create valid transactions
 func GenTxSigLimit(r *rand.Rand) uint64 {
-	return uint64(r.Intn(7) + 1)
+	return uint64(r.Intn(7) + 5)
 }
 
 // GenTxSizeCostPerByte randomized TxSizeCostPerByte

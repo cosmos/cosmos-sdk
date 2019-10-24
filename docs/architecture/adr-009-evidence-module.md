@@ -3,10 +3,11 @@
 ## Changelog
 
 - 2019 July 31: Initial draft
+- 2019 October 24: Initial implementation
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 

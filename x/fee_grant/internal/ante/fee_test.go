@@ -20,7 +20,7 @@ import (
 )
 
 // newAnteHandler is just like auth.NewAnteHandler, except we use the DeductDelegatedFeeDecorator
-// in order to allow payment of fees via a delegation.
+// in order to allow payment of fees via a grant.
 //
 // This is used for our full-stack tests
 func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKeeper, dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer) sdk.AnteHandler {
@@ -46,11 +46,11 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app, ctx := createTestApp(true)
 
 	// this just tests our handler
-	dfd := ante.NewDeductDelegatedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.DelegationKeeper)
+	dfd := ante.NewDeductDelegatedFeeDecorator(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper)
 	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
-	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.DelegationKeeper, SigGasNoConsumer)
+	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.FeeGrantKeeper, SigGasNoConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := authtypes.KeyTestPubAddr()
@@ -68,8 +68,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	acc2.SetCoins([]sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
-	// Set delegation from addr2 to addr3 (plenty to pay)
-	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	// Set grant from addr2 to addr3 (plenty to pay)
+	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
@@ -77,8 +77,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 	})
 
-	// Set low delegation from addr2 to addr4 (delegation will reject)
-	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	// Set low grant from addr2 to addr4 (keeper will reject)
+	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr4,
 		Allowance: &types.BasicFeeAllowance{
@@ -86,8 +86,8 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		},
 	})
 
-	// Set delegation from addr1 to addr4 (cannot cover this )
-	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	// Set grant from addr1 to addr4 (cannot cover this )
+	app.FeeGrantKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
@@ -138,7 +138,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:   ourAnteHandler,
 			valid:     false,
 		},
-		"valid delegation without account (only ours)": {
+		"valid fee grant without account (only ours)": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
@@ -146,7 +146,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:    ourAnteHandler,
 			valid:      true,
 		},
-		"no delegation (only ours)": {
+		"no fee grant (only ours)": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
@@ -162,7 +162,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:    ourAnteHandler,
 			valid:      false,
 		},
-		"granter cannot cover allowed delegation (only ours)": {
+		"granter cannot cover allowed fee grant (only ours)": {
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
@@ -206,7 +206,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:   anteHandlerStack,
 			valid:     false,
 		},
-		"valid delegation without account (whole stack)": {
+		"valid fee grant without account (whole stack)": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
@@ -214,7 +214,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:    anteHandlerStack,
 			valid:      true,
 		},
-		"no delegation (whole stack)": {
+		"no fee grant (whole stack)": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
@@ -230,7 +230,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			handler:    anteHandlerStack,
 			valid:      false,
 		},
-		"granter cannot cover allowed delegation (whole stack)": {
+		"granter cannot cover allowed fee grant (whole stack)": {
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,

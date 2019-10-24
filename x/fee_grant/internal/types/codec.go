@@ -8,7 +8,7 @@ import (
 // RegisterCodec registers the account types and interface
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.FeeAllowance)(nil), nil)
-	cdc.RegisterConcrete(&BasicFeeAllowance{}, "delegation/BasicFeeAllowance", nil)
+	cdc.RegisterConcrete(&BasicFeeAllowance{}, "feegrant/BasicFeeAllowance", nil)
 }
 
 // ModuleCdc generic sealed codec to be used throughout module

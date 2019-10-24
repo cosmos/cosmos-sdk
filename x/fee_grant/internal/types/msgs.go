@@ -7,7 +7,7 @@ import (
 
 // MsgDelegateFeeAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
-// If there was already an existing delegation, this overwrites it.
+// If there was already an existing grant, this overwrites it.
 type MsgDelegateFeeAllowance struct {
 	Granter   sdk.AccAddress        `json:"granter" yaml:"granter"`
 	Grantee   sdk.AccAddress        `json:"grantee" yaml:"grantee"`

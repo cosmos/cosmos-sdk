@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/fee_grant"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -26,7 +27,6 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -92,17 +92,17 @@ type SimApp struct {
 	tkeys map[string]*sdk.TransientStoreKey
 
 	// keepers
-	AccountKeeper    auth.AccountKeeper
-	BankKeeper       bank.Keeper
-	SupplyKeeper     supply.Keeper
-	StakingKeeper    staking.Keeper
-	SlashingKeeper   slashing.Keeper
-	MintKeeper       mint.Keeper
-	DistrKeeper      distr.Keeper
-	GovKeeper        gov.Keeper
-	CrisisKeeper     crisis.Keeper
-	DelegationKeeper fee_grant.Keeper
-	ParamsKeeper     params.Keeper
+	AccountKeeper  auth.AccountKeeper
+	BankKeeper     bank.Keeper
+	SupplyKeeper   supply.Keeper
+	StakingKeeper  staking.Keeper
+	SlashingKeeper slashing.Keeper
+	MintKeeper     mint.Keeper
+	DistrKeeper    distr.Keeper
+	GovKeeper      gov.Keeper
+	CrisisKeeper   crisis.Keeper
+	FeeGrantKeeper fee_grant.Keeper
+	ParamsKeeper   params.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -159,7 +159,7 @@ func NewSimApp(
 	app.SlashingKeeper = slashing.NewKeeper(app.cdc, keys[slashing.StoreKey], &stakingKeeper,
 		slashingSubspace, slashing.DefaultCodespace)
 	app.CrisisKeeper = crisis.NewKeeper(crisisSubspace, invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName)
-	app.DelegationKeeper = fee_grant.NewKeeper(app.cdc, keys[fee_grant.StoreKey])
+	app.FeeGrantKeeper = fee_grant.NewKeeper(app.cdc, keys[fee_grant.StoreKey])
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -188,7 +188,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		fee_grant.NewAppModule(app.DelegationKeeper),
+		fee_grant.NewAppModule(app.FeeGrantKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

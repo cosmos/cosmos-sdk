@@ -62,13 +62,13 @@ func (d DeductDelegatedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	feePayer := feeTx.FeePayer()
 	txSigner := feeTx.MainSigner()
 
-	// ensure the delegation is allowed, if we request a different fee payer
+	// ensure the grant is allowed, if we request a different fee payer
 	if !txSigner.Equals(feePayer) {
 		allowed := d.dk.UseDelegatedFees(ctx, feePayer, txSigner, fee)
 		if !allowed {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", txSigner, feePayer)
 		}
-		// if there was a valid delegation, ensure that the txSigner account exists (we create it if needed)
+		// if there was a valid grant, ensure that the txSigner account exists (we create it if needed)
 		signerAcc := d.ak.GetAccount(ctx, txSigner)
 		if signerAcc == nil {
 			signerAcc = d.ak.NewAccountWithAddress(ctx, txSigner)

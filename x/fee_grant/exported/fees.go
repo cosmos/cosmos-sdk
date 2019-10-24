@@ -7,7 +7,7 @@ import (
 )
 
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,
-// and are used to enforce fee delegation limits.
+// and are used to enforce fee grant limits.
 type FeeAllowance interface {
 	// Accept can use fee payment requested as well as timestamp/height of the current block
 	// to determine whether or not to process this. This is checked in

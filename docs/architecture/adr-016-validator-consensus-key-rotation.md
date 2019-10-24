@@ -1,4 +1,4 @@
-# ADR 016: Validator consensus key rotation
+# ADR 016: Validator Consensus Key Rotation
 
 ## Changelog
 
@@ -30,12 +30,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
     - parameters can be decided by governance and stored in genesis file.
 - slash module
     - slash module can search corresponding consensus key for any height so that it can decide which consensus key is supposed to be used for given height.
-- data pruning
-    - database does not need to keep the historical key mapping changes after unbonding period past.
-    - when pruning is on, a node prunes all historical key mapping changes past unbonding period.
-- further implementation
-    - introducing "validator control key" which has authority to sign transaction for given validator.
-    - validator control key can be replaced to another key by transaction(RotateValControlKey).
+
 
 ### Special note on implementation
 

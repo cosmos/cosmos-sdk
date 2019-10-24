@@ -116,7 +116,7 @@ func StateFromString(state string) (State, error) {
 	case StateOpen:
 		return OPEN, nil
 	default:
-		return NONE, fmt.Errorf("'%s' is not a valid vote option", state)
+		return NONE, fmt.Errorf("'%s' is not a valid connection state", state)
 	}
 }
 

@@ -42,11 +42,14 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
-		return nil, errors.New("invalid packet destination channel")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.DestChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -55,7 +58,10 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
-		return nil, errors.New("invalid packet destination port")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.DestPort(), channel.Counterparty.PortID),
+		)
 	}
 
 	if proofHeight < packet.TimeoutHeight() {
@@ -63,12 +69,12 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	if nextSequenceRecv >= packet.Sequence() {
-		return nil, errors.New("packet already received")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet already received")
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
 	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
-		return nil, errors.New("packet hasn't been sent")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
 	var ok bool
@@ -85,11 +91,11 @@ func (k Keeper) TimeoutPacket(
 			types.PacketAcknowledgementPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
 		)
 	default:
-		panic("invalid channel ordering type")
+		panic(fmt.Sprintf("invalid channel ordering type %v", channel.Ordering))
 	}
 
 	if !ok {
-		return nil, errors.New("failed packet verification") // TODO: sdk.Error
+		return nil, types.ErrInvalidPacket(k.codespace, "packet verification failed")
 	}
 
 	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
@@ -123,11 +129,14 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
-		return nil, errors.New("invalid packet destination channel")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.DestChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -136,16 +145,15 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
-		return nil, errors.New("invalid packet destination port")
-	}
-
-	if packet.DestPort() != channel.Counterparty.PortID {
-		return nil, errors.New("port id doesn't match with counterparty's")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.DestPort(), channel.Counterparty.PortID),
+		)
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
 	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
-		return nil, errors.New("packet hasn't been sent")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
 	counterparty := types.NewCounterparty(packet.SourcePort(), packet.SourceChannel())

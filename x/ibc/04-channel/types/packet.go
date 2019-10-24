@@ -61,25 +61,25 @@ func (p Packet) Data() []byte { return p.data }
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(p.sourcePort); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid source port ID: %s", err.Error()))
+		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source port ID: %s", err.Error()))
 	}
 	if err := host.DefaultIdentifierValidator(p.destinationPort); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid destination port ID: %s", err.Error()))
+		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination port ID: %s", err.Error()))
 	}
 	if err := host.DefaultIdentifierValidator(p.sourceChannel); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid source channel ID: %s", err.Error()))
+		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source channel ID: %s", err.Error()))
 	}
 	if err := host.DefaultIdentifierValidator(p.destinationChannel); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid destination channel ID: %s", err.Error()))
+		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination channel ID: %s", err.Error()))
 	}
 	if p.sequence == 0 {
-		return ErrInvalidPacketSequence(DefaultCodespace)
+		return ErrInvalidPacket(DefaultCodespace, "packet sequence cannot be 0")
 	}
 	if p.timeout == 0 {
 		return ErrPacketTimeout(DefaultCodespace)
 	}
 	if len(p.data) == 0 {
-		return ErrInvalidPacketData(DefaultCodespace, "Packet data cannot be empty")
+		return ErrInvalidPacket(DefaultCodespace, "packet data cannot be empty")
 	}
 	return nil
 }

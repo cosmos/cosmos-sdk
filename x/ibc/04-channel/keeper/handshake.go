@@ -50,7 +50,7 @@ func (k Keeper) ChanOpenInit(
 	}
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid") // TODO: ics05 sdk.Error
+	// 	return errors.New("port is not valid")
 	// }
 
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
@@ -93,7 +93,7 @@ func (k Keeper) ChanOpenTry(
 	}
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid") // TODO: ics05 sdk.Error
+	// 	return errors.New("port is not valid")
 	// }
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])

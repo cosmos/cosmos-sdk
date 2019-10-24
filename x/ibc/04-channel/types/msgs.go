@@ -392,7 +392,6 @@ func (msg MsgSendPacket) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidSequence("invalid height")
 	}
 	// Check proofs != nil
-	// Check packet != nil
 	// Signer can be empty
 	return msg.Packet.ValidateBasic()
 }

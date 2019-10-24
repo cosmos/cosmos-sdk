@@ -44,34 +44,31 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, acc2)
 
 	// Set delegation from addr2 to addr3 (plenty to pay)
-	err := app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 		},
 	})
-	require.NoError(t, err)
 
 	// Set low delegation from addr2 to addr4 (delegation will reject)
-	err = app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr4,
 		Allowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 		},
 	})
-	require.NoError(t, err)
 
 	// Set delegation from addr1 to addr4 (cannot cover this )
-	err = app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	app.DelegationKeeper.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2,
 		Grantee: addr3,
 		Allowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 		},
 	})
-	require.NoError(t, err)
 
 	cases := map[string]struct {
 		signerKey  crypto.PrivKey

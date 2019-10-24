@@ -17,14 +17,10 @@ func (g GenesisState) ValidateBasic() error {
 }
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
-func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) error {
+func InitGenesis(ctx sdk.Context, k Keeper, gen GenesisState) {
 	for _, f := range gen {
-		err := k.DelegateFeeAllowance(ctx, f)
-		if err != nil {
-			return err
-		}
+		k.DelegateFeeAllowance(ctx, f)
 	}
-	return nil
 }
 
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState

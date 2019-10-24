@@ -40,10 +40,8 @@ func TestQuery(t *testing.T) {
 	}
 
 	// let's set up some initial state here
-	err := k.DelegateFeeAllowance(ctx, grant1)
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, grant2)
-	require.NoError(t, err)
+	k.DelegateFeeAllowance(ctx, grant1)
+	k.DelegateFeeAllowance(ctx, grant2)
 
 	// now try some queries
 	cases := map[string]struct {

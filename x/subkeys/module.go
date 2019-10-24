@@ -132,10 +132,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 	if err != nil {
 		panic(err)
 	}
-	err = InitGenesis(ctx, am.keeper, genesisState)
-	if err != nil {
-		panic(err)
-	}
+	InitGenesis(ctx, am.keeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

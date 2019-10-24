@@ -77,38 +77,31 @@ func TestKeeperCrud(t *testing.T) {
 	}
 
 	// let's set up some initial state here
-	err := k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr2, Allowance: &basic,
 	})
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr3, Allowance: &basic2,
 	})
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr3, Allowance: &basic,
 	})
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr4, Allowance: &basic,
 	})
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr4, Grantee: addr, Allowance: &basic2,
 	})
-	require.NoError(t, err)
 
 	// remove some, overwrite other
 	k.RevokeFeeAllowance(ctx, addr, addr2)
 	k.RevokeFeeAllowance(ctx, addr, addr3)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr, Grantee: addr3, Allowance: &basic,
 	})
-	require.NoError(t, err)
-	err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+	k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 		Granter: addr2, Grantee: addr3, Allowance: &basic2,
 	})
-	require.NoError(t, err)
 
 	// end state:
 	// addr -> addr3 (basic)
@@ -255,14 +248,12 @@ func TestUseDelegatedFee(t *testing.T) {
 			// let's set up some initial state here
 			// addr -> addr2 (future)
 			// addr -> addr3 (expired)
-			err := k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+			k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 				Granter: addr, Grantee: addr2, Allowance: &future,
 			})
-			require.NoError(t, err)
-			err = k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
+			k.DelegateFeeAllowance(ctx, types.FeeAllowanceGrant{
 				Granter: addr, Grantee: addr3, Allowance: &expired,
 			})
-			require.NoError(t, err)
 
 			allowed := k.UseDelegatedFees(ctx, tc.granter, tc.grantee, tc.fee)
 			require.Equal(t, tc.allowed, allowed)

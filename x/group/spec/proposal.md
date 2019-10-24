@@ -36,12 +36,12 @@ const (
 ```go
 type MsgPropose struct {
     Proposer sdk.AccAddress `json:"proposer"`
-	Group    sdk.AccAddress `json:"group"`
     // Policy specifies the policy by which this propose will pass or fail.
-    // If it is left empty, the group's main DecisionProtocol is used. If
-    // it is set to a valid GroupPolicyID for this group, that policy's
+    // If set to DefaultGroupPolicy, the group's root DecisionProtocol is used. If
+    // it is set to another GroupPolicyID for this group, that policy's
     // DecisionProtocol and its Capability grants will be used.
 	Policy   GroupPolicyID `json:"policy"`
+	Group    sdk.AccAddress `json:"group"`
 	Msgs     []sdk.Msg      `json:"msgs"`
 	Description string `json:"Description,omitempty"`
 }
@@ -61,6 +61,7 @@ type MsgVote struct {
 	ProposalID ProposalID     `json:"proposal_id"`
 	Voter      sdk.AccAddress `json:"voter"`
 	Vote       bool           `json:"vote"`
+	Comment string            `json:"comment,omitempty"`
 }
 ```
 
@@ -97,4 +98,5 @@ The group module contains the following parameters:
 |------------------------|-----------------|---------|-----|
 | MaxVotingPeriod | string (time ns) | Proposals older than this time will be garbage-collected | "172800000000000" |
 | MaxDescriptionCharacters | string (uint64) | | "256" |
+| MaxCommentCharacters | string (uint64) | | "256" |
 

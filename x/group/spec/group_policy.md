@@ -5,10 +5,13 @@
 ### `GroupPolicyID`
 
 ```go
-type GroupPolicy uint64 
-```
+// GroupPolicyID is the ID of a group policy, generated as an auto-incrementing integer
+type GroupPolicyID uint64 
 
-The ID of a group policy, generated as an auto-incrementing non-zero, integer.
+// DefaultGroupPolicy is the root policy of the group
+const DefaultGroupPolicy GroupPolicyID = 0
+
+```
 
 ## Messages
 

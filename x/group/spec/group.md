@@ -68,6 +68,11 @@ type MsgGroupExec struct {
     Group sdk.AccAddress `json:"group"`
     Signers []sdk.AccAddress `json:"signers"`
     Msgs []sdk.Msg `json:"msgs"`
+    // Policy specifies the policy by which this propose will pass or fail.
+    // If set to DefaultGroupPolicy, the group's root DecisionProtocol is used. If
+    // it is set to another GroupPolicyID for this group, that policy's
+    // DecisionProtocol and its Capability grants will be used.
+	Policy   GroupPolicyID `json:"policy"`
 }
 ```
 

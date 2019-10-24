@@ -7,7 +7,7 @@
 ## Context
 
 Validator consensus key rotation feature has been discussed and requested for a long time, for the sake of safer validator 
-key management policy.(https://github.com/tendermint/tendermint/issues/1136) So, we suggest one of the simplest form of
+key management policy (e.g. https://github.com/tendermint/tendermint/issues/1136). So, we suggest one of the simplest form of
 validator consensus key rotation implementation mostly onto Cosmos-SDK.
 
 ## Decision

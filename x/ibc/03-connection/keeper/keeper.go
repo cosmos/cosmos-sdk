@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -42,7 +42,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
-func (k Keeper) GetCommitmentPrefix() commitmentexported.PrefixI {
+func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
 	return commitment.NewPrefix(k.prefix)
 }
 
@@ -112,7 +112,7 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
 	}
 
-	conns, ok := removePath(conns, connectionID)
+	conns, ok := host.RemovePath(conns, connectionID)
 	if !ok {
 		return types.ErrConnectionPath(k.codespace)
 	}
@@ -126,7 +126,7 @@ func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof commitmentexported.ProofI,
+	proof commitment.ProofI,
 	pathStr string,
 	value []byte,
 ) bool {
@@ -134,7 +134,11 @@ func (k Keeper) VerifyMembership(
 	if !found {
 		return false
 	}
-	path := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
+	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
+	if err != nil {
+		return false
+	}
+
 	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
 }
 
@@ -143,7 +147,7 @@ func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
 	connection types.ConnectionEnd,
 	height uint64,
-	proof commitmentexported.ProofI,
+	proof commitment.ProofI,
 	pathStr string,
 ) bool {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
@@ -151,18 +155,10 @@ func (k Keeper) VerifyNonMembership(
 		return false
 	}
 
-	path := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
-	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
-}
-
-// removePath is an util function to remove a path from a set.
-//
-// TODO: move to ICS24
-func removePath(paths []string, path string) ([]string, bool) {
-	for i, p := range paths {
-		if p == path {
-			return append(paths[:i], paths[i+1:]...), true
-		}
+	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
+	if err != nil {
+		return false
 	}
-	return paths, false
+
+	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
 }

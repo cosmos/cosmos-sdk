@@ -9,22 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
-// NewQuerier creates a querier for the IBC client
-func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
-		switch path[0] {
-		case types.QueryConnection:
-			return queryConnection(ctx, req, k)
-		case types.QueryClientConnections:
-			return queryClientConnections(ctx, req, k)
-
-		default:
-			return nil, sdk.ErrUnknownRequest("unknown IBC connection query endpoint")
-		}
-	}
-}
-
-func queryConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+// QuerierConnection defines the sdk.Querier to query a connection end
+func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryConnectionParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
@@ -45,7 +31,8 @@ func queryConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 	return bz, nil
 }
 
-func queryClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+// QuerierClientConnections defines the sdk.Querier to query the client connections
+func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryClientConnectionsParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)

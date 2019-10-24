@@ -71,6 +71,15 @@ func (e *ExpiresAt) Step(p Period) error {
 	return nil
 }
 
+// PrepareForExport will deduct the dumpHeight from the expiration, so when this is
+// reloaded after a hard fork, the actual number of allowed blocks is constant
+func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) ExpiresAt {
+	if e.Height != 0 {
+		e.Height -= dumpHeight
+	}
+	return e
+}
+
 // Period is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 type Period struct {

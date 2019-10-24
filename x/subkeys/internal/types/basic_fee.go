@@ -35,6 +35,13 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 	return left.IsZero(), nil
 }
 
+func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
+	return &BasicFeeAllowance{
+		SpendLimit: a.SpendLimit,
+		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),
+	}
+}
+
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a BasicFeeAllowance) ValidateBasic() error {
 	if !a.SpendLimit.IsValid() {

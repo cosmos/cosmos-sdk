@@ -2,6 +2,10 @@ package rest
 
 import (
 	"net/http"
+
+	"github.com/cosmos/cosmos-sdk/client/context"
+
+	"github.com/gorilla/mux"
 )
 
 // EvidenceRESTHandler defines a REST service evidence handler implemented in
@@ -9,4 +13,11 @@ import (
 type EvidenceRESTHandler struct {
 	SubRoute string
 	Handler  func(http.ResponseWriter, *http.Request)
+}
+
+// RegisterRoutes registers all Evidence submission handlers for the evidence module's
+// REST service handler.
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, handlers []EvidenceRESTHandler) {
+	registerQueryRoutes(cliCtx, r)
+	registerTxRoutes(cliCtx, r, handlers)
 }

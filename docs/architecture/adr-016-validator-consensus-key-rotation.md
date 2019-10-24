@@ -24,7 +24,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 - consensus key mapping information management strategy
     - store history of each key mapping changes in the kvstore.
     - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
-    - gaiad does not need any historical mapping information which is past more than unbonding period.
+    - the state machine does not need any historical mapping information which is past more than unbonding period.
 - limits
     - a validator cannot rotate its consensus key more than N time for any unbonding period, to prevent spams.
     - a validator should contribute X atoms to community fund to rotate its consensus key, also to prevent spams.

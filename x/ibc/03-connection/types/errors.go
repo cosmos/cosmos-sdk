@@ -18,6 +18,8 @@ const (
 	CodeInvalidVersion                sdk.CodeType = 106
 	CodeInvalidHeight                 sdk.CodeType = 107
 	CodeInvalidConnectionState        sdk.CodeType = 108
+	CodeInvalidProof                  sdk.CodeType = 109
+	CodeInvalidCounterparty           sdk.CodeType = 110
 )
 
 // ErrConnectionExists implements sdk.Error
@@ -58,4 +60,14 @@ func ErrInvalidHeight(codespace sdk.CodespaceType, msg string) sdk.Error {
 // ErrInvalidConnectionState implements sdk.Error
 func ErrInvalidConnectionState(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidConnectionState, msg)
+}
+
+// ErrInvalidConnectionProof implements sdk.Error
+func ErrInvalidConnectionProof(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidProof, msg)
+}
+
+// ErrInvalidCounterparty implements sdk.Error
+func ErrInvalidCounterparty(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidCounterparty, msg)
 }

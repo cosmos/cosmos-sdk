@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // Keeper defines the IBC connection keeper
@@ -40,8 +41,8 @@ func (k Keeper) GetPorts() []string {
 // The capability must then be passed to a module which will need to pass
 // it as an extra parameter when calling functions on the IBC module.
 func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
-	if !types.ValidatePortID(portID) {
-		panic(fmt.Sprintf("invalid port id: %s", types.ErrInvalidPortID(k.codespace)))
+	if err := host.DefaultIdentifierValidator(portID); err != nil {
+		panic(err.Error())
 	}
 
 	for _, b := range k.bound {
@@ -61,8 +62,8 @@ func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
 // generated and bound to the port (provided as a parameter) which the capability
 // is being authenticated against.
 func (k Keeper) Authenticate(key sdk.CapabilityKey, portID string) bool {
-	if !types.ValidatePortID(portID) {
-		panic(fmt.Sprintf("invalid port id: %s", types.ErrInvalidPortID(k.codespace)))
+	if err := host.DefaultIdentifierValidator(portID); err != nil {
+		panic(err.Error())
 	}
 
 	return k.ports[key] == portID

@@ -9,17 +9,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	commitmentexported "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment/exported"
 )
 
 var _ exported.ConsensusState = ConsensusState{}
 
 // ConsensusState defines a Tendermint consensus state
 type ConsensusState struct {
-	ChainID          string                   `json:"chain_id" yaml:"chain_id"`
-	Height           uint64                   `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
-	Root             commitmentexported.RootI `json:"root" yaml:"root"`
-	NextValidatorSet *tmtypes.ValidatorSet    `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
+	ChainID          string                `json:"chain_id" yaml:"chain_id"`
+	Height           uint64                `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
+	Root             commitment.RootI      `json:"root" yaml:"root"`
+	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 
 // ClientType returns Tendermint
@@ -33,7 +32,7 @@ func (cs ConsensusState) GetHeight() uint64 {
 }
 
 // GetRoot returns the commitment Root for the specific
-func (cs ConsensusState) GetRoot() commitmentexported.RootI {
+func (cs ConsensusState) GetRoot() commitment.RootI {
 	return cs.Root
 }
 

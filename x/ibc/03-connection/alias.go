@@ -32,6 +32,8 @@ const (
 var (
 	// functions aliases
 	NewKeeper                        = keeper.NewKeeper
+	QuerierConnection                = keeper.QuerierConnection
+	QuerierClientConnections         = keeper.QuerierClientConnections
 	RegisterCodec                    = types.RegisterCodec
 	SetMsgConnectionCodec            = types.SetMsgConnectionCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
@@ -63,8 +65,8 @@ var (
 
 type (
 	Keeper                       = keeper.Keeper
-	ConnectionState              = types.ConnectionState
-	ConnectionEnd                = types.ConnectionEnd
+	State                        = types.State
+	End                          = types.ConnectionEnd
 	Counterparty                 = types.Counterparty
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit

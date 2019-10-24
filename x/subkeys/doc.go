@@ -20,11 +20,11 @@ The fee allowance that a grantee receives is specified by an implementation of
 the FeeAllowance interface. Two FeeAllowance implementations are provided in
 this package: BasicFeeAllowance and PeriodicFeeAllowance.
 
-In order to integrate this into an application, we must use the ante handles from
-this package instead of the default auth implementations for DeductFee
-(adding custom logic) and MempoolFee (updating it to be compatible with DelegatedTx).
-An application can do this simply by using `x/delegate_fees/internal/ante.NewAnteHandler()`
-when setting up the app instead of the version from auth.
+In order to integrate this into an application, we must use the DeductDelegatedFeeDecorator
+ante handler from this package instead of the default DeductFeeDecorator from auth.
+To allow handling txs from empty accounts (with fees paid from an existing account),
+we have to re-order the decorators as well. You can see an example in
+`x/delegate_fees/internal/ante/fee_test.go:newAnteHandler()`
 
 I did not pull this into the top level package as it pulls in dependencies on the internals
 of `x/auth` and if I understand correctly, this is bad practice to depend on other modules

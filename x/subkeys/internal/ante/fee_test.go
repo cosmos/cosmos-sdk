@@ -10,11 +10,36 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/ante"
+	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/subkeys/internal/types/tx"
 )
+
+// newAnteHandler is just like auth.NewAnteHandler, except we use the DeductDelegatedFeeDecorator
+// in order to allow payment of fees via a delegation.
+//
+// This is used for our full-stack tests
+func newAnteHandler(ak authkeeper.AccountKeeper, supplyKeeper authtypes.SupplyKeeper, dk keeper.Keeper, sigGasConsumer authante.SignatureVerificationGasConsumer) sdk.AnteHandler {
+	return sdk.ChainAnteDecorators(
+		authante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		authante.NewMempoolFeeDecorator(),
+		authante.NewValidateBasicDecorator(),
+		authante.NewValidateMemoDecorator(ak),
+		authante.NewConsumeGasForTxSizeDecorator(ak),
+		// DeductDelegatedFeeDecorator will create an empty account if we sign with no tokens but valid validation
+		// This must be before SetPubKey, ValidateSigCount, SigVerification, which error if account doesn't exist yet
+		ante.NewDeductDelegatedFeeDecorator(ak, supplyKeeper, dk),
+		authante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
+		authante.NewValidateSigCountDecorator(ak),
+		authante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
+		authante.NewSigVerificationDecorator(ak),
+		authante.NewIncrementSequenceDecorator(ak), // innermost AnteDecorator
+	)
+}
 
 func TestDeductFeesNoDelegation(t *testing.T) {
 	// setup
@@ -25,7 +50,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
-	anteHandlerStack := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.DelegationKeeper, SigGasNoConsumer)
+	anteHandlerStack := newAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.DelegationKeeper, SigGasNoConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := authtypes.KeyTestPubAddr()

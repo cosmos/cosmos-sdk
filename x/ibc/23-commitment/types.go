@@ -48,14 +48,14 @@ const (
 	Merkle Type = iota + 1 // 1
 )
 
-// Client types
+// string representation of the commitment types
 const (
 	TypeMerkle string = "merkle"
 )
 
-// TypeToString returns the string representation of a client type
-func TypeToString(commitmentType Type) string {
-	switch commitmentType {
+// String implements the Stringer interface
+func (ct Type) String() string {
+	switch ct {
 	case Merkle:
 		return TypeMerkle
 

@@ -195,9 +195,9 @@ func (k Keeper) RecvPacket(
 	acknowledgement []byte,
 ) (exported.PacketI, error) {
 
-	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
+	channel, found := k.GetChannel(ctx, packet.DestPort(), packet.DestChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.DestChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -207,7 +207,7 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
+	_, found = k.GetChannelCapability(ctx, packet.DestPort(), packet.DestChannel())
 	if !found {
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}

@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -40,10 +39,10 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	_, found = k.portKeeper.GetPort(ctx, portID)
-	if !found {
-		return port.ErrPortNotFound(k.codespace, portID)
-	}
+	// _, found = k.portKeeper.GetPort(portID)
+	// if !found {
+	// 	return port.ErrPortNotFound(k.codespace, portID)
+	// }
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
 	// 	return errors.New("port is not valid")
@@ -78,10 +77,10 @@ func (k Keeper) ChanOpenTry(
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	_, found = k.portKeeper.GetPort(ctx, portID)
-	if !found {
-		return port.ErrPortNotFound(k.codespace, portID)
-	}
+	// _, found = k.portKeeper.GetPort(portID)
+	// if !found {
+	// 	return port.ErrPortNotFound(k.codespace, portID)
+	// }
 
 	// if !k.portKeeper.AuthenticatePort(port.ID()) {
 	// 	return errors.New("port is not valid")

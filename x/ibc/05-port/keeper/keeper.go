@@ -36,6 +36,12 @@ func (k Keeper) GetPorts() []string {
 	return k.bound
 }
 
+// GetPort retrieves a given port ID from keeper map
+func (k Keeper) GetPort(ck sdk.CapabilityKey) (string, bool) {
+	portID, found := k.ports[ck]
+	return portID, found
+}
+
 // BindPort binds to a port and returns the associated capability.
 // Ports must be bound statically when the chain starts in `app.go`.
 // The capability must then be passed to a module which will need to pass

@@ -21,6 +21,8 @@ const (
 	CodeClientTypeNotFound     = types.CodeClientTypeNotFound
 	CodeInvalidClientType      = types.CodeInvalidClientType
 	CodeRootNotFound           = types.CodeRootNotFound
+	CodeInvalidHeader          = types.CodeInvalidHeader
+	CodeInvalidEvidence        = types.CodeInvalidEvidence
 	AttributeKeyClientID       = types.AttributeKeyClientID
 	SubModuleName              = types.SubModuleName
 	StoreKey                   = types.StoreKey
@@ -46,6 +48,8 @@ var (
 	ErrClientTypeNotFound        = types.ErrClientTypeNotFound
 	ErrInvalidClientType         = types.ErrInvalidClientType
 	ErrRootNotFound              = types.ErrRootNotFound
+	ErrInvalidHeader             = types.ErrInvalidHeader
+	ErrInvalidEvidence           = types.ErrInvalidEvidence
 	ClientStatePath              = types.ClientStatePath
 	ClientTypePath               = types.ClientTypePath
 	ConsensusStatePath           = types.ConsensusStatePath

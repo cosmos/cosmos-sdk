@@ -12,11 +12,15 @@ import (
 )
 
 const (
-	DefaultCodespace = types.DefaultCodespace
-	SubModuleName    = types.SubModuleName
-	StoreKey         = types.StoreKey
-	RouterKey        = types.RouterKey
-	QuerierRoute     = types.QuerierRoute
+	DefaultCodespace         = types.DefaultCodespace
+	CodePortExists           = types.CodePortExists
+	CodePortNotFound         = types.CodePortNotFound
+	CodePortNotAuthenticated = types.CodePortNotAuthenticated
+	CodeInvalidPortID        = types.CodeInvalidPortID
+	SubModuleName            = types.SubModuleName
+	StoreKey                 = types.StoreKey
+	RouterKey                = types.RouterKey
+	QuerierRoute             = types.QuerierRoute
 )
 
 var (

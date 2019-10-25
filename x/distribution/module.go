@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
@@ -99,15 +100,17 @@ type AppModule struct {
 
 	keeper       Keeper
 	supplyKeeper types.SupplyKeeper
+	bankKeeper   bank.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper) AppModule {
+func NewAppModule(keeper Keeper, supplyKeeper types.SupplyKeeper, bankKeeper bank.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
 		keeper:              keeper,
 		supplyKeeper:        supplyKeeper,
+		bankKeeper:          bankKeeper,
 	}
 }
 
@@ -128,7 +131,7 @@ func (AppModule) Route() string {
 
 // NewHandler returns an sdk.Handler for the distribution module.
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.keeper)
+	return NewHandler(am.keeper, am.bankKeeper)
 }
 
 // QuerierRoute returns the distribution module's querier route name.

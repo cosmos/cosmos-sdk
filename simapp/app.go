@@ -182,7 +182,7 @@ func NewSimApp(
 		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
 		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper, app.BankKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 	)
@@ -216,7 +216,7 @@ func NewSimApp(
 		supply.NewAppModule(app.SupplyKeeper, app.AccountKeeper),
 		gov.NewAppModule(app.GovKeeper, app.SupplyKeeper),
 		mint.NewAppModule(app.MintKeeper),
-		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
+		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper, app.BankKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
 	)

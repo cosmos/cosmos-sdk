@@ -5,17 +5,20 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
 
 var (
-	// _ module.AppModule           = AppModule{}
+	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
 	// _ module.AppModuleSimulation = AppModuleSimulation{}
 )
@@ -87,3 +90,71 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------
+
+// AppModule implements the AppModule interface for the evidence module.
+type AppModule struct {
+	AppModuleBasic
+}
+
+func NewAppModule() AppModule {
+	return AppModule{
+		AppModuleBasic: NewAppModuleBasic(),
+	}
+}
+
+// Name returns the evidence module's name.
+func (am AppModule) Name() string {
+	return am.AppModuleBasic.Name()
+}
+
+// Route returns the evidence module's message routing key.
+func (AppModule) Route() string {
+	return RouterKey
+}
+
+// QuerierRoute returns the evidence module's query routing key.
+func (AppModule) QuerierRoute() string {
+	return QuerierRoute
+}
+
+// RegisterInvariants registers the evidence module's invariants.
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	// TODO: Register any necessary invariants (if any).
+}
+
+// NewHandler returns the evidence module's message Handler.
+func (am AppModule) NewHandler() sdk.Handler {
+	// TODO: Construct and return message Handler.
+	return nil
+}
+
+// NewQuerierHandler returns the evidence module's Querier.
+func (am AppModule) NewQuerierHandler() sdk.Querier {
+	// TODO: Construct and return Querier.
+	return nil
+}
+
+// InitGenesis performs the evidence module's genesis initialization It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	// TODO: Construct genesis state object and deserialize.
+	return []abci.ValidatorUpdate{}
+}
+
+// ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	// TODO: Export genesis state and serialize.
+	return []byte("[]")
+}
+
+// BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
+	// TODO: Execute BeginBlocker (if applicable).
+}
+
+// EndBlock executes all ABCI EndBlock logic respective to the evidence module. It
+// returns no validator updates.
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	// TODO: Execute EndBlocker (if applicable).
+	return []abci.ValidatorUpdate{}
+}

@@ -133,6 +133,7 @@ var (
 	ErrMissingSignature                = types.ErrMissingSignature
 	NewGenesisState                    = types.NewGenesisState
 	DefaultGenesisState                = types.DefaultGenesisState
+	DefaultGenesisStateWithParams      = types.DefaultGenesisStateWitParams
 	NewMultiStakingHooks               = types.NewMultiStakingHooks
 	GetValidatorKey                    = types.GetValidatorKey
 	GetValidatorByConsAddrKey          = types.GetValidatorByConsAddrKey

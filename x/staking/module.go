@@ -31,7 +31,14 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	params Params
+}
+
+// NewAppModuleBasic returns a new basic application module having the given set of parameters
+func NewAppModuleBasic(params Params) AppModuleBasic {
+	return AppModuleBasic{params: params}
+}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -47,8 +54,8 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
 // module.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
+func (amb AppModuleBasic) DefaultGenesis() json.RawMessage {
+	return ModuleCdc.MustMarshalJSON(DefaultGenesisStateWithParams(amb.params))
 }
 
 // ValidateGenesis performs genesis state validation for the staking module.

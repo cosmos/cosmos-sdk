@@ -36,3 +36,10 @@ func DefaultGenesisState() GenesisState {
 		Params: DefaultParams(),
 	}
 }
+
+// get raw genesis raw message having the given set of parameters
+func DefaultGenesisStateWitParams(params Params) GenesisState {
+	return GenesisState{
+		Params: UseParamsOrDefault(params),
+	}
+}

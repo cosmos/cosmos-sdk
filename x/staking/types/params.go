@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -76,6 +77,28 @@ func (p Params) Equal(p2 Params) bool {
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
 	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, sdk.DefaultBondDenom)
+}
+
+// UseParamsOrDefault returns a set of parameters that contains the data
+// present inside the given set, or the default value if some parameter is missing
+func UseParamsOrDefault(original Params) Params {
+	if original.UnbondingTime == 0 {
+		original.UnbondingTime = DefaultUnbondingTime
+	}
+
+	if original.MaxEntries == 0 {
+		original.MaxEntries = DefaultMaxEntries
+	}
+
+	if original.MaxValidators == 0 {
+		original.MaxValidators = DefaultMaxValidators
+	}
+
+	if len(strings.TrimSpace(original.BondDenom)) == 0 {
+		original.BondDenom = sdk.DefaultBondDenom
+	}
+
+	return original
 }
 
 // String returns a human readable string representation of the parameters.

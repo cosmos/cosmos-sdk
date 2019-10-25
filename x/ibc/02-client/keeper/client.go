@@ -13,11 +13,11 @@ import (
 // state as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
-	clientTypeStr string, consensusState exported.ConsensusState,
-) (types.ClientState, error) {
+	clientType exported.ClientType, consensusState exported.ConsensusState,
+) (types.State, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.ClientState{}, types.ErrClientExists(k.codespace, clientID)
+		return types.State{}, types.ErrClientExists(k.codespace, clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -25,13 +25,8 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
 	}
 
-	clientType := exported.ClientTypeFromStr(clientTypeStr)
-	if clientType == 0 {
-		return types.ClientState{}, types.ErrInvalidClientType(k.codespace)
-	}
-
 	clientState := k.initialize(ctx, clientID, consensusState)
-	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
+	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
 	return clientState, nil
@@ -78,7 +73,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetConsensusState(ctx, clientID, consensusState)
-	k.SetCommitmentRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
+	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))
 	return nil
 }

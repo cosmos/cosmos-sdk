@@ -12,21 +12,30 @@ import (
 )
 
 const (
+	NONE                           = types.NONE
 	UNORDERED                      = types.UNORDERED
 	ORDERED                        = types.ORDERED
+	OrderNone                      = types.OrderNone
+	OrderUnordered                 = types.OrderUnordered
+	OrderOrdered                   = types.OrderOrdered
 	CLOSED                         = types.CLOSED
 	INIT                           = types.INIT
 	OPENTRY                        = types.OPENTRY
 	OPEN                           = types.OPEN
+	StateClosed                    = types.StateClosed
+	StateInit                      = types.StateInit
+	StateOpenTry                   = types.StateOpenTry
+	StateOpen                      = types.StateOpen
 	DefaultCodespace               = types.DefaultCodespace
 	CodeChannelExists              = types.CodeChannelExists
 	CodeChannelNotFound            = types.CodeChannelNotFound
 	CodeInvalidConnectionHops      = types.CodeInvalidConnectionHops
 	CodeInvalidCounterpartyChannel = types.CodeInvalidCounterpartyChannel
 	CodeChannelCapabilityNotFound  = types.CodeChannelCapabilityNotFound
-	CodeInvalidPacketSequence      = types.CodeInvalidPacketSequence
+	CodeInvalidPacket              = types.CodeInvalidPacket
 	CodeSequenceNotFound           = types.CodeSequenceNotFound
 	CodePacketTimeout              = types.CodePacketTimeout
+	CodeInvalidChannelState        = types.CodeInvalidChannelState
 	AttributeKeySenderPort         = types.AttributeKeySenderPort
 	AttributeKeyReceiverPort       = types.AttributeKeyReceiverPort
 	AttributeKeyChannelID          = types.AttributeKeyChannelID
@@ -41,9 +50,11 @@ const (
 var (
 	// functions aliases
 	NewKeeper                     = keeper.NewKeeper
-	NewQuerier                    = keeper.NewQuerier
+	QuerierChannel                = keeper.QuerierChannel
 	NewChannel                    = types.NewChannel
 	NewCounterparty               = types.NewCounterparty
+	OrderFromString               = types.OrderFromString
+	StateFromString               = types.StateFromString
 	RegisterCodec                 = types.RegisterCodec
 	SetMsgChanCodec               = types.SetMsgChanCodec
 	ErrChannelExists              = types.ErrChannelExists
@@ -51,9 +62,10 @@ var (
 	ErrInvalidConnectionHops      = types.ErrInvalidConnectionHops
 	ErrInvalidCounterpartyChannel = types.ErrInvalidCounterpartyChannel
 	ErrChannelCapabilityNotFound  = types.ErrChannelCapabilityNotFound
-	ErrInvalidPacketSequence      = types.ErrInvalidPacketSequence
+	ErrInvalidPacket              = types.ErrInvalidPacket
 	ErrSequenceNotFound           = types.ErrSequenceNotFound
 	ErrPacketTimeout              = types.ErrPacketTimeout
+	ErrInvalidChannelState        = types.ErrInvalidChannelState
 	ChannelPath                   = types.ChannelPath
 	ChannelCapabilityPath         = types.ChannelCapabilityPath
 	NextSequenceSendPath          = types.NextSequenceSendPath
@@ -66,6 +78,16 @@ var (
 	KeyNextSequenceRecv           = types.KeyNextSequenceRecv
 	KeyPacketCommitment           = types.KeyPacketCommitment
 	KeyPacketAcknowledgement      = types.KeyPacketAcknowledgement
+	NewMsgChannelOpenInit         = types.NewMsgChannelOpenInit
+	NewMsgChannelOpenTry          = types.NewMsgChannelOpenTry
+	NewMsgChannelOpenAck          = types.NewMsgChannelOpenAck
+	NewMsgChannelOpenConfirm      = types.NewMsgChannelOpenConfirm
+	NewMsgChannelCloseInit        = types.NewMsgChannelCloseInit
+	NewMsgChannelCloseConfirm     = types.NewMsgChannelCloseConfirm
+	NewMsgSendPacket              = types.NewMsgSendPacket
+	NewPacket                     = types.NewPacket
+	NewOpaquePacket               = types.NewOpaquePacket
+	NewChannelResponse            = types.NewChannelResponse
 	NewQueryChannelParams         = types.NewQueryChannelParams
 
 	// variable aliases
@@ -82,12 +104,13 @@ var (
 
 type (
 	Keeper                 = keeper.Keeper
-	ChannelOrder           = types.ChannelOrder
-	ChannelState           = types.ChannelState
 	Channel                = types.Channel
 	Counterparty           = types.Counterparty
+	Order                  = types.Order
+	State                  = types.State
 	ClientKeeper           = types.ClientKeeper
 	ConnectionKeeper       = types.ConnectionKeeper
+	PortKeeper             = types.PortKeeper
 	MsgChannelOpenInit     = types.MsgChannelOpenInit
 	MsgChannelOpenTry      = types.MsgChannelOpenTry
 	MsgChannelOpenAck      = types.MsgChannelOpenAck
@@ -95,6 +118,8 @@ type (
 	MsgChannelCloseInit    = types.MsgChannelCloseInit
 	MsgChannelCloseConfirm = types.MsgChannelCloseConfirm
 	MsgSendPacket          = types.MsgSendPacket
+	Packet                 = types.Packet
 	OpaquePacket           = types.OpaquePacket
+	ChannelResponse        = types.ChannelResponse
 	QueryChannelParams     = types.QueryChannelParams
 )

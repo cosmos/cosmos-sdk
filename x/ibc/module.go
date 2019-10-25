@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -39,7 +39,7 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
-	ics23.RegisterCodec(cdc)
+	commitment.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
@@ -55,7 +55,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // RegisterRESTRoutes registers the REST routes for the staking module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	//noop
+	/// TODO:
 }
 
 // GetTxCmd returns the root tx command for the staking module.
@@ -108,8 +108,7 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the staking module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	// return NewQuerier(am.keeper
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns

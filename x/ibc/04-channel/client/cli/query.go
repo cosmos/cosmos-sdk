@@ -5,18 +5,17 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
-
-// TODO: get proofs
-// const (
-// 	FlagProve = "prove"
-// )
 
 // GetQueryCmd returns the query commands for IBC channels
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -34,11 +33,11 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryChannel defines the command to query a channel end
-func GetCmdQueryChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryChannel(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "end [port-id] [channel-id]",
-		Short: "Query stored connection",
-		Long: strings.TrimSpace(fmt.Sprintf(`Query stored connection end
+		Short: "Query a channel end",
+		Long: strings.TrimSpace(fmt.Sprintf(`Query an IBC channel end
 		
 Example:
 $ %s query ibc channel end [port-id] [channel-id]
@@ -55,21 +54,31 @@ $ %s query ibc channel end [port-id] [channel-id]
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(types.ChannelPath(portID, channelID), bz)
+			req := abci.RequestQuery{
+				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryChannel),
+				Data:  bz,
+				Prove: viper.GetBool(flags.FlagProve),
+			}
+
+			res, err := cliCtx.QueryABCI(req)
 			if err != nil {
 				return err
 			}
 
 			var channel types.Channel
-			if err := cdc.UnmarshalJSON(res, &channel); err != nil {
+			if err := cdc.UnmarshalJSON(res.Value, &channel); err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(channel)
+			if res.Proof == nil {
+				return cliCtx.PrintOutput(channel)
+			}
+
+			channelRes := types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
+			return cliCtx.PrintOutput(channelRes)
 		},
 	}
-
-	// cmd.Flags().Bool(FlagProve, false, "(optional) show proofs for the query results")
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd
 }

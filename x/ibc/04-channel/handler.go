@@ -8,7 +8,7 @@ import (
 
 // HandleMsgChannelOpenInit defines the sdk.Handler for MsgChannelOpenInit
 func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenInit) sdk.Result {
-	_, err := k.ChanOpenInit(
+	err := k.ChanOpenInit(
 		ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		msg.Channel.Counterparty, msg.Channel.Version,
 	)
@@ -34,7 +34,7 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 
 // HandleMsgChannelOpenTry defines the sdk.Handler for MsgChannelOpenTry
 func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChannelOpenTry) sdk.Result {
-	_, err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
+	err := k.ChanOpenTry(ctx, msg.Channel.Ordering, msg.Channel.ConnectionHops, msg.PortID, msg.ChannelID,
 		msg.Channel.Counterparty, msg.Channel.Version, msg.CounterpartyVersion, msg.ProofInit, msg.ProofHeight,
 	)
 	if err != nil {

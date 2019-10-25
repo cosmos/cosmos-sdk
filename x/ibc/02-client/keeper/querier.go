@@ -9,25 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
-// NewQuerier creates a querier for the IBC client
-func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
-		switch path[0] {
-		case types.QueryClientState:
-			return queryClientState(ctx, req, k)
-		case types.QueryConsensusState:
-			return queryConsensusState(ctx, req, k)
-		case types.QueryCommitmentPath:
-			return queryCommitmentPath(k)
-		case types.QueryCommitmentRoot:
-			return queryCommitmentRoot(ctx, req, k)
-		default:
-			return nil, sdk.ErrUnknownRequest("unknown IBC client query endpoint")
-		}
-	}
-}
-
-func queryClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+// QuerierClientState defines the sdk.Querier to query the IBC client state
+func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryClientStateParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
@@ -35,8 +18,6 @@ func queryClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	// NOTE: clientID won't be exported as it's declared as private
-	// TODO: should we create a custom ExportedClientState to make it public ?
 	clientState, found := k.GetClientState(ctx, params.ClientID)
 	if !found {
 		return nil, types.ErrClientTypeNotFound(k.codespace)
@@ -50,7 +31,8 @@ func queryClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 	return bz, nil
 }
 
-func queryConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+// QuerierConsensusState defines the sdk.Querier to query a consensus state
+func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryClientStateParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
@@ -71,18 +53,8 @@ func queryConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 	return bz, nil
 }
 
-func queryCommitmentPath(k Keeper) ([]byte, sdk.Error) {
-	path := k.GetCommitmentPath()
-
-	bz, err := types.SubModuleCdc.MarshalJSON(path)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
-
-	return bz, nil
-}
-
-func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+// QuerierVerifiedRoot defines the sdk.Querier to query a verified commitment root
+func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryCommitmentRootParams
 
 	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
@@ -90,7 +62,7 @@ func queryCommitmentRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	root, found := k.GetCommitmentRoot(ctx, params.ClientID, params.Height)
+	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
 		return nil, types.ErrRootNotFound(k.codespace)
 	}

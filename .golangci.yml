@@ -17,15 +17,19 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - interfacer
     - maligned
     - misspell
     - nakedret
     - prealloc
+    - scopelint
     - staticcheck
     - structcheck
+    - stylecheck
     - typecheck
     - unconvert
     - unused
+    - misspell
   disable:
     - errcheck
 
@@ -50,6 +54,3 @@ linters-settings:
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
-
-service:
-  golangci-lint-version: 1.19.x

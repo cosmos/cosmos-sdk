@@ -3,12 +3,14 @@ package keeper
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // CleanupPacket is called by a module to remove a received packet commitment
@@ -24,7 +26,7 @@ import (
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof ics23.Proof,
+	proof commitment.ProofI,
 	proofHeight,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,
@@ -35,7 +37,10 @@ func (k Keeper) CleanupPacket(
 	}
 
 	if channel.State != types.OPEN {
-		return nil, errors.New("channel is not open") // TODO: sdk.Error
+		return nil, types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel state is not OPEN (got %s)", channel.State.String()),
+		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -44,51 +49,57 @@ func (k Keeper) CleanupPacket(
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
-		return nil, errors.New("invalid packet destination channel")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.DestChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return nil, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
 	if packet.DestPort() != channel.Counterparty.PortID {
-		return nil, errors.New("invalid packet destination port")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.DestPort(), channel.Counterparty.PortID),
+		)
 	}
 
 	if nextSequenceRecv >= packet.Sequence() {
-		return nil, errors.New("packet already received")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet already received")
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
 	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
-		return nil, errors.New("packet hasn't been sent")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
 	var ok bool
 	switch channel.Ordering {
 	case types.ORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
-			ctx, connection, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, proof,
 			types.NextSequenceRecvPath(packet.DestPort(), packet.DestChannel()),
 			sdk.Uint64ToBigEndian(nextSequenceRecv),
 		)
 	case types.UNORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
-			ctx, connection, proofHeight, proof,
+			ctx, connectionEnd, proofHeight, proof,
 			types.PacketAcknowledgementPath(packet.DestPort(), packet.DestChannel(), packet.Sequence()),
 			acknowledgement,
 		)
 	default:
-		panic("invalid channel ordering type")
+		panic(fmt.Sprintf("invalid channel ordering type %v", channel.Ordering))
 	}
 
 	if !ok {
-		return nil, errors.New("failed packet verification") // TODO: sdk.Error
+		return nil, types.ErrInvalidPacket(k.codespace, "packet verification failed")
 	}
 
 	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
@@ -101,42 +112,54 @@ func (k Keeper) CleanupPacket(
 func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return errors.New("channel not found") // TODO: sdk.Error
+		return types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
 	}
 
 	if channel.State == types.CLOSED {
-		return errors.New("channel is closed") // TODO: sdk.Error
+		return types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel is CLOSED (got %s)", channel.State.String()),
+		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return errors.New("channel capability key not found") // TODO: sdk.Error
+		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	if packet.DestPort() != channel.Counterparty.PortID {
-		return errors.New("invalid packet destination port")
+		return types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.DestPort(), channel.Counterparty.PortID),
+		)
 	}
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
-		return errors.New("invalid packet destination channel")
+		return types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.DestChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return errors.New("connection not found") // TODO: ics03 sdk.Error
+		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State == connectiontypes.NONE {
-		return errors.New("connection is closed") // TODO: sdk.Error
+	if connectionEnd.State == connection.NONE {
+		return connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection is closed (i.e NONE)"),
+		)
 	}
 
-	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connectionEnd.ClientID)
 	if !found {
-		return errors.New("consensus state not found") // TODO: sdk.Error
+		return client.ErrConsensusStateNotFound(k.codespace)
 	}
 
 	if consensusState.GetHeight() >= packet.TimeoutHeight() {
@@ -149,7 +172,10 @@ func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 	}
 
 	if packet.Sequence() != nextSequenceSend {
-		return types.ErrInvalidPacketSequence(k.codespace)
+		return types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet sequence ≠ next send sequence (%d ≠ %d)", packet.Sequence(), nextSequenceSend),
+		)
 	}
 
 	nextSequenceSend++
@@ -164,7 +190,7 @@ func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	proof ics23.Proof,
+	proof commitment.ProofI,
 	proofHeight uint64,
 	acknowledgement []byte,
 ) (exported.PacketI, error) {
@@ -175,7 +201,10 @@ func (k Keeper) RecvPacket(
 	}
 
 	if channel.State != types.OPEN {
-		return nil, errors.New("channel not open") // TODO: sdk.Error
+		return nil, types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel state is not OPEN (got %s)", channel.State.String()),
+		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -184,25 +213,34 @@ func (k Keeper) RecvPacket(
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	// packet must come from the channel's counterparty
 	if packet.SourcePort() != channel.Counterparty.PortID {
-		return nil, errors.New("invalid packet source port")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.SourcePort(), channel.Counterparty.PortID),
+		)
 	}
 
 	if packet.SourceChannel() != channel.Counterparty.ChannelID {
-		return nil, errors.New("invalid packet source channel")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.SourceChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return nil, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
+	if connectionEnd.State != connection.OPEN {
+		return nil, connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	if uint64(ctx.BlockHeight()) >= packet.TimeoutHeight() {
@@ -210,7 +248,7 @@ func (k Keeper) RecvPacket(
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proof,
+		ctx, connectionEnd, proofHeight, proof,
 		types.PacketCommitmentPath(packet.SourcePort(), packet.SourceChannel(), packet.Sequence()),
 		packet.Data(), // TODO: hash data
 	) {
@@ -231,7 +269,10 @@ func (k Keeper) RecvPacket(
 		}
 
 		if packet.Sequence() != nextSequenceRecv {
-			return nil, types.ErrInvalidPacketSequence(k.codespace)
+			return nil, types.ErrInvalidPacket(
+				k.codespace,
+				fmt.Sprintf("packet sequence ≠ next receive sequence (%d ≠ %d)", packet.Sequence(), nextSequenceRecv),
+			)
 		}
 
 		nextSequenceRecv++
@@ -250,7 +291,7 @@ func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement []byte,
-	proof ics23.Proof,
+	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -259,7 +300,10 @@ func (k Keeper) AcknowledgePacket(
 	}
 
 	if channel.State != types.OPEN {
-		return nil, errors.New("channel not open") // TODO: sdk.Error
+		return nil, types.ErrInvalidChannelState(
+			k.codespace,
+			fmt.Sprintf("channel state is not OPEN (got %s)", channel.State.String()),
+		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
@@ -268,34 +312,43 @@ func (k Keeper) AcknowledgePacket(
 	}
 
 	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key") // TODO: sdk.Error
+	//  return errors.New("invalid capability key")
 	// }
 
 	// packet must come from the channel's counterparty
 	if packet.SourcePort() != channel.Counterparty.PortID {
-		return nil, errors.New("invalid packet source port")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.SourcePort(), channel.Counterparty.PortID),
+		)
 	}
 
 	if packet.SourceChannel() != channel.Counterparty.ChannelID {
-		return nil, errors.New("invalid packet source channel")
+		return nil, types.ErrInvalidPacket(
+			k.codespace,
+			fmt.Sprintf("packet source channel doesn't match the counterparty's channel (%s ≠ %s)", packet.SourceChannel(), channel.Counterparty.ChannelID),
+		)
 	}
 
-	connection, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
+	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, connectiontypes.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return nil, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connection.State != connectiontypes.OPEN {
-		return nil, errors.New("connection is not open") // TODO: ics03 sdk.Error
+	if connectionEnd.State != connection.OPEN {
+		return nil, connection.ErrInvalidConnectionState(
+			k.codespace,
+			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		)
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())
 	if !bytes.Equal(commitment, packet.Data()) { // TODO: hash packet data
-		return nil, errors.New("packet hasn't been sent")
+		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
-		ctx, connection, proofHeight, proof,
+		ctx, connectionEnd, proofHeight, proof,
 		types.PacketAcknowledgementPath(packet.DestPort(), packet.DestChannel(), packet.Sequence()),
 		acknowledgement, // TODO: hash ACK
 	) {

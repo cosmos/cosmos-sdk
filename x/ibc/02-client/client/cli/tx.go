@@ -69,7 +69,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 			}
 
 			msg := types.NewMsgCreateClient(
-				clientID, exported.ClientTypeToString(state.ClientType()), state,
+				clientID, state.ClientType().String(), state,
 				cliCtx.GetFromAddress(),
 			)
 			if err := msg.ValidateBasic(); err != nil {

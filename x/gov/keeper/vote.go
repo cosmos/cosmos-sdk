@@ -18,7 +18,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	}
 
 	if !types.ValidVoteOption(option) {
-		return types.ErrInvalidVote(keeper.codespace, option)
+		return types.ErrInvalidVote(keeper.codespace, option.String())
 	}
 
 	vote := types.NewVote(proposalID, voterAddr, option)

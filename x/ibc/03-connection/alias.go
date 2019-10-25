@@ -13,6 +13,9 @@ import (
 
 const (
 	NONE                              = types.NONE
+	INIT                              = types.INIT
+	TRYOPEN                           = types.TRYOPEN
+	OPEN                              = types.OPEN
 	DefaultCodespace                  = types.DefaultCodespace
 	CodeConnectionExists              = types.CodeConnectionExists
 	CodeConnectionNotFound            = types.CodeConnectionNotFound
@@ -25,15 +28,15 @@ const (
 	StoreKey                          = types.StoreKey
 	RouterKey                         = types.RouterKey
 	QuerierRoute                      = types.QuerierRoute
-	QueryClientState                  = types.QueryClientState
-	QueryConsensusState               = types.QueryConsensusState
-	QueryCommitmentPath               = types.QueryCommitmentPath
-	QueryCommitmentRoot               = types.QueryCommitmentRoot
+	QueryConnection                   = types.QueryConnection
+	QueryClientConnections            = types.QueryClientConnections
 )
 
 var (
 	// functions aliases
 	NewKeeper                        = keeper.NewKeeper
+	QuerierConnection                = keeper.QuerierConnection
+	QuerierClientConnections         = keeper.QuerierClientConnections
 	RegisterCodec                    = types.RegisterCodec
 	SetMsgConnectionCodec            = types.SetMsgConnectionCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
@@ -43,6 +46,7 @@ var (
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
 	ErrConnectionPath                = types.ErrConnectionPath
 	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
+	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ConnectionPath                   = types.ConnectionPath
 	ClientConnectionsPath            = types.ClientConnectionsPath
 	KeyConnection                    = types.KeyConnection
@@ -65,8 +69,8 @@ var (
 
 type (
 	Keeper                       = keeper.Keeper
-	ConnectionState              = types.ConnectionState
-	ConnectionEnd                = types.ConnectionEnd
+	State                        = types.State
+	End                          = types.ConnectionEnd
 	Counterparty                 = types.Counterparty
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit

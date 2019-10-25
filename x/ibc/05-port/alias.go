@@ -28,7 +28,6 @@ var (
 	ErrInvalidPortID        = types.ErrInvalidPortID
 	PortPath                = types.PortPath
 	KeyPort                 = types.KeyPort
-	ValidatePortID          = types.ValidatePortID
 )
 
 type (

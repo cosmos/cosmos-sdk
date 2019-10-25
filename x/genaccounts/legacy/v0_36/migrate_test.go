@@ -76,6 +76,7 @@ func TestMigrateEmptyRecord(t *testing.T) {
 		{"Burned and deposited accounts", args{v034accounts.GenesisState{accountDeposited, accountBurned}, []v034gov.DepositWithMetadata{deposit}}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.NotPanics(t, func() {
 				Migrate(

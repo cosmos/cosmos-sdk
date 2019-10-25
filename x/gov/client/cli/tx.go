@@ -28,6 +28,7 @@ const (
 	flagDepositor    = "depositor"
 	flagStatus       = "status"
 	flagNumLimit     = "limit"
+	flagPage         = "page"
 	FlagProposal     = "proposal"
 )
 

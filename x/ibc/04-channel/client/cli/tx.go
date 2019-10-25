@@ -105,12 +105,12 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			proofHeight, err := validateProofHeight(args[6])
+			proofHeight, err := strconv.ParseInt(args[6], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenTry(portID, channelID, channel, IBCVersion, proof, proofHeight, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenTry(portID, channelID, channel, IBCVersion, proof, uint64(proofHeight), cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -149,12 +149,12 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			proofHeight, err := validateProofHeight(args[3])
+			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenAck(portID, channelID, IBCVersion, proof, proofHeight, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenAck(portID, channelID, IBCVersion, proof, uint64(proofHeight), cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -190,12 +190,12 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 				}
 			}
 
-			proofHeight, err := validateProofHeight(args[3])
+			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenConfirm(portID, channelID, proof, proofHeight, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenConfirm(portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -255,12 +255,12 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 				}
 			}
 
-			proofHeight, err := validateProofHeight(args[3])
+			proofHeight, err := strconv.ParseInt(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgChannelCloseConfirm(portID, channelID, proof, proofHeight, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelCloseConfirm(portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -304,22 +304,11 @@ func GetMsgSendPacketCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func channelOrder() types.ChannelOrder {
+func channelOrder() types.Order {
 	if viper.GetBool(FlagUnordered) {
 		return types.UNORDERED
 	}
 	return types.ORDERED
-}
-
-// TODO: Move to ICS24
-func validatePortID(pid string) (string, error) {
-	// TODO: Add validation here
-	return pid, nil
-}
-
-func validateChannelID(cid string) (string, error) {
-	// TODO: Add validation here
-	return cid, nil
 }
 
 func validateChannelHops(hops string) ([]string, error) {
@@ -327,23 +316,8 @@ func validateChannelHops(hops string) ([]string, error) {
 	return strings.Split(hops, ","), nil
 }
 
-func validateProofHeight(height string) (uint64, error) {
-	// TODO: More validation?
-	i, err := strconv.ParseInt(height, 10, 64)
-	return uint64(i), err
-}
-
-func createChannelFromArgs(pid string, cid string, hops string) (types.Channel, error) {
+func createChannelFromArgs(portID, channelID string, hops string) (types.Channel, error) {
 	var channel types.Channel
-	portID, err := validatePortID(pid)
-	if err != nil {
-		return channel, err
-	}
-
-	channelID, err := validateChannelID(cid)
-	if err != nil {
-		return channel, err
-	}
 
 	channelHops, err := validateChannelHops(hops)
 	if err != nil {

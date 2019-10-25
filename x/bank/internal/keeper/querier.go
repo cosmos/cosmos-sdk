@@ -39,7 +39,7 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 
 	coins := k.GetCoins(ctx, params.Address)
 	if coins == nil {
-		coins = make(sdk.Coins, 0)
+		coins = sdk.NewCoins()
 	}
 
 	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, coins)

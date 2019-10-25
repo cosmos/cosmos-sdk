@@ -3,8 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -38,6 +40,32 @@ func (ch Channel) CounterpartyHops() []string {
 		counterPartyHops[len(counterPartyHops)-1-i] = hop
 	}
 	return counterPartyHops
+}
+
+// ValidateBasic performs a basic validation of the channel fields
+func (ch Channel) ValidateBasic() sdk.Error {
+	if ch.State.String() == "" {
+		return ErrInvalidChannelState(
+			DefaultCodespace,
+			"channel order should be either 'ORDERED' or 'UNORDERED'",
+		)
+	}
+	if ch.Ordering.String() == "" {
+		return ErrInvalidChannel(
+			DefaultCodespace,
+			"channel order should be either 'ORDERED' or 'UNORDERED'",
+		)
+	}
+	if len(ch.ConnectionHops) != 1 {
+		return ErrInvalidChannel(DefaultCodespace, "IBC v1 only supports one connection hop")
+	}
+	if err := host.DefaultIdentifierValidator(ch.ConnectionHops[0]); err != nil {
+		return ErrInvalidChannel(DefaultCodespace, errors.Wrap(err, "invalid connection hop ID").Error())
+	}
+	if strings.TrimSpace(ch.Version) == "" {
+		return ErrInvalidChannel(DefaultCodespace, "channel version can't be blank")
+	}
+	return ch.Counterparty.ValidateBasic()
 }
 
 // Counterparty defines the counterparty chain's channel and port identifiers

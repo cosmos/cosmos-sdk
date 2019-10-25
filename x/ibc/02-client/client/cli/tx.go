@@ -91,7 +91,7 @@ func GetCmdUpdateClient(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(fmt.Sprintf(`update existing client with a header:
 
 Example:
-$ %s tx ibc client create [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+$ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home ../node0/<app>cli --chain-id $CID
 		`, version.ClientName),
 		),
 		Args: cobra.ExactArgs(2),

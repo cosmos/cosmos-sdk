@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -21,12 +20,9 @@ func (k Keeper) ChanOpenInit(
 	channelID string,
 	counterparty types.Counterparty,
 	version string,
+	portCapability sdk.CapabilityKey,
 ) error {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
-	if len(connectionHops) != 1 {
-		return types.ErrInvalidConnectionHops(k.codespace)
-	}
-
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
@@ -44,14 +40,9 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	_, found = k.portKeeper.GetPort(ctx, portID)
-	if !found {
-		return port.ErrPortNotFound(k.codespace, portID)
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
 	}
-
-	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid")
-	// }
 
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -76,25 +67,16 @@ func (k Keeper) ChanOpenTry(
 	counterpartyVersion string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
-
-	if len(connectionHops) != 1 {
-		return types.ErrInvalidConnectionHops(k.codespace)
-	}
-
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	_, found = k.portKeeper.GetPort(ctx, portID)
-	if !found {
-		return port.ErrPortNotFound(k.codespace, portID)
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
 	}
-
-	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid")
-	// }
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
@@ -130,7 +112,7 @@ func (k Keeper) ChanOpenTry(
 		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -151,6 +133,7 @@ func (k Keeper) ChanOpenAck(
 	counterpartyVersion string,
 	proofTry commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -165,7 +148,9 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -182,7 +167,7 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.INIT, channel.Ordering, counterparty,
+		types.OPENTRY, channel.Ordering, counterparty,
 		channel.CounterpartyHops(), channel.Version,
 	)
 
@@ -196,7 +181,7 @@ func (k Keeper) ChanOpenAck(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.OPEN
@@ -214,6 +199,7 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	proofAck commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -227,7 +213,9 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -257,7 +245,7 @@ func (k Keeper) ChanOpenConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.OPEN
@@ -273,8 +261,16 @@ func (k Keeper) ChanOpenConfirm(
 
 // ChanCloseInit is called by either module to close their end of the channel. Once
 // closed, channels cannot be reopened.
-func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
-	// TODO: get channel capability key and authenticate it
+func (k Keeper) ChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	portCapability sdk.CapabilityKey,
+) error {
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
+
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, channelID)
@@ -310,8 +306,12 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
+
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, channelID)
@@ -349,7 +349,7 @@ func (k Keeper) ChanCloseConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.CLOSED

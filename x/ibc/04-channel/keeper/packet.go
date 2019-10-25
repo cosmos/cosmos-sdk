@@ -30,6 +30,7 @@ func (k Keeper) CleanupPacket(
 	proofHeight,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,
+	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
@@ -48,9 +49,9 @@ func (k Keeper) CleanupPacket(
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
+	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+		return nil, errors.New("port is not valid")
+	}
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
 		return nil, types.ErrInvalidPacket(
@@ -109,7 +110,15 @@ func (k Keeper) CleanupPacket(
 // SendPacket  is called by a module in order to send an IBC packet on a channel
 // end owned by the calling module to the corresponding module on the counterparty
 // chain.
-func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
+func (k Keeper) SendPacket(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	portCapability sdk.CapabilityKey,
+) error {
+	if err := packet.ValidateBasic(); err != nil {
+		return err
+	}
+
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
@@ -122,14 +131,9 @@ func (k Keeper) SendPacket(ctx sdk.Context, packet exported.PacketI) error {
 		)
 	}
 
-	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
-	if !found {
-		return types.ErrChannelCapabilityNotFound(k.codespace)
+	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+		return errors.New("port is not valid")
 	}
-
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
 
 	if packet.DestPort() != channel.Counterparty.PortID {
 		return types.ErrInvalidPacket(
@@ -193,11 +197,12 @@ func (k Keeper) RecvPacket(
 	proof commitment.ProofI,
 	proofHeight uint64,
 	acknowledgement []byte,
+	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 
-	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
+	channel, found := k.GetChannel(ctx, packet.DestPort(), packet.DestChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.DestChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -207,14 +212,9 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
-	if !found {
-		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
+	if !k.portKeeper.Authenticate(portCapability, packet.DestPort()) {
+		return nil, errors.New("port is not valid")
 	}
-
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
 
 	// packet must come from the channel's counterparty
 	if packet.SourcePort() != channel.Counterparty.PortID {
@@ -293,6 +293,7 @@ func (k Keeper) AcknowledgePacket(
 	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
@@ -306,14 +307,9 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())
-	if !found {
-		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
+	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+		return nil, errors.New("invalid capability key")
 	}
-
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
 
 	// packet must come from the channel's counterparty
 	if packet.SourcePort() != channel.Counterparty.PortID {
@@ -352,7 +348,7 @@ func (k Keeper) AcknowledgePacket(
 		types.PacketAcknowledgementPath(packet.DestPort(), packet.DestChannel(), packet.Sequence()),
 		acknowledgement, // TODO: hash ACK
 	) {
-		return nil, errors.New("invalid acknowledgement on counterparty chain") // TODO: sdk.Error
+		return nil, errors.New("invalid acknowledgement on counterparty chain")
 	}
 
 	k.deletePacketCommitment(ctx, packet.SourcePort(), packet.SourceChannel(), packet.Sequence())

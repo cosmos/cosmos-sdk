@@ -29,13 +29,14 @@ const (
 	DefaultCodespace               = types.DefaultCodespace
 	CodeChannelExists              = types.CodeChannelExists
 	CodeChannelNotFound            = types.CodeChannelNotFound
-	CodeInvalidConnectionHops      = types.CodeInvalidConnectionHops
 	CodeInvalidCounterpartyChannel = types.CodeInvalidCounterpartyChannel
 	CodeChannelCapabilityNotFound  = types.CodeChannelCapabilityNotFound
 	CodeInvalidPacket              = types.CodeInvalidPacket
 	CodeSequenceNotFound           = types.CodeSequenceNotFound
 	CodePacketTimeout              = types.CodePacketTimeout
+	CodeInvalidChannel             = types.CodeInvalidChannel
 	CodeInvalidChannelState        = types.CodeInvalidChannelState
+	CodeInvalidChannelProof        = types.CodeInvalidChannelProof
 	AttributeKeySenderPort         = types.AttributeKeySenderPort
 	AttributeKeyReceiverPort       = types.AttributeKeyReceiverPort
 	AttributeKeyChannelID          = types.AttributeKeyChannelID
@@ -59,13 +60,14 @@ var (
 	SetMsgChanCodec               = types.SetMsgChanCodec
 	ErrChannelExists              = types.ErrChannelExists
 	ErrChannelNotFound            = types.ErrChannelNotFound
-	ErrInvalidConnectionHops      = types.ErrInvalidConnectionHops
 	ErrInvalidCounterpartyChannel = types.ErrInvalidCounterpartyChannel
 	ErrChannelCapabilityNotFound  = types.ErrChannelCapabilityNotFound
 	ErrInvalidPacket              = types.ErrInvalidPacket
 	ErrSequenceNotFound           = types.ErrSequenceNotFound
 	ErrPacketTimeout              = types.ErrPacketTimeout
+	ErrInvalidChannel             = types.ErrInvalidChannel
 	ErrInvalidChannelState        = types.ErrInvalidChannelState
+	ErrInvalidChannelProof        = types.ErrInvalidChannelProof
 	ChannelPath                   = types.ChannelPath
 	ChannelCapabilityPath         = types.ChannelCapabilityPath
 	NextSequenceSendPath          = types.NextSequenceSendPath
@@ -84,7 +86,6 @@ var (
 	NewMsgChannelOpenConfirm      = types.NewMsgChannelOpenConfirm
 	NewMsgChannelCloseInit        = types.NewMsgChannelCloseInit
 	NewMsgChannelCloseConfirm     = types.NewMsgChannelCloseConfirm
-	NewMsgSendPacket              = types.NewMsgSendPacket
 	NewPacket                     = types.NewPacket
 	NewOpaquePacket               = types.NewOpaquePacket
 	NewChannelResponse            = types.NewChannelResponse
@@ -92,7 +93,6 @@ var (
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
-	EventTypeSendPacket          = types.EventTypeSendPacket
 	EventTypeChannelOpenInit     = types.EventTypeChannelOpenInit
 	EventTypeChannelOpenTry      = types.EventTypeChannelOpenTry
 	EventTypeChannelOpenAck      = types.EventTypeChannelOpenAck
@@ -117,7 +117,6 @@ type (
 	MsgChannelOpenConfirm  = types.MsgChannelOpenConfirm
 	MsgChannelCloseInit    = types.MsgChannelCloseInit
 	MsgChannelCloseConfirm = types.MsgChannelCloseConfirm
-	MsgSendPacket          = types.MsgSendPacket
 	Packet                 = types.Packet
 	OpaquePacket           = types.OpaquePacket
 	ChannelResponse        = types.ChannelResponse

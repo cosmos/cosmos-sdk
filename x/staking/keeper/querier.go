@@ -116,7 +116,7 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 	}
 
 	if delegationResps == nil {
-		delegationResps = make(types.DelegationResponses, 0)
+		delegationResps = types.DelegationResponses{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)

@@ -1,10 +1,8 @@
 package debug
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -16,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -28,58 +25,11 @@ func Cmd(cdc *codec.Codec) *cobra.Command {
 		RunE:  client.ValidateCmd,
 	}
 
-	cmd.AddCommand(TxCmd(cdc))
 	cmd.AddCommand(PubkeyCmd(cdc))
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
 
 	return cmd
-}
-
-func TxCmd(cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
-		Use:   "tx",
-		Short: "Decode a tx from hex or base64",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-
-			txString := args[0]
-
-			// try hex, then base64
-			txBytes, err := hex.DecodeString(txString)
-			if err != nil {
-				var err2 error
-				txBytes, err2 = base64.StdEncoding.DecodeString(txString)
-				if err2 != nil {
-					return fmt.Errorf(`expected hex or base64. Got errors:
-				hex: %v,
-				base64: %v
-				`, err, err2)
-				}
-			}
-
-			var tx = auth.StdTx{}
-
-			err = cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
-			if err != nil {
-				return err
-			}
-
-			bz, err := cdc.MarshalJSON(tx)
-			if err != nil {
-				return err
-			}
-
-			buf := bytes.NewBuffer([]byte{})
-			err = json.Indent(buf, bz, "", "  ")
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(buf.String())
-			return nil
-		},
-	}
 }
 
 func PubkeyCmd(cdc *codec.Codec) *cobra.Command {

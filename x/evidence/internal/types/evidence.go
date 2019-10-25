@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // Evidence defines the contract which concrete evidence types of misbehavior
@@ -10,6 +12,7 @@ type Evidence interface {
 	Route() string
 	Type() string
 	String() string
+	Hash() cmn.HexBytes
 	ValidateBasic() error
 
 	// The consensus address of the malicious validator at time of infraction

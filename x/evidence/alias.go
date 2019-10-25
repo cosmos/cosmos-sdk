@@ -1,6 +1,7 @@
 package evidence
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
@@ -15,12 +16,16 @@ const (
 )
 
 var (
+	NewKeeper = keeper.NewKeeper
+
 	RegisterCodec             = types.RegisterCodec
 	RegisterEvidenceTypeCodec = types.RegisterEvidenceTypeCodec
 	ModuleCdc                 = types.ModuleCdc
 )
 
 type (
+	Keeper = keeper.Keeper
+
 	Evidence = types.Evidence
 	Handler  = types.Handler
 	Router   = types.Router

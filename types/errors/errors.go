@@ -121,7 +121,7 @@ func ABCIError(codespace string, code uint32, log string) error {
 	}
 	// This is a unique error, will never match on .Is()
 	// Use Wrap here to get a stack trace
-	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
+	return Wrap(New(codespace, code, "unknown"), log)
 }
 
 // Error represents a root error.
@@ -137,6 +137,10 @@ type Error struct {
 	codespace string
 	code      uint32
 	desc      string
+}
+
+func New(codespace string, code uint32, desc string) *Error {
+	return &Error{codespace: codespace, code: code, desc: desc}
 }
 
 func (e Error) Error() string {

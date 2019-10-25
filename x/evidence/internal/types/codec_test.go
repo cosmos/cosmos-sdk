@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 	"github.com/stretchr/testify/require"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 var _ types.Evidence = (*testEvidence)(nil)
@@ -18,6 +19,7 @@ func (te testEvidence) Type() string                         { return "" }
 func (te testEvidence) String() string                       { return "" }
 func (te testEvidence) ValidateBasic() error                 { return nil }
 func (te testEvidence) GetConsensusAddress() sdk.ConsAddress { return nil }
+func (te testEvidence) Hash() cmn.HexBytes                   { return nil }
 func (te testEvidence) GetHeight() int64                     { return 0 }
 func (te testEvidence) GetValidatorPower() int64             { return 0 }
 func (te testEvidence) GetTotalPower() int64                 { return 0 }

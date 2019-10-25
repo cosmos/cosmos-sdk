@@ -12,7 +12,6 @@ This repository contains a working implementation of modules that can be used in
 - [Mint](./x/mint/spec/README.md) - Creation of new units of staking token.
 - [Params](./x/params/spec/README.md) - Globally available parameter store.
 - [Supply](./x/supply/spec/README.md) - Total token supply of the chain.
-- [NFT](./x/nft/spec/README.md) - Non-fungible token functionalities.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](../docs/building-modules/README.md).
 

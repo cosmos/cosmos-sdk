@@ -42,14 +42,12 @@ func VerifyMsgPackets(ctx sdk.Context, channel channel.Manager, msgs []MsgPacket
 	return nil
 }
 
-func NewAnteHandler(channel channel.Manager) sdk.AnteDecorator {
+func NewAnteDecorator(channel channel.Manager) sdk.AnteDecorator {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 		msgs, abort := ExtractMsgPackets(tx.GetMsgs())
 		if abort {
 			return ctx, host.ErrInvalidPacket
 		}
-
-		// GasMeter already set by auth.AnteHandler
 
 		err := VerifyMsgPackets(ctx, channel, msgs)
 		if err != nil {

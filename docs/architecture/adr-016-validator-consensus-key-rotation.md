@@ -15,7 +15,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 ### Pseudo procedure for consensus key rotation
 
 - create new random consensus key.
-- create and broadcast a transaction(RotateValConsensusKey) that the new consensus key is now coupled with the validator operator with signature from validator wallet key.
+- create and broadcast a transaction with a `MsgRotateConsPubKey` that states the new consensus key is now coupled with the validator operator with signature from the validator's operator key.
 - old consensus key becomes unable to participate on consensus immediately after the update of key mapping state on-chain.
 - start validating with new consensus key.
 - validators using HSM and KMS should update the consensus key in HSM to use the new rotated key for signing votes.

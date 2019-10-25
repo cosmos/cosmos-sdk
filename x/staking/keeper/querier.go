@@ -115,6 +115,10 @@ func queryValidatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 		return nil, sdk.ErrInternal(err.Error())
 	}
 
+	if delegationResps == nil {
+		delegationResps = make(types.DelegationResponses, 0)
+	}
+
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", err.Error()))
@@ -132,6 +136,9 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	}
 
 	unbonds := k.GetUnbondingDelegationsFromValidator(ctx, params.ValidatorAddr)
+	if unbonds == nil {
+		unbonds = make(types.UnbondingDelegations, 0)
+	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbonds)
 	if err != nil {
@@ -155,6 +162,10 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 		return nil, sdk.ErrInternal(err.Error())
 	}
 
+	if delegationResps == nil {
+		delegationResps = make(types.DelegationResponses, 0)
+	}
+
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", err.Error()))
@@ -172,6 +183,9 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 	}
 
 	unbondingDelegations := k.GetAllUnbondingDelegations(ctx, params.DelegatorAddr)
+	if unbondingDelegations == nil {
+		unbondingDelegations = make(types.UnbondingDelegations, 0)
+	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbondingDelegations)
 	if err != nil {
@@ -192,6 +206,9 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 	}
 
 	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakingParams.MaxValidators)
+	if validators == nil {
+		validators = make(types.Validators, 0)
+	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validators)
 	if err != nil {
@@ -296,6 +313,10 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 	redelResponses, err := redelegationsToRedelegationResponses(ctx, k, redels)
 	if err != nil {
 		return nil, sdk.ErrInternal(err.Error())
+	}
+
+	if redelResponses == nil {
+		redelResponses = make(types.RedelegationResponses, 0)
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, redelResponses)

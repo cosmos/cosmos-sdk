@@ -37,7 +37,12 @@ func queryBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, k.GetCoins(ctx, params.Address))
+	coins := k.GetCoins(ctx, params.Address)
+	if coins == nil {
+		coins = make(sdk.Coins, 0)
+	}
+
+	bz, err := codec.MarshalJSONIndent(types.ModuleCdc, coins)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

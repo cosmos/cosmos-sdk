@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
 
 // NewHandler defines the IBC handler
@@ -38,27 +37,24 @@ func NewHandler(k Keeper) sdk.Handler {
 		case connection.MsgConnectionOpenConfirm:
 			return connection.HandleMsgConnectionOpenConfirm(ctx, k.ConnectionKeeper, msg)
 
-		// IBC channel msgs
-		case channel.MsgChannelOpenInit:
-			return channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
+		// // IBC channel msgs
+		// case channel.MsgChannelOpenInit:
+		// 	return channel.HandleMsgChannelOpenInit(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelOpenTry:
-			return channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, msg)
+		// case channel.MsgChannelOpenTry:
+		// 	return channel.HandleMsgChannelOpenTry(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelOpenAck:
-			return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, msg)
+		// case channel.MsgChannelOpenAck:
+		// 	return channel.HandleMsgChannelOpenAck(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelOpenConfirm:
-			return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, msg)
+		// case channel.MsgChannelOpenConfirm:
+		// 	return channel.HandleMsgChannelOpenConfirm(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelCloseInit:
-			return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, msg)
+		// case channel.MsgChannelCloseInit:
+		// 	return channel.HandleMsgChannelCloseInit(ctx, k.ChannelKeeper, msg)
 
-		case channel.MsgChannelCloseConfirm:
-			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, msg)
-
-		case channel.MsgSendPacket:
-			return channel.HandleMsgSendPacket(ctx, k.ChannelKeeper, msg)
+		// case channel.MsgChannelCloseConfirm:
+		// 	return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, msg)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)

@@ -86,7 +86,6 @@ var (
 	NewMsgChannelOpenConfirm      = types.NewMsgChannelOpenConfirm
 	NewMsgChannelCloseInit        = types.NewMsgChannelCloseInit
 	NewMsgChannelCloseConfirm     = types.NewMsgChannelCloseConfirm
-	NewMsgSendPacket              = types.NewMsgSendPacket
 	NewPacket                     = types.NewPacket
 	NewOpaquePacket               = types.NewOpaquePacket
 	NewChannelResponse            = types.NewChannelResponse
@@ -94,7 +93,6 @@ var (
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc
-	EventTypeSendPacket          = types.EventTypeSendPacket
 	EventTypeChannelOpenInit     = types.EventTypeChannelOpenInit
 	EventTypeChannelOpenTry      = types.EventTypeChannelOpenTry
 	EventTypeChannelOpenAck      = types.EventTypeChannelOpenAck
@@ -119,7 +117,6 @@ type (
 	MsgChannelOpenConfirm  = types.MsgChannelOpenConfirm
 	MsgChannelCloseInit    = types.MsgChannelCloseInit
 	MsgChannelCloseConfirm = types.MsgChannelCloseConfirm
-	MsgSendPacket          = types.MsgSendPacket
 	Packet                 = types.Packet
 	OpaquePacket           = types.OpaquePacket
 	ChannelResponse        = types.ChannelResponse

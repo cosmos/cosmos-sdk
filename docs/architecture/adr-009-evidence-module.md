@@ -56,6 +56,7 @@ type Evidence interface {
   Route() string
   Type() string
   String() string
+  Hash() HexBytes
   ValidateBasic() error
 
   // The consensus address of the malicious validator at time of infraction

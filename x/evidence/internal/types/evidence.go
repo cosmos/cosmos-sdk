@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Evidence defines the contract which concrete evidence types of misbehavior
@@ -11,7 +10,7 @@ type Evidence interface {
 	Route() string
 	Type() string
 	String() string
-	ValidateBasic() sdkerrors.Error
+	ValidateBasic() error
 
 	// The consensus address of the malicious validator at time of infraction
 	GetConsensusAddress() sdk.ConsAddress

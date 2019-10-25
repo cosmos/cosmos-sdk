@@ -1,5 +1,4 @@
 ---
-<<<<<<< HEAD
 order: false
 parent:
   order: 4
@@ -20,11 +19,4 @@ This repository contains documentation on concepts developers need to know in or
 9. [Genesis](./genesis.md)
 10. [Module Interfaces](./module-interfaces.md)
 11. [Standard Module Structure](./structure.md)
-=======
-parent:
-  title: Building modules
----
-
-# Auth
->>>>>>> origin/master-docs
 

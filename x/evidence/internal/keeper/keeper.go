@@ -41,6 +41,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+// SubmitEvidence attempts to match evidence against the keepers router and execute
+// the corresponding registered Evidence Handler. An error is returned if no
+// registered Handler exists or if the Handler fails. Otherwise, the evidence is
+// persisted.
 func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 	if !k.router.HasRoute(evidence.Route()) {
 		return types.ErrNoEvidenceHandlerExists(k.codespace, evidence.Route())

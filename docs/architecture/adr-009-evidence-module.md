@@ -56,7 +56,7 @@ type Evidence interface {
   Route() string
   Type() string
   String() string
-  ValidateBasic() Error
+  ValidateBasic() error
 
   // The consensus address of the malicious validator at time of infraction
   GetConsensusAddress() ConsAddress
@@ -98,7 +98,7 @@ necessary in order for the `Handler` to make the necessary state transitions.
 If no error is returned, the `Evidence` is considered valid.
 
 ```go
-type Handler func(Context, Evidence) Error
+type Handler func(Context, Evidence) error
 ```
 
 ### Submission

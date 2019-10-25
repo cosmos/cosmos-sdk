@@ -87,7 +87,7 @@ func queryValidatorOutstandingRewards(ctx sdk.Context, path []string, req abci.R
 	}
 	rewards := k.GetValidatorOutstandingRewards(ctx, params.ValidatorAddress)
 	if rewards == nil {
-		rewards = make(sdk.DecCoins, 0)
+		rewards = sdk.DecCoins{}
 	}
 	bz, err := codec.MarshalJSONIndent(k.cdc, rewards)
 	if err != nil {

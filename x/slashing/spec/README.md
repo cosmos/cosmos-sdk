@@ -1,4 +1,4 @@
-# Slashing module specification
+# `slashing`
 
 ## Abstract
 

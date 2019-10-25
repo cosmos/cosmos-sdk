@@ -1,4 +1,4 @@
-# Governance module specification
+# `gov`
 
 ## Abstract
 

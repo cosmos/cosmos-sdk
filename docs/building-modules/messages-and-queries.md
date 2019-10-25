@@ -15,11 +15,11 @@ order: 3
 
 ## Messages
 
-`Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions], which may contain one or multiple of them. 
+`Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or multiple of them. 
 
 When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md). 
 
-Defining `message`s is the responsibility of module developers. Typically, they are defined in a `internal/types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+Defining `message`s is the responsibility of module developers. Typically, they are defined in a `./internal/types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
 ```go
 // Example of a message type definition

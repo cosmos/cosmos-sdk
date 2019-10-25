@@ -82,7 +82,7 @@ and go through the following steps:
 2. Marhsall `value` to `[]byte` using the codec `cdc`. 
 3. Set the encoded value in the store at location `key` using the `Set(key []byte, value []byte)` method of the store. 
 
-For more, see an example of `keeper`'s [methods implementation from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/internal/keeper/keeper.go). 
+For more, see an example of `keeper`'s [methods implementation from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/keeper/keeper.go). 
 
 ## Next
 

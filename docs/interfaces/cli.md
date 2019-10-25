@@ -12,11 +12,11 @@ order: 3
 
 This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli).
 
-## Application CLI Components
+## Command-Line Interface
 
-One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `./cmd/cli` folder. The CLI for an application is typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`. Here is where the interfaces docs lie in the directory from the [nameservice tutorial](https://cosmos.network/docs/tutorial)
+One of the main entrypoints of an application is the command-line interface. This entrypoint is created via a `main.go` file which compiles to a binary, conventionally placed in the application's `./cmd/cli` folder. The CLI for an application is typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`. Here is where the interfaces docs lie in the directory from the [nameservice tutorial](https://cosmos.network/docs/tutorial)
 
-### Cobra
+### Example Command
 
 There is no set way to create a CLI, but SDK modules typically use the [Cobra Library](https://github.com/spf13/cobra). Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) understand the actions users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
@@ -25,11 +25,19 @@ Here is an example of a command a user might enter to interact with the nameserv
 ```bash
 nscli tx nameservice buy-name <name> <amount> --gas auto --gas-prices <gasPrices>
 ```
-The first four strings specify the command: the root command for the entire application `nscli`, the subcommand `tx`, the subcommand `nameservice` to indicate which module to route the command to, and the type of transaction `buy-name`. The next two strings are arguments: the `name` the user wishes to buy and the `amount` they want to pay for it. Finally, the last few strings of the command are flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
+
+The first four strings specify the command: 
+
+- The root command for the entire application `nscli`.
+- The subcommand `tx`, which contains all commands that let users create transactions.
+- The subcommand `nameservice` to indicate which module to route the command to (`nameservice` module in this case).
+- The type of transaction `buy-name`. 
+
+The next two strings are arguments: the `name` the user wishes to buy and the `amount` they want to pay for it. Finally, the last few strings of the command are flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
 
 The CLI interacts with a [node](../core/node.md) (running `nsd`) to handle this command. The interface itself is defined in a `main.go` file.
 
-### Main Function
+### Building the CLI
 
 The `main.go` file needs to have a `main()` function that does the following to run the command-line interface:
 
@@ -41,7 +49,7 @@ The `main.go` file needs to have a `main()` function that does the following to 
 
 An example of the `main()` function for the [nameservice tutorial](https://cosmos.network/docs/tutorial) CLI can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/cmd/nscli/main.go#L26-L67). The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the nameservice CLI `main.go` file.
 
-## Commands
+## Adding Commands to the CLI
 
 Every application CLI first constructs a root command, then adds functionality by aggregating subcommands (often with further nested subcommands) using `AddCommand()`. The bulk of an application's unique capabilities lies in its transaction and query commands, called `TxCmd` and `QueryCmd` respectively.
 

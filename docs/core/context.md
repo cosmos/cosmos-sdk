@@ -11,15 +11,11 @@ order: 3
 
 ## Synopsis
 
-This document details the SDK `Context` type.
+The `context` is a data structure intended to be passed from function to function that carries information about the current state of the application. It holds a cached copy of the entire state as well as useful objects and information like `gasMeter`, `block height`, `consensus parameters` and more. 
 
 ## Context Definition
 
-The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context)
-as its base, and has many additional types within its definition that are specific to the Cosmos SDK
-and Tendermint. The `Context` is directly passed between methods and functions as an argument.
-The `Context` is integral to transaction processing in that it allows modules to easily access their respective
-[store](./store.md#base-layer-kvstores) in the [multistore](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
+The SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://golang.org/pkg/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. he `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./store.md#base-layer-kvstores) in the [`multistore`](./store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go
 type Context struct {
@@ -40,21 +36,18 @@ type Context struct {
 ```
 
 - **Context:** The base type is a Go [Context](https://golang.org/pkg/context), which is explained further in the [Go Context Package](#go-context-package) section below. 
-- **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their
-respective `KVStore` using their unique `StoreKey`.
+- **Multistore:** Every application's `BaseApp` contains a [`CommitMultiStore`](./store.md#multistore) which is provided when a `Context` is created. Calling the `KVStore()` and `TransientStore()` methods allows modules to fetch their respective [`KVStore`](./store.md#base-layer-kvstores) using their unique `StoreKey`.
 - **ABCI Header:** The [header](https://tendermint.com/docs/spec/abci/abci.html#header) is an ABCI type. It carries important information about the state of the blockchain, such as block height and proposer of the current block.
 - **Chain ID:** The unique identification number of the blockchain a block pertains to.
 - **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the SDK and consensus engine (e.g. Tendermint) throughout its [lifecycle](../basics/tx-lifecycle.md), some of which to not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./encoding.md) such as [Amino](./encoding.md).
 - **Logger:** A [Logger](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/libs/log/logger.go) from the Tendermint libraries. Learn more about logs [here](https://tendermint.com/docs/tendermint-core/how-to-read-logs.html#how-to-read-logs). Modules call this method to create their own unique module-specific logger.
 - **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://tendermint.com/docs/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
-- **Gas Meters:** Specifically, a `gasMeter` for the transaction currently being processed using the context and a `blockGasMeter` for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
+- **Gas Meters:** Specifically, a [`gasMeter`](../basics/gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../basics/gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../basics/gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
 - **CheckTx Mode:** A boolean value indicating whether a transaction should be processed in `CheckTx` or `DeliverTx` mode.
-- **Min Gas Price:** The minimum [gas](../basics/gas-fees.md) price a node is willing to take in order to include a transaction in its block. This price is a local value configured by each node individually.
-- **Consensus Params:** The ABCI type [Consensus Parameters](https://tendermint.com/docs/spec/abci/apps.html#consensus-parameters), which enforce certain limits for the blockchain, such as maximum gas for a block.
-- **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go). Modules may define module specific
-`Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients
-can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`,
-and `EndBlock` and are returned to Tendermint for indexing. For example:
+- **Min Gas Price:** The minimum [gas](../basics/gas-fees.md) price a node is willing to take in order to include a transaction in its block. This price is a local value configured by each node individually, and should therefore **not be used in any functions used in sequences leading to state-transitions**. 
+- **Consensus Params:** The ABCI type [Consensus Parameters](https://tendermint.com/docs/spec/abci/apps.html#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
+- **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./events.md). Modules may define module specific
+`Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to Tendermint for indexing. For example:
 
 ```go
 ctx.EventManager().EmitEvent(sdk.NewEvent(

@@ -1,4 +1,4 @@
-# NFT Specification
+# `nft`
 
 ## Overview
 

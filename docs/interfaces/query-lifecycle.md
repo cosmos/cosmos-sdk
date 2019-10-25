@@ -10,13 +10,13 @@ order: 2
 
 ## Synopsis
 
-This document describes SDK interfaces in detail through the lifecycle of a query, from the user interface to application stores and back. The query will be referred to as `Query`.
+This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. The query will be referred to as `Query`.
 
 ## Query Creation
 
-A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed; they can be fully handled by one full-node.
+A [**query**](../building-modules/messages-and-queries.md#queries) is a request for information made by end-users of applications through an interface and processed by a full-node. Users can query information about the network, the application itself, and application state directly from the application's stores or modules. Note that queries are different from [transactions](../core/transactions.md) (view the lifecycle [here](../basics/tx-lifecycle.md)), particularly in that they do not require consensus to be processed (as they do not trigger state-transitions); they can be fully handled by one full-node.
 
-For the purpose of explaining a query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module handles this query. But first, there are a few ways `Query` can be created by users.
+For the purpose of explaining the query lifecycle, let's say `Query` is requesting a list of delegations made by a certain delegator address in the application called `app`. As to be expected, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module handles this query. But first, there are a few ways `Query` can be created by users.
 
 ### CLI
 
@@ -26,15 +26,15 @@ The main interface for an application is the command-line interface. Users conne
 appcli query staking delegations <delegatorAddress>
 ```
 
+This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
+
 Note that the general format is as follows:
 
 ```bash
 appcli query [moduleName] [command] <arguments> --flag <flagArg>
 ```
 
-To provide values such as `--node` (the full-node the CLI connects to), the user must use the `config` command to set them or provide them as flags.
-
-This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
+To provide values such as `--node` (the full-node the CLI connects to), the user can use the `config` command to set themn or provide them as flags.
 
 The CLI understands a specific set of commands, defined in a hierarchical structure by the application developer: from the [root command](./cli.md#root-command) (`appcli`), the type of command (`query`), the module that contains the command  (`staking`), and command itself (`delegations`). Thus, the CLI knows exactly which module handles this command and directly passes the call there.
 

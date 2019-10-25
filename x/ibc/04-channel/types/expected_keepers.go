@@ -27,6 +27,5 @@ type ConnectionKeeper interface {
 
 // PortKeeper expected account IBC port keeper
 type PortKeeper interface {
-	GetPort(key sdk.CapabilityKey) (string, bool)
 	Authenticate(key sdk.CapabilityKey, portID string) bool
 }

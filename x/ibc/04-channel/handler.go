@@ -151,27 +151,3 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Ms
 
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
-
-// HandleMsgSendPacket defines the sdk.Handler for MsgSendPacket
-func HandleMsgSendPacket(ctx sdk.Context, k Keeper, msg MsgSendPacket) sdk.Result {
-	err := k.SendPacket(ctx, msg.Packet)
-	if err != nil {
-		return sdk.ResultFromError(err)
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeSendPacket,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.Packet.SourcePort()),
-			sdk.NewAttribute(types.AttributeKeyChannelID, msg.Packet.SourceChannel()),
-			// TODO: destination port and channel events
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
-		),
-	})
-
-	return sdk.Result{Events: ctx.EventManager().Events()}
-}

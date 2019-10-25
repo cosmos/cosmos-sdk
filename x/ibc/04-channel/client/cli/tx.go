@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -41,11 +40,12 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
 		GetMsgChannelCloseInitCmd(storeKey, cdc),
 		GetMsgChannelCloseConfirmCmd(storeKey, cdc),
-		GetMsgSendPacketCmd(storeKey, cdc),
 	)...)
 
 	return ics04ChannelTxCmd
 }
+
+// TODO: module needs to pass the capability key (i.e store key)
 
 // GetMsgChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
 func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -286,39 +286,6 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-}
-
-// GetMsgSendPacketCmd returns the command to create a MsgChannelCloseConfirm transaction
-func GetMsgSendPacketCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "send-packet [/path/to/packet-data.json]",
-		Short: "Creates and sends a SendPacket message",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			var packet exported.PacketI
-			if err := cdc.UnmarshalJSON([]byte(args[0]), &packet); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
-				contents, err := ioutil.ReadFile(args[0])
-				if err != nil {
-					return fmt.Errorf("error opening packet file: %v", err)
-				}
-				if err := cdc.UnmarshalJSON(contents, &packet); err != nil {
-					return fmt.Errorf("error unmarshalling packet file: %v", err)
-				}
-			}
-
-			msg := types.NewMsgSendPacket(packet, cliCtx.GetFromAddress())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
-	return cmd
 }
 
 func channelOrder() types.Order {

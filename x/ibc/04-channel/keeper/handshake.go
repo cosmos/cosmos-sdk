@@ -20,6 +20,7 @@ func (k Keeper) ChanOpenInit(
 	channelID string,
 	counterparty types.Counterparty,
 	version string,
+	portCapability sdk.CapabilityKey,
 ) error {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
 	_, found := k.GetChannel(ctx, portID, channelID)
@@ -39,14 +40,9 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	// _, found = k.portKeeper.GetPort(portID)
-	// if !found {
-	// 	return port.ErrPortNotFound(k.codespace, portID)
-	// }
-
-	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid")
-	// }
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -71,20 +67,16 @@ func (k Keeper) ChanOpenTry(
 	counterpartyVersion string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	// _, found = k.portKeeper.GetPort(portID)
-	// if !found {
-	// 	return port.ErrPortNotFound(k.codespace, portID)
-	// }
-
-	// if !k.portKeeper.AuthenticatePort(port.ID()) {
-	// 	return errors.New("port is not valid")
-	// }
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
@@ -141,6 +133,7 @@ func (k Keeper) ChanOpenAck(
 	counterpartyVersion string,
 	proofTry commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
@@ -155,7 +148,9 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -204,6 +199,7 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	proofAck commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -217,7 +213,9 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -263,8 +261,16 @@ func (k Keeper) ChanOpenConfirm(
 
 // ChanCloseInit is called by either module to close their end of the channel. Once
 // closed, channels cannot be reopened.
-func (k Keeper) ChanCloseInit(ctx sdk.Context, portID, channelID string) error {
-	// TODO: get channel capability key and authenticate it
+func (k Keeper) ChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	portCapability sdk.CapabilityKey,
+) error {
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
+
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, channelID)
@@ -300,8 +306,12 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) error {
-	// TODO: get channel capability key and authenticate it
+	if !k.portKeeper.Authenticate(portCapability, portID) {
+		return errors.New("port is not valid")
+	}
+
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, channelID)

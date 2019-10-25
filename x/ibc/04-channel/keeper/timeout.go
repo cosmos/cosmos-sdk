@@ -23,6 +23,7 @@ func (k Keeper) TimeoutPacket(
 	proof commitment.ProofI,
 	proofHeight uint64,
 	nextSequenceRecv uint64,
+	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
@@ -41,9 +42,9 @@ func (k Keeper) TimeoutPacket(
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
+	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+		return nil, errors.New("port is not valid")
+	}
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
 		return nil, types.ErrInvalidPacket(
@@ -117,6 +118,7 @@ func (k Keeper) TimeoutOnClose(
 	proofNonMembership,
 	proofClosed commitment.ProofI,
 	proofHeight uint64,
+	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
@@ -128,9 +130,9 @@ func (k Keeper) TimeoutOnClose(
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	// if !AuthenticateCapabilityKey(capabilityKey) {
-	//  return errors.New("invalid capability key")
-	// }
+	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+		return nil, errors.New("port is not valid")
+	}
 
 	if packet.DestChannel() != channel.Counterparty.ChannelID {
 		return nil, types.ErrInvalidPacket(

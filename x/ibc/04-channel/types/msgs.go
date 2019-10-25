@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -376,49 +375,5 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Signer}
-}
-
-var _ sdk.Msg = MsgSendPacket{}
-
-// MsgSendPacket PortID dependent on type
-// ChannelID can be empty if batched & not first MsgSendPacket
-// Height uint64 // height of the commitment root for the proofs
-type MsgSendPacket struct {
-	Packet exported.PacketI `json:"packet" yaml:"packet"`
-	Signer sdk.AccAddress   `json:"signer" yaml:"signer"`
-}
-
-// NewMsgSendPacket creates a new MsgSendPacket instance
-func NewMsgSendPacket(packet exported.PacketI, signer sdk.AccAddress) MsgSendPacket {
-	return MsgSendPacket{
-		Packet: packet,
-		Signer: signer,
-	}
-}
-
-// Route implements sdk.Msg
-func (msg MsgSendPacket) Route() string {
-	return ibctypes.RouterKey
-}
-
-// Type implements sdk.Msg
-func (msg MsgSendPacket) Type() string {
-	return "send_packet"
-}
-
-// ValidateBasic implements sdk.Msg
-func (msg MsgSendPacket) ValidateBasic() sdk.Error {
-	// Signer can be empty
-	return msg.Packet.ValidateBasic()
-}
-
-// GetSignBytes implements sdk.Msg
-func (msg MsgSendPacket) GetSignBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
-}
-
-// GetSigners implements sdk.Msg
-func (msg MsgSendPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k keeper.Keeper, bankKeeper bank.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
@@ -22,6 +23,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		case types.MsgWithdrawValidatorCommission:
 			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
+
+		case types.MsgDepositIntoCommunityPool:
+			return handleMsgDepositIntoCommunityPool(ctx, msg, k, bankKeeper)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized distribution message type: %T", msg)
@@ -77,6 +81,26 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress.String()),
+		),
+	)
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
+}
+
+func handleMsgDepositIntoCommunityPool(ctx sdk.Context, msg types.MsgDepositIntoCommunityPool, k keeper.Keeper, bankK bank.Keeper) sdk.Result {
+	if _, err := bankK.SubtractCoins(ctx, msg.Depositor, msg.Amount); err != nil {
+		return err.Result()
+	}
+
+	pool := k.GetFeePool(ctx)
+	pool.CommunityPool = pool.CommunityPool.Add(sdk.NewDecCoins(msg.Amount))
+	k.SetFeePool(ctx, pool)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor.String()),
 		),
 	)
 

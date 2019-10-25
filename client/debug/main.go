@@ -40,10 +40,8 @@ func TxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "tx",
 		Short: "Decode a tx from hex or base64",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return fmt.Errorf("expected single arg")
-			}
 
 			txString := args[0]
 
@@ -88,10 +86,8 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey",
 		Short: "Decode a pubkey from hex, base64, or bech32",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return fmt.Errorf("expected single arg")
-			}
 
 			pubkeyString := args[0]
 			var pubKeyI crypto.PubKey
@@ -167,10 +163,8 @@ func AddrCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "addr",
 		Short: "Convert an address between hex and bech32",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return fmt.Errorf("expected single arg")
-			}
 
 			addrString := args[0]
 			var addr []byte
@@ -212,10 +206,8 @@ func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "raw-bytes",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 1 {
-				return fmt.Errorf("expected single arg")
-			}
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")
 			stringBytes = strings.Trim(stringBytes, "]")

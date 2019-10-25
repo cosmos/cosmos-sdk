@@ -12,13 +12,14 @@ const (
 
 	CodeChannelExists              sdk.CodeType = 101
 	CodeChannelNotFound            sdk.CodeType = 102
-	CodeInvalidConnectionHops      sdk.CodeType = 103
-	CodeInvalidCounterpartyChannel sdk.CodeType = 104
-	CodeChannelCapabilityNotFound  sdk.CodeType = 105
-	CodeInvalidPacket              sdk.CodeType = 106
-	CodeSequenceNotFound           sdk.CodeType = 107
-	CodePacketTimeout              sdk.CodeType = 108
+	CodeInvalidCounterpartyChannel sdk.CodeType = 103
+	CodeChannelCapabilityNotFound  sdk.CodeType = 104
+	CodeInvalidPacket              sdk.CodeType = 105
+	CodeSequenceNotFound           sdk.CodeType = 106
+	CodePacketTimeout              sdk.CodeType = 107
+	CodeInvalidChannel             sdk.CodeType = 108
 	CodeInvalidChannelState        sdk.CodeType = 109
+	CodeInvalidChannelProof        sdk.CodeType = 110
 )
 
 // ErrChannelExists implements sdk.Error
@@ -31,14 +32,9 @@ func ErrChannelNotFound(codespace sdk.CodespaceType, channelID string) sdk.Error
 	return sdk.NewError(codespace, CodeChannelNotFound, fmt.Sprintf("channel with ID %s not found", channelID))
 }
 
-// ErrInvalidConnectionHops implements sdk.Error
-func ErrInvalidConnectionHops(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidConnectionHops, "IBC v1 only supports one connection hop")
-}
-
 // ErrInvalidCounterpartyChannel implements sdk.Error
-func ErrInvalidCounterpartyChannel(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidCounterpartyChannel, "counterparty channel doesn't match the expected one")
+func ErrInvalidCounterpartyChannel(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidCounterpartyChannel, msg)
 }
 
 // ErrChannelCapabilityNotFound implements sdk.Error
@@ -61,7 +57,17 @@ func ErrPacketTimeout(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodePacketTimeout, "packet timeout")
 }
 
+// ErrInvalidChannel implements sdk.Error
+func ErrInvalidChannel(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidChannel, msg)
+}
+
 // ErrInvalidChannelState implements sdk.Error
 func ErrInvalidChannelState(codespace sdk.CodespaceType, msg string) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidChannelState, msg)
+}
+
+// ErrInvalidChannelProof implements sdk.Error
+func ErrInvalidChannelProof(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidChannelProof, msg)
 }

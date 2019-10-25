@@ -23,10 +23,6 @@ func (k Keeper) ChanOpenInit(
 	version string,
 ) error {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
-	if len(connectionHops) != 1 {
-		return types.ErrInvalidConnectionHops(k.codespace)
-	}
-
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
@@ -77,11 +73,6 @@ func (k Keeper) ChanOpenTry(
 	proofInit commitment.ProofI,
 	proofHeight uint64,
 ) error {
-
-	if len(connectionHops) != 1 {
-		return types.ErrInvalidConnectionHops(k.codespace)
-	}
-
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
@@ -130,7 +121,7 @@ func (k Keeper) ChanOpenTry(
 		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -196,7 +187,7 @@ func (k Keeper) ChanOpenAck(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.OPEN
@@ -257,7 +248,7 @@ func (k Keeper) ChanOpenConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.OPEN
@@ -349,7 +340,7 @@ func (k Keeper) ChanCloseConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace)
+		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	channel.State = types.CLOSED

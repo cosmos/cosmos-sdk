@@ -171,7 +171,7 @@ func (k Keeper) TimeoutOnClose(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return nil, types.ErrInvalidCounterpartyChannel(k.codespace)
+		return nil, types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
 	if !k.connectionKeeper.VerifyNonMembership(

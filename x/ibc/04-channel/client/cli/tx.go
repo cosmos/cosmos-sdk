@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,14 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// IBC channel flags
 var (
-	FlagUnordered = "unordered"
-	IBCVersion    = "version"
+	FlagOrdered    = "ordered"
+	FlagIBCVersion = "ibc-version"
 )
 
 // GetTxCmd returns the transaction commands for IBC Connections
@@ -57,12 +59,16 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 
 			portID := args[0]
 			channelID := args[1]
-			channel, err := createChannelFromArgs(args[2], args[3], args[4])
-			if err != nil {
-				return err
-			}
+			counterpartyPortID := args[2]
+			counterpartyChannelID := args[3]
+			hops := strings.Split(args[4], "/")
+			order := channelOrder()
+			version := viper.GetString(FlagIBCVersion)
 
-			msg := types.NewMsgChannelOpenInit(portID, channelID, channel, cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenInit(
+				portID, channelID, version, order, hops,
+				counterpartyPortID, counterpartyChannelID, cliCtx.GetFromAddress(),
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -71,7 +77,8 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 		},
 	}
 
-	cmd.Flags().Bool(FlagUnordered, false, "Pass flag for opening unordered channels")
+	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
+	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
 
 	return cmd
 }
@@ -88,12 +95,13 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
-			channel, err := createChannelFromArgs(args[2], args[3], args[4])
-			if err != nil {
-				return err
-			}
+			counterpartyPortID := args[2]
+			counterpartyChannelID := args[3]
+			hops := strings.Split(args[4], "/")
+			order := channelOrder()
+			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
 
-			var proof ics23.Proof
+			var proof commitment.ProofI
 			if err := cdc.UnmarshalJSON([]byte(args[5]), &proof); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 				contents, err := ioutil.ReadFile(args[5])
@@ -110,7 +118,11 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenTry(portID, channelID, channel, IBCVersion, proof, uint64(proofHeight), cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenTry(
+				portID, channelID, version, order, hops,
+				counterpartyPortID, counterpartyChannelID, version,
+				proof, uint64(proofHeight), cliCtx.GetFromAddress(),
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -118,8 +130,8 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
-	cmd.Flags().Bool(FlagUnordered, false, "Pass flag for opening unordered channels")
+	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
+	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
 
 	return cmd
 }
@@ -136,8 +148,9 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			portID := args[0]
 			channelID := args[1]
+			version := viper.GetString(FlagIBCVersion) // TODO: diferenciate between channel and counterparty versions
 
-			var proof ics23.Proof
+			var proof commitment.ProofI
 			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 				contents, err := ioutil.ReadFile(args[2])
@@ -154,7 +167,9 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenAck(portID, channelID, IBCVersion, proof, uint64(proofHeight), cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenAck(
+				portID, channelID, version, proof, uint64(proofHeight), cliCtx.GetFromAddress(),
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -162,12 +177,13 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
+	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
 	return cmd
 }
 
 // GetMsgChannelOpenConfirmCmd returns the command to create a MsgChannelOpenConfirm transaction
 func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof-ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(1),
@@ -178,7 +194,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 			portID := args[0]
 			channelID := args[1]
 
-			var proof ics23.Proof
+			var proof commitment.ProofI
 			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 				contents, err := ioutil.ReadFile(args[2])
@@ -195,7 +211,9 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 				return err
 			}
 
-			msg := types.NewMsgChannelOpenConfirm(portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelOpenConfirm(
+				portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress(),
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -203,12 +221,11 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	return cmd
 }
 
 // GetMsgChannelCloseInitCmd returns the command to create a MsgChannelCloseInit transaction
 func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(1),
@@ -227,12 +244,11 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	return cmd
 }
 
 // GetMsgChannelCloseConfirmCmd returns the command to create a MsgChannelCloseConfirm transaction
 func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof-init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(1),
@@ -243,7 +259,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 			portID := args[0]
 			channelID := args[1]
 
-			var proof ics23.Proof
+			var proof commitment.ProofI
 			if err := cdc.UnmarshalJSON([]byte(args[2]), &proof); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 				contents, err := ioutil.ReadFile(args[2])
@@ -260,7 +276,9 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 				return err
 			}
 
-			msg := types.NewMsgChannelCloseConfirm(portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress())
+			msg := types.NewMsgChannelCloseConfirm(
+				portID, channelID, proof, uint64(proofHeight), cliCtx.GetFromAddress(),
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -268,7 +286,6 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
-	return cmd
 }
 
 // GetMsgSendPacketCmd returns the command to create a MsgChannelCloseConfirm transaction
@@ -305,32 +322,8 @@ func GetMsgSendPacketCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 func channelOrder() types.Order {
-	if viper.GetBool(FlagUnordered) {
-		return types.UNORDERED
+	if viper.GetBool(FlagOrdered) {
+		return types.ORDERED
 	}
-	return types.ORDERED
-}
-
-func validateChannelHops(hops string) ([]string, error) {
-	// TODO: Add validation here
-	return strings.Split(hops, ","), nil
-}
-
-func createChannelFromArgs(portID, channelID string, hops string) (types.Channel, error) {
-	var channel types.Channel
-
-	channelHops, err := validateChannelHops(hops)
-	if err != nil {
-		return channel, err
-	}
-
-	channel = types.Channel{
-		State:          types.INIT,
-		Ordering:       channelOrder(),
-		Counterparty:   types.NewCounterparty(portID, channelID),
-		ConnectionHops: channelHops,
-		Version:        IBCVersion,
-	}
-
-	return channel, nil
+	return types.UNORDERED
 }

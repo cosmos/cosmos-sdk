@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -21,8 +22,11 @@ type MsgChannelOpenInit struct {
 
 // NewMsgChannelOpenInit creates a new MsgChannelCloseInit MsgChannelOpenInit
 func NewMsgChannelOpenInit(
-	portID, channelID string, channel Channel, signer sdk.AccAddress,
+	portID, channelID string, version string, channelOrder Order, connectionHops []string,
+	counterpartyPortID, counterpartyChannelID string, signer sdk.AccAddress,
 ) MsgChannelOpenInit {
+	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenInit{
 		PortID:    portID,
 		ChannelID: channelID,
@@ -49,8 +53,8 @@ func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-	// Signer can be empty // TODO: Why?
-	return nil
+	// Signer can be empty
+	return msg.Channel.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -77,14 +81,17 @@ type MsgChannelOpenTry struct {
 
 // NewMsgChannelOpenTry creates a new MsgChannelOpenTry instance
 func NewMsgChannelOpenTry(
-	portID, channelID string, channel Channel, cpv string, proofInit commitment.ProofI,
-	proofHeight uint64, signer sdk.AccAddress,
+	portID, channelID, version string, channelOrder Order, connectionHops []string,
+	counterpartyPortID, counterpartyChannelID, counterpartyVersion string,
+	proofInit commitment.ProofI, proofHeight uint64, signer sdk.AccAddress,
 ) MsgChannelOpenTry {
+	counterparty := NewCounterparty(counterpartyPortID, counterpartyChannelID)
+	channel := NewChannel(INIT, channelOrder, counterparty, connectionHops, version)
 	return MsgChannelOpenTry{
 		PortID:              portID,
 		ChannelID:           channelID,
 		Channel:             channel,
-		CounterpartyVersion: cpv,
+		CounterpartyVersion: counterpartyVersion,
 		ProofInit:           proofInit,
 		ProofHeight:         proofHeight,
 		Signer:              signer,
@@ -109,11 +116,17 @@ func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-
-	// Check proofs != nil
-	// Check channel != nil
+	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
+		return ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank")
+	}
+	if msg.ProofInit == nil {
+		return ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof")
+	}
+	if msg.ProofHeight == 0 {
+		return ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0")
+	}
 	// Signer can be empty
-	return nil
+	return msg.Channel.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -170,8 +183,15 @@ func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-
-	// Check proofs != nil
+	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
+		return ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank")
+	}
+	if msg.ProofTry == nil {
+		return ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof")
+	}
+	if msg.ProofHeight == 0 {
+		return ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0")
+	}
 	// Signer can be empty
 	return nil
 }
@@ -228,8 +248,12 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-
-	// Check proofs != nil
+	if msg.ProofAck == nil {
+		return ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof")
+	}
+	if msg.ProofHeight == 0 {
+		return ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0")
+	}
 	// Signer can be empty
 	return nil
 }
@@ -279,7 +303,6 @@ func (msg MsgChannelCloseInit) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-
 	// Signer can be empty
 	return nil
 }
@@ -336,8 +359,12 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
 	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
-
-	// Check proofs != nil
+	if msg.ProofInit == nil {
+		return ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof")
+	}
+	if msg.ProofHeight == 0 {
+		return ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0")
+	}
 	// Signer can be empty
 	return nil
 }
@@ -358,11 +385,8 @@ var _ sdk.Msg = MsgSendPacket{}
 // ChannelID can be empty if batched & not first MsgSendPacket
 // Height uint64 // height of the commitment root for the proofs
 type MsgSendPacket struct {
-	Packet    exported.PacketI    `json:"packet" yaml:"packet"`
-	ChannelID string              `json:"channel_id" yaml:"channel_id"`
-	Proofs    []commitment.ProofI `json:"proofs" yaml:"proofs"`
-	Height    uint64              `json:"height" yaml:"height"`
-	Signer    sdk.AccAddress      `json:"signer" yaml:"signer"`
+	Packet exported.PacketI `json:"packet" yaml:"packet"`
+	Signer sdk.AccAddress   `json:"signer" yaml:"signer"`
 }
 
 // NewMsgSendPacket creates a new MsgSendPacket instance
@@ -385,13 +409,6 @@ func (msg MsgSendPacket) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSendPacket) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
-	}
-	if msg.Height == 0 {
-		return sdk.ErrInvalidSequence("invalid height")
-	}
-	// Check proofs != nil
 	// Signer can be empty
 	return msg.Packet.ValidateBasic()
 }

@@ -104,7 +104,7 @@ func queryValidatorCommission(ctx sdk.Context, path []string, req abci.RequestQu
 	}
 	commission := k.GetValidatorAccumulatedCommission(ctx, params.ValidatorAddress)
 	if commission == nil {
-		commission = make(sdk.DecCoins, 0)
+		commission = sdk.DecCoins{}
 	}
 	bz, err := codec.MarshalJSONIndent(k.cdc, commission)
 	if err != nil {

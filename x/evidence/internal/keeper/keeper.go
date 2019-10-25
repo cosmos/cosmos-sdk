@@ -55,5 +55,12 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 		return types.ErrInvalidEvidence(k.codespace, err)
 	}
 
+	k.setEvidence(ctx, evidence)
 	return nil
+}
+
+func (k Keeper) setEvidence(ctx sdk.Context, evidence types.Evidence) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
+	store.Set(types.EvidenceKey(evidence.Hash()), bz)
 }

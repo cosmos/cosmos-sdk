@@ -131,7 +131,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 	deposits := keeper.GetDeposits(ctx, params.ProposalID)
 	if deposits == nil {
-		deposits = make(types.Deposits, 0)
+		deposits = types.Deposits{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
@@ -186,7 +186,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 	votes := keeper.GetVotes(ctx, params.ProposalID)
 	if votes == nil {
-		votes = make(types.Votes, 0)
+		votes = types.Votes{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
@@ -206,7 +206,7 @@ func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper K
 
 	proposals := keeper.GetProposalsFiltered(ctx, params)
 	if proposals == nil {
-		proposals = make([]types.Proposal, 0)
+		proposals = types.Proposals{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)

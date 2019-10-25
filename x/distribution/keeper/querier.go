@@ -158,7 +158,7 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 	if rewards == nil {
-		rewards = make(sdk.DecCoins, 0)
+		rewards = sdk.DecCoins{}
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, rewards)
@@ -254,7 +254,7 @@ func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.Request
 func queryCommunityPool(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	pool := k.GetFeePoolCommunityCoins(ctx)
 	if pool == nil {
-		pool = make(sdk.DecCoins, 0)
+		pool = sdk.DecCoins{}
 	}
 	bz, err := k.cdc.MarshalJSON(pool)
 	if err != nil {

@@ -57,7 +57,7 @@ func queryValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, 
 	}
 
 	validators := k.GetAllValidators(ctx)
-	filteredVals := make([]types.Validator, 0, len(validators))
+	filteredVals := types.Validators{}
 
 	for _, val := range validators {
 		if strings.EqualFold(val.GetStatus().String(), params.Status) {
@@ -137,7 +137,7 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 
 	unbonds := k.GetUnbondingDelegationsFromValidator(ctx, params.ValidatorAddr)
 	if unbonds == nil {
-		unbonds = make(types.UnbondingDelegations, 0)
+		unbonds = types.UnbondingDelegations{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbonds)
@@ -163,7 +163,7 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper)
 	}
 
 	if delegationResps == nil {
-		delegationResps = make(types.DelegationResponses, 0)
+		delegationResps = types.DelegationResponses{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, delegationResps)
@@ -184,7 +184,7 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, req abci.RequestQuery, 
 
 	unbondingDelegations := k.GetAllUnbondingDelegations(ctx, params.DelegatorAddr)
 	if unbondingDelegations == nil {
-		unbondingDelegations = make(types.UnbondingDelegations, 0)
+		unbondingDelegations = types.UnbondingDelegations{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, unbondingDelegations)
@@ -207,7 +207,7 @@ func queryDelegatorValidators(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 
 	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakingParams.MaxValidators)
 	if validators == nil {
-		validators = make(types.Validators, 0)
+		validators = types.Validators{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, validators)
@@ -316,7 +316,7 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 	}
 
 	if redelResponses == nil {
-		redelResponses = make(types.RedelegationResponses, 0)
+		redelResponses = types.RedelegationResponses{}
 	}
 
 	res, err := codec.MarshalJSONIndent(types.ModuleCdc, redelResponses)

@@ -13,12 +13,21 @@ import (
 
 const (
 	NONE                              = types.NONE
+	StateNone                         = types.StateNone
+	StateInit                         = types.StateInit
+	StateTryOpen                      = types.StateTryOpen
+	StateOpen                         = types.StateOpen
 	DefaultCodespace                  = types.DefaultCodespace
 	CodeConnectionExists              = types.CodeConnectionExists
 	CodeConnectionNotFound            = types.CodeConnectionNotFound
 	CodeClientConnectionPathsNotFound = types.CodeClientConnectionPathsNotFound
 	CodeConnectionPath                = types.CodeConnectionPath
 	CodeInvalidCounterpartyConnection = types.CodeInvalidCounterpartyConnection
+	CodeInvalidVersion                = types.CodeInvalidVersion
+	CodeInvalidHeight                 = types.CodeInvalidHeight
+	CodeInvalidConnectionState        = types.CodeInvalidConnectionState
+	CodeInvalidProof                  = types.CodeInvalidProof
+	CodeInvalidCounterparty           = types.CodeInvalidCounterparty
 	AttributeKeyConnectionID          = types.AttributeKeyConnectionID
 	AttributeKeyCounterpartyClientID  = types.AttributeKeyCounterpartyClientID
 	SubModuleName                     = types.SubModuleName
@@ -38,11 +47,17 @@ var (
 	SetMsgConnectionCodec            = types.SetMsgConnectionCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
+	StateFromString                  = types.StateFromString
 	ErrConnectionExists              = types.ErrConnectionExists
 	ErrConnectionNotFound            = types.ErrConnectionNotFound
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
 	ErrConnectionPath                = types.ErrConnectionPath
 	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
+	ErrInvalidVersion                = types.ErrInvalidVersion
+	ErrInvalidHeight                 = types.ErrInvalidHeight
+	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
+	ErrInvalidConnectionProof        = types.ErrInvalidConnectionProof
+	ErrInvalidCounterparty           = types.ErrInvalidCounterparty
 	ConnectionPath                   = types.ConnectionPath
 	ClientConnectionsPath            = types.ClientConnectionsPath
 	KeyConnection                    = types.KeyConnection
@@ -51,8 +66,13 @@ var (
 	NewMsgConnectionOpenTry          = types.NewMsgConnectionOpenTry
 	NewMsgConnectionOpenAck          = types.NewMsgConnectionOpenAck
 	NewMsgConnectionOpenConfirm      = types.NewMsgConnectionOpenConfirm
+	NewConnectionResponse            = types.NewConnectionResponse
 	NewQueryConnectionParams         = types.NewQueryConnectionParams
+	NewClientConnectionsResponse     = types.NewClientConnectionsResponse
 	NewQueryClientConnectionsParams  = types.NewQueryClientConnectionsParams
+	GetCompatibleVersions            = types.GetCompatibleVersions
+	LatestVersion                    = types.LatestVersion
+	PickVersion                      = types.PickVersion
 
 	// variable aliases
 	SubModuleCdc                   = types.SubModuleCdc
@@ -65,14 +85,16 @@ var (
 
 type (
 	Keeper                       = keeper.Keeper
-	State                        = types.State
-	End                          = types.ConnectionEnd
+	ConnectionEnd                = types.ConnectionEnd
 	Counterparty                 = types.Counterparty
+	State                        = types.State
 	ClientKeeper                 = types.ClientKeeper
 	MsgConnectionOpenInit        = types.MsgConnectionOpenInit
 	MsgConnectionOpenTry         = types.MsgConnectionOpenTry
 	MsgConnectionOpenAck         = types.MsgConnectionOpenAck
 	MsgConnectionOpenConfirm     = types.MsgConnectionOpenConfirm
+	ConnectionResponse           = types.ConnectionResponse
 	QueryConnectionParams        = types.QueryConnectionParams
+	ClientConnectionsResponse    = types.ClientConnectionsResponse
 	QueryClientConnectionsParams = types.QueryClientConnectionsParams
 )

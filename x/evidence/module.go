@@ -94,11 +94,14 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 // AppModule implements the AppModule interface for the evidence module.
 type AppModule struct {
 	AppModuleBasic
+
+	keeper Keeper
 }
 
-func NewAppModule() AppModule {
+func NewAppModule(keeper Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
+		keeper:         keeper,
 	}
 }
 

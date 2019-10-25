@@ -46,5 +46,10 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 		return types.ErrNoEvidenceHandlerExists(k.codespace, evidence.Route())
 	}
 
+	handler := k.router.GetRoute(evidence.Route())
+	if err := handler(ctx, evidence); err != nil {
+		return types.ErrInvalidEvidence(k.codespace, err)
+	}
+
 	return nil
 }

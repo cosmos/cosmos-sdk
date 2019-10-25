@@ -130,7 +130,7 @@ the module's router and invoking the corresponding `Handler` which may include
 slashing and jailing the validator. Upon success, the submitted evidence is persisted.
 
 ```go
-func (k Keeper) SubmitEvidence(ctx Context, evidence Evidence) Error {
+func (k Keeper) SubmitEvidence(ctx Context, evidence Evidence) error {
   handler := keeper.router.GetRoute(evidence.Route())
   if err := handler(ctx, evidence); err != nil {
     return ErrInvalidEvidence(keeper.codespace, err)

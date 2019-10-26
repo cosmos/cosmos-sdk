@@ -5,9 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/mock/bank/internal/types"
 )
 
-// nolint
 type (
-	MsgTransfer           = types.MsgTransfer
 	MsgRecvTransferPacket = types.MsgRecvTransferPacket
 	Keeper                = keeper.Keeper
 )
@@ -15,7 +13,6 @@ type (
 const (
 	ModuleName   = types.ModuleName
 	StoreKey     = types.StoreKey
-	TStoreKey    = types.TStoreKey
 	QuerierRoute = types.QuerierRoute
 	RouterKey    = types.RouterKey
 )
@@ -25,6 +22,5 @@ var (
 	RegisterCdc = types.RegisterCodec
 
 	NewKeeper                = keeper.NewKeeper
-	NewMsgTransfer           = types.NewMsgTransfer
 	NewMsgRecvTransferPacket = types.NewMsgRecvTransferPacket
 )

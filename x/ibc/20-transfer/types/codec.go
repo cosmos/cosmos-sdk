@@ -7,7 +7,8 @@ import (
 )
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgRecvTransferPacket{}, "ibcmockbank/MsgRecvTransferPacket", nil)
+	cdc.RegisterConcrete(MsgTransfer{}, "ibc/transfer/MsgTransfer", nil)
+	cdc.RegisterConcrete(TransferPacketData{}, "ibc/transfer/TransferPacketData", nil)
 }
 
 var MouduleCdc = codec.New()

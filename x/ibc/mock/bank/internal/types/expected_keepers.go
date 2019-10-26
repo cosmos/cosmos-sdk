@@ -3,23 +3,17 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-type BankKeeper interface {
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
-
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Error)
+// IbcBankKeeper expected IBC transfer keeper
+type IbcBankKeeper interface {
+	ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, destPort, destChannel, srcPort, srcChannel string) sdk.Error
 }
 
+// ChannelKeeper expected IBC channel keeper
 type ChannelKeeper interface {
-	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)
-
-	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
-
 	RecvPacket(
 		ctx sdk.Context,
 		packet exported.PacketI,
@@ -27,6 +21,4 @@ type ChannelKeeper interface {
 		proofHeight uint64,
 		acknowledgement []byte,
 	) (exported.PacketI, error)
-
-	SendPacket(ctx sdk.Context, packet exported.PacketI) error
 }

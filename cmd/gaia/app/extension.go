@@ -35,9 +35,9 @@ type (
 	}
 
 	RabbitInsert struct {
-		Values   string `json:"values"`
-		Table    string `json:"table"`
-		Database string `json:"database"`
+		Values   []interface{} `json:"values"`
+		Table    string        `json:"table"`
+		Database string        `json:"database"`
 	}
 )
 
@@ -76,7 +76,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals [
 		balance := account.GetCoins()
 		for _, coin := range balance {
 			obj := RabbitInsert{
-				Values:   fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s'),'%s'", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+				Values:   []interface{}{account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 				Table:    BalanceTable,
 				Database: network,
 			}
@@ -90,7 +90,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals [
 
 			for _, coin := range rewards {
 				obj := RabbitInsert{
-					Values:   fmt.Sprintf("'%s','%s',%d,'%s',%d,toDateTime('%s'),'%s'", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+					Values:   []interface{}{account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 					Table:    RewardsTable,
 					Database: network,
 				}
@@ -126,7 +126,7 @@ func BalancesBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, vals [
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
 			obj := RabbitInsert{
-				Values:   fmt.Sprintf("'%s',%d,'%s',%d,toDateTime('%s'),'%s'", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+				Values:   []interface{}{valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 				Table:    ValRewardsTable,
 				Database: network,
 			}
@@ -150,7 +150,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, val
 
 	for _, delegation := range delegations {
 		obj := RabbitInsert{
-			Values:   fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),'%s'", delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+			Values:   []interface{}{delegation.GetDelegatorAddr().String(), delegation.GetValidatorAddr().String(), uint64(delegation.GetShares().TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 			Table:    DelegationsTable,
 			Database: network,
 		}
@@ -174,7 +174,7 @@ func DelegationsBlocker(app *GaiaApp, rabbit *amqp.Channel, ctx sdk.Context, val
 		for _, unbond := range unbondings {
 			for _, entry := range unbond.Entries {
 				obj := RabbitInsert{
-					Values:   fmt.Sprintf("'%s','%s',%d,%d,toDateTime('%s'),toDateTime('%s'),'%s'", unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime.Format("2006-01-02 15:04:05"), req.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+					Values:   []interface{}{unbond.DelegatorAddress.String(), unbond.ValidatorAddress.String(), uint64(entry.Balance.Int64()), uint64(req.Header.Height), entry.CompletionTime.Format("2006-01-02 15:04:05"), req.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 					Table:    UnbondingsTable,
 					Database: network,
 				}
@@ -196,7 +196,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				for msgidx, msg := range sdktx.GetMsgs() {
 
 					obj := RabbitInsert{
-						Values:   fmt.Sprintf("'%s',%d,'%s','%s',toDateTime('%s'),'%s'", txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05"), chainid),
+						Values:   []interface{}{txHash, msgidx, msg.Type(), string(msg.GetSignBytes()), block.Header.Time.Format("2006-01-02 15:04:05"), chainid},
 						Table:    MessagesTable,
 						Database: network,
 					}
@@ -213,7 +213,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
 				obj := RabbitInsert{
-					Values: fmt.Sprintf("'%s',%d,%d,%d,%d,'%s','%s','%s','%s','%s',toDateTime('%s'),'%s'",
+					Values: []interface{}{
 						txHash,
 						block.Header.Height,
 						result.GetCode(),
@@ -225,7 +225,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *amqp.Channel, sdk.Contex
 						string(jsonTags),
 						string(jsonMsgs),
 						block.Header.Time.Format("2006-01-02 15:04:05"),
-						chainid),
+						chainid},
 					Table:    TransactionsTable,
 					Database: network,
 				}
@@ -250,7 +250,7 @@ func addAddresses(msg sdk.Msg, hash string, idx int, rabbit *amqp.Channel, netwo
 		if ok && !sdkAddr.Empty() && !a[sdkAddr.String()] { // pks in clickhouse aren't unique, so avoid dedupe here.
 			a[sdkAddr.String()] = true
 			obj := RabbitInsert{
-				Values:   fmt.Sprintf("'%s',%d,'%s','%s'", hash, idx, sdkAddr.String(), chainid),
+				Values:   []interface{}{hash, idx, sdkAddr.String(), chainid},
 				Table:    AddressesTable,
 				Database: network,
 			}

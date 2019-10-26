@@ -43,15 +43,19 @@ func (msg MsgTransfer) ValidateBasic() sdk.Error {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAmount, "invalid amount")
 	}
 
-	if msg.Sender.Empty() || len(msg.Receiver) == 0 {
+	if msg.Sender.Empty() {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid address")
+	}
+
+	if len(msg.Receiver) == 0 {
+		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidReceiver, "receiver is empty")
 	}
 
 	return nil
 }
 
 func (msg MsgTransfer) GetSignBytes() []byte {
-	return sdk.MustSortJSON(MouduleCdc.MustMarshalJSON(msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {

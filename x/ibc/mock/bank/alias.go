@@ -6,8 +6,8 @@ import (
 )
 
 type (
-	MsgRecvTransferPacket = types.MsgRecvTransferPacket
-	Keeper                = keeper.Keeper
+	MsgRecvPacket = types.MsgRecvPacket
+	Keeper        = keeper.Keeper
 )
 
 const (
@@ -21,6 +21,6 @@ const (
 var (
 	RegisterCdc = types.RegisterCodec
 
-	NewKeeper                = keeper.NewKeeper
-	NewMsgRecvTransferPacket = types.NewMsgRecvTransferPacket
+	NewKeeper        = keeper.NewKeeper
+	NewMsgRecvPacket = types.NewMsgRecvPacket
 )

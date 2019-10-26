@@ -2,23 +2,23 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 const (
-	TypeMsgRecvTransferPacket = "recv-transfer-packet"
+	TypeMsgRecvPacket = "recv_packet"
 )
 
-type MsgRecvTransferPacket struct {
-	Packet ics04.PacketI  `json:"packet" yaml:"packet"`
-	Proofs []ics23.Proof  `json:"proofs" yaml:"proofs"`
-	Height uint64         `json:"height" yaml:"height"`
-	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+type MsgRecvPacket struct {
+	Packet channel.PacketI    `json:"packet" yaml:"packet"`
+	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
+	Height uint64             `json:"height" yaml:"height"`
+	Signer sdk.AccAddress     `json:"signer" yaml:"signer"`
 }
 
-func NewMsgRecvTransferPacket(packet ics04.PacketI, proofs []ics23.Proof, height uint64, signer sdk.AccAddress) MsgRecvTransferPacket {
-	return MsgRecvTransferPacket{
+func NewMsgRecvPacket(packet channel.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+	return MsgRecvPacket{
 		Packet: packet,
 		Proofs: proofs,
 		Height: height,
@@ -26,15 +26,15 @@ func NewMsgRecvTransferPacket(packet ics04.PacketI, proofs []ics23.Proof, height
 	}
 }
 
-func (MsgRecvTransferPacket) Route() string {
+func (MsgRecvPacket) Route() string {
 	return RouterKey
 }
 
-func (MsgRecvTransferPacket) Type() string {
-	return TypeMsgRecvTransferPacket
+func (MsgRecvPacket) Type() string {
+	return TypeMsgRecvPacket
 }
 
-func (msg MsgRecvTransferPacket) ValidateBasic() sdk.Error {
+func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 	if msg.Proofs == nil {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeProofMissing, "proof missing")
 	}
@@ -43,13 +43,17 @@ func (msg MsgRecvTransferPacket) ValidateBasic() sdk.Error {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid signer")
 	}
 
+	if err := msg.Packet.ValidateBasic(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (msg MsgRecvTransferPacket) GetSignBytes() []byte {
-	return sdk.MustSortJSON(MouduleCdc.MustMarshalJSON(msg))
+func (msg MsgRecvPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
-func (msg MsgRecvTransferPacket) GetSigners() []sdk.AccAddress {
+func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

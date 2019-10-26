@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ics04 "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -38,25 +38,24 @@ func (k Keeper) SendTransfer(ctx sdk.Context, srcPort, srcChan string, denom str
 	// get the port and channel of the counterparty
 	channel, ok := k.ck.GetChannel(ctx, srcPort, srcChan)
 	if !ok {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), ics04.CodeChannelNotFound, "failed to get channel")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), channeltypes.CodeChannelNotFound, "failed to get channel")
 	}
 
-	dstPort := channel.Counterparty.PortID
-	dstChan := channel.Counterparty.ChannelID
+	destPort := channel.Counterparty.PortID
+	destChan := channel.Counterparty.ChannelID
 
 	// get the next sequence
 	sequence, ok := k.ck.GetNextSequenceSend(ctx, srcPort, srcChan)
 	if !ok {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), ics04.CodeSequenceNotFound, "failed to retrieve sequence")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), channeltypes.CodeSequenceNotFound, "failed to retrieve sequence")
 	}
 
 	if source {
 		// build the receiving denomination prefix
-		prefix := fmt.Sprintf("%s/%s", dstPort, dstChan)
-		denom = prefix + denom
+		denom = getDenomPrefix(destPort, destChan) + denom
 	}
 
-	return k.createOutgoingPacket(ctx, sequence, srcPort, srcChan, dstPort, dstChan, denom, amount, sender, receiver, source)
+	return k.createOutgoingPacket(ctx, sequence, srcPort, srcChan, destPort, destChan, denom, amount, sender, receiver, source)
 }
 
 // ReceiveTransfer handles transfer receiving logic
@@ -71,8 +70,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, 
 		// mint tokens
 
 		// check the denom prefix
-		prefix := fmt.Sprintf("%s/%s", destPort, destChannel)
-		if !strings.HasPrefix(data.Denomination, prefix) {
+		if !strings.HasPrefix(data.Denomination, getDenomPrefix(destPort, destChannel)) {
 			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
 
@@ -85,7 +83,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, 
 		// unescrow tokens
 
 		// check the denom prefix
-		prefix := fmt.Sprintf("%s/%s", srcPort, srcChannel)
+		prefix := getDenomPrefix(srcPort, srcChannel)
 		if !strings.HasPrefix(data.Denomination, prefix) {
 			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
@@ -100,7 +98,7 @@ func (k Keeper) ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, 
 	return nil
 }
 
-func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcChan, dstPort, dstChan string, denom string, amount sdk.Int, sender sdk.AccAddress, receiver string, source bool) sdk.Error {
+func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcChan, destPort, destChan string, denom string, amount sdk.Int, sender sdk.AccAddress, receiver string, source bool) sdk.Error {
 	if source {
 		// escrow tokens
 
@@ -108,7 +106,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 		escrowAddress := getEscrowAddress(srcChan)
 
 		// check the denom prefix
-		prefix := fmt.Sprintf("%s/%s", dstPort, dstChan)
+		prefix := getDenomPrefix(destPort, destChan)
 		if !strings.HasPrefix(denom, prefix) {
 			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
@@ -122,7 +120,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 		// burn vouchers from sender
 
 		// check the denom prefix
-		prefix := fmt.Sprintf("%s/%s", srcPort, srcChan)
+		prefix := getDenomPrefix(srcPort, srcChan)
 		if !strings.HasPrefix(denom, prefix) {
 			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeIncorrectDenom, "incorrect denomination")
 		}
@@ -137,7 +135,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 	packetData := types.TransferPacketData{
 		Denomination: denom,
 		Amount:       amount,
-		Sender:       sender,
+		Sender:       sender.String(),
 		Receiver:     receiver,
 		Source:       source,
 	}
@@ -147,7 +145,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")
 	}
 
-	packet := ics04.NewPacket(seq, uint64(ctx.BlockHeight())+DefaultPacketTimeout, srcPort, srcChan, dstPort, dstChan, packetDataBz)
+	packet := channeltypes.NewPacket(seq, uint64(ctx.BlockHeight())+DefaultPacketTimeout, srcPort, srcChan, destPort, destChan, packetDataBz)
 
 	err = k.ck.SendPacket(ctx, packet)
 	if err != nil {
@@ -160,4 +158,9 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 // getEscrowAddress returns the escrow address for the specified channel
 func getEscrowAddress(chanID string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(chanID)))
+}
+
+// getDenomPrefix returns the receiving denomination prefix
+func getDenomPrefix(port, channel string) string {
+	return fmt.Sprintf("%s/%s", port, channel)
 }

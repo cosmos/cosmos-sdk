@@ -8,9 +8,8 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeInvalidAmount     sdk.CodeType = 101
-	CodeInvalidAddress    sdk.CodeType = 102
-	CodeErrReceivePacket  sdk.CodeType = 103
-	CodeProofMissing      sdk.CodeType = 104
-	CodeInvalidPacketData sdk.CodeType = 105
+	CodeInvalidAddress    sdk.CodeType = 101
+	CodeErrReceivePacket  sdk.CodeType = 102
+	CodeProofMissing      sdk.CodeType = 103
+	CodeInvalidPacketData sdk.CodeType = 104
 )

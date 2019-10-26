@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,31 +9,35 @@ import (
 
 // TransferPacketData defines a struct for the packet payload
 type TransferPacketData struct {
-	Denomination string         `json:"denomination" yaml:"denomination"`
-	Amount       sdk.Int        `json:"amount" yaml:"amount"`
-	Sender       sdk.AccAddress `json:"sender" yaml:"sender"`
-	Receiver     string         `json:"receiver" yaml:"receiver"`
-	Source       bool           `json:"source" yaml:"source"`
+	Denomination string  `json:"denomination" yaml:"denomination"`
+	Amount       sdk.Int `json:"amount" yaml:"amount"`
+	Sender       string  `json:"sender" yaml:"sender"`
+	Receiver     string  `json:"receiver" yaml:"receiver"`
+	Source       bool    `json:"source" yaml:"source"`
 }
 
 func (tpd TransferPacketData) MarshalAmino() ([]byte, error) {
-	return MouduleCdc.MarshalBinaryBare(tpd)
+	return ModuleCdc.MarshalBinaryBare(tpd)
 }
 
 func (tpd *TransferPacketData) UnmarshalAmino(bz []byte) (err error) {
-	return MouduleCdc.UnmarshalBinaryBare(bz, tpd)
+	return ModuleCdc.UnmarshalBinaryBare(bz, tpd)
 }
 
 func (tpd TransferPacketData) Marshal() []byte {
-	return MouduleCdc.MustMarshalBinaryBare(tpd)
+	return ModuleCdc.MustMarshalBinaryBare(tpd)
 }
 
+type TransferPacketDataAlias TransferPacketData
+
+// MarshalJSON implements the json.Marshaler interface.
 func (tpd TransferPacketData) MarshalJSON() ([]byte, error) {
-	return MouduleCdc.MarshalJSON(tpd)
+	return json.Marshal((TransferPacketDataAlias)(tpd))
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.
 func (tpd *TransferPacketData) UnmarshalJSON(bz []byte) (err error) {
-	return MouduleCdc.UnmarshalJSON(bz, tpd)
+	return json.Unmarshal(bz, (*TransferPacketDataAlias)(tpd))
 }
 
 func (tpd TransferPacketData) String() string {
@@ -44,7 +49,7 @@ func (tpd TransferPacketData) String() string {
 	Source:               %v`,
 		tpd.Denomination,
 		tpd.Amount.String(),
-		tpd.Sender.String(),
+		tpd.Sender,
 		tpd.Receiver,
 		tpd.Source,
 	)
@@ -55,7 +60,7 @@ func (tpd TransferPacketData) Validate() error {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAmount, "invalid amount")
 	}
 
-	if tpd.Sender.Empty() || len(tpd.Receiver) == 0 {
+	if len(tpd.Sender) == 0 || len(tpd.Receiver) == 0 {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid address")
 	}
 

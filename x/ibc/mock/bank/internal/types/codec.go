@@ -7,13 +7,13 @@ import (
 )
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgRecvTransferPacket{}, "ibcmockbank/MsgRecvTransferPacket", nil)
+	cdc.RegisterConcrete(MsgRecvPacket{}, "ibcmockbank/MsgRecvPacket", nil)
 }
 
-var MouduleCdc = codec.New()
+var ModuleCdc = codec.New()
 
 func init() {
-	RegisterCodec(MouduleCdc)
-	channel.RegisterCodec(MouduleCdc)
-	commitment.RegisterCodec(MouduleCdc)
+	RegisterCodec(ModuleCdc)
+	channel.RegisterCodec(ModuleCdc)
+	commitment.RegisterCodec(ModuleCdc)
 }

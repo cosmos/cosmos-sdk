@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	ics23 "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/mock/bank/internal/types"
 	"github.com/spf13/cobra"
 )
@@ -55,7 +55,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 				}
 			}
 
-			var proof ics23.Proof
+			var proof commitment.Proof
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &proof); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...\n")
 				contents, err := ioutil.ReadFile(args[1])
@@ -72,7 +72,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("error height: %v", err)
 			}
 
-			msg := types.NewMsgRecvTransferPacket(packet, []ics23.Proof{proof}, height, cliCtx.GetFromAddress())
+			msg := types.NewMsgRecvPacket(packet, []commitment.Proof{proof}, height, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

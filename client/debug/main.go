@@ -4,18 +4,17 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"strconv"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Cmd(cdc *codec.Codec) *cobra.Command {
@@ -34,9 +33,12 @@ func Cmd(cdc *codec.Codec) *cobra.Command {
 
 func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "pubkey",
+		Use:   "pubkey [pubkey]",
 		Short: "Decode a pubkey from hex, base64, or bech32",
-		Args:  cobra.ExactArgs(1),
+		Long: `Decode a public key:
+		
+		$ <appcli> debug pubkey <pubkey> `,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			pubkeyString := args[0]
@@ -98,12 +100,12 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Address:", pubKey.Address())
-			fmt.Printf("Hex: %X\n", pubkeyBytes)
-			fmt.Println("JSON (base64):", string(pubKeyJSONBytes))
-			fmt.Println("Bech32 Acc:", accPub)
-			fmt.Println("Bech32 Validator Operator:", valPub)
-			fmt.Println("Bech32 Validator Consensus:", consenusPub)
+			cmd.Println("Address:", pubKey.Address())
+			cmd.Printf("Hex: %X\n", pubkeyBytes)
+			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))
+			cmd.Println("Bech32 Acc:", accPub)
+			cmd.Println("Bech32 Validator Operator:", valPub)
+			cmd.Println("Bech32 Validator Consensus:", consenusPub)
 			return nil
 		},
 	}
@@ -111,9 +113,12 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 
 func AddrCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "addr",
+		Use:   "addr [address]",
 		Short: "Convert an address between hex and bech32",
-		Args:  cobra.ExactArgs(1),
+		Long: `Convert addresses:
+		
+		$ <appcli> debug addr <address>`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			addrString := args[0]
@@ -143,10 +148,10 @@ func AddrCmd() *cobra.Command {
 			accAddr := sdk.AccAddress(addr)
 			valAddr := sdk.ValAddress(addr)
 
-			fmt.Println("Address:", addr)
-			fmt.Printf("Address (hex): %X\n", addr)
-			fmt.Printf("Bech32 Acc: %s\n", accAddr)
-			fmt.Printf("Bech32 Val: %s\n", valAddr)
+			cmd.Println("Address:", addr)
+			cmd.Printf("Address (hex): %X\n", addr)
+			cmd.Printf("Bech32 Acc: %s\n", accAddr)
+			cmd.Printf("Bech32 Val: %s\n", valAddr)
 			return nil
 		},
 	}
@@ -154,9 +159,12 @@ func AddrCmd() *cobra.Command {
 
 func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "raw-bytes",
+		Use:   "raw-bytes [raw-bytes]",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
-		Args:  cobra.ExactArgs(1),
+		Long: `Convert bytes output:
+		
+		$ <appcli> debug raw-bytes <bytes>`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")

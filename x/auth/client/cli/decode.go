@@ -45,12 +45,15 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 	return client.PostCommands(cmd)[0]
 }
 
-// DecodeTxCmd - returns the command to decode a tx from hex or base64
-func DecodeTxCmd(cdc *codec.Codec) *cobra.Command {
+// GetDecodeTxCmd - returns the command to decode a tx from hex or base64
+func GetDecodeTxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "tx",
+		Use:   "decode-tx [tx]",
 		Short: "Decode a tx from hex or base64",
-		Args:  cobra.ExactArgs(1),
+		Long: `Decode Tx from hez or base64:
+		
+		$ <appcli> decode-tx <tx>`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txString := args[0]
@@ -81,8 +84,7 @@ func DecodeTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			buf := bytes.NewBuffer([]byte{})
-			err = json.Indent(buf, bz, "", "  ")
-			if err != nil {
+			if err = json.Indent(buf, bz, "", "  "); err != nil {
 				return err
 			}
 

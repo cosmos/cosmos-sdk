@@ -20,6 +20,7 @@ type (
 		HasRoute(r string) bool
 		GetRoute(path string) Handler
 		Seal()
+		Sealed() bool
 	}
 
 	router struct {
@@ -41,6 +42,11 @@ func (rtr *router) Seal() {
 		panic("router already sealed")
 	}
 	rtr.sealed = true
+}
+
+// Sealed returns a boolean signifying if the Router is sealed or not.
+func (rtr router) Sealed() bool {
+	return rtr.sealed
 }
 
 // AddRoute adds a governance handler for a given path. It returns the Router

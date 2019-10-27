@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,15 +24,13 @@ type Keeper struct {
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace, rtr types.Router,
-	codespace sdk.CodespaceType,
-) Keeper {
+	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace, codespace sdk.CodespaceType,
+) *Keeper {
 
-	return Keeper{
+	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
-		router:     rtr,
 		codespace:  codespace,
 	}
 }
@@ -39,6 +38,24 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// SetRouter sets the Evidence Handler router for the x/evidence module. Note,
+// we allow the ability to set the router after the Keeper is constructed as a
+// given Handler may need access the Keeper before being constructed. The router
+// may only be set once and will be sealed if it's not already sealed.
+func (k *Keeper) SetRouter(rtr types.Router) {
+	// It is vital to seal the Evidence Handler router as to not allow further
+	// handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
+	if !rtr.Sealed() {
+		rtr.Seal()
+	}
+	if k.router != nil {
+		panic(fmt.Sprintf("attempting to reset router on x/%s", types.ModuleName))
+	}
+
+	k.router = rtr
 }
 
 // SubmitEvidence attempts to match evidence against the keepers router and execute
@@ -63,4 +80,18 @@ func (k Keeper) setEvidence(ctx sdk.Context, evidence types.Evidence) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
 	store.Set(types.EvidenceKey(evidence.Hash()), bz)
+}
+
+// GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
+// the given hash, (nil, false) is returned.
+func (k Keeper) GetEvidence(ctx sdk.Context, hash cmn.HexBytes) (evidence types.Evidence, found bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	bz := store.Get(types.EvidenceKey(hash))
+	if len(bz) == 0 {
+		return nil, false
+	}
+
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &evidence)
+	return evidence, true
 }

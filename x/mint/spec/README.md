@@ -2,7 +2,7 @@
 
 ## Contents
 
-1. **[Concept](01_concept.md)**
+1. **[Concept](01_concepts.md)**
 2. **[State](02_state.md)**
     - [Minter](02_state.md#minter)
     - [Params](02_state.md#params)

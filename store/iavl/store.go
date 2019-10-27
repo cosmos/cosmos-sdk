@@ -307,14 +307,14 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 // Implements types.Iterator.
 type iavlIterator struct {
-	// Underlying store
-	tree *iavl.ImmutableTree
-
 	// Domain
 	start, end []byte
 
-	// Iteration order
-	ascending bool
+	key   []byte // The current key (mutable)
+	value []byte // The current value (mutable)
+
+	// Underlying store
+	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
 	iterCh chan cmn.KVPair
@@ -325,13 +325,11 @@ type iavlIterator struct {
 	// Close this to signal that state is initialized.
 	initCh chan struct{}
 
-	//----------------------------------------
-	// What follows are mutable state.
 	mtx sync.Mutex
 
-	invalid bool   // True once, true forever
-	key     []byte // The current key
-	value   []byte // The current value
+	ascending bool // Iteration order
+
+	invalid bool // True once, true forever (mutable)
 }
 
 var _ types.Iterator = (*iavlIterator)(nil)

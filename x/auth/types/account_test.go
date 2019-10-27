@@ -12,11 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-var (
-	stakeDenom = "stake"
-	feeDenom   = "fee"
-)
-
 func TestBaseAddressPubKey(t *testing.T) {
 	_, pub1, addr1 := KeyTestPubAddr()
 	_, pub2, addr2 := KeyTestPubAddr()
@@ -126,6 +121,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)

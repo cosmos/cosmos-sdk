@@ -77,7 +77,7 @@ raw transaction bytes relayed by the underlying Tendermint engine.
 used to persist data related to the core of the application, like consensus parameters.
 - [`AnteHandler`](#antehandler): This handler is used to handle signature verification, fee payment,
 and other pre-message execution checks when a transaction is received. It's executed during
-[`CheckTx`](#checktx) and [`DeliverTx`](#delivertx).
+[`CheckTx/RecheckTx`](#checktx) and [`DeliverTx`](#delivertx).
 - [`InitChainer`](../basics/app-anatomy.md#initchainer),
 [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#beginblocker-and-endblocker): These are
 the functions executed when the application receives the `InitChain`, `BeginBlock` and `EndBlock`
@@ -214,18 +214,43 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 
 ### CheckTx
 
-`CheckTx` is sent by the underlying consensus engine when a new unconfirmed (i.e. not yet included in a valid block) transaction is received by a full-node. The role of `CheckTx` is to guard the full-node's mempool (where unconfirmed transactions are stored until they are included in a block) from spam transactions. Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
+`CheckTx` is sent by the underlying consensus engine when a new unconfirmed (i.e. not yet included in a valid block)
+transaction is received by a full-node. The role of `CheckTx` is to guard the full-node's mempool
+(where unconfirmed transactions are stored until they are included in a block) from spam transactions.
+Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 
-`CheckTx` can perform both *stateful* and *stateless* checks, but developers should strive to make them lightweight. In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx` is implemented to do the following checks:
+`CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
+make them lightweight. In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx()` is implemented
+to do the following checks:
 
 1. Extract the `message`s from the transaction.
-2. Perform *stateless* checks by calling `ValidateBasic()` on each of the `messages`. This is done first, as *stateless* checks are less computationally expensive than *stateful* checks. If `ValidateBasic()` fail, `CheckTx` returns before running *stateful* checks, which saves resources.
-3. Perform non-module related *stateful* checks on the [account](../basics/accounts.md). This step is mainly about checking that the `message` signatures are valid, that enough fees are provided and that the sending account has enough funds to pay for said fees. Note that no precise [`gas`](../basics/gas-fees.md) counting occurs here, as `message`s are not processed. Usually, the [`anteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided with the transaction is superior to a minimum reference gas amount based on the raw transaction size, in order to avoid spam with transactions that provide 0 gas. 
-4. Ensure that a [`Route`](#message-routing) exists for each `message`, but do **not** actually process `message`s. `Message`s only need to be processed when the canonical state need to be updated, which happens during `DeliverTx`. 
+2. Perform _stateless_ checks by calling `ValidateBasic()` on each of the `messages`. This is done
+   first, as _stateless_ checks are less computationally expensive than _stateful_ checks. If
+   `ValidateBasic()` fail, `CheckTx` returns before running _stateful_ checks, which saves resources.
+3. Perform non-module related _stateful_ checks on the [account](../basics/accounts.md). This step is mainly about checking
+   that the `message` signatures are valid, that enough fees are provided and that the sending account
+   has enough funds to pay for said fees. Note that no precise [`gas`](../basics/gas-fees.md) counting occurs here,
+   as `message`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
+   with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
+   in order to avoid spam with transactions that provide 0 gas.
+4. Ensure that a [`Route`](#message-routing) exists for each `message`, but do **not** actually
+   process `message`s. `Message`s only need to be processed when the canonical state need to be updated,
+   which happens during `DeliverTx`.
 
-Steps 2. and 3. are  performed by the [`anteHandler`](../basics/gas-fees.md#antehandler) in the [`RunTx`](#runtx-antehandler-and-runmsgs) function, which `CheckTx` calls with the `runTxModeCheck` mode. During each step of `CheckTx`, a special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep track of the temporary changes triggered by the `CheckTx` calls of each transaction without modifying the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx`, the transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is received from the same account before the first is processed, and the account has consumed all its funds in `checkState` during the first transaction, the second transaction will fail `CheckTx` and be rejected. In any case, the sender's account will not actually pay the fees until the transaction is actually included in a block, because `checkState` never gets committed to the main state. `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
+Steps 2. and 3. are performed by the [`AnteHandler`](../basics/gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
+function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
+special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep
+track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying
+the [main canonical state](#main-state) . For example, when a transaction goes through `CheckTx()`, the
+transaction's fees are deducted from the sender's account in `checkState`. If a second transaction is
+received from the same account before the first is processed, and the account has consumed all its
+funds in `checkState` during the first transaction, the second transaction will fail `CheckTx`() and
+be rejected. In any case, the sender's account will not actually pay the fees until the transaction
+is actually included in a block, because `checkState` never gets committed to the main state. The
+`checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#checktx). The response contains:
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://tendermint.com/docs/spec/abci/abci.html#messages).
+The response contains:
 
 - `Code (uint32)`: Response Code. `0` if successful. 
 - `Data ([]byte)`: Result bytes, if any.
@@ -236,6 +261,14 @@ Steps 2. and 3. are  performed by the [`anteHandler`](../basics/gas-fees.md#ante
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
+#### RecheckTx
+
+After `Commit`, `CheckTx` is run again on all transactions that remain in the node's local mempool
+after filtering those included in the block. To prevent the mempool from rechecking all transactions
+every time a block is committed, the configuration option `mempool.recheck=false` can be set. As of
+Tendermint v0.32.1, an additional `Type` parameter is made available to the `CheckTx` function that
+indicates whether an incoming transaction is new (`CheckTxType_New`), or a recheck (`CheckTxType_Recheck`).
+This allows certain checks like signature verification can be skipped during `CheckTxType_Recheck`.
 
 ### DeliverTx
 
@@ -245,8 +278,8 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
-3. The `anteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose. 
-5. For each `message` in the transaction, route to the appropriate module's [`handler`](../building-modules/handler.md). Additional *stateful* checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`. 
+1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
+2. For each `message` in the transaction, route to the appropriate module's [`handler`](../building-modules/handler.md). Additional _stateful_ checks are performed, and the cache-wrapped multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `handler` returns successfully, the cache-wrapped multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation [here](https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L142-L150). At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails. 
 

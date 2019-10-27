@@ -179,6 +179,12 @@ func TestMsgMarshalYAML(t *testing.T) {
 	require.NoError(t, err)
 
 	want := fmt.Sprintf(`|
+  description:
+    moniker: a
+    identity: b
+    website: c
+    security_contact: d
+    details: e
   commission:
     rate: "0.000000000000000000"
     max_rate: "0.000000000000000000"

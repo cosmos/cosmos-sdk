@@ -14,3 +14,12 @@ type QueryEvidenceParams struct {
 func NewQueryEvidenceParams(hash string) QueryEvidenceParams {
 	return QueryEvidenceParams{EvidenceHash: hash}
 }
+
+type QueryAllEvidenceParams struct {
+	Page  int
+	Limit int
+}
+
+func NewQueryAllEvidenceParams(page, limit int) QueryAllEvidenceParams {
+	return QueryAllEvidenceParams{Page: page, Limit: limit}
+}

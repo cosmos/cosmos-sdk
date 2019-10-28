@@ -20,9 +20,10 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cms    sdk.CommitMultiStore
-	ctx    sdk.Context
-	keeper *keeper.Keeper
+	cms     sdk.CommitMultiStore
+	ctx     sdk.Context
+	querier sdk.Querier
+	keeper  *keeper.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -34,12 +35,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// create required keepers
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
 	subspace := paramsKeeper.Subspace(types.DefaultParamspace)
-	keeper := keeper.NewKeeper(cdc, storeKey, subspace, types.DefaultCodespace)
+	evidenceKeeper := keeper.NewKeeper(cdc, storeKey, subspace, types.DefaultCodespace)
 
 	// create Evidence router, mount Handlers, and set keeper's router
 	router := types.NewRouter()
-	router = router.AddRoute(EvidenceRouteEquivocation, EquivocationHandler(*keeper))
-	keeper.SetRouter(router)
+	router = router.AddRoute(EvidenceRouteEquivocation, EquivocationHandler(*evidenceKeeper))
+	evidenceKeeper.SetRouter(router)
 
 	// create DB, mount stores, and load latest version
 	db := dbm.NewMemDB()
@@ -61,7 +62,37 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.cms = cms
 	suite.ctx = ctx
-	suite.keeper = keeper
+	suite.querier = keeper.NewQuerier(*evidenceKeeper)
+	suite.keeper = evidenceKeeper
+}
+
+func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []types.Evidence {
+	evidence := make([]types.Evidence, numEvidence)
+
+	for i := 0; i < numEvidence; i++ {
+		pk := ed25519.GenPrivKey()
+		sv := SimpleVote{
+			ValidatorAddress: pk.PubKey().Address(),
+			Height:           int64(i),
+			Round:            0,
+		}
+
+		sig, err := pk.Sign(sv.SignBytes(ctx.ChainID()))
+		suite.NoError(err)
+		sv.Signature = sig
+
+		evidence[i] = EquivocationEvidence{
+			Power:      100,
+			TotalPower: 100000,
+			PubKey:     pk.PubKey(),
+			VoteA:      sv,
+			VoteB:      sv,
+		}
+
+		suite.Nil(suite.keeper.SubmitEvidence(ctx, evidence[i]))
+	}
+
+	return evidence
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
@@ -121,29 +152,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 func (suite *KeeperTestSuite) TestIterateEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	numEvidence := 100
-
-	for i := 0; i < numEvidence; i++ {
-		pk := ed25519.GenPrivKey()
-		sv := SimpleVote{
-			ValidatorAddress: pk.PubKey().Address(),
-			Height:           int64(i),
-			Round:            0,
-		}
-
-		sig, err := pk.Sign(sv.SignBytes(ctx.ChainID()))
-		suite.NoError(err)
-		sv.Signature = sig
-
-		e := EquivocationEvidence{
-			Power:      100,
-			TotalPower: 100000,
-			PubKey:     pk.PubKey(),
-			VoteA:      sv,
-			VoteB:      sv,
-		}
-
-		suite.Nil(suite.keeper.SubmitEvidence(ctx, e))
-	}
+	suite.populateEvidence(ctx, numEvidence)
 
 	evidence := suite.keeper.GetAllEvidence(ctx)
 	suite.Len(evidence, numEvidence)

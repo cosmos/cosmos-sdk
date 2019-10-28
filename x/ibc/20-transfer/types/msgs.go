@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 type MsgTransfer struct {
@@ -32,7 +33,7 @@ func NewMsgTransfer(
 
 // Route implements sdk.Msg
 func (MsgTransfer) Route() string {
-	return RouterKey
+	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg

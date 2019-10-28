@@ -96,3 +96,30 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash cmn.HexBytes) (evidence types.
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &evidence)
 	return evidence, true
 }
+
+// IterateEvidence provides an interator over all stored Evidence objects. For
+// each Evidence object, cb will be called. If the cb returns true, the iterator
+// will close and stop.
+func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(types.Evidence) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var evidence types.Evidence
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &evidence)
+
+		if cb(evidence) {
+			break
+		}
+	}
+}
+
+// GetAllEvidence returns all stored Evidence objects.
+func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []types.Evidence) {
+	k.IterateEvidence(ctx, func(e types.Evidence) bool {
+		evidence = append(evidence, e)
+		return false
+	})
+	return evidence
+}

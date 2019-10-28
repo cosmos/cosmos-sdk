@@ -118,6 +118,37 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	suite.Nil(res)
 }
 
+func (suite *KeeperTestSuite) TestIterateEvidence() {
+	ctx := suite.ctx.WithIsCheckTx(false)
+	numEvidence := 100
+
+	for i := 0; i < numEvidence; i++ {
+		pk := ed25519.GenPrivKey()
+		sv := SimpleVote{
+			ValidatorAddress: pk.PubKey().Address(),
+			Height:           int64(i),
+			Round:            0,
+		}
+
+		sig, err := pk.Sign(sv.SignBytes(ctx.ChainID()))
+		suite.NoError(err)
+		sv.Signature = sig
+
+		e := EquivocationEvidence{
+			Power:      100,
+			TotalPower: 100000,
+			PubKey:     pk.PubKey(),
+			VoteA:      sv,
+			VoteB:      sv,
+		}
+
+		suite.Nil(suite.keeper.SubmitEvidence(ctx, e))
+	}
+
+	evidence := suite.keeper.GetAllEvidence(ctx)
+	suite.Len(evidence, numEvidence)
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

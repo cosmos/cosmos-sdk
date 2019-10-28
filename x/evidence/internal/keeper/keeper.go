@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -77,17 +78,17 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 }
 
 func (k Keeper) setEvidence(ctx sdk.Context, evidence types.Evidence) {
-	store := ctx.KVStore(k.storeKey)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
-	store.Set(types.EvidenceKey(evidence.Hash()), bz)
+	store.Set(evidence.Hash(), bz)
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
 func (k Keeper) GetEvidence(ctx sdk.Context, hash cmn.HexBytes) (evidence types.Evidence, found bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
-	bz := store.Get(types.EvidenceKey(hash))
+	bz := store.Get(hash)
 	if len(bz) == 0 {
 		return nil, false
 	}

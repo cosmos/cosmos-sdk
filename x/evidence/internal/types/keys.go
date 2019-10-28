@@ -1,9 +1,5 @@
 package types
 
-import (
-	cmn "github.com/tendermint/tendermint/libs/common"
-)
-
 const (
 	// ModuleName defines the module name
 	ModuleName = "evidence"
@@ -25,8 +21,3 @@ const (
 var (
 	KeyPrefixEvidence = []byte{0x00}
 )
-
-// EvidenceKey returns the KVStore key for persisting Evidence.
-func EvidenceKey(hash cmn.HexBytes) []byte {
-	return append(KeyPrefixEvidence, hash...)
-}

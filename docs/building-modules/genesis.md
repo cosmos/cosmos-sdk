@@ -1,3 +1,7 @@
+---
+order: 9
+---
+
 # Module Genesis
 
 ## Pre-requisite Reading
@@ -9,18 +13,13 @@
 
 Modules generally handle a subset of the state and, as such, they need to define the related subset of the genesis file as well as methods to initialize, verify and export it. 
 
-- [Type Definition](#type-definition)
-    + [InitGenesis](#initgenesis)
-    + [DefaultGenesis](#defaultgenesis)
-- [Other Genesis Functions](#other-genesis-functions)
-    + [ValidateGenesis](#validategenesis)
-    + [ExportGenesis](#exportgenesis)
-
 ## Type Definition 
 
-The subset of the genesis state defined from a given module is generally defined in a `internal/types/genesis.go` file, along with the `DefaultGenesis` and `ValidateGenesis` methods. The struct defining the subset of the genesis state defined by the module is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process. 
+The subset of the genesis state defined from a given module is generally defined in a `./internal/types/genesis.go` file, along with the `DefaultGenesis` and `ValidateGenesis` methods. The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process. 
 
-See an example of `GenesisState` type definition from the [nameservice tutoria](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L10-L12). 
+See an example of `GenesisState` type definition from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L10-L12). 
+
+Next we present the main genesis-related methods that need to be implemented by module developers in order for their module to be used in Cosmos SDK applications. 
 
 ### `DefaultGenesis`
 
@@ -37,6 +36,8 @@ Other than the methods related directly to `GenesisState`, module developers are
 ### `InitGenesis`
 
 The `InitGenesis` method is executed during [`InitChain`](../core/baseapp.md#initchain) when the application is first started. Given a `GenesisState`, it initializes the subset of the state managed by the module by using the module's [`keeper`](./keeper.md) setter function on each parameter within the `GenesisState`. 
+
+The [module manager](./module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules, in order. This order is set by the application developer via the manager's `SetOrderGenesisMethod`, which is called in the [application's constructor function](../basics/app-anatomy.md#constructor-function)
 
 See an [example of `InitGenesis` from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/genesis.go#L39-L44).
 

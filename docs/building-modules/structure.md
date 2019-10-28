@@ -1,4 +1,8 @@
-# Module Structure Specification
+---
+order: 12
+---
+
+# Recommended Structure
 
 This document outlines the recommended structure of Cosmos SDK modules. These
 ideas are meant to be applied as suggestions. Application developers are encouraged

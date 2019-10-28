@@ -1,3 +1,7 @@
+---
+order: 11
+---
+
 # Module Interfaces
 
 ## Prerequisites
@@ -6,23 +10,15 @@
 
 ## Synopsis
 
-This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules will be included.
-
-- [CLI](#cli)
-  + [Transaction Commands](#tx-commands)
-  + [Query Commands](#query-commands)
-- [REST](#rest)
-  + [Request Types](#request-types)
-  + [Request Handlers](#request-handlers)
-  + [Register Routes](#register-routes)
+This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included.
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint created by the application developer will add commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries).  The CLI files are typically found in the `./x/moduleName/client/cli` folder.
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. Here is an example from the [nameservice tutorial](https://cosmos.network/docs/tutorial/cli.html#transactions):
+[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. Here is an example from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/cli.md#transactions):
 
 ```go
 func GetCmdBuyName(cdc *codec.Codec) *cobra.Command {
@@ -60,14 +56,13 @@ func GetCmdBuyName(cdc *codec.Codec) *cobra.Command {
 
 This getter function creates the command for the Buy Name transaction. It does the following:
 
-- **`codec`**. The getter function takes in an application [`codec`](../core/encoding.md) as an argument and returns a reference to the `cobra.command`. Since a module is intended to be used by any application, the `codec` must be provided.
 - **Construct the command:** Read the [Cobra Documentation](https://github.com/spf13/cobra) for details on how to create commands.
   + **Use:** Specifies the format of a command-line entry users should type in order to invoke this command. In this case, the user uses `buy-name` as the name of the transaction command and provides the `name` the user wishes to buy and the `amount` the user is willing to pay.
   + **Args:** The number of arguments the user provides, in this case exactly two: `name` and `amount`.
   + **Short and Long:** A description for the function is provided here. A `Short` description is expected, and `Long` can be used to provide a more detailed description when a user uses the `--help` flag to ask for more information.
   + **RunE:** Defines a function that can return an error, called when the command is executed. Using `Run` would do the same thing, but would not allow for errors to be returned.
 - **`RunE` Function Body:** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
-  + The function should first initialize a [`TxBuilder`](../core/transactions.md#txbuilder) with the application `codec`'s `TxEncoder`, as well as a new [`CLIContext`](./query-lifecycle.md#clicontext) with the `codec` and `AccountDecoder`. These contexts contain all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
+  + The function should first initialize a [`TxBuilder`](../core/transactions.md#txbuilder) with the application `codec`'s `TxEncoder`, as well as a new [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) with the `codec` and `AccountDecoder`. These contexts contain all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
   + If applicable, the command's arguments are parsed. Here, the `amount` given by the user is parsed into a denomination of `coins`.
   + If applicable, the `CLIContext` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `cliCtx.getFromAddress()`.
   + A [message](./messages-and-queries.md) is created using all parameters parsed from the command arguments and `CLIContext`. The constructor function of the specific message type is called directly. It is good practice to call `ValidateBasic()` on the newly created message to run a sanity check and check for invalid arguments.
@@ -95,7 +90,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the [nameservice module CLI](https://cosmos.network/docs/tutorial/cli.html#queries):
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the [nameservice module CLI](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/cli.md#queries):
 
 ```go
 func GetCmdWhois(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -127,9 +122,9 @@ This query returns the address that owns a particular name. The getter function 
 - **`codec` and `queryRoute`.** In addition to taking in the application `codec`, query command getters also take a `queryRoute` used to construct a path [Baseapp](../core/baseapp.md#query-routing) uses to route the query in the application.
 - **Construct the command.** Read the [Cobra Documentation](https://github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `whois` and provide the `name` they are querying for as the only argument.
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
-  + The function should first initialize a new [`CLIContext`](./query-lifecycle.md#clicontext) with the application `codec`.
+  + The function should first initialize a new [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) with the application `codec`.
   + If applicable, the `CLIContext` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `CLIContext` parameters in this case because the query does not involve any information about the user.
-  + The `queryRoute` is used to construct a `path` [`baseapp`](../basics/baseapp.md) will use to route the query to the appropriate [querier](./querier.md). The expected format for a query `path` is "queryCategory/queryRoute/queryType/arg1/arg2/...", where `queryCategory` can be `p2p`, `store`, `app`, or `custom`, `queryRoute` is the name of the module, and `queryType` is the name of the query type defined within the module. [`baseapp`](../basics/baseapp.md) can handle each type of `queryCategory` by routing it to a module querier or retrieving results directly from stores and functions for querying peer nodes. Module queries are `custom` type queries (some SDK modules have exceptions, such as `auth` and `gov` module queries).
+  + The `queryRoute` is used to construct a `path` [`baseapp`](../core/baseapp.md) will use to route the query to the appropriate [querier](./querier.md). The expected format for a query `path` is "queryCategory/queryRoute/queryType/arg1/arg2/...", where `queryCategory` can be `p2p`, `store`, `app`, or `custom`, `queryRoute` is the name of the module, and `queryType` is the name of the query type defined within the module. [`baseapp`](../core/baseapp.md) can handle each type of `queryCategory` by routing it to a module querier or retrieving results directly from stores and functions for querying peer nodes. Module queries are `custom` type queries (some SDK modules have exceptions, such as `auth` and `gov` module queries).
   + The `CLIContext` `QueryWithData()` function is used to relay the query to a node and retrieve the response. It requires the `path`. It returns the result and height of the query upon success or an error if the query fails. In addition, it will verify the returned proof if `TrustNode` is disabled. If proof verification fails or the query height is invalid, an error will be returned.
   + The `codec` is used to nmarshal the response and the `CLIContext` is used to print the output back to the user.
 - **Flags.** Add any [flags](#flags) to the command.
@@ -163,7 +158,7 @@ Since `PostCommands()` includes all of the basic flags required for a transactio
 
 ## REST
 
-Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](lunie.io)). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io). Thus, application developers will also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers. The module developer's responsibility is to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
 
 To support HTTP requests, the module developer needs to define possible request types, how to handle them, and provide a way to register them with a provided router.
 
@@ -171,7 +166,7 @@ To support HTTP requests, the module developer needs to define possible request 
 
 Request types, which define structured interactions from users, must be defined for all *transaction* requests. Users using this method to interact with an application will send HTTP Requests with the required fields in order to trigger state changes in the application. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
 
-Here is an example of a request to buy a name from the [nameservice](https://cosmos.network/docs/tutorial/rest.html) module:
+Here is an example of a request to buy a name from the [nameservice](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/rest.md) module:
 
 ```go
 type buyNameReq struct {
@@ -193,7 +188,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 *	`ChainID` specifies the unique identifier of the blockchain the transaction pertains to.
 *	`AccountNumber` is an identifier for the account.
 *	`Sequence`is the value of a counter measuring how many transactions have been sent from the account. It is used to prevent replay attacks.
-*	`Gas` refers to how much [gas](../core/gas.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
+*	`Gas` refers to how much [gas](../basics/gas-fees.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
 *	`GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 *	`GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 *	`Fees` specifies how much in [fees](../basics/gas-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.

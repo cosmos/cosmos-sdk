@@ -1,3 +1,7 @@
+---
+order: 4
+---
+
 # Handlers
 
 ## Pre-requisite Reading
@@ -8,9 +12,6 @@
 ## Synopsis
 
 A `Handler` designates a function that processes [`message`s](./messages-and-queries.md#messages). `Handler`s are specific to the module in which they are defined, and only process `message`s defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx).
-
-- [`handler` type](#handler-type)
-- [Implementation of a module `handler`s](#implementation-of-a-module-handlers)
 
 ## `handler` type
 
@@ -24,11 +25,11 @@ Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
-- The [`Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38) returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/gas-fees.md) consumption and [`events`](./events.md).
+- The [`Result`](https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38) returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/gas-fees.md) consumption and [`events`](../core/events.md).
 
 ## Implementation of a module `handler`s
 
-Module `handler`s are typically implemented in a `handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
+Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the [application's `router`](../core/baseapp.md#message-routing) via the `NewHandler()` method. Typically, the manager's `NewHandler()` method simply calls a `NewHandler()` method defined in `handler.go`, which looks like the following:
 
 ```go
 func NewHandler(keeper Keeper) sdk.Handler {

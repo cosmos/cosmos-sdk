@@ -1,4 +1,9 @@
-# Module Manager and `AppModule` Interface
+---
+order: 2
+---
+
+
+# Module Manager
 
 ## Pre-requisite Reading
 
@@ -6,16 +11,7 @@
 
 ## Synopsis
 
-Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../core/baseapp.md#routing), and allows the application developer to set the order of execution of a variety of functions like [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#begingblocker-and-endblocker). 
-
-- [Application Module Interfaces](#application-module-interfaces)
-	+ [`AppModuleBasic`](#appmodulebasic)
-	+ [`AppModuleGenesis`](#appmodulegenesis)
-	+ [`AppModule`](#appmodule)
-	+ [Implementing the Application Module Interfaces](#implementing-the-application-module-interfaces)
-- [Module Managers](#module-managers)
-	+ [`BasicManager`](#basicmanager)
-	+ [`Manager`](#manager)
+Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../core/baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`BeginBlocker` and `EndBlocker`](../basics/app-anatomy.md#begingblocker-and-endblocker). 
 
 ## Application Module Interfaces
 
@@ -25,7 +21,7 @@ Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-m
 - [`AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 - [`AppModuleGenesis`](#appmodulegenesis) for inter-dependent genesis-related module functionalities.
 
-The `AppModuleBasic` interface exists to define independent methods of the module, i.e. those that do not depend on other modules in the application. This allows for the construction of the basic application structure early in the application definition, generally in the `init()` function of the [main application file](../basics/app-antomy.md#core-application-file).
+The `AppModuleBasic` interface exists to define independent methods of the module, i.e. those that do not depend on other modules in the application. This allows for the construction of the basic application structure early in the application definition, generally in the `init()` function of the [main application file](../basics/app-anatomy.md#core-application-file).
 
 The `AppModule` interface exists to define inter-dependent module methods. Many modules need to interract with other modules, typically through [`keeper`s](./keeper.md), which means there is a need for an interface where modules list their `keeper`s and other methods that require a reference to another module's object. `AppModule` interface also enables the module manager to set the order of execution between module's methods like `BeginBlock` and `EndBlock`, which is important in cases where the order of execution between modules matters in the context of the application. 
 
@@ -60,7 +56,7 @@ Let us go through the methods:
 - `ValidateGenesis(json.RawMessage)`: Used to validate the `GenesisState` defined by a module, given in its `json.RawMessage` form. It will usually unmarshall the `json` before running a custom [`ValidateGenesis`](./genesis.md#validategenesis) function defined by the module developer. 
 - `RegisterRESTRoutes(context.CLIContext, *mux.Router)`: Registers the REST routes for the module. These routes will be used to map REST request to the module in order to process them. See [../interfaces/rest.md] for more.
 - `GetTxCmd(*codec.Codec)`: Returns the root [`Tx` command](./module-interfaces.md#tx) for the module. The subcommands of this root command are used by end-users to generate new transactions containing [`message`s](./messages-and-queries.md#queries) defined in the module. 
-- `GetQueryCmd(*codec.Codec)`: Return the root [`query` command](./module-intefaces.md#query) for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module. 
+- `GetQueryCmd(*codec.Codec)`: Return the root [`query` command](./module-interfaces.md#query) for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module. 
 
 All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#basicmanager). 
 

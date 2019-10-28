@@ -1,3 +1,8 @@
+---
+order: 3
+---
+
+
 # Messages and Queries
 
 ## Pre-requisite Reading
@@ -8,16 +13,13 @@
 
 `Message`s and `Queries` are the two primary objects handled by modules. Most of the core components defined in a module, like `handler`s, `keeper`s and `querier`s, exist to process `message`s and `queries`. 
 
-- [Messages](#messages)
-- [Queries](#queries)
-
 ## Messages
 
-`Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions], which may contain one or multiple of them. 
+`Message`s are objects whose end-goal is to trigger state-transitions. They are wrapped in [transactions](../core/transactions.md), which may contain one or multiple of them. 
 
-When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../basics/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md). 
+When a transaction is relayed from the underlying consensus engine to the SDK application, it is first decoded by [`baseapp`](../core/baseapp.md). Then, each `message` contained in the transaction is extracted and routed to the appropriate module via `baseapp`'s `router` so that it can be processed by the module's [`handler`](./handler.md). For a more detailed explanation of the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md). 
 
-Defining `message`s is the responsibility of module developers. Typically, they are defined in a `internal/types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
+Defining `message`s is the responsibility of module developers. Typically, they are defined in a `./internal/types/msgs.go` file inside the module's folder. The `message`'s type definition usually includes a list of parameters needed to process the message that will be provided by end-users when they want to create a new transaction containing said `message`.
 
 ```go
 // Example of a message type definition
@@ -29,10 +31,10 @@ type MsgSubmitProposal struct {
 }
 ```
 
-The `Msg` is typically accompagnied by a standard constructor function, that is called from one of the [module's interface](./module-interface). `message`s also need to implement the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29) interface, which contains the following methods:
+The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29) interface, which contains the following methods:
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
-- `Type() string`: Type of the message, used primarly in [events](./events.md). This should return a message-specific `string`, typically the denomination of the message itself.
+- `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
 - `ValidateBasic() Error`: This method is called by `baseapp` very early in the processing of the `message` (in both [`CheckTx`](../core/baseapp.md#checktx) and [`DeliverTx`](../core/baseapp.md#delivertx)), in order to discard obviously invalid messages. `ValidateBasic` should only include *stateless* checks, i.e. checks that do not require access to the state. This usually consists in checking that the message's parameters are correctly formatted and valid (i.e. that the `amount` is strictly positive for a transfer).
 - `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature. 
 - `GetSigners() []AccAddress`: Return the list of signers. The SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method. 
@@ -64,4 +66,4 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 ## Next
 
-Learn about [`handler`s](./handler.go).
+Learn about [`handler`s](./handler.md).

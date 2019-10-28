@@ -14,7 +14,7 @@ tree is the AppHash which will be included in block header.
 
 ![Simple Merkle Tree](./pics/simpleMerkleTree.png)
 
-As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation),
+As we have discussed in LCD trust-propagation,
 the AppHash can be verified by checking voting power against a trusted validator set. Here we just
 need to build proof from ABCI state to AppHash. The proof contains two parts:
 

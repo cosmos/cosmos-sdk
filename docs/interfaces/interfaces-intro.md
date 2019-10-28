@@ -1,3 +1,7 @@
+---
+order: 1
+---
+
 # Interfaces
 
 ## Prerequisites
@@ -5,39 +9,31 @@
 * [Anatomy of an SDK Application](../basics/app-anatomy.md)
 * [Lifecycle of a Transaction](../basics/tx-lifecycle.md)
 
-
 ## Synopsis
 
-Typically, SDK applications include some type of interface that users interact with to utilize the application's functionalities. This document introduces user command-line and REST interfaces.
-
-- [Types of Application Interfaces](#types-of-application-interfaces)
-- [Module vs Application Interfaces](#module-vs-application-interfaces)
-  + [Module Developer Responsibilities](#module-developer-responsibilities)
-  + [Application Developer Responsibilities](#application-developer-responsibilities)
-
+Typically, SDK applications include interfaces to let end-users interact with the application. This document introduces the different types of interfaces for SDK applications. 
 
 ## Types of Application Interfaces
 
-SDK applications generally have a Command-Line Interface (CLI) and REST Interface to support interactions with a [full-node](../core/node.md). The SDK is opinionated about how to create these two interfaces; all modules specify [Cobra commands](https://github.com/spf13/cobra) and register routes using [Gorilla Mux routers](https://github.com/gorilla/mux). The CLI and REST Interface are conventionally defined in the application `app/cmd/cli` folder.
-
+SDK applications generally have a Command-Line Interface (CLI) and REST Interface to support interactions with a [full-node](../core/node.md). The SDK is opinionated about how to create these two interfaces; all modules specify [Cobra commands](https://github.com/spf13/cobra) and register routes using [Gorilla Mux routers](https://github.com/gorilla/mux). The CLI and REST Interface are conventionally defined in the application `./app/cmd/cli` folder.
 
 ## Module vs Application Interfaces
 
-The process of creating an application interface is distinct from creating a [module interface](../building-modules/interfaces.md), though the components are closely intertwined. As expected, the module interface handles the bulk of the underlying logic, defining ways for end-users to create [messages](../building-modules/messages-and-queries.md#messages) handled by the module and [queries](../building-modules/messages-and-queries.md#queries) to the subset of application state within the scope of the module. On the other hand, the application interfaces aggregate module-level interfaces in order to route messages and queries to the appropriate modules. Application interfaces also handle root-level responsibilities such as signing and broadcasting [transactions](../core/transactions.md) that wrap messages.
+The process of creating an application interface is distinct from creating a [module interface](../building-modules/module-interfaces.md), though the two are closely intertwined. As expected, module interfaces handle the bulk of the underlying logic, defining ways for end-users to create [messages](../building-modules/messages-and-queries.md#messages) and [queries](../building-modules/messages-and-queries.md#queries) to the subset of application state within their scope. On the other hand, application interfaces aggregate module-level interfaces in order to route `messages` and `queries` to the appropriate modules. Application interfaces also handle root-level responsibilities such as signing and broadcasting [transactions](../core/transactions.md) that wrap messages.
 
 ### Module Developer Responsibilities
 
-In regards to interfaces, module developers include the following definitions:
+With regards to interfaces, module developers need to include the following definitions:
 
-* **CLI commands:** Specifically, [Transaction commands](../building-modules/interfaces.md#transaction-commands) and [Query commands](../building-modules/interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module, users will create `tx auth send` transactions.
-* **Request Handlers:** Also categorized into Transaction and Query requests. Transactions will require HTTP [Request Types](../building-modules/interfaces.md#request-types) in addition to [Request Handlers](../building-modules/interfaces.md#request-handlers) in order to encapsulate all of the user's options (e.g. gas prices).
-* **REST Routes:** Given a router, the module interface registers paths with the aforementioned [Request Handlers](../building-modules/interfaces.md#request-handlers) for each type of request.
+* **CLI commands:** Specifically, [Transaction commands](../building-modules/module-interfaces.md#transaction-commands) and [Query commands](../building-modules/module-interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module, users will create `tx auth send` transactions.
+* **Request Handlers:** Also categorized into Transaction and Query requests. Transactions will require HTTP [Request Types](../building-modules/module-interfaces.md#request-types) in addition to [Request Handlers](../building-modules/module-interfaces.md#request-handlers) in order to encapsulate all of the user's options (e.g. gas prices).
+* **REST Routes:** Given a router, the module interface registers paths with the aforementioned [Request Handlers](../building-modules/module-interfaces.md#request-handlers) for each type of request.
 
-Module interfaces are designed to be generic. Both commands and request types  include required user input (through flags or request body) which are different for each application. This section of documents will only detail application interfaces; to read about how to build module interfaces, click [here](../building-modules/interfaces.md).
+Module interfaces are designed to be generic. Both commands and request types  include required user input (through flags or request body) which are different for each application. This section of documents will only detail application interfaces; to read about how to build module interfaces, click [here](../building-modules/module-interfaces.md).
 
 ### Application Developer Responsibilities
 
-In regards to interfaces, application developers include:
+With regards to interfaces, application developers need to include:
 
 * **CLI Root Command:** The [root command](./cli.md#root-command) adds subcommands to include all of the functionality for the application, mainly module [transaction](./cli.md#transaction-commands) and [query](./cli.md#query-commands) commands from the application's module(s).
 * **App Configurations:** All application-specific values are the responsibility of the application developer, including the [`codec`](../core/encoding.md) used to marshal requests before relaying them to a node.

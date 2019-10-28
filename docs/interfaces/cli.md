@@ -1,3 +1,7 @@
+---
+order: 3
+---
+
 # Command-Line Interface
 
 ## Prerequisites
@@ -6,18 +10,13 @@
 
 ## Synopsis
 
-This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/interfaces.md#cli).
+This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli).
 
-- [Application CLI Components](#application-cli-components)
-- [Commands](#commands)
-- [Flags](#flags)
-- [Configurations](#configurations)
+## Command-Line Interface
 
-## Application CLI Components
+One of the main entrypoints of an application is the command-line interface. This entrypoint is created via a `main.go` file which compiles to a binary, conventionally placed in the application's `./cmd/cli` folder. The CLI for an application is typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`. Here is where the interfaces docs lie in the directory from the [nameservice tutorial](https://cosmos.network/docs/tutorial)
 
-One of the main entrypoints of an application is the command-line interface. This entrypoint is created as a `main.go` file which compiles to a binary, conventionally placed in the application's `./cmd/cli` folder. The CLI for an application is typically be referred to as the name of the application suffixed with `-cli`, e.g. `appcli`. Here is where the interfaces docs lie in the directory from the [nameservice tutorial](https://cosmos.network/docs/tutorial)
-
-### Cobra
+### Example Command
 
 There is no set way to create a CLI, but SDK modules typically use the [Cobra Library](https://github.com/spf13/cobra). Building a CLI with Cobra entails defining commands, arguments, and flags. [**Commands**](#commands) understand the actions users wish to take, such as `tx` for creating a transaction and `query` for querying the application. Each command can also have nested subcommands, necessary for naming the specific transaction type. Users also supply **Arguments**, such as account numbers to send coins to, and [**Flags**](#flags) to modify various aspects of the commands, such as gas prices or which node to broadcast to.
 
@@ -26,11 +25,19 @@ Here is an example of a command a user might enter to interact with the nameserv
 ```bash
 nscli tx nameservice buy-name <name> <amount> --gas auto --gas-prices <gasPrices>
 ```
-The first four strings specify the command: the root command for the entire application `nscli`, the subcommand `tx`, the subcommand `nameservice` to indicate which module to route the command to, and the type of transaction `buy-name`. The next two strings are arguments: the `name` the user wishes to buy and the `amount` they want to pay for it. Finally, the last few strings of the command are flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
+
+The first four strings specify the command: 
+
+- The root command for the entire application `nscli`.
+- The subcommand `tx`, which contains all commands that let users create transactions.
+- The subcommand `nameservice` to indicate which module to route the command to (`nameservice` module in this case).
+- The type of transaction `buy-name`. 
+
+The next two strings are arguments: the `name` the user wishes to buy and the `amount` they want to pay for it. Finally, the last few strings of the command are flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
 
 The CLI interacts with a [node](../core/node.md) (running `nsd`) to handle this command. The interface itself is defined in a `main.go` file.
 
-### Main Function
+### Building the CLI
 
 The `main.go` file needs to have a `main()` function that does the following to run the command-line interface:
 
@@ -42,7 +49,7 @@ The `main.go` file needs to have a `main()` function that does the following to 
 
 An example of the `main()` function for the [nameservice tutorial](https://cosmos.network/docs/tutorial) CLI can be found [here](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/cmd/nscli/main.go#L26-L67). The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the nameservice CLI `main.go` file.
 
-## Commands
+## Adding Commands to the CLI
 
 Every application CLI first constructs a root command, then adds functionality by aggregating subcommands (often with further nested subcommands) using `AddCommand()`. The bulk of an application's unique capabilities lies in its transaction and query commands, called `TxCmd` and `QueryCmd` respectively.
 
@@ -50,7 +57,7 @@ Every application CLI first constructs a root command, then adds functionality b
 
 The root command (called `rootCmd`) is what the user first types into the command line to indicate which application they wish to interact with. The string used to invoke the command (the "Use" field) is typically the name of the application suffixed with `-cli`, e.g. `appcli`. The root command typically includes the following commands to support basic functionality in the application.
 
-* **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](,,/core/node.md). The Status of a node includes [`NodeInfo`](https://github.com/tendermint/tendermint/blob/master/p2p/node_info.go#L75-L92), `SyncInfo` and `ValidatorInfo`: this information includes the node ID, latest block hash, and the validator public key and voting power. Here is an example of what the `status command` outputs:
+* **Status** command from the SDK rpc client tools, which prints information about the status of the connected [`Node`](../core/node.md). The Status of a node includes [`NodeInfo`](https://github.com/tendermint/tendermint/blob/master/p2p/node_info.go#L75-L92), `SyncInfo` and `ValidatorInfo`: this information includes the node ID, latest block hash, and the validator public key and voting power. Here is an example of what the `status command` outputs:
 ```json
 {
   "jsonrpc": "2.0",
@@ -132,10 +139,10 @@ The root-level `status`, `config`, and `keys` subcommands are common across most
 
 [Transactions](#./transactions.md) are objects wrapping [messages](../building-modules/messages-and-queries.md) that trigger state changes. To enable the creation of transactions using the CLI interface, `TxCmd` typically adds the following commands:
 
-* **Sign** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_sign.go#L30-L83) from the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/auth) module, the command that signs messages in a transaction. To enable multisig, add the `auth` module [`MultiSign`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_multisign.go#L26-L151) command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
+* **Sign** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_sign.go#L30-L83) from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, the command that signs messages in a transaction. To enable multisig, add the `auth` module [`MultiSign`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/tx_multisign.go#L26-L151) command. Since every transaction requires some sort of signature in order to be valid, this command is necessary for every application.
 * **Broadcast** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/broadcast.go) from the SDK client tools, which broadcasts transactions.
-* **Send** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/client/cli/tx.go#L31-L60) from the [`bank`](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/bank) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
-* All [module transaction commands](../building-modules/interfaces.md) the application is dependent on, retrieved by calling [`GetTxCmd()`](../building-modules/interfaces.md#GetTxCmd) on all the modules or using the Module Manager's [`AddTxCommands()`](../building-modules/module-manager.md) function.
+* **Send** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/client/cli/tx.go#L31-L60) from the [`bank`](https://github.com/cosmos/cosmos-sdk/tree/master/x/bank/spec) module, which is a transaction that allows accounts to send coins to one another, including gas and fees for transactions.
+* All [module transaction commands](../building-modules/module-interfaces.md) the application is dependent on, retrieved by calling [`GetTxCmd()`](../building-modules/module-interfaces.md#GetTxCmd) on all the modules or using the Module Manager's [`AddTxCommands()`](../building-modules/module-manager.md) function.
 
 Here is an example of a `TxCmd` aggregating these subcommands from the [nameservice tutorial](https://cosmos.network/docs/tutorial).
 
@@ -171,7 +178,7 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 * **Account** [command](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/client/cli/query.go#L45-L73) from the `auth` module, which displays the state (e.g. account balance) of an account given an address.
 * **Validator** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/rpc/validators.go) from the SDK rpc client tools, which displays the validator set of a given height.
 * **Block** [command](https://github.com/cosmos/cosmos-sdk/blob/master/client/rpc/block.go) from the SDK rpc client tools, which displays the block data for a given height.
-* All [module query commands](../building-modules/interfaces.md) the application is dependent on, retrieved by calling [`GetQueryCmd()`](../building-modules/interfaces.md#GetqueryCmd) on all the modules or using the Module Manager's `AddQueryCommands()` function.
+* All [module query commands](../building-modules/module-interfaces.md) the application is dependent on, retrieved by calling [`GetQueryCmd()`](../building-modules/module-interfaces.md#GetqueryCmd) on all the modules or using the Module Manager's `AddQueryCommands()` function.
 
 Here is an example of a `QueryCmd` aggregating subcommands, also from the nameservice tutorial (it is structurally identical to `TxCmd`):
 
@@ -291,6 +298,3 @@ rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
 }
 ```
 
-## Next
-
-Read about how to build a module CLI [here](./module-interfaces#cli)

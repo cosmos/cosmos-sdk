@@ -1,3 +1,7 @@
+---
+order: 4
+---
+
 # Node Client (Daemon)
 
 ## Pre-requisite Reading
@@ -8,17 +12,14 @@
 
 The main endpoint of an SDK application is the daemon client, otherwise known as the full-node client. The full-node runs the state-machine, starting from a genesis file. It connects to peers running the same client in order to receive and relay transactions, block proposals and signatures. The full-node is constituted of the application, defined with the Cosmos SDK, and of a consensus engine connected to the application via the ABCI. 
 
-- [`main` function](#main-function)
-- [`start` command](#start-command)
-
 ## `main` function
 
-The full-node client of any SDK application is built by running a `main` function. The client is generally named by appending the `-d` suffix to the application name (e.g. `appd` for an application named `app`), and the `main` function is defined in a `cmd/appd/main.go` file. Running this function creates an executable `.appd` that comes with a set of commands. For an app named `app`, the main command is [`appd start`](#start-command), which starts the full-node. 
+The full-node client of any SDK application is built by running a `main` function. The client is generally named by appending the `-d` suffix to the application name (e.g. `appd` for an application named `app`), and the `main` function is defined in a `./cmd/appd/main.go` file. Running this function creates an executable `.appd` that comes with a set of commands. For an app named `app`, the main command is [`appd start`](#start-command), which starts the full-node. 
 
 In general, developers will implement the `main.go` function with the following structure:
 
 - First, a [`codec`](./encoding.md) is instanciated for the application.
-- Then, the [`config`](https://github.com/cosmos/cosmos-sdk/blob/master/types/config.go) is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts-fees-gas.md#addresses-and-pubkeys).
+- Then, the [`config`](https://github.com/cosmos/cosmos-sdk/blob/master/types/config.go) is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`. 
 - Add default server commands to `rootCmd` using the `server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)` method. These commands are separated from the ones added above since they are standard and defined at SDK level. They should be shared by all SDK-based applications. They include the most important command: the [`start` command](#start-command).
 - Prepare and execute the [`executor`](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/libs/cli/setup.go#L75-L78).  
@@ -61,7 +62,7 @@ tmNode, err := node.NewNode(
 )
 ```
 
-The Tendermint node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/application.go#L11-L26) (given that `app` extends [`baseapp`](./baseapp.md)). As part of the `NewNode` method, Tendermint makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the Tendermint node. The difference between these two heights should always be negative or null. If it is strictly negative, `NewNode` will replay blocks until the height of the application reaches the height of the Tendermint node. Finally, if the height of the application is `0`, the Tendermint node will call [`InitChain`](./baseapp.md#initchain) on the application to initialize the state. 
+The Tendermint node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/application.go#L11-L26) (given that `app` extends [`baseapp`](./baseapp.md)). As part of the `NewNode` method, Tendermint makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the Tendermint node. The difference between these two heights should always be negative or null. If it is strictly negative, `NewNode` will replay blocks until the height of the application reaches the height of the Tendermint node. Finally, if the height of the application is `0`, the Tendermint node will call [`InitChain`](./baseapp.md#initchain) on the application to initialize the state from the genesis file. 
 
 Once the Tendermint node is instanciated and in sync with the application, the node can be started:
 

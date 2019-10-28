@@ -1,3 +1,7 @@
+---
+order: 7
+---
+
 # Events
 
 ## Pre-Requisite Reading
@@ -8,14 +12,11 @@
 
 `Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. 
 
-- [Events](#events)
-- [EventManager](#eventmanager)
-
 ## Events
 
 `Event`s are implemented in the Cosmos SDK as an alias of the [ABCI `event` type](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/types.pb.go#L2661-L2667). They contain:
 
-- A **type** of type `string`, which can refer to the type of action that led to the `event`'s emission (e.g. a certain value going above a threshold), or to the type of `message` if the event is triggered at the end of that `message` processing. 
+- A **`type`** of type `string`, which can refer to the type of action that led to the `event`'s emission (e.g. a certain value going above a threshold), or to the type of `message` if the event is triggered at the end of that `message` processing. 
 - A list of [`attributes`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L53-L56), which are key-value pairs that give more information about the `event`. 
 
 `Event`s are returned to the underlying consensus engine in the response of the following ABCI messages: [`CheckTx`](./baseapp.md#checktx), [`DeliverTx`](./baseapp.md#delivertx), [`BeginBlock`](./baseapp.md#beginblock) and [`EndBlock`](./baseapp.md#endblock). 

@@ -1,3 +1,7 @@
+---
+order: 1
+---
+
 # BaseApp
 
 ## Pre-requisite Reading
@@ -9,37 +13,6 @@
 
 This document describes `BaseApp`, the abstraction that implements the core
 functionalities of an SDK application.
-
-- [BaseApp](#baseapp)
-  - [Pre-requisite Reading](#pre-requisite-reading)
-  - [Synopsis](#synopsis)
-  - [Introduction](#introduction)
-  - [Type Definition](#type-definition)
-  - [Constructor](#constructor)
-  - [State Updates](#state-updates)
-    - [InitChain State Updates](#initchain-state-updates)
-    - [CheckState State Updates-](#checktx-state-updates)
-    - [BeginBlock State Updates](#beginblock-state-updates)
-    - [DeliverTx State Updates](#delivertx-state-updates)
-    - [Commit State Updates](#commit-state-updates)
-  - [Routing](#routing)
-    - [Message Routing](#message-routing)
-    - [Query Routing](#query-routing)
-  - [Main ABCI Messages](#main-abci-messages)
-    - [CheckTx](#checktx)
-      - [RecheckTx](#rechecktx)
-    - [DeliverTx](#delivertx)
-  - [RunTx, AnteHandler and RunMsgs](#runtx-antehandler-and-runmsgs)
-    - [RunTx](#runtx)
-    - [AnteHandler](#antehandler)
-    - [RunMsgs](#runmsgs)
-  - [Other ABCI Messages](#other-abci-messages)
-    - [InitChain](#initchain)
-    - [BeginBlock](#beginblock)
-    - [EndBlock](#endblock)
-    - [Commit](#commit)
-    - [Info](#info)
-    - [Query](#query)
 
 ## Introduction
 
@@ -216,7 +189,7 @@ When messages and queries are received by the application, they must be routed t
 
 ### Message Routing
 
-[`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](./handler.md). Usually, the `path` is the name of the module.
+[`Message`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `baseapp` holds a [`router`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/router.go) which maps `paths` (`string`) to the appropriate module [`handler`](../building-modules/handler.md). Usually, the `path` is the name of the module.
 
 The application's `router` is initilalized with all the routes using the application's [module manager](../building-modules/module-manager.md#manager), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor). 
 
@@ -257,14 +230,14 @@ to do the following checks:
 3. Perform non-module related _stateful_ checks on the [account](../basics/accounts.md). This step is mainly about checking
    that the `message` signatures are valid, that enough fees are provided and that the sending account
    has enough funds to pay for said fees. Note that no precise [`gas`](../basics/gas-fees.md) counting occurs here,
-   as `message`s are not processed. Usually, the [`AnteHandler`](./gas-fees.md#antehandler) will check that the `gas` provided
+   as `message`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
 4. Ensure that a [`Route`](#message-routing) exists for each `message`, but do **not** actually
    process `message`s. `Message`s only need to be processed when the canonical state need to be updated,
    which happens during `DeliverTx`.
 
-Steps 2. and 3. are performed by the [`AnteHandler`](./gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
+Steps 2. and 3. are performed by the [`AnteHandler`](../basics/gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
 function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
 special [volatile state](#volatile-states) called `checkState` is updated. This state is used to keep
 track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying
@@ -283,9 +256,9 @@ The response contains:
 - `Data ([]byte)`: Result bytes, if any.
 - `Log (string):` The output of the application's logger. May be non-deterministic.
 - `Info (string):` Additional information. May be non-deterministic.
-- `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction.
-- `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go#L101) for an example).
-- `Events ([]Event)`: Key-Value events for filtering and indexing transactions (eg. by account or message type).
+- `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
+- `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/basic.go#L98) for an example). 
+- `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
 #### RecheckTx
@@ -317,7 +290,7 @@ During step 5., each read/write to the store increases the value of `GasConsumed
 - `Log (string):` The output of the application's logger. May be non-deterministic.
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
-- `GasUsed (int64)`: Amount of gas consumed by transaction. During `DeliverTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go#L101) for an example), and by adding gas each time a read/write to the store occurs. 
+- `GasUsed (int64)`: Amount of gas consumed by transaction. During `DeliverTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/basic.go#L98) for an example), and by adding gas each time a read/write to the store occurs. 
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
@@ -327,7 +300,7 @@ During step 5., each read/write to the store increases the value of `GasConsumed
 
 `RunTx` is called from `CheckTx`/`DeliverTx` to handle the transaction, with `runTxModeCheck` or `runTxModeDeliver` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded. 
 
-The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a cached version of the main store instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`.  After that, two `defer func()` are called for [`gas`](./gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
+The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a cached version of the main store instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`.  After that, two `defer func()` are called for [`gas`](../basics/gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
 After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `message` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
@@ -341,11 +314,13 @@ The `AnteHandler` is a special handler that implements the [`anteHandler` interf
 
 The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
 
-- Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./tx-msgs.md#sequence) checking. 
+- Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./transactions.md#transaction-generation) checking. 
 - Perform preliminary *stateful* validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees. 
 - Play a role in the incentivisation of stakeholders via the collection of transaction fees. 
 
-`baseapp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante.go).
+`baseapp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/ante.go).
+
+Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`. 
 
 ### RunMsgs
 
@@ -363,7 +338,7 @@ The [`InitChain` ABCI message](https://tendermint.com/docs/app-dev/abci-spec.htm
 - [`checkState` and `deliverState`](#volatile-states) via `setCheckState` and `setDeliverState`.
 - The [block gas meter](../basics/gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions. 
 
-Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the [`genesis file`](./genesis.md) and, if defined, call the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules.
+Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls the [`initChainer()`](../basics/app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../building-modules/genesis.md#initgenesis) function of each of the application's modules.
 
 ### BeginBlock
 

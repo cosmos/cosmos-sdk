@@ -58,7 +58,7 @@ func BalancesBlocker(app *GaiaApp, database *sql.DB, ctx sdk.Context, vals []sdk
 			rewards := app.distrKeeper.CalculateDelegationRewards(wrap, val, del, rew)
 
 			for _, coin := range rewards {
-				database.Exec("INSERT INTO rewards VALUES (?,?,?,?,?,?,?)", account.GetAddress().String(), del.GetValidatorAddr().String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
+				database.Exec("INSERT INTO rewards VALUES (?,?,?,?,?,?,?)", account.GetAddress().String(), del.GetValidatorAddr().String(), coin.Denom, uint64(coin.Amount.TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
 			}
 			return false
 		})
@@ -89,7 +89,7 @@ func BalancesBlocker(app *GaiaApp, database *sql.DB, ctx sdk.Context, vals []sdk
 	for _, valObj := range validators {
 		commission := app.distrKeeper.GetValidatorAccumulatedCommission(wrap, valObj.OperatorAddress)
 		for _, coin := range commission {
-			database.Exec("INSERT INTO val_rewards VALUES (?,?,?,?,?,?)", valObj.OperatorAddress.String(), uint64(coin.Amount.TruncateInt64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
+			database.Exec("INSERT INTO val_rewards VALUES (?,?,?,?,?,?)", valObj.OperatorAddress.String(), coin.Denom, uint64(coin.Amount.TruncateInt64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
 		}
 	}
 }
@@ -153,7 +153,7 @@ func TxsBlockerForBlock(block tm.Block) func(*GaiaApp, *sql.DB, sdk.Context, []s
 				jsonMsgs := MsgsToString(sdktx.GetMsgs())
 				jsonFee, _ := app.GetCodec().MarshalJSON(sdktx.Fee)
 
-				database.Exec("INSERT INTO messages VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+				database.Exec("INSERT INTO transactions VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
 					txHash,
 					block.Header.Height,
 					result.GetCode(),

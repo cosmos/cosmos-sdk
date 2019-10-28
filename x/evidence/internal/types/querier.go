@@ -8,7 +8,7 @@ const (
 
 // QueryEvidenceParams defines the parameters necessary for querying Evidence.
 type QueryEvidenceParams struct {
-	EvidenceHash string
+	EvidenceHash string `json:"evidence_hash" yaml:"evidence_hash"`
 }
 
 func NewQueryEvidenceParams(hash string) QueryEvidenceParams {
@@ -17,8 +17,8 @@ func NewQueryEvidenceParams(hash string) QueryEvidenceParams {
 
 // QueryAllEvidenceParams defines the parameters necessary for querying for all Evidence.
 type QueryAllEvidenceParams struct {
-	Page  int
-	Limit int
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
 }
 
 func NewQueryAllEvidenceParams(page, limit int) QueryAllEvidenceParams {

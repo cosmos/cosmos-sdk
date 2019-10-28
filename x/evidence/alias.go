@@ -18,6 +18,7 @@ const (
 	CodeNoEvidenceHandlerExists = types.CodeNoEvidenceHandlerExists
 	CodeInvalidEvidence         = types.CodeInvalidEvidence
 	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
+	TypeMsgSubmitEvidence       = types.TypeMsgSubmitEvidence
 )
 
 var (
@@ -34,7 +35,8 @@ var (
 type (
 	Keeper = keeper.Keeper
 
-	Evidence = types.Evidence
-	Handler  = types.Handler
-	Router   = types.Router
+	MsgSubmitEvidence = types.MsgSubmitEvidence
+	Evidence          = types.Evidence
+	Handler           = types.Handler
+	Router            = types.Router
 )

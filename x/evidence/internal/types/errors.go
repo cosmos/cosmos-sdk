@@ -27,11 +27,11 @@ func ErrNoEvidenceHandlerExists(codespace sdk.CodespaceType, route string) error
 }
 
 // ErrInvalidEvidence returns a typed ABCI error for invalid evidence.
-func ErrInvalidEvidence(codespace sdk.CodespaceType, err error) error {
+func ErrInvalidEvidence(codespace sdk.CodespaceType, msg string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidEvidence),
-		fmt.Sprintf("invalid evidence: %s", err),
+		fmt.Sprintf("invalid evidence: %s", msg),
 	)
 }
 

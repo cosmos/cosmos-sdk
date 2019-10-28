@@ -70,7 +70,7 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 
 	handler := k.router.GetRoute(evidence.Route())
 	if err := handler(ctx, evidence); err != nil {
-		return types.ErrInvalidEvidence(k.codespace, err)
+		return types.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 
 	k.setEvidence(ctx, evidence)

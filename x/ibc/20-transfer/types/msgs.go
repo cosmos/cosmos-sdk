@@ -1,63 +1,74 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+	"fmt"
 
-const (
-	TypeMsgTransfer = "transfer"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 type MsgTransfer struct {
-	SrcPort      string         `json:"src_port" yaml:"src_port"`
-	SrcChannel   string         `json:"src_channel" yaml:"src_channel"`
-	Denomination string         `json:"denomination" yaml:"denomination"`
-	Amount       sdk.Int        `json:"amount" yaml:"amount"`
-	Sender       sdk.AccAddress `json:"sender" yaml:"sender"`
-	Receiver     string         `json:"receiver" yaml:"receiver"`
-	Source       bool           `json:"source" yaml:"source"`
+	SourcePort    string         `json:"source_port" yaml:"source_port"`
+	SourceChannel string         `json:"source_channel" yaml:"source_channel"`
+	Amount        sdk.Coins      `json:"amount" yaml:"amount"`
+	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`
+	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`
+	Source        bool           `json:"source" yaml:"source"`
 }
 
-func NewMsgTransfer(srcPort, srcChannel string, denom string, amount sdk.Int, sender sdk.AccAddress, receiver string, source bool) MsgTransfer {
+// NewMsgTransfer creates a new MsgTransfer instance
+func NewMsgTransfer(
+	sourcePort, sourceChannel string, amount sdk.Coins, sender, receiver sdk.AccAddress, source bool,
+) MsgTransfer {
 	return MsgTransfer{
-		SrcPort:      srcPort,
-		SrcChannel:   srcChannel,
-		Denomination: denom,
-		Amount:       amount,
-		Sender:       sender,
-		Receiver:     receiver,
-		Source:       source,
+		SourcePort:    sourcePort,
+		SourceChannel: sourceChannel,
+		Amount:        amount,
+		Sender:        sender,
+		Receiver:      receiver,
+		Source:        source,
 	}
 }
 
+// Route implements sdk.Msg
 func (MsgTransfer) Route() string {
 	return RouterKey
 }
 
+// Type implements sdk.Msg
 func (MsgTransfer) Type() string {
-	return TypeMsgTransfer
+	return "transfer"
 }
 
+// ValidateBasic implements sdk.Msg
 func (msg MsgTransfer) ValidateBasic() sdk.Error {
-	if !msg.Amount.IsPositive() {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAmount, "invalid amount")
+	if err := host.DefaultIdentifierValidator(msg.SourcePort); err != nil {
+		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid port ID: %s", err.Error()))
 	}
-
+	if err := host.DefaultIdentifierValidator(msg.SourceChannel); err != nil {
+		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
+	}
+	if !msg.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("transfer amount is invalid")
+	}
+	if !msg.Amount.IsAllPositive() {
+		return sdk.ErrInsufficientCoins("transfer amount must be positive")
+	}
 	if msg.Sender.Empty() {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid address")
+		return sdk.ErrInvalidAddress("missing sender address")
 	}
-
-	if len(msg.Receiver) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidReceiver, "receiver is empty")
+	if msg.Receiver.Empty() {
+		return sdk.ErrInvalidAddress("missing recipient address")
 	}
-
 	return nil
 }
 
+// GetSignBytes implements sdk.Msg
 func (msg MsgTransfer) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
+// GetSigners implements sdk.Msg
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }

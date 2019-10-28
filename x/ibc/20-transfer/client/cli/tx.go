@@ -1,7 +1,9 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -9,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // IBC transfer flags
@@ -43,21 +43,21 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			sender := ctx.GetFromAddress()
 			srcPort := args[0]
-			srcChan := args[1]
-			receiver := args[2]
-
-			// parse coin trying to be sent
-			coin, err := sdk.ParseCoin(args[3])
+			srcChannel := args[1]
+			receiver, err := sdk.AccAddressFromBech32(args[2])
 			if err != nil {
 				return err
 			}
 
-			source := false
-			if viper.GetBool(FlagSource) {
-				source = true
+			// parse coin trying to be sent
+			coins, err := sdk.ParseCoins(args[3])
+			if err != nil {
+				return err
 			}
 
-			msg := types.NewMsgTransfer(srcPort, srcChan, coin.Denom, coin.Amount, sender, receiver, source)
+			source := viper.GetBool(FlagSource)
+
+			msg := types.NewMsgTransfer(srcPort, srcChannel, coins, sender, receiver, source)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -65,10 +65,6 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 			return utils.GenerateOrBroadcastMsgs(ctx, txBldr, []sdk.Msg{msg})
 		},
 	}
-
 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
-
-	cmd = client.PostCommands(cmd)[0]
-
 	return cmd
 }

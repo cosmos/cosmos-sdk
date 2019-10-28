@@ -9,7 +9,7 @@ import (
 
 // IbcBankKeeper expected IBC transfer keeper
 type IbcBankKeeper interface {
-	ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, destPort, destChannel, srcPort, srcChannel string) sdk.Error
+	ReceiveTransfer(ctx sdk.Context, data types.TransferPacketData, srcPort, srcChannel, destPort, destChannel string) sdk.Error
 }
 
 // ChannelKeeper expected IBC channel keeper

@@ -1,7 +1,7 @@
 package transfer
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/kepper"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 

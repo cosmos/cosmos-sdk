@@ -9,11 +9,10 @@ import (
 
 // TransferPacketData defines a struct for the packet payload
 type TransferPacketData struct {
-	Denomination string  `json:"denomination" yaml:"denomination"`
-	Amount       sdk.Int `json:"amount" yaml:"amount"`
-	Sender       string  `json:"sender" yaml:"sender"`
-	Receiver     string  `json:"receiver" yaml:"receiver"`
-	Source       bool    `json:"source" yaml:"source"`
+	Amount   sdk.Coins      `json:"amount" yaml:"amount"`
+	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`
+	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"`
+	Source   bool           `json:"source" yaml:"source"`
 }
 
 func (tpd TransferPacketData) MarshalAmino() ([]byte, error) {
@@ -42,12 +41,10 @@ func (tpd *TransferPacketData) UnmarshalJSON(bz []byte) (err error) {
 
 func (tpd TransferPacketData) String() string {
 	return fmt.Sprintf(`TransferPacketData:
-	Denomination          %s
 	Amount:               %s
 	Sender:               %s
 	Receiver:             %s
 	Source:               %v`,
-		tpd.Denomination,
 		tpd.Amount.String(),
 		tpd.Sender,
 		tpd.Receiver,
@@ -55,14 +52,19 @@ func (tpd TransferPacketData) String() string {
 	)
 }
 
-func (tpd TransferPacketData) Validate() error {
-	if !tpd.Amount.IsPositive() {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAmount, "invalid amount")
+// ValidateBasic performs a basic check of the packet fields
+func (tpd TransferPacketData) ValidateBasic() sdk.Error {
+	if !tpd.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("transfer amount is invalid")
 	}
-
-	if len(tpd.Sender) == 0 || len(tpd.Receiver) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid address")
+	if !tpd.Amount.IsAllPositive() {
+		return sdk.ErrInsufficientCoins("transfer amount must be positive")
 	}
-
+	if tpd.Sender.Empty() {
+		return sdk.ErrInvalidAddress("missing sender address")
+	}
+	if tpd.Receiver.Empty() {
+		return sdk.ErrInvalidAddress("missing recipient address")
+	}
 	return nil
 }

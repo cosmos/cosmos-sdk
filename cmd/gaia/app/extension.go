@@ -32,31 +32,6 @@ type (
 		Type  string                  `json:"type"`
 		Value AddressContainingStruct `json:"value"`
 	}
-
-	RabbitInsert struct {
-		Values   []interface{} `json:"values"`
-		Table    string        `json:"table"`
-		Database string        `json:"database"`
-	}
-)
-
-var (
-	BalanceTable       = "balance"
-	BalanceFields      = "address,balance,denom,height,timestamp,chain"
-	RewardsTable       = "rewards"
-	RewardsFields      = "address,validator,rewards,denom,height,timestamp,chain"
-	ValRewardsTable    = "val_rewards"
-	ValRewardsFields   = "validator,rewards,denom,height,timestamp,chain"
-	DelegationsTable   = "delegations"
-	UnbondingsTable    = "unbondings"
-	DelegationsFields  = "address,validator,shares,height,timestamp,chain"
-	UnbondingsFields   = "address,validator,tokens,height,completion_timestamp,timestamp,chain"
-	MessagesFields     = "hash,idx,msgtype,msg,timestamp,chain"
-	MessagesTable      = "messages"
-	TransactionsFields = "hash,height,code,gasWanted,gasUsed,log,memo,fees,tags,msgs,timestamp,chain"
-	TransactionsTable  = "transactions"
-	AddressesFields    = "hash,idx,address,chain"
-	AddressesTable     = "message_addresses"
 )
 
 func (app *GaiaApp) BeginBlockHook(database *sql.DB, blockerFunctions []func(*GaiaApp, *sql.DB, sdk.Context, []sdk.ValAddress, []sdk.AccAddress, string, string, types.RequestBeginBlock), vals []sdk.ValAddress, accs []sdk.AccAddress, network string, chainid string) sdk.BeginBlocker {
@@ -74,7 +49,7 @@ func BalancesBlocker(app *GaiaApp, database *sql.DB, ctx sdk.Context, vals []sdk
 	processAcc := func(account auth.Account) bool {
 		balance := account.GetCoins()
 		for _, coin := range balance {
-			database.Exec("INSERT INTO balance VALUES (?,?,?,?,?,?)", account.GetAddress().String(), uint64(coin.Amount.Int64()), coin.Denom, uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
+			database.Exec("INSERT INTO balance VALUES (?,?,?,?,?,?)", account.GetAddress().String(), coin.Denom, uint64(coin.Amount.Int64()), uint64(req.Header.Height), req.Header.Time.Format("2006-01-02 15:04:05"), chainid)
 		}
 		wrap, _ := ctx.CacheContext()
 		app.stakingKeeper.IterateDelegations(wrap, account.GetAddress(), func(index int64, del sdk.Delegation) (stop bool) {

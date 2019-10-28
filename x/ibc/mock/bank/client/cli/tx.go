@@ -23,7 +23,6 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "ibcmockbank",
 		Short: "IBC mockbank module transaction subcommands",
-		// RunE:  client.ValidateCmd,
 	}
 	txCmd.AddCommand(
 		GetMsgRecvPacketCmd(cdc),

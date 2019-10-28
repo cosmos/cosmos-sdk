@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -31,7 +32,7 @@ func NewMsgTransfer(srcPort, srcChannel string, denom string, amount sdk.Int, se
 }
 
 func (MsgTransfer) Route() string {
-	return RouterKey
+	return ibctypes.RouterKey
 }
 
 func (MsgTransfer) Type() string {

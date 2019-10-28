@@ -147,7 +147,7 @@ func (k Keeper) createOutgoingPacket(ctx sdk.Context, seq uint64, srcPort, srcCh
 
 	packet := channeltypes.NewPacket(seq, uint64(ctx.BlockHeight())+DefaultPacketTimeout, srcPort, srcChan, destPort, destChan, packetDataBz)
 
-	err = k.ck.SendPacket(ctx, packet)
+	err = k.ck.SendPacket(ctx, packet, k.key)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrSendPacket, "failed to send packet")
 	}

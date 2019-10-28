@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -16,5 +15,5 @@ const (
 
 // IBC transfer events vars
 var (
-	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, transfer.SubModuleName)
+	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

@@ -27,7 +27,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ChannelKeeper, bk ty
 
 // ReceivePacket handles receiving packet
 func (k Keeper) ReceivePacket(ctx sdk.Context, packet exported.PacketI, proof commitment.Proof, height uint64) sdk.Error {
-	_, err := k.ck.RecvPacket(ctx, packet, proof, height, nil)
+	_, err := k.ck.RecvPacket(ctx, packet, proof, height, nil, k.key)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrReceivePacket, "failed to receive packet")
 	}

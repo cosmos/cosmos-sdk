@@ -21,5 +21,5 @@ type ChannelKeeper interface {
 
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
 
-	SendPacket(ctx sdk.Context, packet exported.PacketI) error
+	SendPacket(ctx sdk.Context, packet exported.PacketI, portCapability sdk.CapabilityKey) error
 }

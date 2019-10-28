@@ -8,16 +8,24 @@ import (
 // nolint
 
 const (
-	ModuleName        = types.ModuleName
-	StoreKey          = types.StoreKey
-	RouterKey         = types.RouterKey
-	QuerierRoute      = types.QuerierRoute
-	DefaultParamspace = types.DefaultParamspace
+	ModuleName                  = types.ModuleName
+	StoreKey                    = types.StoreKey
+	RouterKey                   = types.RouterKey
+	QuerierRoute                = types.QuerierRoute
+	DefaultParamspace           = types.DefaultParamspace
+	QueryEvidence               = types.QueryEvidence
+	QueryAllEvidence            = types.QueryAllEvidence
+	CodeNoEvidenceHandlerExists = types.CodeNoEvidenceHandlerExists
+	CodeInvalidEvidence         = types.CodeInvalidEvidence
+	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
 )
 
 var (
-	NewKeeper = keeper.NewKeeper
+	NewKeeper  = keeper.NewKeeper
+	NewQuerier = keeper.NewQuerier
 
+	NewQueryEvidenceParams    = types.NewQueryEvidenceParams
+	NewQueryAllEvidenceParams = types.NewQueryAllEvidenceParams
 	RegisterCodec             = types.RegisterCodec
 	RegisterEvidenceTypeCodec = types.RegisterEvidenceTypeCodec
 	ModuleCdc                 = types.ModuleCdc

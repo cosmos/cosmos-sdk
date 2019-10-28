@@ -133,8 +133,7 @@ func (am AppModule) NewHandler() sdk.Handler {
 
 // NewQuerierHandler returns the evidence module's Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	// TODO: Construct and return Querier.
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 // InitGenesis performs the evidence module's genesis initialization It returns

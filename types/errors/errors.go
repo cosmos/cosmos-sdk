@@ -65,6 +65,12 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = Register(RootCodespace, 16, "no signatures supplied")
 
+	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
+	ErrJSONMarshal = Register(RootCodespace, 17, "failed to marshal JSON bytes")
+
+	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error
+	ErrJSONUnmarshal = Register(RootCodespace, 18, "failed to unmarshal JSON bytes")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

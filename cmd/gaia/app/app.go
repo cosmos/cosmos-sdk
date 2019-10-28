@@ -37,7 +37,6 @@ var (
 	DefaultNodeHome = os.ExpandEnv("$HOME/.gaiad")
 )
 
-
 // Extended ABCI application
 type GaiaApp struct {
 	*bam.BaseApp
@@ -410,4 +409,20 @@ func (h StakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAd
 func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
 	h.dh.BeforeValidatorSlashed(ctx, valAddr, fraction)
 	h.sh.BeforeValidatorSlashed(ctx, valAddr, fraction)
+}
+
+func (app *GaiaApp) StakingKeeper() staking.Keeper {
+	return app.stakingKeeper
+}
+
+func (app *GaiaApp) DistrKeeper() distr.Keeper {
+	return app.distrKeeper
+}
+
+func (app *GaiaApp) BankKeeper() bank.Keeper {
+	return app.bankKeeper
+}
+
+func (app *GaiaApp) AccountKeeper() auth.AccountKeeper {
+	return app.accountKeeper
 }

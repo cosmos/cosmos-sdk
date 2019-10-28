@@ -51,7 +51,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns the evidence module's default genesis state.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
 	// TODO: Return proper default genesis state.
-	return []byte("[]")
+	return []byte("{}")
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.

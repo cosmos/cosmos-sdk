@@ -15,6 +15,7 @@ func NewQueryEvidenceParams(hash string) QueryEvidenceParams {
 	return QueryEvidenceParams{EvidenceHash: hash}
 }
 
+// QueryAllEvidenceParams defines the parameters necessary for querying for all Evidence.
 type QueryAllEvidenceParams struct {
 	Page  int
 	Limit int

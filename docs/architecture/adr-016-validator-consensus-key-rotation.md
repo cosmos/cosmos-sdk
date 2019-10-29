@@ -53,6 +53,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 3. `handleMsgRotateConsPubKey` gets `MsgRotateConsPubKey`, calls `RotateConsPubKey` with emits event
 4. `RotateConsPubKey` 
     - checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
+    - checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
     - overwrites `NewPubKey` in `validator.ConsPubKey`
     - deletes old `ValidatorByConsAddr`
     - `SetValidatorByConsAddr` for `NewPubKey`

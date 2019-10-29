@@ -146,7 +146,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 	// TODO: Export genesis state and serialize.
-	return []byte("[]")
+	return []byte("{}")
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.

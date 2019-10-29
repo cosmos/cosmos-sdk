@@ -32,6 +32,7 @@ type Keeper struct {
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 	clientk types.ClientKeeper, connk types.ConnectionKeeper,
 	chank types.ChannelKeeper, bk types.BankKeeper,
+	sk types.SupplyKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -42,6 +43,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 		connectionKeeper: connk,
 		channelKeeper:    chank,
 		bankKeeper:       bk,
+		supplyKeeper:     sk,
 	}
 }
 
@@ -194,10 +196,13 @@ func (k Keeper) onTimeoutPacket(
 		}
 
 	} else {
-		_, err := k.bankKeeper.AddCoins(ctx, data.Sender, data.Amount)
+		// mint from supply
+		err = k.supplyKeeper.MintCoins(ctx, types.SubModuleName, data.Amount)
 		if err != nil {
 			return err
 		}
+
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.SubModuleName, data.Sender, data.Amount)
 	}
 
 	return nil

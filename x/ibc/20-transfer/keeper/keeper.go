@@ -141,7 +141,7 @@ func (k Keeper) onChanCloseConfirm(
 func (k Keeper) onRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-) sdk.Error {
+) error {
 	var data types.TransferPacketData
 
 	err := data.UnmarshalJSON(packet.Data())

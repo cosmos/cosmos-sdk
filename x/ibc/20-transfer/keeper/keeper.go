@@ -123,16 +123,18 @@ func (k Keeper) onChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-) {
+) error {
 	// noop
+	return nil
 }
 
 func (k Keeper) onChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-) {
+) error {
 	// noop
+	return nil
 }
 
 // onRecvPacket is called when an FTTransfer packet is received
@@ -155,8 +157,9 @@ func (k Keeper) onAcknowledgePacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
-) {
+) error {
 	// noop
+	return nil
 }
 
 func (k Keeper) onTimeoutPacket(
@@ -202,8 +205,9 @@ func (k Keeper) onTimeoutPacket(
 func (k Keeper) onTimeoutPacketClose(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-) {
+) error {
 	// noop
+	return nil
 }
 
 // SendTransfer handles transfer sending logic

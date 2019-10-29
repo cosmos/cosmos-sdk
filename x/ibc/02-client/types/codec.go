@@ -21,4 +21,6 @@ func RegisterCodec(cdc *codec.Codec) {
 
 	cdc.RegisterConcrete(tendermint.ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(tendermint.Header{}, "ibc/client/tendermint/Header", nil)
+
+	SubModuleCdc = cdc
 }

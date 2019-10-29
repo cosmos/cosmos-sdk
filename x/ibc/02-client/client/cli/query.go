@@ -34,6 +34,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryHeader(cdc),
 		GetCmdQueryClientState(queryRoute, cdc),
 		GetCmdQueryRoot(queryRoute, cdc),
+		GetCmdNodeConsensusState(queryRoute, cdc),
 	)...)
 	return ics02ClientQueryCmd
 }
@@ -215,6 +216,61 @@ $ %s query ibc client header
 			}
 
 			return cliCtx.PrintOutput(header)
+		},
+	}
+}
+
+// GetCmdQueryNodeConsensusState defines the command to query the latest consensus state of a node
+// The result is feed to client creation
+func GetCmdNodeConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "node-state",
+		Short: "Query a node consensus state",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query node consensus state
+
+Example:
+$ %s query ibc client node-state
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			node, err := cliCtx.GetNode()
+			if err != nil {
+				return err
+			}
+
+			info, err := node.ABCIInfo()
+			if err != nil {
+				return err
+			}
+
+			height := info.Response.LastBlockHeight
+			prevHeight := height - 1
+
+			commit, err := node.Commit(&height)
+			if err != nil {
+				return err
+			}
+
+			validators, err := node.Validators(&prevHeight)
+			if err != nil {
+				return err
+			}
+
+			var state exported.ConsensusState
+			state = tendermint.ConsensusState{
+				ChainID:          commit.ChainID,
+				Height:           uint64(commit.Height),
+				Root:             commitment.NewRoot(commit.AppHash),
+				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+			}
+
+			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
+
+			return nil
 		},
 	}
 }

@@ -36,7 +36,7 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 
 	// deduct from both the current period and the max amount
 	var isNeg bool
-	a.PeriodSpendLimit, isNeg = a.PeriodSpendLimit.SafeSub(fee)
+	a.PeriodCanSpend, isNeg = a.PeriodCanSpend.SafeSub(fee)
 	if isNeg {
 		return false, ErrFeeLimitExceeded()
 	}
@@ -50,7 +50,7 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 
 // TryResetPeriod will reset the period if we hit the conditions
 func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight int64) {
-	if !a.PeriodReset.IsExpired(blockTime, blockHeight) {
+	if !a.PeriodReset.IsZero() && !a.PeriodReset.IsExpired(blockTime, blockHeight) {
 		return
 	}
 	// set CanSpend to the lesser of PeriodSpendLimit and the TotalLimit

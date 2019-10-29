@@ -7,6 +7,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// DONTCOVER
+
 // Error codes specific to the evidence module
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName

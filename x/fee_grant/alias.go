@@ -14,7 +14,7 @@ const (
 	DefaultCodespace      = types.DefaultCodespace
 	CodeFeeLimitExceeded  = types.CodeFeeLimitExceeded
 	CodeFeeLimitExpired   = types.CodeFeeLimitExpired
-	CodeInvalidPeriod     = types.CodeInvalidPeriod
+	CodeInvalidDuration   = types.CodeInvalidDuration
 	ModuleName            = types.ModuleName
 	StoreKey              = types.StoreKey
 	RouterKey             = types.RouterKey
@@ -27,11 +27,11 @@ var (
 	RegisterCodec               = types.RegisterCodec
 	ErrFeeLimitExceeded         = types.ErrFeeLimitExceeded
 	ErrFeeLimitExpired          = types.ErrFeeLimitExpired
-	ErrInvalidPeriod            = types.ErrInvalidPeriod
+	ErrInvalidDuration          = types.ErrInvalidDuration
 	ExpiresAtTime               = types.ExpiresAtTime
 	ExpiresAtHeight             = types.ExpiresAtHeight
-	ClockPeriod                 = types.ClockPeriod
-	BlockPeriod                 = types.BlockPeriod
+	ClockDuration               = types.ClockDuration
+	BlockDuration               = types.BlockDuration
 	FeeAllowanceKey             = types.FeeAllowanceKey
 	FeeAllowancePrefixByGrantee = types.FeeAllowancePrefixByGrantee
 	NewMsgGrantFeeAllowance     = types.NewMsgGrantFeeAllowance
@@ -47,9 +47,10 @@ var (
 type (
 	BasicFeeAllowance     = types.BasicFeeAllowance
 	ExpiresAt             = types.ExpiresAt
-	Period                = types.Period
+	Duration              = types.Duration
 	FeeAllowanceGrant     = types.FeeAllowanceGrant
 	MsgGrantFeeAllowance  = types.MsgGrantFeeAllowance
 	MsgRevokeFeeAllowance = types.MsgRevokeFeeAllowance
+	PeriodicFeeAllowance  = types.PeriodicFeeAllowance
 	Keeper                = keeper.Keeper
 )

@@ -116,7 +116,7 @@ func (k Keeper) onChanOpenConfirm(
 	portID,
 	channelID string,
 ) error {
-	//TODO
+	// noop
 	return nil
 }
 
@@ -220,7 +220,7 @@ func (k Keeper) SendTransfer(
 	sender,
 	receiver sdk.AccAddress,
 	isSourceChain bool,
-) sdk.Error {
+) error {
 	// get the port and channel of the counterparty
 	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
@@ -260,7 +260,7 @@ func (k Keeper) ReceiveTransfer(
 	destinationPort,
 	destinationChannel string,
 	data types.TransferPacketData,
-) sdk.Error {
+) error {
 	if data.Source {
 		// mint tokens
 
@@ -312,7 +312,7 @@ func (k Keeper) createOutgoingPacket(
 	sender sdk.AccAddress,
 	receiver sdk.AccAddress,
 	isSourceChain bool,
-) sdk.Error {
+) error {
 	if isSourceChain {
 		// escrow tokens
 

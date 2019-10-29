@@ -26,7 +26,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, 
 	connectionKeeper := connection.NewKeeper(cdc, key, codespace, clientKeeper)
 	portKeeper := port.NewKeeper(cdc, key, codespace)
 	channelKeeper := channel.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, portKeeper)
-	transferKeeper := transfer.NewKeeper(cdc, key, channelKeeper, bk)
+	transferKeeper := transfer.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, channelKeeper, bk)
 
 	return Keeper{
 		ClientKeeper:     clientKeeper,

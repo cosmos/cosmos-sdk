@@ -29,8 +29,8 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	clientk types.ClientKeeper, chank types.ChannelKeeper,
-	connk types.ConnectionKeeper, bk types.BankKeeper,
+	clientk types.ClientKeeper, connk types.ConnectionKeeper,
+	chank types.ChannelKeeper, bk types.BankKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
@@ -54,15 +54,15 @@ func (k Keeper) onChanOpenInit(
 	version string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
 	}
 
 	if counterparty.PortID != types.BoundPortID {
-		types.ErrInvalidPort(types.DefaultCodespace, portID)
+		return types.ErrInvalidPort(types.DefaultCodespace, portID)
 	}
 
 	if version != "" {
-		types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
 	return nil

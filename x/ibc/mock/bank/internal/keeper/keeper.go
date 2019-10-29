@@ -40,5 +40,5 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet exported.PacketI, proof co
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")
 	}
 
-	return k.bk.ReceiveTransfer(ctx, data, packet.SourcePort(), packet.DestChannel(), packet.DestPort(), packet.DestChannel())
+	return k.bk.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(), packet.DestPort(), packet.DestChannel(), data)
 }

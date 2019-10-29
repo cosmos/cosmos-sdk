@@ -56,6 +56,6 @@ type (
 	ConnectionKeeper        = types.ConnectionKeeper
 	SupplyKeeper            = types.SupplyKeeper
 	MsgTransfer             = types.MsgTransfer
-	TransferPacketData      = types.TransferPacketData
-	TransferPacketDataAlias = types.TransferPacketDataAlias
+	PacketData      = types.PacketData
+	PacketDataAlias = types.PacketDataAlias
 )

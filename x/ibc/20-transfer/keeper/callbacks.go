@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
+// nolint: unused
 func (k Keeper) onChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -33,6 +34,7 @@ func (k Keeper) onChanOpenInit(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -62,6 +64,7 @@ func (k Keeper) onChanOpenTry(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -75,6 +78,7 @@ func (k Keeper) onChanOpenAck(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -84,6 +88,7 @@ func (k Keeper) onChanOpenConfirm(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -93,6 +98,7 @@ func (k Keeper) onChanCloseInit(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -103,11 +109,12 @@ func (k Keeper) onChanCloseConfirm(
 }
 
 // onRecvPacket is called when an FTTransfer packet is received
+// nolint: unused
 func (k Keeper) onRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.TransferPacketData
+	var data types.PacketData
 
 	err := data.UnmarshalJSON(packet.Data())
 	if err != nil {
@@ -118,6 +125,7 @@ func (k Keeper) onRecvPacket(
 		packet.DestPort(), packet.DestChannel(), data)
 }
 
+// nolint: unused
 func (k Keeper) onAcknowledgePacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -127,11 +135,12 @@ func (k Keeper) onAcknowledgePacket(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.TransferPacketData
+	var data types.PacketData
 
 	err := data.UnmarshalJSON(packet.Data())
 	if err != nil {
@@ -170,6 +179,7 @@ func (k Keeper) onTimeoutPacket(
 	return nil
 }
 
+// nolint: unused
 func (k Keeper) onTimeoutPacketClose(
 	ctx sdk.Context,
 	packet channeltypes.Packet,

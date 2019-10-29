@@ -57,7 +57,7 @@ func (k Keeper) ReceiveTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
-	data types.TransferPacketData,
+	data types.PacketData,
 ) error {
 	if data.Source {
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
@@ -150,7 +150,7 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.TransferPacketData{
+	packetData := types.PacketData{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,

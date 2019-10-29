@@ -34,7 +34,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 
 	// only process ICS20 token transfer packet data now,
 	// that should be done in routing module.
-	var data transfer.TransferPacketData
+	var data transfer.PacketData
 	err = data.UnmarshalJSON(packet.Data())
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")

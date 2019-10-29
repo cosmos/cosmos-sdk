@@ -33,13 +33,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 
 	// create required keepers
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	paramsKeeper := params.NewKeeper(types.TestingCdc, keyParams, tkeyParams, params.DefaultCodespace)
 	subspace := paramsKeeper.Subspace(types.DefaultParamspace)
-	evidenceKeeper := keeper.NewKeeper(cdc, storeKey, subspace, types.DefaultCodespace)
+	evidenceKeeper := keeper.NewKeeper(types.TestingCdc, storeKey, subspace, types.DefaultCodespace)
 
 	// create Evidence router, mount Handlers, and set keeper's router
 	router := types.NewRouter()
-	router = router.AddRoute(EvidenceRouteEquivocation, EquivocationHandler(*evidenceKeeper))
+	router = router.AddRoute(types.EvidenceRouteEquivocation, types.EquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
 	// create DB, mount stores, and load latest version
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()
-		sv := SimpleVote{
+		sv := types.SimpleVote{
 			ValidatorAddress: pk.PubKey().Address(),
 			Height:           int64(i),
 			Round:            0,
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 		suite.NoError(err)
 		sv.Signature = sig
 
-		evidence[i] = EquivocationEvidence{
+		evidence[i] = types.EquivocationEvidence{
 			Power:      100,
 			TotalPower: 100000,
 			PubKey:     pk.PubKey(),
@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
-	sv := SimpleVote{
+	sv := types.SimpleVote{
 		ValidatorAddress: pk.PubKey().Address(),
 		Height:           11,
 		Round:            0,
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	suite.NoError(err)
 	sv.Signature = sig
 
-	e := EquivocationEvidence{
+	e := types.EquivocationEvidence{
 		Power:      100,
 		TotalPower: 100000,
 		PubKey:     pk.PubKey(),
@@ -126,16 +126,16 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
-	e := EquivocationEvidence{
+	e := types.EquivocationEvidence{
 		Power:      100,
 		TotalPower: 100000,
 		PubKey:     pk.PubKey(),
-		VoteA: SimpleVote{
+		VoteA: types.SimpleVote{
 			ValidatorAddress: pk.PubKey().Address(),
 			Height:           10,
 			Round:            0,
 		},
-		VoteB: SimpleVote{
+		VoteB: types.SimpleVote{
 			ValidatorAddress: pk.PubKey().Address(),
 			Height:           11,
 			Round:            0,

@@ -7,9 +7,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 func TestMsgSubmitEvidence(t *testing.T) {
+	pk := ed25519.GenPrivKey()
+	sv := types.SimpleVote{
+		ValidatorAddress: pk.PubKey().Address(),
+		Height:           11,
+		Round:            0,
+	}
+	sig, err := pk.Sign(sv.SignBytes("test-chain"))
+	require.NoError(t, err)
+	sv.Signature = sig
+
 	submitter := sdk.AccAddress("test")
 	testCases := []struct {
 		evidence  types.Evidence
@@ -17,7 +28,28 @@ func TestMsgSubmitEvidence(t *testing.T) {
 		expectErr bool
 	}{
 		{nil, submitter, true},
-		// TODO: Add test cases using real concrete types.
+		{
+			types.EquivocationEvidence{
+				Power:      100,
+				TotalPower: 100000,
+				PubKey:     pk.PubKey(),
+				VoteA:      sv,
+				VoteB:      sv,
+			},
+			submitter,
+			false,
+		},
+		{
+			types.EquivocationEvidence{
+				Power:      100,
+				TotalPower: 100000,
+				PubKey:     pk.PubKey(),
+				VoteA:      sv,
+				VoteB:      types.SimpleVote{Height: 10, Round: 1},
+			},
+			submitter,
+			true,
+		},
 	}
 
 	for i, tc := range testCases {

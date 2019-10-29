@@ -127,8 +127,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // NewHandler returns the evidence module's message Handler.
 func (am AppModule) NewHandler() sdk.Handler {
-	// TODO: Construct and return message Handler.
-	return nil
+	return NewHandler(am.keeper)
 }
 
 // NewQuerierHandler returns the evidence module's Querier.

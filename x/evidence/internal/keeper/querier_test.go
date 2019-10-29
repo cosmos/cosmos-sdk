@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	evidence := suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryEvidenceParams(evidence[0].Hash().String())),
+		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryEvidenceParams(evidence[0].Hash().String())),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	suite.NotNil(bz)
 
 	var e types.Evidence
-	suite.Nil(cdc.UnmarshalJSON(bz, &e))
+	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
 
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_NonExisting() {
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryEvidence}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryEvidenceParams("0000000000000000000000000000000000000000000000000000000000000000")),
+		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryEvidenceParams("0000000000000000000000000000000000000000000000000000000000000000")),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryEvidence}, query)
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
+		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(1, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	suite.NotNil(bz)
 
 	var e []types.Evidence
-	suite.Nil(cdc.UnmarshalJSON(bz, &e))
+	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, numEvidence)
 }
 
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	suite.populateEvidence(ctx, numEvidence)
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryAllEvidence}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
+		Data: types.TestingCdc.MustMarshalJSON(types.NewQueryAllEvidenceParams(0, numEvidence)),
 	}
 
 	bz, err := suite.querier(ctx, []string{types.QueryAllEvidence}, query)
@@ -80,6 +80,6 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	suite.NotNil(bz)
 
 	var e []types.Evidence
-	suite.Nil(cdc.UnmarshalJSON(bz, &e))
+	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }

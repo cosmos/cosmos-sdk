@@ -1,4 +1,8 @@
-package keeper_test
+/*
+Common testing types and utility functions and methods to be used in unit and
+integration testing of the evidence module.
+*/
+package types
 
 import (
 	"bytes"
@@ -8,8 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
 	"gopkg.in/yaml.v2"
 
@@ -19,8 +21,9 @@ import (
 )
 
 var (
-	_   types.Evidence = (*EquivocationEvidence)(nil)
-	cdc                = codec.New()
+	_ Evidence = (*EquivocationEvidence)(nil)
+
+	TestingCdc = codec.New()
 )
 
 const (
@@ -54,9 +57,9 @@ type (
 )
 
 func init() {
-	types.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	cdc.RegisterConcrete(EquivocationEvidence{}, "test/EquivocationEvidence", nil)
+	RegisterCodec(TestingCdc)
+	codec.RegisterCrypto(TestingCdc)
+	TestingCdc.RegisterConcrete(EquivocationEvidence{}, "test/EquivocationEvidence", nil)
 }
 
 func (e EquivocationEvidence) Route() string            { return EvidenceRouteEquivocation }
@@ -92,7 +95,7 @@ func (e EquivocationEvidence) ValidateBasic() error {
 }
 
 func (e EquivocationEvidence) Hash() cmn.HexBytes {
-	return tmhash.Sum(cdc.MustMarshalBinaryBare(e))
+	return tmhash.Sum(TestingCdc.MustMarshalBinaryBare(e))
 }
 
 func (v SimpleVote) SignBytes(chainID string) []byte {
@@ -102,12 +105,12 @@ func (v SimpleVote) SignBytes(chainID string) []byte {
 		Timestamp: v.Timestamp,
 		ChainID:   chainID,
 	}
-	bz, _ := cdc.MarshalBinaryLengthPrefixed(scv)
+	bz, _ := TestingCdc.MarshalBinaryLengthPrefixed(scv)
 	return bz
 }
 
-func EquivocationHandler(k keeper.Keeper) types.Handler {
-	return func(ctx sdk.Context, e types.Evidence) error {
+func EquivocationHandler(k interface{}) Handler {
+	return func(ctx sdk.Context, e Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

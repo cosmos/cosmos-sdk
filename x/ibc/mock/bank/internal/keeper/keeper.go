@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/mock/bank/internal/types"
@@ -26,7 +26,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ChannelKeeper, bk ty
 }
 
 // ReceivePacket handles receiving packet
-func (k Keeper) ReceivePacket(ctx sdk.Context, packet exported.PacketI, proof commitment.Proof, height uint64) sdk.Error {
+func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) sdk.Error {
 	_, err := k.ck.RecvPacket(ctx, packet, proof, height, nil, k.key)
 	if err != nil {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeErrReceivePacket, "failed to receive packet")

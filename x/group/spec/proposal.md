@@ -3,8 +3,8 @@
 Groups can submit proposals in order to execute arbitrary transactions.
 Authorization to execute messages is performed by the `msg_delegation.Keeper`'s
 `DispatchActions` method. The actual protocol that a group uses to determine
-whether a certain proposal passes are based on the group or group policy's
-`DecisionProtocol`.
+whether a certain proposal passes are based on the group accounts's
+`DecisionPolicy`.
 
 ## Types
 
@@ -36,14 +36,9 @@ const (
 ```go
 type MsgPropose struct {
     Proposer sdk.AccAddress `json:"proposer"`
-    // Policy specifies the policy by which this propose will pass or fail.
-    // If set to DefaultGroupPolicy, the group's root DecisionProtocol is used. If
-    // it is set to another GroupPolicyID for this group, that policy's
-    // DecisionProtocol and its Capability grants will be used.
-	Policy   GroupPolicyID `json:"policy"`
-	Group    sdk.AccAddress `json:"group"`
+	GroupAccount    sdk.AccAddress `json:"group_account"`
 	Msgs     []sdk.Msg      `json:"msgs"`
-	Description string `json:"Description,omitempty"`
+	Description string      `json:"Description,omitempty"`
 }
 ```
 

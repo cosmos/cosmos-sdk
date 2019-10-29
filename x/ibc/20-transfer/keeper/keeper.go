@@ -32,14 +32,15 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	clientk types.ClientKeeper, connk types.ConnectionKeeper,
-	chank types.ChannelKeeper, bk types.BankKeeper,
-	sk types.SupplyKeeper,
+func NewKeeper(
+	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	clientKeeper types.ClientKeeper, connnectionKeeper types.ConnectionKeeper,
+	channelKeeper types.ChannelKeeper, bankKeeper types.BankKeeper,
+	supplyKeeper types.SupplyKeeper,
 ) Keeper {
 
 	// ensure ibc transfer module account is set
-	if addr := sk.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
+	if addr := supplyKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
 		panic("the IBC transfer module account has not been set")
 	}
 
@@ -48,11 +49,11 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 		cdc:              cdc,
 		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
 		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
-		clientKeeper:     clientk,
-		connectionKeeper: connk,
-		channelKeeper:    chank,
-		bankKeeper:       bk,
-		supplyKeeper:     sk,
+		clientKeeper:     clientKeeper,
+		connectionKeeper: connnectionKeeper,
+		channelKeeper:    channelKeeper,
+		bankKeeper:       bankKeeper,
+		supplyKeeper:     supplyKeeper,
 	}
 }
 

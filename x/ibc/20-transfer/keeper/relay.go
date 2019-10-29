@@ -91,7 +91,7 @@ func (k Keeper) ReceiveTransfer(
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}
 
-	escrowAddress := types.GetEscrowAddress(destinationChannel)
+	escrowAddress := types.GetEscrowAddress(destinationPort, destinationChannel)
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 
 }
@@ -110,7 +110,7 @@ func (k Keeper) createOutgoingPacket(
 ) error {
 	if isSourceChain {
 		// escrow tokens if the destination chain is the same as the sender's
-		escrowAddress := types.GetEscrowAddress(sourceChannel)
+		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
 
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		coins := make(sdk.Coins, len(amount))

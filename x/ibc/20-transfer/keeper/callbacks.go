@@ -31,8 +31,8 @@ func (k Keeper) onChanOpenInit(
 		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
-	// TODO:
-	// channelEscrowAddresses[channelIdentifier] = newAddress()
+	// NOTE: as the escrow address is generated from both the port and channel IDs
+	// there's no need to store it on a map.
 	return nil
 }
 
@@ -63,9 +63,8 @@ func (k Keeper) onChanOpenTry(
 		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid counterparty version: %s", version))
 	}
 
-	// TODO:
-	// channelEscrowAddresses[channelIdentifier] = newAddress()
-
+	// NOTE: as the escrow address is generated from both the port and channel IDs
+	// there's no need to store it on a map.
 	return nil
 }
 
@@ -166,7 +165,7 @@ func (k Keeper) onTimeoutPacket(
 	}
 
 	if data.Source {
-		escrowAddress := types.GetEscrowAddress(packet.DestChannel())
+		escrowAddress := types.GetEscrowAddress(packet.DestPort(), packet.DestChannel())
 		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
 	}
 

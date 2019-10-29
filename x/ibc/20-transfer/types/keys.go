@@ -27,8 +27,12 @@ const (
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel
-func GetEscrowAddress(chanID string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(chanID)))
+//
+// CONTRACT: this assumes that there's only one bank bridge module that owns the
+// port associated with the channel ID so that the address created is actually
+// unique.
+func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(portID + channelID)))
 }
 
 // GetDenomPrefix returns the receiving denomination prefix

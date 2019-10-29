@@ -19,12 +19,15 @@ const (
 	CodeInvalidEvidence         = types.CodeInvalidEvidence
 	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
 	TypeMsgSubmitEvidence       = types.TypeMsgSubmitEvidence
+	DefaultCodespace            = types.DefaultCodespace
 )
 
 var (
 	NewKeeper  = keeper.NewKeeper
 	NewQuerier = keeper.NewQuerier
 
+	NewMsgSubmitEvidence      = types.NewMsgSubmitEvidence
+	NewRouter                 = types.NewRouter
 	NewQueryEvidenceParams    = types.NewQueryEvidenceParams
 	NewQueryAllEvidenceParams = types.NewQueryAllEvidenceParams
 	RegisterCodec             = types.RegisterCodec

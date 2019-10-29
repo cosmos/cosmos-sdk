@@ -21,18 +21,18 @@ import (
 )
 
 var (
-	_ Evidence = (*EquivocationEvidence)(nil)
+	_ Evidence = (*TestEquivocationEvidence)(nil)
 
 	TestingCdc = codec.New()
 )
 
 const (
-	EvidenceRouteEquivocation = "EquivocationEvidence"
-	EvidenceTypeEquivocation  = "equivocation"
+	TestEvidenceRouteEquivocation = "TestEquivocationEvidence"
+	TestEvidenceTypeEquivocation  = "equivocation"
 )
 
 type (
-	SimpleVote struct {
+	TestVote struct {
 		Height           int64
 		Round            int64
 		Timestamp        time.Time
@@ -40,44 +40,44 @@ type (
 		Signature        []byte
 	}
 
-	SimpleCanonicalVote struct {
+	TestCanonicalVote struct {
 		Height    int64
 		Round     int64
 		Timestamp time.Time
 		ChainID   string
 	}
 
-	EquivocationEvidence struct {
+	TestEquivocationEvidence struct {
 		Power      int64
 		TotalPower int64
 		PubKey     crypto.PubKey
-		VoteA      SimpleVote
-		VoteB      SimpleVote
+		VoteA      TestVote
+		VoteB      TestVote
 	}
 )
 
 func init() {
 	RegisterCodec(TestingCdc)
 	codec.RegisterCrypto(TestingCdc)
-	TestingCdc.RegisterConcrete(EquivocationEvidence{}, "test/EquivocationEvidence", nil)
+	TestingCdc.RegisterConcrete(TestEquivocationEvidence{}, "test/TestEquivocationEvidence", nil)
 }
 
-func (e EquivocationEvidence) Route() string            { return EvidenceRouteEquivocation }
-func (e EquivocationEvidence) Type() string             { return EvidenceTypeEquivocation }
-func (e EquivocationEvidence) GetHeight() int64         { return e.VoteA.Height }
-func (e EquivocationEvidence) GetValidatorPower() int64 { return e.Power }
-func (e EquivocationEvidence) GetTotalPower() int64     { return e.TotalPower }
+func (e TestEquivocationEvidence) Route() string            { return TestEvidenceRouteEquivocation }
+func (e TestEquivocationEvidence) Type() string             { return TestEvidenceTypeEquivocation }
+func (e TestEquivocationEvidence) GetHeight() int64         { return e.VoteA.Height }
+func (e TestEquivocationEvidence) GetValidatorPower() int64 { return e.Power }
+func (e TestEquivocationEvidence) GetTotalPower() int64     { return e.TotalPower }
 
-func (e EquivocationEvidence) String() string {
+func (e TestEquivocationEvidence) String() string {
 	bz, _ := yaml.Marshal(e)
 	return string(bz)
 }
 
-func (e EquivocationEvidence) GetConsensusAddress() sdk.ConsAddress {
+func (e TestEquivocationEvidence) GetConsensusAddress() sdk.ConsAddress {
 	return sdk.ConsAddress(e.PubKey.Address())
 }
 
-func (e EquivocationEvidence) ValidateBasic() error {
+func (e TestEquivocationEvidence) ValidateBasic() error {
 	if e.VoteA.Height != e.VoteB.Height ||
 		e.VoteA.Round != e.VoteB.Round {
 		return fmt.Errorf("H/R/S does not match (got %v and %v)", e.VoteA, e.VoteB)
@@ -94,12 +94,12 @@ func (e EquivocationEvidence) ValidateBasic() error {
 	return nil
 }
 
-func (e EquivocationEvidence) Hash() cmn.HexBytes {
+func (e TestEquivocationEvidence) Hash() cmn.HexBytes {
 	return tmhash.Sum(TestingCdc.MustMarshalBinaryBare(e))
 }
 
-func (v SimpleVote) SignBytes(chainID string) []byte {
-	scv := SimpleCanonicalVote{
+func (v TestVote) SignBytes(chainID string) []byte {
+	scv := TestCanonicalVote{
 		Height:    v.Height,
 		Round:     v.Round,
 		Timestamp: v.Timestamp,
@@ -109,13 +109,13 @@ func (v SimpleVote) SignBytes(chainID string) []byte {
 	return bz
 }
 
-func EquivocationHandler(k interface{}) Handler {
+func TestEquivocationHandler(k interface{}) Handler {
 	return func(ctx sdk.Context, e Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
 
-		ee, ok := e.(EquivocationEvidence)
+		ee, ok := e.(TestEquivocationEvidence)
 		if !ok {
 			return fmt.Errorf("unexpected evidence type: %T", e)
 		}

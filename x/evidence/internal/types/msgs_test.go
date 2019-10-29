@@ -12,7 +12,7 @@ import (
 
 func TestMsgSubmitEvidence(t *testing.T) {
 	pk := ed25519.GenPrivKey()
-	sv := types.SimpleVote{
+	sv := types.TestVote{
 		ValidatorAddress: pk.PubKey().Address(),
 		Height:           11,
 		Round:            0,
@@ -29,7 +29,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 	}{
 		{nil, submitter, true},
 		{
-			types.EquivocationEvidence{
+			types.TestEquivocationEvidence{
 				Power:      100,
 				TotalPower: 100000,
 				PubKey:     pk.PubKey(),
@@ -40,12 +40,12 @@ func TestMsgSubmitEvidence(t *testing.T) {
 			false,
 		},
 		{
-			types.EquivocationEvidence{
+			types.TestEquivocationEvidence{
 				Power:      100,
 				TotalPower: 100000,
 				PubKey:     pk.PubKey(),
 				VoteA:      sv,
-				VoteB:      types.SimpleVote{Height: 10, Round: 1},
+				VoteB:      types.TestVote{Height: 10, Round: 1},
 			},
 			submitter,
 			true,

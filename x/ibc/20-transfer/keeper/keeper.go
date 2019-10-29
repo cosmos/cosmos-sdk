@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // DefaultPacketTimeout is the default packet timeout relative to the current block height
@@ -21,18 +25,34 @@ type Keeper struct {
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
 
-	channelKeeper types.ChannelKeeper
 	bankKeeper    types.BankKeeper
+	channelKeeper types.ChannelKeeper
+	supplyKeeper  types.SupplyKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ChannelKeeper, bk types.BankKeeper) Keeper {
+func NewKeeper(
+	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	bk types.BankKeeper, ck types.ChannelKeeper, sk types.SupplyKeeper,
+) Keeper {
 	return Keeper{
 		cdc:           cdc,
 		storeKey:      key,
-		channelKeeper: ck,
+		codespace:     sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer"
 		bankKeeper:    bk,
+		channelKeeper: ck,
+		supplyKeeper:  sk,
 	}
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
+}
+
+// GetTransferAccount returns the ICS20 - transfers ModuleAccount
+func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccountI {
+	return k.supplyKeeper.GetModuleAccount(ctx, types.ModuleAccountName)
 }
 
 // SendTransfer handles transfer sending logic
@@ -84,10 +104,14 @@ func (k Keeper) ReceiveTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string) sdk.Error {
-	if data.Source {
-		// mint tokens
 
-		// check the denom prefix
+	if data.Source {
+		// mint new tokens if the source of the transfer is the same chain
+		err := k.supplyKeeper.MintCoins(ctx, types.ModuleAccountName, data.Amount)
+		if err != nil {
+			return err
+		}
+
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		for _, coin := range data.Amount {
 			coin := coin
@@ -96,9 +120,7 @@ func (k Keeper) ReceiveTransfer(
 			}
 		}
 
-		// TODO: use supply keeper to mint
-		_, err := k.bankKeeper.AddCoins(ctx, data.Receiver, data.Amount)
-		return err
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleAccountName, data.Receiver, data.Amount)
 	}
 
 	// unescrow tokens
@@ -131,12 +153,9 @@ func (k Keeper) createOutgoingPacket(
 	receiver sdk.AccAddress,
 	isSourceChain bool) sdk.Error {
 	if isSourceChain {
-		// escrow tokens
-
-		// get escrow address
+		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourceChannel)
 
-		// check the denom prefix
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		coins := make(sdk.Coins, len(amount))
 		for i, coin := range amount {
@@ -153,9 +172,7 @@ func (k Keeper) createOutgoingPacket(
 		}
 
 	} else {
-		// burn vouchers from sender
-
-		// check the denom prefix
+		// burn vouchers from the sender's balance if the source is from another chain
 		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 		for _, coin := range amount {
 			coin := coin
@@ -164,8 +181,13 @@ func (k Keeper) createOutgoingPacket(
 			}
 		}
 
-		// TODO: use supply keeper to burn
-		_, err := k.bankKeeper.SubtractCoins(ctx, sender, amount)
+		// transfer the coins to the module account and burn them
+		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleAccountName, amount)
+		if err != nil {
+			return err
+		}
+
+		err = k.supplyKeeper.BurnCoins(ctx, types.ModuleAccountName, amount)
 		if err != nil {
 			return err
 		}
@@ -193,5 +215,5 @@ func (k Keeper) createOutgoingPacket(
 		packetDataBz,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, packet)
+	return k.channelKeeper.SendPacket(ctx, packet, k.storeKey)
 }

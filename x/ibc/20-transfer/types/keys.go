@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -21,6 +22,9 @@ const (
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = SubModuleName
 )
+
+// ModuleAccountName defines the IBC transfer module account name
+var ModuleAccountName = fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
 
 // GetEscrowAddress returns the escrow address for the specified channel
 func GetEscrowAddress(chanID string) sdk.AccAddress {

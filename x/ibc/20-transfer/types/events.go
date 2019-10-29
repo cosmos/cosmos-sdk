@@ -8,9 +8,7 @@ import (
 
 // IBC transfer events
 const (
-	AttributeKeySender   = "sender"
 	AttributeKeyReceiver = "receiver"
-	AttributeKeyAmount   = "amount"
 )
 
 // IBC transfer events vars

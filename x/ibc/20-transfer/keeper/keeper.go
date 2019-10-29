@@ -10,9 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
-// DefaultPacketTimeout is the default packet timeout relative to the current block height
 const (
-	DefaultPacketTimeout = 1000 // NOTE: in blocks
+	DefaultPacketTimeout = 1000 // default packet timeout relative to the current consensus height of the counterparty
 )
 
 // Keeper defines the IBC transfer keeper
@@ -20,19 +19,191 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
+	prefix    []byte // prefix bytes for accessing the store
 
-	channelKeeper types.ChannelKeeper
-	bankKeeper    types.BankKeeper
+	clientKeeper     types.ClientKeeper
+	connectionKeeper types.ConnectionKeeper
+	channelKeeper    types.ChannelKeeper
+	bankKeeper       types.BankKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ChannelKeeper, bk types.BankKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	clientk types.ClientKeeper, chank types.ChannelKeeper,
+	connk types.ConnectionKeeper, bk types.BankKeeper,
+) Keeper {
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      key,
-		channelKeeper: ck,
-		bankKeeper:    bk,
+		storeKey:         key,
+		cdc:              cdc,
+		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
+		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
+		clientKeeper:     clientk,
+		connectionKeeper: connk,
+		channelKeeper:    chank,
+		bankKeeper:       bk,
 	}
+}
+
+func (k Keeper) onChanOpenInit(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version string,
+) error {
+	if order != channeltypes.UNORDERED {
+		types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+	}
+
+	if counterparty.PortID != types.BoundPortID {
+		types.ErrInvalidPort(types.DefaultCodespace, portID)
+	}
+
+	if version != "" {
+		types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenTry(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version string,
+	counterpartyVersion string,
+) error {
+	if order != channeltypes.UNORDERED {
+		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+	}
+
+	if counterparty.PortID != types.BoundPortID {
+		return types.ErrInvalidPort(types.DefaultCodespace, portID)
+	}
+
+	if version != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	if counterpartyVersion != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid counterparty version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	version string,
+) error {
+	if version != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	//TODO
+	return nil
+}
+
+func (k Keeper) onChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) {
+	// noop
+}
+
+func (k Keeper) onChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) {
+	// noop
+}
+
+// onRecvPacket is called when an FTTransfer packet is received
+func (k Keeper) onRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) sdk.Error {
+	var data types.TransferPacketData
+
+	err := data.UnmarshalJSON(packet.Data())
+	if err != nil {
+		return types.ErrInvalidPacketData(types.DefaultCodespace)
+	}
+
+	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(),
+		packet.DestPort(), packet.DestChannel(), data)
+}
+
+func (k Keeper) onAcknowledgePacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+) {
+	// noop
+}
+
+func (k Keeper) onTimeoutPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	var data types.TransferPacketData
+
+	err := data.UnmarshalJSON(packet.Data())
+	if err != nil {
+		return types.ErrInvalidPacketData(types.DefaultCodespace)
+	}
+
+	// check the denom prefix
+	prefix := types.GetDenomPrefix(packet.SourcePort(), packet.SourcePort())
+	coins := make(sdk.Coins, len(data.Amount))
+	for i, coin := range data.Amount {
+		coin := coin
+		if !strings.HasPrefix(coin.Denom, prefix) {
+			return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+		}
+		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+	}
+
+	if data.Source {
+		escrowAddress := types.GetEscrowAddress(packet.DestChannel())
+
+		err := k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		_, err := k.bankKeeper.AddCoins(ctx, data.Sender, data.Amount)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) onTimeoutPacketClose(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) {
+	// noop
 }
 
 // SendTransfer handles transfer sending logic
@@ -79,11 +250,12 @@ func (k Keeper) SendTransfer(
 // ReceiveTransfer handles transfer receiving logic
 func (k Keeper) ReceiveTransfer(
 	ctx sdk.Context,
-	data types.TransferPacketData,
 	sourcePort,
 	sourceChannel,
 	destinationPort,
-	destinationChannel string) sdk.Error {
+	destinationChannel string,
+	data types.TransferPacketData,
+) sdk.Error {
 	if data.Source {
 		// mint tokens
 
@@ -129,7 +301,8 @@ func (k Keeper) createOutgoingPacket(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver sdk.AccAddress,
-	isSourceChain bool) sdk.Error {
+	isSourceChain bool,
+) sdk.Error {
 	if isSourceChain {
 		// escrow tokens
 
@@ -193,5 +366,10 @@ func (k Keeper) createOutgoingPacket(
 		packetDataBz,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, packet)
+	err = k.channelKeeper.SendPacket(ctx, packet, k.storeKey)
+	if err != nil {
+		return types.ErrSendPacket(types.DefaultCodespace)
+	}
+
+	return nil
 }

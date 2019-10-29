@@ -20,6 +20,9 @@ const (
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = SubModuleName
+
+	// Bound port ID
+	BoundPortID = "bank"
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel

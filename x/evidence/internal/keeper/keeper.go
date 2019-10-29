@@ -64,6 +64,9 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
 func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
+	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
+		return types.ErrEvidenceExists(k.codespace, evidence.Hash().String())
+	}
 	if !k.router.HasRoute(evidence.Route()) {
 		return types.ErrNoEvidenceHandlerExists(k.codespace, evidence.Route())
 	}
@@ -73,11 +76,12 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence types.Evidence) error {
 		return types.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 
-	k.setEvidence(ctx, evidence)
+	k.SetEvidence(ctx, evidence)
 	return nil
 }
 
-func (k Keeper) setEvidence(ctx sdk.Context, evidence types.Evidence) {
+// SetEvidence sets Evidence by hash in the module's KVStore.
+func (k Keeper) SetEvidence(ctx sdk.Context, evidence types.Evidence) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(evidence)
 	store.Set(evidence.Hash(), bz)

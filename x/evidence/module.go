@@ -2,6 +2,7 @@ package evidence
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,10 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/rest"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -50,14 +50,18 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 
 // DefaultGenesis returns the evidence module's default genesis state.
 func (AppModuleBasic) DefaultGenesis() json.RawMessage {
-	// TODO: Return proper default genesis state.
-	return []byte("{}")
+	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	// TODO: Validate genesis state.
-	return nil
+	var gs GenesisState
+	err := ModuleCdc.UnmarshalJSON(bz, &gs)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
+	}
+
+	return gs.Validate()
 }
 
 // RegisterRESTRoutes registers the evidence module's REST service handlers.
@@ -120,11 +124,6 @@ func (AppModule) QuerierRoute() string {
 	return QuerierRoute
 }
 
-// RegisterInvariants registers the evidence module's invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO: Register any necessary invariants (if any).
-}
-
 // NewHandler returns the evidence module's message Handler.
 func (am AppModule) NewHandler() sdk.Handler {
 	return NewHandler(am.keeper)
@@ -135,17 +134,27 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 	return NewQuerier(am.keeper)
 }
 
+// RegisterInvariants registers the evidence module's invariants.
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	// TODO: Register any necessary invariants (if any).
+}
+
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	// TODO: Construct genesis state object and deserialize.
+func (am AppModule) InitGenesis(ctx sdk.Context, bz json.RawMessage) []abci.ValidatorUpdate {
+	var gs GenesisState
+	err := ModuleCdc.UnmarshalJSON(bz, &gs)
+	if err != nil {
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", ModuleName, err))
+	}
+
+	InitGenesis(ctx, am.keeper, gs)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the evidence module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	// TODO: Export genesis state and serialize.
-	return []byte("{}")
+	return ModuleCdc.MustMarshalJSON(ExportGenesis(ctx, am.keeper))
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.

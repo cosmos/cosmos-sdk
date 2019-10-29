@@ -123,6 +123,35 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	suite.Equal(e, res)
 }
 
+func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
+	ctx := suite.ctx.WithIsCheckTx(false)
+	pk := ed25519.GenPrivKey()
+	sv := types.TestVote{
+		ValidatorAddress: pk.PubKey().Address(),
+		Height:           11,
+		Round:            0,
+	}
+
+	sig, err := pk.Sign(sv.SignBytes(ctx.ChainID()))
+	suite.NoError(err)
+	sv.Signature = sig
+
+	e := types.TestEquivocationEvidence{
+		Power:      100,
+		TotalPower: 100000,
+		PubKey:     pk.PubKey(),
+		VoteA:      sv,
+		VoteB:      sv,
+	}
+
+	suite.Nil(suite.keeper.SubmitEvidence(ctx, e))
+	suite.Error(suite.keeper.SubmitEvidence(ctx, e))
+
+	res, ok := suite.keeper.GetEvidence(ctx, e.Hash())
+	suite.True(ok)
+	suite.Equal(e, res)
+}
+
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()

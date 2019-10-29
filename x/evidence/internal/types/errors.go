@@ -1,3 +1,4 @@
+// DONTCOVER
 package types
 
 import (
@@ -7,8 +8,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// DONTCOVER
-
 // Error codes specific to the evidence module
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
@@ -16,6 +15,7 @@ const (
 	CodeNoEvidenceHandlerExists sdk.CodeType = 1
 	CodeInvalidEvidence         sdk.CodeType = 2
 	CodeNoEvidenceExists        sdk.CodeType = 3
+	CodeEvidenceExists          sdk.CodeType = 4
 )
 
 // ErrNoEvidenceHandlerExists returns a typed ABCI error for an invalid evidence
@@ -44,5 +44,15 @@ func ErrNoEvidenceExists(codespace sdk.CodespaceType, hash string) error {
 		string(codespace),
 		uint32(CodeNoEvidenceExists),
 		fmt.Sprintf("evidence with hash %s does not exist", hash),
+	)
+}
+
+// ErrEvidenceExists returns a typed ABCI error for Evidence that already exists
+// by hash in state.
+func ErrEvidenceExists(codespace sdk.CodespaceType, hash string) error {
+	return sdkerrors.New(
+		string(codespace),
+		uint32(CodeEvidenceExists),
+		fmt.Sprintf("evidence with hash %s already exists", hash),
 	)
 }

@@ -1,11 +1,10 @@
+// nolint
 package evidence
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
-
-// nolint
 
 const (
 	ModuleName                  = types.ModuleName
@@ -33,11 +32,14 @@ var (
 	RegisterCodec             = types.RegisterCodec
 	RegisterEvidenceTypeCodec = types.RegisterEvidenceTypeCodec
 	ModuleCdc                 = types.ModuleCdc
+	NewGenesisState           = types.NewGenesisState
+	DefaultGenesisState       = types.DefaultGenesisState
 )
 
 type (
 	Keeper = keeper.Keeper
 
+	GenesisState      = types.GenesisState
 	MsgSubmitEvidence = types.MsgSubmitEvidence
 	Evidence          = types.Evidence
 	Handler           = types.Handler

@@ -20,17 +20,19 @@ func (k Keeper) onChanOpenInit(
 	version string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+		return types.ErrInvalidChannelOrder(k.codespace, order.String())
 	}
 
 	if counterparty.PortID != types.BoundPortID {
-		return types.ErrInvalidPort(types.DefaultCodespace, portID)
+		return types.ErrInvalidPort(k.codespace, portID)
 	}
 
-	if version != "" {
-		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	if strings.TrimSpace(version) != "" {
+		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
+	// TODO:
+	// channelEscrowAddresses[channelIdentifier] = newAddress()
 	return nil
 }
 
@@ -46,20 +48,23 @@ func (k Keeper) onChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+		return types.ErrInvalidChannelOrder(k.codespace, order.String())
 	}
 
 	if counterparty.PortID != types.BoundPortID {
-		return types.ErrInvalidPort(types.DefaultCodespace, portID)
+		return types.ErrInvalidPort(k.codespace, portID)
 	}
 
-	if version != "" {
-		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	if strings.TrimSpace(version) != "" {
+		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
-	if counterpartyVersion != "" {
-		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid counterparty version: %s", version))
+	if strings.TrimSpace(counterpartyVersion) != "" {
+		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid counterparty version: %s", version))
 	}
+
+	// TODO:
+	// channelEscrowAddresses[channelIdentifier] = newAddress()
 
 	return nil
 }
@@ -71,8 +76,8 @@ func (k Keeper) onChanOpenAck(
 	channelID string,
 	version string,
 ) error {
-	if version != "" {
-		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	if strings.TrimSpace(version) != "" {
+		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
 	return nil
@@ -84,7 +89,7 @@ func (k Keeper) onChanOpenConfirm(
 	portID,
 	channelID string,
 ) error {
-	// noop
+	// no-op
 	return nil
 }
 
@@ -94,7 +99,7 @@ func (k Keeper) onChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// noop
+	// no-op
 	return nil
 }
 
@@ -104,7 +109,7 @@ func (k Keeper) onChanCloseConfirm(
 	portID,
 	channelID string,
 ) error {
-	// noop
+	// no-op
 	return nil
 }
 
@@ -118,11 +123,13 @@ func (k Keeper) onRecvPacket(
 
 	err := data.UnmarshalJSON(packet.Data())
 	if err != nil {
-		return types.ErrInvalidPacketData(types.DefaultCodespace)
+		return types.ErrInvalidPacketData(k.codespace)
 	}
 
-	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(),
-		packet.DestPort(), packet.DestChannel(), data)
+	return k.ReceiveTransfer(
+		ctx, packet.SourcePort(), packet.SourceChannel(),
+		packet.DestPort(), packet.DestChannel(), data,
+	)
 }
 
 // nolint: unused
@@ -131,7 +138,7 @@ func (k Keeper) onAcknowledgePacket(
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 ) error {
-	// noop
+	// no-op
 	return nil
 }
 
@@ -144,7 +151,7 @@ func (k Keeper) onTimeoutPacket(
 
 	err := data.UnmarshalJSON(packet.Data())
 	if err != nil {
-		return types.ErrInvalidPacketData(types.DefaultCodespace)
+		return types.ErrInvalidPacketData(k.codespace)
 	}
 
 	// check the denom prefix
@@ -160,30 +167,19 @@ func (k Keeper) onTimeoutPacket(
 
 	if data.Source {
 		escrowAddress := types.GetEscrowAddress(packet.DestChannel())
-
-		err := k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		// mint from supply
-		err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
-		if err != nil {
-			return err
-		}
-
-		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
+		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
 	}
 
-	return nil
+	// mint from supply
+	err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+	if err != nil {
+		return err
+	}
+
+	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacketClose(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-) error {
-	// noop
-	return nil
+func (k Keeper) onTimeoutPacketClose(_ sdk.Context, _ channeltypes.Packet) {
+	panic("can't happen, only unordered channels allowed")
 }

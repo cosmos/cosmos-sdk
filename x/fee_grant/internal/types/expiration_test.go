@@ -69,41 +69,41 @@ func TestExpiresAt(t *testing.T) {
 	}
 }
 
-func TestPeriodValid(t *testing.T) {
+func TestDurationValid(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		period       Period
+		period       Duration
 		valid        bool
 		compatible   ExpiresAt
 		incompatible ExpiresAt
 	}{
 		"basic height": {
-			period:       BlockPeriod(100),
+			period:       BlockDuration(100),
 			valid:        true,
 			compatible:   ExpiresAtHeight(50),
 			incompatible: ExpiresAtTime(now),
 		},
 		"basic time": {
-			period:       ClockPeriod(time.Hour),
+			period:       ClockDuration(time.Hour),
 			valid:        true,
 			compatible:   ExpiresAtTime(now),
 			incompatible: ExpiresAtHeight(50),
 		},
 		"zero": {
-			period: Period{},
+			period: Duration{},
 			valid:  false,
 		},
 		"double": {
-			period: Period{Block: 100, Clock: time.Hour},
+			period: Duration{Block: 100, Clock: time.Hour},
 			valid:  false,
 		},
 		"negative clock": {
-			period: ClockPeriod(-1 * time.Hour),
+			period: ClockDuration(-1 * time.Hour),
 			valid:  false,
 		},
 		"negative block": {
-			period: BlockPeriod(-5),
+			period: BlockDuration(-5),
 			valid:  false,
 		},
 	}
@@ -124,30 +124,30 @@ func TestPeriodValid(t *testing.T) {
 	}
 }
 
-func TestPeriodStep(t *testing.T) {
+func TestDurationStep(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
 		expires ExpiresAt
-		period  Period
+		period  Duration
 		valid   bool
 		result  ExpiresAt
 	}{
 		"add height": {
 			expires: ExpiresAtHeight(789),
-			period:  BlockPeriod(100),
+			period:  BlockDuration(100),
 			valid:   true,
 			result:  ExpiresAtHeight(889),
 		},
 		"add time": {
 			expires: ExpiresAtTime(now),
-			period:  ClockPeriod(time.Hour),
+			period:  ClockDuration(time.Hour),
 			valid:   true,
 			result:  ExpiresAtTime(now.Add(time.Hour)),
 		},
 		"mismatch": {
 			expires: ExpiresAtHeight(789),
-			period:  ClockPeriod(time.Hour),
+			period:  ClockDuration(time.Hour),
 			valid:   false,
 		},
 	}
@@ -160,13 +160,13 @@ func TestPeriodStep(t *testing.T) {
 			err = tc.expires.ValidateBasic()
 			require.NoError(t, err)
 
-			err = tc.expires.Step(tc.period)
+			next, err := tc.expires.Step(tc.period)
 			if !tc.valid {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, tc.result, tc.expires)
+			require.Equal(t, tc.result, next)
 		})
 	}
 }

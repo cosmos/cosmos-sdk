@@ -23,10 +23,10 @@ func ExpiresAtHeight(h int64) ExpiresAt {
 // Note that empty expiration is allowed
 func (e ExpiresAt) ValidateBasic() error {
 	if !e.Time.IsZero() && e.Height != 0 {
-		return ErrInvalidPeriod("both time and height are set")
+		return ErrInvalidDuration("both time and height are set")
 	}
 	if e.Height < 0 {
-		return ErrInvalidPeriod("negative height")
+		return ErrInvalidDuration("negative height")
 	}
 	return nil
 }
@@ -34,6 +34,15 @@ func (e ExpiresAt) ValidateBasic() error {
 // IsZero returns true for an uninitialized struct
 func (e ExpiresAt) IsZero() bool {
 	return e.Time.IsZero() && e.Height == 0
+}
+
+// FastForward produces a new Expiration with the time or height set to the
+// new value, depending on what was set on the original expiration
+func (e ExpiresAt) FastForward(t time.Time, h int64) ExpiresAt {
+	if !e.Time.IsZero() {
+		return ExpiresAtTime(t)
+	}
+	return ExpiresAtHeight(h)
 }
 
 // IsExpired returns if the time or height is *equal to* or greater
@@ -50,25 +59,34 @@ func (e ExpiresAt) IsExpired(t time.Time, h int64) bool {
 
 // IsCompatible returns true iff the two use the same units.
 // If false, they cannot be added.
-func (e ExpiresAt) IsCompatible(p Period) bool {
+func (e ExpiresAt) IsCompatible(p Duration) bool {
 	if !e.Time.IsZero() {
 		return p.Clock > 0
 	}
 	return p.Block > 0
 }
 
-// Step will increase the expiration point by one period
-// It returns an error if the period is incompatible
-func (e *ExpiresAt) Step(p Period) error {
+// Step will increase the expiration point by one Duration
+// It returns an error if the Duration is incompatible
+func (e ExpiresAt) Step(p Duration) (ExpiresAt, error) {
 	if !e.IsCompatible(p) {
-		return ErrInvalidPeriod("expires_at and period have different units")
+		return ExpiresAt{}, ErrInvalidDuration("expires_at and Duration have different units")
 	}
 	if !e.Time.IsZero() {
 		e.Time = e.Time.Add(p.Clock)
 	} else {
 		e.Height += p.Block
 	}
-	return nil
+	return e, nil
+}
+
+// MustStep is like Step, but panics on error
+func (e ExpiresAt) MustStep(p Duration) ExpiresAt {
+	res, err := e.Step(p)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }
 
 // PrepareForExport will deduct the dumpHeight from the expiration, so when this is
@@ -80,37 +98,37 @@ func (e ExpiresAt) PrepareForExport(dumpTime time.Time, dumpHeight int64) Expire
 	return e
 }
 
-// Period is a repeating unit of either clock time or number of blocks.
+// Duration is a repeating unit of either clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
-type Period struct {
+type Duration struct {
 	Clock time.Duration `json:"clock" yaml:"clock"`
 	Block int64         `json:"block" yaml:"block"`
 }
 
-// ClockPeriod creates an period by clock time
-func ClockPeriod(d time.Duration) Period {
-	return Period{Clock: d}
+// ClockDuration creates an Duration by clock time
+func ClockDuration(d time.Duration) Duration {
+	return Duration{Clock: d}
 }
 
-// BlockPeriod creates an period by block height
-func BlockPeriod(h int64) Period {
-	return Period{Block: h}
+// BlockDuration creates an Duration by block height
+func BlockDuration(h int64) Duration {
+	return Duration{Block: h}
 }
 
 // ValidateBasic performs basic sanity checks
 // Note that exactly one must be set and it must be positive
-func (p Period) ValidateBasic() error {
+func (p Duration) ValidateBasic() error {
 	if p.Block == 0 && p.Clock == 0 {
-		return ErrInvalidPeriod("neither time and height are set")
+		return ErrInvalidDuration("neither time and height are set")
 	}
 	if p.Block != 0 && p.Clock != 0 {
-		return ErrInvalidPeriod("both time and height are set")
+		return ErrInvalidDuration("both time and height are set")
 	}
 	if p.Block < 0 {
-		return ErrInvalidPeriod("negative block step")
+		return ErrInvalidDuration("negative block step")
 	}
 	if p.Clock < 0 {
-		return ErrInvalidPeriod("negative clock step")
+		return ErrInvalidDuration("negative clock step")
 	}
 	return nil
 }

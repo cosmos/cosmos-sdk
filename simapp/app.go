@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -60,12 +61,13 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:     nil,
-		distr.ModuleName:          nil,
-		mint.ModuleName:           {supply.Minter},
-		staking.BondedPoolName:    {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
-		gov.ModuleName:            {supply.Burner},
+		auth.FeeCollectorName:              nil,
+		distr.ModuleName:                   nil,
+		mint.ModuleName:                    {supply.Minter},
+		staking.BondedPoolName:             {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName:          {supply.Burner, supply.Staking},
+		gov.ModuleName:                     {supply.Burner},
+		ibctransfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
 	}
 )
 

@@ -33,6 +33,7 @@ type ConnectionKeeper interface {
 
 // SupplyKeeper expected supply keeper
 type SupplyKeeper interface {
+	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) supplyexported.ModuleAccountI
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error

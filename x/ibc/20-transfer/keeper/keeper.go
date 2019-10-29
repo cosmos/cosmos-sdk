@@ -37,6 +37,12 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 	chank types.ChannelKeeper, bk types.BankKeeper,
 	sk types.SupplyKeeper,
 ) Keeper {
+
+	// ensure ibc transfer module account is set
+	if addr := sk.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
+		panic("the IBC transfer module account has not been set")
+	}
+
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,

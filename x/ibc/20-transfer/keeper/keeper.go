@@ -25,6 +25,7 @@ type Keeper struct {
 	connectionKeeper types.ConnectionKeeper
 	channelKeeper    types.ChannelKeeper
 	bankKeeper       types.BankKeeper
+	supplyKeeper     types.SupplyKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
@@ -272,9 +273,14 @@ func (k Keeper) ReceiveTransfer(
 			}
 		}
 
-		// TODO: use supply keeper to mint
-		_, err := k.bankKeeper.AddCoins(ctx, data.Receiver, data.Amount)
-		return err
+		// mint from supply
+		err := k.supplyKeeper.MintCoins(ctx, types.SubModuleName, data.Amount)
+		if err != nil {
+			return err
+		}
+
+		// send to receiver
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.SubModuleName, data.Receiver, data.Amount)
 	}
 
 	// unescrow tokens
@@ -341,8 +347,13 @@ func (k Keeper) createOutgoingPacket(
 			}
 		}
 
-		// TODO: use supply keeper to burn
-		_, err := k.bankKeeper.SubtractCoins(ctx, sender, amount)
+		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.SubModuleName, amount)
+		if err != nil {
+			return err
+		}
+
+		// burn from supply
+		err = k.supplyKeeper.BurnCoins(ctx, types.SubModuleName, amount)
 		if err != nil {
 			return err
 		}

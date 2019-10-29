@@ -6,10 +6,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-const (
-	TypeMsgRecvPacket = "recv_packet"
-)
-
 type MsgRecvPacket struct {
 	Packet channel.PacketI    `json:"packet" yaml:"packet"`
 	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
@@ -17,6 +13,7 @@ type MsgRecvPacket struct {
 	Signer sdk.AccAddress     `json:"signer" yaml:"signer"`
 }
 
+// NewMsgRecvPacket creates a new MsgRecvPacket instance
 func NewMsgRecvPacket(packet channel.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
 	return MsgRecvPacket{
 		Packet: packet,
@@ -26,14 +23,17 @@ func NewMsgRecvPacket(packet channel.PacketI, proofs []commitment.Proof, height 
 	}
 }
 
+// Route implements sdk.Msg
 func (MsgRecvPacket) Route() string {
 	return RouterKey
 }
 
+// Type implements sdk.Msg
 func (MsgRecvPacket) Type() string {
-	return TypeMsgRecvPacket
+	return "recv_packet"
 }
 
+// ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 	if msg.Proofs == nil {
 		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeProofMissing, "proof missing")
@@ -50,10 +50,12 @@ func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// GetSignBytes implements sdk.Msg
 func (msg MsgRecvPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
+// GetSigners implements sdk.Msg
 func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

@@ -21,10 +21,10 @@ const (
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = SubModuleName
-)
 
-// ModuleAccountName defines the IBC transfer module account name
-var ModuleAccountName = fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
+	// BoundPortID defines the name of the capability key
+	BoundPortID = "bank"
+)
 
 // GetEscrowAddress returns the escrow address for the specified channel
 func GetEscrowAddress(chanID string) sdk.AccAddress {
@@ -34,4 +34,9 @@ func GetEscrowAddress(chanID string) sdk.AccAddress {
 // GetDenomPrefix returns the receiving denomination prefix
 func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s", portID, channelID)
+}
+
+// GetModuleAccountName returns the IBC transfer module account name for supply
+func GetModuleAccountName() string {
+	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
 }

@@ -24,24 +24,31 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
+	prefix    []byte // prefix bytes for accessing the store
 
-	bankKeeper    types.BankKeeper
-	channelKeeper types.ChannelKeeper
-	supplyKeeper  types.SupplyKeeper
+	clientKeeper     types.ClientKeeper
+	connectionKeeper types.ConnectionKeeper
+	channelKeeper    types.ChannelKeeper
+	bankKeeper       types.BankKeeper
+	supplyKeeper     types.SupplyKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
-func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	bk types.BankKeeper, ck types.ChannelKeeper, sk types.SupplyKeeper,
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	clientk types.ClientKeeper, connk types.ConnectionKeeper,
+	chank types.ChannelKeeper, bk types.BankKeeper,
+	sk types.SupplyKeeper,
 ) Keeper {
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      key,
-		codespace:     sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer"
-		bankKeeper:    bk,
-		channelKeeper: ck,
-		supplyKeeper:  sk,
+		storeKey:         key,
+		cdc:              cdc,
+		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
+		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
+		clientKeeper:     clientk,
+		connectionKeeper: connk,
+		channelKeeper:    chank,
+		bankKeeper:       bk,
+		supplyKeeper:     sk,
 	}
 }
 
@@ -52,7 +59,176 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
 func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccountI {
-	return k.supplyKeeper.GetModuleAccount(ctx, types.ModuleAccountName)
+	return k.supplyKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
+}
+
+func (k Keeper) onChanOpenInit(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version string,
+) error {
+	if order != channeltypes.UNORDERED {
+		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+	}
+
+	if counterparty.PortID != types.BoundPortID {
+		return types.ErrInvalidPort(types.DefaultCodespace, portID)
+	}
+
+	if version != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenTry(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	counterparty channeltypes.Counterparty,
+	version string,
+	counterpartyVersion string,
+) error {
+	if order != channeltypes.UNORDERED {
+		return types.ErrInvalidChannelOrder(types.DefaultCodespace, order.String())
+	}
+
+	if counterparty.PortID != types.BoundPortID {
+		return types.ErrInvalidPort(types.DefaultCodespace, portID)
+	}
+
+	if version != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	if counterpartyVersion != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid counterparty version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	version string,
+) error {
+	if version != "" {
+		return types.ErrInvalidVersion(types.DefaultCodespace, fmt.Sprintf("invalid version: %s", version))
+	}
+
+	return nil
+}
+
+func (k Keeper) onChanOpenConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	// noop
+	return nil
+}
+
+func (k Keeper) onChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	// noop
+	return nil
+}
+
+func (k Keeper) onChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	// noop
+	return nil
+}
+
+// onRecvPacket is called when an FTTransfer packet is received
+func (k Keeper) onRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	var data types.TransferPacketData
+
+	err := data.UnmarshalJSON(packet.Data())
+	if err != nil {
+		return types.ErrInvalidPacketData(types.DefaultCodespace)
+	}
+
+	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(),
+		packet.DestPort(), packet.DestChannel(), data)
+}
+
+func (k Keeper) onAcknowledgePacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+) error {
+	// noop
+	return nil
+}
+
+func (k Keeper) onTimeoutPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	var data types.TransferPacketData
+
+	err := data.UnmarshalJSON(packet.Data())
+	if err != nil {
+		return types.ErrInvalidPacketData(types.DefaultCodespace)
+	}
+
+	// check the denom prefix
+	prefix := types.GetDenomPrefix(packet.SourcePort(), packet.SourcePort())
+	coins := make(sdk.Coins, len(data.Amount))
+	for i, coin := range data.Amount {
+		coin := coin
+		if !strings.HasPrefix(coin.Denom, prefix) {
+			return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+		}
+		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+	}
+
+	if data.Source {
+		escrowAddress := types.GetEscrowAddress(packet.DestChannel())
+
+		err := k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		// mint from supply
+		err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+		if err != nil {
+			return err
+		}
+
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
+	}
+
+	return nil
+}
+
+func (k Keeper) onTimeoutPacketClose(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	// noop
+	return nil
 }
 
 // SendTransfer handles transfer sending logic
@@ -64,7 +240,7 @@ func (k Keeper) SendTransfer(
 	sender,
 	receiver sdk.AccAddress,
 	isSourceChain bool,
-) sdk.Error {
+) error {
 	// get the port and channel of the counterparty
 	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
@@ -99,19 +275,13 @@ func (k Keeper) SendTransfer(
 // ReceiveTransfer handles transfer receiving logic
 func (k Keeper) ReceiveTransfer(
 	ctx sdk.Context,
-	data types.TransferPacketData,
 	sourcePort,
 	sourceChannel,
 	destinationPort,
-	destinationChannel string) sdk.Error {
-
+	destinationChannel string,
+	data types.TransferPacketData,
+) error {
 	if data.Source {
-		// mint new tokens if the source of the transfer is the same chain
-		err := k.supplyKeeper.MintCoins(ctx, types.ModuleAccountName, data.Amount)
-		if err != nil {
-			return err
-		}
-
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		for _, coin := range data.Amount {
 			coin := coin
@@ -120,7 +290,14 @@ func (k Keeper) ReceiveTransfer(
 			}
 		}
 
-		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleAccountName, data.Receiver, data.Amount)
+		// mint new tokens if the source of the transfer is the same chain
+		err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+		if err != nil {
+			return err
+		}
+
+		// send to receiver
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Receiver, data.Amount)
 	}
 
 	// unescrow tokens
@@ -151,7 +328,8 @@ func (k Keeper) createOutgoingPacket(
 	amount sdk.Coins,
 	sender sdk.AccAddress,
 	receiver sdk.AccAddress,
-	isSourceChain bool) sdk.Error {
+	isSourceChain bool,
+) error {
 	if isSourceChain {
 		// escrow tokens if the destination chain is the same as the sender's
 		escrowAddress := types.GetEscrowAddress(sourceChannel)
@@ -182,12 +360,13 @@ func (k Keeper) createOutgoingPacket(
 		}
 
 		// transfer the coins to the module account and burn them
-		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleAccountName, amount)
+		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.GetModuleAccountName(), amount)
 		if err != nil {
 			return err
 		}
 
-		err = k.supplyKeeper.BurnCoins(ctx, types.ModuleAccountName, amount)
+		// burn from supply
+		err = k.supplyKeeper.BurnCoins(ctx, types.GetModuleAccountName(), amount)
 		if err != nil {
 			return err
 		}

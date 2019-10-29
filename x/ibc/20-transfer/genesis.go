@@ -12,6 +12,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper) {
 	// check if the module account exists
 	moduleAcc := keeper.GetTransferAccount(ctx)
 	if moduleAcc == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleAccountName))
+		panic(fmt.Sprintf("%s module account has not been set", types.GetModuleAccountName()))
 	}
 }

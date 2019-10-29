@@ -22,13 +22,12 @@ type Keeper struct {
 }
 
 // NewKeeper creates a new ibc Keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	bk bank.Keeper, sk supply.Keeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, bk bank.Keeper, sk supply.Keeper) Keeper {
 	clientKeeper := client.NewKeeper(cdc, key, codespace)
 	connectionKeeper := connection.NewKeeper(cdc, key, codespace, clientKeeper)
 	portKeeper := port.NewKeeper(cdc, key, codespace)
 	channelKeeper := channel.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, portKeeper)
-	transferKeeper := transfer.NewKeeper(cdc, key, codespace, bk, channelKeeper, sk)
+	transferKeeper := transfer.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, channelKeeper, bk, sk)
 
 	return Keeper{
 		ClientKeeper:     clientKeeper,

@@ -9,12 +9,12 @@ import (
 )
 
 type MsgTransfer struct {
-	SourcePort    string         `json:"source_port" yaml:"source_port"`
-	SourceChannel string         `json:"source_channel" yaml:"source_channel"`
-	Amount        sdk.Coins      `json:"amount" yaml:"amount"`
-	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`
-	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`
-	Source        bool           `json:"source" yaml:"source"`
+	SourcePort    string         `json:"source_port" yaml:"source_port"`       // the port on which the packet will be sent
+	SourceChannel string         `json:"source_channel" yaml:"source_channel"` // the channel by which the packet will be sent
+	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
+	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
+	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
+	Source        bool           `json:"source" yaml:"source"`                 // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
 // NewMsgTransfer creates a new MsgTransfer instance

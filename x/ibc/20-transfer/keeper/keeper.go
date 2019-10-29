@@ -197,12 +197,12 @@ func (k Keeper) onTimeoutPacket(
 
 	} else {
 		// mint from supply
-		err = k.supplyKeeper.MintCoins(ctx, types.SubModuleName, data.Amount)
+		err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
 		if err != nil {
 			return err
 		}
 
-		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.SubModuleName, data.Sender, data.Amount)
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
 	}
 
 	return nil
@@ -279,13 +279,13 @@ func (k Keeper) ReceiveTransfer(
 		}
 
 		// mint from supply
-		err := k.supplyKeeper.MintCoins(ctx, types.SubModuleName, data.Amount)
+		err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
 		if err != nil {
 			return err
 		}
 
 		// send to receiver
-		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.SubModuleName, data.Receiver, data.Amount)
+		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Receiver, data.Amount)
 	}
 
 	// unescrow tokens
@@ -352,13 +352,13 @@ func (k Keeper) createOutgoingPacket(
 			}
 		}
 
-		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.SubModuleName, amount)
+		err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.GetModuleAccountName(), amount)
 		if err != nil {
 			return err
 		}
 
 		// burn from supply
-		err = k.supplyKeeper.BurnCoins(ctx, types.SubModuleName, amount)
+		err = k.supplyKeeper.BurnCoins(ctx, types.GetModuleAccountName(), amount)
 		if err != nil {
 			return err
 		}

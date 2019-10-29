@@ -6,6 +6,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -33,4 +34,9 @@ func GetEscrowAddress(chanID string) sdk.AccAddress {
 // GetDenomPrefix returns the receiving denomination prefix
 func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s", portID, channelID)
+}
+
+// GetModuleAccountName returns the module account name for supply
+func GetModuleAccountName() string {
+	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
 }

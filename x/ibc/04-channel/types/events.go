@@ -12,7 +12,6 @@ const (
 	AttributeKeyReceiverPort = "receiver_port"
 	AttributeKeyChannelID    = "channel_id"
 	AttributeKeySequence     = "sequence"
-	AttributeKeyPacket       = "packet"
 )
 
 // IBC channel events vars

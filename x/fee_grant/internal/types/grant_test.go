@@ -74,6 +74,7 @@ func TestGrant(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := tc.grant.ValidateBasic()
 			if !tc.valid {

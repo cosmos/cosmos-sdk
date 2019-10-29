@@ -9,10 +9,10 @@ import (
 
 // TransferPacketData defines a struct for the packet payload
 type TransferPacketData struct {
-	Amount   sdk.Coins      `json:"amount" yaml:"amount"`
-	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`
-	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"`
-	Source   bool           `json:"source" yaml:"source"`
+	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
+	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
+	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
+	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
 func (tpd TransferPacketData) MarshalAmino() ([]byte, error) {

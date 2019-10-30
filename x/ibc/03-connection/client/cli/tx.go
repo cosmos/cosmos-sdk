@@ -47,6 +47,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		GetCmdConnectionOpenTry(storeKey, cdc),
 		GetCmdConnectionOpenAck(storeKey, cdc),
 		GetCmdConnectionOpenConfirm(storeKey, cdc),
+		GetCmdHandshakeState(storeKey, cdc),
 	)...)
 
 	return ics03ConnectionTxCmd
@@ -314,7 +315,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				WithBroadcastMode(flags.BroadcastBlock)
 
 			// read in path for cid1
-			_, err := parsePath(ctx1.Codec, args[2])
+			path1, err := parsePath(ctx1.Codec, args[2])
 			if err != nil {
 				return err
 			}
@@ -365,6 +366,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Create and send msgUpdateClient
 			viper.Set(flags.FlagChainID, cid2)
 			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientID1, header, ctx2.GetFromAddress())
+			fmt.Println("UPDATE CLIENT", msgUpdateClient)
 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
@@ -382,7 +384,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Create and send msgOpenTry
 			viper.Set(flags.FlagChainID, cid2)
-			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path2, []string{}, proofs.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{}, proofs.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {

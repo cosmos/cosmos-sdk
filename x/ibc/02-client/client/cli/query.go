@@ -35,6 +35,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryClientState(queryRoute, cdc),
 		GetCmdQueryRoot(queryRoute, cdc),
 		GetCmdNodeConsensusState(queryRoute, cdc),
+		GetCmdQueryPath(queryRoute, cdc),
 	)...)
 	return ics02ClientQueryCmd
 }
@@ -269,6 +270,18 @@ $ %s query ibc client node-state
 			}
 
 			return cliCtx.PrintOutput(state)
+		},
+	}
+}
+
+func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "path",
+		Short: "Query the commitment path of the running chain",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCLIContext().WithCodec(cdc)
+			path := commitment.NewPrefix([]byte(storeName))
+			return ctx.PrintOutput(path)
 		},
 	}
 }

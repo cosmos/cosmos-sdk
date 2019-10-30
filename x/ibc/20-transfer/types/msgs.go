@@ -106,7 +106,7 @@ func (MsgRecvPacket) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
-	if msg.Height < 0 {
+	if msg.Height < 1 {
 		return sdk.NewError(DefaultCodespace, CodeInvalidHeight, "invalid height")
 	}
 

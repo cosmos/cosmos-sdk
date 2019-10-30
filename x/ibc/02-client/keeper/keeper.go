@@ -130,19 +130,18 @@ func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState expo
 
 func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
 	switch evidence.Type() {
-	case "tendermint":
+	case exported.ClientTypeTendermint:
 		var tmEvidence tendermint.Evidence
 		_, ok := evidence.(tendermint.Evidence)
 		if !ok {
 			return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
 		}
-		// TODO: pass past consensus states
 		err := tendermint.CheckMisbehaviour(tmEvidence)
 		if err != nil {
 			return errors.ErrInvalidEvidence(k.codespace, err.Error())
 		}
 	default:
-		panic("unregistered evidence type")
+		panic(fmt.Sprintf("unregistered evidence type: %s", evidence.Type()))
 	}
 	return nil
 }

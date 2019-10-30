@@ -153,6 +153,9 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
 	if msg.Evidence == nil {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "evidence is nil")
 	}
+	if err := msg.Evidence.ValidateBasic(); err != nil {
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
+	}
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
 	}

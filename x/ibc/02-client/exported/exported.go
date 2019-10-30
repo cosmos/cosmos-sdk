@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // Blockchain is consensus algorithm which generates valid Headers. It generates
@@ -37,6 +38,7 @@ type Evidence interface {
 	Route() string
 	Type() string
 	String() string
+	Hash() cmn.HexBytes
 	ValidateBasic() sdk.Error
 
 	// The consensus address of the malicious validator at time of infraction

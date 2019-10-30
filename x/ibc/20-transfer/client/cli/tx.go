@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -88,7 +88,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
-			var packet channel.Packet
+			var packet channelexported.PacketI
 			if err := cdc.UnmarshalJSON([]byte(args[0]), &packet); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...\n")
 				contents, err := ioutil.ReadFile(args[0])

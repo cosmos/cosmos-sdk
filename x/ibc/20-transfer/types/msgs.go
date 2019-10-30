@@ -6,13 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 type MsgRecvPacket struct {
-	Packet channel.PacketI    `json:"packet" yaml:"packet"`
+	Packet channelexported.PacketI    `json:"packet" yaml:"packet"`
 	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
 	Height uint64             `json:"height" yaml:"height"`
 	Signer sdk.AccAddress     `json:"signer" yaml:"signer"`
@@ -85,7 +85,7 @@ type MsgTransfer struct {
 }
 
 // NewMsgRecvPacket creates a new MsgRecvPacket instance
-func NewMsgRecvPacket(packet channel.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+func NewMsgRecvPacket(packet channelexported.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
 	return MsgRecvPacket{
 		Packet: packet,
 		Proofs: proofs,

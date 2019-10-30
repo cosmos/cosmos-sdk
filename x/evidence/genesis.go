@@ -9,6 +9,10 @@ import (
 // InitGenesis initializes the evidence module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
+	if err := gs.Validate(); err != nil {
+		panic(fmt.Sprintf("failed to validate %s genesis state: %s", ModuleName, err))
+	}
+
 	for _, e := range gs.Evidence {
 		if _, ok := k.GetEvidence(ctx, e.Hash()); ok {
 			panic(fmt.Sprintf("evidence with hash %s already exists", e.Hash()))

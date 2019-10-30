@@ -2,23 +2,19 @@ package keeper_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // TestNewQuerier tests that the querier paths are correct.
 // NOTE: the actuall testing functionallity are located on each ICS querier test.
-func TestNewQuerier(t *testing.T) {
-	app, ctx := createTestApp(true)
-	querier := keeper.NewQuerier(app.IBCKeeper)
+func (suite *KeeperTestSuite) TestNewQuerier() {
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -94,12 +90,12 @@ func TestNewQuerier(t *testing.T) {
 
 	for i, tc := range cases {
 		i, tc := i, tc
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := querier(ctx, tc.path, query)
+		suite.Run(tc.name, func() {
+			_, err := suite.querier(suite.ctx, tc.path, query)
 			if tc.expectsDefaultErr {
-				require.Contains(t, err.Error(), tc.errMsg, "test case #%d", i)
+				require.Contains(suite.T(), err.Error(), tc.errMsg, "test case #%d", i)
 			} else {
-				require.Error(t, err, "test case #%d", i)
+				suite.Error(err, "test case #%d", i)
 			}
 		})
 	}

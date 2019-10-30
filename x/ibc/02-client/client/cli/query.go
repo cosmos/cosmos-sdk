@@ -220,14 +220,14 @@ $ %s query ibc client header
 	}
 }
 
-// GetCmdQueryNodeConsensusState defines the command to query the latest consensus state of a node
+// GetCmdNodeConsensusState defines the command to query the latest consensus state of a node
 // The result is feed to client creation
 func GetCmdNodeConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "node-state",
 		Short: "Query a node consensus state",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query node consensus state
+			fmt.Sprintf(`Query a node consensus state. This result is feed to the client creation transaction.
 
 Example:
 $ %s query ibc client node-state
@@ -268,9 +268,7 @@ $ %s query ibc client node-state
 				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
-
-			return nil
+			return cliCtx.PrintOutput(state)
 		},
 	}
 }

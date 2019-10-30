@@ -61,6 +61,9 @@ func NewHandler(k Keeper) sdk.Handler {
 		case transfer.MsgTransfer:
 			return transfer.HandleMsgTransfer(ctx, k.TransferKeeper, msg)
 
+		case transfer.MsgRecvPacket:
+			return transfer.HandleMsgRecvPacket(ctx, k.TransferKeeper, msg)
+
 		default:
 			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()

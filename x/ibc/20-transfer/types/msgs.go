@@ -106,8 +106,18 @@ func (MsgRecvPacket) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
+	if msg.Height < 0 {
+		return sdk.NewError(DefaultCodespace, CodeInvalidHeight, "invalid height")
+	}
+
 	if msg.Proofs == nil {
 		return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+	}
+
+	for _, proof := range msg.Proofs {
+		if proof.Proof == nil {
+			return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+		}
 	}
 
 	if msg.Signer.Empty() {

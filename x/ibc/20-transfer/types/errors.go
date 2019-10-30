@@ -18,6 +18,7 @@ const (
 	CodeInvalidVersion      sdk.CodeType = 106
 	CodeProofMissing        sdk.CodeType = 107
 	CodeErrReceivePacket    sdk.CodeType = 108
+	CodeInvalidHeight       sdk.CodeType = 109
 )
 
 // ErrInvalidAddress implements sdk.Error

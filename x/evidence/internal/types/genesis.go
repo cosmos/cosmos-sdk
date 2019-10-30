@@ -6,13 +6,13 @@ type GenesisState struct {
 	Evidence []Evidence `json:"evidence" yaml:"evidence"`
 }
 
-func NewGenesisState() GenesisState {
-	return GenesisState{}
+func NewGenesisState(e []Evidence) GenesisState {
+	return GenesisState{Evidence: e}
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
-	return GenesisState{}
+	return GenesisState{Evidence: []Evidence{}}
 }
 
 // Validate performs basic gensis state validation returning an error upon any

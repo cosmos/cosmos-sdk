@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -140,6 +141,7 @@ func (Proof) GetCommitmentType() Type {
 func (proof Proof) VerifyMembership(root RootI, path PathI, value []byte) bool {
 	runtime := rootmulti.DefaultProofRuntime()
 	err := runtime.VerifyValue(proof.Proof, root.GetHash(), path.String(), value)
+	fmt.Println("verify", err)
 	return err == nil
 }
 

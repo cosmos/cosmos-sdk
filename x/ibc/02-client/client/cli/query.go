@@ -280,7 +280,7 @@ func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the commitment path of the running chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.NewCLIContext().WithCodec(cdc)
-			path := commitment.NewPrefix([]byte(storeName))
+			path := commitment.NewPrefix([]byte("ibc"))
 			return ctx.PrintOutput(path)
 		},
 	}

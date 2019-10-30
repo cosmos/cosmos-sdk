@@ -44,9 +44,11 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.State, b
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyClientState(clientID))
 	if bz == nil {
+		fmt.Println("empty bytes")
 		return types.State{}, false
 	}
 
+	fmt.Println("getcs", []byte(bz))
 	var clientState types.State
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
 	return clientState, true
@@ -56,16 +58,21 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.State, b
 func (k Keeper) SetClientState(ctx sdk.Context, clientState types.State) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
+	fmt.Println("setcs", []byte(bz))
 	store.Set(types.KeyClientState(clientState.ID()), bz)
 }
 
 // GetClientType gets the consensus type for a specific client
 func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.ClientType, bool) {
+	fmt.Println("get", clientID)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := store.Get(types.KeyClientType(clientID))
+	fmt.Println(string(bz), []byte(bz), len(bz))
+	fmt.Println(clientID)
 	if bz == nil {
 		return 0, false
 	}
+	fmt.Println(999)
 
 	return exported.ClientType(bz[0]), true
 }
@@ -73,6 +80,7 @@ func (k Keeper) GetClientType(ctx sdk.Context, clientID string) (exported.Client
 // SetClientType sets the specific client consensus type to the provable store
 func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType exported.ClientType) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	fmt.Println("set", clientID, clientType)
 	store.Set(types.KeyClientType(clientID), []byte{byte(clientType)})
 }
 
@@ -100,6 +108,7 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 // a client
 func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
 		return nil, false
@@ -162,11 +171,13 @@ func (k Keeper) VerifyMembership(
 	value []byte,
 ) bool {
 	if clientState.Frozen {
+		fmt.Println("false3")
 		return false
 	}
 
 	root, found := k.GetVerifiedRoot(ctx, clientState.ID(), height)
 	if !found {
+		fmt.Println("false4")
 		return false
 	}
 

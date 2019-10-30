@@ -54,9 +54,12 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
+	*/
 
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
 	if !found {
@@ -66,8 +69,8 @@ func (k Keeper) ConnOpenTry(
 	// expectedConn defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.INIT, clientID, expectedCounterparty, counterpartyVersions)
+	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
+	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -80,6 +83,7 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
+	fmt.Println(666666)
 	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
 		types.ConnectionPath(connectionID), expConnBz,
@@ -88,11 +92,14 @@ func (k Keeper) ConnOpenTry(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
+	fmt.Println(777777)
+
 	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println(888888)
 	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
 		clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
@@ -105,6 +112,7 @@ func (k Keeper) ConnOpenTry(
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
 	}
+	fmt.Println(999999)
 
 	connection.State = types.TRYOPEN
 	err = k.addConnectionToClient(ctx, clientID, connectionID)
@@ -112,6 +120,7 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
 
+	fmt.Println(111)
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> TRYOPEN ", connectionID))
 	return nil
@@ -129,9 +138,12 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
+	*/
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -159,7 +171,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.ClientID, expectedCounterparty, []string{version})
+	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
 	if err != nil {

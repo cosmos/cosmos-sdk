@@ -5,6 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -72,4 +75,64 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
+}
+
+type MsgRecvPacket struct {
+	Packet channelexported.PacketI `json:"packet" yaml:"packet"`
+	Proofs []commitment.Proof      `json:"proofs" yaml:"proofs"`
+	Height uint64                  `json:"height" yaml:"height"`
+	Signer sdk.AccAddress          `json:"signer" yaml:"signer"`
+}
+
+// NewMsgRecvPacket creates a new MsgRecvPacket instance
+func NewMsgRecvPacket(packet channelexported.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+	return MsgRecvPacket{
+		Packet: packet,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (MsgRecvPacket) Route() string {
+	return RouterKey
+}
+
+// Type implements sdk.Msg
+func (MsgRecvPacket) Type() string {
+	return "recv_packet"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
+	if msg.Height < 1 {
+		return sdk.NewError(DefaultCodespace, CodeInvalidHeight, "invalid height")
+	}
+
+	if msg.Proofs == nil {
+		return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+	}
+
+	for _, proof := range msg.Proofs {
+		if proof.Proof == nil {
+			return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+		}
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.NewError(DefaultCodespace, CodeInvalidAddress, "invalid signer")
+	}
+
+	return msg.Packet.ValidateBasic()
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgRecvPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
 }

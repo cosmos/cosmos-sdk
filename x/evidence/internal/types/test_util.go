@@ -2,6 +2,7 @@
 Common testing types and utility functions and methods to be used in unit and
 integration testing of the evidence module.
 */
+// DONTCOVER
 package types
 
 import (

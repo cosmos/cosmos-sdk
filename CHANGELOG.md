@@ -35,7 +35,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.37.2] - 2019-10-10
+## [v0.37.4] - TBD
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.7](https://github.com/tendermint/tendermint/releases/tag/v0.32.7)
+* (ledger) [\#4716](https://github.com/cosmos/cosmos-sdk/pull/4716) Fix ledger custom coin type support bug.
+
+### Bug Fixes
+
+* (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
+
+## [v0.37.3] - 2019-10-10
 
 ### Bug Fixes
 
@@ -2567,8 +2578,9 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.2...HEAD
-[v0.37.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.2
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.4...HEAD
+[v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4
+[v0.37.3]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.3
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

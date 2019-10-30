@@ -5,16 +5,17 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-type MsgTransfer struct {
-	SourcePort    string         `json:"source_port" yaml:"source_port"`       // the port on which the packet will be sent
-	SourceChannel string         `json:"source_channel" yaml:"source_channel"` // the channel by which the packet will be sent
-	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
-	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
-	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
-	Source        bool           `json:"source" yaml:"source"`                 // indicates if the sending chain is the source chain of the tokens to be transferred
+type MsgRecvPacket struct {
+	Packet channel.PacketI    `json:"packet" yaml:"packet"`
+	Proofs []commitment.Proof `json:"proofs" yaml:"proofs"`
+	Height uint64             `json:"height" yaml:"height"`
+	Signer sdk.AccAddress     `json:"signer" yaml:"signer"`
 }
 
 // NewMsgTransfer creates a new MsgTransfer instance
@@ -72,4 +73,60 @@ func (msg MsgTransfer) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
+}
+
+type MsgTransfer struct {
+	SourcePort    string         `json:"source_port" yaml:"source_port"`       // the port on which the packet will be sent
+	SourceChannel string         `json:"source_channel" yaml:"source_channel"` // the channel by which the packet will be sent
+	Amount        sdk.Coins      `json:"amount" yaml:"amount"`                 // the tokens to be transferred
+	Sender        sdk.AccAddress `json:"sender" yaml:"sender"`                 // the sender address
+	Receiver      sdk.AccAddress `json:"receiver" yaml:"receiver"`             // the recipient address on the destination chain
+	Source        bool           `json:"source" yaml:"source"`                 // indicates if the sending chain is the source chain of the tokens to be transferred
+}
+
+// NewMsgRecvPacket creates a new MsgRecvPacket instance
+func NewMsgRecvPacket(packet channel.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+	return MsgRecvPacket{
+		Packet: packet,
+		Proofs: proofs,
+		Height: height,
+		Signer: signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (MsgRecvPacket) Route() string {
+	return RouterKey
+}
+
+// Type implements sdk.Msg
+func (MsgRecvPacket) Type() string {
+	return "recv_packet"
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
+	if msg.Proofs == nil {
+		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeProofMissing, "proof missing")
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid signer")
+	}
+
+	if err := msg.Packet.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgRecvPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
 }

@@ -107,11 +107,11 @@ func (MsgRecvPacket) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 	if msg.Proofs == nil {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeProofMissing, "proof missing")
+		return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
 	}
 
 	if msg.Signer.Empty() {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidAddress, "invalid signer")
+		return sdk.NewError(DefaultCodespace, CodeInvalidAddress, "invalid signer")
 	}
 
 	if err := msg.Packet.ValidateBasic(); err != nil {

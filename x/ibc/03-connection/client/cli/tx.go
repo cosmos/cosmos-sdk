@@ -259,3 +259,236 @@ func lastHeight(cliCtx context.CLIContext) (uint64, error) {
 
 	return uint64(info.Response.LastBlockHeight), nil
 }
+
+// func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
+// 	cmd := &cobra.Command{
+// 		Use:   "handshake [conn-id-chain-1] [client-id-chain-1] [path-chain-1] [conn-id-chain-2] [client-id-chain-2] [path-chain-2] ",
+// 		Short: "initiate connection handshake between two chains",
+// 		Args:  cobra.ExactArgs(6),
+// 		RunE: func(cmd *cobra.Command, args []string) error {
+// 			// --chain-id values for each chain
+// 			cid1 := viper.GetString(flags.FlagChainID)
+// 			cid2 := viper.GetString(FlagChainID2)
+
+// 			// --from values for each wallet
+// 			from1 := viper.GetString(FlagFrom1)
+// 			from2 := viper.GetString(FlagFrom2)
+
+// 			// --node values for each RPC
+// 			rpc1 := viper.GetString(FlagNode1)
+// 			rpc2 := viper.GetString(FlagNode2)
+
+// 			// ibc connection-id for each chain
+// 			connID1 := args[0]
+// 			connID2 := args[3]
+
+// 			// ibc client-id for each chain
+// 			clientID1 := args[1]
+// 			clientID2 := args[4]
+
+// 			// Create txbldr, clictx, querier for cid1
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+// 			ctx1 := context.NewCLIContextIBC(from1, cid1, rpc1).WithCodec(cdc).
+// 				WithBroadcastMode(flags.BroadcastBlock)
+// 			q1 := storestate.NewCLIQuerier(ctx1)
+
+// 			// Create txbldr, clictx, querier for cid1
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+// 			ctx2 := context.NewCLIContextIBC(from2, cid2, rpc2).WithCodec(cdc).
+// 				WithBroadcastMode(flags.BroadcastBlock)
+// 			q2 := storestate.NewCLIQuerier(ctx2)
+
+// 			// get passphrase for key from1
+// 			passphrase1, err := keys.GetPassphrase(from1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// get passphrase for key from2
+// 			passphrase2, err := keys.GetPassphrase(from2)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// read in path for cid1
+// 			path1, err := parsePath(ctx1.Codec, args[2])
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// read in path for cid2
+// 			path2, err := parsePath(ctx1.Codec, args[5])
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Create connection objects for each chain
+// 			conn1 := connection.NewConnection(clientID1, connID2, path1)
+// 			conn2 := connection.NewConnection(clientID2, connID1, path2)
+
+// 			// Fetch handshake state object for cid1
+// 			hs1, err := handshakeState(q1, cdc, storeKey, version.DefaultPrefix(), connID1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Fetch handshake state object for cid2
+// 			hs2, err := handshakeState(q2, cdc, storeKey, version.DefaultPrefix(), connID2)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// TODO: check state and if not Idle continue existing process
+// 			// Create and send msgOpenInit
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			msgOpenInit := connection.NewMsgOpenInit(connID1, conn1, conn2.Client, 0, ctx1.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
+// 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) client(%v) conn(%v)\n", res.TxHash, conn2.Client, connID1)
+
+// 			// Another block has to be passed after msgOpenInit is committed
+// 			// to retrieve the correct proofs
+// 			// TODO: Modify this to actually check two blocks being processed, and
+// 			// remove hardcoding this to 8 seconds.
+// 			time.Sleep(8 * time.Second)
+
+// 			header, err := getHeader(ctx1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Create and send msgUpdateClient
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			msgUpdateClient := client.NewMsgUpdateClient(conn2.Client, header, ctx2.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, conn2.Client)
+
+// 			// Fetch proofs from cid1
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+// 			proofs, err := queryProofs(hs1, q1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Create and send msgOpenTry
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			msgOpenTry := connection.NewMsgOpenTry(connID2, conn2, conn1.Client, 0, 0, proofs, uint64(header.Height),ctx2.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) client(%v) connection(%v)\n", res.TxHash, conn1.Client, connID2)
+
+// 			// Another block has to be passed after msgOpenInit is committed
+// 			// to retrieve the correct proofs
+// 			// TODO: Modify this to actually check two blocks being processed, and
+// 			// remove hardcoding this to 8 seconds.
+// 			time.Sleep(8 * time.Second)
+
+// 			header, err = getHeader(ctx2)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Update the client for cid2 on cid1
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			msgUpdateClient = client.NewMsgUpdateClient(conn1.Client, header, ctx1.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, conn1.Client)
+
+// 			// Fetch proofs from cid2
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			q2 = storestate.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
+// 			proofs, err = queryProofs(hs2, q2)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Create and send msgOpenAck
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			msgOpenAck := connection.NewMsgOpenAck(connID1, 0, 0, proofs, uint64(header.Height), ctx1.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) connection(%v)\n", res.TxHash, connID1)
+
+// 			// Another block has to be passed after msgOpenInit is committed
+// 			// to retrieve the correct proofs
+// 			// TODO: Modify this to actually check two blocks being processed, and
+// 			// remove hardcoding this to 8 seconds.
+// 			time.Sleep(8 * time.Second)
+
+// 			header, err = getHeader(ctx1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Update client for cid1 on cid2
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			msgUpdateClient = client.NewMsgUpdateClient(conn2.Client, header, ctx2.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+// 			if err != nil || !res.IsOK() {
+// 				fmt.Println(res)
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, conn2.Client)
+
+// 			// Fetch proof from cid1
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			q1 = storestate.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
+// 			_, pstate, err := hs1.StageCLI(q1)
+// 			if err != nil {
+// 				return err
+// 			}
+
+// 			// Create and send msgOpenConfirm
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			msgOpenConfirm := connection.NewMsgOpenConfirm(connID2, 0, []commitment.Proof{pstate}, uint64(header.Height), ctx2.GetFromAddress())
+// 			fmt.Printf("%v <- %-14v", cid1, msgOpenConfirm.Type())
+// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+// 			if err != nil || !res.IsOK() {
+// 				return err
+// 			}
+// 			fmt.Printf(" [OK] txid(%v) connection(%v)\n", res.TxHash, connID2)
+
+// 			return nil
+// 		},
+// 	}
+
+// 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
+// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+// 	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
+// 	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+// 	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
+
+// 	cmd.MarkFlagRequired(FlagNode1)
+// 	cmd.MarkFlagRequired(FlagNode2)
+// 	cmd.MarkFlagRequired(FlagFrom1)
+// 	cmd.MarkFlagRequired(FlagFrom2)
+// 	cmd.MarkFlagRequired(FlagChainID2)
+
+// 	return cmd
+// }

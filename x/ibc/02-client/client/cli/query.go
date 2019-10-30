@@ -268,9 +268,7 @@ $ %s query ibc client node-state
 				NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 			}
 
-			fmt.Printf("%s\n", codec.MustMarshalJSONIndent(cdc, state))
-
-			return nil
+			return cliCtx.PrintOutput(state)
 		},
 	}
 }

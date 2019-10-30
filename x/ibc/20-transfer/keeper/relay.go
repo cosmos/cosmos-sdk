@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // SendTransfer handles transfer sending logic
@@ -48,6 +50,22 @@ func (k Keeper) SendTransfer(
 	}
 
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
+}
+
+// ReceivePacket handles receiving packet
+func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
+	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
+	if err != nil {
+		return err
+	}
+
+	var data types.PacketData
+	err = data.UnmarshalJSON(packet.Data())
+	if err != nil {
+		return sdk.NewError(types.DefaultCodespace, types.CodeInvalidPacketData, "invalid packet data")
+	}
+
+	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(), packet.DestPort(), packet.DestChannel(), data)
 }
 
 // ReceiveTransfer handles transfer receiving logic

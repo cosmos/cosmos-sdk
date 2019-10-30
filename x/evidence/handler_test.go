@@ -3,18 +3,14 @@ package evidence_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type HandlerTestSuite struct {
@@ -22,46 +18,29 @@ type HandlerTestSuite struct {
 
 	ctx     sdk.Context
 	handler sdk.Handler
-	keeper  *evidence.Keeper
+	keeper  evidence.Keeper
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
-	// create required store keys
-	keyParams := sdk.NewKVStoreKey(params.StoreKey)
-	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
-	storeKey := sdk.NewKVStoreKey(evidence.StoreKey)
+	checkTx := false
+	app := simapp.Setup(checkTx)
 
-	// create required keepers
-	paramsKeeper := params.NewKeeper(types.TestingCdc, keyParams, tkeyParams, params.DefaultCodespace)
-	subspace := paramsKeeper.Subspace(evidence.DefaultParamspace)
-	evidenceKeeper := evidence.NewKeeper(types.TestingCdc, storeKey, subspace, evidence.DefaultCodespace)
+	// get the app's codec and register custom testing types
+	cdc := app.Codec()
+	cdc.RegisterConcrete(types.TestEquivocationEvidence{}, "test/TestEquivocationEvidence", nil)
 
-	// create Evidence router, mount Handlers, and set keeper's router
+	// recreate keeper in order to use custom testing types
+	evidenceKeeper := evidence.NewKeeper(
+		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName),
+		evidence.DefaultCodespace,
+	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	// create DB, mount stores, and load latest version
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
-	cms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	suite.Nil(cms.LoadLatestVersion())
-
-	// create initial Context
-	ctx := sdk.NewContext(cms, abci.Header{ChainID: "test-chain"}, false, log.NewNopLogger())
-	ctx = ctx.WithConsensusParams(
-		&abci.ConsensusParams{
-			Validator: &abci.ValidatorParams{
-				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
-			},
-		},
-	)
-
-	suite.ctx = ctx
+	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.handler = evidence.NewHandler(*evidenceKeeper)
-	suite.keeper = evidenceKeeper
+	suite.keeper = *evidenceKeeper
 }
 
 func (suite *HandlerTestSuite) TestMsgSubmitEvidence_Valid() {
@@ -72,7 +51,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence_Valid() {
 		Round:            0,
 	}
 
-	sig, err := pk.Sign(sv.SignBytes("test-chain"))
+	sig, err := pk.Sign(sv.SignBytes(suite.ctx.ChainID()))
 	suite.NoError(err)
 	sv.Signature = sig
 
@@ -100,7 +79,7 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence_Invalid() {
 		Round:            0,
 	}
 
-	sig, err := pk.Sign(sv.SignBytes("test-chain"))
+	sig, err := pk.Sign(sv.SignBytes(suite.ctx.ChainID()))
 	suite.NoError(err)
 	sv.Signature = sig
 

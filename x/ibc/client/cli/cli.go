@@ -8,7 +8,6 @@ import (
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
-	mockbank "github.com/cosmos/cosmos-sdk/x/ibc/mock/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -26,7 +25,6 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		ibcclient.GetTxCmd(cdc, storeKey),
 		connection.GetTxCmd(cdc, storeKey),
 		transfer.GetTxCmd(cdc),
-		mockbank.GetTxCmd(cdc),
 	)
 	return ibcTxCmd
 }

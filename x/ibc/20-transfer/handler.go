@@ -5,6 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 
+// handleMsgRecvPacket defines the sdk.Handler for MsgRecvPacket
+func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (res sdk.Result) {
+	err := k.ReceivePacket(ctx, msg.Packet, msg.Proofs[0], msg.Height)
+	if err != nil {
+		return sdk.ResultFromError(err)
+	}
+
+	return sdk.Result{Events: ctx.EventManager().Events()}
+}
+
 // HandleMsgTransfer defines the sdk.Handler for MsgTransfer
 func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Result) {
 	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)

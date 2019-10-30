@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -19,10 +18,9 @@ var _ exported.Evidence = Evidence{}
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
 	tmtypes.DuplicateVoteEvidence
-	ChainID        string        `json:"chain_id" yaml:"chain_id"`
-	ValPubKey      crypto.PubKey `json:"val_pubkey" yaml:"val_pubkey"`
-	ValidatorPower int64         `json:"val_power" yaml:"val_power"`
-	TotalPower     int64         `json:"total_power" yaml:"total_power"`
+	ChainID        string `json:"chain_id" yaml:"chain_id"`
+	ValidatorPower int64  `json:"val_power" yaml:"val_power"`
+	TotalPower     int64  `json:"total_power" yaml:"total_power"`
 }
 
 // Type implements exported.Evidence interface
@@ -53,9 +51,6 @@ func (ev Evidence) ValidateBasic() sdk.Error {
 	}
 	if ev.ChainID == "" {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty")
-	}
-	if ev.ValPubKey == nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "Validator PubKey is empty")
 	}
 	if ev.ValidatorPower <= 0 {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Validator Power: %d", ev.ValidatorPower))
@@ -88,5 +83,5 @@ func (ev Evidence) GetTotalPower() int64 {
 
 // CheckMisbehaviour checks if the evidence provided is a misbehaviour
 func CheckMisbehaviour(evidence Evidence) error {
-	return evidence.DuplicateVoteEvidence.Verify(evidence.ChainID, evidence.ValPubKey)
+	return evidence.DuplicateVoteEvidence.Verify(evidence.ChainID, evidence.DuplicateVoteEvidence.PubKey)
 }

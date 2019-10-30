@@ -24,6 +24,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(tendermint.Evidence{}, "ibc/client/tendermint/Evidence", nil)
 }
 
-func init {
+func init() {
 	RegisterCodec(SubModuleCdc)
 }

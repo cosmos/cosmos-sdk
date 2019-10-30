@@ -22,12 +22,10 @@ import (
 )
 
 const (
-	// Check a transaction
-	runTxModeCheck runTxMode = iota
-	// Simulate a transaction
-	runTxModeSimulate runTxMode = iota
-	// Deliver a transaction
-	runTxModeDeliver runTxMode = iota
+	runTxModeCheck    runTxMode = iota // Check a transaction
+	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                  // Simulate a transaction
+	runTxModeDeliver                   // Deliver a transaction
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
@@ -467,25 +465,28 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 // Returns the applications's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeCheck || mode == runTxModeSimulate {
-		return app.checkState
+	if mode == runTxModeDeliver {
+		return app.deliverState
 	}
 
-	return app.deliverState
+	return app.checkState
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	ctx = app.getState(mode).ctx.
+func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
+	ctx := app.getState(mode).ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos).
 		WithConsensusParams(app.consensusParams)
 
+	if mode == runTxModeReCheck {
+		ctx = ctx.WithIsReCheckTx(true)
+	}
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
 
-	return
+	return ctx
 }
 
 // cacheTxContext returns a new context based off of the provided context with
@@ -653,8 +654,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		var msgResult sdk.Result
 
-		// skip actual execution for CheckTx mode
-		if mode != runTxModeCheck {
+		// skip actual execution for CheckTx and ReCheckTx mode
+		if mode != runTxModeCheck && mode != runTxModeReCheck {
 			msgResult = handler(ctx, msg)
 		}
 

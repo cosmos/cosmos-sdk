@@ -1,6 +1,7 @@
 package commitment
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -105,6 +106,11 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	if err != nil {
 		return Path{}, err
 	}
+
+	if prefix == nil || len(prefix.Bytes()) == 0 {
+		return Path{}, errors.New("prefix can't be empty")
+	}
+
 	// Split paths by the separator
 	pathSlice := strings.Split(path, "/")
 	keyPath := merkle.KeyPath{}

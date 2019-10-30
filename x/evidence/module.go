@@ -135,9 +135,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 }
 
 // RegisterInvariants registers the evidence module's invariants.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	// TODO: Register any necessary invariants (if any).
-}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.

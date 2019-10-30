@@ -124,11 +124,7 @@ func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidAddress, "invalid signer")
 	}
 
-	if err := msg.Packet.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return nil
+	return msg.Packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg

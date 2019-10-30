@@ -158,13 +158,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the evidence module.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
-	// TODO: Execute BeginBlocker (if applicable).
-}
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the evidence module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	// TODO: Execute EndBlocker (if applicable).
 	return []abci.ValidatorUpdate{}
 }

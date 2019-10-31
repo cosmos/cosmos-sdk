@@ -21,7 +21,7 @@ const (
 	// TimeFormat specifies ISO UTC format for submitting the time for a new upgrade proposal
 	TimeFormat = "2006-01-02T15:04:05Z"
 
-	FlagUpgradeHeight = "height"
+	FlagUpgradeHeight = "upgrade-height"
 	FlagUpgradeTime   = "time"
 	FlagUpgradeInfo   = "info"
 )

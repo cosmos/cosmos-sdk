@@ -18,7 +18,7 @@ import (
 )
 
 // GetQueryCmd returns the query commands for IBC channels
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetQueryCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	ics04ChannelQueryCmd := &cobra.Command{
 		Use:                "channel",
 		Short:              "IBC channel query subcommands",

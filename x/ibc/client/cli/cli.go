@@ -45,6 +45,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	ibcQueryCmd.AddCommand(
 		ibcclient.GetQueryCmd(cdc, queryRoute),
 		connection.GetQueryCmd(cdc, queryRoute),
+		channel.GetQueryCmd(cdc, queryRoute),
 	)
 	return ibcQueryCmd
 }

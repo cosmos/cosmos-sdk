@@ -310,7 +310,7 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 Example:
 $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-client-id] [cp-port-id] [cp-chain-id] [cp-conn-id]
 		`, version.ClientName)),
-		Args: cobra.ExactArgs(6),
+		Args: cobra.ExactArgs(8),
 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// --chain-id values for each chain
@@ -368,7 +368,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// TODO: check state and if not Idle continue existing process
 			viper.Set(flags.FlagChainID, cid1)
 			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid1}, portid2, chanid2, ctx1.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
+			fmt.Printf("%v <- %-23v", cid1, msgOpenInit.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -387,7 +387,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 
 			viper.Set(flags.FlagChainID, cid2)
 			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			fmt.Printf("%v <- %-23v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -402,7 +402,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			}
 
 			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+			fmt.Printf("%v <- %-23v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -421,7 +421,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 
 			viper.Set(flags.FlagChainID, cid1)
 			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
+			fmt.Printf("%v <- %-23v", cid1, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -437,7 +437,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 
 			viper.Set(flags.FlagChainID, cid1)
 			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx1.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+			fmt.Printf("%v <- %-23v", cid1, msgOpenAck.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -456,7 +456,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 
 			viper.Set(flags.FlagChainID, cid2)
 			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			fmt.Printf("%v <- %-23v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -471,7 +471,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			}
 
 			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
-			fmt.Printf("%v <- %-14v", cid2, msgOpenConfirm.Type())
+			fmt.Printf("%v <- %-23v", cid2, msgOpenConfirm.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
 			if err != nil || !res.IsOK() {
 				fmt.Println(res)
@@ -496,20 +496,24 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 	return cmd
 }
 
-func queryProofs(ctx client.CLIContext, channelID string, portID string, queryRoute string) (types.ChannelResponse, error) {
+func queryProofs(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
 
+	fmt.Printf("pid %s chanid %s\n", portID, channelID)
 	var connRes types.ChannelResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  []byte(fmt.Sprintf("ports/%s/channels/%s", portID, channelID)),
+		Data:  types.KeyChannel(portID, channelID),
 		Prove: true,
 	}
+	fmt.Println(string(types.KeyChannel(portID, channelID)))
+
 	res, err := ctx.QueryABCI(req)
-	if err != nil {
+	if res.Value == nil || err != nil {
 		return connRes, err
 	}
 
+	fmt.Println("res: %#v err: %v", string(res.Value), err)
 	var channel types.Channel
 	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
 		return connRes, err

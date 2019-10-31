@@ -26,7 +26,6 @@ func (k Keeper) CreateClient(
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)
-	fmt.Printf("clist %+v\n", clientState)
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
@@ -37,41 +36,29 @@ func (k Keeper) CreateClient(
 // UpdateClient updates the consensus state and the state root from a provided header
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
 
-	fmt.Printf("~ 1\n")
-
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrClientTypeNotFound(k.codespace), "cannot update client")
 	}
-
-	fmt.Printf("~ 2\n")
 
 	// check that the header consensus matches the client one
 	if header.ClientType() != clientType {
 		return sdkerrors.Wrap(types.ErrInvalidConsensus(k.codespace), "cannot update client")
 	}
 
-	fmt.Printf("~ 3\n")
-
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrClientNotFound(k.codespace, clientID), "cannot update client")
 	}
 
-	fmt.Printf("~ 4\n")
-
 	if clientState.Frozen {
 		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientID), "cannot update client")
 	}
-
-	fmt.Printf("~ 5\n")
 
 	consensusState, found := k.GetConsensusState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConsensusStateNotFound(k.codespace), "cannot update client")
 	}
-
-	fmt.Printf("~ 6\n")
 
 	if header.GetHeight() < consensusState.GetHeight() {
 		return sdkerrors.Wrap(
@@ -82,14 +69,10 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		)
 	}
 
-	fmt.Printf("~ 7\n")
-
 	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return sdkerrors.Wrap(err, "cannot update client")
 	}
-
-	fmt.Printf("~ 8\n")
 
 	k.SetConsensusState(ctx, clientID, consensusState)
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())

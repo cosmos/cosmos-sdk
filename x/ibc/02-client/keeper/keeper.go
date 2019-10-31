@@ -30,7 +30,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		storeKey:  key,
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client",
-		prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
+		prefix:    []byte{},
+		// prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
 	}
 }
 
@@ -174,14 +175,7 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	fmt.Printf("proof: %+v\n", proof)
-	fmt.Printf("root: %+v\n", root)
-	fmt.Printf("path: %+v\n", path)
-	fmt.Printf("value: %+v\n", value)
-
 	res := proof.VerifyMembership(root, path, value)
-
-	fmt.Printf("result: %v\n", res)
 
 	return res
 }

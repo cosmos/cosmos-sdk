@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
-	suite.keeper = &app.IBCKeeper.TransferKeeper
+	suite.keeper = &app.IBCKeeper.NFTTransferKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -552,30 +552,6 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 		return connRes, err
 	}
 	return types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height), nil
-
-	/*
-		var connRes types.ConnectionResponse
-		bz, err := ctx.Codec.MarshalJSON(types.NewQueryConnectionParams(connectionID))
-		if err != nil {
-			return connRes, err
-		}
-
-		req := abci.RequestQuery{
-			Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryConnection),
-			Data:  bz,
-			Prove: viper.GetBool(flags.FlagProve),
-		}
-
-		res, err := ctx.QueryABCI(req)
-		if err != nil {
-			return connRes, err
-		}
-
-		var connection types.ConnectionEnd
-		if err := ctx.Codec.UnmarshalJSON(res.Value, &connection); err != nil {
-			return connRes, err
-		}
-	*/
 }
 
 func parsePath(cdc *codec.Codec, arg string) (commitment.Prefix, error) {

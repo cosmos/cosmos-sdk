@@ -6,6 +6,8 @@ import (
 
 	"github.com/gorilla/mux"
 
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -39,6 +41,12 @@ type CancelRequest struct {
 	Deposit     sdk.Coins    `json:"deposit" yaml:"deposit"`
 }
 
+func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "param_change",
+		Handler:  postPlanHandler(cliCtx),
+	}
+}
 func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest

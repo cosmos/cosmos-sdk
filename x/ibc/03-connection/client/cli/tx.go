@@ -542,6 +542,7 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)
+	fmt.Printf("full result: %+v\n", res)
 	if err != nil {
 		return connRes, err
 	}
@@ -575,8 +576,6 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 			return connRes, err
 		}
 	*/
-
-	return types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height), nil
 }
 
 func parsePath(cdc *codec.Codec, arg string) (commitment.Prefix, error) {

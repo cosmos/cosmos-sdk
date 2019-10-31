@@ -386,6 +386,8 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			fmt.Printf("Proofs: %+v\n", proofs)
+
 			// Create and send msgOpenTry
 			viper.Set(flags.FlagChainID, cid2)
 			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())

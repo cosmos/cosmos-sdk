@@ -44,7 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
 		GetMsgChannelCloseInitCmd(storeKey, cdc),
 		GetMsgChannelCloseConfirmCmd(storeKey, cdc),
-		// GetCmdHandshake(storeKey, cdc),
+		GetCmdHandshake(storeKey, cdc),
 	)...)
 
 	return ics04ChannelTxCmd

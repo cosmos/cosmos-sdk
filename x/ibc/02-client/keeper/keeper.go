@@ -175,14 +175,7 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	fmt.Printf("proof: %+v\n", proof)
-	fmt.Printf("root: %+v\n", root)
-	fmt.Printf("path: %+v\n", path)
-	fmt.Printf("value: %+v\n", value)
-
 	res := proof.VerifyMembership(root, path, value)
-
-	fmt.Printf("result: %v\n", res)
 
 	return res
 }

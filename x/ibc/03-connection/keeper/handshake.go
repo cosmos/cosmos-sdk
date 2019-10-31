@@ -28,7 +28,6 @@ func (k Keeper) ConnOpenInit(
 	connection := types.NewConnectionEnd(types.INIT, clientID, counterparty, types.GetCompatibleVersions())
 	k.SetConnection(ctx, connectionID, connection)
 
-	fmt.Printf("setConn: %+v\n", connection)
 	err := k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
 		sdkerrors.Wrap(err, "cannot initialize connection")
@@ -73,7 +72,6 @@ func (k Keeper) ConnOpenTry(
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
-	fmt.Printf("expectedConn: %+v\n", expectedConn)
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
 	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
@@ -94,12 +92,8 @@ func (k Keeper) ConnOpenTry(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	fmt.Printf("verified connection membership\n")
-
 	// XXX: blocked by #5078
 	/*
-		fmt.Printf("expected consensus state: %+v\n", expectedConsensusState)
-
 		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
 		if err != nil {
 			return err
@@ -114,7 +108,6 @@ func (k Keeper) ConnOpenTry(
 			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 		}
 
-		fmt.Printf("verified consensus state membership\n")
 	*/
 
 	_, found := k.GetConnection(ctx, connectionID)
@@ -195,8 +188,6 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	fmt.Printf("verified connection membership\n")
-
 	// XXX: blocked by #5078
 	/*
 		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
@@ -212,7 +203,6 @@ func (k Keeper) ConnOpenAck(
 			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 		}
 
-		fmt.Printf("verified consensus state membership\n")
 	*/
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
@@ -245,7 +235,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.OPEN, connection.ClientID, expectedCounterparty, connection.Versions)
+	expectedConn := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
 	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
 	if err != nil {

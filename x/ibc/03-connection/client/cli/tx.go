@@ -391,9 +391,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Proofs: %+v\n", proofs)
-			fmt.Printf("cs proof: %+v\n", csProof)
-
 			// Create and send msgOpenTry
 			viper.Set(flags.FlagChainID, cid2)
 			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
@@ -401,7 +398,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Printf("err: %s\nres: %+v\n", err, res)
 				return err
 			}
 
@@ -439,9 +435,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			fmt.Printf("Proofs: %+v\n", proofs)
-			fmt.Printf("cs proof: %+v\n", csProof)
 
 			// Create and send msgOpenAck
 			viper.Set(flags.FlagChainID, cid1)
@@ -558,7 +551,6 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)
-	fmt.Printf("full result: %+v\n", res)
 	if err != nil {
 		return connRes, err
 	}
@@ -578,7 +570,6 @@ func queryConsensusStateProof(ctx client.CLIContext, clientID string) (ibcclient
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)
-	fmt.Printf("full result: %+v\n", res)
 	if err != nil {
 		return csRes, err
 	}

@@ -293,213 +293,228 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 	}
 }
 
-// func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "handshake",
-// 		Short: "initiate connection handshake between two chains",
-// 		Long: strings.TrimSpace(
-// 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
+func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "handshake",
+		Short: "initiate connection handshake between two chains",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
 
-// Example:
-// $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-client-id] [cp-port-id] [cp-chain-id] [cp-conn-id]
-// 		`, version.ClientName),
-// 		Args:  cobra.ExactArgs(6),
-// 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			// --chain-id values for each chain
-// 			cid1 := viper.GetString(flags.FlagChainID)
-// 			cid2 := viper.GetString(FlagChainId2)
+Example:
+$ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-client-id] [cp-port-id] [cp-chain-id] [cp-conn-id]
+		`, version.ClientName),
+		Args:  cobra.ExactArgs(6),
+		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// --chain-id values for each chain
+			cid1 := viper.GetString(flags.FlagChainID)
+			cid2 := viper.GetString(FlagChainId2)
 
-// 			// --from values for each wallet
-// 			from1 := viper.GetString(FlagFrom1)
-// 			from2 := viper.GetString(FlagFrom2)
+			// --from values for each wallet
+			from1 := viper.GetString(FlagFrom1)
+			from2 := viper.GetString(FlagFrom2)
 
-// 			// --node values for each RPC
-// 			node1 := viper.GetString(FlagNode1)
-// 			node2 := viper.GetString(FlagNode2)
+			// --node values for each RPC
+			node1 := viper.GetString(FlagNode1)
+			node2 := viper.GetString(FlagNode2)
 
-// 			// client IDs
-// 			clientid1 := args[0]
-// 			clientid2 := args[4]
+			// client IDs
+			clientid1 := args[0]
+			clientid2 := args[4]
 
-// 			// port IDs
-// 			portid1 := args[1]
-// 			portid2 := args[5]
+			// port IDs
+			portid1 := args[1]
+			portid2 := args[5]
 
-// 			// channel IDs
-// 			chanid1 := args[2]
-// 			chanid2 := args[6]
+			// channel IDs
+			chanid1 := args[2]
+			chanid2 := args[6]
 
-// 			// connection IDs
-// 			connid1 := args[3]
-// 			connid2 := args[7]
+			// connection IDs
+			connid1 := args[3]
+			connid2 := args[7]
 
-// 			// Create txbldr, clictx, querier for cid1
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-// 			ctx1 := context.NewCLIContextIBC(from1, cid1, node1).WithCodec(cdc).
-// 				WithBroadcastMode(flags.BroadcastBlock)
+			// Create txbldr, clictx, querier for cid1
+			viper.Set(flags.FlagChainID, cid1)
+			txBldr1 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx1 := context.NewCLIContextIBC(from1, cid1, node1).WithCodec(cdc).
+				WithBroadcastMode(flags.BroadcastBlock)
 
-// 			// Create txbldr, clictx, querier for cid2
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-// 			ctx2 := context.NewCLIContextIBC(from2, cid2, node2).WithCodec(cdc).
-// 				WithBroadcastMode(flags.BroadcastBlock)
+			// Create txbldr, clictx, querier for cid2
+			viper.Set(flags.FlagChainID, cid2)
+			txBldr2 := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx2 := context.NewCLIContextIBC(from2, cid2, node2).WithCodec(cdc).
+				WithBroadcastMode(flags.BroadcastBlock)
 
-// 			// get passphrase for key from1
-// 			passphrase1, err := keys.GetPassphrase(from1)
-// 			if err != nil {
-// 				return err
-// 			}
+			// get passphrase for key from1
+			passphrase1, err := keys.GetPassphrase(from1)
+			if err != nil {
+				return err
+			}
 
-// 			// get passphrase for key from2
-// 			passphrase2, err := keys.GetPassphrase(from2)
-// 			if err != nil {
-// 				return err
-// 			}
+			// get passphrase for key from2
+			passphrase2, err := keys.GetPassphrase(from2)
+			if err != nil {
+				return err
+			}
 
-// 			// Create channel objects
-// 			// chan1 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid2, chanid2), []string{connid2}, "v1.0.0")
-// 			// chan2 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid1, chanid1), []string{connid1}, "v1.0.0")
+			// Create channel objects
+			// chan1 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid2, chanid2), []string{connid2}, "v1.0.0")
+			// chan2 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid1, chanid1), []string{connid1}, "v1.0.0")
 
-// 			// TODO: check state and if not Idle continue existing process
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid2}, portid2, chanid2, ctx1.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
-// 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
+			// TODO: check state and if not Idle continue existing process
+			viper.Set(flags.FlagChainID, cid1)
+			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid2}, portid2, chanid2, ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
+			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
 
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
 
-// 			header, err := tendermint.GetHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
+			header, err := tendermint.GetHeader(ctx1)
+			if err != nil {
+				return err
+			}
 
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
+			viper.Set(flags.FlagChainID, cid2)
+			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
 
-// 			// viper.Set(flags.FlagChainID, cid1)
-// 			// proofs, err := queryProofs(ctx1.WithHeight(header.Height-1), connID1, storeKey)
-// 			// if err != nil {
-// 			// 	return err
-// 			// }
+			viper.Set(flags.FlagChainID, cid1)
+			proofs, err := queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
+			if err != nil {
+				return err
+			}
 
-// 			// csProof, err := queryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
-// 			// if err != nil {
-// 			// 	return err
-// 			// }
+			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanchanid1, "v1.0.0", []commitment.Proof{proofs.Proof}, uint64(header.Height), ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
 
-// 			msgOpenTry := channel.NewMsgOpenTry(portid2, chanid2, chan2, []commitment.Proof{pchan, pstate}, uint64(header.Height), ctx2.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
 
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
+			header, err = tendermint.GetHeader(ctx1)
+			if err != nil {
+				return err
+			}
 
-// 			header, err = getHeader(ctx2)
-// 			if err != nil {
-// 				return err
-// 			}
 
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			msgUpdateClient = client.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid1)
+			viper.Set(flags.FlagChainID, cid1)
+			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid1)
+			
+			viper.Set(flags.FlagChainID, cid2)
+			proofs, err := queryProofs(ctx2.WithHeight(header.Height-1), portid2, chanid2, storeKey)
+			if err != nil {
+				return err
+			}			
+			
+			viper.Set(flags.FlagChainID, cid1)
+			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0",[]commitment.Proof{proofs.Proof}, uint64(header.Height), ctx1.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
 
-// 			q2 = state.NewCLIQuerier(ctx2.WithHeight(header.Height - 1))
-// 			_, pchan, err = obj2.ChannelCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			_, pstate, err = obj2.StageCLI(q2)
-// 			if err != nil {
-// 				return err
-// 			}
+			// Another block has to be passed after msginit is commited
+			// to retrieve the correct proofs
+			time.Sleep(8 * time.Second)
 
-// 			msgOpenAck := channel.NewMsgOpenAck(portid1, chanid1, []commitment.Proof{pchan, pstate}, uint64(header.Height), ctx1.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
+			header, err = tendermint.GetHeader(ctx1)
+			if err != nil {
+				return err
+			}
 
-// 			// Another block has to be passed after msginit is commited
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
+			viper.Set(flags.FlagChainID, cid2)
+			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
 
-// 			header, err = getHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
 
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			msgUpdateClient = client.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
+			viper.Set(flags.FlagChainID, cid1)
+			proofs, err := queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
+			if err != nil {
+				return err
+			}
 
-// 			q1 = state.NewCLIQuerier(ctx1.WithHeight(header.Height - 1))
-// 			_, pstate, err = obj1.StageCLI(q1)
-// 			if err != nil {
-// 				return err
-// 			}
+			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, []commitment.Proof{proof.Proofs}, uint64(header.Height), ctx2.GetFromAddress())
+			fmt.Printf("%v <- %-14v", cid2, msgOpenConfirm.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+			if err != nil || !res.IsOK() {
+				fmt.Println(res)
+				return err
+			}
+			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
 
-// 			msgOpenConfirm := channel.NewMsgOpenConfirm(portid2, chanid2, []commitment.Proof{pstate}, uint64(header.Height), ctx2.GetFromAddress())
-// 			fmt.Printf("%v <- %-14v", cid2, msgOpenConfirm.Type())
-// 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				fmt.Println(res)
-// 				return err
-// 			}
-// 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
+			return nil
+		},
+	}
 
-// 			return nil
-// 		},
-// 	}
+	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
+	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
+	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
 
-// 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
-// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-// 	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
-// 	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
-// 	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
-// 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
+	cmd.MarkFlagRequired(FlagFrom1)
+	cmd.MarkFlagRequired(FlagFrom2)
 
-// 	cmd.MarkFlagRequired(FlagFrom1)
-// 	cmd.MarkFlagRequired(FlagFrom2)
+	return cmd
+}
 
-// 	return cmd
-// }
+func queryProofs(ctx client.CLIContext, channelID string, portID string, queryRoute string) (types.ChannelResponse, error) {
+
+	var connRes types.ChannelResponse
+
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  []byte(fmt.Sprintf("ports/%s/channels/%s", portID, channelID)),
+		Prove: true,
+	}
+	res, err := ctx.QueryABCI(req)
+	if err != nil {
+		return connRes, err
+	}
+
+	var channel types.ChannelEnd
+	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
+		return connRes, err
+	}
+	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
+}
 
 func channelOrder() types.Order {
 	if viper.GetBool(FlagOrdered) {

@@ -179,7 +179,11 @@ func (k Keeper) VerifyMembership(
 	fmt.Printf("path: %+v\n", path)
 	fmt.Printf("value: %+v\n", value)
 
-	return proof.VerifyMembership(root, path, value)
+	res := proof.VerifyMembership(root, path, value)
+
+	fmt.Printf("result: %v\n", res)
+
+	return res
 }
 
 // VerifyNonMembership state non-membership function defined by the client type

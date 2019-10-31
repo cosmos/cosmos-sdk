@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -17,7 +16,6 @@ type Keeper struct {
 	upgradeHandlers map[string]types.UpgradeHandler
 }
 
-var _ exported.Keeper = (Keeper)(nil)
 
 // NewKeeper constructs an upgrade Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {

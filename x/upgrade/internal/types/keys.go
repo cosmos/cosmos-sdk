@@ -10,8 +10,6 @@ const (
 	// StoreKey is the prefix under which we store this module's data
 	StoreKey = ModuleName
 
-	TStoreKey = "transient_" + ModuleName
-
 	// QuerierKey is used to handle abci_query requests
 	QuerierKey = ModuleName
 

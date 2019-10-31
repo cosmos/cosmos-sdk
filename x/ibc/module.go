@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	nft_transfer "github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
@@ -42,6 +43,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	channel.RegisterCodec(cdc)
 	commitment.RegisterCodec(cdc)
 	transfer.RegisterCodec(cdc)
+	nft_transfer.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
@@ -118,6 +120,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	// check if the IBC transfer module account is set
 	transfer.InitGenesis(ctx, am.keeper.TransferKeeper)
+	nft_transfer.InitGenesis(ctx, am.keeper.NFTTransferKeeper) // actually unnecessary
 	return []abci.ValidatorUpdate{}
 }
 

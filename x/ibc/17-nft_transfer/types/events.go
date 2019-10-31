@@ -6,12 +6,12 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
-// IBC transfer events
+// IBC nft_transfer events
 const (
 	AttributeKeyReceiver = "receiver"
 )
 
-// IBC transfer events vars
+// IBC nft_transfer events vars
 var (
 	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

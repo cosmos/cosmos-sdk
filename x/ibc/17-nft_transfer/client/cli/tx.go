@@ -17,19 +17,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// IBC transfer flags
+// IBC nft_transfer flags
 var (
 	FlagSource = "source"
 )
 
-// GetTxCmd returns the transaction commands for IBC fungible token transfer
+// GetTxCmd returns the transaction commands for IBC non-fungible token transfer
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
-		Use:   "nft",
+		Use:   "nft_transfer",
 		Short: "IBC non-fungible token transfer transaction subcommands",
 	}
 	txCmd.AddCommand(
@@ -43,7 +43,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "nft [src-port] [src-channel] [receiver] [id] [denom]",
+		Use:   "nft_transfer [src-port] [src-channel] [receiver] [id] [denom]",
 		Short: "Transfer non-fungible token through IBC",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {

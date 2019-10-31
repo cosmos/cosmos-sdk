@@ -1,8 +1,8 @@
-package transfer
+package nft_transfer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer/types"
 )
 
 // HandleMsgTransfer defines the sdk.Handler for MsgTransfer

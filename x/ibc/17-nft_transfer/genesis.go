@@ -1,4 +1,4 @@
-package transfer
+package nft_transfer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"

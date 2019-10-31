@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	// SubModuleName defines the IBC transfer name
+	// SubModuleName defines the IBC nft_transfer name
 	SubModuleName = "nft_transfer"
 
-	// StoreKey is the store key string for IBC transfer
+	// StoreKey is the store key string for IBC nft_transfer
 	StoreKey = SubModuleName
 
-	// RouterKey is the message route for IBC transfer
+	// RouterKey is the message route for IBC nft_transfer
 	RouterKey = SubModuleName
 
-	// QuerierRoute is the querier route for IBC transfer
+	// QuerierRoute is the querier route for IBC nft_transfer
 	QuerierRoute = SubModuleName
 
 	// BoundPortID defines the name of the capability key
@@ -40,7 +40,7 @@ func GetDenomPrefix(portID, channelID string) string {
 	return fmt.Sprintf("%s/%s", portID, channelID)
 }
 
-// GetModuleAccountName returns the IBC transfer module account name for supply
+// GetModuleAccountName returns the IBC nft_transfer module account name for supply
 func GetModuleAccountName() string {
 	return fmt.Sprintf("%s/%s", ibctypes.ModuleName, SubModuleName)
 }

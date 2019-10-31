@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	nft_transfer "github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 )
 
@@ -63,6 +64,11 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case transfer.MsgRecvPacket:
 			return transfer.HandleMsgRecvPacket(ctx, k.TransferKeeper, msg)
+
+		case nft_transfer.MsgTransfer:
+			return nft_transfer.HandleMsgTransfer(ctx, k.NFTTransferKeeper, msg)
+		case nft_transfer.MsgRecvPacket:
+			return nft_transfer.HandleMsgRecvPacket(ctx, k.NFTTransferKeeper, msg)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)

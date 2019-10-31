@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer/types"
 )
 
 // nolint: unused

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// transfer error codes
+// nft_transfer error codes
 const (
 	DefaultCodespace sdk.CodespaceType = SubModuleName
 

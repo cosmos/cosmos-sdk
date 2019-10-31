@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
-// SendTransfer handles transfer sending logic
+// SendTransfer handles nft_transfer sending logic
 func (k Keeper) SendTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -61,7 +61,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(), packet.DestPort(), packet.DestChannel(), data)
 }
 
-// ReceiveTransfer handles transfer receiving logic
+// ReceiveTransfer handles nft_transfer receiving logic
 func (k Keeper) ReceiveTransfer(
 	ctx sdk.Context,
 	sourcePort,
@@ -78,7 +78,7 @@ func (k Keeper) ReceiveTransfer(
 
 		nft := NewBaseNFT(data.ID, data.Receiver, data.TokenURI)
 
-		// mint new non-fungible token if the source of the transfer is the same chain
+		// mint new non-fungible token if the source of the nft_transfer is the same chain
 		return k.nftKeeper.MintNFT(ctx, data.Denom, &nft)
 	}
 
@@ -100,7 +100,7 @@ func (k Keeper) ReceiveTransfer(
 
 	// NFT needs to be in escrow to continue
 	if !nft.GetOwner().Equals(escrowAddress) {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant transfer un-owned NFT")
+		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant nft_transfer un-owned NFT")
 	}
 
 	// update NFT owner
@@ -142,7 +142,7 @@ func (k Keeper) createOutgoingPacket(
 
 		// NFT needs to be owned by sender to continue
 		if !nft.GetOwner().Equals(sender) {
-			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant transfer un-owned NFT")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant nft_transfer un-owned NFT")
 		}
 
 		tokenURI = nft.GetTokenURI()
@@ -168,7 +168,7 @@ func (k Keeper) createOutgoingPacket(
 
 		// NFT needs to be owned by sender to continue
 		if !nft.GetOwner().Equals(sender) {
-			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant transfer un-owned NFT")
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "cant nft_transfer un-owned NFT")
 		}
 
 		tokenURI = nft.GetTokenURI()

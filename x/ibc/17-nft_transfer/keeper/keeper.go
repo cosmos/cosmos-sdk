@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft_transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -16,7 +16,7 @@ const (
 	DefaultPacketTimeout = 1000 // NOTE: in blocks
 )
 
-// Keeper defines the IBC transfer keeper
+// Keeper defines the IBC nft_transfer keeper
 type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
@@ -29,7 +29,7 @@ type Keeper struct {
 	nftKeeper        types.NFTKeeper
 }
 
-// NewKeeper creates a new IBC transfer Keeper instance
+// NewKeeper creates a new IBC nft_transfer Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 	clientKeeper types.ClientKeeper, connnectionKeeper types.ConnectionKeeper,

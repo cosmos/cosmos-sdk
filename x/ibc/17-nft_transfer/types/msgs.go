@@ -43,7 +43,7 @@ func (MsgTransfer) Route() string {
 
 // Type implements sdk.Msg
 func (MsgTransfer) Type() string {
-	return "transfer"
+	return "nft_transfer"
 }
 
 // ValidateBasic implements sdk.Msg

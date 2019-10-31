@@ -17,11 +17,11 @@ type Keeper struct {
 	upgradeHandlers map[string]types.UpgradeHandler
 }
 
-var _ exported.Keeper = (*Keeper)(nil)
+var _ exported.Keeper = (Keeper)(nil)
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) *Keeper {
-	return &Keeper{
+func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+	return Keeper{
 		storeKey:        storeKey,
 		cdc:             cdc,
 		upgradeHandlers: map[string]types.UpgradeHandler{},
@@ -31,14 +31,14 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) *Keeper {
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
 // with this name is applied. In order for an upgrade with the given name to proceed, a handler for this upgrade
 // must be set even if it is a no-op function.
-func (k *Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
+func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
-func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
+func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	err := plan.ValidateBasic()
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (k *Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	return nil
 }
 
-func (k *Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
+func (k Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.DoneHeightKey(name))
 	if len(bz) == 0 {
@@ -71,7 +71,7 @@ func (k *Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
 }
 
 // ClearUpgradePlan clears any schedule upgrade
-func (k *Keeper) ClearUpgradePlan(ctx sdk.Context) {
+func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.PlanKey())
 }
@@ -83,7 +83,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetUpgradePlan returns the currently scheduled Plan if any, setting havePlan to true if there is a scheduled
 // upgrade or false if there is none
-func (k *Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
+func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.PlanKey())
 	if bz == nil {
@@ -94,7 +94,7 @@ func (k *Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool
 }
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
-func (k *Keeper) setDone(ctx sdk.Context, name string) {
+func (k Keeper) setDone(ctx sdk.Context, name string) {
 	store := ctx.KVStore(k.storeKey)
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
@@ -102,13 +102,13 @@ func (k *Keeper) setDone(ctx sdk.Context, name string) {
 }
 
 // HasHandler returns true iff there is a handler registered for this name
-func (k *Keeper) HasHandler(name string) bool {
+func (k Keeper) HasHandler(name string) bool {
 	_, ok := k.upgradeHandlers[name]
 	return ok
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
-func (k *Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
+func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")

@@ -10,7 +10,7 @@ import (
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
-func NewQuerier(k *Keeper) sdk.Querier {
+func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 
@@ -26,7 +26,7 @@ func NewQuerier(k *Keeper) sdk.Querier {
 	}
 }
 
-func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k *Keeper) ([]byte, sdk.Error) {
+func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	plan, has := k.GetUpgradePlan(ctx)
 	if !has {
 		// empty data - client can respond Not Found
@@ -39,7 +39,7 @@ func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k *Keeper) ([]byte, sd
 	return res, nil
 }
 
-func queryApplied(ctx sdk.Context, req abci.RequestQuery, k *Keeper) ([]byte, sdk.Error) {
+func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params types.QueryAppliedParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)

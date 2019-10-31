@@ -17,7 +17,7 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	keeper  *Keeper
+	keeper  Keeper
 	querier sdk.Querier
 	handler gov.Handler
 	module  module.AppModule

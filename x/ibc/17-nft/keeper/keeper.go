@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // DefaultPacketTimeout is the default packet timeout relative to the current block height
@@ -28,7 +27,6 @@ type Keeper struct {
 	connectionKeeper types.ConnectionKeeper
 	channelKeeper    types.ChannelKeeper
 	nftKeeper        types.NFTKeeper
-	supplyKeeper     types.SupplyKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
@@ -36,33 +34,21 @@ func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
 	clientKeeper types.ClientKeeper, connnectionKeeper types.ConnectionKeeper,
 	channelKeeper types.ChannelKeeper, nftKeeper types.NFTKeeper,
-	supplyKeeper types.SupplyKeeper,
 ) Keeper {
-
-	// ensure ibc transfer module account is set
-	if addr := supplyKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
-		panic("the IBC transfer module account has not been set")
-	}
 
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
-		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
+		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/nft_transfer",
+		prefix:           []byte(types.SubModuleName + "/"),                                          // "nft_transfer/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connnectionKeeper,
 		channelKeeper:    channelKeeper,
-		bankKeeper:       bankKeeper,
-		supplyKeeper:     supplyKeeper,
+		nftKeeper:        nftKeeper,
 	}
 }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s/%s", ibctypes.ModuleName, types.SubModuleName))
-}
-
-// GetTransferAccount returns the ICS20 - transfers ModuleAccount
-func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccountI {
-	return k.supplyKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
 }

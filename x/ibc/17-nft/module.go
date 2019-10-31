@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/17-nft/client/cli"
 )
 
 // Name returns the IBC transfer ICS name

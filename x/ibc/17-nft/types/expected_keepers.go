@@ -7,7 +7,6 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 	nft "github.com/cosmos/modules/incubator/nft/exported"
 )
 
@@ -27,16 +26,6 @@ type ClientKeeper interface {
 // ConnectionKeeper defines the expected IBC connection keeper
 type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connection connection.ConnectionEnd, found bool)
-}
-
-// SupplyKeeper expected supply keeper
-type SupplyKeeper interface {
-	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, name string) supplyexported.ModuleAccountI
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) sdk.Error
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
 }
 
 type NFTKeeper interface {

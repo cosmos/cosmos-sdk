@@ -155,25 +155,30 @@ func (k Keeper) onTimeoutPacket(
 
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.SourcePort(), packet.SourcePort())
-	denom := data.Denom
 
-	if !strings.HasPrefix(denom, prefix) {
+	if !strings.HasPrefix(data.Denom, prefix) {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidDenom, "incorrect denomination")
 	}
 	id := data.ID
 
 	if data.Source {
 		escrowAddress := types.GetEscrowAddress(packet.DestPort(), packet.DestChannel())
-		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
+		denom := data.Denom[len(prefix):]
+		nft, err := k.nftKeeper.GetNFT(ctx, denom, id)
+		if err != nil {
+			return err
+		}
+		// NFT needs to be in escrow to continue
+		if !nft.GetOwner().Equals(escrowAddress) {
+			return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidNFT, "NFT should be in escrow")
+		}
+		// update NFT owner
+		nft.SetOwner(data.Sender)
+		return k.nftKeeper.UpdateNFT(ctx, denom, nft)
 	}
-
 	// mint from supply
-	err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
-	if err != nil {
-		return err
-	}
-
-	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
+	nft := NewBaseNFT(data.ID, data.Sender, data.TokenURI)
+	return k.nftKeeper.MintNFT(ctx, data.Denom, &nft)
 }
 
 // nolint: unused

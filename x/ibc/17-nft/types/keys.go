@@ -11,7 +11,7 @@ import (
 
 const (
 	// SubModuleName defines the IBC transfer name
-	SubModuleName = "transfer"
+	SubModuleName = "nft_transfer"
 
 	// StoreKey is the store key string for IBC transfer
 	StoreKey = SubModuleName
@@ -23,12 +23,12 @@ const (
 	QuerierRoute = SubModuleName
 
 	// BoundPortID defines the name of the capability key
-	BoundPortID = "bank"
+	BoundPortID = "nft_transfer"
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel
 //
-// CONTRACT: this assumes that there's only one bank bridge module that owns the
+// CONTRACT: this assumes that there's only one nft bridge module that owns the
 // port associated with the channel ID so that the address created is actually
 // unique.
 func GetEscrowAddress(portID, channelID string) sdk.AccAddress {

@@ -32,10 +32,11 @@ func NewKeeper(
 	portKeeper types.PortKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:         key,
-		cdc:              cdc,
-		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
-		prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
+		storeKey:  key,
+		cdc:       cdc,
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
+		prefix:    []byte{},
+		// prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
 		portKeeper:       portKeeper,

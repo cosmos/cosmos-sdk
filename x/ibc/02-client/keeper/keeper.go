@@ -30,7 +30,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		storeKey:  key,
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client",
-		prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
+		prefix:    []byte{},
+		// prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
 	}
 }
 

@@ -386,7 +386,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err := queryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
+			csProof, err := queryConsensusStateProof(ctx1.WithHeight(header.Height-1), clientID1)
 			if err != nil {
 				return err
 			}
@@ -397,9 +397,11 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Create and send msgOpenTry
 			viper.Set(flags.FlagChainID, cid2)
 			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
+
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
+				fmt.Printf("err: %s\nres: %+v\n", err, res)
 				return err
 			}
 
@@ -552,7 +554,7 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  []byte(fmt.Sprintf("connection/connections/%s", connectionID)),
+		Data:  []byte(fmt.Sprintf("connections/%s", connectionID)),
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)
@@ -572,7 +574,7 @@ func queryConsensusStateProof(ctx client.CLIContext, clientID string) (ibcclient
 	var csRes ibcclient.ConsensusStateResponse
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  []byte(fmt.Sprintf("client/clients/%s/consensusState", clientID)),
+		Data:  []byte(fmt.Sprintf("clients/%s/consensusState", clientID)),
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)

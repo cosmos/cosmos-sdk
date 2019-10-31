@@ -25,8 +25,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		storeKey:  key,
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
-		prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
-		ports:     make(map[sdk.CapabilityKey]string),                                         // map of capabilities to port ids
+		prefix:    []byte{},
+		// prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
+		ports: make(map[sdk.CapabilityKey]string), // map of capabilities to port ids
 	}
 }
 

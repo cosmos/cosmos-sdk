@@ -83,7 +83,6 @@ func (k Keeper) ConnOpenTry(
 		return err
 	}
 
-	fmt.Println(666666)
 	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
 		types.ConnectionPath(connectionID), expConnBz,
@@ -92,14 +91,11 @@ func (k Keeper) ConnOpenTry(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	fmt.Println(777777)
-
 	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(888888)
 	ok = k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
 		clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
@@ -112,7 +108,6 @@ func (k Keeper) ConnOpenTry(
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
 	}
-	fmt.Println(999999)
 
 	connection.State = types.TRYOPEN
 	err = k.addConnectionToClient(ctx, clientID, connectionID)
@@ -120,7 +115,6 @@ func (k Keeper) ConnOpenTry(
 		return sdkerrors.Wrap(err, "cannot relay connection attempt")
 	}
 
-	fmt.Println(111)
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> TRYOPEN ", connectionID))
 	return nil

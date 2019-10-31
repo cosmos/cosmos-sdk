@@ -350,11 +350,9 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 
-			fmt.Println(res)
 			fmt.Printf(" [OK] txid(%v) client(%v) conn(%v)\n", res.TxHash, clientID1, connID1)
 
 			// Another block has to be passed after msgOpenInit is committed
@@ -374,7 +372,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID1)
@@ -392,7 +389,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 
@@ -415,7 +411,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID2)
@@ -433,7 +428,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) connection(%v)\n", res.TxHash, connID1)
@@ -455,7 +449,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID1)

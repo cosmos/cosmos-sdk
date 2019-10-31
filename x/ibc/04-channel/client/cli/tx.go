@@ -40,8 +40,8 @@ const (
 // GetTxCmd returns the transaction commands for IBC Connections
 func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
-		Use:   "connection",
-		Short: "IBC connection transaction subcommands",
+		Use:   "channel",
+		Short: "IBC channel transaction subcommands",
 	}
 
 	ics04ChannelTxCmd.AddCommand(client.PostCommands(

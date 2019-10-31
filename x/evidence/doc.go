@@ -2,7 +2,7 @@
 Package evidence implements a Cosmos SDK module, per ADR 009, that allows for the
 submission and handling of arbitrary evidence of misbehavior.
 
-All concrete evidence types must implement the Evidence interface contract. Sumbitted
+All concrete evidence types must implement the Evidence interface contract. Submitted
 evidence is first routed through the evidence module's Router in which it attempts
 to find a corresponding Handler for that specific evidence type. Each evidence type
 must have a Handler registered with the evidence module's keeper in order for it

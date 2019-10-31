@@ -93,6 +93,9 @@ func (k Keeper) ConnOpenTry(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
+	fmt.Printf("verified connection membership\n")
+	fmt.Printf("expected consensus state: %+v\n", expectedConsensusState)
+
 	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
 	if err != nil {
 		return err
@@ -106,6 +109,8 @@ func (k Keeper) ConnOpenTry(
 		fmt.Sprintf("couldn't verify consensus state membership on counterparty's client\n")
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 	}
+
+	fmt.Printf("verified consensus state membership\n")
 
 	_, found = k.GetConnection(ctx, connectionID)
 	if found {
@@ -184,6 +189,8 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
+	fmt.Printf("verified connection membership\n")
+
 	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
 	if err != nil {
 		return err
@@ -196,6 +203,8 @@ func (k Keeper) ConnOpenAck(
 	if !ok {
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 	}
+
+	fmt.Printf("verified consensus state membership\n")
 
 	connection.State = types.OPEN
 	connection.Versions = []string{version}

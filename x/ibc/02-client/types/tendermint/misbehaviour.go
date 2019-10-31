@@ -3,6 +3,8 @@ package tendermint
 import (
 	"fmt"
 
+	yaml "gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
@@ -17,7 +19,7 @@ var _ exported.Evidence = Evidence{}
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	tmtypes.DuplicateVoteEvidence
+	*tmtypes.DuplicateVoteEvidence
 	ChainID        string `json:"chain_id" yaml:"chain_id"`
 	ValidatorPower int64  `json:"val_power" yaml:"val_power"`
 	TotalPower     int64  `json:"total_power" yaml:"total_power"`
@@ -35,7 +37,11 @@ func (ev Evidence) Type() string {
 
 // String implements exported.Evidence interface
 func (ev Evidence) String() string {
-	return ev.DuplicateVoteEvidence.String()
+	bz, err := yaml.Marshal(ev)
+	if err != nil {
+		panic(err)
+	}
+	return string(bz)
 }
 
 // Hash implements exported.Evidence interface
@@ -45,6 +51,9 @@ func (ev Evidence) Hash() cmn.HexBytes {
 
 // ValidateBasic implements exported.Evidence interface
 func (ev Evidence) ValidateBasic() sdk.Error {
+	if ev.DuplicateVoteEvidence == nil {
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil")
+	}
 	err := ev.DuplicateVoteEvidence.ValidateBasic()
 	if err != nil {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
@@ -55,7 +64,7 @@ func (ev Evidence) ValidateBasic() sdk.Error {
 	if ev.ValidatorPower <= 0 {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Validator Power: %d", ev.ValidatorPower))
 	}
-	if ev.TotalPower <= 0 {
+	if ev.TotalPower < ev.ValidatorPower {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Total Power: %d", ev.TotalPower))
 	}
 	return nil

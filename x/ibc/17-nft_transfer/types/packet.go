@@ -61,10 +61,10 @@ func (pd PacketData) String() string {
 // ValidateBasic performs a basic check of the packet fields
 func (pd PacketData) ValidateBasic() sdk.Error {
 	if len(pd.ID) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidID, "invalid id")
+		return sdk.NewError(DefaultCodespace, CodeInvalidID, "invalid id")
 	}
 	if len(pd.Denom) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidDenom, "invalid denom")
+		return sdk.NewError(DefaultCodespace, CodeInvalidDenom, "invalid denom")
 	}
 	if pd.Sender.Empty() {
 		return sdk.ErrInvalidAddress("missing sender address")

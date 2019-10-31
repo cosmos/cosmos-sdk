@@ -55,10 +55,10 @@ func (msg MsgTransfer) ValidateBasic() sdk.Error {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
 	}
 	if len(msg.ID) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidID, "invalid id")
+		return sdk.NewError(DefaultCodespace, CodeInvalidID, "invalid id")
 	}
 	if len(msg.Denom) == 0 {
-		return sdk.NewError(sdk.CodespaceType(DefaultCodespace), CodeInvalidDenom, "invalid denom")
+		return sdk.NewError(DefaultCodespace, CodeInvalidDenom, "invalid denom")
 	}
 	if msg.Sender.Empty() {
 		return sdk.ErrInvalidAddress("missing sender address")

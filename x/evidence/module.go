@@ -20,6 +20,8 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+
+	// TODO: Enable simulation once concrete types are defined.
 	// _ module.AppModuleSimulation = AppModuleSimulation{}
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 // mounted.
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   evidence.ModuleName,
+		Use:   types.ModuleName,
 		Short: "Query for evidence by hash or for all (paginated) submitted evidence",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query for specific submitted evidence by hash or query for all (paginated) evidence:
@@ -33,7 +33,7 @@ Example:
 $ %s query %s DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660
 $ %s query %s --page=2 --limit=50
 `,
-				version.ClientName, evidence.ModuleName, version.ClientName, evidence.ModuleName,
+				version.ClientName, types.ModuleName, version.ClientName, types.ModuleName,
 			),
 		),
 		Args:                       cobra.MaximumNArgs(1),
@@ -71,20 +71,19 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 		return fmt.Errorf("invalid evidence hash: %w", err)
 	}
 
-	params := evidence.NewQueryEvidenceParams(hash)
-
+	params := types.NewQueryEvidenceParams(hash)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", evidence.QuerierRoute, evidence.QueryEvidence)
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryEvidence)
 	res, _, err := cliCtx.QueryWithData(route, bz)
 	if err != nil {
 		return err
 	}
 
-	var evidence evidence.Evidence
+	var evidence types.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
@@ -94,20 +93,19 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 }
 
 func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
-	params := evidence.NewQueryAllEvidenceParams(viper.GetInt(flagPage), viper.GetInt(flagLimit))
-
+	params := types.NewQueryAllEvidenceParams(viper.GetInt(flagPage), viper.GetInt(flagLimit))
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {
 		return fmt.Errorf("failed to marshal query params: %w", err)
 	}
 
-	route := fmt.Sprintf("custom/%s/%s", evidence.QuerierRoute, evidence.QueryAllEvidence)
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllEvidence)
 	res, _, err := cliCtx.QueryWithData(route, bz)
 	if err != nil {
 		return err
 	}
 
-	var evidence []evidence.Evidence
+	var evidence []types.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)

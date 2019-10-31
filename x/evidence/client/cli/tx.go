@@ -22,7 +22,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, childCmds []*cobra.Command) *co
 		RunE:                       client.ValidateCmd,
 	}
 
-	submitEvidenceCmd := getSubmitEvidenceCmd(cdc)
+	submitEvidenceCmd := SubmitEvidenceCMD(cdc)
 	for _, childCmd := range childCmds {
 		submitEvidenceCmd.AddCommand(client.PostCommands(childCmd)[0])
 	}
@@ -32,7 +32,14 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, childCmds []*cobra.Command) *co
 	return cmd
 }
 
-func getSubmitEvidenceCmd(cdc *codec.Codec) *cobra.Command {
-	// TODO: Implement and return 'submit-evidence sub-command'
-	return nil
+// SubmitEvidenceCMD returns the top-level evidence submission command handler.
+// All concrete evidence submission child command handlers should be registered
+// under this command.
+func SubmitEvidenceCMD(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "submit",
+		Short: "Submit arbitrary evidence of misbehavior",
+	}
+
+	return cmd
 }

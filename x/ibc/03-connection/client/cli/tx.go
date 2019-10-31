@@ -282,6 +282,9 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "initiate connection handshake between two chains",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			viper.Set(flags.FlagProve, true)
+
 			// --chain-id values for each chain
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainID2)

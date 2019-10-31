@@ -14,6 +14,7 @@ const (
 	ModuleName                        = types.ModuleName
 	RouterKey                         = types.RouterKey
 	StoreKey                          = types.StoreKey
+	TStoreKey 						  = types.TStoreKey
 	QuerierKey                        = types.QuerierKey
 	PlanByte                          = types.PlanByte
 	DoneByte                          = types.DoneByte

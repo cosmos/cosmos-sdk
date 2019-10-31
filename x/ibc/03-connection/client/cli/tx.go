@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -364,7 +363,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err := getHeader(ctx1)
+			header, err := tendermint.GetHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -411,7 +410,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = getHeader(ctx2)
+			header, err = tendermint.GetHeader(ctx2)
 			if err != nil {
 				return err
 			}
@@ -457,7 +456,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = getHeader(ctx1)
+			header, err = tendermint.GetHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -506,44 +505,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd.MarkFlagRequired(FlagChainID2)
 
 	return cmd
-}
-
-func getHeader(ctx context.CLIContext) (res tendermint.Header, err error) {
-	node, err := ctx.GetNode()
-	if err != nil {
-		return
-	}
-
-	info, err := node.ABCIInfo()
-	if err != nil {
-		return
-	}
-
-	height := info.Response.LastBlockHeight
-	prevheight := height - 1
-
-	commit, err := node.Commit(&height)
-	if err != nil {
-		return
-	}
-
-	validators, err := node.Validators(&prevheight)
-	if err != nil {
-		return
-	}
-
-	nextvalidators, err := node.Validators(&height)
-	if err != nil {
-		return
-	}
-
-	res = tendermint.Header{
-		SignedHeader:     commit.SignedHeader,
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
-	}
-
-	return
 }
 
 func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) (types.ConnectionResponse, error) {

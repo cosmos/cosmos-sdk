@@ -537,8 +537,8 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 	var connRes types.ConnectionResponse
 
 	req := abci.RequestQuery{
-		Path:  "store/key",
-		Data:  []byte(fmt.Sprintf("ibc/connection/connections/%s", connectionID)),
+		Path:  "store/ibc/key",
+		Data:  []byte(fmt.Sprintf("connection/connections/%s", connectionID)),
 		Prove: true,
 	}
 	res, err := ctx.QueryABCI(req)

@@ -6,18 +6,25 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 const (
@@ -31,7 +38,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for IBC Connections
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
 		Use:   "connection",
 		Short: "IBC connection transaction subcommands",
@@ -302,8 +309,8 @@ func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 Example:
 $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-client-id] [cp-port-id] [cp-chain-id] [cp-conn-id]
-		`, version.ClientName),
-		Args:  cobra.ExactArgs(6),
+		`, version.ClientName)),
+		Args: cobra.ExactArgs(6),
 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// --chain-id values for each chain
@@ -358,13 +365,9 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			// Create channel objects
-			// chan1 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid2, chanid2), []string{connid2}, "v1.0.0")
-			// chan2 := types.NewChannel(types.State(byte(0)), types.UNORDERED, types.NewCounterparty(portid1, chanid1), []string{connid1}, "v1.0.0")
-
 			// TODO: check state and if not Idle continue existing process
 			viper.Set(flags.FlagChainID, cid1)
-			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid2}, portid2, chanid2, ctx1.GetFromAddress())
+			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid1}, portid2, chanid2, ctx1.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
@@ -398,7 +401,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanchanid1, "v1.0.0", []commitment.Proof{proofs.Proof}, uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
@@ -416,7 +419,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-
 			viper.Set(flags.FlagChainID, cid1)
 			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid1, msgUpdateClient.Type())
@@ -426,15 +428,15 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid1)
-			
+
 			viper.Set(flags.FlagChainID, cid2)
-			proofs, err := queryProofs(ctx2.WithHeight(header.Height-1), portid2, chanid2, storeKey)
+			proofs, err = queryProofs(ctx2.WithHeight(header.Height-1), portid2, chanid2, storeKey)
 			if err != nil {
 				return err
-			}			
-			
+			}
+
 			viper.Set(flags.FlagChainID, cid1)
-			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0",[]commitment.Proof{proofs.Proof}, uint64(header.Height), ctx1.GetFromAddress())
+			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx1.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
@@ -462,14 +464,13 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
 
-
 			viper.Set(flags.FlagChainID, cid1)
-			proofs, err := queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
+			proofs, err = queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
 			if err != nil {
 				return err
 			}
 
-			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, []commitment.Proof{proof.Proofs}, uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid2, msgOpenConfirm.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
 			if err != nil || !res.IsOK() {
@@ -509,7 +510,7 @@ func queryProofs(ctx client.CLIContext, channelID string, portID string, queryRo
 		return connRes, err
 	}
 
-	var channel types.ChannelEnd
+	var channel types.Channel
 	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
 		return connRes, err
 	}

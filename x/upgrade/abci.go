@@ -13,7 +13,7 @@ import (
 //
 // The prupose is to ensure the binary is switch EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
-func BeginBlock(k *Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
+func BeginBlocker(k *Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

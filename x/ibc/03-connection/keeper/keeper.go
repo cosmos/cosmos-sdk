@@ -63,6 +63,8 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
+	fmt.Printf("prefix: %s\n", k.prefix)
+	fmt.Printf("key: %s\n", types.KeyConnection(connectionID))
 	fmt.Printf("%+v\n", connection)
 	fmt.Printf("bs: %X\n", bz)
 	store.Set(types.KeyConnection(connectionID), bz)

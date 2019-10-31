@@ -51,6 +51,7 @@ func (k Keeper) ConnOpenTry(
 	clientID string,
 	counterpartyVersions []string,
 	proofInit commitment.ProofI,
+	proofConsensus commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -88,6 +89,7 @@ func (k Keeper) ConnOpenTry(
 		types.ConnectionPath(connectionID), expConnBz,
 	)
 	if !ok {
+		fmt.Sprintf("couldn't verify connection membership on counterparty's client\n")
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
@@ -97,10 +99,11 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofInit,
+		ctx, connection, proofHeight, proofConsensus,
 		clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {
+		fmt.Sprintf("couldn't verify consensus state membership on counterparty's client\n")
 		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 	}
 
@@ -129,6 +132,7 @@ func (k Keeper) ConnOpenAck(
 	connectionID string,
 	version string,
 	proofTry commitment.ProofI,
+	proofConsensus commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
@@ -186,7 +190,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
+		ctx, connection, proofHeight, proofConsensus,
 		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
 	)
 	if !ok {

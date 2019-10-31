@@ -33,7 +33,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) sdk.Result {
 	err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
-		msg.CounterpartyVersions, msg.ProofInit, msg.ProofHeight, msg.ConsensusHeight)
+		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus, msg.ProofHeight, msg.ConsensusHeight)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}
@@ -57,7 +57,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
 func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) sdk.Result {
 	err := k.ConnOpenAck(
-		ctx, msg.ConnectionID, msg.Version, msg.ProofTry,
+		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	)
 	if err != nil {

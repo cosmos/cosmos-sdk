@@ -79,7 +79,8 @@ type MsgConnectionOpenTry struct {
 	ClientID             string            `json:"client_id"`
 	Counterparty         Counterparty      `json:"counterparty"`
 	CounterpartyVersions []string          `json:"counterparty_versions"`
-	ProofInit            commitment.ProofI `json:"proof_init"` // proof of the initialization the connection on Chain A: `none -> INIT`
+	ProofInit            commitment.ProofI `json:"proof_init"`      // proof of the initialization the connection on Chain A: `none -> INIT`
+	ProofConsensus       commitment.ProofI `json:"proof_consensus"` // proof of client consensus stat
 	ProofHeight          uint64            `json:"proof_height"`
 	ConsensusHeight      uint64            `json:"consensus_height"`
 	Signer               sdk.AccAddress    `json:"signer"`
@@ -89,7 +90,7 @@ type MsgConnectionOpenTry struct {
 func NewMsgConnectionOpenTry(
 	connectionID, clientID, counterpartyConnectionID,
 	counterpartyClientID string, counterpartyPrefix commitment.PrefixI,
-	counterpartyVersions []string, proofInit commitment.ProofI,
+	counterpartyVersions []string, proofInit, proofConsensus commitment.ProofI,
 	proofHeight, consensusHeight uint64, signer sdk.AccAddress,
 ) MsgConnectionOpenTry {
 	counterparty := NewCounterparty(counterpartyClientID, counterpartyConnectionID, counterpartyPrefix)
@@ -99,6 +100,7 @@ func NewMsgConnectionOpenTry(
 		Counterparty:         counterparty,
 		CounterpartyVersions: counterpartyVersions,
 		ProofInit:            proofInit,
+		ProofConsensus:       proofConsensus,
 		ProofHeight:          proofHeight,
 		ConsensusHeight:      consensusHeight,
 		Signer:               signer,
@@ -134,6 +136,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
 	if msg.ProofInit == nil {
 		return ErrInvalidConnectionProof(DefaultCodespace, "proof init cannot be nil")
 	}
+	if msg.ProofConsensus == nil {
+		return ErrInvalidConnectionProof(DefaultCodespace, "proof consensus cannot be nil")
+	}
 	if msg.ProofHeight == 0 {
 		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
 	}
@@ -162,7 +167,8 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 // the change of connection state to TRYOPEN on Chain B.
 type MsgConnectionOpenAck struct {
 	ConnectionID    string            `json:"connection_id"`
-	ProofTry        commitment.ProofI `json:"proof_try"` // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
+	ProofTry        commitment.ProofI `json:"proof_try"`       // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
+	ProofConsensus  commitment.ProofI `json:"proof_consensus"` // proof of client consensus stat
 	ProofHeight     uint64            `json:"proof_height"`
 	ConsensusHeight uint64            `json:"consensus_height"`
 	Version         string            `json:"version"`
@@ -171,13 +177,14 @@ type MsgConnectionOpenAck struct {
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
 func NewMsgConnectionOpenAck(
-	connectionID string, proofTry commitment.ProofI,
+	connectionID string, proofTry, proofConsensus commitment.ProofI,
 	proofHeight, consensusHeight uint64, version string,
 	signer sdk.AccAddress,
 ) MsgConnectionOpenAck {
 	return MsgConnectionOpenAck{
 		ConnectionID:    connectionID,
 		ProofTry:        proofTry,
+		ProofConsensus:  proofConsensus,
 		ProofHeight:     proofHeight,
 		ConsensusHeight: consensusHeight,
 		Version:         version,
@@ -205,6 +212,9 @@ func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
 	}
 	if msg.ProofTry == nil {
 		return ErrInvalidConnectionProof(DefaultCodespace, "proof try cannot be nil")
+	}
+	if msg.ProofConsensus == nil {
+		return ErrInvalidConnectionProof(DefaultCodespace, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
 		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")

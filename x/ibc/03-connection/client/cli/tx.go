@@ -159,7 +159,7 @@ $ %s tx ibc connection open-try connection-id] [client-id]
 
 			msg := types.NewMsgConnectionOpenTry(
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
-				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofHeight,
+				counterpartyPrefix, []string{counterpartyVersions}, proofInit, proofInit, proofHeight,
 				consensusHeight, cliCtx.GetFromAddress(),
 			)
 
@@ -207,7 +207,7 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 			version := args[4]
 
 			msg := types.NewMsgConnectionOpenAck(
-				connectionID, proofTry, proofHeight,
+				connectionID, proofTry, proofTry, proofHeight,
 				consensusHeight, version, cliCtx.GetFromAddress(),
 			)
 
@@ -386,11 +386,17 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			csProof, err := queryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
+			if err != nil {
+				return err
+			}
+
 			fmt.Printf("Proofs: %+v\n", proofs)
+			fmt.Printf("cs proof: %+v\n", csProof)
 
 			// Create and send msgOpenTry
 			viper.Set(flags.FlagChainID, cid2)
-			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
@@ -427,9 +433,17 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			csProof, err = queryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Proofs: %+v\n", proofs)
+			fmt.Printf("cs proof: %+v\n", csProof)
+
 			// Create and send msgOpenAck
 			viper.Set(flags.FlagChainID, cid1)
-			msgOpenAck := types.NewMsgConnectionOpenAck(connID1, proofs.Proof, uint64(header.Height), uint64(header.Height), version, ctx1.GetFromAddress())
+			msgOpenAck := types.NewMsgConnectionOpenAck(connID1, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), version, ctx1.GetFromAddress())
 			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
@@ -552,6 +566,26 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 		return connRes, err
 	}
 	return types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height), nil
+}
+
+func queryConsensusStateProof(ctx client.CLIContext, clientID string) (ibcclient.ConsensusStateResponse, error) {
+	var csRes ibcclient.ConsensusStateResponse
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  []byte(fmt.Sprintf("client/clients/%s/consensusState", clientID)),
+		Prove: true,
+	}
+	res, err := ctx.QueryABCI(req)
+	fmt.Printf("full result: %+v\n", res)
+	if err != nil {
+		return csRes, err
+	}
+
+	var cs tendermint.ConsensusState
+	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
+		return csRes, err
+	}
+	return ibcclient.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
 }
 
 func parsePath(cdc *codec.Codec, arg string) (commitment.Prefix, error) {

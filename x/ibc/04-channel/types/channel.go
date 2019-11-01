@@ -32,16 +32,6 @@ func NewChannel(
 	}
 }
 
-// CounterpartyHops returns the connection hops of the counterparty channel.
-// The counterparty hops are stored in the inverse order as the channel's.
-func (ch Channel) CounterpartyHops() []string {
-	counterPartyHops := make([]string, len(ch.ConnectionHops))
-	for i, hop := range ch.ConnectionHops {
-		counterPartyHops[len(counterPartyHops)-1-i] = hop
-	}
-	return counterPartyHops
-}
-
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() sdk.Error {
 	if ch.State.String() == "" {

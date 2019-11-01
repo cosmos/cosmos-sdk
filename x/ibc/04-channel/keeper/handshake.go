@@ -20,7 +20,6 @@ func (k Keeper) ChanOpenInit(
 	channelID string,
 	counterparty types.Counterparty,
 	version string,
-	portCapability sdk.CapabilityKey,
 ) error {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
 	_, found := k.GetChannel(ctx, portID, channelID)
@@ -40,7 +39,10 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -67,14 +69,16 @@ func (k Keeper) ChanOpenTry(
 	counterpartyVersion string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -133,7 +137,6 @@ func (k Keeper) ChanOpenAck(
 	counterpartyVersion string,
 	proofTry commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -147,7 +150,10 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -198,7 +204,6 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	proofAck commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
@@ -212,7 +217,10 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -264,9 +272,11 @@ func (k Keeper) ChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCapability sdk.CapabilityKey,
 ) error {
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -305,9 +315,11 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 

@@ -164,7 +164,7 @@ func (k Keeper) ChanOpenAck(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State != types.INIT {
@@ -239,7 +239,7 @@ func (k Keeper) ChanOpenConfirm(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State != types.OPENTRY {
@@ -322,7 +322,7 @@ func (k Keeper) ChanCloseInit(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -365,7 +365,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {

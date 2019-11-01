@@ -34,7 +34,7 @@ func (k Keeper) CleanupPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourcePort(), packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -121,7 +121,7 @@ func (k Keeper) SendPacket(
 
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return types.ErrChannelNotFound(k.codespace, packet.SourcePort(), packet.SourceChannel())
 	}
 
 	if channel.State == types.CLOSED {
@@ -202,7 +202,7 @@ func (k Keeper) RecvPacket(
 
 	channel, found := k.GetChannel(ctx, packet.DestPort(), packet.DestChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.DestChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.DestPort(), packet.DestChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -297,7 +297,7 @@ func (k Keeper) AcknowledgePacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourcePort(), packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {

@@ -27,7 +27,7 @@ func (k Keeper) TimeoutPacket(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourcePort(), packet.SourceChannel())
 	}
 
 	if channel.State != types.OPEN {
@@ -122,7 +122,7 @@ func (k Keeper) TimeoutOnClose(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.SourcePort(), packet.SourceChannel())
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.SourceChannel())
+		return nil, types.ErrChannelNotFound(k.codespace, packet.SourcePort(), packet.SourceChannel())
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.SourcePort(), packet.SourceChannel())

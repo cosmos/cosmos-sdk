@@ -24,7 +24,7 @@ func (k Keeper) SendTransfer(
 	// get the port and channel of the counterparty
 	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrChannelNotFound(k.codespace, sourceChannel)
+		return channeltypes.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
 	destinationPort := channel.Counterparty.PortID

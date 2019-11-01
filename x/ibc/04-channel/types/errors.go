@@ -28,8 +28,8 @@ func ErrChannelExists(codespace sdk.CodespaceType, channelID string) sdk.Error {
 }
 
 // ErrChannelNotFound implements sdk.Error
-func ErrChannelNotFound(codespace sdk.CodespaceType, channelID string) sdk.Error {
-	return sdk.NewError(codespace, CodeChannelNotFound, fmt.Sprintf("channel with ID %s not found", channelID))
+func ErrChannelNotFound(codespace sdk.CodespaceType, portID, channelID string) sdk.Error {
+	return sdk.NewError(codespace, CodeChannelNotFound, fmt.Sprintf("channel with ID %s on port %s not found", channelID, portID))
 }
 
 // ErrInvalidCounterpartyChannel implements sdk.Error

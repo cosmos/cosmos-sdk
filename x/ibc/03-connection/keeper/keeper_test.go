@@ -245,22 +245,22 @@ func (suite *KeeperTestSuite) TestHandshake() {
 	// create client on gaia
 	suite.createClient(CosmosChainId, ClientToIris, clientType, state1)
 
-	//===========open-init on iris===========
+	//===========OpenInit on iris===========
 	suite.connOpenInit(IrisChainId, ConnectionToGaia, ClientToGaia, ClientToIris, ConnectionToIris)
 
-	//===========open-try===========
-	// update cosmos consensusState(should be UpdateClient)
+	//===========OpenTry on gaia===========
+	// update gaia consensusState(should be UpdateClient)
 	suite.updateClient(CosmosChainId, ClientToIris)
 	// open-try on gaia
 	suite.connOpenTry(CosmosChainId, ConnectionToIris, ClientToIris, ClientToGaia, ConnectionToGaia)
 
-	//===========ConnOpenAck===========
+	//===========ConnOpenAck on iris===========
 	// update iris consensusState(should be UpdateClient)
 	suite.updateClient(IrisChainId, ClientToGaia)
 	suite.connOpenAck(IrisChainId, ConnectionToGaia, ConnectionToIris)
 
-	//===========ConnOpenConfirm===========
-	// update iris consensusState(should be UpdateClient)
+	//===========ConnOpenConfirm on gaia===========
+	// update gaia consensusState(should be UpdateClient)
 	suite.updateClient(CosmosChainId, ClientToIris)
 	suite.connOpenConfirm(CosmosChainId, ConnectionToIris, ConnectionToGaia)
 

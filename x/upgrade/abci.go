@@ -3,6 +3,7 @@ package upgrade
 import (
 	"fmt"
 
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +16,7 @@ import (
 // The purpose is to ensure the binary is switch EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
+	fmt.Printf("This is viper in begin blocker %v", viper.AllKeys())
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

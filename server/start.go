@@ -130,12 +130,13 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
+	viper.Set("sahith", "hello" )
 	traceWriterFile := viper.GetString(flagTraceStore)
-
 	db, err := openDB(home)
 	if err != nil {
 		return nil, err
 	}
+
 	traceWriter, err := openTraceWriter(traceWriterFile)
 	if err != nil {
 		return nil, err

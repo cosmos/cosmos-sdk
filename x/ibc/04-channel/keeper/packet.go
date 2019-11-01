@@ -131,9 +131,12 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
-		return errors.New("port is not valid")
-	}
+	// XXX: commented out for demo
+	/*
+		if !k.portKeeper.Authenticate(portCapability, packet.SourcePort()) {
+			return errors.New("port is not valid")
+		}
+	*/
 
 	if packet.DestPort() != channel.Counterparty.PortID {
 		return types.ErrInvalidPacket(

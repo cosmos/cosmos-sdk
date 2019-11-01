@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMsgConnectionOpenInit(t *testing.T) {
+func TestNewMsgConnectionOpenInit(t *testing.T) {
 	type TestCase = struct {
 		connectionID string
 		clientID     string

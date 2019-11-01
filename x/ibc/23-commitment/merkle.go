@@ -2,8 +2,7 @@ package commitment
 
 import (
 	"errors"
-	"strings"
-
+	"fmt"
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -111,12 +110,13 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 		return Path{}, errors.New("prefix can't be empty")
 	}
 
+	path = fmt.Sprintf("%s%s", string(prefix.Bytes()), path)
 	// Split paths by the separator
-	pathSlice := strings.Split(path, "/")
+	//pathSlice := strings.Split(path, "/")
 	keyPath := merkle.KeyPath{}
-	commitmentPath := NewPath(pathSlice)
+	commitmentPath := NewPath([]string{path})
 
-	keyPath = keyPath.AppendKey(prefix.Bytes(), merkle.KeyEncodingURL)
+	keyPath = keyPath.AppendKey([]byte("ibc"), merkle.KeyEncodingURL)
 	commitmentPath.KeyPath = append(keyPath, commitmentPath.KeyPath...)
 	return commitmentPath, nil
 }

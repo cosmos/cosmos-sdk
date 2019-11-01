@@ -129,6 +129,5 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd = client.PostCommands(cmd)[0]
-	cmd.Flags().String(flags.FlagFrom, "", "key in local keystore to send from")
 	return cmd
 }

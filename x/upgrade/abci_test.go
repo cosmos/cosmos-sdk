@@ -32,7 +32,7 @@ func (s *TestSuite) SetupTest() {
 	cdc := codec.New()
 	RegisterCodec(cdc)
 	s.keeper = NewKeeper(key, cdc)
-	s.handler = NewSoftwareUpgradeProposalHandler(*s.keeper)
+	s.handler = NewSoftwareUpgradeProposalHandler(s.keeper)
 	s.querier = NewQuerier(s.keeper)
 	s.module = NewAppModule(s.keeper)
 	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)

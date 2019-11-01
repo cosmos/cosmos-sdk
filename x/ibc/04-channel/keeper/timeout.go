@@ -158,9 +158,15 @@ func (k Keeper) TimeoutOnClose(
 		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
+	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
+	if !found {
+		// Should not reach here, connectionEnd was able to be retrieved above
+		panic("cannot find connection")
+	}
+
 	counterparty := types.NewCounterparty(packet.SourcePort(), packet.SourceChannel())
 	expectedChannel := types.NewChannel(
-		types.CLOSED, channel.Ordering, counterparty, channel.CounterpartyHops(), channel.Version,
+		types.CLOSED, channel.Ordering, counterparty, counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)

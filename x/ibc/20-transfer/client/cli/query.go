@@ -6,9 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GetTxCmd returns the transaction commands for IBC fungible token transfer
@@ -28,7 +31,7 @@ func GetQueryCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 // GetCmdQueryChannel defines the command to query a channel end
 func GetCmdQueryPacketProof(cdc *codec.Codec, queryRoute string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "packet [port-id] [channel-id] [sequence]",
+		Use:   "next-recv [port-id] [channel-id] [sequence]",
 		Short: "Query a channel end",
 		Long: strings.TrimSpace(fmt.Sprintf(`Query an IBC channel end
 		
@@ -38,37 +41,32 @@ $ %s query ibc channel end [port-id] [channel-id]
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// cliCtx := context.NewCLIContext().WithCodec(cdc)
-			// portID := args[0]
-			// channelID := args[1]
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			portID := args[0]
+			channelID := args[1]
 
-			// bz, err := cdc.MarshalJSON(types.New(portID, channelID))
-			// if err != nil {
-			// 	return err
-			// }
+			req := abci.RequestQuery{
+				Path:  "store/ibc/key",
+				Data:  channel.KeyNextSequenceRecv(portID, channelID),
+				Prove: true,
+			}
 
-			// req := abci.RequestQuery{
-			// 	Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.SubModuleName),
-			// 	Data:  bz,
-			// 	Prove: viper.GetBool(flags.FlagProve),
-			// }
+			res, err := cliCtx.QueryABCI(req)
+			if err != nil {
+				return err
+			}
 
-			// res, err := cliCtx.QueryABCI(req)
-			// if err != nil {
-			// 	return err
-			// }
+			var channel channel.Channel
+			if err := cdc.UnmarshalJSON(res.Value, &channel); err != nil {
+				return err
+			}
 
-			// var channel types.Channel
-			// if err := cdc.UnmarshalJSON(res.Value, &channel); err != nil {
-			// 	return err
-			// }
+			if res.Proof == nil {
+				return cliCtx.PrintOutput(channel)
+			}
 
-			// if res.Proof == nil {
-			// 	return cliCtx.PrintOutput(channel)
-			// }
-
-			// channelRes := types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
-			// return cliCtx.PrintOutput(channelRes)
+			channelRes := channel.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
+			return cliCtx.PrintOutput(channelRes)
 			return nil
 		},
 	}

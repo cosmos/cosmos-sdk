@@ -414,7 +414,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err = tendermint.GetHeader(ctx1)
+			header, err = tendermint.GetHeader(ctx2)
 			if err != nil {
 				return err
 			}
@@ -497,8 +497,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 }
 
 func queryProofs(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
-
-	fmt.Printf("pid %s chanid %s\n", portID, channelID)
 	var connRes types.ChannelResponse
 
 	req := abci.RequestQuery{
@@ -506,14 +504,12 @@ func queryProofs(ctx client.CLIContext, portID string, channelID string, queryRo
 		Data:  types.KeyChannel(portID, channelID),
 		Prove: true,
 	}
-	fmt.Println(string(types.KeyChannel(portID, channelID)))
 
 	res, err := ctx.QueryABCI(req)
 	if res.Value == nil || err != nil {
 		return connRes, err
 	}
 
-	fmt.Println("res: %#v err: %v", string(res.Value), err)
 	var channel types.Channel
 	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
 		return connRes, err

@@ -75,6 +75,7 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
+	cmd.Flags().String(flags.FlagFrom, "", "key in local keystore to send from")
 	return cmd
 }
 

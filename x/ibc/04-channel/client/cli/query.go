@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -55,7 +56,7 @@ $ %s query ibc channel end [port-id] [channel-id]
 			}
 
 			req := abci.RequestQuery{
-				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryChannel),
+				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.SubModuleName),
 				Data:  bz,
 				Prove: viper.GetBool(flags.FlagProve),
 			}
@@ -81,4 +82,25 @@ $ %s query ibc channel end [port-id] [channel-id]
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd
+}
+
+func queryChannel(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
+	var connRes types.ChannelResponse
+
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  types.KeyChannel(portID, channelID),
+		Prove: true,
+	}
+
+	res, err := ctx.QueryABCI(req)
+	if res.Value == nil || err != nil {
+		return connRes, err
+	}
+
+	var channel types.Channel
+	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
+		return connRes, err
+	}
+	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

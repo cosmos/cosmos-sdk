@@ -355,7 +355,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf(" [OK] txid(%v) client(%v) conn(%v)\n", res.TxHash, clientID1, connID1)
+			fmt.Printf(" [OK] txid(%v) client(%v) connection(%v)\n", res.TxHash, clientID1, connID1)
 
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs

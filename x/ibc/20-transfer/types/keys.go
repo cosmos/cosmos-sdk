@@ -23,7 +23,7 @@ const (
 	QuerierRoute = SubModuleName
 
 	// BoundPortID defines the name of the capability key
-	BoundPortID = "bank"
+	BoundPortID = "bankbankbank"
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel

@@ -60,16 +60,16 @@ func (p Packet) Data() []byte { return p.data }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(p.sourcePort); err != nil {
+	if err := host.DefaultPortIdentifierValidator(p.sourcePort); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source port ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(p.destinationPort); err != nil {
+	if err := host.DefaultPortIdentifierValidator(p.destinationPort); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination port ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(p.sourceChannel); err != nil {
+	if err := host.DefaultChannelIdentifierValidator(p.sourceChannel); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source channel ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(p.destinationChannel); err != nil {
+	if err := host.DefaultChannelIdentifierValidator(p.destinationChannel); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination channel ID: %s", err.Error()))
 	}
 	if p.sequence == 0 {

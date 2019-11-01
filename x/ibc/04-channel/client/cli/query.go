@@ -19,7 +19,7 @@ import (
 )
 
 // GetQueryCmd returns the query commands for IBC channels
-func GetQueryCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
+func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics04ChannelQueryCmd := &cobra.Command{
 		Use:                "channel",
 		Short:              "IBC channel query subcommands",
@@ -56,10 +56,12 @@ $ %s query ibc channel end [port-id] [channel-id]
 			}
 
 			req := abci.RequestQuery{
-				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.SubModuleName),
+				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryChannel),
 				Data:  bz,
 				Prove: viper.GetBool(flags.FlagProve),
 			}
+
+			fmt.Println(queryRoute, types.QueryChannel)
 
 			res, err := cliCtx.QueryABCI(req)
 			if err != nil {

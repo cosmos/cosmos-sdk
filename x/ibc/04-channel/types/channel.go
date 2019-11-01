@@ -59,7 +59,7 @@ func (ch Channel) ValidateBasic() sdk.Error {
 	if len(ch.ConnectionHops) != 1 {
 		return ErrInvalidChannel(DefaultCodespace, "IBC v1 only supports one connection hop")
 	}
-	if err := host.DefaultIdentifierValidator(ch.ConnectionHops[0]); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
 		return ErrInvalidChannel(DefaultCodespace, errors.Wrap(err, "invalid connection hop ID").Error())
 	}
 	if strings.TrimSpace(ch.Version) == "" {
@@ -84,10 +84,10 @@ func NewCounterparty(portID, channelID string) Counterparty {
 
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(c.PortID); err != nil {
+	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty connection ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(c.ChannelID); err != nil {
+	if err := host.DefaultChannelIdentifierValidator(c.ChannelID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty client ID: %s", err.Error()))
 	}
 	return nil

@@ -48,10 +48,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid connection ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Signer.Empty() {
@@ -119,10 +119,10 @@ func (msg MsgConnectionOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid connection ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if len(msg.CounterpartyVersions) == 0 {
@@ -204,7 +204,7 @@ func (msg MsgConnectionOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid connection ID: %s", err.Error()))
 	}
 	if strings.TrimSpace(msg.Version) == "" {
@@ -273,7 +273,7 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenConfirm) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid connection ID: %s", err.Error()))
 	}
 	if msg.ProofAck == nil {

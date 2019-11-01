@@ -14,7 +14,6 @@ import (
 // NewQuerier creates a querier for the IBC module
 func NewQuerier(k Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
-		fmt.Println(path)
 		switch path[0] {
 		case client.SubModuleName:
 			switch path[1] {

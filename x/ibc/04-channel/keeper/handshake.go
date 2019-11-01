@@ -135,7 +135,6 @@ func (k Keeper) ChanOpenAck(
 	proofHeight uint64,
 	portCapability sdk.CapabilityKey,
 ) error {
-
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, channelID)

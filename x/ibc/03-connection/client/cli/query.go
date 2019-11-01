@@ -59,6 +59,8 @@ $ %s query ibc connection end [connection-id]
 				Prove: viper.GetBool(flags.FlagProve),
 			}
 
+			fmt.Println(queryRoute, types.QueryConnection)
+
 			res, err := cliCtx.QueryABCI(req)
 			if err != nil {
 				return err

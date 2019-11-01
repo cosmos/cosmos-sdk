@@ -38,7 +38,7 @@ const (
 )
 
 // GetTxCmd returns the transaction commands for IBC Connections
-func GetTxCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics04ChannelTxCmd := &cobra.Command{
 		Use:   "channel",
 		Short: "IBC channel transaction subcommands",
@@ -371,7 +371,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid1, msgOpenInit.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
@@ -390,7 +389,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
@@ -405,7 +403,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid2, msgOpenTry.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)
@@ -424,7 +421,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid1, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid1)
@@ -440,7 +436,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid1, msgOpenAck.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid1, chanid1)
@@ -459,7 +454,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid2)
@@ -474,7 +468,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			fmt.Printf("%v <- %-23v", cid2, msgOpenConfirm.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) portid(%v) chanid(%v)\n", res.TxHash, portid2, chanid2)

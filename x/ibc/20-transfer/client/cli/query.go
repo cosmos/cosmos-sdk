@@ -65,8 +65,8 @@ $ %s query ibc channel end [port-id] [channel-id]
 				return cliCtx.PrintOutput(channel)
 			}
 
-			channelRes := channel.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
-			return cliCtx.PrintOutput(channelRes)
+			// channelRes := channel.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
+			return cliCtx.PrintOutput(channel)
 			return nil
 		},
 	}

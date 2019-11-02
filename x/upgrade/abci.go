@@ -16,7 +16,11 @@ import (
 // The purpose is to ensure the binary is switch EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
-	fmt.Printf("This is viper in begin blocker %v", viper.AllKeys())
+	skipUpgrade := viper.Get(FlagUnsafeSkipUpgrade).(bool)
+	fmt.Printf("this is skip upgrade value %v", skipUpgrade)
+	if skipUpgrade {
+		return
+	}
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

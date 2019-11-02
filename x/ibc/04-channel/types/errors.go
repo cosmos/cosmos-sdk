@@ -44,7 +44,7 @@ func ErrChannelCapabilityNotFound(codespace sdk.CodespaceType) sdk.Error {
 
 // ErrInvalidPacket implements sdk.Error
 func ErrInvalidPacket(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidPacket, "invalid packet sequence counter")
+	return sdk.NewError(codespace, CodeInvalidPacket, msg)
 }
 
 // ErrSequenceNotFound implements sdk.Error

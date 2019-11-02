@@ -58,7 +58,7 @@ func DefaultParams() MintParams {
 }
 
 // validate params
-func ValidateParams(params Params) error {
+func ValidateParams(params MintParams) error {
 	if params.GoalBonded.IsNegative() {
 		return fmt.Errorf("mint parameter GoalBonded should be positive, is %s ", params.GoalBonded.String())
 	}

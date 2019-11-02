@@ -7,15 +7,15 @@
 
 ## Reference
 
-- **[Basics](./basics/README.md)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle and accounts management.  
-- **[Core](./core/README.md)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`. 
-- **[Building Modules](./building-modules/README.md)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s. 
-- **[Interfaces](./interfaces/README.md)**: Documentation on building interfaces for Cosmos SDK applications. 
+- **[Basics](./basics/)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle and accounts management.  
+- **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`. 
+- **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s. 
+- **[Interfaces](./interfaces/)**: Documentation on building interfaces for Cosmos SDK applications. 
 
 ## Other Resources
 
-- **[Module Directory](../x/README.md)**: Module implementations and their respective documentation. 
-- **[Specifications](./spec/README.md)**: Specifications of modules and other parts of the Cosmos SDK.
+- **[Module Directory](../x/)**: Module implementations and their respective documentation. 
+- **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
 - **[SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
 - **[REST API spec](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node through REST.
 

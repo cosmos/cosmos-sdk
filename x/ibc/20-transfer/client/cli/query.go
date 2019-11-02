@@ -66,14 +66,3 @@ $ %s query ibc channel next-recv [port-id] [channel-id]
 
 	return cmd
 }
-
-/*
-
-	if res.Proof == nil {
-		return cliCtx.PrintOutput(channel)
-	}
-
-	channelRes := types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
-	return cliCtx.PrintOutput(channelRes)
-
-*/

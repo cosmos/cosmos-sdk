@@ -29,6 +29,7 @@ const (
 	FlagHaltHeight      = "halt-height"
 	FlagHaltTime        = "halt-time"
 	FlagInterBlockCache = "inter-block-cache"
+	FlagSkipUpgrade 	= "unsafe-skip-upgrade"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -77,6 +78,7 @@ which accepts a path for the resulting pprof file.
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
+	cmd.Flags().Bool(FlagSkipUpgrade, false, "Skip upgrade")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")
@@ -130,7 +132,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	cfg := ctx.Config
 	home := cfg.RootDir
-	viper.Set("sahith", "hello" )
+
 	traceWriterFile := viper.GetString(flagTraceStore)
 	db, err := openDB(home)
 	if err != nil {

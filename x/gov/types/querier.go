@@ -68,18 +68,20 @@ func NewQueryVoteParams(proposalID uint64, voter sdk.AccAddress) QueryVoteParams
 
 // QueryProposalsParams Params for query 'custom/gov/proposals'
 type QueryProposalsParams struct {
+	Page           int
+	Limit          int
 	Voter          sdk.AccAddress
 	Depositor      sdk.AccAddress
 	ProposalStatus ProposalStatus
-	Limit          uint64
 }
 
 // NewQueryProposalsParams creates a new instance of QueryProposalsParams
-func NewQueryProposalsParams(status ProposalStatus, limit uint64, voter, depositor sdk.AccAddress) QueryProposalsParams {
+func NewQueryProposalsParams(page, limit int, status ProposalStatus, voter, depositor sdk.AccAddress) QueryProposalsParams {
 	return QueryProposalsParams{
+		Page:           page,
+		Limit:          limit,
 		Voter:          voter,
 		Depositor:      depositor,
 		ProposalStatus: status,
-		Limit:          limit,
 	}
 }

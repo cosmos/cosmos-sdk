@@ -14,23 +14,23 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authsimops "github.com/cosmos/cosmos-sdk/x/auth/simulation/operations"
-	banksimops "github.com/cosmos/cosmos-sdk/x/bank/simulation/operations"
+	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrsimops "github.com/cosmos/cosmos-sdk/x/distribution/simulation/operations"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govsimops "github.com/cosmos/cosmos-sdk/x/gov/simulation/operations"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsimops "github.com/cosmos/cosmos-sdk/x/params/simulation/operations"
+	paramsim "github.com/cosmos/cosmos-sdk/x/params/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingsimops "github.com/cosmos/cosmos-sdk/x/slashing/simulation/operations"
+	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingsimops "github.com/cosmos/cosmos-sdk/x/staking/simulation/operations"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -39,7 +39,6 @@ func init() {
 	GetSimulatorFlags()
 }
 
-// TODO: add description
 func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedOperation {
 	ap := make(simulation.AppParams)
 
@@ -59,35 +58,24 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightDeductFee, &v, nil,
-					func(_ *rand.Rand) {
-						v = 5
-					})
-				return v
-			}(nil),
-			authsimops.SimulateDeductFee(app.AccountKeeper, app.SupplyKeeper),
-		},
-		{
-			func(_ *rand.Rand) int {
-				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgSend, &v, nil,
 					func(_ *rand.Rand) {
 						v = 100
 					})
 				return v
 			}(nil),
-			banksimops.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
+			banksim.SimulateMsgSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightSingleInputMsgMultiSend, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightMsgMultiSend, &v, nil,
 					func(_ *rand.Rand) {
-						v = 10
+						v = 40
 					})
 				return v
 			}(nil),
-			banksimops.SimulateSingleInputMsgMultiSend(app.AccountKeeper, app.BankKeeper),
+			banksim.SimulateMsgMultiSend(app.AccountKeeper, app.BankKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -98,7 +86,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgSetWithdrawAddress(app.DistrKeeper),
+			distrsim.SimulateMsgSetWithdrawAddress(app.AccountKeeper, app.DistrKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -109,7 +97,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawDelegatorReward(app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawDelegatorReward(app.AccountKeeper, app.DistrKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -120,40 +108,40 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			distrsimops.SimulateMsgWithdrawValidatorCommission(app.DistrKeeper),
+			distrsim.SimulateMsgWithdrawValidatorCommission(app.AccountKeeper, app.DistrKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingTextProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitTextProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, govsimops.SimulateTextProposalContent),
+			govsim.SimulateSubmitProposal(app.AccountKeeper, app.GovKeeper, govsim.SimulateTextProposalContent),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingCommunitySpendProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitCommunitySpendProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, distrsimops.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
+			govsim.SimulateSubmitProposal(app.AccountKeeper, app.GovKeeper, distrsim.SimulateCommunityPoolSpendProposalContent(app.DistrKeeper)),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
-				ap.GetOrGenerate(app.cdc, OpWeightSubmitVotingSlashingParamChangeProposal, &v, nil,
+				ap.GetOrGenerate(app.cdc, OpWeightSubmitParamChangeProposal, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
-			govsimops.SimulateSubmittingVotingAndSlashingForProposal(app.GovKeeper, paramsimops.SimulateParamChangeProposalContent(paramChanges)),
+			govsim.SimulateSubmitProposal(app.AccountKeeper, app.GovKeeper, paramsim.SimulateParamChangeProposalContent(paramChanges)),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -164,7 +152,18 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			govsimops.SimulateMsgDeposit(app.GovKeeper),
+			govsim.SimulateMsgDeposit(app.AccountKeeper, app.GovKeeper),
+		},
+		{
+			func(_ *rand.Rand) int {
+				var v int
+				ap.GetOrGenerate(app.cdc, OpWeightMsgVote, &v, nil,
+					func(_ *rand.Rand) {
+						v = 100
+					})
+				return v
+			}(nil),
+			govsim.SimulateMsgVote(app.AccountKeeper, app.GovKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -175,18 +174,18 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgCreateValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
 				var v int
 				ap.GetOrGenerate(app.cdc, OpWeightMsgEditValidator, &v, nil,
 					func(_ *rand.Rand) {
-						v = 5
+						v = 20
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgEditValidator(app.StakingKeeper),
+			stakingsim.SimulateMsgEditValidator(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -197,7 +196,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgDelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -208,7 +207,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgUndelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -219,7 +218,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			stakingsimops.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
+			stakingsim.SimulateMsgBeginRedelegate(app.AccountKeeper, app.StakingKeeper),
 		},
 		{
 			func(_ *rand.Rand) int {
@@ -230,7 +229,7 @@ func testAndRunTxs(app *SimApp, config simulation.Config) []simulation.WeightedO
 					})
 				return v
 			}(nil),
-			slashingsimops.SimulateMsgUnjail(app.SlashingKeeper),
+			slashingsim.SimulateMsgUnjail(app.AccountKeeper, app.SlashingKeeper, app.StakingKeeper),
 		},
 	}
 }
@@ -254,6 +253,7 @@ func TestFullAppSimulation(t *testing.T) {
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
+	config.ChainID = helpers.SimAppChainID
 
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
@@ -308,6 +308,7 @@ func TestAppImportExport(t *testing.T) {
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
+	config.ChainID = helpers.SimAppChainID
 
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
@@ -414,7 +415,7 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
-		require.Len(t, failedKVAs, 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 
 }
@@ -426,6 +427,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	var logger log.Logger
 	config := NewConfigFromFlags()
+	config.ChainID = helpers.SimAppChainID
 
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
@@ -520,6 +522,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
+	config.ChainID = helpers.SimAppChainID
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -529,7 +532,13 @@ func TestAppStateDeterminism(t *testing.T) {
 		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			logger := log.NewNopLogger()
+			var logger log.Logger
+			if FlagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
+			}
+
 			db := dbm.NewMemDB()
 
 			app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())

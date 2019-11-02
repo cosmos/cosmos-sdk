@@ -85,6 +85,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
 
@@ -101,6 +102,8 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 func TestSigVerification(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
+	// make block height non-zero to ensure account numbers part of signBytes
+	ctx = ctx.WithBlockHeight(1)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -120,15 +123,39 @@ func TestSigVerification(t *testing.T) {
 
 	fee := types.NewTestStdFee()
 
-	privs, accNums, seqs := []crypto.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}
-	tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
-
 	spkd := ante.NewSetPubKeyDecorator(app.AccountKeeper)
 	svd := ante.NewSigVerificationDecorator(app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
-	_, err := antehandler(ctx, tx, false)
-	require.NotNil(t, err)
+	type testCase struct {
+		name      string
+		privs     []crypto.PrivKey
+		accNums   []uint64
+		seqs      []uint64
+		recheck   bool
+		shouldErr bool
+	}
+	testCases := []testCase{
+		{"no signers", []crypto.PrivKey{}, []uint64{}, []uint64{}, false, true},
+		{"not enough signers", []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
+		{"wrong order signers", []crypto.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
+		{"wrong accnums", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
+		{"wrong sequences", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
+		{"valid tx", []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
+		{"no err on recheck", []crypto.PrivKey{}, []uint64{}, []uint64{}, true, false},
+	}
+	for i, tc := range testCases {
+		ctx = ctx.WithIsReCheckTx(tc.recheck)
+
+		tx := types.NewTestTx(ctx, msgs, tc.privs, tc.accNums, tc.seqs, fee)
+
+		_, err := antehandler(ctx, tx, false)
+		if tc.shouldErr {
+			require.NotNil(t, err, "TestCase %d: %s did not error as expected", i, tc.name)
+		} else {
+			require.Nil(t, err, "TestCase %d: %s errored unexpectedly. Err: %v", i, tc.name, err)
+		}
+	}
 }
 
 func TestSigIntegration(t *testing.T) {

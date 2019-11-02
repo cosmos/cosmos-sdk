@@ -23,6 +23,7 @@ func TestCreateVerifier(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			verifier, err := context.CreateVerifier(tc.ctx, context.DefaultVerifierCacheSize)
 			require.Equal(t, tc.expectErr, err != nil, err)

@@ -1,4 +1,4 @@
-// nolint:deadcode unused
+// nolint:deadcode,unused
 // DONTCOVER
 // noalias
 package keeper
@@ -131,7 +131,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
+	copy(pkEd[:], pkBytes)
 	return pkEd
 }
 

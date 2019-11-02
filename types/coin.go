@@ -56,7 +56,7 @@ func validate(denom string, amount Int) error {
 		return err
 	}
 
-	if amount.LT(ZeroInt()) {
+	if amount.IsNegative() {
 		return fmt.Errorf("negative coin amount: %v", amount)
 	}
 

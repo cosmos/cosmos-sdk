@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,6 +21,8 @@ func QueryProofs(ctx client.CLIContext, portID, channelID string, sequence uint6
 	if err != nil {
 		return packetRes, err
 	}
+
+	fmt.Printf("res.Value: %s\n", res.Value)
 
 	var packet types.Packet
 	if err := ctx.Codec.UnmarshalJSON(res.Value, &packet); err != nil {

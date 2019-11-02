@@ -271,14 +271,16 @@ func (k Keeper) RecvPacket(
 			return nil, types.ErrSequenceNotFound(k.codespace, "receive")
 		}
 
+		nextSequenceRecv++
+
 		if packet.Sequence() != nextSequenceRecv {
+			fmt.Println("inv", packet.Sequence(), nextSequenceRecv)
 			return nil, types.ErrInvalidPacket(
 				k.codespace,
 				fmt.Sprintf("packet sequence ≠ next receive sequence (%d ≠ %d)", packet.Sequence(), nextSequenceRecv),
 			)
 		}
 
-		nextSequenceRecv++
 		k.SetNextSequenceRecv(ctx, packet.DestPort(), packet.DestChannel(), nextSequenceRecv)
 	}
 

@@ -50,7 +50,6 @@ func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32
 }
 
 // Parse the BIP44 path and unmarshal into the struct.
-// nolint: gocyclo
 func NewParamsFromPath(path string) (*BIP44Params, error) {
 	spl := strings.Split(path, "/")
 	if len(spl) != 5 {

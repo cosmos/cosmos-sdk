@@ -59,9 +59,6 @@ func NewSetPubKeyDecorator(ak keeper.AccountKeeper) SetPubKeyDecorator {
 }
 
 func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	if simulate {
-		return next(ctx, tx, simulate)
-	}
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
@@ -73,9 +70,13 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	for i, pk := range pubkeys {
 		// PublicKey was omitted from slice since it has already been set in context
 		if pk == nil {
-			continue
+			if !simulate {
+				continue
+			}
+			pk = simSecp256k1Pubkey
 		}
-		if !bytes.Equal(pk.Address(), signers[i]) {
+		// Only make check if simulate=false
+		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
 				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
 		}
@@ -83,6 +84,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
 		if err != nil {
 			return ctx, err
+		}
+		// account already has pubkey set,no need to reset
+		if acc.GetPubKey() != nil {
+			continue
 		}
 		err = acc.SetPubKey(pk)
 		if err != nil {
@@ -130,26 +135,27 @@ func (sgcd SigGasConsumeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		}
 		pubKey := signerAcc.GetPubKey()
 
-		if simulate {
-			// Simulated txs should not contain a signature and are not required to
-			// contain a pubkey, so we must account for tx size of including a
-			// StdSignature (Amino encoding) and simulate gas consumption
-			// (assuming a SECP256k1 simulation key).
-			consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
-		} else {
-			err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
-			if err != nil {
-				return ctx, err
+		if simulate && pubKey == nil {
+			// In simulate mode the transaction comes with no signatures, thus if the
+			// account's pubkey is nil, both signature verification and gasKVStore.Set()
+			// shall consume the largest amount, i.e. it takes more gas to verify
+			// secp256k1 keys than ed25519 ones.
+			if pubKey == nil {
+				pubKey = simSecp256k1Pubkey
 			}
+		}
+		err = sgcd.sigGasConsumer(ctx.GasMeter(), sig, pubKey, params)
+		if err != nil {
+			return ctx, err
 		}
 	}
 
 	return next(ctx, tx, simulate)
 }
 
-// Verify all signatures for tx and return error if any are invalid
-// increment sequence of each signer and set updated account back in store
-// Call next AnteHandler
+// Verify all signatures for a tx and return an error if any are invalid. Note,
+// the SigVerificationDecorator decorator will not get executed on ReCheck.
+//
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
@@ -163,6 +169,10 @@ func NewSigVerificationDecorator(ak keeper.AccountKeeper) SigVerificationDecorat
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	// no need to verify signatures on recheck tx
+	if ctx.IsReCheckTx() {
+		return next(ctx, tx, simulate)
+	}
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -206,9 +216,15 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-// Increments sequences of all signers.
-// Use this decorator to prevent replay attacks
-// CONTRACT: Tx must implement SigVerifiableTx interface
+// IncrementSequenceDecorator handles incrementing sequences of all signers.
+// Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
+// there is no need to execute IncrementSequenceDecorator on CheckTx or RecheckTX
+// since it is merely updating the nonce. As a result, this has the side effect
+// that subsequent and sequential txs orginating from the same account cannot be
+// handled correctly in a reliable way. To send sequential txs orginating from the
+// same account, it is recommended to instead use multiple messages in a tx.
+//
+// CONTRACT: The tx must implement the SigVerifiableTx interface.
 type IncrementSequenceDecorator struct {
 	ak keeper.AccountKeeper
 }
@@ -220,6 +236,11 @@ func NewIncrementSequenceDecorator(ak keeper.AccountKeeper) IncrementSequenceDec
 }
 
 func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	// no need to increment sequence on CheckTx or RecheckTx
+	if ctx.IsCheckTx() && !simulate {
+		return next(ctx, tx, simulate)
+	}
+
 	sigTx, ok := tx.(SigVerifiableTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
@@ -310,29 +331,6 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 			sigIndex++
 		}
 	}
-}
-
-// Internal function that simulates gas consumption of signature verification when simulate=true
-// TODO: allow users to simulate signatures other than auth.StdSignature
-func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig []byte, params types.Params) {
-	simSig := types.StdSignature{
-		Signature: sig,
-		PubKey:    pubkey,
-	}
-	if len(sig) == 0 {
-		simSig.Signature = simSecp256k1Sig[:]
-	}
-
-	sigBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(simSig)
-	cost := sdk.Gas(len(sigBz) + 6)
-
-	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
-	// number of signers.
-	if _, ok := pubkey.(multisig.PubKeyMultisigThreshold); ok {
-		cost *= params.TxSigLimit
-	}
-
-	gasmeter.ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 }
 
 // GetSignerAcc returns an account for a given address that is expected to sign

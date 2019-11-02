@@ -116,6 +116,7 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 // custom marshal yaml function due to consensus pubkey
 func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
 	bs, err := yaml.Marshal(struct {
+		Description       Description
 		Commission        CommissionRates
 		MinSelfDelegation sdk.Int
 		DelegatorAddress  sdk.AccAddress
@@ -123,6 +124,7 @@ func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
 		PubKey            string
 		Value             sdk.Coin
 	}{
+		Description:       msg.Description,
 		Commission:        msg.Commission,
 		MinSelfDelegation: msg.MinSelfDelegation,
 		DelegatorAddress:  msg.DelegatorAddress,
@@ -168,7 +170,7 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if err := msg.Commission.Validate(); err != nil {
 		return err
 	}
-	if !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
@@ -224,12 +226,12 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
 
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.GT(sdk.ZeroInt()) {
+	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
 		return ErrMinSelfDelegationInvalid(DefaultCodespace)
 	}
 
 	if msg.CommissionRate != nil {
-		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.LT(sdk.ZeroDec()) {
+		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
 			return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission rate must be between 0 and 1, inclusive")
 		}
 	}

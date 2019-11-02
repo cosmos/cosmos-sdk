@@ -28,7 +28,7 @@ import (
 )
 
 // dummy addresses used for testing
-// nolint: unused deadcode
+// nolint:unused, deadcode
 var (
 	Addrs = createTestAddrs(500)
 	PKs   = createTestPubKeys(500)
@@ -282,22 +282,19 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	return validator
 }
 
-// nolint: deadcode unused
+// nolint:deadcode, unused
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)
 }
 
 // RandomValidator returns a random validator given access to the keeper and ctx
-func RandomValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
+func RandomValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) (val types.Validator, ok bool) {
 	vals := keeper.GetAllValidators(ctx)
-	i := r.Intn(len(vals))
-	return vals[i]
-}
+	if len(vals) == 0 {
+		return types.Validator{}, false
+	}
 
-// RandomBondedValidator returns a random bonded validator given access to the keeper and ctx
-func RandomBondedValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
-	vals := keeper.GetBondedValidatorsByPower(ctx)
 	i := r.Intn(len(vals))
-	return vals[i]
+	return vals[i], true
 }

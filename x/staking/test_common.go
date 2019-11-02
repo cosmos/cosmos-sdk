@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// nolint: deadcode unused
+// nolint:deadcode,unused,varcheck
 var (
 	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())

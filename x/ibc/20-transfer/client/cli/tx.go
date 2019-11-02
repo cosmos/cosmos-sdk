@@ -1,11 +1,6 @@
 package cli
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strconv"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -16,8 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	ctypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	cutils "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -90,41 +84,28 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 // GetMsgRecvPacketCmd returns the command to create a MsgRecvTransferPacket transaction
 func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "recv-packet [sending-port-id] [sending-channel-id] [receiving-port-id] [receiving-channel-id] [/path/to/proof.json] [height]",
+		Use:   "recv-packet [sending-port-id] [sending-channel-id]",
 		Short: "Creates and sends a SendPacket message",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
-			var packet channelexported.PacketI
-			sequence := uint64(viper.GetInt(FlagSequence))
-			timeout := uint64(viper.GetInt(FlagTimeout))
+			node2 := viper.GetString(FlagNode2)
+			cid2 := viper.GetString(FlagChainId2)
+			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+
+			viper.Set(flags.FlagChainID, cid2)
 			sourcePort := args[0]
 			sourceChannel := args[1]
-			destinationPort := args[2]
-			destinationChannel := args[3]
-			var data []byte // TODO
-			packet = ctypes.NewPacket(sequence, timeout, sourcePort, sourceChannel, destinationPort, destinationChannel, data)
-
-			var proof commitment.Proof
-			if err := cdc.UnmarshalJSON([]byte(args[1]), &proof); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...\n")
-				contents, err := ioutil.ReadFile(args[1])
-				if err != nil {
-					return fmt.Errorf("error opening proofs file: %v", err)
-				}
-				if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
-					return fmt.Errorf("error unmarshalling proofs file: %v", err)
-				}
-			}
-
-			height, err := strconv.ParseUint(args[2], 10, 64)
+			sequence := uint64(viper.GetInt(FlagSequence))
+			packetRes, err := cutils.QueryProofs(cliCtx2, sourcePort, sourceChannel, sequence, "")
 			if err != nil {
-				return fmt.Errorf("error height: %v", err)
+				return err
 			}
+			viper.Set(flags.FlagChainID, viper.GetString(flags.FlagChainID))
 
-			msg := types.NewMsgRecvPacket(packet, []commitment.Proof{proof}, height, cliCtx.GetFromAddress())
+			msg := types.NewMsgRecvPacket(packetRes.Packet, []commitment.Proof{packetRes.Proof}, packetRes.ProofHeight, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -134,10 +115,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd = client.PostCommands(cmd)[0]
-	//cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
-	//cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
-	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
+	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
 	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 	cmd.Flags().String(FlagSequence, "", "sequence for the packet")
 	cmd.Flags().String(FlagTimeout, "", "timeout for the packet")

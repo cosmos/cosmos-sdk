@@ -80,7 +80,7 @@ type (
 	NodeQuerier                      = types.NodeQuerier
 	AccountRetriever                 = types.AccountRetriever
 	GenesisState                     = types.GenesisState
-	Params                           = types.Params
+	Params                           = types.AuthParams
 	QueryAccountParams               = types.QueryAccountParams
 	StdSignMsg                       = types.StdSignMsg
 	StdTx                            = types.StdTx

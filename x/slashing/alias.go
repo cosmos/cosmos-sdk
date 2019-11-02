@@ -96,7 +96,7 @@ type (
 	GenesisState            = types.GenesisState
 	MissedBlock             = types.MissedBlock
 	MsgUnjail               = types.MsgUnjail
-	Params                  = types.Params
+	Params                  = types.SlashParams
 	QuerySigningInfoParams  = types.QuerySigningInfoParams
 	QuerySigningInfosParams = types.QuerySigningInfosParams
 	ValidatorSigningInfo    = types.ValidatorSigningInfo

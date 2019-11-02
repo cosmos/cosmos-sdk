@@ -92,7 +92,7 @@ $ <appcli> query slashing params
 				return err
 			}
 
-			var params types.Params
+			var params types.SlashParams
 			cdc.MustUnmarshalJSON(res, &params)
 			return cliCtx.PrintOutput(params)
 		},

@@ -11,12 +11,12 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params   Params                   `json:"params" yaml:"params"`
+	Params   AuthParams               `json:"params" yaml:"params"`
 	Accounts exported.GenesisAccounts `json:"accounts" yaml:"accounts"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params, accounts exported.GenesisAccounts) GenesisState {
+func NewGenesisState(params AuthParams, accounts exported.GenesisAccounts) GenesisState {
 	return GenesisState{
 		Params:   params,
 		Accounts: accounts,

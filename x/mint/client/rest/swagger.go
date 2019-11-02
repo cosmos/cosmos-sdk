@@ -7,11 +7,11 @@ import "github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 // they enabled typed documentation.
 //
 //nolint:deadcode,unused
+
 type (
-	mintParams = types.Params
 	mintParams struct {
-		Height int64      `json:"height"`
-		Result mintParams `json:"result"`
+		Height int64            `json:"height"`
+		Result types.MintParams `json:"result"`
 	}
 
 	mintInflation struct {

@@ -55,7 +55,7 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
+func CreateTestInput(t *testing.T, defaults types.SlashParams) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
@@ -137,7 +137,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 
 // Have to change these parameters for tests
 // lest the tests take forever
-func TestParams() types.Params {
+func TestParams() types.SlashParams {
 	params := types.DefaultParams()
 	params.SignedBlocksWindow = 1000
 	params.DowntimeJailDuration = 60 * 60

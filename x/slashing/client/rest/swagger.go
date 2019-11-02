@@ -11,7 +11,6 @@ import (
 //
 //nolint:deadcode,unused
 type (
-	slashingParams    = types.Params
 	validatorSignInfo struct {
 		Height int64                      `json:"height"`
 		Result types.ValidatorSigningInfo `json:"result"`
@@ -23,8 +22,8 @@ type (
 	}
 
 	slashingParams struct {
-		Height int64            `json:"height"`
-		Result []slashingParams `json:"result"`
+		Height int64               `json:"height"`
+		Result []types.SlashParams `json:"result"`
 	}
 
 	postUnjail struct {

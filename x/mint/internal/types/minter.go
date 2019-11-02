@@ -47,7 +47,7 @@ func ValidateMinter(minter Minter) error {
 }
 
 // NextInflationRate returns the new inflation rate for the next hour.
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
+func (m Minter) NextInflationRate(params MintParams, bondedRatio sdk.Dec) sdk.Dec {
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
 	// the distance from the desired ratio (67%). The maximum rate change possible is
@@ -74,13 +74,13 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) sdk.Dec {
 
 // NextAnnualProvisions returns the annual provisions based on current total
 // supply and inflation rate.
-func (m Minter) NextAnnualProvisions(_ Params, totalSupply sdk.Int) sdk.Dec {
+func (m Minter) NextAnnualProvisions(_ MintParams, totalSupply sdk.Int) sdk.Dec {
 	return m.Inflation.MulInt(totalSupply)
 }
 
 // BlockProvision returns the provisions for a block based on the annual
 // provisions rate.
-func (m Minter) BlockProvision(params Params) sdk.Coin {
+func (m Minter) BlockProvision(params MintParams) sdk.Coin {
 	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

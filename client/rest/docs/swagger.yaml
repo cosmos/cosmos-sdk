@@ -338,14 +338,11 @@ definitions:
     type: object
   rest.distrParams:
     properties:
-      base_proposer_reward:
-        type: string
-      bonus_proposer_reward:
-        type: string
-      community_tax:
-        type: string
-      withdraw_addr_enabled:
-        type: string
+      height:
+        type: integer
+      result:
+        $ref: '#/definitions/common.PrettyParams'
+        type: object
     type: object
   rest.editValidator:
     properties:
@@ -382,15 +379,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/rest.mintParams'
-        type: object
-    type: object
-  rest.params:
-    properties:
-      height:
-        type: integer
-      result:
-        $ref: '#/definitions/rest.distrParams'
+        $ref: '#/definitions/types.MintParams'
         type: object
     type: object
   rest.pool:
@@ -640,15 +629,32 @@ definitions:
         type: integer
       result:
         items:
-          $ref: '#/definitions/rest.slashingParams'
+          $ref: '#/definitions/types.SlashParams'
         type: array
+    type: object
+  rest.stakeParams:
+    properties:
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
+        type: string
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
+        type: integer
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
+        type: string
     type: object
   rest.stakingParams:
     properties:
       height:
         type: integer
       result:
-        $ref: '#/definitions/rest.stakingParams'
+        $ref: '#/definitions/rest.stakeParams'
         type: object
     type: object
   rest.totalDenomSupply:
@@ -922,6 +928,27 @@ definitions:
         description: optional website link
         type: string
     type: object
+  types.MintParams:
+    properties:
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
+        type: string
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
+        type: string
+    type: object
   types.MsgBeginRedelegate:
     properties:
       amount:
@@ -1070,6 +1097,23 @@ definitions:
       validator_address:
         type: string
     type: object
+  types.Params:
+    properties:
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
+        type: string
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
+        type: integer
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
+        type: string
+    type: object
   types.Pool:
     properties:
       bonded_tokens:
@@ -1199,6 +1243,21 @@ definitions:
         items:
           $ref: '#/definitions/types.TxResponse'
         type: array
+    type: object
+  types.SlashParams:
+    properties:
+      downtime_jail_duration:
+        type: string
+      max_evidence_age:
+        type: string
+      min_signed_per_window:
+        type: string
+      signed_blocks_window:
+        type: integer
+      slash_fraction_double_sign:
+        type: string
+      slash_fraction_downtime:
+        type: string
     type: object
   types.StdFee:
     properties:
@@ -1791,7 +1850,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.params'
+            $ref: '#/definitions/rest.distrParams'
         "400":
           description: Returned if the request doesn't have a valid height
           schema:

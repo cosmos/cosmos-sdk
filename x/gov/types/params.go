@@ -125,20 +125,20 @@ func (vp VotingParams) String() string {
 }
 
 // Params returns all of the governance params
-type Params struct {
+type GovParams struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
 	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_parmas"`
 }
 
-func (gp Params) String() string {
+func (gp GovParams) String() string {
 	return gp.VotingParams.String() + "\n" +
 		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
 }
 
 // NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
-	return Params{
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) GovParams {
+	return GovParams{
 		VotingParams:  vp,
 		DepositParams: dp,
 		TallyParams:   tp,
@@ -146,6 +146,6 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 }
 
 // DefaultParams default governance params
-func DefaultParams() Params {
+func DefaultParams() GovParams {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }

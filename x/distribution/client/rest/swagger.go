@@ -10,8 +10,8 @@ import (
 // they enabled typed documentation.
 //
 //nolint:deadcode,unused
+
 type (
-	distrParams = common.PrettyParams
 	coinsReturn struct {
 		Height int64       `json:"height"`
 		Result types.Coins `json:"result"`
@@ -29,8 +29,8 @@ type (
 	}
 
 	// params helps generate documentation for paramsHandlerFn
-	params struct {
-		Height int64       `json:"height"`
-		Result distrParams `json:"result"`
+	distrParams struct {
+		Height int64               `json:"height"`
+		Result common.PrettyParams `json:"result"`
 	}
 )

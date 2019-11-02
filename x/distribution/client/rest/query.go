@@ -273,7 +273,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 // @Tags distribution
 // @Produce json
 // @Param height query string false "Block height to execute query (defaults to chain tip)"
-// @Success 200 {object} rest.params
+// @Success 200 {object} rest.distrParams
 // @Failure 400 {object} rest.ErrorResponse "Returned if the request doesn't have a valid height"
 // @Failure 500 {object} rest.ErrorResponse "Returned on server error"
 // @Router /distribution/parameters [get]

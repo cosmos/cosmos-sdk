@@ -18,7 +18,7 @@ var (
 )
 
 // mint parameters
-type Params struct {
+type MintParams struct {
 	MintDenom           string  `json:"mint_denom" yaml:"mint_denom"`                       // type of coin to mint
 	InflationRateChange sdk.Dec `json:"inflation_rate_change" yaml:"inflation_rate_change"` // maximum annual change in inflation rate
 	InflationMax        sdk.Dec `json:"inflation_max" yaml:"inflation_max"`                 // maximum inflation rate
@@ -29,13 +29,13 @@ type Params struct {
 
 // ParamTable for minting module.
 func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&Params{})
+	return params.NewKeyTable().RegisterParamSet(&MintParams{})
 }
 
 func NewParams(mintDenom string, inflationRateChange, inflationMax,
-	inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
+	inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) MintParams {
 
-	return Params{
+	return MintParams{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
 		InflationMax:        inflationMax,
@@ -46,8 +46,8 @@ func NewParams(mintDenom string, inflationRateChange, inflationMax,
 }
 
 // default minting module parameters
-func DefaultParams() Params {
-	return Params{
+func DefaultParams() MintParams {
+	return MintParams{
 		MintDenom:           sdk.DefaultBondDenom,
 		InflationRateChange: sdk.NewDecWithPrec(13, 2),
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
@@ -58,7 +58,7 @@ func DefaultParams() Params {
 }
 
 // validate params
-func ValidateParams(params Params) error {
+func ValidateParams(params MintParams) error {
 	if params.GoalBonded.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("mint parameter GoalBonded should be positive, is %s ", params.GoalBonded.String())
 	}
@@ -74,7 +74,7 @@ func ValidateParams(params Params) error {
 	return nil
 }
 
-func (p Params) String() string {
+func (p MintParams) String() string {
 	return fmt.Sprintf(`Minting Params:
   Mint Denom:             %s
   Inflation Rate Change:  %s
@@ -89,7 +89,7 @@ func (p Params) String() string {
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
+func (p *MintParams) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		{Key: KeyMintDenom, Value: &p.MintDenom},
 		{Key: KeyInflationRateChange, Value: &p.InflationRateChange},

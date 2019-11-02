@@ -140,6 +140,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd = client.PostCommands(cmd)[0]
+	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
 	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
 	cmd.Flags().String(FlagSequence, "", "sequence for the packet")

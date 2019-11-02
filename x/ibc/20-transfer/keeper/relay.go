@@ -53,17 +53,20 @@ func (k Keeper) SendTransfer(
 
 // ReceivePacket handles receiving packet
 func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
+	fmt.Println(1111)
 	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println(2222)
 	var data types.PacketData
 	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
 		return sdk.NewError(types.DefaultCodespace, types.CodeInvalidPacketData, "invalid packet data")
 	}
 
+	fmt.Println(3333)
 	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
 }
 
@@ -84,12 +87,14 @@ func (k Keeper) ReceiveTransfer(
 			}
 		}
 
+		fmt.Println(4444)
 		// mint new tokens if the source of the transfer is the same chain
 		err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
 		if err != nil {
 			return err
 		}
 
+		fmt.Println(5555)
 		// send to receiver
 		return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Receiver, data.Amount)
 	}
@@ -106,6 +111,7 @@ func (k Keeper) ReceiveTransfer(
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}
 
+	fmt.Println(6666)
 	escrowAddress := types.GetEscrowAddress(destinationPort, destinationChannel)
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 

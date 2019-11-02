@@ -203,11 +203,13 @@ func (k Keeper) RecvPacket(
 	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 
+	fmt.Println(11111)
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
 		return nil, types.ErrChannelNotFound(k.codespace, packet.GetDestPort(), packet.GetDestChannel())
 	}
 
+	fmt.Println(22222)
 	if channel.State != types.OPEN {
 		return nil, types.ErrInvalidChannelState(
 			k.codespace,
@@ -215,10 +217,12 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	fmt.Println(33333)
 	if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
 		return nil, errors.New("port is not valid")
 	}
 
+	fmt.Println(44444)
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
 		return nil, types.ErrInvalidPacket(
@@ -227,6 +231,7 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	fmt.Println(55555)
 	if packet.GetSourceChannel() != channel.Counterparty.ChannelID {
 		return nil, types.ErrInvalidPacket(
 			k.codespace,
@@ -234,11 +239,13 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	fmt.Println(66666)
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
 		return nil, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
+	fmt.Println(77777)
 	if connectionEnd.State != connection.OPEN {
 		return nil, connection.ErrInvalidConnectionState(
 			k.codespace,
@@ -246,10 +253,12 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	fmt.Println(88888)
 	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
 		return nil, types.ErrPacketTimeout(k.codespace)
 	}
 
+	fmt.Println(99999)
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
 		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
@@ -258,6 +267,7 @@ func (k Keeper) RecvPacket(
 		return nil, errors.New("couldn't verify counterparty packet commitment")
 	}
 
+	fmt.Println(111)
 	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
@@ -265,6 +275,7 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	fmt.Println(222)
 	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
@@ -284,6 +295,7 @@ func (k Keeper) RecvPacket(
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
+	fmt.Println(333)
 	return packet, nil
 }
 

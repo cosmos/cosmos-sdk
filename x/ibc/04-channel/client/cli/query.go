@@ -6,14 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 )
 
 // GetQueryCmd returns the query commands for IBC channels
@@ -46,7 +43,7 @@ $ %s query ibc channel end [port-id] [channel-id]
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			ch, err := queryChannel(cliCtx, args[0], args[1], queryRoute)
+			ch, err := utils.QueryChannel(cliCtx, args[0], args[1], queryRoute)
 			if err != nil {
 				return err
 			}
@@ -55,25 +52,4 @@ $ %s query ibc channel end [port-id] [channel-id]
 		},
 	}
 	return cmd
-}
-
-func queryChannel(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
-	var connRes types.ChannelResponse
-
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyChannel(portID, channelID),
-		Prove: true,
-	}
-
-	res, err := ctx.QueryABCI(req)
-	if res.Value == nil || err != nil {
-		return connRes, err
-	}
-
-	var channel types.Channel
-	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
-		return connRes, err
-	}
-	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

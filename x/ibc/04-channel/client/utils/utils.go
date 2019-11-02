@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-func QueryProofs(ctx client.CLIContext, portID, channelID string, sequence uint64, queryRoute string) (types.PacketResponse, error) {
+func QueryPacket(ctx client.CLIContext, portID, channelID string, sequence uint64, queryRoute string) (types.PacketResponse, error) {
 	var packetRes types.PacketResponse
 
 	req := abci.RequestQuery{
@@ -21,10 +21,44 @@ func QueryProofs(ctx client.CLIContext, portID, channelID string, sequence uint6
 		return packetRes, err
 	}
 
-	var packet types.Packet
-	if err := ctx.Codec.UnmarshalJSON(res.Value, &packet); err != nil {
+	channel, err := QueryChannel(ctx, portID, channelID, queryRoute)
+	if err != nil {
 		return packetRes, err
 	}
 
+	destPortID := channel.Channel.Counterparty.PortID
+	destChannelID := channel.Channel.Counterparty.ChannelID
+
+	packet := types.NewPacket(
+		sequence,
+		uint64(ctx.Height)+1000, // XXX: fixme
+		portID,
+		channelID,
+		destPortID,
+		destChannelID,
+		res.Value,
+	)
+
 	return types.NewPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height), nil
+}
+
+func QueryChannel(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
+	var connRes types.ChannelResponse
+
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  types.KeyChannel(portID, channelID),
+		Prove: true,
+	}
+
+	res, err := ctx.QueryABCI(req)
+	if res.Value == nil || err != nil {
+		return connRes, err
+	}
+
+	var channel types.Channel
+	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
+		return connRes, err
+	}
+	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

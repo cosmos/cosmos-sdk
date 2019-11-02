@@ -99,7 +99,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 			sourcePort := args[0]
 			sourceChannel := args[1]
 			sequence := uint64(viper.GetInt(FlagSequence))
-			packetRes, err := cutils.QueryProofs(cliCtx2, sourcePort, sourceChannel, sequence, "")
+			packetRes, err := cutils.QueryPacket(cliCtx2, sourcePort, sourceChannel, sequence, "")
 			if err != nil {
 				return err
 			}

@@ -32,10 +32,11 @@ func NewKeeper(
 	portKeeper types.PortKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey:         key,
-		cdc:              cdc,
-		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
-		prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
+		storeKey:  key,
+		cdc:       cdc,
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
+		prefix:    []byte{},
+		// prefix:           []byte(types.SubModuleName + "/"),                                          // "channel/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
 		portKeeper:       portKeeper,
@@ -62,6 +63,7 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
+	fmt.Printf("setting channel %s at port %s\n", channelID, portID)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(channel)
 	store.Set(types.KeyChannel(portID, channelID), bz)

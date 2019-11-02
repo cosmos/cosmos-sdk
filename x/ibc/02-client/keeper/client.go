@@ -29,11 +29,13 @@ func (k Keeper) CreateClient(
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
+	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, consensusState.GetHeight()))
 	return clientState, nil
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
+
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrClientTypeNotFound(k.codespace), "cannot update client")

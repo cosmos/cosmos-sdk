@@ -36,6 +36,41 @@ const (
 	DefaultKeyPass = "12345678"
 )
 
+func addKeyScriptingCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "test [name] [mnemonic] [password]",
+		Short: "Add a recovered mnemonic to the keystore encrypt it, and save to disk, for testing",
+		Long: `Derive a new private key from an existing mnemonic file and encrypt to disk.
+
+NOTE: This is insecure and only meant to be used during testing!!!! HERE BE DRAGONS!		
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			kb, err := NewKeyBaseFromHomeFlag()
+			if err != nil {
+				return err
+			}
+
+			_, err = kb.Get(args[0])
+			if err == nil {
+				return errors.New("key already exists, exiting")
+			}
+
+			if !bip39.IsMnemonicValid(args[1]) {
+				return errors.New("invalid mnemonic")
+			}
+
+			info, err := kb.CreateAccount(args[0], args[1], "", args[2], 0, 0)
+			if err != nil {
+				return err
+			}
+
+			return printCreate(cmd, info, false, "")
+		},
+	}
+	return cmd
+}
+
 func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",

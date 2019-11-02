@@ -641,7 +641,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.AuthParams) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

@@ -38,7 +38,7 @@ func TestQueryParams(t *testing.T) {
 	app, ctx := createTestApp(true)
 	querier := keep.NewQuerier(app.MintKeeper)
 
-	var params types.Params
+	var params types.MintParams
 
 	res, sdkErr := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
 	require.NoError(t, sdkErr)

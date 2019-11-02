@@ -71,7 +71,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		meter  sdk.GasMeter
 		sig    []byte
 		pubkey crypto.PubKey
-		params types.Params
+		params types.AuthParams
 	}
 	tests := []struct {
 		name        string
@@ -147,7 +147,7 @@ func TestSigIntegration(t *testing.T) {
 	require.Equal(t, initialSigCost*uint64(len(privs)), doubleCost-initialCost)
 }
 
-func runSigDecorators(t *testing.T, params types.Params, multisig bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
+func runSigDecorators(t *testing.T, params types.AuthParams, multisig bool, privs ...crypto.PrivKey) (sdk.Gas, error) {
 	// setup
 	app, ctx := createTestApp(true)
 	// Make block-height non-zero to include accNum in SignBytes

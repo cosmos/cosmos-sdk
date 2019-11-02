@@ -25,7 +25,7 @@ To learn how the SDK works from a high-level perspective, go to the [SDK Intro](
 
 If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
-For more, please go to the [Cosmos SDK Docs](./docs/README.md).
+For more, please go to the [Cosmos SDK Docs](./docs/).
 
 ## Cosmos Hub Mainnet
 

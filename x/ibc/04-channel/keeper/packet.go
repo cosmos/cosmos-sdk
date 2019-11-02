@@ -49,9 +49,12 @@ func (k Keeper) CleanupPacket(
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-		return nil, errors.New("port is not valid")
-	}
+	// XXX: commented out
+	/*
+		if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
+			return nil, errors.New("port is not valid")
+		}
+	*/
 
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return nil, types.ErrInvalidPacket(
@@ -217,10 +220,13 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	fmt.Println(33333)
-	if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
-		return nil, errors.New("port is not valid")
-	}
+	// XXX: commented out
+	/*
+		fmt.Println(33333)
+		if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
+			return nil, errors.New("port is not valid")
+		}
+	*/
 
 	fmt.Println(44444)
 	// packet must come from the channel's counterparty
@@ -324,9 +330,12 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-		return nil, errors.New("invalid capability key")
-	}
+	// XXX: commented out
+	/*
+		if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
+			return nil, errors.New("invalid capability key")
+		}
+	*/
 
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {

@@ -22,7 +22,7 @@ func QueryProofs(ctx client.CLIContext, portID, channelID string, sequence uint6
 	}
 
 	var packet types.Packet
-	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &packet); err != nil {
+	if err := ctx.Codec.UnmarshalJSON(res.Value, &packet); err != nil {
 		return packetRes, err
 	}
 

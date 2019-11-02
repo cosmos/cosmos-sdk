@@ -30,7 +30,7 @@ var (
 	FlagFrom1    = "from1"
 	FlagFrom2    = "from2"
 	FlagChainId2 = "chain-id2"
-	FlagSequence = "sequence"
+	FlagSequence = "packet-sequence"
 	FlagTimeout  = "timeout"
 )
 

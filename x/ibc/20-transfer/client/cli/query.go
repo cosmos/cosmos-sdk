@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strings"
 
@@ -22,21 +23,21 @@ func GetQueryCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
 	}
 
 	queryCmd.AddCommand(
-		GetCmdQueryPacketProof(cdc, storeKey),
+		GetCmdQueryNextSequence(cdc, storeKey),
 	)
 
 	return queryCmd
 }
 
-// GetCmdQueryChannel defines the command to query a channel end
-func GetCmdQueryPacketProof(cdc *codec.Codec, queryRoute string) *cobra.Command {
+// GetCmdQueryNextSequence defines the command to query a next receive sequence
+func GetCmdQueryNextSequence(cdc *codec.Codec, queryRoute string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "next-recv [port-id] [channel-id] [sequence]",
-		Short: "Query a channel end",
+		Use:   "next-recv [port-id] [channel-id]",
+		Short: "Query a next receive sequence",
 		Long: strings.TrimSpace(fmt.Sprintf(`Query an IBC channel end
 		
 Example:
-$ %s query ibc channel end [port-id] [channel-id]
+$ %s query ibc channel next-recv [port-id] [channel-id]
 		`, version.ClientName),
 		),
 		Args: cobra.ExactArgs(2),
@@ -56,21 +57,23 @@ $ %s query ibc channel end [port-id] [channel-id]
 				return err
 			}
 
-			var channel channel.Channel
-			if err := cdc.UnmarshalJSON(res.Value, &channel); err != nil {
-				return err
-			}
+			sequence := binary.BigEndian.Uint64(res.Value)
 
-			if res.Proof == nil {
-				return cliCtx.PrintOutput(channel)
-			}
-
-			// channelRes := channel.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
-			return cliCtx.PrintOutput(channel)
-			return nil
+			return cliCtx.PrintOutput(sequence)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 
 	return cmd
 }
+
+/*
+
+	if res.Proof == nil {
+		return cliCtx.PrintOutput(channel)
+	}
+
+	channelRes := types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
+	return cliCtx.PrintOutput(channelRes)
+
+*/

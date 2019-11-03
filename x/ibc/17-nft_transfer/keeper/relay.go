@@ -24,7 +24,7 @@ func (k Keeper) SendTransfer(
 	// get the port and channel of the counterparty
 	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrChannelNotFound(k.codespace, sourceChannel)
+		return channeltypes.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
 	destinationPort := channel.Counterparty.PortID
@@ -53,12 +53,12 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	}
 
 	var data types.PacketData
-	err = data.UnmarshalJSON(packet.Data())
+	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
 		return sdk.NewError(types.DefaultCodespace, types.CodeInvalidPacketData, "invalid packet data")
 	}
 
-	return k.ReceiveTransfer(ctx, packet.SourcePort(), packet.SourceChannel(), packet.DestPort(), packet.DestChannel(), data)
+	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
 }
 
 // ReceiveTransfer handles nft_transfer receiving logic

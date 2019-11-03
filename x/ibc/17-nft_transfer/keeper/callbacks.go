@@ -120,14 +120,14 @@ func (k Keeper) onRecvPacket(
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.Data())
+	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
 		return types.ErrInvalidPacketData(k.codespace)
 	}
 
 	return k.ReceiveTransfer(
-		ctx, packet.SourcePort(), packet.SourceChannel(),
-		packet.DestPort(), packet.DestChannel(), data,
+		ctx, packet.GetSourcePort(), packet.GetSourceChannel(),
+		packet.GetDestPort(), packet.GetDestChannel(), data,
 	)
 }
 
@@ -148,13 +148,13 @@ func (k Keeper) onTimeoutPacket(
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.Data())
+	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
 		return types.ErrInvalidPacketData(k.codespace)
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.SourcePort(), packet.SourcePort())
+	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourcePort())
 
 	if !strings.HasPrefix(data.Denom, prefix) {
 		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidDenom, "incorrect denomination")
@@ -162,7 +162,7 @@ func (k Keeper) onTimeoutPacket(
 	id := data.ID
 
 	if data.Source {
-		escrowAddress := types.GetEscrowAddress(packet.DestPort(), packet.DestChannel())
+		escrowAddress := types.GetEscrowAddress(packet.GetDestPort(), packet.GetDestChannel())
 		denom := data.Denom[len(prefix):]
 		nft, err := k.nftKeeper.GetNFT(ctx, denom, id)
 		if err != nil {

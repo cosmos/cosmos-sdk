@@ -92,6 +92,15 @@ func QueryValidatorCommission(cliCtx context.CLIContext, queryRoute string, vali
 	return res, err
 }
 
+// QueryValidatorOutstandingReward returns a validator's outstanding reward.
+func QueryValidatorOutstandingReward(cliCtx context.CLIContext, queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
+	res, _, err := cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryValidatorOutstandingRewards),
+		cliCtx.Codec.MustMarshalJSON(types.NewQueryValidatorCommissionParams(validatorAddr)),
+	)
+	return res, err
+}
+
 // WithdrawAllDelegatorRewards builds a multi-message slice to be used
 // to withdraw all delegations rewards for the given delegator.
 func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {

@@ -43,10 +43,11 @@ type CancelRequest struct {
 
 func ProposalRESTHandler(cliCtx context.CLIContext) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
-		SubRoute: "param_change",
+		SubRoute: "upgrade",
 		Handler:  postPlanHandler(cliCtx),
 	}
 }
+
 func postPlanHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req PlanRequest

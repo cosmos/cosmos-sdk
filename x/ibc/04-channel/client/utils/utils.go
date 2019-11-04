@@ -7,12 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-func QueryPacket(ctx client.CLIContext, portID, channelID string, sequence uint64, timeout uint64, queryRoute string) (types.PacketResponse, error) {
+// QueryPacket returns a packet from the store
+func QueryPacket(
+	ctx client.CLIContext, portID, channelID string,
+	sequence, timeout uint64, queryRoute string,
+) (types.PacketResponse, error) {
 	var packetRes types.PacketResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  []byte(types.PacketCommitmentPath(portID, channelID, sequence)),
+		Data:  types.KeyPacketCommitment(portID, channelID, sequence),
 		Prove: true,
 	}
 
@@ -39,10 +43,11 @@ func QueryPacket(ctx client.CLIContext, portID, channelID string, sequence uint6
 		res.Value,
 	)
 
-	// XXX: res.Height+1 is hack, fix later
+	// FIXME: res.Height+1 is hack, fix later
 	return types.NewPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height+1), nil
 }
 
+// QueryChannel returns a channel from the store
 func QueryChannel(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
 	var connRes types.ChannelResponse
 

@@ -3,8 +3,8 @@ package tendermint
 import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
 var _ exported.Header = Header{}
@@ -29,15 +29,15 @@ func (h Header) GetHeight() uint64 {
 }
 
 // GetHeader takes a context and returns the appropriate header
-func GetHeader(ctx context.CLIContext) (res Header, err error) {
+func GetHeader(ctx context.CLIContext) (Header, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return
+		return Header{}, err
 	}
 
 	info, err := node.ABCIInfo()
 	if err != nil {
-		return
+		return Header{}, err
 	}
 
 	height := info.Response.LastBlockHeight
@@ -45,25 +45,24 @@ func GetHeader(ctx context.CLIContext) (res Header, err error) {
 
 	commit, err := node.Commit(&height)
 	if err != nil {
-		return
+		return Header{}, err
 	}
 
 	validators, err := node.Validators(&prevheight)
 	if err != nil {
-		return
+		return Header{}, err
 	}
 
 	nextvalidators, err := node.Validators(&height)
 	if err != nil {
-		return
+		return Header{}, err
 	}
 
-	res = Header{
+	header := Header{
 		SignedHeader:     commit.SignedHeader,
 		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
 		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
 	}
 
-	return
+	return header, nil
 }
-

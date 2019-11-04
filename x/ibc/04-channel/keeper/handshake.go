@@ -91,14 +91,12 @@ func (k Keeper) ChanOpenTry(
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	/*
-		// TODO: Maybe not right
-		key := sdk.NewKVStoreKey(portID)
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
 
-		if !k.portKeeper.Authenticate(key, portID) {
-			return errors.New("port is not valid")
-		}
-	*/
+	if !k.portKeeper.Authenticate(key, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
@@ -174,14 +172,12 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	/*
-		// TODO: Maybe not right
-		key := sdk.NewKVStoreKey(portID)
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
 
-		if !k.portKeeper.Authenticate(key, portID) {
-			return errors.New("port is not valid")
-		}
-	*/
+	if !k.portKeeper.Authenticate(key, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -249,14 +245,12 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	/*
-		// TODO: Maybe not right
-		key := sdk.NewKVStoreKey(portID)
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
 
-		if !k.portKeeper.Authenticate(key, portID) {
-			return errors.New("port is not valid")
-		}
-	*/
+	if !k.portKeeper.Authenticate(key, portID) {
+		return errors.New("port is not valid")
+	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {

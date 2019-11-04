@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -99,7 +97,9 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 			node2 := viper.GetString(FlagNode2)
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainId2)
-			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).
+				WithCodec(cdc).
+				WithBroadcastMode(flags.BroadcastBlock)
 
 			header, err := tendermint.GetHeader(cliCtx2)
 			if err != nil {
@@ -115,6 +115,10 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 
 			viper.Set(flags.FlagChainID, cid1)
 			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid, header, cliCtx.GetFromAddress())
+			if err := msgUpdateClient.ValidateBasic(); err != nil {
+				return err
+			}
+
 			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
 			if err != nil || !res.IsOK() {
 				return err

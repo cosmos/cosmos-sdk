@@ -80,7 +80,7 @@ type MsgConnectionOpenTry struct {
 	Counterparty         Counterparty      `json:"counterparty"`
 	CounterpartyVersions []string          `json:"counterparty_versions"`
 	ProofInit            commitment.ProofI `json:"proof_init"`      // proof of the initialization the connection on Chain A: `none -> INIT`
-	ProofConsensus       commitment.ProofI `json:"proof_consensus"` // proof of client consensus stat
+	ProofConsensus       commitment.ProofI `json:"proof_consensus"` // proof of client consensus state
 	ProofHeight          uint64            `json:"proof_height"`
 	ConsensusHeight      uint64            `json:"consensus_height"`
 	Signer               sdk.AccAddress    `json:"signer"`
@@ -168,7 +168,7 @@ var _ sdk.Msg = MsgConnectionOpenAck{}
 type MsgConnectionOpenAck struct {
 	ConnectionID    string            `json:"connection_id"`
 	ProofTry        commitment.ProofI `json:"proof_try"`       // proof for the change of the connection state on Chain B: `none -> TRYOPEN`
-	ProofConsensus  commitment.ProofI `json:"proof_consensus"` // proof of client consensus stat
+	ProofConsensus  commitment.ProofI `json:"proof_consensus"` // proof of client consensus state
 	ProofHeight     uint64            `json:"proof_height"`
 	ConsensusHeight uint64            `json:"consensus_height"`
 	Version         string            `json:"version"`

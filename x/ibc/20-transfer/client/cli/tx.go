@@ -115,13 +115,10 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 
 			viper.Set(flags.FlagChainID, cid1)
 			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid, header, cliCtx.GetFromAddress())
-			fmt.Printf("%v <- %-23v", cid2, msgUpdateClient.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
 			if err != nil || !res.IsOK() {
-				fmt.Println(res)
 				return err
 			}
-			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientid)
 
 			viper.Set(flags.FlagChainID, cid2)
 			sequence := uint64(viper.GetInt(FlagSequence))

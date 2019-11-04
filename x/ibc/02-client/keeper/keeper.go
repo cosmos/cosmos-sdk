@@ -175,9 +175,7 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	res := proof.VerifyMembership(root, path, value)
-
-	return res
+	return proof.VerifyMembership(root, path, value)
 }
 
 // VerifyNonMembership state non-membership function defined by the client type

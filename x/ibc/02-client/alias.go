@@ -9,20 +9,21 @@ package client
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
 const (
-	DefaultCodespace           = types.DefaultCodespace
-	CodeClientExists           = types.CodeClientExists
-	CodeClientNotFound         = types.CodeClientNotFound
-	CodeClientFrozen           = types.CodeClientFrozen
-	CodeConsensusStateNotFound = types.CodeConsensusStateNotFound
-	CodeInvalidConsensusState  = types.CodeInvalidConsensusState
-	CodeClientTypeNotFound     = types.CodeClientTypeNotFound
-	CodeInvalidClientType      = types.CodeInvalidClientType
-	CodeRootNotFound           = types.CodeRootNotFound
-	CodeInvalidHeader          = types.CodeInvalidHeader
-	CodeInvalidEvidence        = types.CodeInvalidEvidence
+	DefaultCodespace           = errors.DefaultCodespace
+	CodeClientExists           = errors.CodeClientExists
+	CodeClientNotFound         = errors.CodeClientNotFound
+	CodeClientFrozen           = errors.CodeClientFrozen
+	CodeConsensusStateNotFound = errors.CodeConsensusStateNotFound
+	CodeInvalidConsensusState  = errors.CodeInvalidConsensusState
+	CodeClientTypeNotFound     = errors.CodeClientTypeNotFound
+	CodeInvalidClientType      = errors.CodeInvalidClientType
+	CodeRootNotFound           = errors.CodeRootNotFound
+	CodeInvalidHeader          = errors.CodeInvalidHeader
+	CodeInvalidEvidence        = errors.CodeInvalidEvidence
 	AttributeKeyClientID       = types.AttributeKeyClientID
 	SubModuleName              = types.SubModuleName
 	StoreKey                   = types.StoreKey
@@ -40,16 +41,16 @@ var (
 	QuerierConsensusState        = keeper.QuerierConsensusState
 	QuerierVerifiedRoot          = keeper.QuerierVerifiedRoot
 	RegisterCodec                = types.RegisterCodec
-	ErrClientExists              = types.ErrClientExists
-	ErrClientNotFound            = types.ErrClientNotFound
-	ErrClientFrozen              = types.ErrClientFrozen
-	ErrConsensusStateNotFound    = types.ErrConsensusStateNotFound
-	ErrInvalidConsensus          = types.ErrInvalidConsensus
-	ErrClientTypeNotFound        = types.ErrClientTypeNotFound
-	ErrInvalidClientType         = types.ErrInvalidClientType
-	ErrRootNotFound              = types.ErrRootNotFound
-	ErrInvalidHeader             = types.ErrInvalidHeader
-	ErrInvalidEvidence           = types.ErrInvalidEvidence
+	ErrClientExists              = errors.ErrClientExists
+	ErrClientNotFound            = errors.ErrClientNotFound
+	ErrClientFrozen              = errors.ErrClientFrozen
+	ErrConsensusStateNotFound    = errors.ErrConsensusStateNotFound
+	ErrInvalidConsensus          = errors.ErrInvalidConsensus
+	ErrClientTypeNotFound        = errors.ErrClientTypeNotFound
+	ErrInvalidClientType         = errors.ErrInvalidClientType
+	ErrRootNotFound              = errors.ErrRootNotFound
+	ErrInvalidHeader             = errors.ErrInvalidHeader
+	ErrInvalidEvidence           = errors.ErrInvalidEvidence
 	ClientStatePath              = types.ClientStatePath
 	ClientTypePath               = types.ClientTypePath
 	ConsensusStatePath           = types.ConsensusStatePath

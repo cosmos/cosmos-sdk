@@ -24,8 +24,6 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		ibcclient.GetTxCmd(cdc, storeKey),
 		connection.GetTxCmd(cdc, storeKey),
 	)...)
-	return ibcTxCmd
-}
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {

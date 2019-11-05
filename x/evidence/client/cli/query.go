@@ -39,7 +39,7 @@ $ %s query %s --page=2 --limit=50
 		Args:                       cobra.MaximumNArgs(1),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       QueryEvidenceCMD(cdc),
+		RunE:                       QueryEvidenceCmd(cdc),
 	}
 
 	cmd.Flags().Int(flagPage, 1, "pagination page of evidence to to query for")

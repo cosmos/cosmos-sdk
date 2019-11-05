@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -385,13 +385,13 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err := tendermint.GetHeader(ctx1)
+			header, err := clientutils.GetTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid2)
-			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
 			if err := msgUpdateClient.ValidateBasic(); err != nil {
 				return err
 			}
@@ -421,13 +421,13 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err = tendermint.GetHeader(ctx2)
+			header, err = clientutils.GetTendermintHeader(ctx2)
 			if err != nil {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid1)
-			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
+			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
 			if err := msgUpdateClient.ValidateBasic(); err != nil {
 				return err
 			}
@@ -458,13 +458,13 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err = tendermint.GetHeader(ctx1)
+			header, err = clientutils.GetTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid2)
-			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
+			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
 			if err := msgUpdateClient.ValidateBasic(); err != nil {
 				return err
 			}

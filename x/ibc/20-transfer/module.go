@@ -16,3 +16,8 @@ func Name() string {
 func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cli.GetTxCmd(cdc)
 }
+
+// GetQueryCmd returns the root tx command for the IBC transfer.
+func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
+	return cli.GetQueryCmd(cdc, queryRoute)
+}

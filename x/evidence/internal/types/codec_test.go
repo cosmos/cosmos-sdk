@@ -3,14 +3,16 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 	"github.com/stretchr/testify/require"
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
-var _ types.Evidence = (*testEvidence)(nil)
+var _ exported.Evidence = (*testEvidence)(nil)
 
 type testEvidence struct{}
 
@@ -29,7 +31,7 @@ func TestCodec(t *testing.T) {
 	types.RegisterCodec(cdc)
 	types.RegisterEvidenceTypeCodec(testEvidence{}, "cosmos-sdk/testEvidence")
 
-	var e types.Evidence = testEvidence{}
+	var e exported.Evidence = testEvidence{}
 	bz, err := cdc.MarshalBinaryBare(e)
 	require.NoError(t, err)
 

@@ -3,9 +3,11 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
@@ -17,7 +19,7 @@ func TestDefaultGenesisState(t *testing.T) {
 func TestGenesisStateValidate_Valid(t *testing.T) {
 	pk := ed25519.GenPrivKey()
 
-	evidence := make([]types.Evidence, 100)
+	evidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),
@@ -44,7 +46,7 @@ func TestGenesisStateValidate_Valid(t *testing.T) {
 func TestGenesisStateValidate_Invalid(t *testing.T) {
 	pk := ed25519.GenPrivKey()
 
-	evidence := make([]types.Evidence, 100)
+	evidence := make([]exported.Evidence, 100)
 	for i := 0; i < 100; i++ {
 		sv := types.TestVote{
 			ValidatorAddress: pk.PubKey().Address(),

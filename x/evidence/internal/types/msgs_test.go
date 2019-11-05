@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 
 	submitter := sdk.AccAddress("test")
 	testCases := []struct {
-		evidence  types.Evidence
+		evidence  exported.Evidence
 		submitter sdk.AccAddress
 		expectErr bool
 	}{

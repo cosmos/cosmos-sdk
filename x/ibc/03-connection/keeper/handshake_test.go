@@ -153,14 +153,14 @@ func (suite *KeeperTestSuite) connOpenConfirm(chainId string, connectionID, coun
 
 func (suite *KeeperTestSuite) TestHandshake() {
 	//get gaia1 consensusState
-	state := suite.getConsensusState(ChainIdGaia1)
-	//create client on gaia2
-	suite.createClient(ChainIdGaia2, ClientToGaia2, clientType, state)
+	state1 := suite.getConsensusState(ChainIdGaia1)
+	//create gaia1's client on gaia2
+	suite.createClient(ChainIdGaia2, ClientToGaia2, clientType, state1)
 
 	//get gaia2 consensusState
-	state1 := suite.getConsensusState(ChainIdGaia2)
-	// create client on gaia1
-	suite.createClient(ChainIdGaia1, ClientToGaia1, clientType, state1)
+	state2 := suite.getConsensusState(ChainIdGaia2)
+	// create gaia2's client on gaia1
+	suite.createClient(ChainIdGaia1, ClientToGaia1, clientType, state2)
 
 	//===========OpenInit on gaia2===========
 	suite.connOpenInit(ChainIdGaia2, ConnectionToGaia1, ClientToGaia2, ClientToGaia1, ConnectionToGaia2)

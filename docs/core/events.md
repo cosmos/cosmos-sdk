@@ -21,6 +21,8 @@ order: 7
 
 `Event`s are returned to the underlying consensus engine in the response of the following ABCI messages: [`CheckTx`](./baseapp.md#checktx), [`DeliverTx`](./baseapp.md#delivertx), [`BeginBlock`](./baseapp.md#beginblock) and [`EndBlock`](./baseapp.md#endblock). 
 
+Typically, `event` `type`s and `attributes` are defined on a **per-module basis** in the module's `/internal/types/events.go` file, and triggered from the module's [`handler`](../building-modules/handler.md) via the [`EventManager`](#eventmanager).
+
 ## EventManager
 
 In Cosmos SDK applications, `event`s are generally managed by an object called the [`EventManager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L18-L20). It is implemented as a simple wrapper around a slice of `event`s: 
@@ -45,6 +47,44 @@ ctx.EventManager().EmitEvent(
 ```
 
 See the [`handler` concept doc](../building-modules/handler.md) for a more detailed view on how to typically implement `events` and use the `EventManager` in modules. 
+
+## Subscribing to `events`
+
+It is possible to subscribe to `events` via [Tendermint's Websocket](https://tendermint.com/docs/app-dev/subscribing-to-events-via-websocket.html#subscribing-to-events-via-websocket). This is done by calling the `subscribe` RPC method via Websocket:
+
+```
+{
+    "jsonrpc": "2.0",
+    "method": "subscribe",
+    "id": "0",
+    "params": {
+        "query": "tm.event='eventCategory' AND type.attribute='attributeValue'"
+    }
+}
+```
+
+The main `eventCategory` you can subscribe to are:
+
+- `NewBlock`: Contains `events` triggered during `BeginBlock` and `EndBlock`.
+- `Tx`: Contains `events` triggered during `DeliverTx` (i.e. transaction processing).
+- `ValidatorSetUpdates`: Contains validator set updates for the block. 
+
+These events are triggered from the `state` package after a block is committed. You can get the full list of `event` categories [here](https://godoc.org/github.com/tendermint/tendermint/types#pkg-constants). 
+
+The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are looking for. For example, a `transfer` transaction triggers an `event` of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/internal/types/events.go)). Subscribing to this `event` would be done like so:
+
+```
+{
+    "jsonrpc": "2.0",
+    "method": "subscribe",
+    "id": "0",
+    "params": {
+        "query": "tm.event='Tx' AND transfer.sender='senderAddress'"
+    }
+}
+```
+
+where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format. 
 
 ## Next
 

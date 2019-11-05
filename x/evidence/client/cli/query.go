@@ -48,7 +48,7 @@ $ %s query %s --page=2 --limit=50
 	return cmd
 }
 
-// QueryEvidenceCMD returns the command handler for evidence querying. Evidence
+// QueryEvidenceCmd returns the command handler for evidence querying. Evidence
 // can be queried for by hash or paginated evidence can be returned.
 func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {

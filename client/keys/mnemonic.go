@@ -17,7 +17,7 @@ const (
 	mnemonicEntropySize = 256
 )
 
-func mnemonicKeyCommand() *cobra.Command {
+func MnemonicKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",

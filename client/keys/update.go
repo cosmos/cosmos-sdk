@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func updateKeyCommand() *cobra.Command {
+func UpdateKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",
 		Short: "Change the password used to protect private key",

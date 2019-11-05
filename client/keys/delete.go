@@ -16,7 +16,7 @@ const (
 	flagForce = "force"
 )
 
-func deleteKeyCommand() *cobra.Command {
+func DeleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete the given key",

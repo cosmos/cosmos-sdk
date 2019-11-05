@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func exportKeyCommand() *cobra.Command {
+func ExportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",

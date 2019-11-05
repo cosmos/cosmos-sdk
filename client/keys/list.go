@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-func listKeysCmd() *cobra.Command {
+func ListKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all keys",

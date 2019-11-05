@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func importKeyCommand() *cobra.Command {
+func ImportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import <name> <keyfile>",
 		Short: "Import private keys into the local keybase",

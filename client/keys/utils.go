@@ -28,14 +28,14 @@ const (
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
-func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
+func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir)
+	return NewKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.
-func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir)
+func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
@@ -54,8 +54,8 @@ func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
 	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
 }
 
-func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
+func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -72,9 +72,9 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		var out []byte
 		var err error
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(ko, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(ko)
+			out, err = KeysCdc.MarshalJSON(ko)
 		}
 		if err != nil {
 			panic(err)
@@ -99,9 +99,9 @@ func printInfos(infos []keys.Info) {
 		var err error
 
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(kos, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(kos)
+			out, err = KeysCdc.MarshalJSON(kos)
 		}
 
 		if err != nil {

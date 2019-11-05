@@ -13,7 +13,7 @@ import (
 )
 
 func Test_runMigrateCmd(t *testing.T) {
-	cmd := addKeyCommand()
+	cmd := AddKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
@@ -29,7 +29,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	viper.Set(flags.FlagDryRun, true)
-	cmd = migrateCommand()
+	cmd = MigrateCommand()
 	mockIn, _, _ = tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\n")
 	assert.NoError(t, runMigrateCmd(cmd, []string{}))

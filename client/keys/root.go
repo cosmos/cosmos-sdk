@@ -19,17 +19,17 @@ func Commands() *cobra.Command {
     needs to sign with a private key.`,
 	}
 	cmd.AddCommand(
-		mnemonicKeyCommand(),
-		addKeyCommand(),
-		exportKeyCommand(),
-		importKeyCommand(),
-		listKeysCmd(),
-		showKeysCmd(),
+		MnemonicKeyCommand(),
+		AddKeyCommand(),
+		ExportKeyCommand(),
+		ImportKeyCommand(),
+		ListKeysCmd(),
+		ShowKeysCmd(),
 		flags.LineBreak,
-		deleteKeyCommand(),
-		updateKeyCommand(),
-		parseKeyStringCommand(),
-		migrateCommand(),
+		DeleteKeyCommand(),
+		UpdateKeyCommand(),
+		ParseKeyStringCommand(),
+		MigrateCommand(),
 	)
 	return cmd
 }

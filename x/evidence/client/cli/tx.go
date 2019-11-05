@@ -22,7 +22,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, childCmds []*cobra.Command) *co
 		RunE:                       client.ValidateCmd,
 	}
 
-	submitEvidenceCmd := SubmitEvidenceCMD(cdc)
+	submitEvidenceCmd := SubmitEvidenceCmd(cdc)
 	for _, childCmd := range childCmds {
 		submitEvidenceCmd.AddCommand(client.PostCommands(childCmd)[0])
 	}

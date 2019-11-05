@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -36,8 +37,8 @@ const (
 	TestChannel1   = "firstchannel"
 	TestChannel2   = "secondchannel"
 
-	TestChannelOrder = types.ORDERED
-	TestVersion      = ""
+	TestChannelOrder   = types.ORDERED
+	TestChannelVersion = ""
 )
 
 type KeeperTestSuite struct {
@@ -77,8 +78,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.channelKeeper = NewKeeper(suite.cdc, suite.storeKey, types.DefaultCodespace, suite.clientKeeper, suite.connectionKeeper, suite.portKeeper)
 
 	suite.createClient()
-	suite.createConnection()
-	suite.bindPorts()
 }
 
 func (suite *KeeperTestSuite) createClient() {
@@ -94,9 +93,9 @@ func (suite *KeeperTestSuite) createClient() {
 	suite.clientKeeper.CreateClient(suite.ctx, TestClient, TestClientType, consensusState)
 }
 
-func (suite *KeeperTestSuite) createConnection() {
+func (suite *KeeperTestSuite) createConnection(state connection.State) {
 	connection := connection.ConnectionEnd{
-		State:    connection.OPEN,
+		State:    state,
 		ClientID: TestClient,
 		Counterparty: connection.Counterparty{
 			ClientID:     TestClient,
@@ -118,15 +117,19 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 			ChannelID: counterpartyChan,
 		},
 		ConnectionHops: []string{connID},
-		Version:        TestVersion,
+		Version:        TestChannelVersion,
 	}
 
 	suite.channelKeeper.SetChannel(suite.ctx, portID, chanID, channel)
 }
 
-func (suite *KeeperTestSuite) bindPorts() {
-	suite.portKeeper.BindPort(TestPort1)
-	suite.portKeeper.BindPort(TestPort2)
+func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
+	store := prefix.NewStore(suite.ctx.KVStore(suite.storeKey), suite.channelKeeper.prefix)
+	store.Delete(types.KeyChannel(portID, chanID))
+}
+
+func (suite *KeeperTestSuite) bindPorts(portID string) {
+	suite.portKeeper.BindPort(portID)
 }
 
 func (suite *KeeperTestSuite) updateClient() {
@@ -163,8 +166,21 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 	counterparty := types.NewCounterparty(TestPort2, TestChannel2)
 	capabilityKey := sdk.NewKVStoreKey(TestPort1)
 
-	err := suite.channelKeeper.ChanOpenInit(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort1, TestChannel1, counterparty, TestVersion, capabilityKey)
-	suite.Nil(err)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
+	err := suite.channelKeeper.ChanOpenInit(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort1, TestChannel1, counterparty, TestChannelVersion, capabilityKey)
+	suite.NotNil(err) // channel has already exist
+
+	suite.deleteChannel(TestPort1, TestChannel1)
+	err = suite.channelKeeper.ChanOpenInit(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort1, TestChannel1, counterparty, TestChannelVersion, capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.NONE)
+	err = suite.channelKeeper.ChanOpenInit(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort1, TestChannel1, counterparty, TestChannelVersion, capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	err = suite.channelKeeper.ChanOpenInit(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort1, TestChannel1, counterparty, TestChannelVersion, capabilityKey)
+	suite.Nil(err) // successfully executedTestChannelVersion
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
 	suite.True(found)
@@ -172,17 +188,35 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
-	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
-	suite.updateClient()
-
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
-	proofInit, proofHeight := suite.queryProof(chanKey)
-
 	counterparty := types.NewCounterparty(TestPort1, TestChannel1)
 	capabilityKey := sdk.NewKVStoreKey(TestPort2)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 
-	err := suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestVersion, TestVersion, proofInit, uint64(proofHeight), capabilityKey)
-	suite.Nil(err)
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.INIT)
+	proofInit, proofHeight := commitment.Proof{}, int64(0)
+	err := suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel has already exist
+
+	suite.deleteChannel(TestPort2, TestChannel2)
+	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.NONE)
+	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
+	suite.Nil(err) // successfully executed
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
 	suite.True(found)
@@ -190,17 +224,45 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
-	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
+	capabilityKey := sdk.NewKVStoreKey(TestPort1)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort2, TestChannel2))
+
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
 	suite.updateClient()
-
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort2, TestChannel2))
 	proofTry, proofHeight := suite.queryProof(chanKey)
+	err := suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel does not exist
 
-	capabilityKey := sdk.NewKVStoreKey(TestPort1)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid channel state
 
-	err := suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestVersion, proofTry, uint64(proofHeight), capabilityKey)
-	suite.Nil(err)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.NONE)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
+	suite.Nil(err) // successfully executed
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
 	suite.True(found)
@@ -208,21 +270,205 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 }
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
-	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	capabilityKey := sdk.NewKVStoreKey(TestPort2)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
 	suite.updateClient()
-
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 	proofAck, proofHeight := suite.queryProof(chanKey)
-
-	capabilityKey := sdk.NewKVStoreKey(TestPort2)
-
 	err := suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
-	suite.Nil(err)
+	suite.NotNil(err) // channel does not exist
+
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid channel state
+
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.NONE)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // successfully executed
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
 	suite.True(found)
 	suite.Equal(types.OPEN, channel.State)
+}
+
+func (suite *KeeperTestSuite) TestChanCloseInit() {
+	capabilityKey := sdk.NewKVStoreKey(TestPort1)
+
+	err := suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1, capabilityKey)
+	suite.NotNil(err) // channel does not exist
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1, capabilityKey)
+	suite.NotNil(err) // channel is already closed
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1, capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.TRYOPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1, capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1, capabilityKey)
+	suite.Nil(err) // successfully executed
+
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(types.CLOSED, channel.State)
+}
+
+func (suite *KeeperTestSuite) TestChanCloseConfirm() {
+	capabilityKey := sdk.NewKVStoreKey(TestPort2)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	suite.updateClient()
+	proofInit, proofHeight := suite.queryProof(chanKey)
+	err := suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel does not exist
+
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.CLOSED)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel is already closed
+
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // connection does not exist
+
+	suite.createConnection(connection.TRYOPEN)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // invalid connection state
+
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
+	suite.NotNil(err) // successfully executed
+
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
+	suite.True(found)
+	suite.Equal(types.CLOSED, channel.State)
+}
+
+func (suite *KeeperTestSuite) TestSetChannel() {
+	storedChannel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
+	suite.False(found)
+
+	channel := types.Channel{
+		State:    types.OPEN,
+		Ordering: TestChannelOrder,
+		Counterparty: types.Counterparty{
+			PortID:    TestPort1,
+			ChannelID: TestChannel1,
+		},
+		ConnectionHops: []string{TestConnection},
+		Version:        TestChannelVersion,
+	}
+	suite.channelKeeper.SetChannel(suite.ctx, TestPort1, TestChannel1, channel)
+
+	storedChannel, found = suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(channel, storedChannel)
+}
+
+func (suite *KeeperTestSuite) TestSetChannelCapability() {
+	storedChannelCap, found := suite.channelKeeper.GetChannelCapability(suite.ctx, TestPort1, TestChannel1)
+	suite.False(found)
+
+	channelCap := "test-channel-capability"
+	suite.channelKeeper.SetChannelCapability(suite.ctx, TestPort1, TestChannel1, channelCap)
+
+	storedChannelCap, found = suite.channelKeeper.GetChannelCapability(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(channelCap, storedChannelCap)
+}
+
+func (suite *KeeperTestSuite) TestSetSequence() {
+	storedNextSeqSend, found := suite.channelKeeper.GetNextSequenceSend(suite.ctx, TestPort1, TestChannel1)
+	suite.False(found)
+
+	storedNextSeqRecv, found := suite.channelKeeper.GetNextSequenceRecv(suite.ctx, TestPort1, TestChannel1)
+	suite.False(found)
+
+	nextSeqSend, nextSeqRecv := uint64(10), uint64(10)
+	suite.channelKeeper.SetNextSequenceSend(suite.ctx, TestPort1, TestChannel1, nextSeqSend)
+	suite.channelKeeper.SetNextSequenceRecv(suite.ctx, TestPort1, TestChannel1, nextSeqRecv)
+
+	storedNextSeqSend, found = suite.channelKeeper.GetNextSequenceSend(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(nextSeqSend, storedNextSeqSend)
+
+	storedNextSeqRecv, found = suite.channelKeeper.GetNextSequenceSend(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(nextSeqRecv, storedNextSeqRecv)
+}
+
+func (suite *KeeperTestSuite) TestPackageCommitment() {
+	seq := uint64(10)
+	storedCommitment := suite.channelKeeper.GetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
+	suite.Equal(nil, storedCommitment)
+
+	commitment := []byte("commitment")
+	suite.channelKeeper.SetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq, commitment)
+
+	storedCommitment = suite.channelKeeper.GetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
+	suite.Equal(commitment, storedCommitment)
+
+	suite.channelKeeper.deletePacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
+	storedCommitment = suite.channelKeeper.GetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
+	suite.Equal(nil, storedCommitment)
+}
+
+func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
+	store := prefix.NewStore(suite.ctx.KVStore(suite.storeKey), suite.channelKeeper.prefix)
+	seq := uint64(10)
+
+	storedAckHash := store.Get(types.KeyPacketAcknowledgement(TestPort1, TestChannel1, seq))
+	suite.Equal(nil, storedAckHash)
+
+	ackHash := []byte("ackhash")
+	suite.channelKeeper.SetPacketAcknowledgement(suite.ctx, TestPort1, TestChannel1, seq, ackHash)
+
+	storedAckHash = store.Get(types.KeyPacketAcknowledgement(TestPort1, TestChannel1, seq))
+	suite.Equal(ackHash, storedAckHash)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

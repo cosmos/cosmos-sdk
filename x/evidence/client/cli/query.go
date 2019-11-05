@@ -50,7 +50,7 @@ $ %s query %s --page=2 --limit=50
 
 // QueryEvidenceCMD returns the command handler for evidence querying. Evidence
 // can be queried for by hash or paginated evidence can be returned.
-func QueryEvidenceCMD(cdc *codec.Codec) func(*cobra.Command, []string) error {
+func QueryEvidenceCmd(cdc *codec.Codec) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := client.ValidateCmd(cmd, args); err != nil {
 			return err

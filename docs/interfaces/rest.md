@@ -15,13 +15,13 @@ This document describes how to create a REST interface for an SDK **application*
 
 ## Application REST Interface
 
-Building the REST Interface for an application involves creating a [REST server](./rest.md#rest-server) to route requests and output responses. The SDK comes with its own REST Server by default. To enable it, the `rest.ServeCommand` command should be added as a subcommand of the `rootCmd` in the `main()` function of the CLI interface:
+Building the REST Interface for an application is done by [aggregating REST Routes](#registering-routes) defined in the application's modules. This interface is served by a REST Server [REST server](#rest-server), which route requests and output responses in the application itself. The SDK comes with its own REST Server by default. To enable it, the `rest.ServeCommand` command needs to be added as a subcommand of the `rootCmd` in the `main()` function of the [CLI interface](./cli.md):
 
 ```go
 rootCmd.AddCommand(rest.ServeCommand(cdc, registerRoutes))
 ```
 
-Users can use the application CLI to start a new REST server, a local server through which they can securely interact with the application without downloading the entire state. The command entered by users would look something like this:
+Users will then be able to use the application CLI to start a new REST server, a local server through which they can securely interact with the application without downloading the entire state. The command entered by users would look something like this:
 
 ```bash
 appcli rest-server --chain-id <chainID> --trust-node
@@ -40,6 +40,8 @@ A REST Server is used to receive and route HTTP Requests, obtain the results fro
 * **Listener:** A [listener](https://golang.org/pkg/net/#Listener) from the net package.
 
 Of the five, the only attribute that application developers need interact with is the `router`: they need to add routes to it so that the REST server can properly handle queries. See the next section for more information on registering routes. 
+
+In order to enable the REST Server in an SDK application, the `rest.ServeCommand` needs to be added to the application's command-line interface. See the [above section](#application-rest-interface) for more information.
 
 ## Registering Routes
 

@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -17,7 +18,7 @@ func (k Keeper) CreateClient(
 ) (types.State, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.State{}, types.ErrClientExists(k.codespace, clientID)
+		return types.State{}, errors.ErrClientExists(k.codespace, clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -30,6 +31,7 @@ func (k Keeper) CreateClient(
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
+	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, consensusState.GetHeight()))
 	return clientState, nil
 }
 
@@ -37,26 +39,26 @@ func (k Keeper) CreateClient(
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrClientTypeNotFound(k.codespace), "cannot update client")
+		return sdkerrors.Wrap(errors.ErrClientTypeNotFound(k.codespace), "cannot update client")
 	}
 
 	// check that the header consensus matches the client one
 	if header.ClientType() != clientType {
-		return sdkerrors.Wrap(types.ErrInvalidConsensus(k.codespace), "cannot update client")
+		return sdkerrors.Wrap(errors.ErrInvalidConsensus(k.codespace), "cannot update client")
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrClientNotFound(k.codespace, clientID), "cannot update client")
+		return sdkerrors.Wrap(errors.ErrClientNotFound(k.codespace, clientID), "cannot update client")
 	}
 
 	if clientState.Frozen {
-		return sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientID), "cannot update client")
+		return sdkerrors.Wrap(errors.ErrClientFrozen(k.codespace, clientID), "cannot update client")
 	}
 
 	consensusState, found := k.GetConsensusState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConsensusStateNotFound(k.codespace), "cannot update client")
+		return sdkerrors.Wrap(errors.ErrConsensusStateNotFound(k.codespace), "cannot update client")
 	}
 
 	if header.GetHeight() < consensusState.GetHeight() {
@@ -84,7 +86,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string, evidence exported.Evidence) error {
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		sdk.ResultFromError(types.ErrClientNotFound(k.codespace, clientID))
+		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, clientID))
 	}
 
 	err := k.checkMisbehaviour(ctx, evidence)

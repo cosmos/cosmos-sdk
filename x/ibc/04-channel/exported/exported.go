@@ -5,12 +5,12 @@ import (
 )
 
 type PacketI interface {
-	Sequence() uint64
-	TimeoutHeight() uint64
-	SourcePort() string
-	SourceChannel() string
-	DestPort() string
-	DestChannel() string
-	Data() []byte
+	GetSequence() uint64
+	GetTimeoutHeight() uint64
+	GetSourcePort() string
+	GetSourceChannel() string
+	GetDestPort() string
+	GetDestChannel() string
+	GetData() []byte
 	ValidateBasic() sdk.Error
 }

@@ -11,6 +11,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -29,8 +31,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 	return Keeper{
 		storeKey:  key,
 		cdc:       cdc,
-		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/client",
-		prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, errors.DefaultCodespace)), // "ibc/client",
+		prefix:    []byte{},
+		// prefix:    []byte(types.SubModuleName + "/"),                                          // "client/"
 	}
 }
 
@@ -128,25 +131,27 @@ func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState expo
 }
 
 func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
-	// switch evidence.H1().ClientType() {
-	// case exported.Tendermint:
-	// 	var tmEvidence tendermint.Evidence
-	// 	_, ok := evidence.(tendermint.Evidence)
-	// 	if !ok {
-	// 		return sdkerrors.Wrap(types.ErrInvalidClientType(k.codespace), "consensus type is not Tendermint")
-	// 	}
-	// 	// TODO: pass past consensus states
-	// 	return tendermint.CheckMisbehaviour(tmEvidence)
-	// default:
-	// 	panic("unregistered consensus type")
-	// }
+	switch evidence.Type() {
+	case exported.ClientTypeTendermint:
+		var tmEvidence tendermint.Evidence
+		_, ok := evidence.(tendermint.Evidence)
+		if !ok {
+			return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
+		}
+		err := tendermint.CheckMisbehaviour(tmEvidence)
+		if err != nil {
+			return errors.ErrInvalidEvidence(k.codespace, err.Error())
+		}
+	default:
+		panic(fmt.Sprintf("unregistered evidence type: %s", evidence.Type()))
+	}
 	return nil
 }
 
 // freeze updates the state of the client in the event of a misbehaviour
 func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, error) {
 	if clientState.Frozen {
-		return types.State{}, sdkerrors.Wrap(types.ErrClientFrozen(k.codespace, clientState.ID()), "already frozen")
+		return types.State{}, sdkerrors.Wrap(errors.ErrClientFrozen(k.codespace, clientState.ID()), "already frozen")
 	}
 
 	clientState.Frozen = true

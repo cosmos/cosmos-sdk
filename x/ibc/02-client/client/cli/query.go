@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
@@ -168,7 +169,6 @@ $ %s query ibc client consensus-state [client-id]
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain
-// TODO: do we really need this cmd ??
 func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "header",
@@ -182,38 +182,9 @@ $ %s query ibc client header
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			node, err := cliCtx.GetNode()
+			header, err := utils.GetTendermintHeader(cliCtx)
 			if err != nil {
 				return err
-			}
-
-			info, err := node.ABCIInfo()
-			if err != nil {
-				return err
-			}
-
-			height := info.Response.LastBlockHeight
-			prevHeight := height - 1
-
-			commit, err := node.Commit(&height)
-			if err != nil {
-				return err
-			}
-
-			validators, err := node.Validators(&prevHeight)
-			if err != nil {
-				return err
-			}
-
-			nextValidators, err := node.Validators(&height)
-			if err != nil {
-				return err
-			}
-
-			header := tendermint.Header{
-				SignedHeader:     commit.SignedHeader,
-				ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-				NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
 			}
 
 			return cliCtx.PrintOutput(header)
@@ -261,8 +232,7 @@ $ %s query ibc client node-state
 				return err
 			}
 
-			var state exported.ConsensusState
-			state = tendermint.ConsensusState{
+			state := tendermint.ConsensusState{
 				ChainID:          commit.ChainID,
 				Height:           uint64(commit.Height),
 				Root:             commitment.NewRoot(commit.AppHash),
@@ -274,6 +244,7 @@ $ %s query ibc client node-state
 	}
 }
 
+// GetCmdQueryPath defines the command to query the commitment path.
 func GetCmdQueryPath(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "path",

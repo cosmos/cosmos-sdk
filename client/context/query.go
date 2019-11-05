@@ -148,7 +148,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery,
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
-		Prove:  !ctx.TrustNode,
+		Prove:  req.Prove || !ctx.TrustNode,
 	}
 
 	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)

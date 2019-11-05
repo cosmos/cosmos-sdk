@@ -15,15 +15,15 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// GetTxCmd returns the transaction commands for IBC fungible token transfer
-func GetQueryCmd(cdc *codec.Codec, storeKey string) *cobra.Command {
+// GetQueryCmd returns the query commands for IBC fungible token transfer
+func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:   "transfer",
 		Short: "IBC fungible token transfer query subcommands",
 	}
 
 	queryCmd.AddCommand(
-		GetCmdQueryNextSequence(cdc, storeKey),
+		GetCmdQueryNextSequence(cdc, queryRoute),
 	)
 
 	return queryCmd

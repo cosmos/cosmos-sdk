@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -356,17 +357,17 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 
-			// // get passphrase for key from1
-			// passphrase1, err := keys.GetPassphrase(from1)
-			// if err != nil {
-			// 	return err
-			// }
+			// get passphrase for key from1
+			passphrase1, err := keys.GetPassphrase(from1)
+			if err != nil {
+				return err
+			}
 
-			// // get passphrase for key from2
-			// passphrase2, err := keys.GetPassphrase(from2)
-			// if err != nil {
-			// 	return err
-			// }
+			// get passphrase for key from2
+			passphrase2, err := keys.GetPassphrase(from2)
+			if err != nil {
+				return err
+			}
 
 			// TODO: check state and if not Idle continue existing process
 			viper.Set(flags.FlagChainID, cid1)
@@ -375,8 +376,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err := utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgOpenInit})
-			if err != nil {
+			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -395,8 +396,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -411,8 +412,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgOpenTry})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -431,8 +432,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -448,8 +449,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgOpenAck})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -468,8 +469,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
@@ -484,8 +485,8 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 

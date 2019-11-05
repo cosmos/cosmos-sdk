@@ -1,122 +1,105 @@
 package commitment_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
-func TestVerifyMembership(t *testing.T) {
-	db := dbm.NewMemDB()
-	store := rootmulti.NewStore(db)
+func (suite *MerkleTestSuite) TestVerifyMembership() {
+	suite.iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
+	cid := suite.store.Commit()
 
-	iavlStoreKey := storetypes.NewKVStoreKey("iavlStoreKey")
-
-	store.MountStoreWithDB(iavlStoreKey, storetypes.StoreTypeIAVL, nil)
-	store.LoadVersion(0)
-
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
-	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
-	cid := store.Commit()
-
-	res := store.Query(abci.RequestQuery{
-		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
+	res := suite.store.Query(abci.RequestQuery{
+		Path:  fmt.Sprintf("/%s/key", suite.storeKey.Name()), // required path to get key/value+proof
 		Data:  []byte("MYKEY"),
 		Prove: true,
 	})
-	require.NotNil(t, res.Proof)
+	require.NotNil(suite.T(), res.Proof)
 
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
 	cases := []struct {
+		name       string
 		root       []byte
 		pathArr    []string
 		value      []byte
 		shouldPass bool
-		errString  string
 	}{
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY"}, []byte("MYVALUE"), true, "valid membership proof failed"},                               // valid proof
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY"}, []byte("WRONGVALUE"), false, "invalid membership proof with wrong value passed"},        // invalid proof with wrong value
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY"}, []byte(nil), false, "invalid membership proof with wrong value passed"},                 // invalid proof with nil value
-		{cid.Hash, []string{"iavlStoreKey", "NOTMYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with wrong key passed"},          // invalid proof with wrong key
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY", "MYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with wrong path passed"},   // invalid proof with wrong path
-		{cid.Hash, []string{"iavlStoreKey"}, []byte("MYVALUE"), false, "invalid membership proof with wrong path passed"},                     // invalid proof with wrong path
-		{cid.Hash, []string{"MYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with wrong path passed"},                            // invalid proof with wrong path
-		{cid.Hash, []string{"otherStoreKey", "MYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with wrong store prefix passed"},   // invalid proof with wrong store prefix
-		{[]byte("WRONGROOT"), []string{"iavlStoreKey", "MYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with wrong root passed"}, // invalid proof with wrong root
-		{[]byte(nil), []string{"iavlStoreKey", "MYKEY"}, []byte("MYVALUE"), false, "invalid membership proof with nil root passed"},           // invalid proof with nil root
+		{"valid proof", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), true},            // valid proof
+		{"wrong value", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte("WRONGVALUE"), false},        // invalid proof with wrong value
+		{"nil value", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, []byte(nil), false},                   // invalid proof with nil value
+		{"wrong key", cid.Hash, []string{suite.storeKey.Name(), "NOTMYKEY"}, []byte("MYVALUE"), false},          // invalid proof with wrong key
+		{"wrong path 1", cid.Hash, []string{suite.storeKey.Name(), "MYKEY", "MYKEY"}, []byte("MYVALUE"), false}, // invalid proof with wrong path
+		{"wrong path 2", cid.Hash, []string{suite.storeKey.Name()}, []byte("MYVALUE"), false},                   // invalid proof with wrong path
+		{"wrong path 3", cid.Hash, []string{"MYKEY"}, []byte("MYVALUE"), false},                                 // invalid proof with wrong path
+		{"wrong storekey", cid.Hash, []string{"otherStoreKey", "MYKEY"}, []byte("MYVALUE"), false},              // invalid proof with wrong store prefix
+		{"wrong root", []byte("WRONGROOT"), []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), false}, // invalid proof with wrong root
+		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYKEY"}, []byte("MYVALUE"), false},           // invalid proof with nil root
 	}
 
 	for i, tc := range cases {
-		root := commitment.NewRoot(tc.root)
-		path := commitment.NewPath(tc.pathArr)
+		suite.Run(tc.name, func() {
+			root := commitment.NewRoot(tc.root)
+			path := commitment.NewPath(tc.pathArr)
 
-		ok := proof.VerifyMembership(root, path, tc.value)
+			ok := proof.VerifyMembership(root, path, tc.value)
 
-		require.True(t, ok == tc.shouldPass, "Test case %d failed: %s", i, tc.errString)
+			require.True(suite.T(), ok == tc.shouldPass, "Test case %d failed", i)
+		})
 	}
 
 }
 
-func TestVerifyNonMembership(t *testing.T) {
-	db := dbm.NewMemDB()
-	store := rootmulti.NewStore(db)
-
-	iavlStoreKey := storetypes.NewKVStoreKey("iavlStoreKey")
-
-	store.MountStoreWithDB(iavlStoreKey, storetypes.StoreTypeIAVL, nil)
-	store.LoadVersion(0)
-
-	iavlStore := store.GetCommitStore(iavlStoreKey).(*iavl.Store)
-	iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
-	cid := store.Commit()
+func (suite *MerkleTestSuite) TestVerifyNonMembership() {
+	suite.iavlStore.Set([]byte("MYKEY"), []byte("MYVALUE"))
+	cid := suite.store.Commit()
 
 	// Get Proof
-	res := store.Query(abci.RequestQuery{
-		Path:  "/iavlStoreKey/key", // required path to get key/value+proof
+	res := suite.store.Query(abci.RequestQuery{
+		Path:  fmt.Sprintf("/%s/key", suite.storeKey.Name()), // required path to get key/value+proof
 		Data:  []byte("MYABSENTKEY"),
 		Prove: true,
 	})
-	require.NotNil(t, res.Proof)
+	require.NotNil(suite.T(), res.Proof)
 
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
 
 	cases := []struct {
+		name       string
 		root       []byte
 		pathArr    []string
 		shouldPass bool
-		errString  string
 	}{
-		{cid.Hash, []string{"iavlStoreKey", "MYABSENTKEY"}, true, "valid non-membership proof failed"},                               // valid proof
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY"}, false, "invalid non-membership proof with wrong key passed"},                   // invalid proof with existent key
-		{cid.Hash, []string{"iavlStoreKey", "MYKEY", "MYABSENTKEY"}, false, "invalid non-membership proof with wrong path passed"},   // invalid proof with wrong path
-		{cid.Hash, []string{"iavlStoreKey", "MYABSENTKEY", "MYKEY"}, false, "invalid non-membership proof with wrong path passed"},   // invalid proof with wrong path
-		{cid.Hash, []string{"iavlStoreKey"}, false, "invalid non-membership proof with wrong path passed"},                           // invalid proof with wrong path
-		{cid.Hash, []string{"MYABSENTKEY"}, false, "invalid non-membership proof with wrong path passed"},                            // invalid proof with wrong path
-		{cid.Hash, []string{"otherStoreKey", "MYABSENTKEY"}, false, "invalid non-membership proof with wrong store prefix passed"},   // invalid proof with wrong store prefix
-		{[]byte("WRONGROOT"), []string{"iavlStoreKey", "MYABSENTKEY"}, false, "invalid non-membership proof with wrong root passed"}, // invalid proof with wrong root
-		{[]byte(nil), []string{"iavlStoreKey", "MYABSENTKEY"}, false, "invalid non-membership proof with nil root passed"},           // invalid proof with nil root
+		{"valid proof", cid.Hash, []string{suite.storeKey.Name(), "MYABSENTKEY"}, true},            // valid proof
+		{"wrong key", cid.Hash, []string{suite.storeKey.Name(), "MYKEY"}, false},                   // invalid proof with existent key
+		{"wrong path 1", cid.Hash, []string{suite.storeKey.Name(), "MYKEY", "MYABSENTKEY"}, false}, // invalid proof with wrong path
+		{"wrong path 2", cid.Hash, []string{suite.storeKey.Name(), "MYABSENTKEY", "MYKEY"}, false}, // invalid proof with wrong path
+		{"wrong path 3", cid.Hash, []string{suite.storeKey.Name()}, false},                         // invalid proof with wrong path
+		{"wrong path 4", cid.Hash, []string{"MYABSENTKEY"}, false},                                 // invalid proof with wrong path
+		{"wrong storeKey", cid.Hash, []string{"otherStoreKey", "MYABSENTKEY"}, false},              // invalid proof with wrong store prefix
+		{"wrong root", []byte("WRONGROOT"), []string{suite.storeKey.Name(), "MYABSENTKEY"}, false}, // invalid proof with wrong root
+		{"nil root", []byte(nil), []string{suite.storeKey.Name(), "MYABSENTKEY"}, false},           // invalid proof with nil root
 	}
 
 	for i, tc := range cases {
-		root := commitment.NewRoot(tc.root)
-		path := commitment.NewPath(tc.pathArr)
+		suite.Run(tc.name, func() {
+			root := commitment.NewRoot(tc.root)
+			path := commitment.NewPath(tc.pathArr)
 
-		ok := proof.VerifyNonMembership(root, path)
+			ok := proof.VerifyNonMembership(root, path)
 
-		require.True(t, ok == tc.shouldPass, "Test case %d failed: %s", i, tc.errString)
+			require.True(suite.T(), ok == tc.shouldPass, "Test case %d failed", i)
+		})
 	}
 
 }

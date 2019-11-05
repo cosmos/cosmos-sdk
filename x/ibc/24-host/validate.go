@@ -22,24 +22,48 @@ var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 // ValidateFn function type to validate path and identifier bytestrings
 type ValidateFn func(string) error
 
-// DefaultIdentifierValidator is the default validator function for Client,
-// Connection and Channel identifiers.
-// A valid Identifier must be between 10-20 characters and only contain lowercase
-// alphabetic characters,
-func DefaultIdentifierValidator(id string) error {
+func defaultIdentifierValidator(id string, min, max int) error {
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
 		return sdkerrors.Wrap(ErrInvalidID, "identifier cannot contain separator: /")
 	}
 	// valid id must be between 10 and 20 characters
-	if len(id) < 10 || len(id) > 20 {
-		return sdkerrors.Wrapf(ErrInvalidID, "identifier has invalid length: %d, must be between 10-20 characters", len(id))
+	if len(id) < min || len(id) > max {
+		return sdkerrors.Wrapf(ErrInvalidID, "identifier has invalid length: %d, must be between %d-%d characters", len(id), min, max)
 	}
 	// valid id must contain only lower alphabetic characters
 	if !isAlphaLower(id) {
 		return sdkerrors.Wrap(ErrInvalidID, "identifier must contain only lowercase alphabetic characters")
 	}
 	return nil
+}
+
+// DefaultClientIdentifierValidator is the default validator function for Client identifiers
+// A valid Identifier must be between 10-20 characters and only contain lowercase
+// alphabetic characters,
+func DefaultClientIdentifierValidator(id string) error {
+	return defaultIdentifierValidator(id, 10, 20)
+}
+
+// DefaultConnectionIdentifierValidator is the default validator function for Connection identifiers
+// A valid Identifier must be between 10-20 characters and only contain lowercase
+// alphabetic characters,
+func DefaultConnectionIdentifierValidator(id string) error {
+	return defaultIdentifierValidator(id, 10, 20)
+}
+
+// DefaultChannelIdentifierValidator is the default validator function for Channel identifiers
+// A valid Identifier must be between 10-20 characters and only contain lowercase
+// alphabetic characters,
+func DefaultChannelIdentifierValidator(id string) error {
+	return defaultIdentifierValidator(id, 10, 20)
+}
+
+// DefaultPortIdentifierValidator is the default validator function for Port identifiers
+// A valid Identifier must be between 2-20 characters and only contain lowercase
+// alphabetic characters,
+func DefaultPortIdentifierValidator(id string) error {
+	return defaultIdentifierValidator(id, 2, 20)
 }
 
 // NewPathValidator takes in a Identifier Validator function and returns

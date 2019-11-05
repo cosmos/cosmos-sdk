@@ -13,6 +13,9 @@ import (
 
 const (
 	NONE                              = types.NONE
+	INIT                              = types.INIT
+	TRYOPEN                           = types.TRYOPEN
+	OPEN                              = types.OPEN
 	StateNone                         = types.StateNone
 	StateInit                         = types.StateInit
 	StateTryOpen                      = types.StateTryOpen

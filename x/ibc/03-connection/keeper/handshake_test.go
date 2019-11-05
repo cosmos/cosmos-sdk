@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	ics02 "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 
@@ -25,14 +25,14 @@ const (
 	clientType = exported.Tendermint
 	storeKey   = "ibc"
 
-	CosmosChainId = "cosmos"
-	IrisChainId   = "irishub"
+	ChainIdGaia1 = "gaia-1"
+	ChainIdGaia2 = "gaia-2"
 
-	ClientToGaia = "clienttogaia"
-	ClientToIris = "clienttoiris"
+	ClientToGaia2 = "clienttogaia2"
+	ClientToGaia1 = "clienttogaia1"
 
-	ConnectionToGaia = "connectiontogaia"
-	ConnectionToIris = "connectiontoiris"
+	ConnectionToGaia1 = "connectiontogaia1"
+	ConnectionToGaia2 = "connectiontogaia2"
 )
 
 type KeeperTestSuite struct {
@@ -94,15 +94,15 @@ func MakeCdc() *codec.Codec {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.apps = map[string]App{
-		CosmosChainId: NewApp(CosmosChainId),
-		IrisChainId:   NewApp(IrisChainId),
+		ChainIdGaia1: NewApp(ChainIdGaia1),
+		ChainIdGaia2: NewApp(ChainIdGaia2),
 	}
 }
 
-func (suite *KeeperTestSuite) getConsensusState(chainId string) ics02.ConsensusState {
+func (suite *KeeperTestSuite) getConsensusState(chainId string) tendermint.ConsensusState {
 	app := suite.apps[chainId]
 	commitId := app.store.Commit()
-	state := ics02.ConsensusState{
+	state := tendermint.ConsensusState{
 		ChainID: app.chainId,
 		Height:  uint64(commitId.Version),
 		Root:    commitment.NewRoot(commitId.Hash),
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) queryProof(chainId string, key string) (proof comm
 }
 
 func (suite *KeeperTestSuite) createClient(chainId string, clientID string,
-	clientType exported.ClientType, state ics02.ConsensusState) {
+	clientType exported.ClientType, state tendermint.ConsensusState) {
 	app := suite.apps[chainId]
 	_, err := app.clientKeeper.CreateClient(app.ctx, clientID, clientType, state)
 	if err != nil {
@@ -139,9 +139,9 @@ func (suite *KeeperTestSuite) createClient(chainId string, clientID string,
 }
 
 func (suite *KeeperTestSuite) updateClient(chainId string, clientID string) {
-	otherChainId := CosmosChainId
-	if chainId == CosmosChainId {
-		otherChainId = IrisChainId
+	otherChainId := ChainIdGaia1
+	if chainId == ChainIdGaia1 {
+		otherChainId = ChainIdGaia2
 	}
 	consensusState := suite.getConsensusState(otherChainId)
 
@@ -179,9 +179,9 @@ func (suite *KeeperTestSuite) connOpenTry(chainId string, connectionID, clientID
 	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, app.connKeeper.GetCommitmentPrefix())
 
 	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainId := CosmosChainId
-	if chainId == CosmosChainId {
-		otherChainId = IrisChainId
+	otherChainId := ChainIdGaia1
+	if chainId == ChainIdGaia1 {
+		otherChainId = ChainIdGaia2
 	}
 	proof, h := suite.queryProof(otherChainId, connKey)
 
@@ -200,9 +200,9 @@ func (suite *KeeperTestSuite) connOpenTry(chainId string, connectionID, clientID
 func (suite *KeeperTestSuite) connOpenAck(chainId string, connectionID, counterpartyConnID string) {
 	app := suite.apps[chainId]
 	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainId := CosmosChainId
-	if chainId == CosmosChainId {
-		otherChainId = IrisChainId
+	otherChainId := ChainIdGaia1
+	if chainId == ChainIdGaia1 {
+		otherChainId = ChainIdGaia2
 	}
 	proof, h := suite.queryProof(otherChainId, connKey)
 
@@ -221,9 +221,9 @@ func (suite *KeeperTestSuite) connOpenAck(chainId string, connectionID, counterp
 func (suite *KeeperTestSuite) connOpenConfirm(chainId string, connectionID, counterpartyConnID string) {
 	app := suite.apps[chainId]
 	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainId := CosmosChainId
-	if chainId == CosmosChainId {
-		otherChainId = IrisChainId
+	otherChainId := ChainIdGaia1
+	if chainId == ChainIdGaia1 {
+		otherChainId = ChainIdGaia2
 	}
 	proof, h := suite.queryProof(otherChainId, connKey)
 
@@ -241,33 +241,33 @@ func (suite *KeeperTestSuite) connOpenConfirm(chainId string, connectionID, coun
 
 func (suite *KeeperTestSuite) TestHandshake() {
 	//get gaia consensusState
-	state := suite.getConsensusState(CosmosChainId)
+	state := suite.getConsensusState(ChainIdGaia1)
 	//create client on iris
-	suite.createClient(IrisChainId, ClientToGaia, clientType, state)
+	suite.createClient(ChainIdGaia2, ClientToGaia2, clientType, state)
 
 	//get iris consensusState
-	state1 := suite.getConsensusState(IrisChainId)
+	state1 := suite.getConsensusState(ChainIdGaia2)
 	// create client on gaia
-	suite.createClient(CosmosChainId, ClientToIris, clientType, state1)
+	suite.createClient(ChainIdGaia1, ClientToGaia1, clientType, state1)
 
 	//===========OpenInit on iris===========
-	suite.connOpenInit(IrisChainId, ConnectionToGaia, ClientToGaia, ClientToIris, ConnectionToIris)
+	suite.connOpenInit(ChainIdGaia2, ConnectionToGaia1, ClientToGaia2, ClientToGaia1, ConnectionToGaia2)
 
 	//===========OpenTry on gaia===========
 	// update gaia consensusState(should be UpdateClient)
-	suite.updateClient(CosmosChainId, ClientToIris)
+	suite.updateClient(ChainIdGaia1, ClientToGaia1)
 	// open-try on gaia
-	suite.connOpenTry(CosmosChainId, ConnectionToIris, ClientToIris, ClientToGaia, ConnectionToGaia)
+	suite.connOpenTry(ChainIdGaia1, ConnectionToGaia2, ClientToGaia1, ClientToGaia2, ConnectionToGaia1)
 
 	//===========ConnOpenAck on iris===========
 	// update iris consensusState(should be UpdateClient)
-	suite.updateClient(IrisChainId, ClientToGaia)
-	suite.connOpenAck(IrisChainId, ConnectionToGaia, ConnectionToIris)
+	suite.updateClient(ChainIdGaia2, ClientToGaia2)
+	suite.connOpenAck(ChainIdGaia2, ConnectionToGaia1, ConnectionToGaia2)
 
 	//===========ConnOpenConfirm on gaia===========
 	// update gaia consensusState(should be UpdateClient)
-	suite.updateClient(CosmosChainId, ClientToIris)
-	suite.connOpenConfirm(CosmosChainId, ConnectionToIris, ConnectionToGaia)
+	suite.updateClient(ChainIdGaia1, ClientToGaia1)
+	suite.connOpenConfirm(ChainIdGaia1, ConnectionToGaia2, ConnectionToGaia1)
 
 }
 

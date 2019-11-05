@@ -130,7 +130,6 @@ that allows for arbitrary vesting periods.
 
 ### Improvements
 
-* (tendermint) Bump Tendermint version to [v0.32.7](https://github.com/tendermint/tendermint/releases/tag/v0.32.7)
 * (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
 has been moved to the configuration file, to allow easier node configuration.
 * (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
@@ -186,10 +185,20 @@ to detail this new feature and how state transitions occur.
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
-* (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 
-## [v0.37.2] - 2019-10-10
+## [v0.37.4] - 2019-11-04
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.7](https://github.com/tendermint/tendermint/releases/tag/v0.32.7)
+* (ledger) [\#4716](https://github.com/cosmos/cosmos-sdk/pull/4716) Fix ledger custom coin type support bug.
+
+### Bug Fixes
+
+* (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
+
+## [v0.37.3] - 2019-10-10
 
 ### Bug Fixes
 
@@ -2741,8 +2750,9 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.2...HEAD
-[v0.37.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.2
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.4...HEAD
+[v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4
+[v0.37.3]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.3
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

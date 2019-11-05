@@ -549,16 +549,8 @@ func fakePrompt(prompt string) (string, error) {
 }
 
 func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
-	options := dbKeybaseOptions{
-		keygenFunc: nil,
-	}
-
-	for _, o := range opts {
-		o.apply(&options)
-	}
-
 	return keyringKeybase{
 		db:   db,
-		base: newBaseKeybase(options.keygenFunc),
+		base: newBaseKeybase(opts...),
 	}
 }

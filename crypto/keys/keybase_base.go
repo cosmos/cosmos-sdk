@@ -19,10 +19,19 @@ type (
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
 	PrivKeyGenFunc func(bz [32]byte) tmcrypto.PrivKey
 
+	kbOptions struct {
+		keygenFunc PrivKeyGenFunc
+	}
+
+	// KeybaseOption overrides options for the db
+	KeybaseOption interface {
+		apply(*kbOptions)
+	}
+
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
 	baseKeybase struct {
-		genKeyFunc PrivKeyGenFunc
+		options kbOptions
 	}
 
 	keyWriter interface {
@@ -39,15 +48,32 @@ type (
 	}
 )
 
+type optionFunc func(*kbOptions)
+
+func (f optionFunc) apply(o *kbOptions) {
+	f(o)
+}
+
+// WithKeygenFunc applies an overriden key generation function to generate the private key
+func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
+	return optionFunc(func(o *kbOptions) {
+		o.keygenFunc = f
+	})
+}
+
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP key type
-func newBaseKeybase(genFunc PrivKeyGenFunc) baseKeybase {
-	if genFunc == nil {
-		// If algo type is not specified by application, use default
-		genFunc = baseSecpPrivKeyGen
+func newBaseKeybase(opts ...KeybaseOption) baseKeybase {
+	// Default options for keybase
+	options := kbOptions{
+		keygenFunc: baseSecpPrivKeyGen,
+	}
+
+	for _, o := range opts {
+		o.apply(&options)
 	}
 
 	return baseKeybase{
-		genKeyFunc: genFunc,
+		options: options,
 	}
 }
 
@@ -122,9 +148,9 @@ func (kb baseKeybase) persistDerivedKey(
 	var info Info
 
 	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, kb.genKeyFunc(derivedPriv), passwd)
+		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv), passwd)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, kb.genKeyFunc(derivedPriv).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv).PubKey())
 	}
 
 	return info, nil

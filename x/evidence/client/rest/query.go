@@ -28,7 +28,7 @@ func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		vars := mux.Vars(r)
 		evidenceHash := vars[RestParamEvidenceHash]
 
-		if len(evidenceHash) == 0 {
+		if strings.TrimSpace(evidenceHash) == "" {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "evidence hash required but not specified")
 			return
 		}

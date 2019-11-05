@@ -4,7 +4,7 @@ package types
 // Any actor holding the Stage can access on and modify that client information.
 type State struct {
 	// Client ID
-	Id string
+	Id string `json:"id" yaml:"id"`
 	// Boolean that states if the client is frozen when a misbehaviour proof is
 	// submitted in the event of an equivocation.
 	Frozen bool `json:"frozen" yaml:"frozen"`

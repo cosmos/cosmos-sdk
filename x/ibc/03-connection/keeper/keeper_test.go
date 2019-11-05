@@ -20,8 +20,8 @@ const (
 	clientType = clientexported.Tendermint
 	storeKey   = "ibc"
 
-	ChainIdGaia1 = "gaia-1"
-	ChainIdGaia2 = "gaia-2"
+	ChainIDGaia1 = "gaia-1"
+	ChainIDGaia2 = "gaia-2"
 
 	ClientToGaia2 = "clienttogaia2"
 	ClientToGaia1 = "clienttogaia1"
@@ -37,8 +37,8 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.apps = map[string]App{
-		ChainIdGaia1: NewApp(ChainIdGaia1),
-		ChainIdGaia2: NewApp(ChainIdGaia2),
+		ChainIDGaia1: NewApp(ChainIDGaia1),
+		ChainIDGaia2: NewApp(ChainIDGaia2),
 	}
 }
 
@@ -47,9 +47,9 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
-	gaia := suite.apps[ChainIdGaia1]
+	gaia := suite.apps[ChainIDGaia1]
 
-	conn, existed := gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
+	_, existed := gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
 	suite.False(existed)
 
 	counterparty := types.NewCounterparty(ClientToGaia2, ConnectionToGaia1, gaia.connKeeper.GetCommitmentPrefix())
@@ -60,25 +60,25 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 		Versions:     types.GetCompatibleVersions(),
 	}
 	gaia.connKeeper.SetConnection(gaia.ctx, ConnectionToGaia2, expConn)
-	conn, existed = gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
+	conn, existed := gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
 	suite.True(existed)
 	suite.EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
-	gaia := suite.apps[ChainIdGaia1]
+	gaia := suite.apps[ChainIDGaia1]
 
-	paths, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
+	_, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
 	suite.False(existed)
 
 	gaia.connKeeper.SetClientConnectionPaths(gaia.ctx, ClientToGaia2, types.GetCompatibleVersions())
-	paths, existed = gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
+	paths, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
 	suite.True(existed)
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
 }
 
 func (suite *KeeperTestSuite) TestAddAndRemoveConnectionToClient() {
-	gaia := suite.apps[ChainIdGaia1]
+	gaia := suite.apps[ChainIDGaia1]
 
 	//add connection to client
 	err := gaia.connKeeper.addConnectionToClient(gaia.ctx, ClientToGaia2, ConnectionToGaia1)
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestAddAndRemoveConnectionToClient() {
 }
 
 type App struct {
-	chainId string
+	chainID string
 	ctx     sdk.Context
 	cdc     *codec.Codec
 	store   sdk.CommitMultiStore
@@ -129,7 +129,7 @@ type IBCKeeper struct {
 	clientKeeper client.Keeper
 }
 
-func NewApp(chainId string) App {
+func NewApp(chainID string) App {
 	var codespaceType sdk.CodespaceType = storeKey
 	storeKey := sdk.NewKVStoreKey(storeKey)
 
@@ -144,10 +144,10 @@ func NewApp(chainId string) App {
 
 	clientKeeper := client.NewKeeper(cdc, storeKey, codespaceType)
 	connKeeper := NewKeeper(cdc, storeKey, codespaceType, clientKeeper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainId, Height: 0}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID, Height: 0}, false, log.NewNopLogger())
 
 	return App{
-		chainId: chainId,
+		chainID: chainID,
 		ctx:     ctx,
 		cdc:     cdc,
 		store:   ms,

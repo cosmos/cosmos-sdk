@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -45,10 +46,10 @@ func (msg MsgCreateClient) ValidateBasic() sdk.Error {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if _, err := exported.ClientTypeFromString(msg.ClientType); err != nil {
-		return ErrInvalidClientType(DefaultCodespace, err.Error())
+		return errors.ErrInvalidClientType(errors.DefaultCodespace, err.Error())
 	}
 	if msg.ConsensusState == nil {
-		return ErrInvalidConsensus(DefaultCodespace)
+		return errors.ErrInvalidConsensus(errors.DefaultCodespace)
 	}
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
@@ -100,7 +101,7 @@ func (msg MsgUpdateClient) ValidateBasic() sdk.Error {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Header == nil {
-		return ErrInvalidHeader(DefaultCodespace)
+		return errors.ErrInvalidHeader(errors.DefaultCodespace)
 	}
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")
@@ -150,7 +151,10 @@ func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Evidence == nil {
-		return ErrInvalidEvidence(DefaultCodespace)
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "evidence is nil")
+	}
+	if err := msg.Evidence.ValidateBasic(); err != nil {
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
 	}
 	if msg.Signer.Empty() {
 		return sdk.ErrInvalidAddress("empty address")

@@ -1,4 +1,4 @@
-package types
+package errors
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 // client error codes
 const (
-	DefaultCodespace sdk.CodespaceType = SubModuleName
+	DefaultCodespace sdk.CodespaceType = "client"
 
 	CodeClientExists           sdk.CodeType = 101
 	CodeClientNotFound         sdk.CodeType = 102
@@ -68,6 +68,6 @@ func ErrInvalidHeader(codespace sdk.CodespaceType) sdk.Error {
 }
 
 // ErrInvalidEvidence implements sdk.Error
-func ErrInvalidEvidence(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidEvidence, "invalid evidence")
+func ErrInvalidEvidence(codespace sdk.CodespaceType, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidEvidence, "invalid evidence: %s", msg)
 }

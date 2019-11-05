@@ -75,8 +75,8 @@ func (cs ConsensusState) checkValidity(header Header) error {
 	}
 
 	// abortTransactionUnless(consensusState.publicKey.verify(header.signature))
-	return cs.NextValidatorSet.VerifyFutureCommit(
-		header.ValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit,
+	return header.ValidatorSet.VerifyFutureCommit(
+		cs.NextValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit,
 	)
 }
 

@@ -23,12 +23,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// Connection Handshake flags
 const (
 	FlagNode1    = "node1"
 	FlagNode2    = "node2"
@@ -94,6 +94,10 @@ $ %s tx ibc connection open-init [connection-id] [client-id] [counterparty-conne
 				connectionID, clientID, counterpartyConnectionID, counterpartyClientID,
 				counterpartyPrefix, cliCtx.GetFromAddress(),
 			)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -165,6 +169,10 @@ $ %s tx ibc connection open-try connection-id] [client-id]
 				consensusHeight, cliCtx.GetFromAddress(),
 			)
 
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -213,6 +221,10 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 				consensusHeight, version, cliCtx.GetFromAddress(),
 			)
 
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -256,6 +268,10 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 			msg := types.NewMsgConnectionOpenConfirm(
 				connectionID, proofAck, proofHeight, cliCtx.GetFromAddress(),
 			)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
@@ -352,6 +368,11 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				path2, ctx1.GetFromAddress(),
 			)
 
+			if err := msgOpenInit.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
 			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
@@ -363,7 +384,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err := tendermint.GetHeader(ctx1)
+			header, err := clientutils.GetTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -371,6 +392,12 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Create and send msgUpdateClient
 			viper.Set(flags.FlagChainID, cid2)
 			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
+
+			if err := msgUpdateClient.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
@@ -393,6 +420,12 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			viper.Set(flags.FlagChainID, cid2)
 			msgOpenTry := types.NewMsgConnectionOpenTry(connID2, clientID2, connID1, clientID1, path1, []string{version}, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), ctx2.GetFromAddress())
 
+			if err := msgOpenTry.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
@@ -406,7 +439,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = tendermint.GetHeader(ctx2)
+			header, err = clientutils.GetTendermintHeader(ctx2)
 			if err != nil {
 				return err
 			}
@@ -414,6 +447,11 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Update the client for cid2 on cid1
 			viper.Set(flags.FlagChainID, cid1)
 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID1, header, ctx1.GetFromAddress())
+
+			if err := msgUpdateClient.ValidateBasic(); err != nil {
+				return err
+			}
+
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
@@ -435,6 +473,13 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Create and send msgOpenAck
 			viper.Set(flags.FlagChainID, cid1)
 			msgOpenAck := types.NewMsgConnectionOpenAck(connID1, proofs.Proof, csProof.Proof, uint64(header.Height), uint64(header.Height), version, ctx1.GetFromAddress())
+
+			if err := msgOpenAck.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
@@ -447,21 +492,28 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = tendermint.GetHeader(ctx1)
+			header, err = clientutils.GetTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
 
 			// Update client for cid1 on cid2
 			viper.Set(flags.FlagChainID, cid2)
+
 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
+
+			if err := msgUpdateClient.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
 			}
 			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID1)
 
-			// Fetch proof from cid1
 			viper.Set(flags.FlagChainID, cid1)
 			proofs, err = queryProofs(ctx1.WithHeight(header.Height-1), connID1, storeKey)
 			if err != nil {
@@ -471,6 +523,13 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// Create and send msgOpenConfirm
 			viper.Set(flags.FlagChainID, cid2)
 			msgOpenConfirm := types.NewMsgConnectionOpenConfirm(connID2, proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
+
+			if err := msgOpenConfirm.ValidateBasic(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%v <- %-14v", cid1, msgOpenConfirm.Type())
+
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err

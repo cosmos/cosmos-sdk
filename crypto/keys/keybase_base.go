@@ -54,7 +54,7 @@ func (f optionFunc) apply(o *kbOptions) {
 	f(o)
 }
 
-// WithKeygenFunc applies an overriden key generation function to generate the private key
+// WithKeygenFunc applies an overridden key generation function to generate the private key
 func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 	return optionFunc(func(o *kbOptions) {
 		o.keygenFunc = f

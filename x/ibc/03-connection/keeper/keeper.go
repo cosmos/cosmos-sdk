@@ -94,7 +94,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
+		conns = []string{}
 	}
 
 	conns = append(conns, connectionID)

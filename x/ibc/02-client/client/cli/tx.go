@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -51,7 +52,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
 
@@ -72,6 +73,7 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 				clientID, state.ClientType().String(), state,
 				cliCtx.GetFromAddress(),
 			)
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

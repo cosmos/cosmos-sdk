@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
+// SubModuleCdc defines the IBC client codec.
 var SubModuleCdc = codec.New()
 
 // RegisterCodec registers the IBC client interfaces and types

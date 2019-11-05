@@ -13,7 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -38,8 +40,10 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the staking module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
+	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
 	commitment.RegisterCodec(cdc)
+	transfer.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking
@@ -114,6 +118,8 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // InitGenesis performs genesis initialization for the staking module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
+	// check if the IBC transfer module account is set
+	transfer.InitGenesis(ctx, am.keeper.TransferKeeper)
 	return []abci.ValidatorUpdate{}
 }
 

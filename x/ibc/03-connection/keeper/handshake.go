@@ -54,9 +54,12 @@ func (k Keeper) ConnOpenTry(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
+	*/
 
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
 	if !found {
@@ -66,8 +69,8 @@ func (k Keeper) ConnOpenTry(
 	// expectedConn defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(counterparty.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.INIT, clientID, expectedCounterparty, counterpartyVersions)
+	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
+	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -129,9 +132,12 @@ func (k Keeper) ConnOpenAck(
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
+	*/
 
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
@@ -159,7 +165,7 @@ func (k Keeper) ConnOpenAck(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.ClientID, expectedCounterparty, []string{version})
+	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
 	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
 	if err != nil {

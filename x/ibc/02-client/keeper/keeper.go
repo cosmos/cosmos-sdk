@@ -100,6 +100,7 @@ func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusSta
 // a client
 func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+
 	bz := store.Get(types.KeyRoot(clientID, height))
 	if bz == nil {
 		return nil, false
@@ -155,17 +156,20 @@ func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, e
 // VerifyMembership state membership verification function defined by the client type
 func (k Keeper) VerifyMembership(
 	ctx sdk.Context,
-	clientState types.State,
+	clientID string,
 	height uint64, // sequence
 	proof commitment.ProofI,
 	path commitment.PathI,
 	value []byte,
 ) bool {
-	if clientState.Frozen {
-		return false
-	}
+	// XXX: commented out for demo
+	/*
+		if clientState.Frozen {
+			return false
+		}
+	*/
 
-	root, found := k.GetVerifiedRoot(ctx, clientState.ID(), height)
+	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
 		return false
 	}
@@ -176,16 +180,18 @@ func (k Keeper) VerifyMembership(
 // VerifyNonMembership state non-membership function defined by the client type
 func (k Keeper) VerifyNonMembership(
 	ctx sdk.Context,
-	clientState types.State,
+	clientID string,
 	height uint64, // sequence
 	proof commitment.ProofI,
 	path commitment.PathI,
 ) bool {
-	if clientState.Frozen {
-		return false
-	}
-
-	root, found := k.GetVerifiedRoot(ctx, clientState.ID(), height)
+	// XXX: commented out for demo
+	/*
+		if clientState.Frozen {
+			return false
+		}
+	*/
+	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
 		return false
 	}

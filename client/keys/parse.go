@@ -18,7 +18,7 @@ import (
 )
 
 func bech32Prefixes() []string {
-	var config = sdk.GetConfig()
+	config := sdk.GetConfig()
 
 	return []string{
 		config.GetBech32AccountAddrPrefix(),

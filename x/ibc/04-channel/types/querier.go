@@ -48,3 +48,24 @@ func NewQueryChannelParams(portID, channelID string) QueryChannelParams {
 		ChannelID: channelID,
 	}
 }
+
+// PacketResponse defines the client query response for a packet which also
+// includes a proof, its path and the height form which the proof was retrieved
+type PacketResponse struct {
+	Packet      Packet           `json:"packet" yaml:"packet"`
+	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+}
+
+// NewPacketResponse creates a new PacketResponswe instance
+func NewPacketResponse(
+	portID, channelID string, sequence uint64, packet Packet, proof *merkle.Proof, height int64,
+) PacketResponse {
+	return PacketResponse{
+		Packet:      packet,
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(PacketCommitmentPath(portID, channelID, sequence), "/")),
+		ProofHeight: uint64(height),
+	}
+}

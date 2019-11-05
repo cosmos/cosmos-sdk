@@ -5,10 +5,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
-var SubModuleCdc *codec.Codec
+// SubModuleCdc defines the IBC channel codec.
+var SubModuleCdc = codec.New()
 
+// RegisterCodec registers all the necessary types and interfaces for the
+// IBC channel.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.PacketI)(nil), nil)
+	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 	cdc.RegisterConcrete(OpaquePacket{}, "ibc/channel/OpaquePacket", nil)
 
 	cdc.RegisterConcrete(MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
@@ -19,6 +23,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
 }
 
-func SetMsgChanCodec(cdc *codec.Codec) {
-	SubModuleCdc = cdc
+func init() {
+	RegisterCodec(SubModuleCdc)
 }

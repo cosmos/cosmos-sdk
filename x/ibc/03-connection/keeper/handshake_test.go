@@ -2,102 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
-
-const (
-	clientType = exported.Tendermint
-	storeKey   = "ibc"
-
-	ChainIdGaia1 = "gaia-1"
-	ChainIdGaia2 = "gaia-2"
-
-	ClientToGaia2 = "clienttogaia2"
-	ClientToGaia1 = "clienttogaia1"
-
-	ConnectionToGaia1 = "connectiontogaia1"
-	ConnectionToGaia2 = "connectiontogaia2"
-)
-
-type KeeperTestSuite struct {
-	suite.Suite
-	apps map[string]App
-}
-
-type App struct {
-	chainId string
-	ctx     sdk.Context
-	cdc     *codec.Codec
-	store   sdk.CommitMultiStore
-	IBCKeeper
-}
-
-type IBCKeeper struct {
-	connKeeper   Keeper
-	clientKeeper client.Keeper
-}
-
-func NewApp(chainId string) App {
-	var codespaceType sdk.CodespaceType = storeKey
-	storeKey := sdk.NewKVStoreKey(storeKey)
-
-	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	if err := ms.LoadLatestVersion(); err != nil {
-		panic(err)
-	}
-
-	cdc := MakeCdc()
-
-	clientKeeper := client.NewKeeper(cdc, storeKey, codespaceType)
-	connKeeper := NewKeeper(cdc, storeKey, codespaceType, clientKeeper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainId, Height: 0}, false, log.NewNopLogger())
-
-	return App{
-		chainId: chainId,
-		ctx:     ctx,
-		cdc:     cdc,
-		store:   ms,
-		IBCKeeper: IBCKeeper{
-			connKeeper:   connKeeper,
-			clientKeeper: clientKeeper,
-		},
-	}
-
-}
-
-func MakeCdc() *codec.Codec {
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	client.RegisterCodec(cdc)
-	types.RegisterCodec(cdc)
-	commitment.RegisterCodec(cdc)
-	return cdc
-}
-
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.apps = map[string]App{
-		ChainIdGaia1: NewApp(ChainIdGaia1),
-		ChainIdGaia2: NewApp(ChainIdGaia2),
-	}
-}
 
 func (suite *KeeperTestSuite) getConsensusState(chainId string) tendermint.ConsensusState {
 	app := suite.apps[chainId]
@@ -240,37 +151,33 @@ func (suite *KeeperTestSuite) connOpenConfirm(chainId string, connectionID, coun
 }
 
 func (suite *KeeperTestSuite) TestHandshake() {
-	//get gaia consensusState
+	//get gaia1 consensusState
 	state := suite.getConsensusState(ChainIdGaia1)
-	//create client on iris
+	//create client on gaia2
 	suite.createClient(ChainIdGaia2, ClientToGaia2, clientType, state)
 
-	//get iris consensusState
+	//get gaia2 consensusState
 	state1 := suite.getConsensusState(ChainIdGaia2)
-	// create client on gaia
+	// create client on gaia1
 	suite.createClient(ChainIdGaia1, ClientToGaia1, clientType, state1)
 
-	//===========OpenInit on iris===========
+	//===========OpenInit on gaia2===========
 	suite.connOpenInit(ChainIdGaia2, ConnectionToGaia1, ClientToGaia2, ClientToGaia1, ConnectionToGaia2)
 
-	//===========OpenTry on gaia===========
-	// update gaia consensusState(should be UpdateClient)
+	//===========OpenTry on gaia1===========
+	// update gaia1 consensusState(should be UpdateClient)
 	suite.updateClient(ChainIdGaia1, ClientToGaia1)
-	// open-try on gaia
+	// open-try on gaia1
 	suite.connOpenTry(ChainIdGaia1, ConnectionToGaia2, ClientToGaia1, ClientToGaia2, ConnectionToGaia1)
 
-	//===========ConnOpenAck on iris===========
-	// update iris consensusState(should be UpdateClient)
+	//===========ConnOpenAck on gaia2===========
+	// update gaia2 consensusState(should be UpdateClient)
 	suite.updateClient(ChainIdGaia2, ClientToGaia2)
 	suite.connOpenAck(ChainIdGaia2, ConnectionToGaia1, ConnectionToGaia2)
 
-	//===========ConnOpenConfirm on gaia===========
-	// update gaia consensusState(should be UpdateClient)
+	//===========ConnOpenConfirm on gaia1===========
+	// update gaia1 consensusState(should be UpdateClient)
 	suite.updateClient(ChainIdGaia1, ClientToGaia1)
 	suite.connOpenConfirm(ChainIdGaia1, ConnectionToGaia2, ConnectionToGaia1)
 
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

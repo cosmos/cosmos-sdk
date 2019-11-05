@@ -12,11 +12,11 @@ type ClientKeeper interface {
 	GetConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
 	GetClientState(ctx sdk.Context, clientID string) (client.State, bool)
 	VerifyMembership(
-		ctx sdk.Context, clientState client.State, height uint64,
+		ctx sdk.Context, clientID string, height uint64,
 		proof commitment.ProofI, path commitment.PathI, value []byte,
 	) bool
 	VerifyNonMembership(
-		ctx sdk.Context, clientState client.State, height uint64,
+		ctx sdk.Context, clientID string, height uint64,
 		proof commitment.ProofI, path commitment.PathI,
 	) bool
 }

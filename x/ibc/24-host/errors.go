@@ -13,4 +13,10 @@ var (
 
 	// ErrInvalidPath is returned if path string is invalid
 	ErrInvalidPath = sdkerrors.Register(IBCCodeSpace, 2, "invalid path")
+
+	// ErrInvalidEvidence is returned if evidence is invalid
+	ErrInvalidEvidence = sdkerrors.Register(IBCCodeSpace, 3, "invalid evidence")
+
+	// ErrInvalidPacket is returned if packets embedded in msg are invalid
+	ErrInvalidPacket = sdkerrors.Register(IBCCodeSpace, 4, "invalid packet extracted from msg")
 )

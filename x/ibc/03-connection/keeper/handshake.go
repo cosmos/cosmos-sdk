@@ -88,18 +88,21 @@ func (k Keeper) ConnOpenTry(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	//expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//ok = k.VerifyMembership(
-	//	ctx, connection, proofHeight, proofInit,
-	//	clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
-	//)
-	//if !ok {
-	//	return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-	//}
+	// XXX: blocked by #5078
+	/*
+		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+		if err != nil {
+			return err
+		}
+
+		ok = k.VerifyMembership(
+			ctx, connection, proofHeight, proofInit,
+			clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
+		)
+		if !ok {
+			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
+		}
+	*/
 
 	_, found = k.GetConnection(ctx, connectionID)
 	if found {
@@ -107,11 +110,10 @@ func (k Keeper) ConnOpenTry(
 	}
 
 	connection.State = types.TRYOPEN
-	// TODO
-	//err = k.addConnectionToClient(ctx, clientID, connectionID)
-	//if err != nil {
-	//	return sdkerrors.Wrap(err, "cannot relay connection attempt")
-	//}
+	err = k.addConnectionToClient(ctx, clientID, connectionID)
+	if err != nil {
+		return sdkerrors.Wrap(err, "cannot relay connection attempt")
+	}
 
 	k.SetConnection(ctx, connectionID, connection)
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> TRYOPEN ", connectionID))
@@ -175,18 +177,20 @@ func (k Keeper) ConnOpenAck(
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 
-	//expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-	//if err != nil {
-	//	return err
-	//}
+	// XXX: blocked by #5078
+	/* expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+	if err != nil {
+		return err
+	}
 
-	//ok = k.VerifyMembership(
-	//	ctx, connection, proofHeight, proofTry,
-	//	clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
-	//)
-	//if !ok {
-	//	return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-	//}
+	ok = k.VerifyMembership(
+		ctx, connection, proofHeight, proofTry,
+		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
+	)
+	if !ok {
+		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
+	}
+	*/
 
 	connection.State = types.OPEN
 	connection.Versions = []string{version}

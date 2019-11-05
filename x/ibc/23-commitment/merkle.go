@@ -3,10 +3,11 @@ package commitment
 import (
 	"errors"
 	"fmt"
-	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -111,14 +112,7 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 	}
 
 	path = fmt.Sprintf("%s%s", string(prefix.Bytes()), path)
-	// Split paths by the separator
-	//pathSlice := strings.Split(path, "/")
-	keyPath := merkle.KeyPath{}
-	commitmentPath := NewPath([]string{path})
-
-	keyPath = keyPath.AppendKey([]byte("ibc"), merkle.KeyEncodingURL)
-	commitmentPath.KeyPath = append(keyPath, commitmentPath.KeyPath...)
-	return commitmentPath, nil
+	return NewPath([]string{types.ModuleName, path}), nil
 }
 
 var _ ProofI = Proof{}

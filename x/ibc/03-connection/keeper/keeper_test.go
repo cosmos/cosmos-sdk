@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/stretchr/testify/suite"
@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	clientType = exported.Tendermint
+	clientType = clientexported.Tendermint
 	storeKey   = "ibc"
 
 	ChainIdGaia1 = "gaia-1"
@@ -35,15 +35,15 @@ type KeeperTestSuite struct {
 	apps map[string]App
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.apps = map[string]App{
 		ChainIdGaia1: NewApp(ChainIdGaia1),
 		ChainIdGaia2: NewApp(ChainIdGaia2),
 	}
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {

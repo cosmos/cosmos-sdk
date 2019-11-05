@@ -23,6 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -61,16 +63,18 @@ var (
 		slashing.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
+		ibc.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:     nil,
-		distr.ModuleName:          nil,
-		mint.ModuleName:           {supply.Minter},
-		staking.BondedPoolName:    {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
-		gov.ModuleName:            {supply.Burner},
+		auth.FeeCollectorName:              nil,
+		distr.ModuleName:                   nil,
+		mint.ModuleName:                    {supply.Minter},
+		staking.BondedPoolName:             {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName:          {supply.Burner, supply.Staking},
+		gov.ModuleName:                     {supply.Burner},
+		ibctransfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -121,6 +125,7 @@ type SimApp struct {
 	UpgradeKeeper  upgrade.Keeper
 	ParamsKeeper   params.Keeper
 	EvidenceKeeper evidence.Keeper
+	IBCKeeper      ibc.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -145,6 +150,7 @@ func NewSimApp(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
 		gov.StoreKey, params.StoreKey, upgrade.StoreKey, evidence.StoreKey,
+		ibc.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
@@ -224,6 +230,8 @@ func NewSimApp(
 		staking.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
+	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace, app.BankKeeper, app.SupplyKeeper)
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
@@ -239,6 +247,7 @@ func NewSimApp(
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		ibc.NewAppModule(app.IBCKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -252,7 +261,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		auth.ModuleName, distr.ModuleName, staking.ModuleName, bank.ModuleName,
 		slashing.ModuleName, gov.ModuleName, mint.ModuleName, supply.ModuleName,
-		crisis.ModuleName, genutil.ModuleName, evidence.ModuleName,
+		crisis.ModuleName, ibc.ModuleName, genutil.ModuleName, evidence.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

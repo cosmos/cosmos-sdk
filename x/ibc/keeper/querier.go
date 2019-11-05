@@ -26,7 +26,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			default:
 				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName))
 			}
-
 		case connection.SubModuleName:
 			switch path[1] {
 			case connection.QueryConnection:
@@ -36,7 +35,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			default:
 				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", connection.SubModuleName))
 			}
-
 		case channel.SubModuleName:
 			switch path[1] {
 			case channel.QueryChannel:
@@ -44,7 +42,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			default:
 				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", channel.SubModuleName))
 			}
-
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown IBC query endpoint")
 		}

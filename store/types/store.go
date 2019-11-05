@@ -277,6 +277,10 @@ type StoreKey interface {
 	String() string
 }
 
+// CapabilityKey represent the Cosmos SDK keys for object-capability
+// generation in the IBC protocol as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#data-structures
+type CapabilityKey StoreKey
+
 // KVStoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
 type KVStoreKey struct {

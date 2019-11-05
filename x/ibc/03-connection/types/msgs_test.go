@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewMsgConnectionOpenInit(t *testing.T) {

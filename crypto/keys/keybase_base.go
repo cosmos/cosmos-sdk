@@ -16,9 +16,14 @@ import (
 )
 
 type (
+	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
+	PrivKeyGenFunc func(bz [32]byte) tmcrypto.PrivKey
+
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
-	baseKeybase struct{}
+	baseKeybase struct {
+		genKeyFunc PrivKeyGenFunc
+	}
 
 	keyWriter interface {
 		writeLocalKeyer
@@ -33,6 +38,22 @@ type (
 		writeInfo(name string, info Info)
 	}
 )
+
+// newBaseKeybase generates the base keybase with defaulting to tendermint SECP key type
+func newBaseKeybase(genFunc PrivKeyGenFunc) baseKeybase {
+	if genFunc == nil {
+		// If algo type is not specified by application, use default
+		genFunc = baseSecpPrivKeyGen
+	}
+
+	return baseKeybase{
+		genKeyFunc: genFunc,
+	}
+}
+
+func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
+	return secp256k1.PrivKeySecp256k1(bz)
+}
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
@@ -101,9 +122,9 @@ func (kb baseKeybase) persistDerivedKey(
 	var info Info
 
 	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
+		info = keyWriter.writeLocalKey(name, kb.genKeyFunc(derivedPriv), passwd)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, secp256k1.PrivKeySecp256k1(derivedPriv).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, kb.genKeyFunc(derivedPriv).PubKey())
 	}
 
 	return info, nil

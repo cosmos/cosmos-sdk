@@ -64,6 +64,28 @@ var (
 	ErrUnsupportedLanguage = errors.New("unsupported language: only english is supported")
 )
 
+type dbKeybaseOptions struct {
+	keygenFunc PrivKeyGenFunc
+}
+
+// Option overrides behavior of Connect.
+type KeybaseOption interface {
+	apply(*dbKeybaseOptions)
+}
+
+type optionFunc func(*dbKeybaseOptions)
+
+func (f optionFunc) apply(o *dbKeybaseOptions) {
+	f(o)
+}
+
+// WithKeygenFunc applies an overriden key generation function to generate the private key
+func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
+	return optionFunc(func(o *dbKeybaseOptions) {
+		o.keygenFunc = f
+	})
+}
+
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
 //
@@ -75,16 +97,24 @@ type dbKeybase struct {
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB) Keybase {
+func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
+	options := dbKeybaseOptions{
+		keygenFunc: nil,
+	}
+
+	for _, o := range opts {
+		o.apply(&options)
+	}
+
 	return dbKeybase{
-		base: baseKeybase{},
+		base: newBaseKeybase(options.keygenFunc),
 		db:   db,
 	}
 }
 
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
-func NewInMemory() Keybase { return newDBKeybase(dbm.NewMemDB()) }
+func NewInMemory(opts ...KeybaseOption) Keybase { return newDBKeybase(dbm.NewMemDB(), opts...) }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password. It returns the generated mnemonic and the key Info.

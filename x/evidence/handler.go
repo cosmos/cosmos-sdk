@@ -25,6 +25,14 @@ func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg MsgSubmitEvidence) s
 		return sdk.ConvertError(err).Result()
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Submitter.String()),
+		),
+	)
+
 	return sdk.Result{
 		Data:   msg.Evidence.Hash(),
 		Events: ctx.EventManager().Events(),

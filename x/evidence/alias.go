@@ -20,6 +20,9 @@ const (
 	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
 	TypeMsgSubmitEvidence       = types.TypeMsgSubmitEvidence
 	DefaultCodespace            = types.DefaultCodespace
+	EventTypeSubmitEvidence     = types.EventTypeSubmitEvidence
+	AttributeValueCategory      = types.AttributeValueCategory
+	AttributeKeyEvidenceHash    = types.AttributeKeyEvidenceHash
 )
 
 var (

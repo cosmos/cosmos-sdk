@@ -77,6 +77,13 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 		return types.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitEvidence,
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, evidence.Hash().String()),
+		),
+	)
+
 	k.SetEvidence(ctx, evidence)
 	return nil
 }

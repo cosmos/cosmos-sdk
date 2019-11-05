@@ -80,14 +80,16 @@ func TestMsgUpdateClient(t *testing.T) {
 
 var _ exported.Evidence = mockEvidence{}
 
+const mockStr = "mock"
+
 // mock GoodEvidence
 type mockEvidence struct{}
 
 // Implement Evidence interface
-func (me mockEvidence) Route() string                        { return "mock" }
-func (me mockEvidence) Type() string                         { return "mock" }
-func (me mockEvidence) String() string                       { return "mock" }
-func (me mockEvidence) Hash() cmn.HexBytes                   { return cmn.HexBytes([]byte("mock")) }
+func (me mockEvidence) Route() string                        { return mockStr }
+func (me mockEvidence) Type() string                         { return mockStr }
+func (me mockEvidence) String() string                       { return mockStr }
+func (me mockEvidence) Hash() cmn.HexBytes                   { return cmn.HexBytes([]byte(mockStr)) }
 func (me mockEvidence) ValidateBasic() sdk.Error             { return nil }
 func (me mockEvidence) GetConsensusAddress() sdk.ConsAddress { return sdk.ConsAddress{} }
 func (me mockEvidence) GetHeight() int64                     { return 3 }

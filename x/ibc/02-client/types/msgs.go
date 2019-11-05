@@ -42,7 +42,7 @@ func (msg MsgCreateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if _, err := exported.ClientTypeFromString(msg.ClientType); err != nil {
@@ -97,7 +97,7 @@ func (msg MsgUpdateClient) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Header == nil {
@@ -147,7 +147,7 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitMisbehaviour) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(msg.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid client ID: %s", err.Error()))
 	}
 	if msg.Evidence == nil {

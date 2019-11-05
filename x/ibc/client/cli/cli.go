@@ -19,9 +19,9 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcTxCmd.AddCommand(
+	ibcTxCmd.AddCommand(client.PostCommands(
 		ibcclient.GetTxCmd(cdc, storeKey),
-	)
+	)...)
 	return ibcTxCmd
 }
 
@@ -36,8 +36,8 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	ibcQueryCmd.AddCommand(
+	ibcQueryCmd.AddCommand(client.GetCommands(
 		ibcclient.GetQueryCmd(cdc, queryRoute),
-	)
+	)...)
 	return ibcQueryCmd
 }

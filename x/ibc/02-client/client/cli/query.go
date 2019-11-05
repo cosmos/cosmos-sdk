@@ -232,8 +232,7 @@ $ %s query ibc client node-state
 				return err
 			}
 
-			var state exported.ConsensusState
-			state = tendermint.ConsensusState{
+			state := tendermint.ConsensusState{
 				ChainID:          commit.ChainID,
 				Height:           uint64(commit.Height),
 				Root:             commitment.NewRoot(commit.AppHash),

@@ -27,7 +27,6 @@ func (k Keeper) CreateClient(
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)
-	fmt.Printf("clist %+v\n", clientState)
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)

@@ -501,7 +501,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Update client for cid1 on cid2
 			viper.Set(flags.FlagChainID, cid2)
-
 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
 
 			if err := msgUpdateClient.ValidateBasic(); err != nil {

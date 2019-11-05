@@ -29,6 +29,7 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgra
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
 			ctx.Logger().Info(skipUpgradeMsg)
 			k.ClearUpgradePlan(ctx)
+			return
 		}
 
 		if !k.HasHandler(plan.Name) {

@@ -1,5 +1,6 @@
-// DONTCOVER
 package types
+
+// DONTCOVER
 
 // GenesisState defines the evidence module's genesis state.
 type GenesisState struct {

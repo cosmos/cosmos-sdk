@@ -13,4 +13,7 @@ var (
 
 	// ErrInvalidPath is returned if path string is invalid
 	ErrInvalidPath = sdkerrors.Register(IBCCodeSpace, 2, "invalid path")
+
+	// ErrInvalidEvidence is returned if evidence is invalid
+	ErrInvalidEvidence = sdkerrors.Register(IBCCodeSpace, 3, "invalid evidence")
 )

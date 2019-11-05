@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -349,6 +350,18 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			// get passphrase for key from1
+			passphrase1, err := keys.GetPassphrase(from1)
+			if err != nil {
+				return err
+			}
+
+			// get passphrase for key from2
+			passphrase2, err := keys.GetPassphrase(from2)
+			if err != nil {
+				return err
+			}
+
 			viper.Set(flags.FlagChainID, cid1)
 			msgOpenInit := types.NewMsgConnectionOpenInit(
 				connID1, clientID1, connID2, clientID2,
@@ -359,10 +372,13 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgOpenInit})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid1, msgOpenInit.Type())
+			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
+
+			fmt.Printf(" [OK] txid(%v) client(%v) conn(%v)\n", res.TxHash, clientID1, connID1)
 
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs
@@ -383,11 +399,12 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
-			fmt.Printf(" [OK] client(%v)\n", clientID1)
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID1)
 
 			// Fetch proofs from cid1
 			viper.Set(flags.FlagChainID, cid1)
@@ -409,12 +426,14 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgOpenTry})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid2, msgOpenTry.Type())
+
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
 
-			fmt.Printf(" [OK] client(%v) connection(%v)\n", clientID2, connID2)
+			fmt.Printf(" [OK] txid(%v) client(%v) connection(%v)\n", res.TxHash, clientID2, connID2)
 
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs
@@ -435,11 +454,11 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
-			fmt.Printf(" [OK] client(%v)\n", clientID2)
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID2)
 
 			// Fetch proofs from cid2
 			viper.Set(flags.FlagChainID, cid2)
@@ -461,11 +480,13 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr1, ctx1, []sdk.Msg{msgOpenAck})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid1, msgOpenAck.Type())
+
+			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+			if err != nil || !res.IsOK() {
 				return err
 			}
-			fmt.Printf(" [OK] connection(%v)\n", connID1)
+			fmt.Printf(" [OK] txid(%v) connection(%v)\n", res.TxHash, connID1)
 
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs
@@ -486,13 +507,14 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgUpdateClient})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid2, msgUpdateClient.Type())
+
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
-			fmt.Printf(" [OK] client(%v)\n", clientID1)
+			fmt.Printf(" [OK] txid(%v) client(%v)\n", res.TxHash, clientID1)
 
-			// Fetch proof from cid1
 			viper.Set(flags.FlagChainID, cid1)
 			proofs, err = queryProofs(ctx1.WithHeight(header.Height-1), connID1, storeKey)
 			if err != nil {
@@ -507,11 +529,13 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			err = utils.CompleteAndBroadcastTxCLI(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm})
-			if err != nil {
+			fmt.Printf("%v <- %-14v", cid1, msgOpenConfirm.Type())
+
+			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+			if err != nil || !res.IsOK() {
 				return err
 			}
-			fmt.Printf(" [OK] connection(%v)\n", connID2)
+			fmt.Printf(" [OK] txid(%v) connection(%v)\n", res.TxHash, connID2)
 
 			return nil
 		},

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -138,45 +139,91 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 	return acc.GetCoins()
 }
 
-// MarshalYAML returns the YAML representation of an account.
-func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if acc.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(acc.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address       sdk.AccAddress
-		Coins         sdk.Coins
-		PubKey        string
-		AccountNumber uint64
-		Sequence      uint64
-	}{
-		Address:       acc.Address,
-		Coins:         acc.Coins,
-		PubKey:        pubkey,
-		AccountNumber: acc.AccountNumber,
-		Sequence:      acc.Sequence,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bs), err
-}
-
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
 	if acc.PubKey != nil && acc.Address != nil &&
 		!bytes.Equal(acc.PubKey.Address().Bytes(), acc.Address.Bytes()) {
 		return errors.New("pubkey and address pair is invalid")
 	}
+
+	return nil
+}
+
+type baseAccountSimple struct {
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+	PubKey        string         `json:"public_key" yaml:"public_key"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+}
+
+// MarshalYAML returns the YAML representation of an account.
+func (acc BaseAccount) MarshalYAML() (interface{}, error) {
+	a := baseAccountSimple{
+		Address:       acc.Address,
+		Coins:         acc.Coins,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
+	}
+
+	if acc.PubKey != nil {
+		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		a.PubKey = pks
+	}
+
+	bz, err := yaml.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
+}
+
+// MarshalJSON returns the JSON representation of a BaseAccount.
+func (acc BaseAccount) MarshalJSON() ([]byte, error) {
+	a := baseAccountSimple{
+		Address:       acc.Address,
+		Coins:         acc.Coins,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
+	}
+
+	if acc.PubKey != nil {
+		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		a.PubKey = pks
+	}
+
+	return json.Marshal(a)
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a BaseAccount.
+func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
+	var a baseAccountSimple
+	if err := json.Unmarshal(bz, &a); err != nil {
+		return err
+	}
+
+	if a.PubKey != "" {
+		pk, err := sdk.GetAccPubKeyBech32(a.PubKey)
+		if err != nil {
+			return err
+		}
+
+		acc.PubKey = pk
+	}
+
+	acc.Address = a.Address
+	acc.Coins = a.Coins
+	acc.AccountNumber = a.AccountNumber
+	acc.Sequence = a.Sequence
 
 	return nil
 }

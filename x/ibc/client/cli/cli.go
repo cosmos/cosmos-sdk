@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -21,6 +22,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 	ibcTxCmd.AddCommand(client.PostCommands(
 		ibcclient.GetTxCmd(cdc, storeKey),
+		connection.GetTxCmd(cdc, storeKey),
 	)...)
 	return ibcTxCmd
 }
@@ -38,6 +40,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 	ibcQueryCmd.AddCommand(client.GetCommands(
 		ibcclient.GetQueryCmd(cdc, queryRoute),
+		connection.GetQueryCmd(cdc, queryRoute),
 	)...)
 	return ibcQueryCmd
 }

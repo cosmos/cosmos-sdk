@@ -61,6 +61,7 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagKeyringBackend     = "keyring-backend"
+	FlagProve              = "prove"
 )
 
 // LineBreak can be included in a command list to provide a blank line

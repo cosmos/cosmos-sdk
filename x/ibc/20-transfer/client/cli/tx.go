@@ -12,8 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channelutils "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -26,7 +26,7 @@ var (
 	FlagNode2    = "node2"
 	FlagFrom1    = "from1"
 	FlagFrom2    = "from2"
-	FlagChainId2 = "chain-id2"
+	FlagChainID2 = "chain-id2"
 	FlagSequence = "packet-sequence"
 	FlagTimeout  = "timeout"
 )
@@ -96,7 +96,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 
 			node2 := viper.GetString(FlagNode2)
 			cid1 := viper.GetString(flags.FlagChainID)
-			cid2 := viper.GetString(FlagChainId2)
+			cid2 := viper.GetString(FlagChainID2)
 			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
@@ -143,7 +143,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	cmd = client.PostCommands(cmd)[0]
 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-	cmd.Flags().String(FlagChainId2, "", "chain-id for the second chain")
+	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
 	cmd.Flags().String(FlagSequence, "", "sequence for the packet")
 	cmd.Flags().String(FlagTimeout, "", "timeout for the packet")
 	return cmd

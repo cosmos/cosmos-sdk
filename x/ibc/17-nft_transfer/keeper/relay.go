@@ -203,7 +203,8 @@ func (k Keeper) createOutgoingPacket(
 		packetDataBz,
 	)
 
-	// generate the capability key
+	// TODO: Remove this, capability keys are never generated when sending packets. Not sure why this is here.
 	key := sdk.NewKVStoreKey(types.BoundPortID)
+
 	return k.channelKeeper.SendPacket(ctx, packet, key)
 }

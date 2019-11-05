@@ -23,7 +23,7 @@ const (
 	QuerierRoute = SubModuleName
 
 	// BoundPortID defines the name of the capability key
-	BoundPortID = "nft_transfer"
+	BoundPortID = "nftnftnft"
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel
@@ -37,7 +37,7 @@ func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
 
 // GetDenomPrefix returns the receiving denomination prefix
 func GetDenomPrefix(portID, channelID string) string {
-	return fmt.Sprintf("%s/%s", portID, channelID)
+	return fmt.Sprintf("%s/%s/", portID, channelID)
 }
 
 // GetModuleAccountName returns the IBC nft_transfer module account name for supply

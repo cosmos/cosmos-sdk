@@ -98,7 +98,7 @@ func NewMsgRecvPacket(packet channelexported.PacketI, proofs []commitment.Proof,
 
 // Route implements sdk.Msg
 func (MsgRecvPacket) Route() string {
-	return RouterKey
+	return ibctypes.RouterKey
 }
 
 // Type implements sdk.Msg

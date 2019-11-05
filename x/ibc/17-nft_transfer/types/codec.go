@@ -8,6 +8,7 @@ import (
 
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgTransfer{}, "ibc/nft_transfer/MsgTransfer", nil)
+	cdc.RegisterConcrete(MsgRecvPacket{}, "ibc/nft_transfer/MsgRecvPacket", nil)
 	cdc.RegisterConcrete(PacketData{}, "ibc/nft_transfer/PacketData", nil)
 }
 

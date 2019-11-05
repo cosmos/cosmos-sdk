@@ -31,7 +31,7 @@ func GetPlanCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			var plan upgrade.Plan
-			err = cdc.UnmarshalBinaryBare(res, &plan)
+			err = cdc.UnmarshalJSON(res, &plan)
 			if err != nil {
 				return err
 			}

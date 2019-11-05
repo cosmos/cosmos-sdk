@@ -88,7 +88,6 @@ func (k Keeper) ConnOpenTry(
 		types.ConnectionPath(counterparty.ConnectionID), expConnBz,
 	)
 	if !ok {
-		fmt.Sprintf("couldn't verify connection membership on counterparty's client\n")
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
 	}
 

@@ -44,6 +44,8 @@ func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootP
 	}
 }
 
+// ConsensusStateResponse defines the client response for a Consensus state query.
+// It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {
 	ConsensusState tmtypes.ConsensusState
 	Proof          commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
@@ -51,6 +53,7 @@ type ConsensusStateResponse struct {
 	ProofHeight    uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
+// NewConsensusStateResponse creates a new ConsensusStateResponse instance.
 func NewConsensusStateResponse(
 	clientID string, cs tmtypes.ConsensusState, proof *merkle.Proof, height int64,
 ) ConsensusStateResponse {

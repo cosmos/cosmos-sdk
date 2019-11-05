@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -19,7 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -354,7 +357,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs
 			// TODO: Modify this to actually check two blocks being processed, and
@@ -368,7 +370,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Create and send msgUpdateClient
 			viper.Set(flags.FlagChainID, cid2)
-			msgUpdateClient := ibcclient.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
+			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
@@ -382,7 +384,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err := queryConsensusStateProof(ctx1.WithHeight(header.Height-1), clientID1)
+			csProof, err := clientutils.QueryConsensusStateProof(ctx1.WithHeight(header.Height-1), clientID1)
 			if err != nil {
 				return err
 			}
@@ -411,7 +413,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Update the client for cid2 on cid1
 			viper.Set(flags.FlagChainID, cid1)
-			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientID1, header, ctx1.GetFromAddress())
+			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID1, header, ctx1.GetFromAddress())
 			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
@@ -425,7 +427,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err = queryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
+			csProof, err = clientutils.QueryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
 			if err != nil {
 				return err
 			}
@@ -452,7 +454,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Update client for cid1 on cid2
 			viper.Set(flags.FlagChainID, cid2)
-			msgUpdateClient = ibcclient.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
+			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
 			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
@@ -515,35 +517,16 @@ func queryProofs(ctx client.CLIContext, connectionID string, queryRoute string) 
 	return types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height), nil
 }
 
-func queryConsensusStateProof(ctx client.CLIContext, clientID string) (ibcclient.ConsensusStateResponse, error) {
-	var csRes ibcclient.ConsensusStateResponse
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  []byte(fmt.Sprintf("clients/%s/consensusState", clientID)),
-		Prove: true,
-	}
-	res, err := ctx.QueryABCI(req)
-	if err != nil {
-		return csRes, err
-	}
-
-	var cs tendermint.ConsensusState
-	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
-		return csRes, err
-	}
-	return ibcclient.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
-}
-
 func parsePath(cdc *codec.Codec, arg string) (commitment.Prefix, error) {
 	var path commitment.Prefix
 	if err := cdc.UnmarshalJSON([]byte(arg), &path); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 		contents, err := ioutil.ReadFile(arg)
 		if err != nil {
-			return path, fmt.Errorf("error opening path file: %v\n", err)
+			return path, errors.Wrap(err, "error opening path file")
 		}
 		if err := cdc.UnmarshalJSON(contents, &path); err != nil {
-			return path, fmt.Errorf("error unmarshalling path file: %v\n", err)
+			return path, errors.Wrap(err, "error unmarshalling path file")
 		}
 	}
 	return path, nil

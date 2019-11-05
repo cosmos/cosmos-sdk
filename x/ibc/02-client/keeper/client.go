@@ -35,7 +35,6 @@ func (k Keeper) CreateClient(
 
 // UpdateClient updates the consensus state and the state root from a provided header
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
-
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrClientTypeNotFound(k.codespace), "cannot update client")

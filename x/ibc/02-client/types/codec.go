@@ -6,7 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
-var SubModuleCdc *codec.Codec
+// SubModuleCdc defines the IBC client codec.
+var SubModuleCdc = codec.New()
 
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
@@ -21,6 +22,8 @@ func RegisterCodec(cdc *codec.Codec) {
 
 	cdc.RegisterConcrete(tendermint.ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(tendermint.Header{}, "ibc/client/tendermint/Header", nil)
+}
 
-	SubModuleCdc = cdc
+func init() {
+	RegisterCodec(SubModuleCdc)
 }

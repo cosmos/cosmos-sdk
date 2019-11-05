@@ -378,6 +378,8 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			fmt.Printf(" [OK] txid(%v) client(%v) conn(%v)\n", res.TxHash, clientID1, connID1)
+
 			// Another block has to be passed after msgOpenInit is committed
 			// to retrieve the correct proofs
 			// TODO: Modify this to actually check two blocks being processed, and
@@ -499,7 +501,6 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 			// Update client for cid1 on cid2
 			viper.Set(flags.FlagChainID, cid2)
-
 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientID2, header, ctx2.GetFromAddress())
 
 			if err := msgUpdateClient.ValidateBasic(); err != nil {

@@ -1,19 +1,21 @@
 package types
 
+import "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+
 // DONTCOVER
 
 // GenesisState defines the evidence module's genesis state.
 type GenesisState struct {
-	Evidence []Evidence `json:"evidence" yaml:"evidence"`
+	Evidence []exported.Evidence `json:"evidence" yaml:"evidence"`
 }
 
-func NewGenesisState(e []Evidence) GenesisState {
+func NewGenesisState(e []exported.Evidence) GenesisState {
 	return GenesisState{Evidence: e}
 }
 
 // DefaultGenesisState returns the evidence module's default genesis state.
 func DefaultGenesisState() GenesisState {
-	return GenesisState{Evidence: []Evidence{}}
+	return GenesisState{Evidence: []exported.Evidence{}}
 }
 
 // Validate performs basic gensis state validation returning an error upon any

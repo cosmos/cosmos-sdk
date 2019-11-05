@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
@@ -44,8 +45,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.keeper = *evidenceKeeper
 }
 
-func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []types.Evidence {
-	evidence := make([]types.Evidence, numEvidence)
+func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
+	evidence := make([]exported.Evidence, numEvidence)
 
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()

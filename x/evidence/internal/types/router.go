@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 type (
@@ -11,7 +12,7 @@ type (
 	// for executing all corresponding business logic necessary for verifying the
 	// evidence as valid. In addition, the Handler may execute any necessary
 	// slashing and potential jailing.
-	Handler func(sdk.Context, Evidence) error
+	Handler func(sdk.Context, exported.Evidence) error
 
 	// Router defines a contract for which any Evidence handling module must
 	// implement in order to route Evidence to registered Handlers.

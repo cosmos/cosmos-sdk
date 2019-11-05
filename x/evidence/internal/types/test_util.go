@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
 	"gopkg.in/yaml.v2"
 
@@ -22,7 +23,7 @@ import (
 )
 
 var (
-	_ Evidence = (*TestEquivocationEvidence)(nil)
+	_ exported.Evidence = (*TestEquivocationEvidence)(nil)
 
 	TestingCdc = codec.New()
 )
@@ -111,7 +112,7 @@ func (v TestVote) SignBytes(chainID string) []byte {
 }
 
 func TestEquivocationHandler(k interface{}) Handler {
-	return func(ctx sdk.Context, e Evidence) error {
+	return func(ctx sdk.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}

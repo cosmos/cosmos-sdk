@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 )
 
@@ -83,7 +84,7 @@ func queryEvidence(cdc *codec.Codec, cliCtx context.CLIContext, hash string) err
 		return err
 	}
 
-	var evidence types.Evidence
+	var evidence exported.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)
@@ -105,7 +106,7 @@ func queryAllEvidence(cdc *codec.Codec, cliCtx context.CLIContext) error {
 		return err
 	}
 
-	var evidence []types.Evidence
+	var evidence []exported.Evidence
 	err = cdc.UnmarshalJSON(res, &evidence)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal evidence: %w", err)

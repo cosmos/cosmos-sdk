@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -72,7 +73,7 @@ func queryAllEvidence(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keep
 
 	start, end := client.Paginate(len(evidence), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		evidence = []types.Evidence{}
+		evidence = []exported.Evidence{}
 	} else {
 		evidence = evidence[start:end]
 	}

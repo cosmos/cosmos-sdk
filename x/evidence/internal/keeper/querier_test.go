@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,7 +27,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence_Existing() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e types.Evidence
+	var e exported.Evidence
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Equal(evidence[0], e)
 }
@@ -60,7 +61,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []types.Evidence
+	var e []exported.Evidence
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, numEvidence)
 }
@@ -79,7 +80,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	suite.Nil(err)
 	suite.NotNil(bz)
 
-	var e []types.Evidence
+	var e []exported.Evidence
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }

@@ -42,7 +42,6 @@ type (
 
 	GenesisState      = types.GenesisState
 	MsgSubmitEvidence = types.MsgSubmitEvidence
-	Evidence          = types.Evidence
 	Handler           = types.Handler
 	Router            = types.Router
 )

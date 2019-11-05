@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Message types for the evidence module
@@ -17,11 +18,11 @@ var (
 // MsgSubmitEvidence defines an sdk.Msg type that supports submitting arbitrary
 // Evidence.
 type MsgSubmitEvidence struct {
-	Evidence  Evidence       `json:"evidence" yaml:"evidence"`
-	Submitter sdk.AccAddress `json:"submitter" yaml:"submitter"`
+	Evidence  exported.Evidence `json:"evidence" yaml:"evidence"`
+	Submitter sdk.AccAddress    `json:"submitter" yaml:"submitter"`
 }
 
-func NewMsgSubmitEvidence(e Evidence, s sdk.AccAddress) MsgSubmitEvidence {
+func NewMsgSubmitEvidence(e exported.Evidence, s sdk.AccAddress) MsgSubmitEvidence {
 	return MsgSubmitEvidence{Evidence: e, Submitter: s}
 }
 

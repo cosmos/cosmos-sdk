@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // ModuleCdc defines the evidence module's codec. The codec is not sealed as to
@@ -11,7 +12,7 @@ var ModuleCdc = codec.New()
 // RegisterCodec registers all the necessary types and interfaces for the
 // evidence module.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*Evidence)(nil), nil)
+	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterConcrete(MsgSubmitEvidence{}, "cosmos-sdk/MsgSubmitEvidence", nil)
 }
 

@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -38,6 +39,7 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the staking module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
+	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
 	commitment.RegisterCodec(cdc)
 }

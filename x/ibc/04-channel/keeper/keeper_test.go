@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.updateClient()
 	proofAck, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
-	suite.NotNil(err) // successfully executed
+	suite.Nil(err) // successfully executed
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
 	suite.True(found)
@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
-	suite.NotNil(err) // successfully executed
+	suite.Nil(err) // successfully executed
 
 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
 	suite.True(found)
@@ -444,7 +444,7 @@ func (suite *KeeperTestSuite) TestSetSequence() {
 func (suite *KeeperTestSuite) TestPackageCommitment() {
 	seq := uint64(10)
 	storedCommitment := suite.channelKeeper.GetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
-	suite.Equal(nil, storedCommitment)
+	suite.Equal([]byte(nil), storedCommitment)
 
 	commitment := []byte("commitment")
 	suite.channelKeeper.SetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq, commitment)
@@ -454,7 +454,7 @@ func (suite *KeeperTestSuite) TestPackageCommitment() {
 
 	suite.channelKeeper.deletePacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
 	storedCommitment = suite.channelKeeper.GetPacketCommitment(suite.ctx, TestPort1, TestChannel1, seq)
-	suite.Equal(nil, storedCommitment)
+	suite.Equal([]byte(nil), storedCommitment)
 }
 
 func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
@@ -462,7 +462,7 @@ func (suite *KeeperTestSuite) TestSetPacketAcknowledgement() {
 	seq := uint64(10)
 
 	storedAckHash := store.Get(types.KeyPacketAcknowledgement(TestPort1, TestChannel1, seq))
-	suite.Equal(nil, storedAckHash)
+	suite.Equal([]byte(nil), storedAckHash)
 
 	ackHash := []byte("ackhash")
 	suite.channelKeeper.SetPacketAcknowledgement(suite.ctx, TestPort1, TestChannel1, seq, ackHash)

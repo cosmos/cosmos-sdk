@@ -98,14 +98,12 @@ func (s *TestSuite) VerifyDoUpgrade() {
 	s.T().Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	viper.Set(s.FlagUnsafeSkipUpgrade, false )
 	s.Require().Panics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan Plan) {})
-	viper.Set(s.FlagUnsafeSkipUpgrade, false )
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})

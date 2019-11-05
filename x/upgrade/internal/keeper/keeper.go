@@ -16,7 +16,6 @@ type Keeper struct {
 	upgradeHandlers map[string]types.UpgradeHandler
 }
 
-
 // NewKeeper constructs an upgrade Keeper
 func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{

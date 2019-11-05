@@ -12,8 +12,6 @@ const (
 
 	// QuerierKey is used to handle abci_query requests
 	QuerierKey = ModuleName
-
-
 )
 
 const (

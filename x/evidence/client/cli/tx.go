@@ -32,7 +32,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, childCmds []*cobra.Command) *co
 	return cmd
 }
 
-// SubmitEvidenceCMD returns the top-level evidence submission command handler.
+// SubmitEvidenceCmd returns the top-level evidence submission command handler.
 // All concrete evidence submission child command handlers should be registered
 // under this command.
 func SubmitEvidenceCMD(cdc *codec.Codec) *cobra.Command {

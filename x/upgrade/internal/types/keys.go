@@ -26,8 +26,3 @@ const (
 func PlanKey() []byte {
 	return []byte{PlanByte}
 }
-
-// DoneHeightKey returns a key that points to the height at which a past upgrade was applied
-func DoneHeightKey(name string) []byte {
-	return append([]byte{DoneByte}, []byte(name)...)
-}

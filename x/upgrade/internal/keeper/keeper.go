@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -48,19 +49,19 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 		return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	if store.Has(types.DoneHeightKey(plan.Name)) {
+	if k.getDoneHeight(ctx, plan.Name) != 0 {
 		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(plan)
+	store := ctx.KVStore(k.storeKey)
 	store.Set(types.PlanKey(), bz)
 	return nil
 }
 
 func (k Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.DoneHeightKey(name))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	bz := store.Get([]byte(name))
 	if len(bz) == 0 {
 		return 0
 	}
@@ -92,10 +93,10 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := ctx.KVStore(k.storeKey)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
-	store.Set(types.DoneHeightKey(name), bz)
+	store.Set([]byte(name), bz)
 }
 
 // HasHandler returns true iff there is a handler registered for this name

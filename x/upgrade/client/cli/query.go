@@ -81,7 +81,7 @@ func GetAppliedHeightCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			if len(headers.BlockMetas) == 0 {
-				return fmt.Errorf("No headers returned for height %d", applied)
+				return fmt.Errorf("no headers returned for height %d", applied)
 			}
 
 			// always output json as Header is unreable in toml ([]byte is a long list of numbers)

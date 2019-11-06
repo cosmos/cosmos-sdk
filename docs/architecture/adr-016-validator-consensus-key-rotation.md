@@ -99,7 +99,7 @@ Proposed
 ### Negative
 
 - Slash module needs more computation because it needs to lookup corresponding consensus key of validators for each height
-
+- frequent key rotations will make light client bisection less efficient
 ### Neutral
 
 ## References

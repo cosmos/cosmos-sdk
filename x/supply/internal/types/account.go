@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -30,6 +31,7 @@ func init() {
 // ModuleAccount defines an account for modules that holds coins on a pool
 type ModuleAccount struct {
 	*authtypes.BaseAccount
+
 	Name        string   `json:"name" yaml:"name"`               // name of the module
 	Permissions []string `json:"permissions" yaml:"permissions"` // permissions of module account
 }
@@ -100,15 +102,6 @@ func (ma ModuleAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
-// String follows stringer interface
-func (ma ModuleAccount) String() string {
-	b, err := yaml.Marshal(ma)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
 // Validate checks for errors on the account fields
 func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
@@ -121,17 +114,24 @@ func (ma ModuleAccount) Validate() error {
 	return ma.BaseAccount.Validate()
 }
 
+type moduleAccountPretty struct {
+	Address       sdk.AccAddress `json:"address" yaml:"address"`
+	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
+	PubKey        string         `json:"public_key" yaml:"public_key"`
+	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
+	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+	Name          string         `json:"name" yaml:"name"`
+	Permissions   []string       `json:"permissions" yaml:"permissions"`
+}
+
+func (ma ModuleAccount) String() string {
+	out, _ := ma.MarshalYAML()
+	return out.(string)
+}
+
 // MarshalYAML returns the YAML representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
-	bs, err := yaml.Marshal(struct {
-		Address       sdk.AccAddress
-		Coins         sdk.Coins
-		PubKey        string
-		AccountNumber uint64
-		Sequence      uint64
-		Name          string
-		Permissions   []string
-	}{
+	bs, err := yaml.Marshal(moduleAccountPretty{
 		Address:       ma.Address,
 		Coins:         ma.Coins,
 		PubKey:        "",
@@ -146,4 +146,31 @@ func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	return string(bs), nil
+}
+
+// MarshalJSON returns the JSON representation of a ModuleAccount.
+func (ma ModuleAccount) MarshalJSON() ([]byte, error) {
+	return json.Marshal(moduleAccountPretty{
+		Address:       ma.Address,
+		Coins:         ma.Coins,
+		PubKey:        "",
+		AccountNumber: ma.AccountNumber,
+		Sequence:      ma.Sequence,
+		Name:          ma.Name,
+		Permissions:   ma.Permissions,
+	})
+}
+
+// UnmarshalJSON unmarshals raw JSON bytes into a ModuleAccount.
+func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
+	var alias moduleAccountPretty
+	if err := json.Unmarshal(bz, &alias); err != nil {
+		return err
+	}
+
+	ma.BaseAccount = authtypes.NewBaseAccount(alias.Address, alias.Coins, nil, alias.AccountNumber, alias.Sequence)
+	ma.Name = alias.Name
+	ma.Permissions = alias.Permissions
+
+	return nil
 }

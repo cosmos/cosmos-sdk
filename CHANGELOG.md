@@ -74,6 +74,7 @@ if the provided arguments are invalid.
 
 ### Client Breaking Changes
 
+* (rest) [\#5270](https://github.com/cosmos/cosmos-sdk/issues/5270) All account types now implement custom JSON serialization.
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.

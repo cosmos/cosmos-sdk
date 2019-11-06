@@ -15,7 +15,7 @@ type Keeper struct {
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
 	prefix    []byte // prefix bytes for accessing the store
-	ports     map[sdk.CapabilityKey]string
+	ports     map[string]string
 	bound     []string
 }
 
@@ -27,7 +27,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
 		prefix:    []byte{},
 		// prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
-		ports: make(map[sdk.CapabilityKey]string), // map of capabilities to port ids
+		ports: make(map[string]string), // map of capability key names to port ids
 	}
 }
 
@@ -39,7 +39,7 @@ func (k Keeper) GetPorts() []string {
 
 // GetPort retrieves a given port ID from keeper map
 func (k Keeper) GetPort(ck sdk.CapabilityKey) (string, bool) {
-	portID, found := k.ports[ck]
+	portID, found := k.ports[ck.Name()]
 	return portID, found
 }
 
@@ -59,7 +59,7 @@ func (k Keeper) BindPort(portID string) sdk.CapabilityKey {
 	}
 
 	key := sdk.NewKVStoreKey(portID)
-	k.ports[key] = portID
+	k.ports[key.Name()] = portID
 	k.bound = append(k.bound, portID)
 	return key
 }
@@ -73,5 +73,5 @@ func (k Keeper) Authenticate(key sdk.CapabilityKey, portID string) bool {
 		panic(err.Error())
 	}
 
-	return k.ports[key] == portID
+	return k.ports[key.Name()] == portID
 }

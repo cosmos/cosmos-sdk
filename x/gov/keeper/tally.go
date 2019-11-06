@@ -35,30 +35,31 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 
 	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
 		// if validator, just record it in the map
-		// if delegator tally voting power
 		valAddrStr := sdk.ValAddress(vote.Voter).String()
 		if val, ok := currValidators[valAddrStr]; ok {
 			val.Vote = vote.Option
 			currValidators[valAddrStr] = val
-		} else {
-			// iterate over all delegations from voter, deduct from any delegated-to validators
-			keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation exported.DelegationI) (stop bool) {
-				valAddrStr := delegation.GetValidatorAddr().String()
-
-				if val, ok := currValidators[valAddrStr]; ok {
-					val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
-					currValidators[valAddrStr] = val
-
-					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
-					votingPower := delegatorShare.MulInt(val.BondedTokens)
-
-					results[vote.Option] = results[vote.Option].Add(votingPower)
-					totalVotingPower = totalVotingPower.Add(votingPower)
-				}
-
-				return false
-			})
 		}
+
+		// iterate over all delegations from voter, deduct from any delegated-to validators
+		keeper.sk.IterateDelegations(ctx, vote.Voter, func(index int64, delegation exported.DelegationI) (stop bool) {
+			valAddrStr := delegation.GetValidatorAddr().String()
+
+			if val, ok := currValidators[valAddrStr]; ok {
+				// There is no need to handle the special case that validator address equal to voter address.
+				// Because voter's voting power will tally again even if there will deduct voter's voting power from validator.
+				val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
+				currValidators[valAddrStr] = val
+
+				delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
+				votingPower := delegatorShare.MulInt(val.BondedTokens)
+
+				results[vote.Option] = results[vote.Option].Add(votingPower)
+				totalVotingPower = totalVotingPower.Add(votingPower)
+			}
+
+			return false
+		})
 
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
 		return false

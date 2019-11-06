@@ -18,6 +18,7 @@ const (
 	CommunityTax        = "community_tax"
 	BaseProposerReward  = "base_proposer_reward"
 	BonusProposerReward = "bonus_proposer_reward"
+	WithdrawEnabled     = "withdraw_enabled"
 )
 
 // GenCommunityTax randomized CommunityTax
@@ -33,6 +34,11 @@ func GenBaseProposerReward(r *rand.Rand) sdk.Dec {
 // GenBonusProposerReward randomized BonusProposerReward
 func GenBonusProposerReward(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+}
+
+// GenWithdrawEnabled returns a randomized WithdrawEnabled parameter.
+func GenWithdrawEnabled(r *rand.Rand) bool {
+	return r.Int63n(101) <= 95 // 95% chance of withdraws being enabled
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
@@ -55,11 +61,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { bonusProposerReward = GenBonusProposerReward(r) },
 	)
 
+	var withdrawEnabled bool
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, WithdrawEnabled, &withdrawEnabled, simState.Rand,
+		func(r *rand.Rand) { withdrawEnabled = GenWithdrawEnabled(r) },
+	)
+
 	distrGenesis := types.GenesisState{
 		FeePool:             types.InitialFeePool(),
 		CommunityTax:        communityTax,
 		BaseProposerReward:  baseProposerReward,
 		BonusProposerReward: bonusProposerReward,
+		WithdrawAddrEnabled: withdrawEnabled,
 	}
 
 	fmt.Printf("Selected randomly generated distribution parameters:\n%s\n", codec.MustMarshalJSONIndent(simState.Cdc, distrGenesis))

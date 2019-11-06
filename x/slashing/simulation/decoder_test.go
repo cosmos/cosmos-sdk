@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
-// nolint:deadcode unused
+// nolint:deadcode,unused,varcheck
 var (
 	delPk1    = ed25519.GenPrivKey().PubKey()
 	delAddr1  = sdk.AccAddress(delPk1.Address())
@@ -55,6 +55,7 @@ func TestDecodeStore(t *testing.T) {
 		{"other", ""},
 	}
 	for i, tt := range tests {
+		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:

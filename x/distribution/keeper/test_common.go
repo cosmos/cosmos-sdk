@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -23,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-//nolint: deadcode unused
+//nolint:deadcode,unused
 var (
 	delPk1   = ed25519.GenPrivKey().PubKey()
 	delPk2   = ed25519.GenPrivKey().PubKey()
@@ -47,7 +46,6 @@ var (
 	valConsPk3   = ed25519.GenPrivKey().PubKey()
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
-	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())
 
 	// TODO move to common testing package for all modules
 	// test addresses
@@ -55,10 +53,6 @@ var (
 		delAddr1, delAddr2, delAddr3,
 		valAccAddr1, valAccAddr2, valAccAddr3,
 	}
-
-	emptyDelAddr sdk.AccAddress
-	emptyValAddr sdk.ValAddress
-	emptyPubkey  crypto.PubKey
 
 	distrAcc = supply.NewEmptyModuleAccount(types.ModuleName)
 )

@@ -13,7 +13,7 @@ block.
 
 ## Modules specifications
 
-- [Auth](../../x/authspec) - The structure and authentication of accounts and transactions.
+- [Auth](../../x/auth/spec) - The structure and authentication of accounts and transactions.
 - [Bank](../../x/bank/spec) - Sending tokens.
 - [Governance](../../x/governance/spec) - Proposals and voting.
 - [Staking](../../x/staking/spec) - Proof-of-stake bonding, delegation, etc.

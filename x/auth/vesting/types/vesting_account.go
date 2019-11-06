@@ -11,13 +11,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Assert BaseVestingAccount implements authexported.Account at compile-time
-var _ authexported.Account = (*BaseVestingAccount)(nil)
-
-// Assert vesting accounts implement vestexported.VestingAccount at compile-time
-var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
-var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
-var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
+// Compile-time type assertions
+var (
+	_ authexported.Account        = (*BaseVestingAccount)(nil)
+	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
+	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
+	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
+)
 
 // Register the vesting account types on the auth module codec
 func init() {
@@ -182,45 +182,50 @@ func (bva BaseVestingAccount) Validate() error {
 	return bva.BaseAccount.Validate()
 }
 
-// MarshalYAML returns the YAML representation of an account.
+type vestingAccountPretty struct {
+	Address          sdk.AccAddress `json:"address" yaml:"address"`
+	Coins            sdk.Coins      `json:"coins" yaml:"coins"`
+	PubKey           string         `json:"public_key" yaml:"public_key"`
+	AccountNumber    uint64         `json:"account_number" yaml:"account_number"`
+	Sequence         uint64         `json:"sequence" yaml:"sequence"`
+	OriginalVesting  sdk.Coins      `json:"original_vesting" yaml:"original_vesting"`
+	DelegatedFree    sdk.Coins      `json:"delegated_free" yaml:"delegated_free"`
+	DelegatedVesting sdk.Coins      `json:"delegated_vesting" yaml:"delegated_vesting"`
+	EndTime          int64          `json:"end_time" yaml:"end_time"`
+
+	// custom fields based on concrete vesting type which can be omitted
+	StartTime      int64   `json:"start_time,omitempty" yaml:"start_time,omitempty"`
+	VestingPeriods Periods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
+}
+
+// MarshalYAML returns the YAML representation of a BaseVestingAccount.
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if bva.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(bva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address          sdk.AccAddress
-		Coins            sdk.Coins
-		PubKey           string
-		AccountNumber    uint64
-		Sequence         uint64
-		OriginalVesting  sdk.Coins
-		DelegatedFree    sdk.Coins
-		DelegatedVesting sdk.Coins
-		EndTime          int64
-	}{
+	alias := vestingAccountPretty{
 		Address:          bva.Address,
 		Coins:            bva.Coins,
-		PubKey:           pubkey,
 		AccountNumber:    bva.AccountNumber,
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
-	})
+	}
+
+	if bva.PubKey != nil {
+		pks, err := sdk.Bech32ifyAccPub(bva.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		alias.PubKey = pks
+	}
+
+	bz, err := yaml.Marshal(alias)
 	if err != nil {
 		return nil, err
 	}
 
-	return string(bs), err
+	return string(bz), err
 }
 
 //-----------------------------------------------------------------------------
@@ -320,34 +325,11 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
-// MarshalYAML returns the YAML representation of an account.
+// MarshalYAML returns the YAML representation of a ContinuousVestingAccount.
 func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if cva.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(cva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address          sdk.AccAddress
-		Coins            sdk.Coins
-		PubKey           string
-		AccountNumber    uint64
-		Sequence         uint64
-		OriginalVesting  sdk.Coins
-		DelegatedFree    sdk.Coins
-		DelegatedVesting sdk.Coins
-		EndTime          int64
-		StartTime        int64
-	}{
+	alias := vestingAccountPretty{
 		Address:          cva.Address,
 		Coins:            cva.Coins,
-		PubKey:           pubkey,
 		AccountNumber:    cva.AccountNumber,
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
@@ -355,12 +337,23 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		DelegatedVesting: cva.DelegatedVesting,
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
-	})
+	}
+
+	if cva.PubKey != nil {
+		pks, err := sdk.Bech32ifyAccPub(cva.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		alias.PubKey = pks
+	}
+
+	bz, err := yaml.Marshal(alias)
 	if err != nil {
 		return nil, err
 	}
 
-	return string(bs), err
+	return string(bz), err
 }
 
 //-----------------------------------------------------------------------------
@@ -485,35 +478,11 @@ func (pva PeriodicVestingAccount) Validate() error {
 	return pva.BaseVestingAccount.Validate()
 }
 
-// MarshalYAML returns the YAML representation of an account.
+// MarshalYAML returns the YAML representation of a PeriodicVestingAccount.
 func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
-	var bs []byte
-	var err error
-	var pubkey string
-
-	if pva.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(pva.PubKey)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bs, err = yaml.Marshal(struct {
-		Address          sdk.AccAddress
-		Coins            sdk.Coins
-		PubKey           string
-		AccountNumber    uint64
-		Sequence         uint64
-		OriginalVesting  sdk.Coins
-		DelegatedFree    sdk.Coins
-		DelegatedVesting sdk.Coins
-		EndTime          int64
-		StartTime        int64
-		VestingPeriods   Periods
-	}{
+	alias := vestingAccountPretty{
 		Address:          pva.Address,
 		Coins:            pva.Coins,
-		PubKey:           pubkey,
 		AccountNumber:    pva.AccountNumber,
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
@@ -522,12 +491,23 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          pva.EndTime,
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
-	})
+	}
+
+	if pva.PubKey != nil {
+		pks, err := sdk.Bech32ifyAccPub(pva.PubKey)
+		if err != nil {
+			return nil, err
+		}
+
+		alias.PubKey = pks
+	}
+
+	bz, err := yaml.Marshal(alias)
 	if err != nil {
 		return nil, err
 	}
 
-	return string(bs), err
+	return string(bz), err
 }
 
 //-----------------------------------------------------------------------------

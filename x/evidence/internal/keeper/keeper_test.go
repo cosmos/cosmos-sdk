@@ -166,6 +166,16 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	suite.Len(evidence, numEvidence)
 }
 
+func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
+	handler, err := suite.keeper.GetEvidenceHandler(types.TestEquivocationEvidence{}.Route())
+	suite.NoError(err)
+	suite.NotNil(handler)
+
+	handler, err = suite.keeper.GetEvidenceHandler("invalidHandler")
+	suite.Error(err)
+	suite.Nil(handler)
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

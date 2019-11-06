@@ -60,6 +60,16 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 	k.router = rtr
 }
 
+// GetEvidenceHandler returns a registered Handler for a given Evidence type. If
+// no handler exists, an error is returned.
+func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
+	if !k.router.HasRoute(evidenceRoute) {
+		return nil, types.ErrNoEvidenceHandlerExists(k.codespace, evidenceRoute)
+	}
+
+	return k.router.GetRoute(evidenceRoute), nil
+}
+
 // SubmitEvidence attempts to match evidence against the keepers router and execute
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is

@@ -130,7 +130,6 @@ that allows for arbitrary vesting periods.
 
 ### Improvements
 
-* (keys) [\#5091](https://github.com/cosmos/cosmos-sdk/issues/5091) Changed prefixes using `SetBech32PrefixForAccount(), SetBech32PrefixForValidator(), SetBech32PrefixForConsensusNode()` methods are respected in `keys parse`.
 * (server) [\#4215](https://github.com/cosmos/cosmos-sdk/issues/4215) The `--pruning` flag
 has been moved to the configuration file, to allow easier node configuration.
 * (cli) [\#5116](https://github.com/cosmos/cosmos-sdk/issues/5116) The `CLIContext` now supports multiple verifiers
@@ -150,6 +149,7 @@ chain ID and node URI or client set. To use a `CLIContext` with a verifier for a
     context.CreateVerifier(sideCtx, context.DefaultVerifierCacheSize),
   )
   ```
+
 * (modules) [\#5017](https://github.com/cosmos/cosmos-sdk/pull/5017) The `x/auth` package now supports
 generalized genesis accounts through the `GenesisAccount` interface.
 * (modules) [\#4762](https://github.com/cosmos/cosmos-sdk/issues/4762) Deprecate remove and add permissions in ModuleAccount.

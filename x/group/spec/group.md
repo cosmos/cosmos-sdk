@@ -17,9 +17,9 @@ type GroupID uint64
 type Member struct {
 	// The address of a group member. Can be another group or a contract
 	Address sdk.AccAddress `json:"address"`
-	// The integral power of this member with respect to other members
-	Power sdk.Int `json:"power"`
-	Description sdk.Int `json:"description"`
+	// The integral weight of this member with respect to other members
+	Weight sdk.Int `json:"weight"`
+	Description string `json:"description"`
 }
 ```
 
@@ -48,8 +48,12 @@ type MsgCreateGroup struct {
 type MsgUpdateGroupMembers struct {
 	Admin  sdk.AccAddress `json:"admin"`
 	Group  GroupID `json:"group"`
+    // NewAdmin sets a new admin for the group. If this is left empty, the
+    // current admin is not changed.
 	NewAdmin  sdk.AccAddress `json:"new_admin"`
-	Description string `json:"description,omitempty"`
+    // Description sets a new description if the string point is non-nil,
+    // otherwise the description isn't changed
+	Description *string `json:"description,omitempty"`
 	MemberUpdates []Member `json:"member_updates,omitempty"`
 }
 ```
@@ -66,9 +70,10 @@ to authorize messages send back to the router.
 
 ```go
 type GroupKeeper interface {
-  IterateGroupsByMember(member sdk.Address, fn func (group sdk.AccAddress) (stop bool))
-  IterateGroupsByAdmin(member sdk.Address, fn func (group sdk.AccAddress) (stop bool))
-  GetGroupDescription(group sdk.AccAddress) string
-  GetTotalPower(group sdk.AccAddress) sdk.Int
+  IterateGroupMembers(group GroupID, fn func (member sdk.AccAddress, weight sdk.Int, description string) (stop bool))
+  IterateGroupsByMember(member sdk.Address, fn func (group GroupID) (stop bool))
+  IterateGroupsByAdmin(member sdk.Address, fn func (group Group) (stop bool))
+  GetGroupDescription(group GroupID) string
+  GetTotalWeight(group GroupID) sdk.Int
 }
 ```

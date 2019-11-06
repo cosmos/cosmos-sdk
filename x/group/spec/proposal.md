@@ -55,7 +55,7 @@ counts for open proposals must be updated when a member's power is changed.
 type MsgVote struct {
 	ProposalID ProposalID     `json:"proposal_id"`
 	Voter      sdk.AccAddress `json:"voter"`
-	Vote       bool           `json:"vote"`
+	Vote       Vote           `json:"vote"`
 	Comment string            `json:"comment,omitempty"`
 }
 ```

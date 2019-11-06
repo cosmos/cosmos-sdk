@@ -44,7 +44,7 @@ type MsgCreateGroupAccount struct {
 }
 ```
 
-*Returns:*  a new auto-generated `sdk.AccAddress` for this group.
+*Returns:*  a new auto-generated `sdk.AccAddress` for this group account.
 
 ### `MsgGroupExec`
 
@@ -65,9 +65,15 @@ type MsgGroupExec struct {
 type MsgUpdateGroupAccount struct {
 	Admin  sdk.AccAddress `json:"admin"`
 	GroupAccount  sdk.AccAddress `json:"group_account"`
+    // NewAdmin sets a new admin for the group. If this is left empty, the
+    // current admin is not changed.
 	NewAdmin  sdk.AccAddress `json:"new_admin"`
+    // Description sets a new description if the string point is non-nil,
+    // otherwise the description isn't changed
+	Description *string `json:"description,omitempty"`
+    // DecisionPolicy changes the GroupAccount DecisionPolicy, if left to nil,
+    // the DecisionPolicy isn't changed
     DecisionPolicy DecisionPolicy `json:"decision_policy"`
-	Description string `json:"Description,omitempty"`
 }
 
 ```

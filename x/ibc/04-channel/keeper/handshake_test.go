@@ -124,12 +124,12 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(TestPort1, TestChannel1)
 	suite.bindPort(TestPort2)
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+	channelKey := types.ChannelPath(TestPort1, TestChannel1)
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.INIT)
 	suite.updateClient()
-	proofInit, proofHeight := suite.queryProof(chanKey)
+	proofInit, proofHeight := suite.queryProof(channelKey)
 	err := suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight))
 	suite.NotNil(err) // channel has already exist
 
@@ -147,13 +147,13 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	suite.createConnection(connection.OPEN)
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
 	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
+	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight))
 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
 	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
+	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight))
 	suite.Nil(err) // successfully executed
 
@@ -164,11 +164,11 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.bindPort(TestPort1)
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort2, TestChannel2))
+	channelKey := types.ChannelPath(TestPort2, TestChannel2)
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
 	suite.updateClient()
-	proofTry, proofHeight := suite.queryProof(chanKey)
+	proofTry, proofHeight := suite.queryProof(channelKey)
 	err := suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
 	suite.NotNil(err) // channel does not exist
 
@@ -191,13 +191,13 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.createConnection(connection.OPEN)
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
 	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
+	proofTry, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
 	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
+	proofTry, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
 	suite.Nil(err) // successfully executed
 
@@ -208,11 +208,11 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.bindPort(TestPort2)
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+	channelKey := types.ChannelPath(TestPort1, TestChannel1)
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
 	suite.updateClient()
-	proofAck, proofHeight := suite.queryProof(chanKey)
+	proofAck, proofHeight := suite.queryProof(channelKey)
 	err := suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
 	suite.NotNil(err) // channel does not exist
 
@@ -235,13 +235,13 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.createConnection(connection.OPEN)
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
 	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
+	proofAck, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
 	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
+	proofAck, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
 	suite.Nil(err) // successfully executed
 
@@ -282,11 +282,11 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.bindPort(TestPort2)
-	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+	channelKey := types.ChannelPath(TestPort1, TestChannel1)
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
 	suite.updateClient()
-	proofInit, proofHeight := suite.queryProof(chanKey)
+	proofInit, proofHeight := suite.queryProof(channelKey)
 	err := suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort1, TestChannel2, proofInit, uint64(proofHeight))
 	suite.NotNil(err) // unauthenticated port
 
@@ -308,13 +308,13 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.createConnection(connection.OPEN)
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
 	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
+	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
 	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
+	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
 	suite.Nil(err) // successfully executed
 

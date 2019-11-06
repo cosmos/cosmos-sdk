@@ -35,7 +35,7 @@ const (
 	TestChannel2   = "secondchannel"
 
 	TestChannelOrder   = types.ORDERED
-	TestChannelVersion = ""
+	TestChannelVersion = "1.0"
 )
 
 type KeeperTestSuite struct {

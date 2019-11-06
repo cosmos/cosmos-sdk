@@ -28,8 +28,8 @@ func TestModuleAccountMarshalYAML(t *testing.T) {
 	want := fmt.Sprintf(`|
   address: %s
   coins: []
-  pubkey: ""
-  accountnumber: 0
+  public_key: ""
+  account_number: 0
   sequence: 0
   name: %s
   permissions:

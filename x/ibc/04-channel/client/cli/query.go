@@ -5,16 +5,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	cli "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 )
 
 // GetQueryCmd returns the query commands for IBC channels
@@ -46,39 +42,14 @@ $ %s query ibc channel end [port-id] [channel-id]
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			portID := args[0]
-			channelID := args[1]
 
-			bz, err := cdc.MarshalJSON(types.NewQueryChannelParams(portID, channelID))
+			ch, err := utils.QueryChannel(cliCtx, args[0], args[1], queryRoute)
 			if err != nil {
 				return err
 			}
 
-			req := abci.RequestQuery{
-				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryChannel),
-				Data:  bz,
-				Prove: viper.GetBool(flags.FlagProve),
-			}
-
-			res, err := cliCtx.QueryABCI(req)
-			if err != nil {
-				return err
-			}
-
-			var channel types.Channel
-			if err := cdc.UnmarshalJSON(res.Value, &channel); err != nil {
-				return err
-			}
-
-			if res.Proof == nil {
-				return cliCtx.PrintOutput(channel)
-			}
-
-			channelRes := types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height)
-			return cliCtx.PrintOutput(channelRes)
+			return cliCtx.PrintOutput(ch)
 		},
 	}
-	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-
 	return cmd
 }

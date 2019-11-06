@@ -10,6 +10,20 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// CounterpartyHops returns the connection hops of the counterparty channel.
+// The counterparty hops are stored in the inverse order as the channel's.
+func (k Keeper) CounterpartyHops(ctx sdk.Context, ch types.Channel) ([]string, bool) {
+	counterPartyHops := make([]string, len(ch.ConnectionHops))
+	for i, hop := range ch.ConnectionHops {
+		connection, found := k.connectionKeeper.GetConnection(ctx, hop)
+		if !found {
+			return []string{}, false
+		}
+		counterPartyHops[len(counterPartyHops)-1-i] = connection.Counterparty.ConnectionID
+	}
+	return counterPartyHops, true
+}
+
 // ChanOpenInit is called by a module to initiate a channel opening handshake with
 // a module on another chain.
 func (k Keeper) ChanOpenInit(
@@ -20,7 +34,6 @@ func (k Keeper) ChanOpenInit(
 	channelID string,
 	counterparty types.Counterparty,
 	version string,
-	portCapability sdk.CapabilityKey,
 ) error {
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
 	_, found := k.GetChannel(ctx, portID, channelID)
@@ -40,10 +53,15 @@ func (k Keeper) ChanOpenInit(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
-		return errors.New("port is not valid")
-	}
+	/*
+		// TODO: Maybe not right
+		key := sdk.NewKVStoreKey(portID)
 
+		if !k.portKeeper.Authenticate(key, portID) {
+			return errors.New("port is not valid")
+		}
+
+	*/
 	channel := types.NewChannel(types.INIT, order, counterparty, connectionHops, version)
 	k.SetChannel(ctx, portID, channelID, channel)
 
@@ -67,14 +85,16 @@ func (k Keeper) ChanOpenTry(
 	counterpartyVersion string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
 		return types.ErrChannelExists(k.codespace, channelID)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -94,12 +114,18 @@ func (k Keeper) ChanOpenTry(
 	// hops
 	channel := types.NewChannel(types.OPENTRY, order, counterparty, connectionHops, version)
 
+	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
+	if !found {
+		// Should not reach here, connectionEnd was able to be retrieved above
+		panic("cannot find connection")
+	}
+
 	// expectedCounterpaty is the counterparty of the counterparty's channel end
 	// (i.e self)
 	expectedCounterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		types.INIT, channel.Ordering, expectedCounterparty,
-		channel.CounterpartyHops(), channel.Version,
+		counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
@@ -133,12 +159,10 @@ func (k Keeper) ChanOpenAck(
 	counterpartyVersion string,
 	proofTry commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
-
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State != types.INIT {
@@ -148,7 +172,10 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -164,11 +191,17 @@ func (k Keeper) ChanOpenAck(
 		)
 	}
 
+	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
+	if !found {
+		// Should not reach here, connectionEnd was able to be retrieved above
+		panic("cannot find connection")
+	}
+
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		types.OPENTRY, channel.Ordering, counterparty,
-		channel.CounterpartyHops(), channel.Version,
+		counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
@@ -199,11 +232,10 @@ func (k Keeper) ChanOpenConfirm(
 	channelID string,
 	proofAck commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State != types.OPENTRY {
@@ -213,7 +245,10 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
@@ -229,10 +264,16 @@ func (k Keeper) ChanOpenConfirm(
 		)
 	}
 
+	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
+	if !found {
+		// Should not reach here, connectionEnd was able to be retrieved above
+		panic("cannot find connection")
+	}
+
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		types.OPEN, channel.Ordering, counterparty,
-		channel.CounterpartyHops(), channel.Version,
+		counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
@@ -265,15 +306,17 @@ func (k Keeper) ChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	portCapability sdk.CapabilityKey,
 ) error {
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -306,15 +349,17 @@ func (k Keeper) ChanCloseConfirm(
 	channelID string,
 	proofInit commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) error {
-	if !k.portKeeper.Authenticate(portCapability, portID) {
+	// TODO: Maybe not right
+	key := sdk.NewKVStoreKey(portID)
+
+	if !k.portKeeper.Authenticate(key, portID) {
 		return errors.New("port is not valid")
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, channelID)
+		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
 	if channel.State == types.CLOSED {
@@ -333,10 +378,16 @@ func (k Keeper) ChanCloseConfirm(
 		)
 	}
 
+	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
+	if !found {
+		// Should not reach here, connectionEnd was able to be retrieved above
+		panic("cannot find connection")
+	}
+
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
 		types.CLOSED, channel.Ordering, counterparty,
-		channel.CounterpartyHops(), channel.Version,
+		counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)

@@ -30,6 +30,7 @@ func Commands() *cobra.Command {
 		updateKeyCommand(),
 		parseKeyStringCommand(),
 		migrateCommand(),
+		addKeyScriptingCommand(),
 	)
 	return cmd
 }

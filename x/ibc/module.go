@@ -42,8 +42,8 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
 	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
-	commitment.RegisterCodec(cdc)
 	transfer.RegisterCodec(cdc)
+	commitment.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the staking

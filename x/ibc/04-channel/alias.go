@@ -57,7 +57,6 @@ var (
 	OrderFromString               = types.OrderFromString
 	StateFromString               = types.StateFromString
 	RegisterCodec                 = types.RegisterCodec
-	SetMsgChanCodec               = types.SetMsgChanCodec
 	ErrChannelExists              = types.ErrChannelExists
 	ErrChannelNotFound            = types.ErrChannelNotFound
 	ErrInvalidCounterpartyChannel = types.ErrInvalidCounterpartyChannel

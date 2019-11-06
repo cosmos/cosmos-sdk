@@ -27,10 +27,11 @@ type Keeper struct {
 // NewKeeper creates a new IBC connection Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ClientKeeper) Keeper {
 	return Keeper{
-		storeKey:     key,
-		cdc:          cdc,
-		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
-		prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
+		storeKey:  key,
+		cdc:       cdc,
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
+		prefix:    []byte{},
+		// prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
 		clientKeeper: ck,
 	}
 }
@@ -63,8 +64,6 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
-	fmt.Printf("%+v\n", connection)
-	fmt.Printf("bs: %X\n", bz)
 	store.Set(types.KeyConnection(connectionID), bz)
 }
 
@@ -96,7 +95,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
+		conns = []string{}
 	}
 
 	conns = append(conns, connectionID)

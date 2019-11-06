@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(TestPort1, TestChannel1)
-	_ = suite.bindPort(TestPort2)
+	suite.bindPort(TestPort2)
 	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
@@ -162,163 +162,163 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	suite.Equal(types.OPENTRY, channel.State)
 }
 
-// func (suite *KeeperTestSuite) TestChanOpenAck() {
-// 	suite.bindPort(TestPort1)
-// 	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort2, TestChannel2))
+func (suite *KeeperTestSuite) TestChanOpenAck() {
+	suite.bindPort(TestPort1)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort2, TestChannel2))
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
-// 	suite.updateClient()
-// 	proofTry, proofHeight := suite.queryProof(chanKey)
-// 	err := suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // channel does not exist
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	suite.updateClient()
+	proofTry, proofHeight := suite.queryProof(chanKey)
+	err := suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // channel does not exist
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // invalid channel state
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // invalid channel state
 
-// 	suite.createChannel(TestPort2, TestChannel1, TestConnection, TestPort1, TestChannel2, types.INIT)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort2, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // unauthenticated port
+	suite.createChannel(TestPort2, TestChannel1, TestConnection, TestPort1, TestChannel2, types.INIT)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort2, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // unauthenticated port
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // connection does not exist
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // connection does not exist
 
-// 	suite.createConnection(connection.NONE)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // invalid connection state
+	suite.createConnection(connection.NONE)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // invalid connection state
 
-// 	suite.createConnection(connection.OPEN)
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
-// 	suite.updateClient()
-// 	proofTry, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
-// 	suite.updateClient()
-// 	proofTry, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
-// 	suite.Nil(err) // successfully executed
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	suite.updateClient()
+	proofTry, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight))
+	suite.Nil(err) // successfully executed
 
-// 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
-// 	suite.True(found)
-// 	suite.Equal(types.OPEN, channel.State)
-// }
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(types.OPEN, channel.State)
+}
 
-// func (suite *KeeperTestSuite) TestChanOpenConfirm() {
-// 	suite.bindPort(TestPort2)
-// 	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+func (suite *KeeperTestSuite) TestChanOpenConfirm() {
+	suite.bindPort(TestPort2)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
-// 	suite.updateClient()
-// 	proofAck, proofHeight := suite.queryProof(chanKey)
-// 	err := suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // channel does not exist
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	suite.updateClient()
+	proofAck, proofHeight := suite.queryProof(chanKey)
+	err := suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // channel does not exist
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // invalid channel state
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // invalid channel state
 
-// 	suite.createChannel(TestPort1, TestChannel2, TestConnection, TestPort2, TestChannel1, types.OPENTRY)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort1, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // unauthenticated port
+	suite.createChannel(TestPort1, TestChannel2, TestConnection, TestPort2, TestChannel1, types.OPENTRY)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort1, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // unauthenticated port
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // connection does not exist
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // connection does not exist
 
-// 	suite.createConnection(connection.NONE)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // invalid connection state
+	suite.createConnection(connection.NONE)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // invalid connection state
 
-// 	suite.createConnection(connection.OPEN)
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
-// 	suite.updateClient()
-// 	proofAck, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPENTRY)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
-// 	suite.updateClient()
-// 	proofAck, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
-// 	suite.Nil(err) // successfully executed
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	suite.updateClient()
+	proofAck, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight))
+	suite.Nil(err) // successfully executed
 
-// 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
-// 	suite.True(found)
-// 	suite.Equal(types.OPEN, channel.State)
-// }
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
+	suite.True(found)
+	suite.Equal(types.OPEN, channel.State)
+}
 
-// func (suite *KeeperTestSuite) TestChanCloseInit() {
-// 	suite.bindPort(TestPort1)
+func (suite *KeeperTestSuite) TestChanCloseInit() {
+	suite.bindPort(TestPort1)
 
-// 	err := suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort2, TestChannel1)
-// 	suite.NotNil(err) // authenticated port
+	err := suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort2, TestChannel1)
+	suite.NotNil(err) // authenticated port
 
-// 	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
-// 	suite.NotNil(err) // channel does not exist
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
+	suite.NotNil(err) // channel does not exist
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
-// 	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
-// 	suite.NotNil(err) // channel is already closed
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
+	suite.NotNil(err) // channel is already closed
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
-// 	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
-// 	suite.NotNil(err) // connection does not exist
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
+	suite.NotNil(err) // connection does not exist
 
-// 	suite.createConnection(connection.TRYOPEN)
-// 	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
-// 	suite.NotNil(err) // invalid connection state
+	suite.createConnection(connection.TRYOPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
+	suite.NotNil(err) // invalid connection state
 
-// 	suite.createConnection(connection.OPEN)
-// 	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
-// 	suite.Nil(err) // successfully executed
+	suite.createConnection(connection.OPEN)
+	err = suite.channelKeeper.ChanCloseInit(suite.ctx, TestPort1, TestChannel1)
+	suite.Nil(err) // successfully executed
 
-// 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
-// 	suite.True(found)
-// 	suite.Equal(types.CLOSED, channel.State)
-// }
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort1, TestChannel1)
+	suite.True(found)
+	suite.Equal(types.CLOSED, channel.State)
+}
 
-// func (suite *KeeperTestSuite) TestChanCloseConfirm() {
-// 	suite.bindPort(TestPort2)
-// 	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
+func (suite *KeeperTestSuite) TestChanCloseConfirm() {
+	suite.bindPort(TestPort2)
+	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
-// 	suite.updateClient()
-// 	proofInit, proofHeight := suite.queryProof(chanKey)
-// 	err := suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort1, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // unauthenticated port
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	suite.updateClient()
+	proofInit, proofHeight := suite.queryProof(chanKey)
+	err := suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort1, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // unauthenticated port
 
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // channel does not exist
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // channel does not exist
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.CLOSED)
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // channel is already closed
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.CLOSED)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // channel is already closed
 
-// 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // connection does not exist
+	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // connection does not exist
 
-// 	suite.createConnection(connection.TRYOPEN)
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // invalid connection state
+	suite.createConnection(connection.TRYOPEN)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // invalid connection state
 
-// 	suite.createConnection(connection.OPEN)
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
-// 	suite.updateClient()
-// 	proofInit, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
+	suite.createConnection(connection.OPEN)
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.OPEN)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.NotNil(err) // channel membership verification failed due to invalid counterparty
 
-// 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
-// 	suite.updateClient()
-// 	proofInit, proofHeight = suite.queryProof(chanKey)
-// 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
-// 	suite.Nil(err) // successfully executed
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
+	suite.updateClient()
+	proofInit, proofHeight = suite.queryProof(chanKey)
+	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight))
+	suite.Nil(err) // successfully executed
 
-// 	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
-// 	suite.True(found)
-// 	suite.Equal(types.CLOSED, channel.State)
-// }
+	channel, found := suite.channelKeeper.GetChannel(suite.ctx, TestPort2, TestChannel2)
+	suite.True(found)
+	suite.Equal(types.CLOSED, channel.State)
+}

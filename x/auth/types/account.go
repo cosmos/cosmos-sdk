@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -43,24 +42,6 @@ func NewBaseAccount(address sdk.AccAddress, coins sdk.Coins,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
-}
-
-// String implements fmt.Stringer
-func (acc BaseAccount) String() string {
-	var pubkey string
-
-	if acc.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(acc.PubKey)
-	}
-
-	return fmt.Sprintf(`Account:
-  Address:       %s
-  Pubkey:        %s
-  Coins:         %s
-  AccountNumber: %d
-  Sequence:      %d`,
-		acc.Address, pubkey, acc.Coins, acc.AccountNumber, acc.Sequence,
-	)
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
@@ -155,6 +136,11 @@ type baseAccountPretty struct {
 	PubKey        string         `json:"public_key" yaml:"public_key"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+}
+
+func (acc BaseAccount) String() string {
+	out, _ := acc.MarshalYAML()
+	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of an account.

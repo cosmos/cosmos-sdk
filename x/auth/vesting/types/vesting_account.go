@@ -201,6 +201,11 @@ type vestingAccountPretty struct {
 	VestingPeriods Periods `json:"vesting_periods,omitempty" yaml:"vesting_periods,omitempty"`
 }
 
+func (bva BaseVestingAccount) String() string {
+	out, _ := bva.MarshalYAML()
+	return out.(string)
+}
+
 // MarshalYAML returns the YAML representation of a BaseVestingAccount.
 func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	alias := vestingAccountPretty{
@@ -379,6 +384,11 @@ func (cva ContinuousVestingAccount) Validate() error {
 	}
 
 	return cva.BaseVestingAccount.Validate()
+}
+
+func (cva ContinuousVestingAccount) String() string {
+	out, _ := cva.MarshalYAML()
+	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of a ContinuousVestingAccount.
@@ -589,6 +599,11 @@ func (pva PeriodicVestingAccount) Validate() error {
 	}
 
 	return pva.BaseVestingAccount.Validate()
+}
+
+func (pva PeriodicVestingAccount) String() string {
+	out, _ := pva.MarshalYAML()
+	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of a PeriodicVestingAccount.

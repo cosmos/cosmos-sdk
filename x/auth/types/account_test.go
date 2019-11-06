@@ -145,5 +145,5 @@ func TestBaseAccountJSON(t *testing.T) {
 
 	var a BaseAccount
 	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, *baseAcc, a)
+	require.Equal(t, baseAcc.String(), a.String())
 }

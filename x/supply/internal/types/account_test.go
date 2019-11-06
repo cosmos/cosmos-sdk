@@ -114,5 +114,5 @@ func TestModuleAccountJSON(t *testing.T) {
 
 	var a ModuleAccount
 	require.NoError(t, json.Unmarshal(bz, &a))
-	require.Equal(t, *acc.BaseAccount, *a.BaseAccount)
+	require.Equal(t, acc.String(), a.String())
 }

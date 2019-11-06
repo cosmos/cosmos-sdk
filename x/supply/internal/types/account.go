@@ -102,15 +102,6 @@ func (ma ModuleAccount) SetSequence(seq uint64) error {
 	return fmt.Errorf("not supported for module accounts")
 }
 
-// String follows stringer interface
-func (ma ModuleAccount) String() string {
-	b, err := yaml.Marshal(ma)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
 // Validate checks for errors on the account fields
 func (ma ModuleAccount) Validate() error {
 	if strings.TrimSpace(ma.Name) == "" {
@@ -131,6 +122,11 @@ type moduleAccountPretty struct {
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
 	Name          string         `json:"name" yaml:"name"`
 	Permissions   []string       `json:"permissions" yaml:"permissions"`
+}
+
+func (ma ModuleAccount) String() string {
+	out, _ := ma.MarshalYAML()
+	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of a ModuleAccount.

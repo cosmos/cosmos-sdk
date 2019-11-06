@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
+// ListKeysCmd lists all keys in the keybase
 func ListKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",

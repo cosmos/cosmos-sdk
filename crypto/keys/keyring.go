@@ -39,8 +39,7 @@ var maxPassphraseEntryAttempts = 3
 
 // NewKeyring creates a new instance of a keyring.
 func NewKeyring(
-	name string, dir string, userInput io.Reader,
-	opts ...KeybaseOption,
+	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
 	if err != nil {

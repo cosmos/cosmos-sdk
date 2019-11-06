@@ -24,9 +24,7 @@ type (
 	}
 
 	// KeybaseOption overrides options for the db
-	KeybaseOption interface {
-		apply(*kbOptions)
-	}
+	KeybaseOption func(*kbOptions)
 
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
@@ -48,33 +46,23 @@ type (
 	}
 )
 
-type optionFunc func(*kbOptions)
-
-func (f optionFunc) apply(o *kbOptions) {
-	f(o)
-}
-
 // WithKeygenFunc applies an overridden key generation function to generate the private key
 func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
-	return optionFunc(func(o *kbOptions) {
+	return func(o *kbOptions) {
 		o.keygenFunc = f
-	})
+	}
 }
 
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP key type
-func newBaseKeybase(opts ...KeybaseOption) baseKeybase {
+func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
-	options := kbOptions{
-		keygenFunc: baseSecpPrivKeyGen,
+	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
+
+	for _, optionFn := range optionsFns {
+		optionFn(&options)
 	}
 
-	for _, o := range opts {
-		o.apply(&options)
-	}
-
-	return baseKeybase{
-		options: options,
-	}
+	return baseKeybase{options: options}
 }
 
 func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
+// ImportKeyCommand imports private keys from a keyfile
 func ImportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import <name> <keyfile>",

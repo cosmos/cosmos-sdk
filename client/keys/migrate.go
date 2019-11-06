@@ -18,6 +18,7 @@ import (
 // is not needed for importing into the Keyring keystore.
 const migratePassphrase = "NOOP_PASSPHRASE"
 
+// MigrateCommand migrates key information from legacy keybase to OS secret store
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate",

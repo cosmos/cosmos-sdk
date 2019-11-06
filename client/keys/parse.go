@@ -67,6 +67,7 @@ func (bo bech32Output) String() string {
 	return fmt.Sprintf("Bech32 Formats:\n%s", strings.Join(out, "\n"))
 }
 
+// ParseKeyStringCommand parses an address from hex to bech32 and vice versa
 func ParseKeyStringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse <hex-or-bech32-address>",

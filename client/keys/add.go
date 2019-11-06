@@ -36,6 +36,7 @@ const (
 	DefaultKeyPass = "12345678"
 )
 
+// AddKeyCommand defines a keybase command to add a generated or recovered private key to keybase
 func AddKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
+// UpdateKeyCommand changes the password of a key in the keybase
 func UpdateKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",

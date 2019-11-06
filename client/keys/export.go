@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
+// ExportKeyCommand exports private keys from the keybase
 func ExportKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export <name>",

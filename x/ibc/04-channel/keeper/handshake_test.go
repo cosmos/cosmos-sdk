@@ -131,14 +131,15 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	capabilityKey := suite.bindPort(TestPort2)
 	chanKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ChannelPath(TestPort1, TestChannel1))
 
+	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.INIT)
-	proofInit, proofHeight := commitment.Proof{}, int64(0)
+	suite.updateClient()
+	proofInit, proofHeight := suite.queryProof(chanKey)
 	err := suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // channel has already exist
 
 	suite.deleteChannel(TestPort2, TestChannel2)
 	invalidCapabilityKey := suite.bindPort(TestPort1)
-	proofInit, proofHeight = commitment.Proof{}, int64(0)
 	err = suite.channelKeeper.ChanOpenTry(suite.ctx, TestChannelOrder, []string{TestConnection}, TestPort2, TestChannel2, counterparty, TestChannelVersion, TestChannelVersion, proofInit, uint64(proofHeight), invalidCapabilityKey)
 	suite.NotNil(err) // unauthenticated port
 
@@ -178,26 +179,18 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.NotNil(err) // channel does not exist
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.CLOSED)
-	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // invalid channel state
 
 	suite.createChannel(TestPort1, TestChannel1, TestConnection, TestPort2, TestChannel2, types.INIT)
 	invalidCapabilityKey := suite.bindPort(TestPort2)
-	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), invalidCapabilityKey)
 	suite.NotNil(err) // unauthenticated port
 
-	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // connection does not exist
 
 	suite.createConnection(connection.NONE)
-	suite.updateClient()
-	proofTry, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenAck(suite.ctx, TestPort1, TestChannel1, TestChannelVersion, proofTry, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // invalid connection state
 
@@ -230,26 +223,18 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.NotNil(err) // channel does not exist
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
-	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // invalid channel state
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPENTRY)
 	invalidCapabilityKey := suite.bindPort(TestPort1)
-	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), invalidCapabilityKey)
 	suite.NotNil(err) // unauthenticated port
 
-	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // connection does not exist
 
 	suite.createConnection(connection.NONE)
-	suite.updateClient()
-	proofAck, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanOpenConfirm(suite.ctx, TestPort2, TestChannel2, proofAck, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // invalid connection state
 
@@ -313,26 +298,18 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	err := suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), invalidCapabilityKey)
 	suite.NotNil(err) // unauthenticated port
 
-	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // channel does not exist
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.CLOSED)
-	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // channel is already closed
 
 	suite.createChannel(TestPort2, TestChannel2, TestConnection, TestPort1, TestChannel1, types.OPEN)
-	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // connection does not exist
 
 	suite.createConnection(connection.TRYOPEN)
-	suite.updateClient()
-	proofInit, proofHeight = suite.queryProof(chanKey)
 	err = suite.channelKeeper.ChanCloseConfirm(suite.ctx, TestPort2, TestChannel2, proofInit, uint64(proofHeight), capabilityKey)
 	suite.NotNil(err) // invalid connection state
 

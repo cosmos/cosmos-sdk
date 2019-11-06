@@ -3925,27 +3925,6 @@
                 }
             }
         },
-        "rest.stakeParams": {
-            "type": "object",
-            "properties": {
-                "bond_denom": {
-                    "description": "note: we need to be a bit careful about potential overflow here, since this is user-determined",
-                    "type": "string"
-                },
-                "max_entries": {
-                    "description": "max entries for either unbonding delegation or redelegation (per pair/trio)",
-                    "type": "integer"
-                },
-                "max_validators": {
-                    "description": "maximum number of validators (max uint16 = 65535)",
-                    "type": "integer"
-                },
-                "unbonding_time": {
-                    "description": "time duration of unbonding",
-                    "type": "string"
-                }
-            }
-        },
         "rest.stakingParams": {
             "type": "object",
             "properties": {
@@ -3954,7 +3933,7 @@
                 },
                 "result": {
                     "type": "object",
-                    "$ref": "#/definitions/rest.stakeParams"
+                    "$ref": "#/definitions/types.StakeParams"
                 }
             }
         },
@@ -4585,27 +4564,6 @@
                 }
             }
         },
-        "types.Params": {
-            "type": "object",
-            "properties": {
-                "bond_denom": {
-                    "description": "note: we need to be a bit careful about potential overflow here, since this is user-determined",
-                    "type": "string"
-                },
-                "max_entries": {
-                    "description": "max entries for either unbonding delegation or redelegation (per pair/trio)",
-                    "type": "integer"
-                },
-                "max_validators": {
-                    "description": "maximum number of validators (max uint16 = 65535)",
-                    "type": "integer"
-                },
-                "unbonding_time": {
-                    "description": "time duration of unbonding",
-                    "type": "string"
-                }
-            }
-        },
         "types.Pool": {
             "type": "object",
             "properties": {
@@ -4710,7 +4668,6 @@
                     "type": "string"
                 },
                 "entries": {
-                    "description": "nolint: structtag",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/types.RedelegationEntryResponse"
@@ -4736,7 +4693,6 @@
                         "type": "string"
                     },
                     "entries": {
-                        "description": "nolint: structtag",
                         "type": "array",
                         "items": {
                             "$ref": "#/definitions/types.RedelegationEntryResponse"
@@ -4804,6 +4760,27 @@
                     "type": "string"
                 },
                 "slash_fraction_downtime": {
+                    "type": "string"
+                }
+            }
+        },
+        "types.StakeParams": {
+            "type": "object",
+            "properties": {
+                "bond_denom": {
+                    "description": "note: we need to be a bit careful about potential overflow here, since this is user-determined",
+                    "type": "string"
+                },
+                "max_entries": {
+                    "description": "max entries for either unbonding delegation or redelegation (per pair/trio)",
+                    "type": "integer"
+                },
+                "max_validators": {
+                    "description": "maximum number of validators (max uint16 = 65535)",
+                    "type": "integer"
+                },
+                "unbonding_time": {
+                    "description": "time duration of unbonding",
                     "type": "string"
                 }
             }

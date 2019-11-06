@@ -584,7 +584,7 @@ $ %s query staking params
 				return err
 			}
 
-			var params types.Params
+			var params types.StakeParams
 			cdc.MustUnmarshalJSON(bz, &params)
 			return cliCtx.PrintOutput(params)
 		},

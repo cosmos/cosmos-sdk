@@ -32,10 +32,10 @@ var (
 	KeyBondDenom     = []byte("BondDenom")
 )
 
-var _ params.ParamSet = (*Params)(nil)
+var _ params.ParamSet = (*StakeParams)(nil)
 
 // Params defines the high level settings for staking
-type Params struct {
+type StakeParams struct {
 	UnbondingTime time.Duration `json:"unbonding_time" yaml:"unbonding_time"` // time duration of unbonding
 	MaxValidators uint16        `json:"max_validators" yaml:"max_validators"` // maximum number of validators (max uint16 = 65535)
 	MaxEntries    uint16        `json:"max_entries" yaml:"max_entries"`       // max entries for either unbonding delegation or redelegation (per pair/trio)
@@ -45,9 +45,9 @@ type Params struct {
 
 // NewParams creates a new Params instance
 func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
-	bondDenom string) Params {
+	bondDenom string) StakeParams {
 
-	return Params{
+	return StakeParams{
 		UnbondingTime: unbondingTime,
 		MaxValidators: maxValidators,
 		MaxEntries:    maxEntries,
@@ -56,7 +56,7 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
 }
 
 // Implements params.ParamSet
-func (p *Params) ParamSetPairs() params.ParamSetPairs {
+func (p *StakeParams) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		{Key: KeyUnbondingTime, Value: &p.UnbondingTime},
 		{Key: KeyMaxValidators, Value: &p.MaxValidators},
@@ -67,19 +67,19 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 
 // Equal returns a boolean determining if two Param types are identical.
 // TODO: This is slower than comparing struct fields directly
-func (p Params) Equal(p2 Params) bool {
+func (p StakeParams) Equal(p2 StakeParams) bool {
 	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p)
 	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
 // DefaultParams returns a default set of parameters.
-func DefaultParams() Params {
+func DefaultParams() StakeParams {
 	return NewParams(DefaultUnbondingTime, DefaultMaxValidators, DefaultMaxEntries, sdk.DefaultBondDenom)
 }
 
 // String returns a human readable string representation of the parameters.
-func (p Params) String() string {
+func (p StakeParams) String() string {
 	return fmt.Sprintf(`Params:
   Unbonding Time:    %s
   Max Validators:    %d
@@ -89,7 +89,7 @@ func (p Params) String() string {
 }
 
 // unmarshal the current staking params value from store key or panic
-func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
+func MustUnmarshalParams(cdc *codec.Codec, value []byte) StakeParams {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
 		panic(err)
@@ -98,7 +98,7 @@ func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
 }
 
 // unmarshal the current staking params value from store key
-func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) {
+func UnmarshalParams(cdc *codec.Codec, value []byte) (params StakeParams, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &params)
 	if err != nil {
 		return
@@ -107,7 +107,7 @@ func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) 
 }
 
 // validate a set of params
-func (p Params) Validate() error {
+func (p StakeParams) Validate() error {
 	if p.BondDenom == "" {
 		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
 	}

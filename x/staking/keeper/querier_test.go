@@ -96,7 +96,7 @@ func TestQueryParametersPool(t *testing.T) {
 	res, err := queryParameters(ctx, keeper)
 	require.Nil(t, err)
 
-	var params types.Params
+	var params types.StakeParams
 	errRes := cdc.UnmarshalJSON(res, &params)
 	require.Nil(t, errRes)
 	require.Equal(t, keeper.GetParams(ctx), params)

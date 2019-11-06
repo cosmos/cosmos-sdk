@@ -632,29 +632,12 @@ definitions:
           $ref: '#/definitions/types.SlashParams'
         type: array
     type: object
-  rest.stakeParams:
-    properties:
-      bond_denom:
-        description: 'note: we need to be a bit careful about potential overflow here,
-          since this is user-determined'
-        type: string
-      max_entries:
-        description: max entries for either unbonding delegation or redelegation (per
-          pair/trio)
-        type: integer
-      max_validators:
-        description: maximum number of validators (max uint16 = 65535)
-        type: integer
-      unbonding_time:
-        description: time duration of unbonding
-        type: string
-    type: object
   rest.stakingParams:
     properties:
       height:
         type: integer
       result:
-        $ref: '#/definitions/rest.stakeParams'
+        $ref: '#/definitions/types.StakeParams'
         type: object
     type: object
   rest.totalDenomSupply:
@@ -1097,23 +1080,6 @@ definitions:
       validator_address:
         type: string
     type: object
-  types.Params:
-    properties:
-      bond_denom:
-        description: 'note: we need to be a bit careful about potential overflow here,
-          since this is user-determined'
-        type: string
-      max_entries:
-        description: max entries for either unbonding delegation or redelegation (per
-          pair/trio)
-        type: integer
-      max_validators:
-        description: maximum number of validators (max uint16 = 65535)
-        type: integer
-      unbonding_time:
-        description: time duration of unbonding
-        type: string
-    type: object
   types.Pool:
     properties:
       bonded_tokens:
@@ -1191,7 +1157,6 @@ definitions:
         description: delegator
         type: string
       entries:
-        description: 'nolint: structtag'
         items:
           $ref: '#/definitions/types.RedelegationEntryResponse'
         type: array
@@ -1209,7 +1174,6 @@ definitions:
           description: delegator
           type: string
         entries:
-          description: 'nolint: structtag'
           items:
             $ref: '#/definitions/types.RedelegationEntryResponse'
           type: array
@@ -1257,6 +1221,23 @@ definitions:
       slash_fraction_double_sign:
         type: string
       slash_fraction_downtime:
+        type: string
+    type: object
+  types.StakeParams:
+    properties:
+      bond_denom:
+        description: 'note: we need to be a bit careful about potential overflow here,
+          since this is user-determined'
+        type: string
+      max_entries:
+        description: max entries for either unbonding delegation or redelegation (per
+          pair/trio)
+        type: integer
+      max_validators:
+        description: maximum number of validators (max uint16 = 65535)
+        type: integer
+      unbonding_time:
+        description: time duration of unbonding
         type: string
     type: object
   types.StdFee:

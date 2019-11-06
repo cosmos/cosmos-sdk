@@ -47,7 +47,7 @@ func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk
 		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
 	}
 
-	applied := k.getDoneHeight(ctx, params.Name)
+	applied := k.GetDoneHeight(ctx, params.Name)
 	if applied == 0 {
 		// empty data - client can respond Not Found
 		return nil, nil

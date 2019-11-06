@@ -49,7 +49,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 		return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
 	}
 
-	if k.getDoneHeight(ctx, plan.Name) != 0 {
+	if k.GetDoneHeight(ctx, plan.Name) != 0 {
 		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
 	}
 
@@ -59,7 +59,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
 	return nil
 }
 
-func (k Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
+func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	bz := store.Get([]byte(name))
 	if len(bz) == 0 {

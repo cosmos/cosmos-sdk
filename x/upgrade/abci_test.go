@@ -43,6 +43,7 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
 	s.FlagUnsafeSkipUpgrade = FlagUnsafeSkipUpgrade
 	viper.Set(FlagUnsafeSkipUpgrade, false)
+	s.VerifySet(false)
 }
 
 func (s *TestSuite) TestRequireName() {
@@ -190,18 +191,22 @@ func (s *TestSuite) TestPlanStringer() {
   Info: `, Plan{Name: "test", Height: 100}.String())
 }
 
-func (s *TestSuite) VerifyNotDone(newCtx sdk.Context) {
-	s.T().Log("Verify that the upgrade plan has been cleared")
-	bz, err := s.querier(newCtx, []string{QueryApplied}, abci.RequestQuery{})
-	s.Require().NoError(err)
-	s.Require().Nil(bz)
+func (s *TestSuite) VerifyNotDone(newCtx sdk.Context, name string) {
+	s.T().Log("Verify that upgrade was not done")
+	height := s.keeper.GetDoneHeight(newCtx, name)
+	s.Require().Zero(height)
 }
 
-func (s *TestSuite) VerifyDone(newCtx sdk.Context) {
-	s.T().Log("Verify that the upgrade plan has been cleared")
-	bz, err := s.querier(newCtx, []string{QueryApplied}, abci.RequestQuery{})
-	s.Require().NoError(err)
-	s.Require().NotNil(bz)
+func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
+	s.T().Log("Verify that the upgrade plan has been executed")
+	height := s.keeper.GetDoneHeight(newCtx, name)
+	s.Require().NotZero(height)
+}
+
+func (s *TestSuite) VerifySet(readFlag bool)  {
+	s.T().Log("Verify if the skip upgrade has been set")
+	skipUpgrade := viper.GetBool(s.FlagUnsafeSkipUpgrade)
+	s.Require().Equal(skipUpgrade, readFlag)
 }
 
 func (s *TestSuite) TestSkipUpgrade()  {
@@ -212,19 +217,20 @@ func (s *TestSuite) TestSkipUpgrade()  {
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan")
 	viper.Set(s.FlagUnsafeSkipUpgrade, true )
+	s.VerifySet(true)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.VerifyCleared(s.ctx)
-	s.VerifyNotDone(s.ctx)
+	s.VerifyNotDone(s.ctx, "test")
 
 }
 
 func (s *TestSuite) TestUpgradeWithoutSkip() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop1", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 	s.T().Log("Verify if upgrade happens without skip upgrade")
 	s.Require().Panics(func() {
@@ -232,7 +238,7 @@ func (s *TestSuite) TestUpgradeWithoutSkip() {
 	})
 
 	s.VerifyDoUpgrade()
-	s.VerifyDone(s.ctx)
+	s.VerifyDone(s.ctx, "test")
 
 }
 

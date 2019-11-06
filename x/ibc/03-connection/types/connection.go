@@ -56,10 +56,10 @@ func NewCounterparty(clientID, connectionID string, prefix commitment.PrefixI) C
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
 func (c Counterparty) ValidateBasic() sdk.Error {
-	if err := host.DefaultIdentifierValidator(c.ConnectionID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty connection ID: %s", err.Error()))
 	}
-	if err := host.DefaultIdentifierValidator(c.ClientID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
 		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty client ID: %s", err.Error()))
 	}
 	if c.Prefix == nil || len(c.Prefix.Bytes()) == 0 {

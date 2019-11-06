@@ -13,6 +13,9 @@ import (
 
 const (
 	NONE                              = types.NONE
+	INIT                              = types.INIT
+	TRYOPEN                           = types.TRYOPEN
+	OPEN                              = types.OPEN
 	StateNone                         = types.StateNone
 	StateInit                         = types.StateInit
 	StateTryOpen                      = types.StateTryOpen
@@ -44,7 +47,6 @@ var (
 	QuerierConnection                = keeper.QuerierConnection
 	QuerierClientConnections         = keeper.QuerierClientConnections
 	RegisterCodec                    = types.RegisterCodec
-	SetMsgConnectionCodec            = types.SetMsgConnectionCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
 	NewCounterparty                  = types.NewCounterparty
 	StateFromString                  = types.StateFromString

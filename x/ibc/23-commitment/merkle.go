@@ -2,12 +2,11 @@ package commitment
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -111,8 +110,7 @@ func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
 		return Path{}, errors.New("prefix can't be empty")
 	}
 
-	path = fmt.Sprintf("%s%s", string(prefix.Bytes()), path)
-	return NewPath([]string{types.ModuleName, path}), nil
+	return NewPath([]string{string(prefix.Bytes()), path}), nil
 }
 
 var _ ProofI = Proof{}

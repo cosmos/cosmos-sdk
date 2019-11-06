@@ -50,17 +50,21 @@ func (k Keeper) ConnOpenTry(
 	clientID string,
 	counterpartyVersions []string,
 	proofInit commitment.ProofI,
+	proofConsensus commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
 
-	_, found := k.clientKeeper.GetConsensusState(ctx, clientID)
-	if !found {
-		return errors.New("client consensus state not found") // TODO: use ICS02 error
-	}
+		expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
+		if !found {
+			return errors.New("client consensus state not found") // TODO: use ICS02 error
+		}
+	*/
 
 	// expectedConn defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
@@ -74,7 +78,6 @@ func (k Keeper) ConnOpenTry(
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(types.NONE, clientID, counterparty, []string{version})
-
 	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
 	if err != nil {
 		return err
@@ -96,15 +99,17 @@ func (k Keeper) ConnOpenTry(
 		}
 
 		ok = k.VerifyMembership(
-			ctx, connection, proofHeight, proofInit,
+			ctx, connection, proofHeight, proofConsensus,
 			clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
 		)
 		if !ok {
+			fmt.Sprintf("couldn't verify consensus state membership on counterparty's client\n")
 			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
 		}
+
 	*/
 
-	_, found = k.GetConnection(ctx, connectionID)
+	_, found := k.GetConnection(ctx, connectionID)
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
 	}
@@ -129,13 +134,16 @@ func (k Keeper) ConnOpenAck(
 	connectionID string,
 	version string,
 	proofTry commitment.ProofI,
+	proofConsensus commitment.ProofI,
 	proofHeight uint64,
 	consensusHeight uint64,
 ) error {
-	if consensusHeight > uint64(ctx.BlockHeight()) {
-		return errors.New("invalid consensus height") // TODO: sdk.Error
-	}
-
+	// XXX: blocked by #5078
+	/*
+		if consensusHeight > uint64(ctx.BlockHeight()) {
+			return errors.New("invalid consensus height") // TODO: sdk.Error
+		}
+	*/
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace, connectionID), "cannot relay ACK of open attempt")
@@ -155,11 +163,13 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	_, found = k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
-	if !found {
-		return errors.New("client consensus state not found") // TODO: use ICS02 error
-	}
-
+	// XXX: blocked by #5078
+	/*
+		expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+		if !found {
+			return errors.New("client consensus state not found") // TODO: use ICS02 error
+		}
+	*/
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
 	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
@@ -178,20 +188,21 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	// XXX: blocked by #5078
-	/* expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-	if err != nil {
-		return err
-	}
+	/*
+		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+		if err != nil {
+			return err
+		}
 
-	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
-		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-	}
+		ok = k.VerifyMembership(
+			ctx, connection, proofHeight, proofConsensus,
+			clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
+		)
+		if !ok {
+			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
+		}
+
 	*/
-
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)

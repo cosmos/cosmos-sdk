@@ -4,8 +4,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var SubModuleCdc *codec.Codec
+// SubModuleCdc defines the IBC connection codec.
+var SubModuleCdc = codec.New()
 
+// RegisterCodec registers the IBC connection types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgConnectionOpenInit{}, "ibc/connection/MsgConnectionOpenInit", nil)
 	cdc.RegisterConcrete(MsgConnectionOpenTry{}, "ibc/connection/MsgConnectionOpenTry", nil)
@@ -14,6 +16,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(ConnectionEnd{}, "ibc/connection/ConnectionEnd", nil)
 }
 
-func SetMsgConnectionCodec(cdc *codec.Codec) {
-	SubModuleCdc = cdc
+func init() {
+	RegisterCodec(SubModuleCdc)
 }

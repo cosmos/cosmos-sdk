@@ -27,10 +27,11 @@ type Keeper struct {
 // NewKeeper creates a new IBC connection Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ClientKeeper) Keeper {
 	return Keeper{
-		storeKey:     key,
-		cdc:          cdc,
-		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
-		prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
+		storeKey:  key,
+		cdc:       cdc,
+		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
+		prefix:    []byte{},
+		// prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
 		clientKeeper: ck,
 	}
 }
@@ -43,7 +44,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetCommitmentPrefix returns the IBC connection store prefix as a commitment
 // Prefix
 func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
-	return commitment.NewPrefix(k.prefix)
+	return commitment.NewPrefix([]byte(k.storeKey.Name()))
 }
 
 // GetConnection returns a connection with a particular identifier
@@ -130,16 +131,19 @@ func (k Keeper) VerifyMembership(
 	pathStr string,
 	value []byte,
 ) bool {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
-	if !found {
-		return false
-	}
+	// FIXME: commented out for demo
+	/*
+		clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+		if !found {
+			return false
+		}
+	*/
 	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	if err != nil {
 		return false
 	}
 
-	return k.clientKeeper.VerifyMembership(ctx, clientState, height, proof, path, value)
+	return k.clientKeeper.VerifyMembership(ctx, connection.ClientID, height, proof, path, value)
 }
 
 // VerifyNonMembership helper function for state non-membership verification
@@ -150,15 +154,18 @@ func (k Keeper) VerifyNonMembership(
 	proof commitment.ProofI,
 	pathStr string,
 ) bool {
-	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
-	if !found {
-		return false
-	}
+	// FIXME: commented out for demo
+	/*
+		clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+		if !found {
+			return false
+		}
+	*/
 
 	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	if err != nil {
 		return false
 	}
 
-	return k.clientKeeper.VerifyNonMembership(ctx, clientState, height, proof, path)
+	return k.clientKeeper.VerifyNonMembership(ctx, connection.ClientID, height, proof, path)
 }

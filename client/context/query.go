@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -12,6 +13,7 @@ import (
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -26,6 +28,55 @@ func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	}
 
 	return ctx.Client, nil
+}
+
+// WaitForNBlocks blocks until the node defined on the context has advanced N blocks
+func (ctx CLIContext) WaitForNBlocks(n int64) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		panic(err)
+	}
+
+	resBlock, err := node.Block(nil)
+	var height int64
+	if err != nil || resBlock.Block == nil {
+		// wait for the first block to exist
+		ctx.waitForHeight(1)
+		height = 1 + n
+	} else {
+		height = resBlock.Block.Height + n
+	}
+	ctx.waitForHeight(height)
+}
+
+func (ctx CLIContext) waitForHeight(height int64) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		// get url, try a few times
+		var resBlock *ctypes.ResultBlock
+		var err error
+	INNER:
+		for i := 0; i < 5; i++ {
+			resBlock, err = node.Block(nil)
+			if err == nil {
+				break INNER
+			}
+			time.Sleep(time.Millisecond * 200)
+		}
+		if err != nil {
+			panic(err)
+		}
+
+		if resBlock.Block != nil && resBlock.Block.Height >= height {
+			return
+		}
+
+		time.Sleep(time.Millisecond * 100)
+	}
 }
 
 // Query performs a query to a Tendermint node with the provided path.
@@ -97,7 +148,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery,
 
 	opts := rpcclient.ABCIQueryOptions{
 		Height: ctx.Height,
-		Prove:  !ctx.TrustNode,
+		Prove:  req.Prove || !ctx.TrustNode,
 	}
 
 	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)

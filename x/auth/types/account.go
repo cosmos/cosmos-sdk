@@ -149,7 +149,7 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-type baseAccountSimple struct {
+type baseAccountPretty struct {
 	Address       sdk.AccAddress `json:"address" yaml:"address"`
 	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
 	PubKey        string         `json:"public_key" yaml:"public_key"`
@@ -159,7 +159,7 @@ type baseAccountSimple struct {
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	a := baseAccountSimple{
+	alias := baseAccountPretty{
 		Address:       acc.Address,
 		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
@@ -172,10 +172,10 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 			return nil, err
 		}
 
-		a.PubKey = pks
+		alias.PubKey = pks
 	}
 
-	bz, err := yaml.Marshal(a)
+	bz, err := yaml.Marshal(alias)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 
 // MarshalJSON returns the JSON representation of a BaseAccount.
 func (acc BaseAccount) MarshalJSON() ([]byte, error) {
-	a := baseAccountSimple{
+	alias := baseAccountPretty{
 		Address:       acc.Address,
 		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
@@ -198,21 +198,21 @@ func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 			return nil, err
 		}
 
-		a.PubKey = pks
+		alias.PubKey = pks
 	}
 
-	return json.Marshal(a)
+	return json.Marshal(alias)
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a BaseAccount.
 func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
-	var a baseAccountSimple
-	if err := json.Unmarshal(bz, &a); err != nil {
+	var alias baseAccountPretty
+	if err := json.Unmarshal(bz, &alias); err != nil {
 		return err
 	}
 
-	if a.PubKey != "" {
-		pk, err := sdk.GetAccPubKeyBech32(a.PubKey)
+	if alias.PubKey != "" {
+		pk, err := sdk.GetAccPubKeyBech32(alias.PubKey)
 		if err != nil {
 			return err
 		}
@@ -220,10 +220,10 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 		acc.PubKey = pk
 	}
 
-	acc.Address = a.Address
-	acc.Coins = a.Coins
-	acc.AccountNumber = a.AccountNumber
-	acc.Sequence = a.Sequence
+	acc.Address = alias.Address
+	acc.Coins = alias.Coins
+	acc.AccountNumber = alias.AccountNumber
+	acc.Sequence = alias.Sequence
 
 	return nil
 }

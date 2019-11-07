@@ -12,17 +12,25 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		case MsgGrantFeeAllowance:
-			grant := FeeAllowanceGrant(msg)
-			k.GrantFeeAllowance(ctx, grant)
-			return sdk.Result{}
+			return handleGrantFee(ctx, k, msg)
 
 		case MsgRevokeFeeAllowance:
-			k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
-			return sdk.Result{}
+			return handleRevokeFee(ctx, k, msg)
 
 		default:
 			errMsg := fmt.Sprintf("Unrecognized data Msg type: %s", ModuleName)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
+}
+
+func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) sdk.Result {
+	grant := FeeAllowanceGrant(msg)
+	k.GrantFeeAllowance(ctx, grant)
+	return sdk.Result{}
+}
+
+func handleRevokeFee(ctx sdk.Context, k Keeper, msg MsgRevokeFeeAllowance) sdk.Result {
+	k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
+	return sdk.Result{}
 }

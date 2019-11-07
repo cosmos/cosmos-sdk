@@ -35,6 +35,13 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, grant types.FeeAllowanceGrant
 	key := types.FeeAllowanceKey(grant.Granter, grant.Grantee)
 	bz := k.cdc.MustMarshalBinaryBare(grant)
 	store.Set(key, bz)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSetFeeGrant,
+			sdk.NewAttribute(types.AttributeKeyGranter, grant.Granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGrantee, grant.Grantee.String()),
+		),
+	)
 }
 
 // RevokeFeeAllowance removes an existing grant
@@ -42,6 +49,13 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	store.Delete(key)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRevokeFeeGrant,
+			sdk.NewAttribute(types.AttributeKeyGranter, granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGrantee, grantee.String()),
+		),
+	)
 }
 
 // GetFeeAllowance returns the allowance between the granter and grantee.
@@ -119,6 +133,15 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	remove, err := grant.Allowance.Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
+	if err == nil {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeUseFeeGrant,
+				sdk.NewAttribute(types.AttributeKeyGranter, granter.String()),
+				sdk.NewAttribute(types.AttributeKeyGrantee, grantee.String()),
+			),
+		)
+	}
 	if remove {
 		k.RevokeFeeAllowance(ctx, granter, grantee)
 		// note this returns nil if err == nil

@@ -7,7 +7,7 @@ import (
 
 	// we depend on the auth module internals... maybe some more of this can be exported?
 	// but things like `x/auth/types/FeeCollectorName` are quite clearly tied to it
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
@@ -87,9 +87,43 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	if fee.IsZero() {
 		return next(ctx, tx, simulate)
 	}
-	err = authante.DeductFees(d.sk, ctx, feePayerAcc, fee)
+	err = DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {
 		return ctx, err
 	}
 	return next(ctx, tx, simulate)
+}
+
+// DeductFees deducts fees from the given account.
+//
+// Copied from auth/ante to avoid the import
+func DeductFees(supplyKeeper exported.SupplyKeeper, ctx sdk.Context, acc auth.Account, fees sdk.Coins) error {
+	blockTime := ctx.BlockHeader().Time
+	coins := acc.GetCoins()
+
+	if !fees.IsValid() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+	}
+
+	// verify the account has enough funds to pay for fees
+	_, hasNeg := coins.SafeSub(fees)
+	if hasNeg {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
+			"insufficient funds to pay for fees; %s < %s", coins, fees)
+	}
+
+	// Validate the account has enough "spendable" coins as this will cover cases
+	// such as vesting accounts.
+	spendableCoins := acc.SpendableCoins(blockTime)
+	if _, hasNeg := spendableCoins.SafeSub(fees); hasNeg {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
+			"insufficient funds to pay for fees; %s < %s", spendableCoins, fees)
+	}
+
+	err := supplyKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, fees)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+	}
+
+	return nil
 }

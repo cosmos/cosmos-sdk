@@ -1,21 +1,15 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/tendermint/tendermint/libs/log"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -32,35 +26,19 @@ const (
 
 type KeeperTestSuite struct {
 	suite.Suite
-	ctx              sdk.Context
-	cms              sdk.CommitMultiStore
-	cdc              *codec.Codec
-	clientKeeper     client.Keeper
-	connectionKeeper connection.Keeper
+
+	cdc *codec.Codec
+	ctx sdk.Context
+	app *simapp.SimApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	var codespaceType sdk.CodespaceType = storeKey
-	storeKey := sdk.NewKVStoreKey(storeKey)
+	isCheckTx := false
+	app := simapp.Setup(isCheckTx)
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	if err := cms.LoadLatestVersion(); err != nil {
-		panic(err)
-	}
-
-	cms.Commit()
-
-	cdc := MakeCdc()
-	clientKeeper := client.NewKeeper(cdc, storeKey, codespaceType)
-	connectionKeeper := connection.NewKeeper(cdc, storeKey, codespaceType, clientKeeper)
-	ctx := sdk.NewContext(cms, abci.Header{ChainID: ChainID, Height: 0}, false, log.NewNopLogger())
-	suite.ctx = ctx
-	suite.clientKeeper = clientKeeper
-	suite.connectionKeeper = connectionKeeper
-	suite.cms = cms
-	suite.cdc = cdc
+	suite.cdc = app.Codec()
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.app = app
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -68,38 +46,29 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
-	_, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
+	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
 	suite.False(existed)
 
-	counterparty := types.NewCounterparty(TestClientID1, TestConnectionID1, suite.connectionKeeper.GetCommitmentPrefix())
+	counterparty := types.NewCounterparty(TestClientID1, TestConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
 	expConn := types.ConnectionEnd{
 		State:        types.INIT,
 		ClientID:     TestClientID1,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
 	}
-	suite.connectionKeeper.SetConnection(suite.ctx, TestConnectionID1, expConn)
-	conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, TestConnectionID1, expConn)
+	conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
 	suite.True(existed)
 	suite.EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 
-	_, existed := suite.connectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
+	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
 	suite.False(existed)
 
-	suite.connectionKeeper.SetClientConnectionPaths(suite.ctx, TestClientID1, types.GetCompatibleVersions())
-	paths, existed := suite.connectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
+	suite.app.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.ctx, TestClientID1, types.GetCompatibleVersions())
+	paths, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
 	suite.True(existed)
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
-}
-
-func MakeCdc() *codec.Codec {
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	client.RegisterCodec(cdc)
-	types.RegisterCodec(cdc)
-	commitment.RegisterCodec(cdc)
-	return cdc
 }

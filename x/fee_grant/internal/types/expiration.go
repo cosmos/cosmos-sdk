@@ -63,30 +63,30 @@ func (e ExpiresAt) IsExpired(t time.Time, h int64) bool {
 
 // IsCompatible returns true iff the two use the same units.
 // If false, they cannot be added.
-func (e ExpiresAt) IsCompatible(p Duration) bool {
+func (e ExpiresAt) IsCompatible(d Duration) bool {
 	if !e.Time.IsZero() {
-		return p.Clock > 0
+		return d.Clock > 0
 	}
-	return p.Block > 0
+	return d.Block > 0
 }
 
 // Step will increase the expiration point by one Duration
 // It returns an error if the Duration is incompatible
-func (e ExpiresAt) Step(p Duration) (ExpiresAt, error) {
-	if !e.IsCompatible(p) {
-		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expires_at and Duration have different units")
+func (e ExpiresAt) Step(d Duration) (ExpiresAt, error) {
+	if !e.IsCompatible(d) {
+		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expiration time and provided duration have different units")
 	}
 	if !e.Time.IsZero() {
-		e.Time = e.Time.Add(p.Clock)
+		e.Time = e.Time.Add(d.Clock)
 	} else {
-		e.Height += p.Block
+		e.Height += d.Block
 	}
 	return e, nil
 }
 
 // MustStep is like Step, but panics on error
-func (e ExpiresAt) MustStep(p Duration) ExpiresAt {
-	res, err := e.Step(p)
+func (e ExpiresAt) MustStep(d Duration) ExpiresAt {
+	res, err := e.Step(d)
 	if err != nil {
 		panic(err)
 	}
@@ -121,17 +121,17 @@ func BlockDuration(h int64) Duration {
 
 // ValidateBasic performs basic sanity checks
 // Note that exactly one must be set and it must be positive
-func (p Duration) ValidateBasic() error {
-	if p.Block == 0 && p.Clock == 0 {
+func (d Duration) ValidateBasic() error {
+	if d.Block == 0 && d.Clock == 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "neither time and height are set")
 	}
-	if p.Block != 0 && p.Clock != 0 {
+	if d.Block != 0 && d.Clock != 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
-	if p.Block < 0 {
+	if d.Block < 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "negative block step")
 	}
-	if p.Clock < 0 {
+	if d.Clock < 0 {
 		return sdkerrors.Wrap(ErrInvalidDuration, "negative clock step")
 	}
 	return nil

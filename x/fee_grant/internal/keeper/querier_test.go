@@ -13,26 +13,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
 )
 
-func TestQuery(t *testing.T) {
-	input := setupTestInput()
-	ctx := input.ctx
-	k := input.dk
+func (suite *KeeperTestSuite) TestQuery(t *testing.T) {
+	ctx := suite.ctx
+	k := suite.dk
 
 	cdc := codec.New()
 	types.RegisterCodec(cdc)
 
 	// some helpers
 	grant1 := types.FeeAllowanceGrant{
-		Granter: addr,
-		Grantee: addr3,
+		Granter: suite.addr,
+		Grantee: suite.addr3,
 		Allowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 			Expiration: types.ExpiresAtHeight(334455),
 		},
 	}
 	grant2 := types.FeeAllowanceGrant{
-		Granter: addr2,
-		Grantee: addr3,
+		Granter: suite.addr2,
+		Grantee: suite.addr3,
 		Allowance: &types.BasicFeeAllowance{
 			SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("eth", 123)),
 			Expiration: types.ExpiresAtHeight(334455),

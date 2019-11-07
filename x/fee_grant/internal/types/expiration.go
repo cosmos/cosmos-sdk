@@ -1,6 +1,10 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
 
 // ExpiresAt is a point in time where something expires.
 // It may be *either* block time or block height
@@ -23,10 +27,10 @@ func ExpiresAtHeight(h int64) ExpiresAt {
 // Note that empty expiration is allowed
 func (e ExpiresAt) ValidateBasic() error {
 	if !e.Time.IsZero() && e.Height != 0 {
-		return ErrInvalidDuration("both time and height are set")
+		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
 	if e.Height < 0 {
-		return ErrInvalidDuration("negative height")
+		return sdkerrors.Wrap(ErrInvalidDuration, "negative height")
 	}
 	return nil
 }
@@ -70,7 +74,7 @@ func (e ExpiresAt) IsCompatible(p Duration) bool {
 // It returns an error if the Duration is incompatible
 func (e ExpiresAt) Step(p Duration) (ExpiresAt, error) {
 	if !e.IsCompatible(p) {
-		return ExpiresAt{}, ErrInvalidDuration("expires_at and Duration have different units")
+		return ExpiresAt{}, sdkerrors.Wrap(ErrInvalidDuration, "expires_at and Duration have different units")
 	}
 	if !e.Time.IsZero() {
 		e.Time = e.Time.Add(p.Clock)
@@ -119,16 +123,16 @@ func BlockDuration(h int64) Duration {
 // Note that exactly one must be set and it must be positive
 func (p Duration) ValidateBasic() error {
 	if p.Block == 0 && p.Clock == 0 {
-		return ErrInvalidDuration("neither time and height are set")
+		return sdkerrors.Wrap(ErrInvalidDuration, "neither time and height are set")
 	}
 	if p.Block != 0 && p.Clock != 0 {
-		return ErrInvalidDuration("both time and height are set")
+		return sdkerrors.Wrap(ErrInvalidDuration, "both time and height are set")
 	}
 	if p.Block < 0 {
-		return ErrInvalidDuration("negative block step")
+		return sdkerrors.Wrap(ErrInvalidDuration, "negative block step")
 	}
 	if p.Clock < 0 {
-		return ErrInvalidDuration("negative clock step")
+		return sdkerrors.Wrap(ErrInvalidDuration, "negative clock step")
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 )
 
@@ -32,12 +33,12 @@ var _ exported.FeeAllowance = (*BasicFeeAllowance)(nil)
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
 func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (bool, error) {
 	if a.Expiration.IsExpired(blockTime, blockHeight) {
-		return true, ErrFeeLimitExpired()
+		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
 
 	left, invalid := a.SpendLimit.SafeSub(fee)
 	if invalid {
-		return false, ErrFeeLimitExceeded()
+		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "basic allowance")
 	}
 
 	a.SpendLimit = left
@@ -57,10 +58,10 @@ func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int6
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a BasicFeeAllowance) ValidateBasic() error {
 	if !a.SpendLimit.IsValid() {
-		return sdk.ErrInvalidCoins("send amount is invalid: " + a.SpendLimit.String())
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)
 	}
 	if !a.SpendLimit.IsAllPositive() {
-		return sdk.ErrInvalidCoins("spend limit must be positive")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
 	}
 	return a.Expiration.ValidateBasic()
 }

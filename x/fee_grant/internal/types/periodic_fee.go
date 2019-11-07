@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 )
 
@@ -38,7 +39,7 @@ var _ exported.FeeAllowance = (*PeriodicFeeAllowance)(nil)
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
 func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (bool, error) {
 	if a.Basic.Expiration.IsExpired(blockTime, blockHeight) {
-		return true, ErrFeeLimitExpired()
+		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "absolute limit")
 	}
 
 	a.TryResetPeriod(blockTime, blockHeight)
@@ -47,11 +48,11 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 	var isNeg bool
 	a.PeriodCanSpend, isNeg = a.PeriodCanSpend.SafeSub(fee)
 	if isNeg {
-		return false, ErrFeeLimitExceeded()
+		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "period limit")
 	}
 	a.Basic.SpendLimit, isNeg = a.Basic.SpendLimit.SafeSub(fee)
 	if isNeg {
-		return false, ErrFeeLimitExceeded()
+		return false, sdkerrors.Wrap(ErrFeeLimitExceeded, "absolute limit")
 	}
 
 	return a.Basic.SpendLimit.IsZero(), nil

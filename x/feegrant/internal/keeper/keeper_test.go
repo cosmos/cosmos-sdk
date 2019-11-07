@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -30,6 +28,10 @@ type KeeperTestSuite struct {
 	addr2 sdk.AccAddress
 	addr3 sdk.AccAddress
 	addr4 sdk.AccAddress
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -64,7 +66,7 @@ func mustAddr(acc string) sdk.AccAddress {
 	return addr
 }
 
-func (suite *KeeperTestSuite) TestKeeperCrud(t *testing.T) {
+func (suite *KeeperTestSuite) TestKeeperCrud() {
 	ctx := suite.ctx
 	k := suite.dk
 
@@ -139,14 +141,15 @@ func (suite *KeeperTestSuite) TestKeeperCrud(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
+		tc := tc
+		suite.Run(name, func() {
 			allow := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
 			if tc.allowance == nil {
-				require.Nil(t, allow)
+				suite.Nil(allow)
 				return
 			}
-			require.NotNil(t, allow)
-			require.Equal(t, tc.allowance, allow)
+			suite.NotNil(allow)
+			suite.Equal(tc.allowance, allow)
 		})
 	}
 
@@ -171,19 +174,20 @@ func (suite *KeeperTestSuite) TestKeeperCrud(t *testing.T) {
 	}
 
 	for name, tc := range allCases {
-		t.Run(name, func(t *testing.T) {
+		tc := tc
+		suite.Run(name, func() {
 			var grants []types.FeeAllowanceGrant
 			err := k.IterateAllGranteeFeeAllowances(ctx, tc.grantee, func(grant types.FeeAllowanceGrant) bool {
 				grants = append(grants, grant)
 				return false
 			})
-			require.NoError(t, err)
-			assert.Equal(t, tc.grants, grants)
+			suite.NoError(err)
+			suite.Equal(tc.grants, grants)
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestUseGrantedFee(t *testing.T) {
+func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	ctx := suite.ctx
 	k := suite.dk
 
@@ -246,7 +250,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
+		tc := tc
+		suite.Run(name, func() {
 			// let's set up some initial state here
 			// addr -> addr2 (future)
 			// addr -> addr3 (expired)
@@ -257,11 +262,15 @@ func (suite *KeeperTestSuite) TestUseGrantedFee(t *testing.T) {
 				Granter: suite.addr, Grantee: suite.addr3, Allowance: &expired,
 			})
 
-			allowed := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
-			require.Equal(t, tc.allowed, allowed)
+			err := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
+			if tc.allowed {
+				suite.NoError(err)
+			} else {
+				suite.Error(err)
+			}
 
 			loaded := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
-			require.Equal(t, tc.final, loaded)
+			suite.Equal(tc.final, loaded)
 		})
 	}
 }

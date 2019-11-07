@@ -1,10 +1,6 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -13,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
 )
 
-func (suite *KeeperTestSuite) TestQuery(t *testing.T) {
+func (suite *KeeperTestSuite) TestQuery() {
 	ctx := suite.ctx
 	k := suite.dk
 
@@ -66,19 +62,20 @@ func (suite *KeeperTestSuite) TestQuery(t *testing.T) {
 
 	querier := keeper.NewQuerier(k)
 	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
+		tc := tc
+		suite.Run(name, func() {
 			bz, err := querier(ctx, tc.path, abci.RequestQuery{})
 			if !tc.valid {
-				require.Error(t, err)
+				suite.Error(err)
 				return
 			}
-			require.NoError(t, err)
+			suite.NoError(err)
 
 			var grants []types.FeeAllowanceGrant
 			serr := cdc.UnmarshalJSON(bz, &grants)
-			require.NoError(t, serr)
+			suite.NoError(serr)
 
-			assert.Equal(t, tc.res, grants)
+			suite.Equal(tc.res, grants)
 		})
 	}
 

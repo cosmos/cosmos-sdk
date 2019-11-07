@@ -14,8 +14,10 @@ const (
 // NewQuerier creates a new querier
 func NewQuerier(keeper Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
-		var res []byte
-		var err error
+		var (
+			res []byte
+			err error
+		)
 		switch path[0] {
 		case QueryGetFeeAllowances:
 			res, err = queryGetFeeAllowances(ctx, path[1:], keeper)

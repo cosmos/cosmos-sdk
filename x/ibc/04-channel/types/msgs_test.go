@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-
 	"github.com/stretchr/testify/require"
 )
 

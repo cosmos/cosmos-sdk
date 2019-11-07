@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -29,6 +28,24 @@ func (suite *KeeperTestSuite) createClient() {
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
 	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) updateClient() {
+	// always commit and begin a new block on updateClient
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	state := clienttypestm.ConsensusState{
+		ChainID: testChainID,
+		Height:  uint64(commitID.Version),
+		Root:    commitment.NewRoot(commitID.Hash),
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
+	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
 }
 
 func (suite *KeeperTestSuite) createConnection(state connection.State) {
@@ -68,24 +85,6 @@ func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
 
 func (suite *KeeperTestSuite) bindPort(portID string) sdk.CapabilityKey {
 	return suite.app.IBCKeeper.PortKeeper.BindPort(portID)
-}
-
-func (suite *KeeperTestSuite) updateClient() {
-	// always commit when updateClient and begin a new block
-	suite.app.Commit()
-	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
-
-	state := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
-	}
-
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
 }
 
 func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {

@@ -1,3 +1,60 @@
+---
+layout: index
+title: Documentation
+description: The Cosmos-SDK is a framework for building blockchain applications in Golang. It is being used to build Gaia, the first implementation of the Cosmos Hub.
+features:
+  - cta: Read
+    title: Introduction to Cosmos SDK
+    desc: Learn about all the parts of the Cosmos SDK.
+    label: 5 min
+    url: /intro/
+    image: spaceship
+  - cta: Learn
+    title: SDK Tutorial
+    desc: Build a complete blockchain application from scratch.
+    label: 30-40 min
+    special: dark
+    h3: View tutorials
+    url: https://tutorials.cosmos.network/
+    image: window
+sections:
+  - title: Introduction
+    desc: Short sentence describing this section.
+    url: /intro
+    icon: introduction
+  - title: Basics
+    desc: Short sentence describing this section.
+    icon: basics
+    url: /basics
+  - title: SDK Core
+    desc: Short sentence describing this section.
+    icon: core
+    url: /core
+  - title: Building Modules
+    desc: Short sentence describing this section.
+    icon: modules
+    url: /building-modules
+  - title: Interfaces
+    desc: Short sentence describing this section.
+    icon: interfaces
+    url: /interfaces
+  - title: Specifications
+    desc: Short sentence describing this section.
+    icon: specifications
+    url: /
+stack:
+  - title: Cosmos Hub
+    desc: Short description about Cosmos Hub, no longer than a few of lines.
+    color: "#BA3FD9"
+    label: hub
+    url: http://hub.cosmos.network
+  - title: Tendermint
+    desc: Short description about Tendermint, no longer than a few of lines.
+    color: "#00BB00"
+    label: core
+    url: http://docs.tendermint.com
+---
+
 # Cosmos SDK Documentation
 
 ## Get Started

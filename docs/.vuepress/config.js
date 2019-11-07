@@ -35,14 +35,14 @@ module.exports = {
       children: [
         {
           title: "Riot Chat",
-          text: "Chat with Tendermint developers on Riot Chat.",
-          highlighted: "500+ people chatting now"
+          text: "[Chat with Cosmos developers](https://riot.im/app/#/room/#cosmos-sdk:matrix.org) on Riot Chat.",
+          highlighted: "**500+** people chatting now"
         },
         {
           title: "Cosmos SDK Forum",
-          text: "Found an Issue?",
+          text: "[Join the SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
           highlighted:
-            "Help us improve this page by suggesting edits on GitHub."
+            "**1038** active developers."
         }
       ]
     },

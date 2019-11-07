@@ -144,3 +144,13 @@ func (k Keeper) SetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
 	store.Set(types.KeyPacketAcknowledgement(portID, channelID, sequence), ackHash)
 }
+
+// GetPacketAcknowledgement gets the packet ack hash from the store
+func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID string, sequence uint64) ([]byte, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	bz := store.Get(types.KeyPacketAcknowledgement(portID, channelID, sequence))
+	if bz == nil {
+		return nil, false
+	}
+	return bz, true
+}

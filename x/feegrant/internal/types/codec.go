@@ -2,7 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
 // RegisterCodec registers the account types and interface

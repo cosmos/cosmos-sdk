@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -56,7 +56,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
-		fee_grant.AppModuleBasic{},
+		feegrant.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 	)
 
@@ -107,7 +107,7 @@ type SimApp struct {
 	DistrKeeper    distr.Keeper
 	GovKeeper      gov.Keeper
 	CrisisKeeper   crisis.Keeper
-	FeeGrantKeeper fee_grant.Keeper
+	FeeGrantKeeper feegrant.Keeper
 	ParamsKeeper   params.Keeper
 	EvidenceKeeper evidence.Keeper
 
@@ -133,7 +133,7 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey, supply.StoreKey, mint.StoreKey,
 		distr.StoreKey, slashing.StoreKey, gov.StoreKey, params.StoreKey, evidence.StoreKey,
-		fee_grant.StoreKey,
+		feegrant.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
@@ -186,8 +186,8 @@ func NewSimApp(
 	app.CrisisKeeper = crisis.NewKeeper(
 		app.subspaces[crisis.ModuleName], invCheckPeriod, app.SupplyKeeper, auth.FeeCollectorName,
 	)
-	app.FeeGrantKeeper = fee_grant.NewKeeper(
-		app.cdc, keys[fee_grant.StoreKey],
+	app.FeeGrantKeeper = feegrant.NewKeeper(
+		app.cdc, keys[feegrant.StoreKey],
 	)
 
 	// create evidence keeper with router
@@ -228,7 +228,7 @@ func NewSimApp(
 		distr.NewAppModule(app.DistrKeeper, app.SupplyKeeper),
 		slashing.NewAppModule(app.SlashingKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
-		fee_grant.NewAppModule(app.FeeGrantKeeper),
+		feegrant.NewAppModule(app.FeeGrantKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 	)
 
@@ -243,7 +243,7 @@ func NewSimApp(
 	app.mm.SetOrderInitGenesis(
 		auth.ModuleName, distr.ModuleName, staking.ModuleName, bank.ModuleName,
 		slashing.ModuleName, gov.ModuleName, mint.ModuleName, supply.ModuleName,
-		crisis.ModuleName, genutil.ModuleName, evidence.ModuleName, fee_grant.ModuleName,
+		crisis.ModuleName, genutil.ModuleName, evidence.ModuleName, feegrant.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

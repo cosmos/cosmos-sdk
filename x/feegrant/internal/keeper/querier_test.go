@@ -9,8 +9,8 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
 )
 
 func (suite *KeeperTestSuite) TestQuery(t *testing.T) {

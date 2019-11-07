@@ -14,9 +14,9 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
 )
 
 type KeeperTestSuite struct {

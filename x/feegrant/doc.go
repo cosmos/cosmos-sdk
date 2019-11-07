@@ -1,5 +1,5 @@
 /*
-Package fee_grant provides functionality for delegating the payment of transaction fees
+Package feegrant provides functionality for delegating the payment of transaction fees
 from one account (key) to another account (key).
 
 Effectively, this allows for a user to pay fees using the balance of an account
@@ -25,4 +25,4 @@ To allow handling txs from empty accounts (with fees paid from an existing accou
 we have to re-order the decorators as well. You can see an example in
 `x/delegate_fees/internal/ante/fee_test.go:newAnteHandler()`
 */
-package fee_grant
+package feegrant

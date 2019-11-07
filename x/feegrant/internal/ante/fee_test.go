@@ -13,10 +13,10 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/ante"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/ante"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types/tx"
 )
 
 // newAnteHandler is just like auth.NewAnteHandler, except we use the DeductGrantedFeeDecorator

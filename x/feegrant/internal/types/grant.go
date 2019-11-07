@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 )
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context

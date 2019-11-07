@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.

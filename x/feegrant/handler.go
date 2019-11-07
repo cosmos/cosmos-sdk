@@ -1,4 +1,4 @@
-package fee_grant
+package feegrant
 
 import (
 	"fmt"

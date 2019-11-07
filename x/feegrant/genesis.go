@@ -1,4 +1,4 @@
-package fee_grant
+package feegrant
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 

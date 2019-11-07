@@ -10,9 +10,9 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types/tx"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

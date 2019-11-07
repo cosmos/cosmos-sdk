@@ -21,13 +21,13 @@ func TestNewMsgConnectionOpenInit(t *testing.T) {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenInit{
-		NewMsgConnectionOpenInit("gaia/conn1", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconngaia", "gaia/iris", "connectiontogaia", "clienttogaia", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "gaia/conn1", "clienttogaia", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "gaia/conn1", prefix, signer),
-		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", nil, signer),
-		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", prefix, nil),
-		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", prefix, signer),
+		NewMsgConnectionOpenInit("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "test/conn1", "clienttotest", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "test/conn1", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", nil, signer),
+		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, nil),
+		NewMsgConnectionOpenInit("ibcconntest", "clienttotest", "connectiontotest", "clienttotest", prefix, signer),
 	}
 
 	var testCases = []TestCase{
@@ -56,18 +56,18 @@ func TestNewMsgConnectionOpenTry(t *testing.T) {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenTry{
-		NewMsgConnectionOpenTry("gaia/conn1", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "gaia/iris", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "ibc/gaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "gaia/conn1", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", nil, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, nil, commitment.Proof{}, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, nil, 10, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 0, 10, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 0, signer),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, nil),
-		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("test/conn1", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "test/iris", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "ibc/test", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "test/conn1", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", nil, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, nil, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, nil, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 0, 10, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 0, signer),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, nil),
+		NewMsgConnectionOpenTry("ibcconntest", "clienttotesta", "connectiontotest", "clienttotest", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
 	}
 
 	var testCases = []TestCase{
@@ -100,14 +100,14 @@ func TestNewMsgConnectionOpenAck(t *testing.T) {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenAck{
-		NewMsgConnectionOpenAck("gaia/conn1", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", nil, commitment.Proof{}, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, nil, 10, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 0, 10, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 0, "1.0.0", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "", signer),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", nil),
-		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("test/conn1", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", nil, commitment.Proof{}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, nil, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, commitment.Proof{}, 0, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, commitment.Proof{}, 10, 0, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, commitment.Proof{}, 10, 10, "", signer),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", nil),
+		NewMsgConnectionOpenAck("ibcconntest", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
 	}
 	var testCases = []TestCase{
 		{testMsgs[0], false, "invalid connection ID"},
@@ -135,11 +135,11 @@ func TestNewMsgConnectionOpenConfirm(t *testing.T) {
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
 	testMsgs := []MsgConnectionOpenConfirm{
-		NewMsgConnectionOpenConfirm("gaia/conn1", commitment.Proof{}, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconngaia", nil, 10, signer),
-		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 0, signer),
-		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 10, nil),
-		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 10, signer),
+		NewMsgConnectionOpenConfirm("test/conn1", commitment.Proof{}, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", nil, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{}, 0, signer),
+		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{}, 10, nil),
+		NewMsgConnectionOpenConfirm("ibcconntest", commitment.Proof{}, 10, signer),
 	}
 
 	var testCases = []TestCase{

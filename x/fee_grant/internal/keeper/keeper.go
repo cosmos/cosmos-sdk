@@ -35,29 +35,26 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (exported.FeeAllowance, error) {
-	grant, err := k.GetFeeGrant(ctx, granter, grantee)
-	if err != nil {
-		return nil, err
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) exported.FeeAllowance {
+	grant, found := k.GetFeeGrant(ctx, granter, grantee)
+	if !found {
+		return nil
 	}
-	return grant.Allowance, nil
+	return grant.Allowance
 }
 
 // GetFeeGrant returns entire grant between both accounts
-func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, error) {
+func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return types.FeeAllowanceGrant{}, nil
+		return types.FeeAllowanceGrant{}, false
 	}
 
 	var grant types.FeeAllowanceGrant
-	err := k.cdc.UnmarshalBinaryBare(bz, &grant)
-	if err != nil {
-		return types.FeeAllowanceGrant{}, err
-	}
-	return grant, nil
+	k.cdc.MustUnmarshalBinaryBare(bz, &grant)
+	return grant, true
 }
 
 // IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
@@ -104,11 +101,8 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) bool {
-	grant, err := k.GetFeeGrant(ctx, granter, grantee)
-	if err != nil {
-		panic(err)
-	}
-	if grant.Allowance == nil {
+	grant, found := k.GetFeeGrant(ctx, granter, grantee)
+	if !found || grant.Allowance == nil {
 		return false
 	}
 

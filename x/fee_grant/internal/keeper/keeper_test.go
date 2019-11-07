@@ -136,8 +136,7 @@ func TestKeeperCrud(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			allow, err := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
-			require.NoError(t, err)
+			allow := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
 			if tc.allowance == nil {
 				require.Nil(t, allow)
 				return
@@ -258,8 +257,7 @@ func TestUseGrantedFee(t *testing.T) {
 			allowed := k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee)
 			require.Equal(t, tc.allowed, allowed)
 
-			loaded, err := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
-			require.NoError(t, err)
+			loaded := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
 			require.Equal(t, tc.final, loaded)
 		})
 	}

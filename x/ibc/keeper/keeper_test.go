@@ -16,9 +16,9 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	keeper *keeper.Keeper
+	cdc     *codec.Codec
+	ctx     sdk.Context
+	keeper  *keeper.Keeper
 	querier sdk.Querier
 }
 

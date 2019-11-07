@@ -1,13 +1,13 @@
 package types
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,25 +20,11 @@ import (
 func TestModuleAccountMarshalYAML(t *testing.T) {
 	name := "test"
 	moduleAcc := NewEmptyModuleAccount(name, Minter, Burner, Staking)
-	moduleAddress := sdk.AccAddress(crypto.AddressHash([]byte(name)))
 	bs, err := yaml.Marshal(moduleAcc)
 	require.NoError(t, err)
 
-	want := fmt.Sprintf(`|
-  address: %s
-  coins: []
-  pubkey: ""
-  accountnumber: 0
-  sequence: 0
-  name: %s
-  permissions:
-  - %s
-  - %s
-  - %s
-`, moduleAddress, name, Minter, Burner, Staking)
-
+	want := "|\n  address: cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe\n  coins: []\n  public_key: \"\"\n  account_number: 0\n  sequence: 0\n  name: test\n  permissions:\n  - minter\n  - burner\n  - staking\n"
 	require.Equal(t, want, string(bs))
-	require.Equal(t, want, moduleAcc.String())
 }
 
 func TestHasPermissions(t *testing.T) {
@@ -95,4 +81,23 @@ func TestValidate(t *testing.T) {
 			require.Equal(t, tt.expErr, err)
 		})
 	}
+}
+
+func TestModuleAccountJSON(t *testing.T) {
+	pubkey := secp256k1.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubkey.Address())
+	coins := sdk.NewCoins(sdk.NewInt64Coin("test", 5))
+	baseAcc := authtypes.NewBaseAccount(addr, coins, nil, 10, 50)
+	acc := NewModuleAccount(baseAcc, "test", "burner")
+
+	bz, err := json.Marshal(acc)
+	require.NoError(t, err)
+
+	bz1, err := acc.MarshalJSON()
+	require.NoError(t, err)
+	require.Equal(t, string(bz1), string(bz))
+
+	var a ModuleAccount
+	require.NoError(t, json.Unmarshal(bz, &a))
+	require.Equal(t, acc.String(), a.String())
 }

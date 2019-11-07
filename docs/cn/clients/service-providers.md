@@ -158,7 +158,7 @@ sequence numbers and it will mostly do the correct thing.
 
 ``` json
 {
-  "type": "auth/StdTx",
+  "type": "cosmos-sdk/StdTx",
   "value": {
     "msg": [...],
     "signatures": [

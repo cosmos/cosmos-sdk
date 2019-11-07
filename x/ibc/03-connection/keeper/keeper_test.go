@@ -1,45 +1,66 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/tendermint/tendermint/libs/log"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 )
 
 const (
 	clientType = clientexported.Tendermint
 	storeKey   = "ibc"
+	ChainID    = "test"
 
-	ChainIDGaia1 = "gaia-1"
-	ChainIDGaia2 = "gaia-2"
+	TestClientID1     = "testclientid1"
+	TestConnectionID1 = "connectionid1"
 
-	ClientToGaia2 = "clienttogaia2"
-	ClientToGaia1 = "clienttogaia1"
-
-	ConnectionToGaia1 = "connectiontogaia1"
-	ConnectionToGaia2 = "connectiontogaia2"
+	TestClientID2     = "testclientid2"
+	TestConnectionID2 = "connectionid2"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
-	apps map[string]App
+	ctx              sdk.Context
+	cms              sdk.CommitMultiStore
+	cdc              *codec.Codec
+	clientKeeper     client.Keeper
+	connectionKeeper connection.Keeper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.apps = map[string]App{
-		ChainIDGaia1: NewApp(ChainIDGaia1),
-		ChainIDGaia2: NewApp(ChainIDGaia2),
+	var codespaceType sdk.CodespaceType = storeKey
+	storeKey := sdk.NewKVStoreKey(storeKey)
+
+	db := dbm.NewMemDB()
+	cms := store.NewCommitMultiStore(db)
+	cms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
+	if err := cms.LoadLatestVersion(); err != nil {
+		panic(err)
 	}
+
+	cms.Commit()
+
+	cdc := MakeCdc()
+	clientKeeper := client.NewKeeper(cdc, storeKey, codespaceType)
+	connectionKeeper := connection.NewKeeper(cdc, storeKey, codespaceType, clientKeeper)
+	ctx := sdk.NewContext(cms, abci.Header{ChainID: ChainID, Height: 0}, false, log.NewNopLogger())
+	suite.ctx = ctx
+	suite.clientKeeper = clientKeeper
+	suite.connectionKeeper = connectionKeeper
+	suite.cms = cms
+	suite.cdc = cdc
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -47,116 +68,31 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetConnection() {
-	gaia := suite.apps[ChainIDGaia1]
-
-	_, existed := gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
+	_, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
 	suite.False(existed)
 
-	counterparty := types.NewCounterparty(ClientToGaia2, ConnectionToGaia1, gaia.connKeeper.GetCommitmentPrefix())
+	counterparty := types.NewCounterparty(TestClientID1, TestConnectionID1, suite.connectionKeeper.GetCommitmentPrefix())
 	expConn := types.ConnectionEnd{
 		State:        types.INIT,
-		ClientID:     ClientToGaia1,
+		ClientID:     TestClientID1,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
 	}
-	gaia.connKeeper.SetConnection(gaia.ctx, ConnectionToGaia2, expConn)
-	conn, existed := gaia.connKeeper.GetConnection(gaia.ctx, ConnectionToGaia2)
+	suite.connectionKeeper.SetConnection(suite.ctx, TestConnectionID1, expConn)
+	conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
 	suite.True(existed)
 	suite.EqualValues(expConn, conn)
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
-	gaia := suite.apps[ChainIDGaia1]
 
-	_, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
+	_, existed := suite.connectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
 	suite.False(existed)
 
-	gaia.connKeeper.SetClientConnectionPaths(gaia.ctx, ClientToGaia2, types.GetCompatibleVersions())
-	paths, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
+	suite.connectionKeeper.SetClientConnectionPaths(suite.ctx, TestClientID1, types.GetCompatibleVersions())
+	paths, existed := suite.connectionKeeper.GetClientConnectionPaths(suite.ctx, TestClientID1)
 	suite.True(existed)
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
-}
-
-func (suite *KeeperTestSuite) TestAddAndRemoveConnectionToClient() {
-	gaia := suite.apps[ChainIDGaia1]
-
-	//add connection to client
-	err := gaia.connKeeper.addConnectionToClient(gaia.ctx, ClientToGaia2, ConnectionToGaia1)
-	suite.Nil(err)
-	expConns := []string{ConnectionToGaia1}
-	conns, existed := gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
-	suite.True(existed)
-	suite.EqualValues(expConns, conns)
-
-	//add connection to client once again
-	newConn := ConnectionToGaia1 + "1"
-	err = gaia.connKeeper.addConnectionToClient(gaia.ctx, ClientToGaia2, newConn)
-	suite.Nil(err)
-	expConns = append(expConns, newConn)
-	conns, existed = gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
-	suite.True(existed)
-	suite.EqualValues(expConns, conns)
-
-	//remove connection from client
-	expConns = expConns[0:1]
-	err = gaia.connKeeper.removeConnectionFromClient(gaia.ctx, ClientToGaia2, newConn)
-	suite.Nil(err)
-	conns, existed = gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
-	suite.True(existed)
-	suite.EqualValues(expConns, conns)
-
-	//remove connection from client again
-	err = gaia.connKeeper.removeConnectionFromClient(gaia.ctx, ClientToGaia2, newConn)
-	suite.NotNil(err)
-
-	err = gaia.connKeeper.removeConnectionFromClient(gaia.ctx, ClientToGaia2, ConnectionToGaia1)
-	suite.Nil(err)
-	conns, existed = gaia.connKeeper.GetClientConnectionPaths(gaia.ctx, ClientToGaia2)
-	suite.True(existed)
-	suite.Nil(conns)
-}
-
-type App struct {
-	chainID string
-	ctx     sdk.Context
-	cdc     *codec.Codec
-	store   sdk.CommitMultiStore
-	IBCKeeper
-}
-
-type IBCKeeper struct {
-	connKeeper   Keeper
-	clientKeeper client.Keeper
-}
-
-func NewApp(chainID string) App {
-	var codespaceType sdk.CodespaceType = storeKey
-	storeKey := sdk.NewKVStoreKey(storeKey)
-
-	db := dbm.NewMemDB()
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(storeKey, sdk.StoreTypeIAVL, db)
-	if err := ms.LoadLatestVersion(); err != nil {
-		panic(err)
-	}
-
-	cdc := MakeCdc()
-
-	clientKeeper := client.NewKeeper(cdc, storeKey, codespaceType)
-	connKeeper := NewKeeper(cdc, storeKey, codespaceType, clientKeeper)
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: chainID, Height: 0}, false, log.NewNopLogger())
-
-	return App{
-		chainID: chainID,
-		ctx:     ctx,
-		cdc:     cdc,
-		store:   ms,
-		IBCKeeper: IBCKeeper{
-			connKeeper:   connKeeper,
-			clientKeeper: clientKeeper,
-		},
-	}
-
 }
 
 func MakeCdc() *codec.Codec {

@@ -1,31 +1,28 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func (suite *KeeperTestSuite) getConsensusState(chainID string) tendermint.ConsensusState {
-	app := suite.apps[chainID]
-	commitID := app.store.Commit()
+func (suite *KeeperTestSuite) getConsensusState() tendermint.ConsensusState {
+	commitID := suite.cms.Commit()
 	state := tendermint.ConsensusState{
-		ChainID: app.chainID,
+		ChainID: ChainID,
 		Height:  uint64(commitID.Version),
 		Root:    commitment.NewRoot(commitID.Hash),
 	}
-	app.ctx.WithBlockHeight(commitID.Version)
 	return state
 }
 
-func (suite *KeeperTestSuite) queryProof(chainID string, key string) (proof commitment.Proof, height int64) {
-	app := suite.apps[chainID]
-	store := app.store.(*rootmulti.Store)
+func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+	store := suite.cms.(*rootmulti.Store)
 	res := store.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("/%s/key", storeKey),
 		Data:  []byte(key),
@@ -39,146 +36,263 @@ func (suite *KeeperTestSuite) queryProof(chainID string, key string) (proof comm
 	return
 }
 
-func (suite *KeeperTestSuite) createClient(chainID string, clientID string,
-	clientType exported.ClientType, state tendermint.ConsensusState) {
-	app := suite.apps[chainID]
-	_, err := app.clientKeeper.CreateClient(app.ctx, clientID, clientType, state)
+func (suite *KeeperTestSuite) createClient(clientID string) {
+	commitID := suite.cms.LastCommitID()
+	state := tendermint.ConsensusState{
+		ChainID: ChainID,
+		Height:  uint64(commitID.Version),
+		Root:    commitment.NewRoot(commitID.Hash),
+	}
+	_, err := suite.clientKeeper.CreateClient(suite.ctx, clientID, clientType, state)
 	if err != nil {
 		panic(err)
 	}
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
 }
 
-func (suite *KeeperTestSuite) updateClient(chainID string, clientID string) {
-	otherChainID := ChainIDGaia1
-	if chainID == ChainIDGaia1 {
-		otherChainID = ChainIDGaia2
-	}
-	consensusState := suite.getConsensusState(otherChainID)
-
+func (suite *KeeperTestSuite) updateClient(clientID string) {
+	consensusState := suite.getConsensusState()
 	//update client consensus state
-	app := suite.apps[chainID]
-	app.clientKeeper.SetConsensusState(app.ctx, clientID, consensusState)
-	app.clientKeeper.SetVerifiedRoot(app.ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
+	suite.clientKeeper.SetConsensusState(suite.ctx, clientID, consensusState)
+	suite.clientKeeper.SetVerifiedRoot(suite.ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 }
 
-func (suite *KeeperTestSuite) connOpenInit(chainID string, connectionID, clientID, counterpartyClientID, counterpartyConnID string) {
-	app := suite.apps[chainID]
-	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, app.connKeeper.GetCommitmentPrefix())
-
-	err := app.connKeeper.ConnOpenInit(app.ctx, connectionID, clientID, counterparty)
-	suite.Nil(err)
-
-	conn, existed := app.connKeeper.GetConnection(app.ctx, connectionID)
-	suite.True(existed)
-
-	expectConn := types.ConnectionEnd{
-		State:        types.INIT,
+func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string, clientID, counterpartyClientID string, state types.State) {
+	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, suite.connectionKeeper.GetCommitmentPrefix())
+	connection := types.ConnectionEnd{
+		State:        state,
 		ClientID:     clientID,
 		Counterparty: counterparty,
 		Versions:     types.GetCompatibleVersions(),
 	}
-	suite.EqualValues(expectConn, conn)
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
+	suite.connectionKeeper.SetConnection(suite.ctx, connID, connection)
 }
 
-func (suite *KeeperTestSuite) connOpenTry(chainID string, connectionID, clientID, counterpartyClientID, counterpartyConnID string) {
-	app := suite.apps[chainID]
-	counterparty := types.NewCounterparty(counterpartyClientID, counterpartyConnID, app.connKeeper.GetCommitmentPrefix())
+func (suite *KeeperTestSuite) TestConnOpenInit() {
+	suite.createClient(TestClientID1)
+	counterparty := types.NewCounterparty(TestClientID1, TestConnectionID1, suite.connectionKeeper.GetCommitmentPrefix())
 
-	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainID := ChainIDGaia1
-	if chainID == ChainIDGaia1 {
-		otherChainID = ChainIDGaia2
+	success := func() {
+		err := suite.connectionKeeper.ConnOpenInit(suite.ctx, TestConnectionID1, TestClientID1, counterparty)
+		suite.Nil(err)
+
+		conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
+		suite.True(existed)
+
+		expectConn := types.ConnectionEnd{
+			State:        types.INIT,
+			ClientID:     TestClientID1,
+			Counterparty: counterparty,
+			Versions:     types.GetCompatibleVersions(),
+		}
+		suite.EqualValues(expectConn, conn)
 	}
-	proof, h := suite.queryProof(otherChainID, connKey)
 
-	err := app.connKeeper.ConnOpenTry(app.ctx, connectionID, counterparty, clientID, types.GetCompatibleVersions(), proof, uint64(h), 0)
-	suite.Nil(err)
-
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
-
-	//check connection state
-	conn, existed := app.connKeeper.GetConnection(app.ctx, connectionID)
-	suite.True(existed)
-	suite.Equal(types.TRYOPEN, conn.State)
-}
-
-func (suite *KeeperTestSuite) connOpenAck(chainID string, connectionID, counterpartyConnID string) {
-	app := suite.apps[chainID]
-	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainID := ChainIDGaia1
-	if chainID == ChainIDGaia1 {
-		otherChainID = ChainIDGaia2
+	connectionExists := func() {
+		err := suite.connectionKeeper.ConnOpenInit(suite.ctx, TestConnectionID1, TestClientID1, counterparty)
+		suite.NotNil(err)
 	}
-	proof, h := suite.queryProof(otherChainID, connKey)
 
-	err := app.connKeeper.ConnOpenAck(app.ctx, connectionID, types.GetCompatibleVersions()[0], proof, uint64(h), 0)
-	suite.Nil(err)
-
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
-
-	//check connection state
-	conn, existed := app.connKeeper.GetConnection(app.ctx, connectionID)
-	suite.True(existed)
-	suite.Equal(types.OPEN, conn.State)
-}
-
-func (suite *KeeperTestSuite) connOpenConfirm(chainID string, connectionID, counterpartyConnID string) {
-	app := suite.apps[chainID]
-	connKey := fmt.Sprintf("%s/%s", types.SubModuleName, types.ConnectionPath(counterpartyConnID))
-	otherChainID := ChainIDGaia1
-	if chainID == ChainIDGaia1 {
-		otherChainID = ChainIDGaia2
+	var testCases = []func(){
+		success,
+		connectionExists,
 	}
-	proof, h := suite.queryProof(otherChainID, connKey)
 
-	err := app.connKeeper.ConnOpenConfirm(app.ctx, connectionID, proof, uint64(h))
-	suite.Nil(err)
-
-	commitID := app.store.Commit()
-	app.ctx.WithBlockHeight(commitID.Version)
-
-	//check connection state
-	conn, existed := app.connKeeper.GetConnection(app.ctx, connectionID)
-	suite.True(existed)
-	suite.Equal(types.OPEN, conn.State)
+	for _, fun := range testCases {
+		fun()
+	}
 }
 
-func (suite *KeeperTestSuite) TestHandshake() {
-	//get gaia1 consensusState
-	state1 := suite.getConsensusState(ChainIDGaia1)
-	//create gaia1's client on gaia2
-	suite.createClient(ChainIDGaia2, ClientToGaia2, clientType, state1)
+func (suite *KeeperTestSuite) TestConnOpenTry() {
+	suite.createClient(TestClientID2)
+	suite.createClient(TestClientID1)
+	suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.INIT)
 
-	//get gaia2 consensusState
-	state2 := suite.getConsensusState(ChainIDGaia2)
-	// create gaia2's client on gaia1
-	suite.createClient(ChainIDGaia1, ClientToGaia1, clientType, state2)
+	connectionKey := types.ConnectionPath(TestConnectionID2)
+	consensusKey := string(client.KeyConsensusState(TestClientID2))
 
-	//===========OpenInit on gaia2===========
-	suite.connOpenInit(ChainIDGaia2, ConnectionToGaia1, ClientToGaia2, ClientToGaia1, ConnectionToGaia2)
+	invalidProof := func() {
+		proofInit, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
 
-	//===========OpenTry on gaia1===========
-	// update gaia1 consensusState(should be UpdateClient)
-	suite.updateClient(ChainIDGaia1, ClientToGaia1)
-	// open-try on gaia1
-	suite.connOpenTry(ChainIDGaia1, ConnectionToGaia2, ClientToGaia1, ClientToGaia2, ConnectionToGaia1)
+		counterparty := types.NewCounterparty(TestClientID2, TestConnectionID2, suite.connectionKeeper.GetCommitmentPrefix())
+		err := suite.connectionKeeper.ConnOpenTry(suite.ctx,
+			TestConnectionID1, counterparty, TestClientID1,
+			types.GetCompatibleVersions(),
+			proofInit, proofConsensus,
+			uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
 
-	//===========ConnOpenAck on gaia2===========
-	// update gaia2 consensusState(should be UpdateClient)
-	suite.updateClient(ChainIDGaia2, ClientToGaia2)
-	suite.connOpenAck(ChainIDGaia2, ConnectionToGaia1, ConnectionToGaia2)
+	success := func() {
+		suite.updateClient(TestClientID1)
+		proofInit, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
 
-	//===========ConnOpenConfirm on gaia1===========
-	// update gaia1 consensusState(should be UpdateClient)
-	suite.updateClient(ChainIDGaia1, ClientToGaia1)
-	suite.connOpenConfirm(ChainIDGaia1, ConnectionToGaia2, ConnectionToGaia1)
+		counterparty := types.NewCounterparty(TestClientID2, TestConnectionID2, suite.connectionKeeper.GetCommitmentPrefix())
+		err := suite.connectionKeeper.ConnOpenTry(suite.ctx,
+			TestConnectionID1, counterparty, TestClientID1,
+			types.GetCompatibleVersions(),
+			proofInit, proofConsensus,
+			uint64(proofHeight), uint64(consensusHeight))
+		suite.Nil(err)
 
+		//check connection state
+		conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
+		suite.True(existed)
+		suite.Equal(types.TRYOPEN, conn.State)
+	}
+
+	connectionExists := func() {
+		suite.updateClient(TestClientID1)
+		proofInit, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+
+		counterparty := types.NewCounterparty(TestClientID2, TestConnectionID2, suite.connectionKeeper.GetCommitmentPrefix())
+		err := suite.connectionKeeper.ConnOpenTry(suite.ctx,
+			TestConnectionID1, counterparty, TestClientID1,
+			types.GetCompatibleVersions(),
+			proofInit, proofConsensus,
+			uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
+
+	var testCases = []func(){
+		invalidProof,
+		success,
+		connectionExists,
+	}
+
+	for _, fun := range testCases {
+		fun()
+	}
+
+}
+
+func (suite *KeeperTestSuite) TestConnOpenAck() {
+	suite.createClient(TestClientID2)
+	suite.createClient(TestClientID1)
+
+	suite.createConnection(TestConnectionID1, TestConnectionID2, TestClientID1, TestClientID2, types.TRYOPEN)
+	connectionKey := types.ConnectionPath(TestConnectionID1)
+	consensusKey := string(client.KeyConsensusState(TestClientID1))
+
+	connectionNotFound := func() {
+		//suite.updateClient(TestClientID2)
+
+		proofTry, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+		err := suite.connectionKeeper.ConnOpenAck(suite.ctx, TestConnectionID2, types.GetCompatibleVersions()[0], proofTry, proofConsensus, uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
+
+	invalidConnectionState := func() {
+		suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.NONE)
+		//suite.updateClient(TestClientID2)
+
+		proofTry, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+		err := suite.connectionKeeper.ConnOpenAck(suite.ctx, TestConnectionID2, types.GetCompatibleVersions()[0], proofTry, proofConsensus, uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
+
+	invalidVersion := func() {
+		suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.INIT)
+		//suite.updateClient(TestClientID2)
+
+		proofTry, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+		err := suite.connectionKeeper.ConnOpenAck(suite.ctx, TestConnectionID2, "1.0.1", proofTry, proofConsensus, uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
+
+	invalidProof := func() {
+		suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.INIT)
+		//suite.updateClient(TestClientID2)
+
+		proofTry, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+		err := suite.connectionKeeper.ConnOpenAck(suite.ctx, TestConnectionID2, types.GetCompatibleVersions()[0], proofTry, proofConsensus, uint64(proofHeight), uint64(consensusHeight))
+		suite.NotNil(err)
+	}
+
+	success := func() {
+		suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.INIT)
+		suite.updateClient(TestClientID2)
+
+		proofTry, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+		err := suite.connectionKeeper.ConnOpenAck(suite.ctx, TestConnectionID2, types.GetCompatibleVersions()[0], proofTry, proofConsensus, uint64(proofHeight), uint64(consensusHeight))
+		suite.Nil(err)
+
+		//check connection state
+		conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID2)
+		suite.True(existed)
+		suite.Equal(types.OPEN, conn.State)
+
+	}
+
+	var testCases = []func(){
+		connectionNotFound,
+		invalidConnectionState,
+		invalidVersion,
+		invalidProof,
+		success,
+	}
+
+	for _, fun := range testCases {
+		fun()
+	}
+
+}
+
+func (suite *KeeperTestSuite) TestConnOpenConfirm() {
+	suite.createClient(TestClientID2)
+	suite.createClient(TestClientID1)
+	suite.createConnection(TestConnectionID2, TestConnectionID1, TestClientID2, TestClientID1, types.OPEN)
+
+	connKey := types.ConnectionPath(TestConnectionID2)
+	proof, h := suite.queryProof(connKey)
+
+	connectionNotFound := func() {
+		//ErrConnectionNotFound
+		err := suite.connectionKeeper.ConnOpenConfirm(suite.ctx, TestConnectionID1, proof, uint64(h))
+		suite.NotNil(err)
+	}
+
+	invalidConnectionState := func() {
+		suite.createConnection(TestConnectionID1, TestConnectionID2, TestClientID1, TestClientID2, types.INIT)
+		err := suite.connectionKeeper.ConnOpenConfirm(suite.ctx, TestConnectionID1, proof, uint64(h))
+		suite.NotNil(err)
+	}
+
+	invalidProof := func() {
+		//Error proof
+		suite.createConnection(TestConnectionID1, TestConnectionID2, TestClientID1, TestClientID2, types.TRYOPEN)
+		err := suite.connectionKeeper.ConnOpenConfirm(suite.ctx, TestConnectionID1, proof, uint64(h))
+		suite.NotNil(err)
+	}
+
+	success := func() {
+		//Success
+		suite.createConnection(TestConnectionID1, TestConnectionID2, TestClientID1, TestClientID2, types.TRYOPEN)
+		suite.updateClient(TestClientID1)
+		proof, h = suite.queryProof(connKey)
+		err := suite.connectionKeeper.ConnOpenConfirm(suite.ctx, TestConnectionID1, proof, uint64(h))
+		suite.Nil(err)
+		//check connection state
+		conn, existed := suite.connectionKeeper.GetConnection(suite.ctx, TestConnectionID1)
+		suite.True(existed)
+		suite.Equal(types.OPEN, conn.State)
+	}
+
+	var testCases = []func(){
+		connectionNotFound,
+		invalidConnectionState,
+		invalidProof,
+		success,
+	}
+
+	for _, fun := range testCases {
+		fun()
+	}
 }

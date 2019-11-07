@@ -15,16 +15,29 @@ module.exports = {
     label: "sdk",
     sidebar: [
       {
-        title: "Resources",
+        title: "Using the SDK",
         children: [
           {
             title: "Modules",
             directory: true,
             path: "/modules/"
-          },
+          }
+        ]
+      },
+      {
+        title: "Resources",
+        children: [
           {
             title: "Tutorials",
             path: "https://github.com/cosmos/sdk-application-tutorial"
+          },
+          {
+            title: "SDK API Reference",
+            path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+          },
+          {
+            title: "REST API Spec",
+            path: "https://cosmos.network/rpc/"
           }
         ]
       }

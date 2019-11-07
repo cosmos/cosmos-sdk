@@ -11,6 +11,9 @@ import (
 // PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
 // as well as a limit per time period.
 type PeriodicFeeAllowance struct {
+	// Basic contains the absolute limits over all time.
+	// These limit (total and expiration) are enforced in addition to the
+	// periodic limits defined below (which renew every period)
 	Basic BasicFeeAllowance
 
 	// Period is the duration of one period

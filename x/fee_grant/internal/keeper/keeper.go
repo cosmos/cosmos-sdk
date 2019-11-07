@@ -1,20 +1,31 @@
 package keeper
 
 import (
+	"fmt"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
 )
 
+// Keeper manages state of all fee grants, as well as calculating approval.
+// It must have a codec with all available allowances registered.
 type Keeper struct {
 	cdc      *codec.Codec
 	storeKey sdk.StoreKey
 }
 
-// NewKeeper creates a DelegationKeeper
+// NewKeeper creates a fee grant Keeper
 func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey) Keeper {
 	return Keeper{cdc: cdc, storeKey: storeKey}
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GrantFeeAllowance creates a new grant

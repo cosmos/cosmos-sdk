@@ -23,7 +23,7 @@ func (msg MsgGrantFeeAllowance) Route() string {
 }
 
 func (msg MsgGrantFeeAllowance) Type() string {
-	return "delegate-fee-allowance"
+	return "grant-fee-allowance"
 }
 
 func (msg MsgGrantFeeAllowance) ValidateBasic() sdk.Error {

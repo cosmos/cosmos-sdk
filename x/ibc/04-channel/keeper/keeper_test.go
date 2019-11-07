@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -19,8 +20,8 @@ const (
 	testClientType = clientexported.Tendermint
 
 	testConnection = "testconnection"
-	testPort1      = "firsttestport"
-	testPort2      = "secondtestport"
+	testPort1      = "firstport"
+	testPort2      = "secondport"
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 

@@ -18,4 +18,7 @@ var (
 
 	// ErrInvalidDuration error if the Duration is invalid or doesn't match the expiration
 	ErrInvalidDuration = sdkerrors.Register(DefaultCodespace, 3, "invalid duration")
+
+	// ErrNoAllowance error if there is no allowance for that pair
+	ErrNoAllowance = sdkerrors.Register(DefaultCodespace, 4, "no allowance")
 )

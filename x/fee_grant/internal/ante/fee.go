@@ -65,9 +65,9 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 
 	// ensure the grant is allowed, if we request a different fee payer
 	if !txSigner.Equals(feePayer) {
-		allowed := d.dk.UseGrantedFees(ctx, feePayer, txSigner, fee)
-		if !allowed {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not allowed to pay fees from %s", txSigner, feePayer)
+		err := d.dk.UseGrantedFees(ctx, feePayer, txSigner, fee)
+		if err != nil {
+			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", txSigner, feePayer)
 		}
 		// if there was a valid grant, ensure that the txSigner account exists (we create it if needed)
 		signerAcc := d.ak.GetAccount(ctx, txSigner)

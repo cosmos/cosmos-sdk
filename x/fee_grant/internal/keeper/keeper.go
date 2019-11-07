@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types"
 )
@@ -111,22 +112,23 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 }
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
-func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) bool {
+func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) error {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found || grant.Allowance == nil {
-		return false
+		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
 	remove, err := grant.Allowance.Accept(fee, ctx.BlockTime(), ctx.BlockHeight())
 	if remove {
 		k.RevokeFeeAllowance(ctx, granter, grantee)
-		return err == nil
+		// note this returns nil if err == nil
+		return sdkerrors.Wrap(err, "removed grant")
 	}
 	if err != nil {
-		return false
+		return sdkerrors.Wrap(err, "invalid grant")
 	}
 
 	// if we accepted, store the updated state of the allowance
 	k.GrantFeeAllowance(ctx, grant)
-	return true
+	return nil
 }

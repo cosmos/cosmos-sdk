@@ -110,20 +110,23 @@ func (a PeriodicFeeAllowance) ValidateBasic() error {
 	}
 
 	if !a.PeriodSpendLimit.IsValid() {
-		return sdk.ErrInvalidCoins("spend amount is invalid: " + a.PeriodSpendLimit.String())
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend amount is invalid: %s", a.PeriodSpendLimit)
 	}
 	if !a.PeriodSpendLimit.IsAllPositive() {
-		return sdk.ErrInvalidCoins("spend limit must be positive")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
 	}
 	if !a.PeriodCanSpend.IsValid() {
-		return sdk.ErrInvalidCoins("can spend amount is invalid: " + a.PeriodCanSpend.String())
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "can spend amount is invalid: %s", a.PeriodCanSpend)
 	}
 	// We allow 0 for CanSpend
 	if a.PeriodCanSpend.IsAnyNegative() {
-		return sdk.ErrInvalidCoins("can spend must not be negative")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "can spend must not be negative")
 	}
 
-	// TODO: ensure PeriodSpendLimit can be subtracted from total (same coin types)
+	// ensure PeriodSpendLimit can be subtracted from total (same coin types)
+	if !a.PeriodSpendLimit.DenomsSubsetOf(a.Basic.SpendLimit) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "period spend limit has different currency than basic spend limit")
+	}
 
 	// check times
 	if err := a.Period.ValidateBasic(); err != nil {

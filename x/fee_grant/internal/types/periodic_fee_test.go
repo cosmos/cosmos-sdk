@@ -14,6 +14,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	oneAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
+	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 
 	cases := map[string]struct {
 		allow PeriodicFeeAllowance
@@ -45,6 +46,17 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			allow: PeriodicFeeAllowance{
 				Period:           BlockDuration(50),
 				PeriodSpendLimit: smallAtom,
+			},
+			valid: false,
+		},
+		"mismatched currencies": {
+			allow: PeriodicFeeAllowance{
+				Basic: BasicFeeAllowance{
+					SpendLimit: atom,
+					Expiration: ExpiresAtHeight(100),
+				},
+				Period:           BlockDuration(10),
+				PeriodSpendLimit: eth,
 			},
 			valid: false,
 		},

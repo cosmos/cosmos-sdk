@@ -8,8 +8,9 @@ import (
 	// we depend on the auth module internals... maybe some more of this can be exported?
 	// but things like `x/auth/types/FeeCollectorName` are quite clearly tied to it
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/cosmos/cosmos-sdk/x/fee_grant/exported"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
 
@@ -34,12 +35,12 @@ type GrantedFeeTx interface {
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
 type DeductGrantedFeeDecorator struct {
-	ak authkeeper.AccountKeeper
+	ak exported.AccountKeeper
 	dk keeper.Keeper
-	sk authtypes.SupplyKeeper
+	sk exported.SupplyKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak authkeeper.AccountKeeper, sk authtypes.SupplyKeeper, dk keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak exported.AccountKeeper, sk exported.SupplyKeeper, dk keeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		dk: dk,

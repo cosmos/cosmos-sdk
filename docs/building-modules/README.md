@@ -1,78 +1,75 @@
-# Auth 
+# Modules
+
+## Auth
 
 The `x/auth` modules is used for accounts
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth)
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/auth)
 
-See the [specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/auth)
-
-# Bank
+## Bank
 
 The `x/bank` module is for transferring coins between accounts.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank).
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/bank)
 
-See the [specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/bank)
-
-# Stake
+## Staking
 
 The `x/staking` module is for Cosmos Delegated-Proof-of-Stake.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/staking).
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/staking)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/staking)
 
-See the
-[specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/staking)
-
-# Slashing
+## Slashing
 
 The `x/slashing` module is for Cosmos Delegated-Proof-of-Stake.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/slashing)
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/slashing)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/slashing)
 
-See the
-[specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/slashing)
-
-# Distribution
+## Distribution
 
 The `x/distribution` module is for distributing fees and inflation across bonded
 stakeholders.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/distribution)
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/distribution)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/distribution)
 
-See the
-[specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/distribution)
-
-# Governance
+## Governance
 
 The `x/gov` module is for bonded stakeholders to make proposals and vote on them.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)
-
-See the
-[specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/governance)
+- [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)
+- [Specification](https://github.com/cosmos/cosmos-sdk/tree/master/docs/spec/governance)
 
 To keep up with the current status of IBC, follow and contribute to [ICS](https://github.com/cosmos/ics)
 
-# Crisis
+## Crisis
 
 The `x/crisis` module is for halting the blockchain under certain circumstances.
 
-See the [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/crisis)
+- [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/crisis)
+- [Specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/crisis)
 
-See the [specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/crisis)
-
-# Mint
+## Mint
 
 The `x/mint` module is for flexible inflation rates and effect a balance between market liquidity and staked supply.
 
-See the [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/mint)
+- [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/mint)
+- [Specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/mint)
 
-See the [specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/mint)
-
-# Params
+## Params
 
 The `x/params` module provides a globally available parameter store.
 
-See the [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/params)
+- [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/params)
+- [Specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/params)
 
-See the [specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/params)
+## Evidence
+
+The `x/evidence` modules provides a mechanism for defining and submitting arbitrary
+events of misbehavior and a means to execute custom business logic for such misbehavior.
+
+- [API Docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/evidence)
+- [Specification](https://github.com/cosmos/cosmos-sdk/blob/master/docs/spec/evidence)

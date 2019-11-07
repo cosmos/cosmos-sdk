@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types/tx"
 )
 
 // newAnteHandler is just like auth.NewAnteHandler, except we use the DeductGrantedFeeDecorator
@@ -244,11 +243,11 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
 			// msg and signatures
-			fee := tx.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
+			fee := types.NewGrantedFee(100000, sdk.NewCoins(sdk.NewInt64Coin("atom", tc.fee)), tc.feeAccount)
 			msgs := []sdk.Msg{sdk.NewTestMsg(tc.signer)}
 			privs, accNums, seqs := []crypto.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
 
-			tx := tx.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
+			tx := types.NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 			_, err := tc.handler(ctx, tx, false)
 			if tc.valid {

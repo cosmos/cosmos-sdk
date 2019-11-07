@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	tx "github.com/cosmos/cosmos-sdk/x/feegrant/internal/types/tx"
 )
 
 var (
@@ -31,7 +30,6 @@ func (AppModuleBasic) Name() string {
 // RegisterCodec registers the feegrant module's types for the given codec.
 func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	RegisterCodec(cdc)
-	tx.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant

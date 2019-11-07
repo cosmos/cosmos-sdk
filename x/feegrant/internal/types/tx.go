@@ -1,4 +1,4 @@
-package tx
+package types
 
 import (
 	"encoding/json"

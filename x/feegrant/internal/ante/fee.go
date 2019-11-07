@@ -12,13 +12,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/feegrant/exported"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/internal/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ GrantedFeeTx = (*tx.FeeGrantTx)(nil) // assert FeeGrantTx implements GrantedFeeTx
+	_ GrantedFeeTx = (*types.FeeGrantTx)(nil) // assert FeeGrantTx implements GrantedFeeTx
 )
 
 // GrantedFeeTx defines the interface to be implemented by Tx to use the GrantedFeeDecorator

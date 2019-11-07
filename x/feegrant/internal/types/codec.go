@@ -8,8 +8,8 @@ import (
 // RegisterCodec registers the account types and interface
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.FeeAllowance)(nil), nil)
-	cdc.RegisterConcrete(&BasicFeeAllowance{}, "feegrant/BasicFeeAllowance", nil)
-	cdc.RegisterConcrete(&PeriodicFeeAllowance{}, "feegrant/PeriodicFeeAllowance", nil)
+	cdc.RegisterConcrete(&BasicFeeAllowance{}, "cosmos-sdk/BasicFeeAllowance", nil)
+	cdc.RegisterConcrete(&PeriodicFeeAllowance{}, "cosmos-sdk/PeriodicFeeAllowance", nil)
 
 	cdc.RegisterConcrete(FeeGrantTx{}, "cosmos-sdk/FeeGrantTx", nil)
 }

@@ -27,10 +27,10 @@ func NewHandler(k Keeper) sdk.Handler {
 func handleGrantFee(ctx sdk.Context, k Keeper, msg MsgGrantFeeAllowance) sdk.Result {
 	grant := FeeAllowanceGrant(msg)
 	k.GrantFeeAllowance(ctx, grant)
-	return sdk.Result{}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 func handleRevokeFee(ctx sdk.Context, k Keeper, msg MsgRevokeFeeAllowance) sdk.Result {
 	k.RevokeFeeAllowance(ctx, msg.Granter, msg.Grantee)
-	return sdk.Result{}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

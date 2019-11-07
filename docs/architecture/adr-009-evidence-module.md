@@ -3,10 +3,11 @@
 ## Changelog
 
 - 2019 July 31: Initial draft
+- 2019 October 24: Initial implementation
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -55,7 +56,8 @@ type Evidence interface {
   Route() string
   Type() string
   String() string
-  ValidateBasic() Error
+  Hash() HexBytes
+  ValidateBasic() error
 
   // The consensus address of the malicious validator at time of infraction
   GetConsensusAddress() ConsAddress
@@ -78,7 +80,7 @@ the `x/evidence` module. It accomplishes this through the `Router` implementatio
 
 ```go
 type Router interface {
-  AddRoute(r string, h Handler)
+  AddRoute(r string, h Handler) Router
   HasRoute(r string) bool
   GetRoute(path string) Handler
   Seal()
@@ -97,7 +99,7 @@ necessary in order for the `Handler` to make the necessary state transitions.
 If no error is returned, the `Evidence` is considered valid.
 
 ```go
-type Handler func(Context, Evidence) Error
+type Handler func(Context, Evidence) error
 ```
 
 ### Submission
@@ -128,7 +130,7 @@ the module's router and invoking the corresponding `Handler` which may include
 slashing and jailing the validator. Upon success, the submitted evidence is persisted.
 
 ```go
-func (k Keeper) SubmitEvidence(ctx Context, evidence Evidence) Error {
+func (k Keeper) SubmitEvidence(ctx Context, evidence Evidence) error {
   handler := keeper.router.GetRoute(evidence.Route())
   if err := handler(ctx, evidence); err != nil {
     return ErrInvalidEvidence(keeper.codespace, err)
@@ -177,3 +179,4 @@ due to the inability to introduce the new evidence type's corresponding handler
 
 - [ICS](https://github.com/cosmos/ics)
 - [IBC Architecture](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
+- [Tendermint Fork Accountability](https://github.com/tendermint/tendermint/blob/master/docs/spec/consensus/fork-accountability.md)

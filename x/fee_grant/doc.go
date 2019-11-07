@@ -1,8 +1,7 @@
 /*
-Package fee_grant provides functionality for delegating sub-permissions
+Package fee_grant provides functionality for delegating the payment of transaction fees
 from one account (key) to another account (key).
 
-The first implementation allows the delegation for the payment of transaction fees.
 Effectively, this allows for a user to pay fees using the balance of an account
 different from their own. Example use cases would be allowing a key on a device to
 pay for fees using a master wallet, or a third party service allowing users to

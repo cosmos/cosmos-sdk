@@ -48,7 +48,12 @@ func (a *PeriodicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 	return a.Basic.SpendLimit.IsZero(), nil
 }
 
-// TryResetPeriod will reset the period if we hit the conditions
+// TryResetPeriod will check if the PeriodReset has been hit. If not, it is a no-op.
+// If we hit the reset period, it will top up the PeriodCanSpend amount to
+// min(PeriodicSpendLimit, a.Basic.SpendLimit) so it is never more than the maximum allowed.
+// It will also update the PeriodReset. If we are within one Period, it will update from the
+// last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
+// If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
 func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight int64) {
 	if !a.PeriodReset.IsZero() && !a.PeriodReset.IsExpired(blockTime, blockHeight) {
 		return
@@ -68,8 +73,10 @@ func (a *PeriodicFeeAllowance) TryResetPeriod(blockTime time.Time, blockHeight i
 	}
 }
 
-// PrepareForExport adjusts all absolute block height (period reset, basic.expiration)
-// with the dump height so they make sense after dump
+// PrepareForExport will adjust the expiration based on export time. In particular,
+// it will subtract the dumpHeight from any height-based expiration to ensure that
+// the elapsed number of blocks this allowance is valid for is fixed.
+// (For PeriodReset and Basic.Expiration)
 func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
 	return &PeriodicFeeAllowance{
 		Basic: BasicFeeAllowance{

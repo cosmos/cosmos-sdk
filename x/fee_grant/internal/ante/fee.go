@@ -7,9 +7,9 @@ import (
 
 	// we depend on the auth module internals... maybe some more of this can be exported?
 	// but things like `x/auth/types/FeeCollectorName` are quite clearly tied to it
-	authAnte "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/fee_grant/internal/types/tx"
 
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	_ GrantedFeeTx = (*tx.FeeGrantTx)(nil) // assert StdTx implements GrantedFeeTx
+	_ GrantedFeeTx = (*tx.FeeGrantTx)(nil) // assert FeeGrantTx implements GrantedFeeTx
 )
 
 // GrantedFeeTx defines the interface to be implemented by Tx to use the GrantedFeeDecorator
@@ -34,12 +34,12 @@ type GrantedFeeTx interface {
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement GrantedFeeTx interface to use DeductGrantedFeeDecorator
 type DeductGrantedFeeDecorator struct {
-	ak authKeeper.AccountKeeper
+	ak authkeeper.AccountKeeper
 	dk keeper.Keeper
-	sk authTypes.SupplyKeeper
+	sk authtypes.SupplyKeeper
 }
 
-func NewDeductGrantedFeeDecorator(ak authKeeper.AccountKeeper, sk authTypes.SupplyKeeper, dk keeper.Keeper) DeductGrantedFeeDecorator {
+func NewDeductGrantedFeeDecorator(ak authkeeper.AccountKeeper, sk authtypes.SupplyKeeper, dk keeper.Keeper) DeductGrantedFeeDecorator {
 	return DeductGrantedFeeDecorator{
 		ak: ak,
 		dk: dk,
@@ -54,8 +54,8 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	}
 
 	// sanity check from DeductFeeDecorator
-	if addr := d.sk.GetModuleAddress(authTypes.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", authTypes.FeeCollectorName))
+	if addr := d.sk.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", authtypes.FeeCollectorName))
 	}
 
 	fee := feeTx.GetFee()
@@ -86,7 +86,7 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 	if fee.IsZero() {
 		return next(ctx, tx, simulate)
 	}
-	err = authAnte.DeductFees(d.sk, ctx, feePayerAcc, fee)
+	err = authante.DeductFees(d.sk, ctx, feePayerAcc, fee)
 	if err != nil {
 		return ctx, err
 	}

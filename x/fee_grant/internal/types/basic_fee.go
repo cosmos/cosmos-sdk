@@ -35,6 +35,9 @@ func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeig
 	return left.IsZero(), nil
 }
 
+// PrepareForExport will adjust the expiration based on export time. In particular,
+// it will subtract the dumpHeight from any height-based expiration to ensure that
+// the elapsed number of blocks this allowance is valid for is fixed.
 func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) exported.FeeAllowance {
 	return &BasicFeeAllowance{
 		SpendLimit: a.SpendLimit,

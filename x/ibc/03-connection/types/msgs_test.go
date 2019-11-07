@@ -10,407 +10,147 @@ import (
 )
 
 func TestNewMsgConnectionOpenInit(t *testing.T) {
+
 	type TestCase = struct {
-		connectionID string
-		clientID     string
-		counterparty Counterparty
-		signer       sdk.AccAddress
-		expected     bool
-		msg          string
+		msg      MsgConnectionOpenInit
+		expected bool
+		errMsg   string
 	}
 
 	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
+	testMsgs := []MsgConnectionOpenInit{
+		NewMsgConnectionOpenInit("gaia/conn1", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconngaia", "gaia/iris", "connectiontogaia", "clienttogaia", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "gaia/conn1", "clienttogaia", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "gaia/conn1", prefix, signer),
+		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", nil, signer),
+		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", prefix, nil),
+		NewMsgConnectionOpenInit("ibcconngaia", "clienttogaia", "connectiontogaia", "clienttogaia", prefix, signer),
+	}
+
 	var testCases = []TestCase{
-		{
-			connectionID: "gaia/conn1",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid connection ID",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "gaia/iris",
-			counterparty: NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid client ID",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("gaia/conn1", "connectiontogaia", prefix),
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid counterparty client ID",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("clienttogaia", "ibc/gaia", prefix),
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid counterparty connection ID",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			signer:       signer,
-			expected:     false,
-			msg:          "empty counterparty prefix",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			signer:       nil,
-			expected:     false,
-			msg:          "empty singer",
-		},
-		{
-			connectionID: "ibcconngaia",
-			clientID:     "clienttogaiaa",
-			counterparty: NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			signer:       signer,
-			expected:     true,
-			msg:          "success",
-		},
+		{testMsgs[0], false, "invalid connection ID"},
+		{testMsgs[1], false, "invalid client ID"},
+		{testMsgs[2], false, "invalid counterparty client ID"},
+		{testMsgs[3], false, "invalid counterparty connection ID"},
+		{testMsgs[4], false, "empty counterparty prefix"},
+		{testMsgs[5], false, "empty singer"},
+		{testMsgs[6], true, "success"},
 	}
 
 	for i, tc := range testCases {
-		msg := NewMsgConnectionOpenInit(tc.connectionID,
-			tc.clientID, tc.counterparty.ConnectionID, tc.counterparty.ClientID, tc.counterparty.Prefix, tc.signer)
-		require.Equal(t, tc.expected, msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.msg))
+		require.Equal(t, tc.expected, tc.msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.errMsg))
 	}
 }
 
 func TestNewMsgConnectionOpenTry(t *testing.T) {
 	type TestCase = struct {
-		connectionID         string
-		clientID             string
-		counterparty         Counterparty
-		counterpartyVersions []string
-		proofInit            commitment.ProofI
-		proofHeight          uint64
-		consensusHeight      uint64
-		signer               sdk.AccAddress
-		expected             bool
-		msg                  string
+		msg      MsgConnectionOpenTry
+		expected bool
+		errMsg   string
 	}
 
 	prefix := commitment.NewPrefix([]byte("storePrefixKey"))
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
+	testMsgs := []MsgConnectionOpenTry{
+		NewMsgConnectionOpenTry("gaia/conn1", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "gaia/iris", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "ibc/gaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "gaia/conn1", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", nil, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, nil, commitment.Proof{}, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, nil, 10, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 0, 10, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 0, signer),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, nil),
+		NewMsgConnectionOpenTry("ibcconngaia", "clienttogaiaa", "connectiontogaia", "clienttogaia", prefix, []string{"1.0.0"}, commitment.Proof{}, commitment.Proof{}, 10, 10, signer),
+	}
+
 	var testCases = []TestCase{
-		{
-			connectionID:         "gaia/conn1",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid connection ID",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "gaia/iris",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid client ID",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("gaia/conn1", "connectiontogaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid counterparty client ID",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "ibc/gaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid counterparty connection ID",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "empty counterparty prefix",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "empty counterpartyVersions",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{""},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "empty Versions",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            nil,
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "empty proof",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          0,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid proofHeight",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", nil),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      0,
-			signer:               signer,
-			expected:             false,
-			msg:                  "invalid consensusHeight",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               nil,
-			expected:             false,
-			msg:                  "empty singer",
-		},
-		{
-			connectionID:         "ibcconngaia",
-			clientID:             "clienttogaiaa",
-			counterparty:         NewCounterparty("clienttogaia", "connectiontogaia", prefix),
-			counterpartyVersions: []string{"1.0.0"},
-			proofInit:            commitment.Proof{},
-			proofHeight:          10,
-			consensusHeight:      10,
-			signer:               signer,
-			expected:             true,
-			msg:                  "success",
-		},
+		{testMsgs[0], false, "invalid connection ID"},
+		{testMsgs[1], false, "invalid client ID"},
+		{testMsgs[2], false, "invalid counterparty connection ID"},
+		{testMsgs[3], false, "invalid counterparty client ID"},
+		{testMsgs[4], false, "empty counterparty prefix"},
+		{testMsgs[5], false, "empty counterpartyVersions"},
+		{testMsgs[6], false, "empty proofInit"},
+		{testMsgs[7], false, "empty proofConsensus"},
+		{testMsgs[8], false, "invalid proofHeight"},
+		{testMsgs[9], false, "invalid consensusHeight"},
+		{testMsgs[10], false, "empty singer"},
+		{testMsgs[11], true, "success"},
 	}
 
 	for i, tc := range testCases {
-		msg := NewMsgConnectionOpenTry(tc.connectionID,
-			tc.clientID, tc.counterparty.ConnectionID, tc.counterparty.ClientID, tc.counterparty.Prefix, tc.counterpartyVersions, tc.proofInit, tc.proofHeight, tc.consensusHeight, tc.signer)
-		require.Equal(t, tc.expected, msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.msg))
+		require.Equal(t, tc.expected, tc.msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.errMsg))
 	}
 }
 
 func TestNewMsgConnectionOpenAck(t *testing.T) {
 	type TestCase = struct {
-		connectionID    string
-		proofTry        commitment.ProofI
-		proofHeight     uint64
-		consensusHeight uint64
-		version         string
-		signer          sdk.AccAddress
-		expected        bool
-		msg             string
+		msg      MsgConnectionOpenAck
+		expected bool
+		errMsg   string
 	}
 
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
+	testMsgs := []MsgConnectionOpenAck{
+		NewMsgConnectionOpenAck("gaia/conn1", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", nil, commitment.Proof{}, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, nil, 10, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 0, 10, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 0, "1.0.0", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "", signer),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", nil),
+		NewMsgConnectionOpenAck("ibcconngaia", commitment.Proof{}, commitment.Proof{}, 10, 10, "1.0.0", signer),
+	}
 	var testCases = []TestCase{
-		{
-			connectionID:    "gaia/conn1",
-			proofTry:        commitment.Proof{},
-			proofHeight:     10,
-			consensusHeight: 10,
-			version:         "1.0.0",
-			signer:          signer,
-			expected:        false,
-			msg:             "invalid connection ID",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        nil,
-			proofHeight:     10,
-			consensusHeight: 10,
-			version:         "1.0.0",
-			signer:          signer,
-			expected:        false,
-			msg:             "empty proofTry",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        commitment.Proof{},
-			proofHeight:     0,
-			consensusHeight: 10,
-			version:         "1.0.0",
-			signer:          signer,
-			expected:        false,
-			msg:             "invalid proofHeight",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        commitment.Proof{},
-			proofHeight:     10,
-			consensusHeight: 0,
-			version:         "1.0.0",
-			signer:          signer,
-			expected:        false,
-			msg:             "invalid consensusHeight",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        commitment.Proof{},
-			proofHeight:     10,
-			consensusHeight: 10,
-			version:         "",
-			signer:          signer,
-			expected:        false,
-			msg:             "invalid version",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        commitment.Proof{},
-			proofHeight:     10,
-			consensusHeight: 10,
-			version:         "1.0.0",
-			signer:          nil,
-			expected:        false,
-			msg:             "empty signer",
-		},
-		{
-			connectionID:    "ibcconngaia",
-			proofTry:        commitment.Proof{},
-			proofHeight:     10,
-			consensusHeight: 10,
-			version:         "1.0.0",
-			signer:          signer,
-			expected:        true,
-			msg:             "success",
-		},
+		{testMsgs[0], false, "invalid connection ID"},
+		{testMsgs[1], false, "empty proofTry"},
+		{testMsgs[2], false, "empty proofConsensus"},
+		{testMsgs[3], false, "invalid proofHeight"},
+		{testMsgs[4], false, "invalid consensusHeight"},
+		{testMsgs[5], false, "invalid version"},
+		{testMsgs[6], false, "empty signer"},
+		{testMsgs[7], true, "success"},
 	}
 
 	for i, tc := range testCases {
-		msg := NewMsgConnectionOpenAck(tc.connectionID,
-			tc.proofTry, tc.proofHeight, tc.consensusHeight, tc.version, tc.signer)
-		require.Equal(t, tc.expected, msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.msg))
+		require.Equal(t, tc.expected, tc.msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.errMsg))
 	}
 }
 
 func TestNewMsgConnectionOpenConfirm(t *testing.T) {
 	type TestCase = struct {
-		connectionID string
-		proofAck     commitment.ProofI
-		proofHeight  uint64
-		signer       sdk.AccAddress
-		expected     bool
-		msg          string
+		msg      MsgConnectionOpenConfirm
+		expected bool
+		errMsg   string
 	}
 
 	signer, _ := sdk.AccAddressFromBech32("cosmos1ckgw5d7jfj7wwxjzs9fdrdev9vc8dzcw3n2lht")
 
+	testMsgs := []MsgConnectionOpenConfirm{
+		NewMsgConnectionOpenConfirm("gaia/conn1", commitment.Proof{}, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconngaia", nil, 10, signer),
+		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 0, signer),
+		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 10, nil),
+		NewMsgConnectionOpenConfirm("ibcconngaia", commitment.Proof{}, 10, signer),
+	}
+
 	var testCases = []TestCase{
-		{
-			connectionID: "gaia/conn1",
-			proofAck:     commitment.Proof{},
-			proofHeight:  10,
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid connection ID",
-		},
-		{
-			connectionID: "ibcconngaia",
-			proofAck:     nil,
-			proofHeight:  10,
-			signer:       signer,
-			expected:     false,
-			msg:          "empty proofTry",
-		},
-		{
-			connectionID: "ibcconngaia",
-			proofAck:     commitment.Proof{},
-			proofHeight:  0,
-			signer:       signer,
-			expected:     false,
-			msg:          "invalid proofHeight",
-		},
-		{
-			connectionID: "ibcconngaia",
-			proofAck:     commitment.Proof{},
-			proofHeight:  10,
-			signer:       nil,
-			expected:     false,
-			msg:          "empty signer",
-		},
-		{
-			connectionID: "ibcconngaia",
-			proofAck:     commitment.Proof{},
-			proofHeight:  10,
-			signer:       signer,
-			expected:     true,
-			msg:          "success",
-		},
+		{testMsgs[0], false, "invalid connection ID"},
+		{testMsgs[1], false, "empty proofTry"},
+		{testMsgs[2], false, "invalid proofHeight"},
+		{testMsgs[3], false, "empty signer"},
+		{testMsgs[4], true, "success"},
 	}
 
 	for i, tc := range testCases {
-		msg := NewMsgConnectionOpenConfirm(tc.connectionID,
-			tc.proofAck, tc.proofHeight, tc.signer)
-		require.Equal(t, tc.expected, msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.msg))
+		require.Equal(t, tc.expected, tc.msg.ValidateBasic() == nil, fmt.Sprintf("case: %d,msg: %s,", i, tc.errMsg))
 	}
 }

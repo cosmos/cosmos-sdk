@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // connection error codes
@@ -23,51 +24,92 @@ const (
 )
 
 // ErrConnectionExists implements sdk.Error
-func ErrConnectionExists(codespace sdk.CodespaceType, connectionID string) sdk.Error {
-	return sdk.NewError(codespace, CodeConnectionExists, fmt.Sprintf("connection with ID %s already exists", connectionID))
+func ErrConnectionExists(codespace sdk.CodespaceType, connectionID string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeConnectionExists),
+		fmt.Sprintf("connection with ID %s already exists", connectionID),
+	)
 }
 
 // ErrConnectionNotFound implements sdk.Error
-func ErrConnectionNotFound(codespace sdk.CodespaceType, connectionID string) sdk.Error {
-	return sdk.NewError(codespace, CodeConnectionNotFound, fmt.Sprintf("connection with ID %s not found", connectionID))
+func ErrConnectionNotFound(codespace sdk.CodespaceType, connectionID string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeConnectionNotFound),
+		fmt.Sprintf("connection with ID %s not found", connectionID),
+	)
 }
 
 // ErrClientConnectionPathsNotFound implements sdk.Error
-func ErrClientConnectionPathsNotFound(codespace sdk.CodespaceType, clientID string) sdk.Error {
-	return sdk.NewError(codespace, CodeClientConnectionPathsNotFound, fmt.Sprintf("client connection paths not found for ID %s", clientID))
+func ErrClientConnectionPathsNotFound(codespace sdk.CodespaceType, clientID string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeClientConnectionPathsNotFound),
+		fmt.Sprintf("client connection paths not found for ID %s", clientID),
+	)
 }
 
 // ErrConnectionPath implements sdk.Error
-func ErrConnectionPath(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeConnectionPath, "connection path is not associated to the client")
+func ErrConnectionPath(codespace sdk.CodespaceType) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeConnectionPath),
+		"connection path is not associated to the client",
+	)
 }
 
 // ErrInvalidCounterpartyConnection implements sdk.Error
-func ErrInvalidCounterpartyConnection(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidCounterpartyConnection, "couldn't verify connection membership on counterparty's client")
+func ErrInvalidCounterpartyConnection(codespace sdk.CodespaceType) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidCounterpartyConnection),
+		"couldn't verify connection membership on counterparty's client",
+	)
 }
 
 // ErrInvalidVersion implements sdk.Error
-func ErrInvalidVersion(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidVersion, msg)
+func ErrInvalidVersion(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidVersion),
+		msg,
+	)
 }
 
 // ErrInvalidHeight implements sdk.Error
-func ErrInvalidHeight(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidHeight, msg)
+func ErrInvalidHeight(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidHeight),
+		msg,
+	)
 }
 
 // ErrInvalidConnectionState implements sdk.Error
-func ErrInvalidConnectionState(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidConnectionState, msg)
+func ErrInvalidConnectionState(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidConnectionState),
+		msg,
+	)
 }
 
 // ErrInvalidConnectionProof implements sdk.Error
-func ErrInvalidConnectionProof(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidProof, msg)
+// TODO: move to ICS23
+func ErrInvalidConnectionProof(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidProof),
+		msg,
+	)
 }
 
 // ErrInvalidCounterparty implements sdk.Error
-func ErrInvalidCounterparty(codespace sdk.CodespaceType, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidCounterparty, msg)
+func ErrInvalidCounterparty(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.Register(
+		string(codespace),
+		uint32(CodeInvalidCounterparty),
+		msg,
+	)
 }

@@ -20,7 +20,7 @@ func (k Keeper) onChanOpenInit(
 	version string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return types.ErrInvalidChannelOrder(k.codespace, order.String())
+		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty

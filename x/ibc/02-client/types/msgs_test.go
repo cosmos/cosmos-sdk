@@ -103,7 +103,7 @@ type mockBadEvidence struct {
 
 // Override ValidateBasic
 func (mbe mockBadEvidence) ValidateBasic() sdk.Error {
-	return errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence")
+	return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence"))
 }
 
 func TestMsgSubmitMisbehaviour(t *testing.T) {

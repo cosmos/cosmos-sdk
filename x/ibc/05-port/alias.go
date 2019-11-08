@@ -16,7 +16,6 @@ const (
 	CodePortExists           = types.CodePortExists
 	CodePortNotFound         = types.CodePortNotFound
 	CodePortNotAuthenticated = types.CodePortNotAuthenticated
-	CodeInvalidPortID        = types.CodeInvalidPortID
 	SubModuleName            = types.SubModuleName
 	StoreKey                 = types.StoreKey
 	RouterKey                = types.RouterKey
@@ -29,7 +28,6 @@ var (
 	ErrPortExists           = types.ErrPortExists
 	ErrPortNotFound         = types.ErrPortNotFound
 	ErrPortNotAuthenticated = types.ErrPortNotAuthenticated
-	ErrInvalidPortID        = types.ErrInvalidPortID
 	PortPath                = types.PortPath
 	KeyPort                 = types.KeyPort
 )

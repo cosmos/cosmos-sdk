@@ -103,6 +103,7 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 // set of connections associated with a client.
 //
 // CONTRACT: client must already exist
+// nolint: unused
 func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {

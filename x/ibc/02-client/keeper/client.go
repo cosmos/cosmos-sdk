@@ -60,15 +60,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrap(errors.ErrConsensusStateNotFound(k.codespace), "cannot update client")
 	}
 
-	if header.GetHeight() < consensusState.GetHeight() {
-		return sdkerrors.Wrap(
-			sdk.ErrInvalidSequence(
-				fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), consensusState.GetHeight()),
-			),
-			"cannot update client",
-		)
-	}
-
 	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return sdkerrors.Wrap(err, "cannot update client")

@@ -14,7 +14,6 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
-	prefix    []byte // prefix bytes for accessing the store
 	ports     map[string]string
 	bound     []string
 }
@@ -25,9 +24,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		storeKey:  key,
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
-		prefix:    []byte{},
-		// prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
-		ports: make(map[string]string), // map of capability key names to port ids
+		ports:     make(map[string]string),                                                    // map of capability key names to port ids
 	}
 }
 

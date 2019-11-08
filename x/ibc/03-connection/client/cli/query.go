@@ -69,10 +69,6 @@ $ %s query ibc connection end [connection-id]
 				return err
 			}
 
-			if res.Proof == nil {
-				return cliCtx.PrintOutput(connection)
-			}
-
 			connRes := types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height)
 			return cliCtx.PrintOutput(connRes)
 		},
@@ -117,10 +113,6 @@ $ %s query ibc connection client [client-id]
 			var connectionPaths []string
 			if err := cdc.UnmarshalJSON(res.Value, &connectionPaths); err != nil {
 				return err
-			}
-
-			if res.Proof == nil {
-				return cliCtx.PrintOutput(connectionPaths)
 			}
 
 			connPathsRes := types.NewClientConnectionsResponse(clientID, connectionPaths, res.Proof, res.Height)

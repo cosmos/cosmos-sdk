@@ -22,7 +22,6 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
-	prefix    []byte // prefix bytes for accessing the store
 
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
@@ -48,7 +47,6 @@ func NewKeeper(
 		storeKey:         key,
 		cdc:              cdc,
 		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
-		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connnectionKeeper,
 		channelKeeper:    channelKeeper,

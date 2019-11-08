@@ -7,15 +7,17 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -44,7 +46,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryClientState defines the command to query the state of a client with
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryClientState(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "state [client-id]",
 		Short: "Query a client state",
 		Long: strings.TrimSpace(
@@ -67,19 +69,28 @@ $ %s query ibc client state [client-id]
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryClientState), bz)
+			req := abci.RequestQuery{
+				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryClientState),
+				Data:  bz,
+				Prove: viper.GetBool(flags.FlagProve),
+			}
+
+			res, err := cliCtx.QueryABCI(req)
 			if err != nil {
 				return err
 			}
 
 			var clientState types.State
-			if err := cdc.UnmarshalJSON(res, &clientState); err != nil {
+			if err := cdc.UnmarshalJSON(res.Value, &clientState); err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(clientState)
+			clientStateRes := types.NewClientStateResponse(clientID, clientState, res.Proof, res.Height)
+			return cliCtx.PrintOutput(clientStateRes)
 		},
 	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	return cmd
 }
 
 // GetCmdQueryRoot defines the command to query
@@ -130,7 +141,7 @@ $ %s query ibc client root [client-id] [height]
 // GetCmdQueryConsensusState defines the command to query the consensus state of
 // the chain as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "consensus-state [client-id]",
 		Short: "Query the latest consensus state of the client",
 		Long: strings.TrimSpace(
@@ -148,24 +159,16 @@ $ %s query ibc client consensus-state [client-id]
 				return errors.New("client ID can't be blank")
 			}
 
-			bz, err := cdc.MarshalJSON(types.NewQueryClientStateParams(clientID))
+			csRes, err := utils.QueryConsensusStateProof(cliCtx, cdc, queryRoute, clientID)
 			if err != nil {
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryConsensusState), bz)
-			if err != nil {
-				return err
-			}
-
-			var consensusState exported.ConsensusState
-			if err := cdc.UnmarshalJSON(res, &consensusState); err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(consensusState)
+			return cliCtx.PrintOutput(csRes)
 		},
 	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	return cmd
 }
 
 // GetCmdQueryHeader defines the command to query the latest header on the chain

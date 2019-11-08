@@ -3,10 +3,13 @@ package tendermint
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -55,6 +58,15 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func (cs ConsensusState) checkValidity(header Header) error {
+
+	if header.GetHeight() < cs.Height {
+		return sdkerrors.Wrap(
+			sdk.ErrInvalidSequence(
+				fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), cs.Height),
+			),
+			"invalid header",
+		)
+	}
 	// check if the hash from the consensus set and header
 	// matches
 	nextHash := cs.NextValidatorSet.Hash()

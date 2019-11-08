@@ -44,6 +44,27 @@ func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootP
 	}
 }
 
+// StateResponse defines the client response for a client state query.
+// It includes the commitment proof and the height of the proof.
+type StateResponse struct {
+	ClientState State            `json:"client_state" yaml:"client_state"`
+	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+}
+
+// NewClientStateResponse creates a new StateResponse instance.
+func NewClientStateResponse(
+	clientID string, clientState State, proof *merkle.Proof, height int64,
+) StateResponse {
+	return StateResponse{
+		ClientState: clientState,
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
+		ProofHeight: uint64(height),
+	}
+}
+
 // ConsensusStateResponse defines the client response for a Consensus state query.
 // It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {

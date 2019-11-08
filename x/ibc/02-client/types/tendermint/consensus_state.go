@@ -58,7 +58,6 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 //
 // CONTRACT: assumes header.Height > consensusState.Height
 func (cs ConsensusState) checkValidity(header Header) error {
-
 	if header.GetHeight() < cs.Height {
 		return sdkerrors.Wrap(
 			sdk.ErrInvalidSequence(
@@ -67,6 +66,7 @@ func (cs ConsensusState) checkValidity(header Header) error {
 			"invalid header",
 		)
 	}
+
 	// check if the hash from the consensus set and header
 	// matches
 	nextHash := cs.NextValidatorSet.Hash()

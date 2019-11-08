@@ -68,10 +68,10 @@ func NewClientStateResponse(
 // ConsensusStateResponse defines the client response for a Consensus state query.
 // It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {
-	ConsensusState tmtypes.ConsensusState
-	Proof          commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath      commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight    uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConsensusState tmtypes.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
+	Proof          commitment.Proof       `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath      commitment.Path        `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight    uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
@@ -83,5 +83,26 @@ func NewConsensusStateResponse(
 		Proof:          commitment.Proof{Proof: proof},
 		ProofPath:      commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
 		ProofHeight:    uint64(height),
+	}
+}
+
+// RootResponse defines the client response for a commitment root query.
+// It includes the commitment proof and the height of the proof.
+type RootResponse struct {
+	Root        commitment.Root  `json:"root" yaml:"root"`
+	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+}
+
+// NewRootResponse creates a new RootResponse instance.
+func NewRootResponse(
+	clientID string, height uint64, root commitment.Root, proof *merkle.Proof, proofHeight int64,
+) RootResponse {
+	return RootResponse{
+		Root:        root,
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofHeight: uint64(proofHeight),
 	}
 }

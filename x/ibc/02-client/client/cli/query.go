@@ -93,9 +93,9 @@ $ %s query ibc client state [client-id]
 	return cmd
 }
 
-// GetCmdQueryRoot defines the command to query
+// GetCmdQueryRoot defines the command to query a verified commitment root
 func GetCmdQueryRoot(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "root [client-id] [height]",
 		Short: "Query a verified commitment root",
 		Long: strings.TrimSpace(
@@ -123,19 +123,28 @@ $ %s query ibc client root [client-id] [height]
 				return err
 			}
 
-			res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryVerifiedRoot), bz)
+			req := abci.RequestQuery{
+				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryVerifiedRoot),
+				Data:  bz,
+				Prove: viper.GetBool(flags.FlagProve),
+			}
+
+			res, err := cliCtx.QueryABCI(req)
 			if err != nil {
 				return err
 			}
 
-			var root commitment.RootI
-			if err := cdc.UnmarshalJSON(res, &root); err != nil {
+			var root commitment.Root
+			if err := cdc.UnmarshalJSON(res.Value, &root); err != nil {
 				return err
 			}
 
-			return cliCtx.PrintOutput(root)
+			rootRes := types.NewRootResponse(clientID, height, root, res.Proof, res.Height)
+			return cliCtx.PrintOutput(rootRes)
 		},
 	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	return cmd
 }
 
 // GetCmdQueryConsensusState defines the command to query the consensus state of

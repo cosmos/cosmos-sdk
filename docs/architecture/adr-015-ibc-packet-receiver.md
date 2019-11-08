@@ -39,7 +39,57 @@ where `MsgPacket` is the `sdk.Msg` type including any IBC packet inside and embe
 
 The `AnteHandler` will be inserted to the top level application, after the signature authentication logic provided by `auth.NewAnteHandler`, utilizing `AnteDecorator` pattern.
 
-This proposal does not cover automatic acknowledgement processing. Applications who want to return acknowledgement should manually handle multistore cacheing.
+The Cosmos SDK will define the wrapper function `ReceivePacket` under the port keeper. The function will wrap packet handlers to automatically handle the acknowledgements.
+
+```go
+// Pseudocode
+func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h func(sdk.Context, Packet), sdk.Result) sdk.Result {
+  // Cache context
+  cctx, write := ctx.CacheContext()
+
+  // verification already done inside the antehandler
+  res := h(cctx, msg.Packet)
+  
+  // write the cache only if succedded
+  write()
+  
+  // set the result to OK to persist the state change
+  res.Code = sdk.CodeOK
+  
+  // res.Data will be stored as acknowledgement; []byte{} will be stored if not exists
+  if len(res.Data) == nil {
+    res.Data = []byte{}
+  }
+  k.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, res.Data)
+
+  return res
+}
+```
+
+Example application-side usage:
+
+```go
+func NewHandler(k Keeper) sdk.Handler {
+  return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+    switch msg := msg.(type) {
+    case ibc.MsgPacket:
+      return k.port.ReceivePacket(ctx, msg, func(ctx sdk.Context, p Packet) sdk.Result {
+        switch packet := packet.(type) {
+        case MyPacket:
+          return handleMyPacket(ctx, k, packet)
+        }
+      })
+    }
+  }
+}
+
+func handleMyPacket(ctx sdk.Context, k keeper, packet MyPacket) sdk.Result {
+  if failureCondition {
+    return AckInvalidPacketContent(k.codespace, []byte{packet.Data})
+  }
+  return sdk.Result{}
+}
+```
 
 ## Status
 

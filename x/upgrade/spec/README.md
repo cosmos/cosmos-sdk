@@ -17,5 +17,4 @@ recover from.
 <!-- TOC -->
 1. **[Concepts](01_concepts.md)**
 2. **[State](02_state.md)**
-3. **[Messages](03_messages.md)**
-4. **[Events](04_events.md)**
+3. **[Events](03_events.md)**

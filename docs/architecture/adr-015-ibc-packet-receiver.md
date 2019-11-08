@@ -18,7 +18,7 @@ regardless of the result of the handler execution.
 
 ## Decision
 
-We will define an `AnteHandler` for IBC packet receiving. The `AnteHandler` will iterate over the messages included in the 
+The Cosmos SDK will define an `AnteHandler` for IBC packet receiving. The `AnteHandler` will iterate over the messages included in the 
 transaction, type switch to check whether the message contains an incoming IBC packet, and if so verify the Merkle proof.
 
 ```go
@@ -55,7 +55,7 @@ Proposed
 
 ### Negative
 
-- AnteHandler processes over the whole transaction before the each handler, `UpdateClient` and `RecvPacket` cannot be processed in the same transaction
+- AnteHandler processes over all the transactions before each handler is executed. `UpdateClient` and `RecvPacket` cannot be processed in the same transaction
 - Cannot support dynamic ports, routing is tied to the baseapp router
 
 ### Neutral

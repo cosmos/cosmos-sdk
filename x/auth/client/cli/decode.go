@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -50,9 +52,12 @@ func GetDecodeTxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "decode-tx [tx]",
 		Short: "Decode a tx from hex or base64",
-		Long: `Decode Tx from hez or base64:
-		
-		$ <appcli> decode-tx <tx>`,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Decode a tx from hex, base64.
+			
+			Example:
+				$ %s tx decode-tx TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+			`, version.ClientName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

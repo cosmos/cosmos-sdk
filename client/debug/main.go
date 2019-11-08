@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func Cmd(cdc *codec.Codec) *cobra.Command {
@@ -35,9 +36,13 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a pubkey from hex, base64, or bech32",
-		Long: `Decode a public key:
-		
-		$ <appcli> debug pubkey <pubkey> `,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
+			
+			Example:
+				$ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+				$ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+			`, version.ClientName, version.ClientName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -115,9 +120,12 @@ func AddrCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "addr [address]",
 		Short: "Convert an address between hex and bech32",
-		Long: `Convert addresses:
-		
-		$ <appcli> debug addr <address>`,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Convert an address between hex encoding and bech32.
+			
+			Example:
+				$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+			`, version.ClientName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -161,9 +169,12 @@ func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "raw-bytes [raw-bytes]",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
-		Long: `Convert bytes output:
-		
-		$ <appcli> debug raw-bytes <bytes>`,
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Convert raw-bytes to hex.
+			
+			Example:
+				$ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
+			`, version.ClientName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			stringBytes := args[0]

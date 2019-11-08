@@ -23,7 +23,8 @@ func (k Keeper) onChanOpenInit(
 		return types.ErrInvalidChannelOrder(k.codespace, order.String())
 	}
 
-	if counterparty.PortID != types.BoundPortID {
+	// NOTE: here the capability key name defines the port ID of the counterparty
+	if counterparty.PortID != k.boundedCapability.Name() {
 		return types.ErrInvalidPort(k.codespace, portID)
 	}
 
@@ -51,7 +52,8 @@ func (k Keeper) onChanOpenTry(
 		return types.ErrInvalidChannelOrder(k.codespace, order.String())
 	}
 
-	if counterparty.PortID != types.BoundPortID {
+	// NOTE: here the capability key name defines the port ID of the counterparty
+	if counterparty.PortID != k.boundedCapability.Name() {
 		return types.ErrInvalidPort(k.codespace, portID)
 	}
 

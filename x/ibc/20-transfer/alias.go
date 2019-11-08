@@ -25,7 +25,6 @@ const (
 	StoreKey                = types.StoreKey
 	RouterKey               = types.RouterKey
 	QuerierRoute            = types.QuerierRoute
-	BoundPortID             = types.BoundPortID
 )
 
 var (

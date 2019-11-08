@@ -54,3 +54,17 @@ type SoftwareUpgradeProposal struct {
   Plan        Plan
 }
 ```
+
+### Cancelling Upgrade Proposals
+
+Upgrade proposals can be cancelled. There exists a `CancelSoftwareUpgrade` proposal
+type, which can be voted on and passed and will remove the scheduled upgrade `Plan`.
+Of course this requires that the upgrade was known to be a bad idea well before the
+upgrade itself, to allow time for a vote.
+
+If such a possibility is desired, the upgrade height to be
+`2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of
+the first upgrade proposal. The `SafetyDelta` is the time available from the
+success of an upgrade proposal and the realization it was a bad idea (due to external social consensus).
+A `CancelSoftwareUpgrade` proposal can also be made while the original `SoftwareUpgradeProposal` is still
+being voted upon, as long as the `VotingPeriod` ends after the `SoftwareUpgradeProposal`.

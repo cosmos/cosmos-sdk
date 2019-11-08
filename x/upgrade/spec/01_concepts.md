@@ -1,1 +1,56 @@
 # Concepts
+
+## Plan
+
+The `x/upgrade` module defines a `Plan` type in which a live upgrade is scheduled
+to occur. A `Plan` can be schedule at a specific block height or time, but not both.
+A `Plan` is created once the release candidate along with an appropriate
+upgrade `Handler` (see below) where the `Name` of a `Plan` corresponds to a
+specific `Handler`. Typically, a `Plan` is created through a governance proposal
+process, where if voted upon and passed, will be scheduled. The `Info` of a `Plan`
+may contain various metadata about the upgrade, typically application specific
+upgrade info to be included on-chain such as a git commit that validators could
+automatically upgrade to.
+
+```go
+type Plan struct {
+  Name   string
+  Time   Time
+  Height int64
+  Info   string
+}
+```
+
+## Handler
+
+The `x/upgrade` module facilitates upgrading from major version X to major version Y. To
+accomplish this, node operators must first upgrade their current binary to a new
+binary that has a corresponding `Handler` for the new version Y. It is assumed that
+this version has fully been tested and approved by the community at large. This
+`Handler` defines what state migrations need to occur before the new binary Y
+can successfully run the chain. Naturally, this `Handler` is application specific
+and not defined on a per-module basis. Registering a `Handler` is done via
+`Keeper#SetUpgradeHandler` in the application.
+
+```go
+type UpgradeHandler func(Context, Plan)
+```
+
+During each `EndBlock` execution, the `x/upgrade` module checks if there exists a
+`Plan` that should execute (is scheduled at that time or height). If so, the corresponding
+`Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
+or if the binary was upgraded too early, the node will gracefully panic and exit.
+
+## Proposal
+
+Typically, a `Plan` is proposed and submitted through governance via a `SoftwareUpgradeProposal`.
+This proposal prescribes to the standard governance process. If the proposal passes,
+the `Plan`, which targets a specific `Handler`, is persisted and scheduled.
+
+```go
+type SoftwareUpgradeProposal struct {
+  Title       string
+  Description string
+  Plan        Plan
+}
+```

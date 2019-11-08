@@ -51,13 +51,15 @@ func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h func(sdk.Con
   res := h(cctx, msg.Packet)
   
   // write the cache only if succedded
-  write()
+  if res.IsOK() {
+    write()
+  }
   
   // set the result to OK to persist the state change
   res.Code = sdk.CodeOK
   
   // res.Data will be stored as acknowledgement; []byte{} will be stored if not exists
-  if len(res.Data) == nil {
+  if res.Data == nil {
     res.Data = []byte{}
   }
   k.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, res.Data)

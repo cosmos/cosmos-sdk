@@ -8,7 +8,7 @@
 
 [ICS 26](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay). 
 `handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the packet merkle proof, and pushes the acknowledgement bytes, if present,
-to the state. 
+to the IBC channel `Keeper` state (ICS04). 
 
 The mechanism is similar to the transaction handling logic in `baseapp`. After authentication, the handler is executed, and 
 the authentication state change must be committed regardless of the result of the handler execution. 
@@ -39,16 +39,16 @@ where `MsgPacket` is the `sdk.Msg` type including any IBC packet inside and embe
 
 The `AnteHandler` will be inserted to the top level application, after the signature authentication logic provided by `auth.NewAnteHandler`, utilizing `AnteDecorator` pattern.
 
-The Cosmos SDK will define the wrapper function `ReceivePacket` under the port keeper. The function will wrap packet handlers to automatically handle the acknowledgements.
+The Cosmos SDK will define the wrapper function `ReceivePacket` under the ICS05 port keeper. The function will wrap packet handlers to automatically handle the acknowledgments.
 
 ```go
 // Pseudocode
 func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h func(sdk.Context, Packet), sdk.Result) sdk.Result {
   // Cache context
-  cctx, write := ctx.CacheContext()
+  cacheCtx, write := ctx.CacheContext()
 
   // verification already done inside the antehandler
-  res := h(cctx, msg.Packet)
+  res := h(cacheCtx, msg.Packet)
   
   // write the cache only if succedded
   if res.IsOK() {
@@ -77,15 +77,15 @@ func NewHandler(k Keeper) sdk.Handler {
     case ibc.MsgPacket:
       return k.port.ReceivePacket(ctx, msg, func(ctx sdk.Context, p Packet) sdk.Result {
         switch packet := packet.(type) {
-        case MyPacket:
-          return handleMyPacket(ctx, k, packet)
+        case CustomPacket: // i.e fulfills the Packet interface
+          return handleCustomPacket(ctx, k, packet)
         }
       })
     }
   }
 }
 
-func handleMyPacket(ctx sdk.Context, k keeper, packet MyPacket) sdk.Result {
+func handleCustomPacket(ctx sdk.Context, k keeper, packet MyPacket) sdk.Result {
   if failureCondition {
     return AckInvalidPacketContent(k.codespace, []byte{packet.Data})
   }

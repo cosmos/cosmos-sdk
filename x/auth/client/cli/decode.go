@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
@@ -52,12 +51,11 @@ func GetDecodeTxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "decode-tx [tx]",
 		Short: "Decode a tx from hex or base64",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Decode a tx from hex, base64.
+		Long: fmt.Sprintf(`Decode a tx from hex, base64.
 			
-			Example:
-				$ %s tx decode-tx TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-			`, version.ClientName)),
+Example:
+	$ %s tx decode-tx TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+			`, version.ClientName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

@@ -9,6 +9,7 @@ module.exports = {
   base: process.env.VUEPRESS_BASE || "/",
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
+    docsRepo: "cosmos/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
     logo: "/logo.svg",
@@ -45,19 +46,23 @@ module.exports = {
     gutter: {
       title: "Help & Support",
       editLink: true,
-      children: [
-        {
-          title: "Riot Chat",
-          text: "[Chat with Cosmos developers](https://riot.im/app/#/room/#cosmos-sdk:matrix.org) on Riot Chat.",
-          highlighted: "**500+** people chatting now"
-        },
-        {
-          title: "Cosmos SDK Forum",
-          text: "[Join the SDK Developer Forum](https://forum.cosmos.network/) to learn more.",
-          highlighted:
-            "**1038** active developers."
-        }
-      ]
+      chat: {
+        title: "Riot Chat",
+        text: "Chat with Cosmos developers on Riot Chat.",
+        url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org",
+        bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)"
+      },
+      forum: {
+        title: "Cosmos SDK Forum",
+        text: "Join the SDK Developer Forum to learn more.",
+        url: "https://forum.cosmos.network/",
+        bg: "linear-gradient(225deg, #46509F -1.08%, #2F3564 95.88%)",
+        logo: "cosmos"
+      },
+      github: {
+        title: "Found an Issue?",
+        text: "Help us improve this page by suggesting edits on GitHub."
+      }
     },
     footer: {
       logo: "/logo-bw.svg",

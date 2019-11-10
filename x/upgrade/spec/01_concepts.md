@@ -3,7 +3,7 @@
 ## Plan
 
 The `x/upgrade` module defines a `Plan` type in which a live upgrade is scheduled
-to occur. A `Plan` can be schedule at a specific block height or time, but not both.
+to occur. A `Plan` can be scheduled at a specific block height or time, but not both.
 A `Plan` is created once the release candidate along with an appropriate
 upgrade `Handler` (see below) where the `Name` of a `Plan` corresponds to a
 specific `Handler`. Typically, a `Plan` is created through a governance proposal

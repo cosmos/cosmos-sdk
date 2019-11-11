@@ -20,11 +20,11 @@ const (
 )
 
 // ErrInvalidID returns a typed ABCI error for an invalid identifier
-func ErrInvalidID(codespace sdk.CodespaceType, ID string) error {
+func ErrInvalidID(codespace sdk.CodespaceType, id string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidID),
-		fmt.Sprintf("invalid identifier '%s'", ID),
+		fmt.Sprintf("invalid identifier '%s'", id),
 	)
 }
 

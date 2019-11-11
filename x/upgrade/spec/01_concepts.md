@@ -4,8 +4,8 @@
 
 The `x/upgrade` module defines a `Plan` type in which a live upgrade is scheduled
 to occur. A `Plan` can be scheduled at a specific block height or time, but not both.
-A `Plan` is created once the release candidate along with an appropriate
-upgrade `Handler` (see below) where the `Name` of a `Plan` corresponds to a
+A `Plan` is created once a (frozen) release candidate along with an appropriate upgrade
+`Handler` (see below) is agreed upon, where the `Name` of a `Plan` corresponds to a
 specific `Handler`. Typically, a `Plan` is created through a governance proposal
 process, where if voted upon and passed, will be scheduled. The `Info` of a `Plan`
 may contain various metadata about the upgrade, typically application specific
@@ -45,7 +45,8 @@ or if the binary was upgraded too early, the node will gracefully panic and exit
 
 Typically, a `Plan` is proposed and submitted through governance via a `SoftwareUpgradeProposal`.
 This proposal prescribes to the standard governance process. If the proposal passes,
-the `Plan`, which targets a specific `Handler`, is persisted and scheduled.
+the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
+upgrade can be delayed or hastened by updating the `Plan.Time` in a new proposal.
 
 ```go
 type SoftwareUpgradeProposal struct {
@@ -62,9 +63,11 @@ type, which can be voted on and passed and will remove the scheduled upgrade `Pl
 Of course this requires that the upgrade was known to be a bad idea well before the
 upgrade itself, to allow time for a vote.
 
-If such a possibility is desired, the upgrade height to be
-`2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of
-the first upgrade proposal. The `SafetyDelta` is the time available from the
-success of an upgrade proposal and the realization it was a bad idea (due to external social consensus).
-A `CancelSoftwareUpgrade` proposal can also be made while the original `SoftwareUpgradeProposal` is still
-being voted upon, as long as the `VotingPeriod` ends after the `SoftwareUpgradeProposal`.
+If such a possibility is desired, the upgrade height is to be
+`2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of the
+upgrade proposal. The `SafetyDelta` is the time available from the success of an
+upgrade proposal and the realization it was a bad idea (due to external social consensus).
+
+A `CancelSoftwareUpgrade` proposal can also be made while the original
+`SoftwareUpgradeProposal` is still being voted upon, as long as the `VotingPeriod`
+ends after the `SoftwareUpgradeProposal`.

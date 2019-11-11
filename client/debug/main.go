@@ -39,8 +39,8 @@ func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
 		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
 
 Example:
-	$ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-	$ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+$ %s debug pubkey TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
+$ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.ClientName, version.ClientName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -64,12 +64,7 @@ Example:
 							var err5 error
 							pubKeyI, err5 = sdk.GetConsPubKeyBech32(pubkeyString)
 							if err5 != nil {
-								return fmt.Errorf(`expected hex, base64, or bech32. Got errors:
-									hex: %v,
-									base64: %v
-									bech32 Acc: %v
-									bech32 Val: %v
-									bech32 Cons: %v`,
+								return fmt.Errorf("expected hex, base64, or bech32. Got errors: hex: %v, base64: %v, bech32 Acc: %v, bech32 Val: %v, bech32 Cons: %v",
 									err, err2, err3, err4, err5)
 							}
 
@@ -122,7 +117,7 @@ func AddrCmd() *cobra.Command {
 		Long: fmt.Sprintf(`Convert an address between hex encoding and bech32.
 			
 Example:
-	$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
+$ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			`, version.ClientName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -141,11 +136,7 @@ Example:
 					addr, err3 = sdk.ValAddressFromBech32(addrString)
 
 					if err3 != nil {
-						return fmt.Errorf(`expected hex or bech32. Got errors:
-				hex: %v,
-				bech32 acc: %v
-				bech32 val: %v
-				`, err, err2, err3)
+						return fmt.Errorf("expected hex or bech32. Got errors: hex: %v, bech32 acc: %v, bech32 val: %v", err, err2, err3)
 
 					}
 				}
@@ -170,7 +161,7 @@ func RawBytesCmd() *cobra.Command {
 		Long: fmt.Sprintf(`Convert raw-bytes to hex.
 			
 Example:
-	$ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
+$ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
 			`, version.ClientName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

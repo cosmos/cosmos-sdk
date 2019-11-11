@@ -52,20 +52,20 @@ func (ev Evidence) Hash() cmn.HexBytes {
 // ValidateBasic implements exported.Evidence interface
 func (ev Evidence) ValidateBasic() sdk.Error {
 	if ev.DuplicateVoteEvidence == nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil")
+		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil"))
 	}
 	err := ev.DuplicateVoteEvidence.ValidateBasic()
 	if err != nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
+		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error()))
 	}
 	if ev.ChainID == "" {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty")
+		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty"))
 	}
 	if ev.ValidatorPower <= 0 {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Validator Power: %d", ev.ValidatorPower))
+		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Validator Power: %d", ev.ValidatorPower)))
 	}
 	if ev.TotalPower < ev.ValidatorPower {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Total Power: %d", ev.TotalPower))
+		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Total Power: %d", ev.TotalPower)))
 	}
 	return nil
 }

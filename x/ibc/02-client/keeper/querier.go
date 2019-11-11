@@ -21,7 +21,7 @@ func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 
 	clientState, found := k.GetClientState(ctx, params.ClientID)
 	if !found {
-		return nil, errors.ErrClientTypeNotFound(k.codespace)
+		return nil, sdk.ConvertError(errors.ErrClientTypeNotFound(k.codespace))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(clientState)
@@ -43,7 +43,7 @@ func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]
 
 	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
 	if !found {
-		return nil, errors.ErrConsensusStateNotFound(k.codespace)
+		return nil, sdk.ConvertError(errors.ErrConsensusStateNotFound(k.codespace))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(consensusState)
@@ -65,7 +65,7 @@ func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 
 	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
-		return nil, errors.ErrRootNotFound(k.codespace)
+		return nil, sdk.ConvertError(errors.ErrRootNotFound(k.codespace))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(root)

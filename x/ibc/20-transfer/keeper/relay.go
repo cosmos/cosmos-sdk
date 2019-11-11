@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
@@ -61,7 +62,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	var data types.PacketData
 	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return sdk.NewError(types.DefaultCodespace, types.CodeInvalidPacketData, "invalid packet data")
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
@@ -173,7 +174,7 @@ func (k Keeper) createOutgoingPacket(
 	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
 	packetDataBz, err := packetData.MarshalJSON()
 	if err != nil {
-		return sdk.NewError(sdk.CodespaceType(types.DefaultCodespace), types.CodeInvalidPacketData, "invalid packet data")
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	packet := channeltypes.NewPacket(
@@ -186,8 +187,5 @@ func (k Keeper) createOutgoingPacket(
 		packetDataBz,
 	)
 
-	// TODO: Remove this, capability keys are never generated when sending packets. Not sure why this is here.
-	key := sdk.NewKVStoreKey(types.BoundPortID)
-
-	return k.channelKeeper.SendPacket(ctx, packet, key)
+	return k.channelKeeper.SendPacket(ctx, packet, k.boundedCapability)
 }

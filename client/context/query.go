@@ -129,11 +129,10 @@ func (ctx CLIContext) GetFromName() string {
 	return ctx.FromName
 }
 
-func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery, err error) {
-
+func (ctx CLIContext) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
-		return resp, err
+		return abci.ResponseQuery{}, err
 	}
 
 	// When a client did not provide a query height, manually query for it so it can
@@ -141,7 +140,7 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery,
 	if ctx.Height == 0 {
 		status, err := node.Status()
 		if err != nil {
-			return resp, err
+			return abci.ResponseQuery{}, err
 		}
 		ctx = ctx.WithHeight(status.SyncInfo.LatestBlockHeight)
 	}
@@ -153,26 +152,25 @@ func (ctx CLIContext) queryABCI(req abci.RequestQuery) (resp abci.ResponseQuery,
 
 	result, err := node.ABCIQueryWithOptions(req.Path, req.Data, opts)
 	if err != nil {
-		return
+		return abci.ResponseQuery{}, err
 	}
 
-	resp = result.Response
-	if !resp.IsOK() {
-		err = errors.New(resp.Log)
-		return
+	if !result.Response.IsOK() {
+		err = errors.New(result.Response.Log)
+		return abci.ResponseQuery{}, err
 	}
 
 	// data from trusted node or subspace query doesn't need verification
 	if ctx.TrustNode || !isQueryStoreWithProof(req.Path) {
-		return resp, nil
+		return result.Response, nil
 	}
 
-	err = ctx.verifyProof(req.Path, resp)
+	err = ctx.verifyProof(req.Path, result.Response)
 	if err != nil {
-		return
+		return abci.ResponseQuery{}, err
 	}
 
-	return
+	return result.Response, nil
 }
 
 // query performs a query to a Tendermint node with the provided store name

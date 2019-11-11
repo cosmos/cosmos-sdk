@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -55,12 +55,12 @@ func NewCounterparty(clientID, connectionID string, prefix commitment.PrefixI) C
 }
 
 // ValidateBasic performs a basic validation check of the identifiers and prefix
-func (c Counterparty) ValidateBasic() sdk.Error {
+func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(c.ConnectionID); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty connection ID: %s", err.Error()))
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if err := host.DefaultClientIdentifierValidator(c.ClientID); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty client ID: %s", err.Error()))
+		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	if c.Prefix == nil || len(c.Prefix.Bytes()) == 0 {
 		return ErrInvalidCounterparty(DefaultCodespace, "invalid counterparty prefix")

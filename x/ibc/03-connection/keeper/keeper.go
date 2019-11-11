@@ -16,22 +16,18 @@ import (
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
-	storeKey  sdk.StoreKey
-	cdc       *codec.Codec
-	codespace sdk.CodespaceType
-	prefix    []byte // prefix bytes for accessing the store
-
+	storeKey     sdk.StoreKey
+	cdc          *codec.Codec
+	codespace    sdk.CodespaceType
 	clientKeeper types.ClientKeeper
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ClientKeeper) Keeper {
 	return Keeper{
-		storeKey:  key,
-		cdc:       cdc,
-		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
-		prefix:    []byte{},
-		// prefix:       []byte(types.SubModuleName + "/"),                                          // "connection/"
+		storeKey:     key,
+		cdc:          cdc,
+		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
 		clientKeeper: ck,
 	}
 }
@@ -49,7 +45,7 @@ func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
 
 // GetConnection returns a connection with a particular identifier
 func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
 	bz := store.Get(types.KeyConnection(connectionID))
 	if bz == nil {
 		return types.ConnectionEnd{}, false
@@ -62,7 +58,7 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
 	store.Set(types.KeyConnection(connectionID), bz)
 }
@@ -70,7 +66,7 @@ func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection t
 // GetClientConnectionPaths returns all the connection paths stored under a
 // particular client
 func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]string, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
 	bz := store.Get(types.KeyClientConnections(clientID))
 	if bz == nil {
 		return nil, false
@@ -83,7 +79,7 @@ func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]st
 
 // SetClientConnectionPaths sets the connections paths for client
 func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths []string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.prefix)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(paths)
 	store.Set(types.KeyClientConnections(clientID), bz)
 }
@@ -92,7 +88,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 // connections associated with a client.
 //
 // CONTRACT: client must already exist
-func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
+func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID string) error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
 		conns = []string{}
@@ -107,7 +103,8 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 // set of connections associated with a client.
 //
 // CONTRACT: client must already exist
-func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) sdk.Error {
+// nolint: unused
+func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
 		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)

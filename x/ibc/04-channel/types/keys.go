@@ -18,6 +18,11 @@ const (
 	QuerierRoute = SubModuleName
 )
 
+// KVStore key prefixes
+var (
+	KeyPrefixChannel = []byte{0x00}
+)
+
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
 	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)

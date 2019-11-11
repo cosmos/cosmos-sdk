@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -28,7 +29,13 @@ func NewKeeper(
 	connectionKeeper := connection.NewKeeper(cdc, key, codespace, clientKeeper)
 	portKeeper := port.NewKeeper(cdc, key, codespace)
 	channelKeeper := channel.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, portKeeper)
-	transferKeeper := transfer.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, channelKeeper, bk, sk)
+
+	// TODO: move out of IBC keeper. Blocked on ADR15
+	capKey := portKeeper.BindPort(bank.ModuleName)
+	transferKeeper := transfer.NewKeeper(
+		cdc, key, codespace, capKey,
+		clientKeeper, connectionKeeper, channelKeeper, bk, sk,
+	)
 
 	return Keeper{
 		ClientKeeper:     clientKeeper,

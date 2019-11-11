@@ -22,7 +22,9 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
-	prefix    []byte // prefix bytes for accessing the store
+
+	// Capability key and port to which ICS20 is binded. Used for packet relaying.
+	boundedCapability sdk.CapabilityKey
 
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
@@ -34,9 +36,9 @@ type Keeper struct {
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	clientKeeper types.ClientKeeper, connnectionKeeper types.ConnectionKeeper,
-	channelKeeper types.ChannelKeeper, bankKeeper types.BankKeeper,
-	supplyKeeper types.SupplyKeeper,
+	capKey sdk.CapabilityKey, clientKeeper types.ClientKeeper,
+	connnectionKeeper types.ConnectionKeeper, channelKeeper types.ChannelKeeper,
+	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper,
 ) Keeper {
 
 	// ensure ibc transfer module account is set
@@ -45,15 +47,15 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:         key,
-		cdc:              cdc,
-		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
-		prefix:           []byte(types.SubModuleName + "/"),                                          // "transfer/"
-		clientKeeper:     clientKeeper,
-		connectionKeeper: connnectionKeeper,
-		channelKeeper:    channelKeeper,
-		bankKeeper:       bankKeeper,
-		supplyKeeper:     supplyKeeper,
+		storeKey:          key,
+		cdc:               cdc,
+		codespace:         sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
+		boundedCapability: capKey,
+		clientKeeper:      clientKeeper,
+		connectionKeeper:  connnectionKeeper,
+		channelKeeper:     channelKeeper,
+		bankKeeper:        bankKeeper,
+		supplyKeeper:      supplyKeeper,
 	}
 }
 

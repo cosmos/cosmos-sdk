@@ -5,7 +5,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -111,12 +110,12 @@ func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
 	}
 
 	if msg.Proofs == nil || len(msg.Proofs) == 0 {
-		return sdk.ConvertError(channeltypes.ErrInvalidChannelProof(DefaultCodespace, "missing proofs"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "missing proofs"))
 	}
 
 	for _, proof := range msg.Proofs {
 		if proof.Proof == nil {
-			return sdk.ConvertError(channeltypes.ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof"))
+			return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 		}
 	}
 

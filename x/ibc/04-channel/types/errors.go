@@ -11,21 +11,20 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = SubModuleName
 
-	CodeChannelExists              sdk.CodeType = 101
-	CodeChannelNotFound            sdk.CodeType = 102
-	CodeInvalidCounterpartyChannel sdk.CodeType = 103
-	CodeChannelCapabilityNotFound  sdk.CodeType = 104
-	CodeInvalidPacket              sdk.CodeType = 105
-	CodeSequenceNotFound           sdk.CodeType = 106
-	CodePacketTimeout              sdk.CodeType = 107
-	CodeInvalidChannel             sdk.CodeType = 108
-	CodeInvalidChannelState        sdk.CodeType = 109
-	CodeInvalidChannelProof        sdk.CodeType = 110
+	CodeChannelExists              sdk.CodeType = 219
+	CodeChannelNotFound            sdk.CodeType = 220
+	CodeInvalidCounterpartyChannel sdk.CodeType = 221
+	CodeChannelCapabilityNotFound  sdk.CodeType = 222
+	CodeInvalidPacket              sdk.CodeType = 223
+	CodeSequenceNotFound           sdk.CodeType = 224
+	CodePacketTimeout              sdk.CodeType = 225
+	CodeInvalidChannel             sdk.CodeType = 226
+	CodeInvalidChannelState        sdk.CodeType = 227
 )
 
 // ErrChannelExists implements sdk.Error
 func ErrChannelExists(codespace sdk.CodespaceType, channelID string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeChannelExists),
 		fmt.Sprintf("channel with ID %s already exists", channelID),
@@ -34,7 +33,7 @@ func ErrChannelExists(codespace sdk.CodespaceType, channelID string) error {
 
 // ErrChannelNotFound implements sdk.Error
 func ErrChannelNotFound(codespace sdk.CodespaceType, portID, channelID string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeChannelNotFound),
 		fmt.Sprintf("channel with ID %s on port %s not found", channelID, portID),
@@ -43,7 +42,7 @@ func ErrChannelNotFound(codespace sdk.CodespaceType, portID, channelID string) e
 
 // ErrInvalidCounterpartyChannel implements sdk.Error
 func ErrInvalidCounterpartyChannel(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidCounterpartyChannel),
 		msg,
@@ -52,7 +51,7 @@ func ErrInvalidCounterpartyChannel(codespace sdk.CodespaceType, msg string) erro
 
 // ErrChannelCapabilityNotFound implements sdk.Error
 func ErrChannelCapabilityNotFound(codespace sdk.CodespaceType) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeChannelCapabilityNotFound),
 		"channel capability key not found",
@@ -61,7 +60,7 @@ func ErrChannelCapabilityNotFound(codespace sdk.CodespaceType) error {
 
 // ErrInvalidPacket implements sdk.Error
 func ErrInvalidPacket(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidPacket),
 		msg,
@@ -70,7 +69,7 @@ func ErrInvalidPacket(codespace sdk.CodespaceType, msg string) error {
 
 // ErrSequenceNotFound implements sdk.Error
 func ErrSequenceNotFound(codespace sdk.CodespaceType, seqType string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeSequenceNotFound),
 		fmt.Sprintf("next %s sequence counter not found", seqType),
@@ -79,7 +78,7 @@ func ErrSequenceNotFound(codespace sdk.CodespaceType, seqType string) error {
 
 // ErrPacketTimeout implements sdk.Error
 func ErrPacketTimeout(codespace sdk.CodespaceType) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodePacketTimeout),
 		"packet timeout",
@@ -88,7 +87,7 @@ func ErrPacketTimeout(codespace sdk.CodespaceType) error {
 
 // ErrInvalidChannel implements sdk.Error
 func ErrInvalidChannel(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidChannel),
 		msg,
@@ -97,18 +96,9 @@ func ErrInvalidChannel(codespace sdk.CodespaceType, msg string) error {
 
 // ErrInvalidChannelState implements sdk.Error
 func ErrInvalidChannelState(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
+	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidChannelState),
-		msg,
-	)
-}
-
-// ErrInvalidChannelProof implements sdk.Error
-func ErrInvalidChannelProof(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
-		string(codespace),
-		uint32(CodeInvalidChannelProof),
 		msg,
 	)
 }

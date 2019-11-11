@@ -119,10 +119,10 @@ func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank"))
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 	// Signer can be empty
 	return sdk.ConvertError(msg.Channel.ValidateBasic())
@@ -186,10 +186,10 @@ func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank"))
 	}
 	if msg.ProofTry == nil {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 	// Signer can be empty
 	return nil
@@ -248,10 +248,10 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	if msg.ProofAck == nil {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 	// Signer can be empty
 	return nil
@@ -359,10 +359,10 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidChannelProof(DefaultCodespace, "proof height must be > 0"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 	// Signer can be empty
 	return nil

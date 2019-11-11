@@ -134,10 +134,10 @@ func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
 		}
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof init cannot be nil"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof init cannot be nil"))
 	}
 	if msg.ProofConsensus == nil {
-		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof consensus cannot be nil"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil"))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))
@@ -211,10 +211,10 @@ func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
 	}
 	if msg.ProofTry == nil {
-		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof try cannot be nil"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof try cannot be nil"))
 	}
 	if msg.ProofConsensus == nil {
-		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof consensus cannot be nil"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil"))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))
@@ -277,7 +277,7 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
 	}
 	if msg.ProofAck == nil {
-		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof ack cannot be nil"))
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof ack cannot be nil"))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))

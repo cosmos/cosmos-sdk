@@ -29,7 +29,6 @@ const (
 	CodeInvalidVersion                = types.CodeInvalidVersion
 	CodeInvalidHeight                 = types.CodeInvalidHeight
 	CodeInvalidConnectionState        = types.CodeInvalidConnectionState
-	CodeInvalidProof                  = types.CodeInvalidProof
 	CodeInvalidCounterparty           = types.CodeInvalidCounterparty
 	AttributeKeyConnectionID          = types.AttributeKeyConnectionID
 	AttributeKeyCounterpartyClientID  = types.AttributeKeyCounterpartyClientID
@@ -57,7 +56,6 @@ var (
 	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
 	ErrInvalidHeight                 = types.ErrInvalidHeight
 	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
-	ErrInvalidConnectionProof        = types.ErrInvalidConnectionProof
 	ErrInvalidCounterparty           = types.ErrInvalidCounterparty
 	ConnectionPath                   = types.ConnectionPath
 	ClientConnectionsPath            = types.ClientConnectionsPath

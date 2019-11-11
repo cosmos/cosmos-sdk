@@ -14,9 +14,9 @@ const SubModuleName = "host"
 const (
 	DefaultCodespace sdk.CodespaceType = SubModuleName
 
-	CodeInvalidID     sdk.CodeType = 1
-	CodeInvalidPath   sdk.CodeType = 2
-	CodeInvalidPacket sdk.CodeType = 3
+	CodeInvalidID     sdk.CodeType = 231
+	CodeInvalidPath   sdk.CodeType = 232
+	CodeInvalidPacket sdk.CodeType = 233
 )
 
 // ErrInvalidID returns a typed ABCI error for an invalid identifier
@@ -24,7 +24,7 @@ func ErrInvalidID(codespace sdk.CodespaceType, ID string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidID),
-		fmt.Sprintf("invalid identifier '%s", ID),
+		fmt.Sprintf("invalid identifier '%s'", ID),
 	)
 }
 
@@ -33,7 +33,7 @@ func ErrInvalidPath(codespace sdk.CodespaceType, path string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidPath),
-		fmt.Sprintf("invalid path '%s", path),
+		fmt.Sprintf("invalid path '%s'", path),
 	)
 }
 
@@ -42,6 +42,6 @@ func ErrInvalidPacket(codespace sdk.CodespaceType, msg string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidPacket),
-		fmt.Sprintf("invalid packet: %s", msg),
+		fmt.Sprintf("invalid packet: '%s'", msg),
 	)
 }

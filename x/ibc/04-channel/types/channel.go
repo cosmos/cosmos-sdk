@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -33,7 +32,7 @@ func NewChannel(
 }
 
 // ValidateBasic performs a basic validation of the channel fields
-func (ch Channel) ValidateBasic() sdk.Error {
+func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return ErrInvalidChannelState(
 			DefaultCodespace,
@@ -50,7 +49,7 @@ func (ch Channel) ValidateBasic() sdk.Error {
 		return ErrInvalidChannel(DefaultCodespace, "IBC v1 only supports one connection hop")
 	}
 	if err := host.DefaultConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
-		return ErrInvalidChannel(DefaultCodespace, errors.Wrap(err, "invalid connection hop ID").Error())
+		return sdkerrors.Wrap(err, "invalid connection hop ID")
 	}
 	if strings.TrimSpace(ch.Version) == "" {
 		return ErrInvalidChannel(DefaultCodespace, "channel version can't be blank")
@@ -73,12 +72,12 @@ func NewCounterparty(portID, channelID string) Counterparty {
 }
 
 // ValidateBasic performs a basic validation check of the identifiers
-func (c Counterparty) ValidateBasic() sdk.Error {
+func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty connection ID: %s", err.Error()))
+		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(c.ChannelID); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid counterparty client ID: %s", err.Error()))
+		return sdkerrors.Wrap(err, "invalid counterparty client ID")
 	}
 	return nil
 }

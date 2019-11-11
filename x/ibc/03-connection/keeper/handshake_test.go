@@ -3,11 +3,12 @@ package keeper_test
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) TestConnOpenInit() {

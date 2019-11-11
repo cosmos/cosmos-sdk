@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +27,6 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // Connection Handshake flags
@@ -413,7 +414,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err := clientutils.QueryConsensusStateProof(ctx1.WithHeight(header.Height-1), clientID1)
+			csProof, err := clientutils.QueryConsensusStateProof(ctx1.WithHeight(header.Height-1), cdc, clienttypes.QuerierRoute, clientID1)
 			if err != nil {
 				return err
 			}
@@ -467,7 +468,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err = clientutils.QueryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2)
+			csProof, err = clientutils.QueryConsensusStateProof(ctx2.WithHeight(header.Height-1), cdc, clienttypes.QuerierRoute, clientID2)
 			if err != nil {
 				return err
 			}

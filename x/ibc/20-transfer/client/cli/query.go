@@ -7,12 +7,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // GetQueryCmd returns the query commands for IBC fungible token transfer

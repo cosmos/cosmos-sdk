@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
@@ -37,29 +36,29 @@ func NewPacket(
 	}
 }
 
-// Sequence implements PacketI interface
+// GetSequence implements PacketI interface
 func (p Packet) GetSequence() uint64 { return p.Sequence }
 
-// TimeoutHeight implements PacketI interface
+// GetTimeoutHeight implements PacketI interface
 func (p Packet) GetTimeoutHeight() uint64 { return p.Timeout }
 
-// SourcePort implements PacketI interface
+// GetSourcePort implements PacketI interface
 func (p Packet) GetSourcePort() string { return p.SourcePort }
 
-// SourceChannel implements PacketI interface
+// GetSourceChannel implements PacketI interface
 func (p Packet) GetSourceChannel() string { return p.SourceChannel }
 
-// DestPort implements PacketI interface
+// GetDestPort implements PacketI interface
 func (p Packet) GetDestPort() string { return p.DestinationPort }
 
-// DestChannel implements PacketI interface
+// GetDestChannel implements PacketI interface
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
-// Data implements PacketI interface
+// GetData implements PacketI interface
 func (p Packet) GetData() []byte { return p.Data }
 
 // ValidateBasic implements PacketI interface
-func (p Packet) ValidateBasic() sdk.Error {
+func (p Packet) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(p.SourcePort); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source port ID: %s", err.Error()))
 	}
@@ -104,5 +103,5 @@ func NewOpaquePacket(sequence, timeout uint64, sourcePort, sourceChannel,
 	return OpaquePacket{&Packet}
 }
 
-// Data implements PacketI interface
+// GetData implements PacketI interface
 func (op OpaquePacket) GetData() []byte { return nil }

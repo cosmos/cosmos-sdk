@@ -13,7 +13,7 @@ import (
 )
 
 // TestNewQuerier tests that the querier paths are correct.
-// NOTE: the actuall testing functionallity are located on each ICS querier test.
+// NOTE: the actuall testing functionality are located on each ICS querier test.
 func (suite *KeeperTestSuite) TestNewQuerier() {
 
 	query := abci.RequestQuery{

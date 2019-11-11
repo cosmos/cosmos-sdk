@@ -3,8 +3,9 @@ package types
 import (
 	"strings"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/tendermint/tendermint/crypto/merkle"
+
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // query routes supported by the IBC connection Querier

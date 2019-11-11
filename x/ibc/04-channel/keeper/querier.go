@@ -20,7 +20,7 @@ func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 
 	channel, found := k.GetChannel(ctx, params.PortID, params.ChannelID)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, params.PortID, params.ChannelID)
+		return nil, sdk.ConvertError(types.ErrChannelNotFound(k.codespace, params.PortID, params.ChannelID))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(channel)

@@ -6,17 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	cmn "github.com/tendermint/tendermint/libs/common"
-)
 
-// Blockchain is consensus algorithm which generates valid Headers. It generates
-// a unique list of headers starting from a genesis ConsensusState with arbitrary messages.
-// This interface is implemented as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#blockchain.
-type Blockchain interface {
-	Genesis() ConsensusState // Consensus state defined in the genesis
-	Consensus() Header       // Header generating function
-}
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+)
 
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {

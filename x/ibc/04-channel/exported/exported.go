@@ -1,9 +1,6 @@
 package exported
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
+// PacketI defines the standard interface for IBC packets
 type PacketI interface {
 	GetSequence() uint64
 	GetTimeoutHeight() uint64
@@ -12,5 +9,5 @@ type PacketI interface {
 	GetDestPort() string
 	GetDestChannel() string
 	GetData() []byte
-	ValidateBasic() sdk.Error
+	ValidateBasic() error
 }

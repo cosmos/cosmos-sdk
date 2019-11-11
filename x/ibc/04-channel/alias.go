@@ -36,7 +36,6 @@ const (
 	CodePacketTimeout              = types.CodePacketTimeout
 	CodeInvalidChannel             = types.CodeInvalidChannel
 	CodeInvalidChannelState        = types.CodeInvalidChannelState
-	CodeInvalidChannelProof        = types.CodeInvalidChannelProof
 	AttributeKeySenderPort         = types.AttributeKeySenderPort
 	AttributeKeyReceiverPort       = types.AttributeKeyReceiverPort
 	AttributeKeyChannelID          = types.AttributeKeyChannelID
@@ -66,7 +65,6 @@ var (
 	ErrPacketTimeout              = types.ErrPacketTimeout
 	ErrInvalidChannel             = types.ErrInvalidChannel
 	ErrInvalidChannelState        = types.ErrInvalidChannelState
-	ErrInvalidChannelProof        = types.ErrInvalidChannelProof
 	ChannelPath                   = types.ChannelPath
 	ChannelCapabilityPath         = types.ChannelCapabilityPath
 	NextSequenceSendPath          = types.NextSequenceSendPath

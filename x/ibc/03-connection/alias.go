@@ -55,7 +55,6 @@ var (
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
 	ErrConnectionPath                = types.ErrConnectionPath
 	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
-	ErrInvalidVersion                = types.ErrInvalidVersion
 	ErrInvalidHeight                 = types.ErrInvalidHeight
 	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ErrInvalidConnectionProof        = types.ErrInvalidConnectionProof

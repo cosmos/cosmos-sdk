@@ -126,11 +126,11 @@ func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid client ID"))
 	}
 	if len(msg.CounterpartyVersions) == 0 {
-		return sdk.ConvertError(ErrInvalidVersion(DefaultCodespace, "missing counterparty versions"))
+		return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "missing counterparty versions"))
 	}
 	for _, version := range msg.CounterpartyVersions {
 		if strings.TrimSpace(version) == "" {
-			return sdk.ConvertError(ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
+			return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
 		}
 	}
 	if msg.ProofInit == nil {
@@ -208,7 +208,7 @@ func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
 	}
 	if strings.TrimSpace(msg.Version) == "" {
-		return sdk.ConvertError(ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
+		return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
 	}
 	if msg.ProofTry == nil {
 		return sdk.ConvertError(ErrInvalidConnectionProof(DefaultCodespace, "proof try cannot be nil"))

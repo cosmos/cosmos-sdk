@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // ConnOpenInit initialises a connection attempt on chain A.
@@ -157,7 +158,7 @@ func (k Keeper) ConnOpenAck(
 	}
 
 	if types.LatestVersion(connection.Versions) != version {
-		return types.ErrInvalidVersion(
+		return ibctypes.ErrInvalidVersion(
 			k.codespace,
 			fmt.Sprintf("connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version),
 		)

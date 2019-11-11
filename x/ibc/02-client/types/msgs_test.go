@@ -5,12 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	cmn "github.com/tendermint/tendermint/libs/common"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {

@@ -11,9 +11,9 @@ import (
 const (
 	DefaultCodespace sdk.CodespaceType = SubModuleName
 
-	CodePortExists           sdk.CodeType = 101
-	CodePortNotFound         sdk.CodeType = 102
-	CodePortNotAuthenticated sdk.CodeType = 103
+	CodePortExists   sdk.CodeType = 101
+	CodePortNotFound sdk.CodeType = 102
+	CodeInvalidPort  sdk.CodeType = 103
 )
 
 // ErrPortExists implements sdk.Error
@@ -34,11 +34,11 @@ func ErrPortNotFound(codespace sdk.CodespaceType, portID string) error {
 	)
 }
 
-// ErrPortNotAuthenticated implements sdk.Error
-func ErrPortNotAuthenticated(codespace sdk.CodespaceType, portID string) error {
+// ErrInvalidPort implements sdk.Error
+func ErrInvalidPort(codespace sdk.CodespaceType, msg string) error {
 	return sdkerrors.Register(
 		string(codespace),
-		uint32(CodePortNotAuthenticated),
-		fmt.Sprintf("port with ID %s failed authentication", portID),
+		uint32(CodePortNotFound),
+		msg,
 	)
 }

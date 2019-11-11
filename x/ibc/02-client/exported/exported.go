@@ -6,8 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // ConsensusState is the state of the consensus process

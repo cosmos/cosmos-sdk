@@ -2,15 +2,14 @@ package tendermint
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	lerr "github.com/tendermint/tendermint/lite/errors"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -44,7 +43,7 @@ func (cs ConsensusState) GetRoot() commitment.RootI {
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
-		return nil, errors.New("header not a valid tendermint header")
+		return nil, clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace)
 	}
 
 	if err := cs.checkValidity(tmHeader); err != nil {
@@ -60,10 +59,8 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 func (cs ConsensusState) checkValidity(header Header) error {
 	if header.GetHeight() < cs.Height {
 		return sdkerrors.Wrap(
-			sdk.ErrInvalidSequence(
-				fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), cs.Height),
-			),
-			"invalid header",
+			clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace),
+			fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), cs.Height),
 		)
 	}
 

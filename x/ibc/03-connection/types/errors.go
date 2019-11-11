@@ -68,15 +68,6 @@ func ErrInvalidCounterpartyConnection(codespace sdk.CodespaceType) error {
 	)
 }
 
-// ErrInvalidVersion implements sdk.Error
-func ErrInvalidVersion(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.Register(
-		string(codespace),
-		uint32(CodeInvalidVersion),
-		msg,
-	)
-}
-
 // ErrInvalidHeight implements sdk.Error
 func ErrInvalidHeight(codespace sdk.CodespaceType, msg string) error {
 	return sdkerrors.Register(

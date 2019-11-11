@@ -3,9 +3,10 @@ package types
 import (
 	"strings"
 
+	"github.com/tendermint/tendermint/crypto/merkle"
+
 	tmtypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // query routes supported by the IBC client Querier

@@ -12,24 +12,22 @@ import (
 )
 
 const (
-	DefaultCodespace         = types.DefaultCodespace
-	CodePortExists           = types.CodePortExists
-	CodePortNotFound         = types.CodePortNotFound
-	CodePortNotAuthenticated = types.CodePortNotAuthenticated
-	SubModuleName            = types.SubModuleName
-	StoreKey                 = types.StoreKey
-	RouterKey                = types.RouterKey
-	QuerierRoute             = types.QuerierRoute
+	DefaultCodespace = types.DefaultCodespace
+	CodePortExists   = types.CodePortExists
+	CodePortNotFound = types.CodePortNotFound
+	SubModuleName    = types.SubModuleName
+	StoreKey         = types.StoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute     = types.QuerierRoute
 )
 
 var (
 	// functions aliases
-	NewKeeper               = keeper.NewKeeper
-	ErrPortExists           = types.ErrPortExists
-	ErrPortNotFound         = types.ErrPortNotFound
-	ErrPortNotAuthenticated = types.ErrPortNotAuthenticated
-	PortPath                = types.PortPath
-	KeyPort                 = types.KeyPort
+	NewKeeper       = keeper.NewKeeper
+	ErrPortExists   = types.ErrPortExists
+	ErrPortNotFound = types.ErrPortNotFound
+	PortPath        = types.PortPath
+	KeyPort         = types.KeyPort
 )
 
 type (

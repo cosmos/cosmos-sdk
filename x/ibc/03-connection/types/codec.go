@@ -5,7 +5,7 @@ import (
 )
 
 // SubModuleCdc defines the IBC connection codec.
-var SubModuleCdc = codec.New()
+var SubModuleCdc *codec.Codec
 
 // RegisterCodec registers the IBC connection types
 func RegisterCodec(cdc *codec.Codec) {
@@ -14,8 +14,10 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgConnectionOpenAck{}, "ibc/connection/MsgConnectionOpenAck", nil)
 	cdc.RegisterConcrete(MsgConnectionOpenConfirm{}, "ibc/connection/MsgConnectionOpenConfirm", nil)
 	cdc.RegisterConcrete(ConnectionEnd{}, "ibc/connection/ConnectionEnd", nil)
+
+	SetSubModuleCodec(cdc)
 }
 
-func init() {
-	RegisterCodec(SubModuleCdc)
+func SetSubModuleCodec(cdc *codec.Codec) {
+	SubModuleCdc = cdc
 }

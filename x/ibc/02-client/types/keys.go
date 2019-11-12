@@ -6,16 +6,16 @@ import (
 
 const (
 	// SubModuleName defines the IBC client name
-	SubModuleName = "client"
+	SubModuleName string = "client"
 
 	// StoreKey is the store key string for IBC client
-	StoreKey = SubModuleName
+	StoreKey string = SubModuleName
 
 	// RouterKey is the message route for IBC client
-	RouterKey = SubModuleName
+	RouterKey string = SubModuleName
 
 	// QuerierRoute is the querier route for IBC client
-	QuerierRoute = SubModuleName
+	QuerierRoute string = SubModuleName
 )
 
 // KVStore key prefixes

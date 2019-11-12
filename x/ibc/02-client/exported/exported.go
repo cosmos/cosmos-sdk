@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cmn "github.com/tendermint/tendermint/libs/common"
-
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -25,32 +22,10 @@ type ConsensusState interface {
 	CheckValidityAndUpdateState(Header) (ConsensusState, error)
 }
 
-// Evidence from ADR 009: Evidence Module
-// TODO: use evidence module interface once merged
-type Evidence interface {
-	Route() string
-	Type() string
-	String() string
-	Hash() cmn.HexBytes
-	ValidateBasic() sdk.Error
-
-	// The consensus address of the malicious validator at time of infraction
-	GetConsensusAddress() sdk.ConsAddress
-
-	// Height at which the infraction occurred
-	GetHeight() int64
-
-	// The total power of the malicious validator at time of infraction
-	GetValidatorPower() int64
-
-	// The total validator set power at time of infraction
-	GetTotalPower() int64
-}
-
 // Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
 	ClientType() ClientType
-	Evidence() Evidence
+	Evidence() evidenceexported.Evidence
 }
 
 // Header is the consensus state update information

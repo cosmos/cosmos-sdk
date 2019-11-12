@@ -5,37 +5,40 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ exported.Evidence = Evidence{}
+var _ evidenceexported.Evidence = Evidence{}
 
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
 	*tmtypes.DuplicateVoteEvidence
+	ClientID       string `json:"client_id" yaml:"client_id"`
 	ChainID        string `json:"chain_id" yaml:"chain_id"`
 	ValidatorPower int64  `json:"val_power" yaml:"val_power"`
 	TotalPower     int64  `json:"total_power" yaml:"total_power"`
 }
 
-// Type implements exported.Evidence interface
+// Route implements Evidence interface
 func (ev Evidence) Route() string {
 	return exported.ClientTypeTendermint
 }
 
-// Type implements exported.Evidence interface
+// Type implements Evidence interface
 func (ev Evidence) Type() string {
 	return exported.ClientTypeTendermint
 }
 
-// String implements exported.Evidence interface
+// String implements Evidence interface
 func (ev Evidence) String() string {
 	bz, err := yaml.Marshal(ev)
 	if err != nil {
@@ -44,30 +47,30 @@ func (ev Evidence) String() string {
 	return string(bz)
 }
 
-// Hash implements exported.Evidence interface
+// Hash implements Evidence interface
 func (ev Evidence) Hash() cmn.HexBytes {
 	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
 }
 
-// ValidateBasic implements exported.Evidence interface
-func (ev Evidence) ValidateBasic() sdk.Error {
+// ValidateBasic implements Evidence interface
+func (ev Evidence) ValidateBasic() error {
 	if ev.DuplicateVoteEvidence == nil {
-		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil"))
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil")
 	}
 	err := ev.DuplicateVoteEvidence.ValidateBasic()
 	if err != nil {
-		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error()))
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
 	}
 	if ev.ChainID == "" {
-		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty"))
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty")
 	}
 	if ev.ValidatorPower <= 0 {
-		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Validator Power: %d", ev.ValidatorPower)))
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid Validator Power: %d", ev.ValidatorPower))
 	}
 	if ev.TotalPower < ev.ValidatorPower {
-		return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Invalid Total Power: %d", ev.TotalPower)))
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid Total Power: %d", ev.TotalPower))
 	}
-	return nil
+	return host.DefaultClientIdentifierValidator(ev.ClientID)
 }
 
 // GetConsensusAddress implements exported.Evidence interface

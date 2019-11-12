@@ -12,7 +12,6 @@ var SubModuleCdc = codec.New()
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
-	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterInterface((*exported.Header)(nil), nil)
 	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
 

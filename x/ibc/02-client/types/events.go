@@ -15,7 +15,7 @@ const (
 var (
 	EventTypeCreateClient       = MsgCreateClient{}.Type()
 	EventTypeUpdateClient       = MsgUpdateClient{}.Type()
-	EventTypeSubmitMisbehaviour = MsgSubmitMisbehaviour{}.Type()
+	EventTypeSubmitMisbehaviour = "submit_misbehaviour"
 
 	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

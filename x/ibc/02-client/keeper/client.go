@@ -5,9 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -73,23 +75,38 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 // CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
 // client if so.
-func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string, evidence exported.Evidence) error {
-	clientState, found := k.GetClientState(ctx, clientID)
+//
+// NOTE: In the first implementation, only Tendermint misbehaviour evidence is
+// supported.
+func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence evidenceexported.Evidence) error {
+	tmEvidence, ok := evidence.(tendermint.Evidence)
+	if !ok {
+		return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
+	}
+
+	clientState, found := k.GetClientState(ctx, tmEvidence.ClientID)
 	if !found {
-		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, clientID))
+		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, tmEvidence.ClientID))
 	}
 
-	err := k.checkMisbehaviour(ctx, evidence)
-	if err != nil {
-		return err
+	if err := tendermint.CheckMisbehaviour(tmEvidence); err != nil {
+		return errors.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 
-	clientState, err = k.freeze(ctx, clientState)
+	clientState, err := k.freeze(ctx, clientState)
 	if err != nil {
 		return err
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", clientID))
+	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", tmEvidence.ClientID))
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitMisbehaviour,
+			sdk.NewAttribute(types.AttributeKeyClientID, tmEvidence.ClientID),
+		),
+	)
+
 	return nil
 }

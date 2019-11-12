@@ -18,6 +18,7 @@ import (
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -59,7 +60,7 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // RegisterRESTRoutes registers the REST routes for the staking module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	/// TODO:
+	rest.RegisterRoutes(ctx, rtr)
 }
 
 // GetTxCmd returns the root tx command for the staking module.

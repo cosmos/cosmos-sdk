@@ -1,10 +1,11 @@
 package rest
 
 import (
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/gorilla/mux"
 )
 
 const (

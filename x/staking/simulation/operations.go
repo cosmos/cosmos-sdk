@@ -272,7 +272,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, k keeper.Keeper) simulation.O
 		}
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if simAccount.PrivKey == nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("Delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
 		}
 
 		account := ak.GetAccount(ctx, delAddr)
@@ -371,7 +371,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, k keeper.Keeper) simulat
 		}
 		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
 		if simAccount.PrivKey == nil {
-			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("Delegation addr: %s does not exist in simulation accounts", delAddr)
+			return simulation.NoOpMsg(types.ModuleName), nil, fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)
 		}
 
 		// get tx fees

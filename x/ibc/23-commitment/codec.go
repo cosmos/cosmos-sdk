@@ -4,6 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+var SubModuleCdc = codec.New()
+
 // RegisterCodec registers types declared in this package
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*RootI)(nil), nil)
@@ -15,4 +17,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(Prefix{}, "ibc/commitment/merkle/Prefix", nil)
 	cdc.RegisterConcrete(Path{}, "ibc/commitment/merkle/Path", nil)
 	cdc.RegisterConcrete(Proof{}, "ibc/commitment/merkle/Proof", nil)
+}
+
+func init() {
+	RegisterCodec(SubModuleCdc)
 }

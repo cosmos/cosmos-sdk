@@ -30,6 +30,10 @@ const (
 	// immediately.
 	BroadcastAsync = "async"
 
+	// BroadcastSimulate defines a tx broadcasting mode where the transaction won't be included by any block
+	// and it only will be executed in simulate mode
+	BroadcastSimulate = "simulate"
+
 	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"

@@ -7,11 +7,10 @@ import (
 )
 
 // SubModuleCdc defines the IBC client codec.
-var SubModuleCdc = codec.New()
+var SubModuleCdc *codec.Codec
 
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*exported.Blockchain)(nil), nil)
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
 	cdc.RegisterInterface((*exported.Evidence)(nil), nil)
 	cdc.RegisterInterface((*exported.Header)(nil), nil)
@@ -23,8 +22,10 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(tendermint.ConsensusState{}, "ibc/client/tendermint/ConsensusState", nil)
 	cdc.RegisterConcrete(tendermint.Header{}, "ibc/client/tendermint/Header", nil)
 	cdc.RegisterConcrete(tendermint.Evidence{}, "ibc/client/tendermint/Evidence", nil)
+
+	SetSubModuleCodec(cdc)
 }
 
-func init() {
-	RegisterCodec(SubModuleCdc)
+func SetSubModuleCodec(cdc *codec.Codec) {
+	SubModuleCdc = cdc
 }

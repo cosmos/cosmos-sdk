@@ -99,7 +99,7 @@ func NewCLIContextWithFrom(from string) CLIContext {
 	return ctx.WithVerifier(verifier)
 }
 
-// NewCLIContextIBC takes additional arguements
+// NewCLIContextIBC takes additional arguments
 func NewCLIContextIBC(from string, chainID string, nodeURI string) CLIContext {
 	var rpc rpcclient.Client
 

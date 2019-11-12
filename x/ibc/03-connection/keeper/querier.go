@@ -20,7 +20,7 @@ func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 
 	connection, found := k.GetConnection(ctx, params.ConnectionID)
 	if !found {
-		return nil, types.ErrConnectionNotFound(k.codespace, params.ConnectionID)
+		return nil, sdk.ConvertError(types.ErrConnectionNotFound(k.codespace, params.ConnectionID))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(connection)
@@ -42,7 +42,7 @@ func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 
 	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
 	if !found {
-		return nil, types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID)
+		return nil, sdk.ConvertError(types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID))
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)

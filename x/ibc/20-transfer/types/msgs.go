@@ -1,13 +1,12 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -46,11 +45,11 @@ func (MsgTransfer) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgTransfer) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid port ID: %s", err.Error()))
+	if err := host.DefaultConnectionIdentifierValidator(msg.SourcePort); err != nil {
+		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid source port ID"))
 	}
-	if err := host.DefaultPortIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdk.NewError(host.IBCCodeSpace, 1, fmt.Sprintf("invalid channel ID: %s", err.Error()))
+	if err := host.DefaultClientIdentifierValidator(msg.SourceChannel); err != nil {
+		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid source channel ID"))
 	}
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins("transfer amount is invalid")
@@ -106,25 +105,25 @@ func (MsgRecvPacket) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
-	if msg.Height < 1 {
-		return sdk.NewError(DefaultCodespace, CodeInvalidHeight, "invalid height")
+	if msg.Height == 0 {
+		return sdk.ConvertError(connectiontypes.ErrInvalidHeight(DefaultCodespace, "height must be > 0"))
 	}
 
-	if msg.Proofs == nil {
-		return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+	if msg.Proofs == nil || len(msg.Proofs) == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "missing proofs"))
 	}
 
 	for _, proof := range msg.Proofs {
 		if proof.Proof == nil {
-			return sdk.NewError(DefaultCodespace, CodeProofMissing, "proof missing")
+			return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 		}
 	}
 
 	if msg.Signer.Empty() {
-		return sdk.NewError(DefaultCodespace, CodeInvalidAddress, "invalid signer")
+		return sdk.ErrInvalidAddress("missing signer address")
 	}
 
-	return msg.Packet.ValidateBasic()
+	return sdk.ConvertError(msg.Packet.ValidateBasic())
 }
 
 // GetSignBytes implements sdk.Msg

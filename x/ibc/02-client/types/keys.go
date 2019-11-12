@@ -18,6 +18,11 @@ const (
 	QuerierRoute = SubModuleName
 )
 
+// KVStore key prefixes
+var (
+	KeyPrefixClient = []byte{0x00}
+)
+
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#path-space
 
 // ClientStatePath takes an Identifier and returns a Path under which to store a

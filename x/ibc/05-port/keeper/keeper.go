@@ -14,9 +14,7 @@ type Keeper struct {
 	storeKey  sdk.StoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
-	prefix    []byte // prefix bytes for accessing the store
-	ports     map[string]string
-	bound     []string
+	ports     map[string]bool
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
@@ -25,22 +23,13 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) 
 		storeKey:  key,
 		cdc:       cdc,
 		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
-		prefix:    []byte{},
-		// prefix:    []byte(types.SubModuleName + "/"),                                          // "port/"
-		ports: make(map[string]string), // map of capability key names to port ids
+		ports:     make(map[string]bool),                                                      // map of capability key names to port ids
 	}
 }
 
-// GetPorts returns the list of bound ports.
-// (these ports still must have been bound statically)
-func (k Keeper) GetPorts() []string {
-	return k.bound
-}
-
-// GetPort retrieves a given port ID from keeper map
-func (k Keeper) GetPort(ck sdk.CapabilityKey) (string, bool) {
-	portID, found := k.ports[ck.Name()]
-	return portID, found
+// isBounded checks a given port ID is already bounded.
+func (k Keeper) isBounded(portID string) bool {
+	return k.ports[portID]
 }
 
 // BindPort binds to a port and returns the associated capability.
@@ -52,15 +41,13 @@ func (k *Keeper) BindPort(portID string) sdk.CapabilityKey {
 		panic(err.Error())
 	}
 
-	for _, b := range k.bound {
-		if b == portID {
-			panic(fmt.Sprintf("port %s is already bound", portID))
-		}
+	if k.isBounded(portID) {
+		panic(fmt.Sprintf("port %s is already bound", portID))
 	}
 
 	key := sdk.NewKVStoreKey(portID)
-	k.ports[key.Name()] = portID
-	k.bound = append(k.bound, portID)
+	k.ports[key.Name()] = true // NOTE: key name and value always match
+
 	return key
 }
 
@@ -73,5 +60,5 @@ func (k Keeper) Authenticate(key sdk.CapabilityKey, portID string) bool {
 		panic(err.Error())
 	}
 
-	return k.ports[key.Name()] == portID
+	return k.ports[key.Name()]
 }

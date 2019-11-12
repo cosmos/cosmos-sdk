@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"errors"
+	"net/url"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
@@ -90,9 +91,13 @@ func (Path) GetCommitmentType() Type {
 	return Merkle
 }
 
-// String implements fmt.Stringer
+// String implements fmt.Stringer. It returns unescaped path of the URL string.
 func (p Path) String() string {
-	return p.KeyPath.String()
+	path, err := url.PathUnescape(p.KeyPath.String())
+	if err != nil {
+		panic(err)
+	}
+	return path
 }
 
 // ApplyPrefix constructs a new commitment path from the arguments. It interprets

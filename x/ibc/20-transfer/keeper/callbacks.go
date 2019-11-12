@@ -5,8 +5,11 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // nolint: unused
@@ -20,15 +23,19 @@ func (k Keeper) onChanOpenInit(
 	version string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return types.ErrInvalidChannelOrder(k.codespace, order.String())
+		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
-	if counterparty.PortID != types.BoundPortID {
-		return types.ErrInvalidPort(k.codespace, portID)
+	// NOTE: here the capability key name defines the port ID of the counterparty
+	if counterparty.PortID != k.boundedCapability.Name() {
+		return porttypes.ErrInvalidPort(
+			k.codespace,
+			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
+		)
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
+		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -48,19 +55,23 @@ func (k Keeper) onChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	if order != channeltypes.UNORDERED {
-		return types.ErrInvalidChannelOrder(k.codespace, order.String())
+		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
-	if counterparty.PortID != types.BoundPortID {
-		return types.ErrInvalidPort(k.codespace, portID)
+	// NOTE: here the capability key name defines the port ID of the counterparty
+	if counterparty.PortID != k.boundedCapability.Name() {
+		return porttypes.ErrInvalidPort(
+			k.codespace,
+			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
+		)
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
+		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
 	}
 
 	if strings.TrimSpace(counterpartyVersion) != "" {
-		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid counterparty version: %s", version))
+		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version cannot be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -76,7 +87,7 @@ func (k Keeper) onChanOpenAck(
 	version string,
 ) error {
 	if strings.TrimSpace(version) != "" {
-		return types.ErrInvalidVersion(k.codespace, fmt.Sprintf("invalid version: %s", version))
+		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
 	}
 
 	return nil
@@ -122,7 +133,7 @@ func (k Keeper) onRecvPacket(
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return types.ErrInvalidPacketData(k.codespace)
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	return k.ReceiveTransfer(
@@ -150,7 +161,7 @@ func (k Keeper) onTimeoutPacket(
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return types.ErrInvalidPacketData(k.codespace)
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	// check the denom prefix

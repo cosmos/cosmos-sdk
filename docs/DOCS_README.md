@@ -59,34 +59,27 @@ to send users to the GitHub.
 
 ## Building Locally
 
-To build and serve the documentation locally, run:
+Make sure you are in the `docs` directory and run the following commands:
 
-```bash
-npm install -g vuepress
+```sh
+rm -rf node_modules
 ```
 
-then change the following line in the `config.js`:
+This command will remove old version of the visual theme and required packages. This step is optional.
 
-```js
-base: "/docs/",
+```sh
+npm install
 ```
 
-to:
+Install the theme and all dependencies.
 
-```js
-base: "/",
+```sh
+npm run serve
 ```
 
-Finally, go up one directory to the root of the repo and run:
+Run `pre` and `post` hooks and start a hot-reloading web-server. See output of this command for the URL (it is often https://localhost:8080).
 
-```bash
-# from root of repo
-vuepress build docs
-cd dist/docs
-python -m SimpleHTTPServer 8080
-```
-
-then navigate to localhost:8080 in your browser.
+To build documentation as a static website run `npm run build`. You will find the website in `.vuepress/dist` directory.
 
 ## Build RPC Docs
 

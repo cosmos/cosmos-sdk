@@ -56,8 +56,8 @@ type BlockID struct {
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (b BlockID) MarshalJSON() ([]byte, error) {
-	type blockIDJson BlockID
-	return json.Marshal(blockIDJson(b))
+	type blockIDJSON BlockID
+	return json.Marshal(blockIDJSON(b))
 }
 
 // PartSetHeader defines a wrapper around Tendermint's PartSetHeader type overriding various fields.
@@ -73,8 +73,8 @@ type PartSetHeader struct {
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (b PartSetHeader) MarshalJSON() ([]byte, error) {
-	type partSetHeadJson PartSetHeader
-	return json.Marshal(partSetHeadJson(b))
+	type partSetHeadJSON PartSetHeader
+	return json.Marshal(partSetHeadJSON(b))
 }
 
 // Consensus defines a wrapper around Tendermint's Consensus type overriding various fields.
@@ -91,11 +91,12 @@ type Consensus struct {
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (b Consensus) MarshalJSON() ([]byte, error) {
-	type consensusJson Consensus
-	return json.Marshal(consensusJson(b))
+	type consensusJSON Consensus
+	return json.Marshal(consensusJSON(b))
 }
 
 // Block defines the atomic unit of a Tendermint blockchain.
+// nolint: structtag.
 type Block struct {
 	// embed original type
 	types.Block
@@ -140,8 +141,8 @@ type CommitSig struct {
 // MarshalJSON implements the json.Marshaler interface. We do this because Amino
 // does not respect the JSON stdlib embedding semantics.
 func (c CommitSig) MarshalJSON() ([]byte, error) {
-	type commitSigJson CommitSig
-	return json.Marshal(commitSigJson(c))
+	type commitSigJSON CommitSig
+	return json.Marshal(commitSigJSON(c))
 }
 
 // ConvertBlockResult allows to convert the given standard ResultBlock into a new ResultBlock having all the

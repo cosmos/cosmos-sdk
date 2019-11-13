@@ -18,8 +18,8 @@ func Name() string {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC client
-func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+func RegisterRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute string) {
+	rest.RegisterRoutes(ctx, rtr, queryRoute)
 }
 
 // GetTxCmd returns the root tx command for the IBC client

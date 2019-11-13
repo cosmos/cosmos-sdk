@@ -35,9 +35,9 @@ var (
 	addr2     = sdk.AccAddress("testaddr2")
 	emptyAddr sdk.AccAddress
 
-	coins, _             = sdk.ParseCoins("100atom")
-	invalidDenomCoins, _ = sdk.ParseCoins("100ato-m")
-	negativeCoins, _     = sdk.ParseCoins("-100atom")
+	coins, _          = sdk.ParseCoins("100atom")
+	invalidDenomCoins = sdk.Coins{sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}}
+	negativeCoins     = sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdk.NewInt(-100)}}
 )
 
 // TestMsgTransfer tests ValidateBasic for MsgTransfer

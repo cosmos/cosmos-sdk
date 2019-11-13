@@ -22,6 +22,10 @@ module.exports = {
             title: "Modules",
             directory: true,
             path: "/modules/"
+          },
+          {
+            title: "Modules README",
+            path: "/modules/"
           }
         ]
       },

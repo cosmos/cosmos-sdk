@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -61,7 +62,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	var data types.PacketData
 	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
@@ -173,7 +174,7 @@ func (k Keeper) createOutgoingPacket(
 	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
 	packetDataBz, err := packetData.MarshalJSON()
 	if err != nil {
-		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
+		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	packet := channel.NewPacket(

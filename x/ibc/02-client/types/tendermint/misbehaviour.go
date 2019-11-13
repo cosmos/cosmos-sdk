@@ -3,6 +3,7 @@ package tendermint
 import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -28,6 +29,10 @@ func (m Misbehaviour) GetEvidence() evidenceexported.Evidence {
 // ValidateBasic performs the basic validity checks for the evidence and the
 // client ID.
 func (m Misbehaviour) ValidateBasic() error {
+	if m.Evidence == nil {
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "empty evidence")
+	}
+
 	if err := m.Evidence.ValidateBasic(); err != nil {
 		return err
 	}

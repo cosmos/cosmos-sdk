@@ -32,7 +32,7 @@ func (ev Evidence) Route() string {
 
 // Type implements Evidence interface
 func (ev Evidence) Type() string {
-	return "tendermint"
+	return "client_misbehaviour"
 }
 
 // String implements Evidence interface

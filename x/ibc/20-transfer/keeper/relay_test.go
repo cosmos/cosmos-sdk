@@ -7,6 +7,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	supply "github.com/cosmos/cosmos-sdk/x/supply"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -97,12 +98,16 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	err = suite.app.IBCKeeper.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, isSourceChain)
 	suite.NotNil(err) // incorrect denom prefix
 
+	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
 	err = suite.app.IBCKeeper.TransferKeeper.SendTransfer(suite.ctx, testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, isSourceChain)
 	suite.Nil(err) // successfully executed
 
 	senderCoins = suite.app.BankKeeper.GetCoins(suite.ctx, testAddr1)
 	suite.Equal(sdk.Coins(nil), senderCoins)
+
+	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
+	suite.Equal(sdk.Coins(nil), totalSupply.GetTotal()) // supply should be deflated
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
@@ -122,6 +127,9 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
 	suite.Nil(err) // successfully executed
 
+	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
+	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
+
 	receiverCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
 	suite.Equal(testPrefixedCoins2, receiverCoins)
 
@@ -137,14 +145,14 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	suite.NotNil(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
-	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testPrefixedCoins1)
+	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
 	suite.Nil(err) // successfully executed
 
 	escrowCoins := suite.app.BankKeeper.GetCoins(suite.ctx, escrowAddress)
-	suite.Equal(sdk.Coins{}, escrowCoins)
+	suite.Equal(sdk.Coins(nil), escrowCoins)
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
-	suite.Equal(testPrefixedCoins1, receiverCoins)
+	suite.Equal(testCoins, receiverCoins)
 }

@@ -5,37 +5,32 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // nolint: unused
 func (k Keeper) onChanOpenInit(
 	ctx sdk.Context,
-	order channeltypes.Order,
+	order channel.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
-	counterparty channeltypes.Counterparty,
+	counterparty channel.Counterparty,
 	version string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+	if order != channel.UNORDERED {
+		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return porttypes.ErrInvalidPort(
-			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
-		)
+		return channel.ErrInvalidCounterpartyChannel(k.codespace, fmt.Sprintf("invalid counterparty port id: %s, expected: %s", counterparty.PortID, k.boundedCapability.Name()))
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return channel.ErrInvalidChannel(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -46,32 +41,29 @@ func (k Keeper) onChanOpenInit(
 // nolint: unused
 func (k Keeper) onChanOpenTry(
 	ctx sdk.Context,
-	order channeltypes.Order,
+	order channel.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
-	counterparty channeltypes.Counterparty,
+	counterparty channel.Counterparty,
 	version string,
 	counterpartyVersion string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+	if order != channel.UNORDERED {
+		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return porttypes.ErrInvalidPort(
-			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
-		)
+		return channel.ErrInvalidCounterpartyChannel(k.codespace, fmt.Sprintf("invalid counterparty port id: %s, expected: %s", counterparty.PortID, k.boundedCapability.Name()))
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return channel.ErrInvalidChannel(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
 	if strings.TrimSpace(counterpartyVersion) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version cannot be blank")
+		return channel.ErrInvalidCounterpartyChannel(k.codespace, fmt.Sprintf("invalid counterparty version: %s", counterpartyVersion))
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -87,7 +79,7 @@ func (k Keeper) onChanOpenAck(
 	version string,
 ) error {
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return channel.ErrInvalidChannel(k.codespace, fmt.Sprintf("invalid version: %s", version))
 	}
 
 	return nil
@@ -127,13 +119,13 @@ func (k Keeper) onChanCloseConfirm(
 // nolint: unused
 func (k Keeper) onRecvPacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 ) error {
 	var data types.PacketData
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
 	}
 
 	return k.ReceiveTransfer(
@@ -145,7 +137,7 @@ func (k Keeper) onRecvPacket(
 // nolint: unused
 func (k Keeper) onAcknowledgePacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 	acknowledgement []byte,
 ) error {
 	// no-op
@@ -155,13 +147,13 @@ func (k Keeper) onAcknowledgePacket(
 // nolint: unused
 func (k Keeper) onTimeoutPacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 ) error {
 	var data types.PacketData
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
 	}
 
 	// check the denom prefix
@@ -190,6 +182,6 @@ func (k Keeper) onTimeoutPacket(
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacketClose(_ sdk.Context, _ channeltypes.Packet) {
+func (k Keeper) onTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
 	panic("can't happen, only unordered channels allowed")
 }

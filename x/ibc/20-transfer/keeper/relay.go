@@ -5,9 +5,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -23,18 +22,18 @@ func (k Keeper) SendTransfer(
 	isSourceChain bool,
 ) error {
 	// get the port and channel of the counterparty
-	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	sourceChan, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
+		return channel.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
-	destinationPort := channel.Counterparty.PortID
-	destinationChannel := channel.Counterparty.ChannelID
+	destinationPort := sourceChan.Counterparty.PortID
+	destinationChannel := sourceChan.Counterparty.ChannelID
 
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrSequenceNotFound(k.codespace, "send")
+		return channel.ErrSequenceNotFound(k.codespace, "send")
 	}
 
 	coins := make(sdk.Coins, len(amount))
@@ -62,7 +61,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	var data types.PacketData
 	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
 	}
 
 	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
@@ -157,6 +156,9 @@ func (k Keeper) createOutgoingPacket(
 			return err
 		}
 
+		maccCoins := k.bankKeeper.GetCoins(ctx, k.GetTransferAccount(ctx).GetAddress())
+		fmt.Println(maccCoins)
+
 		// burn from supply
 		err = k.supplyKeeper.BurnCoins(ctx, types.GetModuleAccountName(), amount)
 		if err != nil {
@@ -174,10 +176,10 @@ func (k Keeper) createOutgoingPacket(
 	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
 	packetDataBz, err := packetData.MarshalJSON()
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+		return channel.ErrInvalidPacket(k.codespace, "invalid packet data")
 	}
 
-	packet := channeltypes.NewPacket(
+	packet := channel.NewPacket(
 		seq,
 		uint64(ctx.BlockHeight())+DefaultPacketTimeout,
 		sourcePort,

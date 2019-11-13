@@ -8,6 +8,13 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
+// Message types for the IBC client
+const (
+	TypeMsgCreateClient    string = "create_client"
+	TypeMsgUpdateClient    string = "update_client"
+	TypeClientMisbehaviour string = "client_misbehaviour"
+)
+
 var _ sdk.Msg = MsgCreateClient{}
 
 // MsgCreateClient defines a message to create an IBC client
@@ -35,7 +42,7 @@ func (msg MsgCreateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgCreateClient) Type() string {
-	return "create_client"
+	return TypeMsgCreateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -90,7 +97,7 @@ func (msg MsgUpdateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgUpdateClient) Type() string {
-	return "update_client"
+	return TypeMsgUpdateClient
 }
 
 // ValidateBasic implements sdk.Msg

@@ -13,9 +13,9 @@ const (
 
 // IBC client events vars
 var (
-	EventTypeCreateClient       = MsgCreateClient{}.Type()
-	EventTypeUpdateClient       = MsgUpdateClient{}.Type()
-	EventTypeSubmitMisbehaviour = "submit_misbehaviour"
+	EventTypeCreateClient       = TypeMsgCreateClient
+	EventTypeUpdateClient       = TypeMsgUpdateClient
+	EventTypeSubmitMisbehaviour = TypeClientMisbehaviour
 
 	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, SubModuleName)
 )

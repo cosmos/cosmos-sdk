@@ -67,7 +67,9 @@ func (ack Ack) IsOK() bool {
   return ack.Err.IsOK()
 }
 
-func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h func(sdk.Context, Packet) ibc.Ack) sdk.Result {
+type PacketHandler func(sdk.Context, Packet) Ack
+
+func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h PacketHandler) sdk.Result {
   // Cache context
   cacheCtx, write := ctx.CacheContext()
 
@@ -100,7 +102,7 @@ func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
     case ibc.MsgPacket:
-      return k.port.ReceivePacket(ctx, msg, func(ctx sdk.Context, p Packet) ibc.Ack {
+      return k.port.ReceivePacket(ctx, msg, func(ctx sdk.Context, p ibc.Packet) ibc.Ack {
         switch packet := packet.(type) {
         case CustomPacket: // i.e fulfills the Packet interface
           return handleCustomPacket(ctx, k, packet)

@@ -2,7 +2,7 @@
 order: 4
 ---
 
-# Main Components of the SDK
+# Main Components of the Cosmos SDK
 
 The Cosmos SDK is a framework that facilitates the development of secure state-machines on top of Tendermint. At its core, the SDK is a boilerplate implementation of the [ABCI](./sdk-app-architecture.md#abci) in Golang. It comes with a [`multistore`](../core/store.md#multistore) to persist data and a [`router`](../core/baseapp.md#routing) to handle transactions. 
 
@@ -91,6 +91,4 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
 
 
-## Next
 
-Learn more about the basics of the Cosmos SDK, starting with the [anatomy of an SDK application](../basics/app-anatomy.md)

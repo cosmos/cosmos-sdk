@@ -2,7 +2,7 @@
 order: 3
 ---
 
-# Architecture of a Cosmos SDK Application
+# Blockchain Architecture
 
 ## State machine 
 
@@ -93,6 +93,7 @@ Here are the most important messages of the ABCI:
 For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
 
 Any application built on Tendermint needs to implement the ABCI interface in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
+
 
 ## Next 
 

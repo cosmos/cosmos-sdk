@@ -40,27 +40,17 @@ As a reminder, the full-node is composed of three conceptual layers: the network
 
 The flow of the `start` command is pretty straightforward. First, it retrieves the `config` from the `context` in order to open the `db` (a [`leveldb`](https://github.com/syndtr/goleveldb) instance by default). This `db` contains the latest known state of the application (empty if the application is started from the first time. 
 
-With the `db`, the `start` command creates a new instance of the application using the [application's constructor function](../basics/app-anatomy.md#constructor-function).
+With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
-```go
-app := appCreator(ctx.Logger, db, traceWriter)
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L144
 
-In the background, the `db` is used by the `appCreator` to mount the main [`CommitMultiStore`](./store.md#commitmultistore) of the application. Then, the instance of `app` is used to instanciate a new Tendermint node:
+Note that an `appCreator` is a function that fulfills the `AppCreator` signature. In practice, the [constructor the application](../basics/app-anatomy.md#constructor-function) is passed as the `appCreator`.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/master/server/constructors.go#L20
 
-```go
-tmNode, err := node.NewNode(
-	cfg,
-	pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-	nodeKey,
-	proxy.NewLocalClientCreator(app),
-	node.DefaultGenesisDocProviderFunc(cfg),
-	node.DefaultDBProvider,
-	node.DefaultMetricsProvider(cfg.Instrumentation),
-	ctx.Logger.With("module", "node"),
-)
-```
+Then, the instance of `app` is used to instanciate a new Tendermint node:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L153-L163
 
 The Tendermint node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/application.go#L11-L26) (given that `app` extends [`baseapp`](./baseapp.md)). As part of the `NewNode` method, Tendermint makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the Tendermint node. The difference between these two heights should always be negative or null. If it is strictly negative, `NewNode` will replay blocks until the height of the application reaches the height of the Tendermint node. Finally, if the height of the application is `0`, the Tendermint node will call [`InitChain`](./baseapp.md#initchain) on the application to initialize the state from the genesis file. 
 

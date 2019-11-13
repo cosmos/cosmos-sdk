@@ -128,7 +128,7 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 }
 
 func (app *BaseApp) GetTxDecoder() sdk.TxDecoder {
-       return app.txDecoder
+	return app.txDecoder
 }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
@@ -549,8 +549,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if err := app.validateHeight(req); err != nil {
-		fmt.Println("Ignoring incorrect height...")
-                
+		panic(err)
+
 	}
 
 	// Initialize the DeliverTx state. If this is the first block, it should

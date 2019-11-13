@@ -39,12 +39,6 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if msg.Content == nil {
 		return ErrInvalidProposalContent(DefaultCodespace, "missing content")
 	}
-	if msg.Content.ProposalType() == ProposalTypeSoftwareUpgrade {
-		// Disable software upgrade proposals as they are currently equivalent
-		// to text proposals. Re-enable once a valid software upgrade proposal
-		// handler is implemented.
-		return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
-	}
 	if msg.Proposer.Empty() {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
 	}

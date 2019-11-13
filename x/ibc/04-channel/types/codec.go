@@ -6,7 +6,7 @@ import (
 )
 
 // SubModuleCdc defines the IBC channel codec.
-var SubModuleCdc = codec.New()
+var SubModuleCdc *codec.Codec
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // IBC channel.
@@ -23,6 +23,6 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
 }
 
-func init() {
-	RegisterCodec(SubModuleCdc)
+func SetSubModuleCodec(cdc *codec.Codec) {
+	SubModuleCdc = cdc
 }

@@ -64,7 +64,7 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.R
 func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
 	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
 		switch e := evidence.(type) {
-		case tendermint.Evidence:
+		case tendermint.Misbehaviour:
 			return k.CheckMisbehaviourAndUpdateState(ctx, evidence)
 
 		default:

@@ -1,99 +1,43 @@
 package tendermint
 
 import (
-	"fmt"
-
-	yaml "gopkg.in/yaml.v2"
-
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ evidenceexported.Evidence = Evidence{}
+var _ exported.Misbehaviour = Misbehaviour{}
+var _ evidenceexported.Evidence = Misbehaviour{}
 
-// Evidence is a wrapper over tendermint's DuplicateVoteEvidence
-// that implements Evidence interface expected by ICS-02
-type Evidence struct {
-	*tmtypes.DuplicateVoteEvidence
-	ClientID       string `json:"client_id" yaml:"client_id"`
-	ChainID        string `json:"chain_id" yaml:"chain_id"`
-	ValidatorPower int64  `json:"val_power" yaml:"val_power"`
-	TotalPower     int64  `json:"total_power" yaml:"total_power"`
+// Misbehaviour contains an evidence that a
+type Misbehaviour struct {
+	*Evidence
+	ClientID string `json:"client_id" yaml:"client_id"`
 }
 
-// Route implements Evidence interface
-func (ev Evidence) Route() string {
-	return exported.ClientTypeTendermint
+// ClientType is Tendermint light client
+func (m Misbehaviour) ClientType() exported.ClientType {
+	return exported.Tendermint
 }
 
-// Type implements Evidence interface
-func (ev Evidence) Type() string {
-	return exported.ClientTypeTendermint
+// GetEvidence returns the evidence to handle a light client misbehaviour
+func (m Misbehaviour) GetEvidence() evidenceexported.Evidence {
+	return m.Evidence
 }
 
-// String implements Evidence interface
-func (ev Evidence) String() string {
-	bz, err := yaml.Marshal(ev)
-	if err != nil {
-		panic(err)
+// ValidateBasic performs the basic validity checks for the evidence and the
+// client ID.
+func (m Misbehaviour) ValidateBasic() error {
+	if err := m.Evidence.ValidateBasic(); err != nil {
+		return err
 	}
-	return string(bz)
-}
 
-// Hash implements Evidence interface
-func (ev Evidence) Hash() cmn.HexBytes {
-	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
-}
-
-// ValidateBasic implements Evidence interface
-func (ev Evidence) ValidateBasic() error {
-	if ev.DuplicateVoteEvidence == nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "duplicate evidence is nil")
-	}
-	err := ev.DuplicateVoteEvidence.ValidateBasic()
-	if err != nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
-	}
-	if ev.ChainID == "" {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "chainID is empty")
-	}
-	if ev.ValidatorPower <= 0 {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid Validator Power: %d", ev.ValidatorPower))
-	}
-	if ev.TotalPower < ev.ValidatorPower {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid Total Power: %d", ev.TotalPower))
-	}
-	return host.DefaultClientIdentifierValidator(ev.ClientID)
-}
-
-// GetConsensusAddress implements exported.Evidence interface
-func (ev Evidence) GetConsensusAddress() sdk.ConsAddress {
-	return sdk.ConsAddress(ev.DuplicateVoteEvidence.Address())
-}
-
-// GetHeight implements exported.Evidence interface
-func (ev Evidence) GetHeight() int64 {
-	return ev.DuplicateVoteEvidence.Height()
-}
-
-// GetValidatorPower implements exported.Evidence interface
-func (ev Evidence) GetValidatorPower() int64 {
-	return ev.ValidatorPower
-}
-
-// GetTotalPower implements exported.Evidence interface
-func (ev Evidence) GetTotalPower() int64 {
-	return ev.TotalPower
+	return host.DefaultClientIdentifierValidator(m.ClientID)
 }
 
 // CheckMisbehaviour checks if the evidence provided is a misbehaviour
-func CheckMisbehaviour(evidence Evidence) error {
-	return evidence.DuplicateVoteEvidence.Verify(evidence.ChainID, evidence.DuplicateVoteEvidence.PubKey)
+func CheckMisbehaviour(m Misbehaviour) error {
+	return m.Evidence.DuplicateVoteEvidence.Verify(
+		m.Evidence.ChainID, m.Evidence.DuplicateVoteEvidence.PubKey,
+	)
 }

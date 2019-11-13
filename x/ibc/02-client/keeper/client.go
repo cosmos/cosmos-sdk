@@ -79,17 +79,17 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 // NOTE: In the first implementation, only Tendermint misbehaviour evidence is
 // supported.
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence evidenceexported.Evidence) error {
-	tmEvidence, ok := evidence.(tendermint.Evidence)
+	misbehaviour, ok := evidence.(tendermint.Misbehaviour)
 	if !ok {
 		return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
 	}
 
-	clientState, found := k.GetClientState(ctx, tmEvidence.ClientID)
+	clientState, found := k.GetClientState(ctx, misbehaviour.ClientID)
 	if !found {
-		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, tmEvidence.ClientID))
+		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID))
 	}
 
-	if err := tendermint.CheckMisbehaviour(tmEvidence); err != nil {
+	if err := tendermint.CheckMisbehaviour(misbehaviour); err != nil {
 		return errors.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 
@@ -99,12 +99,12 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence eviden
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", tmEvidence.ClientID))
+	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.ClientID))
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitMisbehaviour,
-			sdk.NewAttribute(types.AttributeKeyClientID, tmEvidence.ClientID),
+			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.ClientID),
 		),
 	)
 

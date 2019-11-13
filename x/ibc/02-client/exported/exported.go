@@ -25,7 +25,7 @@ type ConsensusState interface {
 // Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
 	ClientType() ClientType
-	Evidence() evidenceexported.Evidence
+	GetEvidence() evidenceexported.Evidence
 }
 
 // Header is the consensus state update information

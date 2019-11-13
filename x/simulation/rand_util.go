@@ -39,7 +39,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 
 // RandPositiveInt get a rand positive sdk.Int
 func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GT(sdk.OneInt()) {
+	if !max.GTE(sdk.OneInt()) {
 		return sdk.Int{}, errors.New("max too small")
 	}
 	max = max.Sub(sdk.OneInt())
@@ -86,6 +86,43 @@ func RandTimestamp(r *rand.Rand) time.Time {
 // RandIntBetween returns a random int between two numbers inclusively.
 func RandIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min) + min
+}
+
+// returns random subset of the provided coins
+// will return at least one coin unless coins argument is empty or malformed
+// i.e. 0 amt in coins
+func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
+	if len(coins) == 0 {
+		return sdk.Coins{}
+	}
+	// make sure at least one coin added
+	denomIdx := r.Intn(len(coins))
+	coin := coins[denomIdx]
+	amt, err := RandPositiveInt(r, coin.Amount)
+	// malformed coin. 0 amt in coins
+	if err != nil {
+		return sdk.Coins{}
+	}
+	subset := sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
+	for i, c := range coins {
+		// skip denom that we already chose earlier
+		if i == denomIdx {
+			continue
+		}
+		// coin flip if multiple coins
+		// if there is single coin then return random amount of it
+		if r.Intn(2) == 0 && len(coins) != 1 {
+			continue
+		}
+
+		amt, err := RandPositiveInt(r, c.Amount)
+		// ignore errors and try another denom
+		if err != nil {
+			continue
+		}
+		subset = append(subset, sdk.NewCoin(c.Denom, amt))
+	}
+	return subset
 }
 
 // DeriveRand derives a new Rand deterministically from another random source.

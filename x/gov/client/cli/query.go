@@ -87,27 +87,29 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query for a all proposals. You can filter the returns with the following flags.
+			fmt.Sprintf(`Query for a all paginated proposals that match optional filters:
 
 Example:
 $ %s query gov proposals --depositor cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 $ %s query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
+$ %s query gov proposals --page=2 --limit=100
 `,
-				version.ClientName, version.ClientName, version.ClientName,
+				version.ClientName, version.ClientName, version.ClientName, version.ClientName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bechDepositorAddr := viper.GetString(flagDepositor)
 			bechVoterAddr := viper.GetString(flagVoter)
 			strProposalStatus := viper.GetString(flagStatus)
-			numLimit := uint64(viper.GetInt64(flagNumLimit))
+			page := viper.GetInt(flagPage)
+			limit := viper.GetInt(flagNumLimit)
 
 			var depositorAddr sdk.AccAddress
 			var voterAddr sdk.AccAddress
 			var proposalStatus types.ProposalStatus
 
-			params := types.NewQueryProposalsParams(proposalStatus, numLimit, voterAddr, depositorAddr)
+			params := types.NewQueryProposalsParams(page, limit, proposalStatus, voterAddr, depositorAddr)
 
 			if len(bechDepositorAddr) != 0 {
 				depositorAddr, err := sdk.AccAddressFromBech32(bechDepositorAddr)
@@ -159,7 +161,8 @@ $ %s query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
 		},
 	}
 
-	cmd.Flags().String(flagNumLimit, "", "(optional) limit to latest [number] proposals. Defaults to all proposals")
+	cmd.Flags().Int(flagPage, 1, "pagination page of proposals to to query for")
+	cmd.Flags().Int(flagNumLimit, 100, "pagination limit of proposals to query for")
 	cmd.Flags().String(flagDepositor, "", "(optional) filter by proposals deposited on by depositor")
 	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
 	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")

@@ -2,7 +2,7 @@
 order: 3
 ---
 
-# SDK Application Architecture
+# Architecture of a Cosmos SDK Application
 
 ## State machine 
 
@@ -62,7 +62,7 @@ The Tendermint consensus algorithm works with a set of special nodes called *Val
 
 ## ABCI
 
-Tendermint passes transactions to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci), which the application must implement. 
+Tendermint passes transactions to the application through an interface called the [ABCI](https://tendermint.com/docs/spec/abci/), which the application must implement. 
 
 ```
 +---------------------+

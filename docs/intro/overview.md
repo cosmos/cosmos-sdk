@@ -2,7 +2,7 @@
 order: 1
 ---
 
-# SDK Intro
+# High-level Overview
 
 ## What is the SDK?
 

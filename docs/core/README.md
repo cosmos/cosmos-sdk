@@ -4,7 +4,7 @@ parent:
   order: 3
 ---
 
-# Core 
+# Core Concepts
 
 This repository contains reference documentation on the core conepts of the Cosmos SDK. 
 

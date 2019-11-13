@@ -156,9 +156,6 @@ func (k Keeper) createOutgoingPacket(
 			return err
 		}
 
-		maccCoins := k.bankKeeper.GetCoins(ctx, k.GetTransferAccount(ctx).GetAddress())
-		fmt.Println(maccCoins)
-
 		// burn from supply
 		err = k.supplyKeeper.BurnCoins(ctx, types.GetModuleAccountName(), amount)
 		if err != nil {

@@ -2,16 +2,11 @@ package types
 
 import (
 	"fmt"
-	"regexp"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_ Router = (*router)(nil)
-
-	isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
-)
+var _ Router = (*router)(nil)
 
 // Router implements a governance Handler router.
 //

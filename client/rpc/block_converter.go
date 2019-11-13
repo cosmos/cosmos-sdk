@@ -146,7 +146,11 @@ func (c CommitSig) MarshalJSON() ([]byte, error) {
 
 // ConvertBlockResult allows to convert the given standard ResultBlock into a new ResultBlock having all the
 // validator addresses as Bech32 strings instead of HEX ones.
-func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult ResultBlock) {
+func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult *ResultBlock) {
+
+	if res == nil {
+		return nil
+	}
 
 	header := Header{
 		Header: res.BlockMeta.Header,
@@ -170,7 +174,7 @@ func ConvertBlockResult(res *ctypes.ResultBlock) (blockResult ResultBlock) {
 		ProposerAddress: sdk.ValAddress(res.BlockMeta.Header.ProposerAddress),
 	}
 
-	return ResultBlock{
+	return &ResultBlock{
 		BlockMeta: BlockMeta{
 			BlockID: res.BlockMeta.BlockID,
 			Header:  header,

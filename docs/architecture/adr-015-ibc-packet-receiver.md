@@ -34,19 +34,19 @@ func (deco ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, si
   for _, msg := range tx.GetMsgs() {
     switch msg := msg.(type) {
     case ibc.MsgUpdateClient:
-      if err := UpdateClient(msg.ClientID, msg.Header); err != nil {
+      if err := deco.clik.UpdateClient(msg.ClientID, msg.Header); err != nil {
         return ctx, err.Result()
       }
     case ibc.MsgPacket:
-      if err := VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight); err != nil {
+      if err := deco.chank.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight); err != nil {
         return ctx, err.Result()
       }
     case ibc.MsgAcknowledgement:
-      if err := VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
+      if err := deco.chank.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
         return ctx, err.Result()
       }
     case ibc.MsgTimeoutPacket:
-      if err := VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
+      if err := deco.chank.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
         return ctx, err.Result()
       }
     }

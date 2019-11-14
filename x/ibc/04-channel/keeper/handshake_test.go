@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.INIT, channel.State)
+	suite.Equal(types.INIT.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.OPENTRY, channel.State)
+	suite.Equal(types.OPENTRY.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.OPEN, channel.State)
+	suite.Equal(types.OPEN.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
@@ -253,7 +253,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.OPEN, channel.State)
+	suite.Equal(types.OPEN.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanCloseInit() {
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.CLOSED, channel.State)
+	suite.Equal(types.CLOSED.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
@@ -326,5 +326,5 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.CLOSED, channel.State)
+	suite.Equal(types.CLOSED.String(), channel.State.String(), "invalid channel state")
 }

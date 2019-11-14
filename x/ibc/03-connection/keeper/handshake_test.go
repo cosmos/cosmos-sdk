@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		//check connection state
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
 		suite.True(existed)
-		suite.Equal(connection.TRYOPEN, conn.State)
+		suite.Equal(connection.TRYOPEN.String(), conn.State.String(), "invalid connection state")
 		return err
 	}
 
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		//check connection state
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID2)
 		suite.True(existed)
-		suite.Equal(connection.OPEN, conn.State)
+		suite.Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
 		return err
 
 	}
@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 		//check connection state
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
 		suite.True(existed)
-		suite.Equal(connection.OPEN, conn.State)
+		suite.Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
 		return err
 	}
 

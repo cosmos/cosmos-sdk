@@ -28,14 +28,12 @@ type CreateClientReq struct {
 
 // UpdateClientReq defines the properties of a update client request's body.
 type UpdateClientReq struct {
-	BaseReq  rest.BaseReq    `json:"base_req" yaml:"base_req"`
-	ClientID string          `json:"client_id" yaml:"client_id"`
-	Header   exported.Header `json:"header" yaml:"header"`
+	BaseReq rest.BaseReq    `json:"base_req" yaml:"base_req"`
+	Header  exported.Header `json:"header" yaml:"header"`
 }
 
 // SubmitMisbehaviourReq defines the properties of a submit misbehaviour request's body.
 type SubmitMisbehaviourReq struct {
 	BaseReq  rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	ClientID string            `json:"client_id" yaml:"client_id"`
 	Evidence exported.Evidence `json:"evidence" yaml:"evidence"`
 }

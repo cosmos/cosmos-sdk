@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,10 +14,10 @@ import (
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/connection/connection/open-init", connectionOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/connection/connection/open-try", connectionOpenTryHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/connection/connections/{connection-id}/open-ack", connectionOpenAckHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/connection/connections/{connection-id}/open-confirm", connectionOpenConfirmHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/connection/open-init", connectionOpenInitHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/connection/open-try", connectionOpenTryHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-ack", RestConnectionID), connectionOpenAckHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-confirm", RestConnectionID), connectionOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 }
 
 func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

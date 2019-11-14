@@ -24,12 +24,12 @@ const (
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	r.HandleFunc(fmt.Sprintf("/ibc/client/consensus-state/clients/{%s}", RestClientID), queryConsensusStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/client/state/clients/{%s}", RestClientID), queryClientStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/client/root/clients/{%s}/heights/{%s}", RestClientID, RestRootHeight), queryRootHandlerFn(cliCtx, queryRoute)).Methods("GET")
-	r.HandleFunc("/ibc/client/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/ibc/client/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc("/ibc/client/path", queryPathHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client_state", RestClientID), queryClientStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/roots/{%s}", RestClientID, RestRootHeight), queryRootHandlerFn(cliCtx, queryRoute)).Methods("GET")
+	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc("/ibc/path", queryPathHandlerFn(cliCtx)).Methods("GET")
 }
 
 func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {

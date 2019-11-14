@@ -15,9 +15,9 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/client/client", createClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/client/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/client/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/client", createClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
 
 func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -57,6 +57,9 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clientID := vars[RestClientID]
+
 		var req UpdateClientReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -75,7 +78,7 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgUpdateClient(
-			req.ClientID,
+			clientID,
 			req.Header,
 			fromAddr,
 		)
@@ -91,6 +94,9 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clientID := vars[RestClientID]
+
 		var req SubmitMisbehaviourReq
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			return
@@ -109,7 +115,7 @@ func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// create the message
 		msg := types.NewMsgSubmitMisbehaviour(
-			req.ClientID,
+			clientID,
 			req.Evidence,
 			fromAddr,
 		)

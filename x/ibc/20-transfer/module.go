@@ -16,7 +16,7 @@ func Name() string {
 }
 
 // RegisterRESTRoutes registers the REST routes for the IBC transfer
-func RegisterRoutes(ctx context.CLIContext, rtr *mux.Router) {
+func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
 	rest.RegisterRoutes(ctx, rtr)
 }
 

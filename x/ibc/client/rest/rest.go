@@ -12,8 +12,8 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	ics02.RegisterRoutes(cliCtx, r, queryRoute)
-	ics03.RegisterRoutes(cliCtx, r, queryRoute)
-	ics04.RegisterRoutes(cliCtx, r, queryRoute)
-	ics20.RegisterRoutes(cliCtx, r)
+	ics02.RegisterRESTRoutes(cliCtx, r, queryRoute)
+	ics03.RegisterRESTRoutes(cliCtx, r, queryRoute)
+	ics04.RegisterRESTRoutes(cliCtx, r, queryRoute)
+	ics20.RegisterRESTRoutes(cliCtx, r)
 }

@@ -27,7 +27,7 @@ func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
 	return cli.GetQueryCmd(fmt.Sprintf("%s/%s", queryRoute, SubModuleName), cdc)
 }
 
-// RegisterRoutes registers the REST routes for the IBC connections.
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	rest.RegisterRoutes(cliCtx, r, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
+// RegisterRESTRoutes registers the REST routes for the IBC connections.
+func RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router, queryRoute string) {
+	rest.RegisterRoutes(ctx, rtr, fmt.Sprintf("%s/%s", queryRoute, SubModuleName))
 }

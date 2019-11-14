@@ -12,7 +12,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-func TestEvienceString(t *testing.T) {
+func TestEvidenceString(t *testing.T) {
 	dupEv := randomDuplicatedVoteEvidence()
 	ev := Evidence{
 		DuplicateVoteEvidence: dupEv,

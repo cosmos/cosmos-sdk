@@ -26,6 +26,8 @@ const (
 	testConnectionID2 = "connectionid2"
 )
 
+var keyPrefix = string([]byte{0x00})
+
 type KeeperTestSuite struct {
 	suite.Suite
 

@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 
 func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
 	store := prefix.NewStore(suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey)), []byte{})
-	store.Delete(types.KeyChannel(portID, chanID))
+	store.Delete(append([]byte(keyPrefix), types.KeyChannel(portID, chanID)...))
 }
 
 func (suite *KeeperTestSuite) bindPort(portID string) sdk.CapabilityKey {
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := keyPrefix + types.ChannelPath(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
 	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.INIT)
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.bindPort(testPort1)
-	channelKey := types.ChannelPath(testPort2, testChannel2)
+	channelKey := keyPrefix + types.ChannelPath(testPort2, testChannel2)
 
 	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.OPENTRY)
 	suite.updateClient()
@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := keyPrefix + types.ChannelPath(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
 	suite.updateClient()
@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := keyPrefix + types.ChannelPath(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
 	suite.updateClient()

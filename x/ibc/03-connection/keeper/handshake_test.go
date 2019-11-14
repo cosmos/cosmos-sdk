@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.INIT)
 
-	connectionKey := connection.ConnectionPath(testConnectionID2)
-	consensusKey := string(client.KeyConsensusState(testClientID2))
+	connectionKey := keyPrefix + connection.ConnectionPath(testConnectionID2)
+	consensusKey := keyPrefix + string(client.KeyConsensusState(testClientID2))
 
 	invalidProof := func() error {
 		proofInit, proofHeight := suite.queryProof(connectionKey)
@@ -119,8 +119,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	suite.createClient(testClientID1)
 
 	suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connection.TRYOPEN)
-	connectionKey := connection.ConnectionPath(testConnectionID1)
-	consensusKey := string(client.KeyConsensusState(testClientID1))
+	connectionKey := keyPrefix + connection.ConnectionPath(testConnectionID1)
+	consensusKey := keyPrefix + string(client.KeyConsensusState(testClientID1))
 
 	connectionNotFound := func() error {
 		//suite.updateClient(testClientID2)
@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.OPEN)
 
-	connKey := connection.ConnectionPath(testConnectionID2)
+	connKey := keyPrefix + connection.ConnectionPath(testConnectionID2)
 	proof, h := suite.queryProof(connKey)
 
 	connectionNotFound := func() error {

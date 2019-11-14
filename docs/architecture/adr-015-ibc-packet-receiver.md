@@ -25,36 +25,41 @@ transaction, type switch to check whether the message contains an incoming IBC p
 
 ```go
 // Pseudocode
-func IBCAnteHandler(ctx sdk.Context, tx sdk.Tx, bool) (sdk.Context, sdk.Result, bool) {
+type ProofVerificationDecorator struct {
+  clik ClientKeeper
+  chank ChannelKeeper
+}
+
+func (deco ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
   for _, msg := range tx.GetMsgs() {
     switch msg := msg.(type) {
     case ibc.MsgUpdateClient:
       if err := UpdateClient(msg.ClientID, msg.Header); err != nil {
-        return ctx, err.Result(), true
+        return ctx, err.Result()
       }
     case ibc.MsgPacket:
       if err := VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight); err != nil {
-        return ctx, err.Result(), true
+        return ctx, err.Result()
       }
     case ibc.MsgAcknowledgement:
       if err := VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
-        return ctx, err.Result(), true
+        return ctx, err.Result()
       }
     case ibc.MsgTimeoutPacket:
       if err := VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
-        return ctx, err.Result(), true
+        return ctx, err.Result()
       }
     }
   }
-  return ctx, sdk.Result{}, false
+  return next(ctx, tx, simulate)
 }
 ```
 
-where `MsgUpdateClient`, `MsgPacket`, `MsgAcknowledgement`, `MsgTimeoutPacket` are `sdk.Msg` types invoking `handleUpdateClient`, `handleRecvPacket`, `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module, respectively.
+where `MsgUpdateClient`, `MsgPacket`, `MsgAcknowledgement`, `MsgTimeoutPacket` are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`, `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module, respectively.
 
-The `AnteHandler` will be inserted to the top level application, after the signature authentication logic provided by `auth.NewAnteHandler`, utilizing `AnteDecorator` pattern.
+The `ProofVerificationDecorator` will be inserted to the top level application. It should come right after the default sybil attack resistent layer, which is the entire `auth.NewAnteHandler` stack in this case. 
 
-The Cosmos SDK will define the wrapper function `ReceivePacket` under the ICS05 port keeper. The function will wrap packet handlers to automatically handle the acknowledgments.
+The Cosmos SDK will define the wrapper function `WriteAcknowledgement` under the ICS05 port keeper. The function will wrap packet handlers to automatically handle the acknowledgments.
 
 ```go
 // Pseudocode
@@ -69,7 +74,7 @@ func (ack Ack) IsOK() bool {
 
 type PacketHandler func(sdk.Context, Packet) Ack
 
-func (k PortKeeper) ReceivePacket(ctx sdk.Context, msg MsgPacket, h PacketHandler) sdk.Result {
+func (k PortKeeper) WriteAcknowledgement(ctx sdk.Context, msg MsgPacket, h PacketHandler) sdk.Result {
   // Cache context
   cacheCtx, write := ctx.CacheContext()
 
@@ -102,7 +107,7 @@ func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
     case ibc.MsgPacket:
-      return k.port.ReceivePacket(ctx, msg, func(ctx sdk.Context, p ibc.Packet) ibc.Ack {
+      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.Packet) ibc.Ack {
         switch packet := packet.(type) {
         case CustomPacket: // i.e fulfills the Packet interface
           return handleCustomPacket(ctx, k, packet)
@@ -151,7 +156,6 @@ Proposed
 
 - Intuitive interface for developers - IBC handlers do not need to care about IBC authentication
 - State change commitment logic is embedded into `baseapp.runTx` logic
-- IBC applications do not need to define message type for receiving packet
 
 ### Negative
 

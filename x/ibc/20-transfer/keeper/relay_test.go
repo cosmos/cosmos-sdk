@@ -111,15 +111,10 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 }
 
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
-	packetData := types.PacketData{
-		Amount:   testPrefixedCoins1,
-		Sender:   testAddr1,
-		Receiver: testAddr2,
-	}
-
 	// test the situation where the source is true
-	packetData.Source = true
+	source := true
 
+	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	err := suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, testPort1, testChannel1, testPort2, testChannel2, packetData)
 	suite.NotNil(err) // incorrect denom prefix
 

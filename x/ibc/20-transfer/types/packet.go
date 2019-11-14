@@ -15,6 +15,16 @@ type PacketData struct {
 	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
+// NewPacketData contructs a new PacketData
+func NewPacketData(amount sdk.Coins, sender, receiver sdk.AccAddress, source bool) PacketData {
+	return PacketData{
+		Amount:   amount,
+		Sender:   sender,
+		Receiver: receiver,
+		Source:   source,
+	}
+}
+
 func (pd PacketData) MarshalAmino() ([]byte, error) {
 	return ModuleCdc.MarshalBinaryBare(pd)
 }

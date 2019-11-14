@@ -164,12 +164,7 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.PacketData{
-		Amount:   amount,
-		Sender:   sender,
-		Receiver: receiver,
-		Source:   isSourceChain,
-	}
+	packetData := types.NewPacketData(amount, sender, receiver, isSourceChain)
 
 	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
 	packetDataBz, err := packetData.MarshalJSON()

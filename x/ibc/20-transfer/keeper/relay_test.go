@@ -1,12 +1,15 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	supply "github.com/cosmos/cosmos-sdk/x/supply"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -26,6 +29,24 @@ func (suite *KeeperTestSuite) createClient() {
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
 	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) updateClient() {
+	// always commit and begin a new block on updateClient
+	suite.app.Commit()
+	commitID := suite.app.LastCommitID()
+
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+
+	state := clienttypestm.ConsensusState{
+		ChainID: testChainID,
+		Height:  uint64(commitID.Version),
+		Root:    commitment.NewRoot(commitID.Hash),
+	}
+
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
+	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
 }
 
 func (suite *KeeperTestSuite) createConnection(state connection.State) {
@@ -56,6 +77,21 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 	}
 
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
+}
+
+func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+	res := suite.app.Query(abci.RequestQuery{
+		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
+		Data:  []byte(key),
+		Prove: true,
+	})
+
+	height = res.Height
+	proof = commitment.Proof{
+		Proof: res.Proof,
+	}
+
+	return
 }
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
@@ -150,4 +186,90 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
 	suite.Equal(testCoins, receiverCoins)
+}
+
+func (suite *KeeperTestSuite) TestReceivePacket() {
+	packetSeq := uint64(1)
+	packetTimeout := uint64(100)
+
+	packetDataBz := []byte("invaliddata")
+	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetCommitmentPath := channel.PacketCommitmentPath(testPort1, testChannel1, packetSeq)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, []byte("invalidcommitment"))
+	suite.updateClient()
+	proofPacket, proofHeight := suite.queryProof(packetCommitmentPath)
+
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, channel.OPEN)
+	err := suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.NotNil(err) // packet membership verification failed due to invalid counterparty packet commitment
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.NotNil(err) // invalid packet data
+
+	// test the situation where the source is true
+	source := true
+
+	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetDataBz, _ = packetData.MarshalJSON()
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.NotNil(err) // invalid denom prefix
+
+	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
+	packetDataBz, _ = packetData.MarshalJSON()
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.Nil(err) // successfully executed
+
+	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
+	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
+
+	receiverCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
+	suite.Equal(testPrefixedCoins2, receiverCoins)
+
+	// test the situation where the source is false
+	source = false
+
+	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
+	packetDataBz, _ = packetData.MarshalJSON()
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.Nil(err) // invalid denom prefix
+
+	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetDataBz, _ = packetData.MarshalJSON()
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.NotNil(err) // insufficient coins in the corresponding escrow account
+
+	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
+	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.Nil(err) // successfully executed
+
+	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
+	suite.Equal(testCoins, receiverCoins)
+
+	escrowCoins := suite.app.BankKeeper.GetCoins(suite.ctx, escrowAddress)
+	suite.Equal(sdk.Coins(nil), escrowCoins)
 }

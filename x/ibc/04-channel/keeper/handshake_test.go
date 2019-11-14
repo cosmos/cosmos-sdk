@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 }
 
 func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
-	store := prefix.NewStore(suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey)), []byte{})
+	store := prefix.NewStore(suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey)), types.KeyPrefixChannel)
 	store.Delete(types.KeyChannel(portID, chanID))
 }
 

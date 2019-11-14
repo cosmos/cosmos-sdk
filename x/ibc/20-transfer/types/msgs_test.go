@@ -38,10 +38,9 @@ var (
 	addr2     = sdk.AccAddress("testaddr2")
 	emptyAddr sdk.AccAddress
 
-	coins, _            = sdk.ParseCoins("100atom")
-	invalidDenomCoins   = sdk.Coins{sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}}
-	negativeCoins       = sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdk.NewInt(-100)}}
-	allPositiveCoins, _ = sdk.ParseCoins("100atom,100atoms")
+	coins, _          = sdk.ParseCoins("100atom")
+	invalidDenomCoins = sdk.Coins{sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}}
+	negativeCoins     = sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdk.NewInt(100)}, sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(-100)}}
 )
 
 // TestMsgTransferRoute tests Route for MsgTransfer
@@ -69,8 +68,7 @@ func TestMsgTransferValidation(t *testing.T) {
 		NewMsgTransfer("testportid", invalidLongChannel, coins, addr1, addr2, false),        // too long channel id
 		NewMsgTransfer("testportid", invalidChannel, coins, addr1, addr2, false),            // channel id contains non-alpha
 		NewMsgTransfer("testportid", "testchannel", invalidDenomCoins, addr1, addr2, false), // invalid amount
-		NewMsgTransfer("testportid", "testchannel", negativeCoins, addr1, addr2, false),     // negative amount
-		NewMsgTransfer("testportid", "testchannel", allPositiveCoins, addr1, addr2, false),  // valid msg for all positive coins
+		NewMsgTransfer("testportid", "testchannel", negativeCoins, addr1, addr2, false),     // amount contains negative coin
 		NewMsgTransfer("testportid", "testchannel", coins, emptyAddr, addr2, false),         // missing sender address
 		NewMsgTransfer("testportid", "testchannel", coins, addr1, emptyAddr, false),         // missing recipient address
 	}
@@ -88,10 +86,9 @@ func TestMsgTransferValidation(t *testing.T) {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "invalid amount"},
-		{testMsgs[8], false, "negative amount"},
-		{testMsgs[9], true, ""},
-		{testMsgs[10], false, "missing sender address"},
-		{testMsgs[11], false, "missing recipient address"},
+		{testMsgs[8], false, "amount contains negative coin"},
+		{testMsgs[9], false, "missing sender address"},
+		{testMsgs[10], false, "missing recipient address"},
 	}
 
 	for i, tc := range testCases {

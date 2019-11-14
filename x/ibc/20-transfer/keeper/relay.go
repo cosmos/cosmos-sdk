@@ -54,7 +54,7 @@ func (k Keeper) SendTransfer(
 
 // ReceivePacket handles receiving packet
 func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
-	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
+	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.boundedCapability)
 	if err != nil {
 		return err
 	}

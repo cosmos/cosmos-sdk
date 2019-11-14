@@ -28,8 +28,10 @@ const (
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
-	testChannelOrder   = channel.ORDERED
+	testChannelOrder   = channel.UNORDERED
 	testChannelVersion = "1.0"
+
+	testCapKeyName = "bank"
 )
 
 // define variables used for testing

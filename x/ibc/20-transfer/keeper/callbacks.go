@@ -14,7 +14,7 @@ import (
 )
 
 // nolint: unused
-func (k Keeper) onChanOpenInit(
+func (k Keeper) OnChanOpenInit(
 	ctx sdk.Context,
 	order channel.Order,
 	connectionHops []string,
@@ -35,7 +35,7 @@ func (k Keeper) onChanOpenInit(
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -44,7 +44,7 @@ func (k Keeper) onChanOpenInit(
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenTry(
+func (k Keeper) OnChanOpenTry(
 	ctx sdk.Context,
 	order channel.Order,
 	connectionHops []string,
@@ -66,11 +66,11 @@ func (k Keeper) onChanOpenTry(
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	if strings.TrimSpace(counterpartyVersion) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -79,21 +79,21 @@ func (k Keeper) onChanOpenTry(
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenAck(
+func (k Keeper) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 	version string,
 ) error {
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	return nil
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenConfirm(
+func (k Keeper) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -103,7 +103,7 @@ func (k Keeper) onChanOpenConfirm(
 }
 
 // nolint: unused
-func (k Keeper) onChanCloseInit(
+func (k Keeper) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -113,7 +113,7 @@ func (k Keeper) onChanCloseInit(
 }
 
 // nolint: unused
-func (k Keeper) onChanCloseConfirm(
+func (k Keeper) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -124,7 +124,7 @@ func (k Keeper) onChanCloseConfirm(
 
 // onRecvPacket is called when an FTTransfer packet is received
 // nolint: unused
-func (k Keeper) onRecvPacket(
+func (k Keeper) OnRecvPacket(
 	ctx sdk.Context,
 	packet channelexported.PacketI,
 ) error {
@@ -142,7 +142,7 @@ func (k Keeper) onRecvPacket(
 }
 
 // nolint: unused
-func (k Keeper) onAcknowledgePacket(
+func (k Keeper) OnAcknowledgePacket(
 	ctx sdk.Context,
 	packet channelexported.PacketI,
 	acknowledgement []byte,
@@ -152,7 +152,7 @@ func (k Keeper) onAcknowledgePacket(
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacket(
+func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channelexported.PacketI,
 ) error {
@@ -189,6 +189,6 @@ func (k Keeper) onTimeoutPacket(
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
+func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
 	panic("can't happen, only unordered channels allowed")
 }

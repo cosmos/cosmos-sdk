@@ -6,60 +6,90 @@
 
 ## Context
 
-[ICS 26](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay). 
-`handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the packet merkle proof, and pushes the acknowledgement bytes, if present,
-to the IBC channel `Keeper` state (ICS04). 
-`handlePacketAcknowledgement` executes per-module `onAcknowledgementPacket` callbacks, and verifies the acknowledgement merkle proof.
-`handlePacketTimeout` and `handlePacketTimeoutOnClose` executes per-module `onTimeoutPacket` callbacks, and verifies the timeout proof.
+[ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
 
-The mechanism is similar to the transaction handling logic in `baseapp`. After authentication, the handler is executed, and 
-the authentication state change must be committed regardless of the result of the handler execution. 
+`handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the
+packet merkle proof, and pushes the acknowledgement bytes, if present, to the IBC
+channel `Keeper` state (ICS04).
 
-`handlePacketRecv` also requires acknowledgement writing which has to be done after the handler execution and also must be commited 
-regardless of the result of the handler execution.
+`handlePacketAcknowledgement` executes per-module `onAcknowledgementPacket`
+callbacks, and verifies the acknowledgement commitment proof.
+
+`handlePacketTimeout` and `handlePacketTimeoutOnClose` executes per-module
+`onTimeoutPacket` callbacks, and verifies the timeout proof.
+
+The mechanism is similar to the transaction handling logic in `baseapp`. After
+authentication, the handler is executed, and the authentication state change
+must be committed regardless of the result of the handler execution.
+
+`handlePacketRecv` also requires acknowledgement writing which has to be done
+after the handler execution and also must be commited regardless of the result of
+the handler execution.
 
 ## Decision
 
-The Cosmos SDK will define an `AnteHandler` for IBC packet receiving. The `AnteHandler` will iterate over the messages included in the 
-transaction, type switch to check whether the message contains an incoming IBC packet, and if so verify the Merkle proof.
+The Cosmos SDK will define an `AnteHandler` for IBC packet receiving. The
+`AnteHandler` will iterate over the messages included in the transaction, type
+`switch` to check whether the message contains an incoming IBC packet, and if so
+verify the Merkle proof.
 
 ```go
 // Pseudocode
 type ProofVerificationDecorator struct {
-  clik ClientKeeper
-  chank ChannelKeeper
+  clientKeeper ClientKeeper
+  channelKeeper ChannelKeeper
 }
 
-func (deco ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
   for _, msg := range tx.GetMsgs() {
+    var err error
     switch msg := msg.(type) {
-    case ibc.MsgUpdateClient:
-      if err := deco.clik.UpdateClient(msg.ClientID, msg.Header); err != nil {
-        return ctx, err.Result()
-      }
-    case ibc.MsgPacket:
-      if err := deco.chank.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight); err != nil {
-        return ctx, err.Result()
-      }
-    case ibc.MsgAcknowledgement:
-      if err := deco.chank.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight); err != nil {
-        return ctx, err.Result()
-      }
-    case ibc.MsgTimeoutPacket:
-      if err := deco.chank.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv); err != nil {
-        return ctx, err.Result()
-      }
+    case client.MsgUpdateClient:
+      err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
+    case channel.MsgPacket:
+      err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+    case chanel.MsgAcknowledgement:
+      err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+    case channel.MsgTimeoutPacket:
+      err = pvr.channelKeeper.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+    default:
+      continue
+    }
+
+    if err != nil {
+      return ctx, err.Result()
     }
   }
   return next(ctx, tx, simulate)
 }
 ```
 
-where `MsgUpdateClient`, `MsgPacket`, `MsgAcknowledgement`, `MsgTimeoutPacket` are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`, `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module, respectively.
+Where `MsgUpdateClient`, `MsgPacket`, `MsgAcknowledgement`, `MsgTimeoutPacket`
+are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
+`handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module,
+respectively.
 
-The `ProofVerificationDecorator` will be inserted to the top level application. It should come right after the default sybil attack resistent layer, which is the entire `auth.NewAnteHandler` stack in this case. 
+The `ProofVerificationDecorator` will be inserted to the top level application.
+It should come right after the default sybil attack resistent layer from the
+current `auth.NewAnteHandler`:
 
-The Cosmos SDK will define the wrapper function `WriteAcknowledgement` under the ICS05 port keeper. The function will wrap packet handlers to automatically handle the acknowledgments.
+```go
+// add IBC ProofVerificationDecorator to the Chain of
+func NewAnteHandler(
+  ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, ibcKeeper ibc.Keeper,
+  sigGasConsumer SignatureVerificationGasConsumer) sdk.AnteHandler {
+  return sdk.ChainAnteDecorators(
+    NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+    ...
+    NewIncrementSequenceDecorator(ak),
+    ibcante.ProofVerificationDecorator(ibcKeeper.ClientKeeper, ibcKeeper.ChannelKeeper), // innermost AnteDecorator
+  )
+}
+```
+
+The Cosmos SDK will define the wrapper function `WriteAcknowledgement` under the
+ICS05 port keeper. The function will wrap packet handlers to automatically handle
+the acknowledgments.
 
 ```go
 // Pseudocode
@@ -163,8 +193,9 @@ Proposed
 
 ### Neutral
 
-- Introduces new AnteHandler
+- Introduces new `AnteHandler` decorator.
 
 ## References
 
-- Relevant comment: https://github.com/cosmos/ics/issues/289#issuecomment-544533583
+- Relevant comment: [cosmos/ics#289](https://github.com/cosmos/ics/issues/289#issuecomment-544533583)
+- [ICS26 - Routing Module](https://github.com/cosmos/ics/blob/master/spec/ics-026-routing-module)

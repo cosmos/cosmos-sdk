@@ -14,6 +14,12 @@ type Evidence interface {
 	String() string
 	Hash() cmn.HexBytes
 	ValidateBasic() error
+}
+
+// ValidatorEvidence extends Evidence interface to define contract
+// for evidence against malicious validators
+type ValidatorEvidence interface {
+	Evidence
 
 	// The consensus address of the malicious validator at time of infraction
 	GetConsensusAddress() sdk.ConsAddress

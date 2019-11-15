@@ -42,7 +42,5 @@ func (m Misbehaviour) ValidateBasic() error {
 
 // CheckMisbehaviour checks if the evidence provided is a misbehaviour
 func CheckMisbehaviour(m Misbehaviour) error {
-	return m.Evidence.DuplicateVoteEvidence.Verify(
-		m.Evidence.ChainID, m.Evidence.DuplicateVoteEvidence.PubKey,
-	)
+	return m.ValidateBasic()
 }

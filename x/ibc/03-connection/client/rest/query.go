@@ -14,6 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 )
 
+const (
+	Prove = "true"
+)
+
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}", RestConnectionID), queryConnectionHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(cliCtx, queryRoute)).Methods("GET")
@@ -32,7 +36,7 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http
 		// return proof if the prove query param is set to true
 		proveStr := r.FormValue("prove")
 		prove := false
-		if strings.ToLower(strings.TrimSpace(proveStr)) == "true" {
+		if strings.ToLower(strings.TrimSpace(proveStr)) == Prove {
 			prove = true
 		}
 
@@ -72,7 +76,7 @@ func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, queryRoute strin
 		// return proof if the prove query param is set to true
 		proveStr := r.FormValue("prove")
 		prove := false
-		if strings.ToLower(strings.TrimSpace(proveStr)) == "true" {
+		if strings.ToLower(strings.TrimSpace(proveStr)) == Prove {
 			prove = true
 		}
 

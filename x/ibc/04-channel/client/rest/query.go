@@ -13,6 +13,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+const (
+	Prove = "true"
+)
+
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}", RestPortID, RestChannelID), queryChannelHandlerFn(cliCtx, queryRoute)).Methods("GET")
 }
@@ -31,7 +35,7 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 		// return proof if the prove query param is set to true
 		proveStr := r.FormValue("prove")
 		prove := false
-		if strings.ToLower(strings.TrimSpace(proveStr)) == "true" {
+		if strings.ToLower(strings.TrimSpace(proveStr)) == Prove {
 			prove = true
 		}
 

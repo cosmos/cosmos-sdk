@@ -34,17 +34,9 @@ type Keeper struct {
 }
 ```
 
-For example, here is the [type definition of the `keeper` from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/x/nameservice/internal/keeper/keeper.go#L10-L17):
+For example, here is the [type definition of the `keeper` from the nameservice tutorial:
 
-```go
-type Keeper struct {
-	CoinKeeper types.CoinKeeper
-
-	storeKey sdk.StoreKey // Unexposed key to access store from sdk.Context
-
-	cdc *codec.Codec // The wire codec for binary encoding/decoding.
-}
-```
++++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/keeper/keeper.go#L10-L17
 
 Let us go through the different parameters:
 

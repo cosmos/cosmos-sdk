@@ -84,17 +84,9 @@ var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
-[gaia app](https://github.com/cosmos/gaia/blob/bd10ee5c62a1206c03a21d0f71a9e9308765cdb7/app/app.go).
+gaia app.
 
-```go
-// register message routes
-app.Router().
-  AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
-  AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
-  AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
-  AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
-  AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
-```
++++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
 
 ## Next
 

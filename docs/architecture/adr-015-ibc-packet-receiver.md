@@ -41,6 +41,8 @@ type ProofVerificationDecorator struct {
 }
 
 func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+  var flag bool
+
   for _, msg := range tx.GetMsgs() {
     var err error
     switch msg := msg.(type) {
@@ -48,13 +50,19 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
       err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
     case channel.MsgPacket:
       err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+      flag = true
       // Store the empty acknowledgement for convinience
       pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, []byte{})
     case chanel.MsgAcknowledgement:
       err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+      flag = true
     case channel.MsgTimeoutPacket:
       err = pvr.channelKeeper.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+      flag = true
     default:
+      if flag {
+        return ctx, errors.New("Transaction cannot include both IBC packet messasges and normal messages")
+      }
       continue
     }
 
@@ -70,6 +78,11 @@ Where `MsgUpdateClient`, `MsgPacket`, `MsgAcknowledgement`, `MsgTimeoutPacket`
 are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
 `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module,
 respectively.
+
+An attacker can insert a failiing message before any of packet receiving message
+preventing the packet messages to be processed but keeping the sequence increased.
+If a transaction contains a packet receiving messages, any possibly failing 
+messages should not be included in the transaction.
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
 It should come right after the default sybil attack resistent layer from the

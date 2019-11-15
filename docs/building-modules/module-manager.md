@@ -15,7 +15,7 @@ Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-m
 
 ## Application Module Interfaces
 
-[Application module interfaces](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go) exist to facilitate the composition of modules together to form a functional SDK application. There are 3 main application module interfaces: 
+Application module interfaces exist to facilitate the composition of modules together to form a functional SDK application. There are 3 main application module interfaces: 
 
 - [`AppModuleBasic`](#appmodulebasic) for independent module functionalities.
 - [`AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
@@ -30,23 +30,9 @@ are only used for genesis can take advantage of the `Module` patterns without ha
 
 ### `AppModuleBasic`
 
-The [`AppModuleBasic`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L45-L57) interface defines the independent methods modules need to implement. 
+The `AppModuleBasic` interface defines the independent methods modules need to implement. 
 
-```go
-type AppModuleBasic interface {
-	Name() string
-	RegisterCodec(*codec.Codec)
-
-	// genesis
-	DefaultGenesis() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
-
-	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router)
-	GetTxCmd(*codec.Codec) *cobra.Command
-	GetQueryCmd(*codec.Codec) *cobra.Command
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L45-L57
 
 Let us go through the methods:
 
@@ -62,15 +48,9 @@ All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#
 
 ### `AppModuleGenesis`
 
-The [`AppModuleGenesis`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L123-L127) interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
+The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
 
-```go
-type AppModuleGenesis interface {
-	AppModuleBasic
-	InitGenesis(sdk.Context, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(sdk.Context) json.RawMessage
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L123-L127
 
 Let us go through the two added methods:
 
@@ -81,25 +61,9 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 
 ### `AppModule`
 
-The [`AppModule`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L130-L144) interface defines the inter-dependent methods modules need to implement. 
+The `AppModule` interface defines the inter-dependent methods modules need to implement. 
 
-```go
-type AppModule interface {
-	AppModuleGenesis
-
-	// registers
-	RegisterInvariants(sdk.InvariantRegistry)
-
-	// routes
-	Route() string
-	NewHandler() sdk.Handler
-	QuerierRoute() string
-	NewQuerierHandler() sdk.Querier
-
-	BeginBlock(sdk.Context, abci.RequestBeginBlock)
-	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L130-L144
 
 `AppModule`s are managed by the [module manager](#manager). This interface embeds the `AppModuleGenesis` interface so that the manager can access all the independent and genesis inter-dependent methods of the module. This means that a concrete type implementing the `AppModule` interface must either implement all the methods of `AppModuleGenesis` (and by extension `AppModuleBasic`), or include a concrete type that does as parameter. 
 
@@ -160,17 +124,9 @@ It implements the following methods:
 
 ### `Manager`
 
-The [`Manager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209) is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
+The `Manager` is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
 
-```go
-type Manager struct {
-	Modules            map[string]AppModule
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209
 
 The module manager is used throughout the application whenever an action on a collection of modules is required. It implements the following methods:
 

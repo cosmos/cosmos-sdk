@@ -26,7 +26,9 @@ The main interface for an application is the command-line interface. Users conne
 appcli query staking delegations <delegatorAddress>
 ```
 
-This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294).
+This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command is the following:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294
 
 Note that the general format is as follows:
 
@@ -48,7 +50,11 @@ GET http://localhost:{PORT}/staking/delegators/{delegatorAddr}/delegations
 
 To provide values such as `--node` (the full-node the CLI connects to) that are required by [`baseReq`](../building-modules/module-interfaces.md#basereq), the user must configure their local REST server with the values or provide them in the request body.
 
-The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function (to see the handler itself, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/query.go#L103-L106)). Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
+The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/query.go#L103-L106
+
+Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
 
 To summarize, when users interact with the interfaces, they create a CLI command or HTTP request. `Query` now exists in one of these two forms, but needs to be transformed into an object understood by a full-node.
 
@@ -62,13 +68,14 @@ The first thing that is created in the execution of a CLI command is a `CLIConte
 
 * **Codec**: The [encoder/decoder](../core/encoding.md) used by the application, used to marshal the parameters and query before making the Tendermint RPC request and unmarshal the returned response into a JSON object.
 * **Account Decoder**: The account decoder from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, which translates `[]byte`s into accounts.
-* **RPC Client**: The [Tendermint RPC Client](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/rpc/client/interface.go), or node, to which the request will be relayed to.
+* **RPC Client**: The Tendermint RPC Client, or node, to which the request will be relayed to.
 * **Keybase**: A [Key Manager](../basics/accounts.md#keybase) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://golang.org/pkg/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query and `--indent`, which indicates to add an indent to the JSON response.
 
-The `CLIContext` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node. For full specification of the `CLIContext` type, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/context.go#L36-L59).
+The `CLIContext` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node. 
 
++++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/context.go#L36-L59
 
 The `CLIContext`'s primary role is to store data used during interactions with the end-user and provide methods to interact with this data - it is used before and after the query is processed by the full-node. Specifically, in handling `Query`, the `CLIContext` is utilized to encode the query parameters, retrieve the full-node, and write the output. Prior to being relayed to a full-node, the query needs to be encoded into a `[]byte` form, as full-nodes are application-agnostic and do not understand specific types. The full-node (RPC Client) itself is retrieved using the `CLIContext`, which knows which node the user CLI is connected to. The query is relayed to this full-node to be processed. Finally, the `CLIContext` contains a `Writer` to write output when the response is returned. These steps are further described in later sections.
 
@@ -76,9 +83,9 @@ The `CLIContext`'s primary role is to store data used during interactions with t
 
 At this point in the lifecycle, the user has created a CLI command or HTTP Request with all of the data they wish to include in their `Query`. A `CLIContext` exists to assist in the rest of the `Query`'s journey. Now, the next step is to parse the command or request, extract the arguments, create a `queryRoute`, and encode everything. These steps all happen on the user side within the interface they are interacting with.
 
-#### Parse Arguments
+#### Encoding
 
-In this case, `Query` contains an [address](../basics/accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `CLIContext` is used to marshal the address as the type [`QueryDelegatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L30-L38). All query arguments have their own types that the application `codec` understands how to encode and decode. For example, the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module also has [`QueryValidatorParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L45-L53) and [`QueryBondsParams`](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/types/querier.go#L59-L69). The module [`querier`](../building-modules/querier.md) declares these types and the application registers the `codec`s.
+In this case, `Query` contains an [address](../basics/accounts.md#addresses) `delegatorAddress` as its only argument. However, the request can only contain `[]byte`s, as it will be relayed to a consensus engine (e.g. Tendermint Core) of a full-node that has no inherent knowledge of the application types. Thus, the `codec` of `CLIContext` is used to marshal the address.
 
 Here is what the code looks like for the CLI command:
 
@@ -116,16 +123,9 @@ Now, `Query` exists as a set of encoded arguments and a route to a specific modu
 
 The `CLIContext` has a `Query()` function used to retrieve the pre-configured node and relay a query to it; the function takes the query `route` and arguments as parameters. It first retrieves the RPC Client (called the [**node**](../core/node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
 
-Here is what the code looks like (for full specification of all `CLIContext` query functionality, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go)):
+Here is what the code looks like:
 
-```go
-node, err := ctx.GetNode()
-opts := rpcclient.ABCIQueryOptions{
-		Height: ctx.Height,
-		Prove:  !ctx.TrustNode,
-}
-result, err := node.ABCIQueryWithOptions(path, key, opts)
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go#L80-L112
 
 ## RPC
 
@@ -143,15 +143,21 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `CLIContext` `Query()` routine receives the response and, if `--trust-node` is toggled to `false` and a proof needs to be verified, the response is verified with the `CLIContext` [`verifyProof()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go#L136-L173) function before the response is returned.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `CLIContext` `Query()` routine receives the response and, if `--trust-node` is toggled to `false` and a proof needs to be verified, the response is verified with the `CLIContext` `verifyProof()` function before the response is returned.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go#L136-L173
 
 ### CLI Response
 
-The application [`codec`](../core/encoding.md) is used to unmarshal the response to a JSON and the `CLIContext` prints the output to the command line, applying any configurations such as `--indent`. To see the code, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L252-L293).
+The application [`codec`](../core/encoding.md) is used to unmarshal the response to a JSON and the `CLIContext` prints the output to the command line, applying any configurations such as `--indent`. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L252-L293
 
 ### REST Response
 
-The [REST server](./rest.md#rest-server) uses the `CLIContext` to format the response properly, then uses the HTTP package to write the appropriate response or error. To see the code, click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/utils.go#L115-L148).
+The [REST server](./rest.md#rest-server) uses the `CLIContext` to format the response properly, then uses the HTTP package to write the appropriate response or error. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/utils.go#L115-L148
 
 ## Next
 

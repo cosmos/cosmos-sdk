@@ -34,36 +34,15 @@ keeper.cdc.MustUnmarshalBinaryBare(bz, &object)
 
 Alternatively, it is possible to use `MustMarshalBinaryLengthPrefixed`/`MustUnmarshalBinaryLengthPrefixed` instead of `MustMarshalBinaryBare`/`MustUnmarshalBinaryBare` for the same encoding prefixed by a `uvarint` encoding of the object to encode. 
 
-Another important use of the `codec` is the encoding and decoding of [transactions](./transactions.md). Transactions are defined at the Cosmos SDK level, but passed to the underlying consensus engine in order to be relayed to other peers. Since the underlying consensus engine is agnostic to the application, it only accepts transactions in the form of `[]byte`. The encoding is done by an object called [`TxEncoder`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L48-L49) and the decoding by an object called [`TxDecoder`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L45-L47). A [standard implementation](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go) of both these objects can be found in the `auth` module:
+Another important use of the `codec` is the encoding and decoding of [transactions](./transactions.md). Transactions are defined at the Cosmos SDK level, but passed to the underlying consensus engine in order to be relayed to other peers. Since the underlying consensus engine is agnostic to the application, it only accepts transactions in the form of `[]byte`. The encoding is done by an object called `TxEncoder` and the decoding by an object called `TxDecoder`. 
 
-```go
-// DefaultTxDecoder logic for standard transaction decoding
-func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
-	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
-		var tx = StdTx{}
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L48-L49
 
-		if len(txBytes) == 0 {
-			return nil, sdk.ErrTxDecode("txBytes are empty")
-		}
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L45-L47
 
-		// StdTx.Msg is an interface. The concrete types
-		// are registered by MakeTxCodec
-		err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
-		if err != nil {
-			return nil, sdk.ErrTxDecode("error decoding transaction").TraceSDK(err.Error())
-		}
+A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
 
-		return tx, nil
-	}
-}
-
-// DefaultTxEncoder logic for standard transaction encoding
-func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
-	return func(tx sdk.Tx) ([]byte, error) {
-		return cdc.MarshalBinaryLengthPrefixed(tx)
-	}
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go#L241-L266
 
 ## Next
 

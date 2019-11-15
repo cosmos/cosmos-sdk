@@ -31,7 +31,11 @@ type MsgSubmitProposal struct {
 }
 ```
 
-The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29) interface, which contains the following methods:
+The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`] interface:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29
+
+It contains the following methods:
 
 - `Route() string`: Name of the route for this message. Typically all `message`s in a module have the same route, which is most often the module's name.
 - `Type() string`: Type of the message, used primarly in [events](../core/events.md). This should return a message-specific `string`, typically the denomination of the message itself.
@@ -39,7 +43,9 @@ The `Msg` is typically accompanied by a standard constructor function, that is c
 - `GetSignBytes() []byte`: Return the canonical byte representation of the message. Used to generate a signature. 
 - `GetSigners() []AccAddress`: Return the list of signers. The SDK will make sure that each `message` contained in a transaction is signed by all the signers listed in the list returned by this method. 
 
-You can see an example implementation of a `message` from the *nameservice tutorial* [here](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go).
+See an example implementation of a `message` from the `nameservice` module:
+
++++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/types/msgs.go#L10-L51
 
 ## Queries
 
@@ -62,7 +68,11 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 - A [`querier`](./querier.md), to process the `query` once it has been [routed to the module](../core/baseapp.md#query-routing). 
 - [Query commands](./module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified. 
-- `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). See an example of `query` return types from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/types/querier.go). 
+- `query` return types. Typically defined in a file `internal/types/querier.go`, they specify the result type of each of the module's `queries`. These custom types must implement the `String()` method of [`fmt.Stringer`](https://golang.org/pkg/fmt/#Stringer). 
+
+See an example of `query` return types from the `nameservice` module:
+
++++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/types/querier.go#L5-L21
 
 ## Next
 

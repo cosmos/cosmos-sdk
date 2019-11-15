@@ -172,6 +172,20 @@ Handler functions return a result of type `sdk.Result`, which informs the applic
 
 To learn more about handlers, [click here](../building-modules/handler.md).
 
+### Querier 
+
+[`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#interfaces) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L519-L556
+
+The `Querier` of a module is defined in a file called `querier.go`, and consists of:
+
+- A **switch function** `NewQuerier` to route the query to the appropriate `querier` function. This function returns a `querier` function, and is is registered in the [`AppModule`](#application-module-interface) to be used in the application's module manager to initialize the [application's query router](../core/baseapp.md#query-routing). See an example of such a switch from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice):
+    +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/keeper/querier.go#L19-L32
+- - **One querier function for each data type defined by the module that needs to be queryable**. Developers write the query processing logic in these functions. This generally involves calling [`keeper`](#keeper)'s methods to query the state and marshalling it to JSON. 
+
+To learn more about `queriers`, [click here](../building-modules/querier.md).
+
 ### Keeper
 
 [`Keepers`](../building-modules/keeper.md) are the gatekeepers of their module's store(s). To read or write in a module's store, it is mandatory to go through one of its `keeper`'s methods. This is ensured by the [object-capabilities](../core/ocap.md) model of the Cosmos SDK. Only objects that hold the key to a store can access it, and only the module's `keeper` should hold the key(s) to the module's store(s).
@@ -187,20 +201,6 @@ The `keeper` type definition generally consists of:
 Along with the type definition, the next important component of the `keeper.go` file is the `keeper`'s constructor function, `NewKeeper`. This function instantiates a new `keeper` of the type defined above, with a `codec`, store `keys` and potentially references to other modules' `keeper`s as parameters. The `NewKeeper` function is called from the [application's constructor](#constructor-function). The rest of the file defines the `keeper`'s methods, primarily getters and setters.
 
 To learn more about `keepers`, [click here](../building-modules/keeper.md).
-
-### Querier 
-
-[`Queriers`](../building-modules/querier.md) are very similar to `handlers`, except they serve user queries to the state as opposed to processing transactions. A [query](../building-modules/messages-and-queries.md#queries) is initiated from an [interface](#interfaces) by an end-user who provides a `queryRoute` and some `data`. The query is then routed to the correct application's `querier` by `baseapp`'s `handleQueryCustom` method using `queryRoute`:
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L519-L556
-
-The `Querier` of a module is defined in a file called `querier.go`, and consists of:
-
-- A **switch function** `NewQuerier` to route the query to the appropriate `querier` function. This function returns a `querier` function, and is is registered in the [`AppModule`](#application-module-interface) to be used in the application's module manager to initialize the [application's query router](../core/baseapp.md#query-routing). See an example of such a switch from the [nameservice tutorial](https://github.com/cosmos/sdk-tutorials/tree/master/nameservice):
-    +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/internal/keeper/querier.go#L19-L32
-- - **One querier function for each data type defined by the module that needs to be queryable**. Developers write the query processing logic in these functions. This generally involves calling [`keeper`](#keeper)'s methods to query the state and marshalling it to JSON. 
-
-To learn more about `queriers`, [click here](../building-modules/querier.md).
 
 ### Command-Line and REST Interfaces
 

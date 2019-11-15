@@ -20,7 +20,11 @@ When users want to interact with an application and make state changes (e.g. sen
 
 ## Type Definition
 
-Transaction objects are SDK types that implement the [`Tx`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L34-L41) interface, which contains the following methods:
+Transaction objects are SDK types that implement the `Tx` interface
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L34-L41
+
+It contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of its message(s) - one transaction may have one or multiple [messages](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
 * **ValidateBasic:** includes lightweight, [*stateless*](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for *`messages`*, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
@@ -43,7 +47,11 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 ### Messages
 
-**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the [`Msg`](https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L10-L31) interface, and also define a [`Handler`](../building-modules/handler.md) to process them. `Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
+**`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L10-L31
+
+`Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
 
 Note: module `messages` are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers. 
 
@@ -57,19 +65,21 @@ Transactions are first created by end-users through an `appcli tx` command throu
 
 [`Contexts`](https://godoc.org/context) are immutable objects that contain all the information needed to process a request. In the process of creating a transaction through the `auth` module (though it is not mandatory to create transactions this way), two contexts are created: the [`CLIContext`](../interfaces/query-lifecycle.md#clicontext) and `TxBuilder`. Both are automatically generated and do not need to be defined by application developers, but do require input from the transaction creator (e.g. using flags through the CLI).
 
-The [`TxBuilder`](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/txbuilder.go) contains data closely related with the processing of transactions:
+The `TxBuilder` contains data closely related with the processing of transactions.
 
-* `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
-* `Keybase` that manages the user's keys and is used to perform signing operations.
-* `AccountNumber` from which this transaction originated.
-* `Sequence`, the number of transactions that the user has sent out, used to prevent replay attacks.
-* `Gas` option chosen by the users for how to calculate how much gas they will need to pay. A common option is "auto" which generates an automatic estimate.
-* `GasAdjustment` to adjust the estimate of gas by a scalar value, used to avoid underestimating the amount of gas required.
-* `SimulateAndExecute` option to simply simulate the transaction execution without broadcasting.
-* `ChainID` representing which blockchain this transaction pertains to.
-* `Memo` to send with the transaction.
-* `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
-* `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
++++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/txbuilder.go#L18-L31
+
+- `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
+- `Keybase` that manages the user's keys and is used to perform signing operations.
+- `AccountNumber` from which this transaction originated.
+- `Sequence`, the number of transactions that the user has sent out, used to prevent replay attacks.
+- `Gas` option chosen by the users for how to calculate how much gas they will need to pay. A common option is "auto" which generates an automatic estimate.
+- `GasAdjustment` to adjust the estimate of gas by a scalar value, used to avoid underestimating the amount of gas required.
+- `SimulateAndExecute` option to simply simulate the transaction execution without broadcasting.
+- `ChainID` representing which blockchain this transaction pertains to.
+- `Memo` to send with the transaction.
+- `Fees`, the maximum amount the user is willing to pay in fees. Alternative to specifying gas prices.
+- `GasPrices`, the amount per unit of gas the user is willing to pay in fees. Alternative to specifying fees.
 
 The `CLIContext` is initialized using the application's `codec` and data more closely related to the user interaction with the interface, holding data such as the output to the user and the broadcast mode. Read more about `CLIContext` [here](../interfaces/query-lifecycle.md#clicontext).
 

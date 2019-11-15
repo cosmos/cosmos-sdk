@@ -28,8 +28,8 @@ the handler execution.
 
 ## Decision
 
-The Cosmos SDK will define an `AnteHandler` for IBC packet receiving. The
-`AnteHandler` will iterate over the messages included in the transaction, type
+The Cosmos SDK will define an `AnteDecorator` for IBC packet receiving. The
+`AnteDecorator` will iterate over the messages included in the transaction, type
 `switch` to check whether the message contains an incoming IBC packet, and if so
 verify the Merkle proof.
 
@@ -48,6 +48,8 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
       err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
     case channel.MsgPacket:
       err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+      // Store the empty acknowledgement for convinience
+      pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, []byte{})
     case chanel.MsgAcknowledgement:
       err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
     case channel.MsgTimeoutPacket:
@@ -57,7 +59,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
     }
 
     if err != nil {
-      return ctx, err.Result()
+      return ctx, err
     }
   }
   return next(ctx, tx, simulate)
@@ -92,39 +94,27 @@ ICS05 port keeper. The function will wrap packet handlers to automatically handl
 the acknowledgments.
 
 ```go
-// Pseudocode
-type Ack struct {
-  Data []byte
-  Err sdk.Error
-}
-
-func (ack Ack) IsOK() bool {
-  return ack.Err.IsOK()
-}
-
-type PacketHandler func(sdk.Context, Packet) Ack
+type PacketHandler func(sdk.Context, Packet) sdk.Result
 
 func (k PortKeeper) WriteAcknowledgement(ctx sdk.Context, msg MsgPacket, h PacketHandler) sdk.Result {
   // Cache context
   cacheCtx, write := ctx.CacheContext()
 
   // verification already done inside the antehandler
-  ack := h(cacheCtx, msg.Packet)
+  res := h(cacheCtx, msg.Packet)
   
   // write the cache only if succedded
-  if ack.IsOK() {
+  if res.IsOK() {
     write()
   }
   
-  res := ack.Err.Result()
   // set the result to OK to persist the state change
   res.Code = sdk.CodeOK
   
-  // ackData will be stored as acknowledgement; []byte{} will be stored if not exists
-  if ack.Data == nil {
-    ack.Data = []byte{}
+  // res.Data will be stored as acknowledgement; noop if not exists(empty bytes already stored)
+  if res.Data != nil {
+    k.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, res.Data)
   }
-  k.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, ack.Data)
 
   return res
 }
@@ -137,7 +127,7 @@ func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
     case ibc.MsgPacket:
-      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.Packet) ibc.Ack {
+      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.Packet) sdk.Result {
         switch packet := packet.(type) {
         case CustomPacket: // i.e fulfills the Packet interface
           return handleCustomPacket(ctx, k, packet)
@@ -157,7 +147,7 @@ func NewHandler(k Keeper) sdk.Handler {
   }
 }
 
-func handleCustomPacket(ctx sdk.Context, k Keeper, packet MyPacket) ibc.Ack {
+func handleCustomPacket(ctx sdk.Context, k Keeper, packet MyPacket) sdk.Result {
   if failureCondition {
     return AckInvalidPacketContent(k.codespace, []byte{packet.Data})
   }
@@ -190,6 +180,7 @@ Proposed
 ### Negative
 
 - Cannot support dynamic ports, routing is tied to the baseapp router
+  Dynamic ports can be supported using hierarchical port identifier, see #5290 for detail
 
 ### Neutral
 

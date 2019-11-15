@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	source := true
 
 	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.NotNil(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	source = false
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
@@ -253,7 +253,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.Nil(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)

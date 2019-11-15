@@ -60,7 +60,7 @@ func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, p
 	}
 
 	var data types.PacketData
-	err = data.UnmarshalJSON(packet.GetData())
+	err = k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
@@ -166,8 +166,8 @@ func (k Keeper) createOutgoingPacket(
 
 	packetData := types.NewPacketData(amount, sender, receiver, isSourceChain)
 
-	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
-	packetDataBz, err := packetData.MarshalJSON()
+	// TODO: This should be hashed (for the commitment in the store).
+	packetDataBz, err := k.cdc.MarshalBinaryBare(packetData)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}

@@ -130,7 +130,7 @@ func (k Keeper) OnRecvPacket(
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.GetData())
+	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
@@ -158,13 +158,13 @@ func (k Keeper) OnTimeoutPacket(
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.GetData())
+	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourcePort())
+	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	coins := make(sdk.Coins, len(data.Amount))
 	for i, coin := range data.Amount {
 		coin := coin

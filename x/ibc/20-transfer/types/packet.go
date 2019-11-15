@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,30 +22,6 @@ func NewPacketData(amount sdk.Coins, sender, receiver sdk.AccAddress, source boo
 		Receiver: receiver,
 		Source:   source,
 	}
-}
-
-func (pd PacketData) MarshalAmino() ([]byte, error) {
-	return ModuleCdc.MarshalBinaryBare(pd)
-}
-
-func (pd *PacketData) UnmarshalAmino(bz []byte) (err error) {
-	return ModuleCdc.UnmarshalBinaryBare(bz, pd)
-}
-
-func (pd PacketData) Marshal() []byte {
-	return ModuleCdc.MustMarshalBinaryBare(pd)
-}
-
-type PacketDataAlias PacketData
-
-// MarshalJSON implements the json.Marshaler interface.
-func (pd PacketData) MarshalJSON() ([]byte, error) {
-	return json.Marshal((PacketDataAlias)(pd))
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (pd *PacketData) UnmarshalJSON(bz []byte) (err error) {
-	return json.Unmarshal(bz, (*PacketDataAlias)(pd))
 }
 
 func (pd PacketData) String() string {

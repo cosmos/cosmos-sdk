@@ -66,14 +66,14 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	source := true
 
 	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
 	suite.NotNil(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
@@ -89,14 +89,14 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	source = false
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
 	suite.NotNil(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
@@ -104,6 +104,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
+	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
 	suite.Nil(err) // successfully executed
 
@@ -124,14 +125,14 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	source := true
 
 	packetData := types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
 	suite.NotNil(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
@@ -152,9 +153,10 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	source = false
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = packetData.MarshalJSON()
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
+	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Sender, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
 	suite.Nil(err) // successfully executed
 

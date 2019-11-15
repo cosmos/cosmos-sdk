@@ -151,20 +151,20 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 
 	msg := transfer.NewMsgTransfer(testPort1, testChannel1, testCoins, testAddr1, testAddr2, source)
 	res := transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // channel does not exist
+	suite.False(res.Code.IsOK()) // channel does not exist
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
 	res = transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // next send sequence not found
+	suite.False(res.Code.IsOK()) // next send sequence not found
 
 	nextSeqSend := uint64(1)
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, nextSeqSend)
 	res = transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // sender has insufficient coins
+	suite.False(res.Code.IsOK()) // sender has insufficient coins
 
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testCoins)
 	res = transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.Equal(0, res.Code) // successfully executed
+	suite.True(res.Code.IsOK()) // successfully executed
 
 	// test when the source is false
 	source = false
@@ -172,13 +172,13 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, source)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins2)
 	res = transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // incorrect denom prefix
+	suite.False(res.Code.IsOK()) // incorrect denom prefix
 
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, source)
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
 	res = transfer.HandleMsgTransfer(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.Equal(0, res.Code) // successfully executed
+	suite.True(res.Code.IsOK()) // successfully executed
 }
 
 func (suite *HandlerTestSuite) TestHandleRecvPacket() {
@@ -196,7 +196,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	msg := types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, channel.OPEN)
 	res := transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // packet membership verification failed due to invalid counterparty packet commitment
+	suite.False(res.Code.IsOK()) // packet membership verification failed due to invalid counterparty packet commitment
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
 	suite.updateClient()
@@ -204,7 +204,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	msg = types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // invalid packet data
+	suite.False(res.Code.IsOK()) // invalid packet data
 
 	// test when the source is true
 	source := true
@@ -219,7 +219,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	msg = types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // invalid denom prefix
+	suite.False(res.Code.IsOK()) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
@@ -231,7 +231,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	msg = types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.Equal(0, res.Code) // successfully executed
+	suite.True(res.Code.IsOK()) // successfully executed
 
 	// test when the source is false
 	source = false
@@ -246,7 +246,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	msg = types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // invalid denom prefix
+	suite.False(res.Code.IsOK()) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
@@ -258,12 +258,12 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	msg = types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.NotEqual(0, res.Code) // insufficient coins in the corresponding escrow account
+	suite.False(res.Code.IsOK()) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
-	suite.Equal(0, res.Code) // successfully executed
+	suite.True(res.Code.IsOK()) // successfully executed
 }
 
 func TestHandlerTestSuite(t *testing.T) {

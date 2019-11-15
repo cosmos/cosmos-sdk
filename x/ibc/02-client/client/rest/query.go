@@ -25,7 +25,7 @@ const (
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client_state", RestClientID), queryClientStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/roots/{%s}", RestClientID, RestRootHeight), queryRootHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")

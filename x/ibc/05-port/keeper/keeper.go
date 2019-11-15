@@ -60,5 +60,9 @@ func (k Keeper) Authenticate(key sdk.CapabilityKey, portID string) bool {
 		panic(err.Error())
 	}
 
+	if key.Name() != portID {
+		return false
+	}
+
 	return k.ports[key.Name()]
 }

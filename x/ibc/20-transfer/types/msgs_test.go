@@ -154,7 +154,7 @@ func TestMsgRecvPacketValidation(t *testing.T) {
 		{testMsgs[1], false, "proof height is zero"},
 		{testMsgs[2], false, "missing proofs"},
 		{testMsgs[3], false, "missing proofs"},
-		{testMsgs[4], true, "proofs contain empty proof"},
+		{testMsgs[4], false, "proofs contain empty proof"},
 		{testMsgs[5], false, "missing signer address"},
 		{testMsgs[6], false, "invalid packet"},
 	}

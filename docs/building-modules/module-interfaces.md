@@ -18,41 +18,11 @@ One of the main interfaces for an application is the [command-line interface](..
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. Here is an example from the [nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/cli.md#transactions):
+[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions prefixed with `GetCmd` and include the name of the command. 
 
-```go
-func GetCmdBuyName(cdc *codec.Codec) *cobra.Command {
-  return &cobra.Command{
-    Use: "buy-name [name] [amount]",
-    Short: "bid for existing name or claim new name",
-    Args: cobra.ExactArgs(2),
-    RunE: func(cmd *cobra.Command, args []string) error {
-      cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+Here is an example from the `nameservice` module:
 
-      txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-
-      if err := cliCtx.EnsureAccountExists(); err != nil {
-        return err
-      }
-
-      coins, err := sdk.ParseCoins(args[1])
-      if err != nil {
-        return err
-      }
-
-      msg := nameservice.NewMsgBuyName(args[0], coins, cliCtx.GetFromAddress())
-      err = msg.ValidateBasic()
-      if err != nil {
-        return err
-      }
-
-      cliCtx.PrintResponse = true
-
-      return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
-    },
-  }
-}
-```
++++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/client/cli/tx.go#L33-L58
 
 This getter function creates the command for the Buy Name transaction. It does the following:
 
@@ -69,53 +39,17 @@ This getter function creates the command for the Buy Name transaction. It does t
   + Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
 - **Flags.** Add any [flags](#flags) to the command. No flags were specified here, but all transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These *persistent* [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
 
-Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) `GetTxCmd()` function, which adds the `Sign` and `MultiSign` commands. An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
+Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign` and `MultiSign` commands. 
 
-```go
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Auth transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-	txCmd.AddCommand(
-		GetMultiSignCommand(cdc),
-		GetSignCommand(cdc),
-	)
-	return txCmd
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/67f6b021180c7ef0bcf25b6597a629aca27766b8/x/auth/client/cli/tx.go#L11-L25
+
+An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the [nameservice module CLI](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/cli.md#queries):
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions and have the prefix `GetCmdQuery`. Here is an example of a query command from the `nameservice` module:
 
-```go
-func GetCmdWhois(queryRoute string, cdc *codec.Codec) *cobra.Command {
- return &cobra.Command{
-   Use: "whois [name]",
-   Short: "Query whois info of name",
-   Args: cobra.ExactArgs(1),
-   RunE: func(cmd *cobra.Command, args []string) error {
-     cliCtx := context.NewCLIContext().WithCodec(cdc)
-     name := args[0]
-
-     res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/whois/%s", queryRoute, name), nil)
-     if err != nil {
-       fmt.Printf("could not resolve whois - %s \n", string(name))
-       return nil
-     }
-
-     var out nameservice.Whois
-     cdc.MustUnmarshalJSON(res, &out)
-     return cliCtx.PrintOutput(out)
-   },
- }
-}
-
-```
++++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/client/cli/query.go#L52-L73
 
 This query returns the address that owns a particular name. The getter function does the following:
 
@@ -140,7 +74,11 @@ The flags for a module are typically found in a `flags.go` file in the `./x/modu
 
 For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
-For example, the SDK `./client/flags` package includes a [`PostCommands()`](https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116) function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. Here is an example of how to add a flag using the `from` flag from this function.
+For example, the SDK `./client/flags` package includes a `PostCommands()` function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116
+
+Here is an example of how to add a flag using the `from` flag from this function.
 
 ```go
 cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
@@ -166,16 +104,9 @@ To support HTTP requests, the module developer needs to define possible request 
 
 Request types, which define structured interactions from users, must be defined for all *transaction* requests. Users using this method to interact with an application will send HTTP Requests with the required fields in order to trigger state changes in the application. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
 
-Here is an example of a request to buy a name from the [nameservice](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/tutorial/rest.md) module:
+Here is an example of a request to buy a name from the `nameservice` module:
 
-```go
-type buyNameReq struct {
-  BaseReq rest.BaseReq `json:"base_req"`
-  Name string `json:"name"`
-  Amount string `json:"amount"`
-  Buyer string `json:"buyer"`
-}
-```
++++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L14-L19
 
 The `BaseReq` includes basic information that every request needs to have, similar to required flags in a CLI. All of these values, including `GasPrices` and `AccountNumber`, will be provided in the request body. The user will also need to specify the arguments `Name` and `Amount` fields in the body and `Buyer` will be provided by the user's address.
 
@@ -200,45 +131,7 @@ Request handlers must be defined for both transaction and query requests. Handle
 
 Here is an example of a request handler for the nameservice module `buyNameReq` request (the same one shown above):
 
-```go
-func buyNameHandler(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
-  return func(w http.ResponseWriter, r *http.Request) {
-    var req buyNameReq
-
-    if !rest.ReadRESTReq(w, r, cdc, &req) {
-      rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
-      return
-    }
-
-    baseReq := req.BaseReq.Sanitize()
-    if !baseReq.ValidateBaic(w) {
-      return
-    }
-
-    addr, err := sdk.AccAddressFromBech32(req.Buyer)
-    if err != nil {
-      rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-      return
-    }
-
-    coins, err := sdk.ParseCoins(req.Amount)
-    if err != nil {
-      rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-      return
-    }
-
-    //create message
-    msg := nameservice.NewMsgBuyName(req.Name, coins, addr)
-    err = msg.ValidateBasic()
-    if err != nil {
-      rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-      return
-    }
-    clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, baseReq, []sdk.Msg{msg})
-
-  }
-}
-```
++++ https://github.com/cosmos/sdk-tutorials/blob/master/nameservice/x/nameservice/client/rest/tx.go#L21-L57
 
 The request handler can be broken down as follows:
 

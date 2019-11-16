@@ -25,7 +25,7 @@ The process of creating an application interface is distinct from creating a [mo
 
 With regards to interfaces, module developers need to include the following definitions:
 
-* **CLI commands:** Specifically, [Transaction commands](../building-modules/module-interfaces.md#transaction-commands) and [Query commands](../building-modules/module-interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/67f6b021180c7ef0bcf25b6597a629aca27766b8/docs/spec/auth) module, users will create `tx auth send` transactions.
+* **CLI commands:** Specifically, [Transaction commands](../building-modules/module-interfaces.md#transaction-commands) and [Query commands](../building-modules/module-interfaces.md#query-commands). These are commands that users will invoke when interacting with the application to create transactions and queries. For example, if an application enables sending coins through the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, users will create `tx auth send` transactions.
 * **Request Handlers:** Also categorized into Transaction and Query requests. Transactions will require HTTP [Request Types](../building-modules/module-interfaces.md#request-types) in addition to [Request Handlers](../building-modules/module-interfaces.md#request-handlers) in order to encapsulate all of the user's options (e.g. gas prices).
 * **REST Routes:** Given a router, the module interface registers paths with the aforementioned [Request Handlers](../building-modules/module-interfaces.md#request-handlers) for each type of request.
 

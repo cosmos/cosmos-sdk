@@ -14,10 +14,15 @@ order: 7
 
 ## Events
 
-`Event`s are implemented in the Cosmos SDK as an alias of the [ABCI `event` type](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/types.pb.go#L2661-L2667). They contain:
+`Event`s are implemented in the Cosmos SDK as an alias of the ABCI `event` type. 
+
++++ https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/types.pb.go#L2661-L2667
+
+They contain:
 
 - A **`type`** of type `string`, which can refer to the type of action that led to the `event`'s emission (e.g. a certain value going above a threshold), or to the type of `message` if the event is triggered at the end of that `message` processing. 
-- A list of [`attributes`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L53-L56), which are key-value pairs that give more information about the `event`. 
+- A list of `attributes`, which are key-value pairs that give more information about the `event`. 
+    +++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L53-L56
 
 `Event`s are returned to the underlying consensus engine in the response of the following ABCI messages: [`CheckTx`](./baseapp.md#checktx), [`DeliverTx`](./baseapp.md#delivertx), [`BeginBlock`](./baseapp.md#beginblock) and [`EndBlock`](./baseapp.md#endblock). 
 
@@ -25,15 +30,13 @@ Typically, `event` `type`s and `attributes` are defined on a **per-module basis*
 
 ## EventManager
 
-In Cosmos SDK applications, `event`s are generally managed by an object called the [`EventManager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L18-L20). It is implemented as a simple wrapper around a slice of `event`s: 
+In Cosmos SDK applications, `event`s are generally managed by an object called the `EventManager`. It is implemented as a simple wrapper around a slice of `event`s: 
 
-```go
-type EventManager struct {
-	events Events
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L18-L20
 
-The `EventManager` comes with a set of useful methods to manage `event`s. Among them, the one that is used the most by module and application developers is the [`EmitEvent`](https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L29-L31) method, which registers an `event` in the `EventManager`. 
+The `EventManager` comes with a set of useful methods to manage `event`s. Among them, the one that is used the most by module and application developers is the `EmitEvent` method, which registers an `event` in the `EventManager`. 
+
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L29-L31
 
 Typically, module developers will implement event emission via the `EventManager` in the [`handler`](../building-modules/handler.md) of modules, as well as in the [`BeginBlocker` and/or`EndBlocker` functions](../building-modules/beginblock-endblock.md). The `EventManager` is accessed via the context [`ctx`](./context.md), and event emission generally follows this pattern:
 

@@ -3,8 +3,8 @@ package cli
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/spf13/cobra"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
+	"github.com/spf13/cobra"
 )
 
 // GetTxCmd returns the transaction commands for this module

@@ -19,12 +19,12 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	keeper  Keeper
-	querier sdk.Querier
-	handler gov.Handler
-	module  module.AppModule
-	ctx     sdk.Context
-	cms     store.CommitMultiStore
+	keeper                Keeper
+	querier               sdk.Querier
+	handler               gov.Handler
+	module                module.AppModule
+	ctx                   sdk.Context
+	cms                   store.CommitMultiStore
 	FlagUnsafeSkipUpgrade string
 }
 
@@ -41,8 +41,8 @@ func (s *TestSuite) SetupTest() {
 	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	_ = s.cms.LoadLatestVersion()
 	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
-	s.FlagUnsafeSkipUpgrade = FlagSkipUpgrade
-	viper.Set(FlagSkipUpgrade, -1)
+	s.FlagUnsafeSkipUpgrade = FlagUnsafeSkipUpgrade
+	viper.Set(FlagUnsafeSkipUpgrade, -1)
 	s.VerifySet()
 }
 
@@ -203,20 +203,20 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 	s.Require().NotZero(height)
 }
 
-func (s *TestSuite) VerifySet()  {
+func (s *TestSuite) VerifySet() {
 	s.T().Log("Verify if the skip upgrade has been set")
 	skipUpgrade := viper.GetInt64(s.FlagUnsafeSkipUpgrade)
 	s.Require().NotNil(skipUpgrade)
 }
 
-func (s *TestSuite) TestSkipUpgrade()  {
+func (s *TestSuite) TestSkipUpgrade() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan")
-	viper.Set(s.FlagUnsafeSkipUpgrade, s.ctx.BlockHeight() + 1)
+	viper.Set(s.FlagUnsafeSkipUpgrade, s.ctx.BlockHeight()+1)
 	s.VerifySet()
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)

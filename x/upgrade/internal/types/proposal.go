@@ -11,7 +11,7 @@ const (
 	ProposalTypeSoftwareUpgrade       string            = "SoftwareUpgrade"
 	ProposalTypeCancelSoftwareUpgrade string            = "CancelSoftwareUpgrade"
 	DefaultCodespace                  sdk.CodespaceType = "upgrade"
-	FlagSkipUpgrade             	  string            = "skip-upgrade"
+	FlagUnsafeSkipUpgrade             string            = "unsafe-skip-upgrade"
 )
 
 // Software Upgrade Proposals

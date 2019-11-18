@@ -41,9 +41,9 @@ func (s *TestSuite) SetupTest() {
 	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	_ = s.cms.LoadLatestVersion()
 	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
-	s.FlagUnsafeSkipUpgrade = FlagUnsafeSkipUpgrade
-	viper.Set(FlagUnsafeSkipUpgrade, false)
-	s.VerifySet(false)
+	s.FlagUnsafeSkipUpgrade = FlagSkipUpgrade
+	viper.Set(FlagSkipUpgrade, -1)
+	s.VerifySet()
 }
 
 func (s *TestSuite) TestRequireName() {
@@ -203,10 +203,10 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 	s.Require().NotZero(height)
 }
 
-func (s *TestSuite) VerifySet(readFlag bool)  {
+func (s *TestSuite) VerifySet()  {
 	s.T().Log("Verify if the skip upgrade has been set")
-	skipUpgrade := viper.GetBool(s.FlagUnsafeSkipUpgrade)
-	s.Require().Equal(skipUpgrade, readFlag)
+	skipUpgrade := viper.GetInt64(s.FlagUnsafeSkipUpgrade)
+	s.Require().NotNil(skipUpgrade)
 }
 
 func (s *TestSuite) TestSkipUpgrade()  {
@@ -216,8 +216,8 @@ func (s *TestSuite) TestSkipUpgrade()  {
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan")
-	viper.Set(s.FlagUnsafeSkipUpgrade, true )
-	s.VerifySet(true)
+	viper.Set(s.FlagUnsafeSkipUpgrade, s.ctx.BlockHeight() + 1)
+	s.VerifySet()
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})

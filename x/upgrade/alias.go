@@ -22,7 +22,7 @@ const (
 	DefaultCodespace                  = types.DefaultCodespace
 	QueryCurrent                      = types.QueryCurrent
 	QueryApplied                      = types.QueryApplied
-	FlagUnsafeSkipUpgrade             = types.FlagUnsafeSkipUpgrade
+	FlagSkipUpgrade          	      = types.FlagSkipUpgrade
 )
 
 var (

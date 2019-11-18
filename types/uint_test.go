@@ -84,6 +84,7 @@ func TestIdentUint(t *testing.T) {
 
 		cases := []uint64{
 			i.Uint64(),
+			i.BigInt().Uint64(),
 			i.i.Uint64(),
 			ifromstr.Uint64(),
 			NewUintFromBigInt(new(big.Int).SetUint64(n)).Uint64(),

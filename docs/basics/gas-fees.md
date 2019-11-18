@@ -1,12 +1,13 @@
+---
+order: 4
+synopsis: This document describes the default strategies to handle gas and fees within a Cosmos SDK application.
+---
+
 # Gas and Fees
 
-## Pre-requisite Reading
+## Pre-requisite Readings
 
-- [Anatomy of an SDK Application](./app-anatomy.md)
-
-## Synopsis
-
-This document describes the default strategies to handle gas and fees within a Cosmos SDK application.
+- [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 
 ## Introduction to `Gas` and `Fees`
 

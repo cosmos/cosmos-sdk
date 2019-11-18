@@ -4,10 +4,6 @@ order: 8
 
 # Object-Capability Model
 
-## Synopsis
-
-The Cosmos SDK uses an object-capabilities model
-
 ## Intro
 
 When thinking about security, it is good to start with a specific threat model. Our threat model is the following:

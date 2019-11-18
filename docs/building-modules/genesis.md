@@ -1,17 +1,14 @@
 ---
 order: 9
+synopsis: Modules generally handle a subset of the state and, as such, they need to define the related subset of the genesis file as well as methods to initialize, verify and export it. 
 ---
 
 # Module Genesis
 
-## Pre-requisite Reading
+## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md)
-- [Keepers](./keeper.md)
-
-## Synopsis
-
-Modules generally handle a subset of the state and, as such, they need to define the related subset of the genesis file as well as methods to initialize, verify and export it. 
+- [Module Manager](./module-manager.md) {prereq}
+- [Keepers](./keeper.md) {prereq}
 
 ## Type Definition 
 

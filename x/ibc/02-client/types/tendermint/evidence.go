@@ -3,7 +3,6 @@ package tendermint
 import (
 	"fmt"
 	"reflect"
-	"sort"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -51,6 +50,7 @@ func (ev Evidence) Hash() cmn.HexBytes {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	// ValidateBasic on both validators
 	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
 	}
@@ -60,9 +60,11 @@ func (ev Evidence) ValidateBasic() error {
 	if ev.Header1.ValidatorSet == nil || ev.Header2.ValidatorSet == nil {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "validator set in header is nil")
 	}
+	// Ensure that Heights are the same
 	if ev.Header1.Height != ev.Header2.Height {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "headers in evidence are on different heights")
 	}
+	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "Headers commit to same blockID")
 	}
@@ -70,8 +72,6 @@ func (ev Evidence) ValidateBasic() error {
 	// Ensure that validator sets that voted on differing headers are the same validators
 	// even if headers have different proposers
 	// Require Validators are sorted first
-	sort.Sort(tmtypes.ValidatorsByAddress(ev.Header1.ValidatorSet.Validators))
-	sort.Sort(tmtypes.ValidatorsByAddress(ev.Header2.ValidatorSet.Validators))
 	valSet1 := ev.Header1.ValidatorSet.Validators
 	valSet2 := ev.Header2.ValidatorSet.Validators
 	if len(valSet1) != len(valSet2) {

@@ -49,7 +49,7 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 **`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L10-L31
++++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L8-L29
 
 `Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
 

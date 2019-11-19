@@ -13,6 +13,11 @@ type Uint struct {
 	i *big.Int
 }
 
+// BigInt converts Uint to big.Int
+func (u Uint) BigInt() *big.Int {
+	return new(big.Int).Set(u.i)
+}
+
 // NewUintFromBigUint constructs Uint from big.Uint
 func NewUintFromBigInt(i *big.Int) Uint {
 	u, err := checkNewUint(i)

@@ -15,7 +15,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/client", createClientHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/clients", createClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/update", RestClientID), updateClientHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }

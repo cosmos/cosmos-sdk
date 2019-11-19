@@ -15,7 +15,7 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/transfer", RestPortID, RestChannelID), transferHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc(fmt.Sprintf("/ibc/packet/receive"), recvPacketHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc(fmt.Sprintf("/ibc/packets/receive"), recvPacketHandlerFn(cliCtx)).Methods("POST")
 }
 
 func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

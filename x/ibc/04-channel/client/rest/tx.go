@@ -15,8 +15,8 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc("/ibc/channel/open-init", channelOpenInitHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/ibc/channel/open-try", channelOpenTryHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/channels/open-init", channelOpenInitHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/ibc/channels/open-try", channelOpenTryHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-ack", RestPortID, RestChannelID), channelOpenAckHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/open-confirm", RestPortID, RestChannelID), channelOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-init", RestPortID, RestChannelID), channelCloseInitHandlerFn(cliCtx)).Methods("POST")

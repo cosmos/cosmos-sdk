@@ -21,6 +21,8 @@ tags:
     description: Slashing module APIs
   - name: Distribution
     description: Fee distribution module APIs
+  - name: IBC
+    description: IBC module APIs
   - name: Supply
     description: Supply module APIs
   - name: version
@@ -1876,6 +1878,851 @@ paths:
             type: string
         500:
           description: Internal Server Error
+  /ibc/clients/{client-id}/consensus-state:
+    get:
+      summary: Query cliet consensus-state
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              consensus_state:
+                $ref: "#/definitions/ConsensusState"
+              proof:
+                $ref: "#/definitions/Proof"
+              proof_path:
+                $ref: "#/definitions/ProofPath"
+              proof_height:
+                type: integer
+        400:
+          description: Invalid client id
+        500:
+          description: Internal Server Error
+  /ibc/clients/{client-id}/client-state:
+    get:
+      summary: Query client state
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              client_state:
+                $ref: "#/definitions/ClientState"
+              proof:
+                $ref: "#/definitions/Proof"
+              proof_path:
+                $ref: "#/definitions/ProofPath"
+              proof_height:
+                type: integer
+        400:
+          description: Invalid client id
+        500:
+          description: Internal Server Error
+  /ibc/clients/{client-id}/roots/{height}:
+    get:
+      summary: Query client root
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+        - in: path
+          name: height
+          description: Root height
+          required: true
+          type: number
+          x-example: 1
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              root:
+                $ref: "#/definitions/Root"
+              proof:
+                $ref: "#/definitions/Proof"
+              proof_path:
+                $ref: "#/definitions/ProofPath"
+              proof_height:
+                type: integer
+        400:
+          description: Invalid client id or height
+        500:
+          description: Internal Server Error
+  /ibc/header:
+    get:
+      summary: Query header
+      tags:
+        - IBC
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Header"
+        500:
+          description: Internal Server Error
+  /ibc/node-state:
+    get:
+      summary: Query node consensus-state
+      tags:
+        - IBC
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ConsensusState"
+        500:
+          description: Internal Server Error
+  /ibc/path:
+    get:
+      summary: Query IBC path
+      tags:
+        - IBC
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: string
+        500:
+          description: Internal Server Error
+  /ibc/clients:
+    post:
+      summary: Create client
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Create client request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              client_id:
+                type: string
+              consensus_state:
+                $ref: "#/definitions/ConsensusState"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/clients/{client-id}/update:
+    post:
+      summary: Update client
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+        - in: body
+          name: "Update client request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              header:
+                $ref: "#/definitions/Header"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid client id
+        500:
+          description: Internal Server Error
+  /ibc/clients/{client-id}/misbehaviour:
+    post:
+      summary: Submit misbehaviour
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+        - in: body
+          name: "Submit misbehaviour request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              evidence:
+                $ref: "#/definitions/Evidence"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/connections/{connection-id}:
+    get:
+      summary: Query connection
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: connection-id
+          description: Connection ID
+          required: true
+          type: string
+          x-example: ibcconnectionid
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ConnectionResponse"
+        400:
+          description: Invalid connection id
+        500:
+          description: Internal Server Error
+  /ibc/clients/{client-id}/connections:
+    get:
+      summary: Query connections of a client
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: client-id
+          description: Client ID
+          required: true
+          type: string
+          x-example: ibcclientid
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ClientConnectionsResponse"
+        400:
+          description: Invalid client id
+        500:
+          description: Internal Server Error
+  /ibc/connections/open-init:
+    post:
+      summary: Connection open-init
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Connection open-init request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              connection_id:
+                type: string
+              client_id:
+                type: string
+              counterparty_client_id:
+                type: string
+              counterparty_connection_id:
+                type: string
+              counterparty_prefix:
+                type: object
+                properties:
+                  key_prefix:
+                    type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/connections/open-try:
+    post:
+      summary: Connection open-try
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Connection open-try request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              connection_id:
+                type: string
+              client_id:
+                type: string
+              counterparty_client_id:
+                type: string
+              counterparty_connection_id:
+                type: string
+              counterparty_prefix:
+                type: object
+                properties:
+                  key_prefix:
+                    type: string
+              counterparty_versions:
+                type: array
+                items:
+                  type: string
+              proof_init:
+                $ref: "#/definitions/Proof"
+              proof_consensus:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+              consensus_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/connections/{connection-id}/open-ack:
+    post:
+      summary: Connection open-ack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: connection-id
+          description: Connection ID
+          required: true
+          type: string
+          x-example: ibcconnectionid
+        - in: body
+          name: "Connection open-ack request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              proof_try:
+                $ref: "#/definitions/Proof"
+              proof_consensus:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+              consensus_height:
+                type: integer
+              version:
+                type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid connection id
+        500:
+          description: Internal Server Error
+  /ibc/connections/{connection-id}/open-confirm:
+    post:
+      summary: Connection open-confirm
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: connection-id
+          description: Connection ID
+          required: true
+          type: string
+          x-example: ibcconnectionid
+        - in: body
+          name: "Connection open-confirm request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              proof_ack:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid connection id
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}:
+    get:
+      summary: Query channel
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: connection-id
+          description: Connection ID
+          required: true
+          type: string
+          x-example: ibcconnectionid
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ChannelResponse"
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/channels/open-init:
+    post:
+      summary: Channel open-init
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Channel open-init request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              port_id:
+                type: string
+              channel_id:
+                type: string
+              version:
+                type: string
+              channel_order:
+                type: string
+              connection_hops:
+                type: array
+                items:
+                  type: string
+              counterparty_port_id:
+                type: string
+              counterparty_channel_id:
+                type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/channels/open-try:
+    post:
+      summary: Channel open-try
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Channel open-try request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              port_id:
+                type: string
+              channel_id:
+                type: string
+              version:
+                type: string
+              channel_order:
+                type: string
+              connection_hops:
+                type: array
+                items:
+                  type: string
+              counterparty_port_id:
+                type: string
+              counterparty_channel_id:
+                type: string
+              proof_init:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}/open-ack:
+    post:
+      summary: Channel open-ack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+        - in: body
+          name: "Channel open-ack request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              counterparty_version:
+                type: string
+              proof_try:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}/open-confirm:
+    post:
+      summary: Channel open-confirm
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+        - in: body
+          name: "Channel open-confirm request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              proof_ack:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}/close-init:
+    post:
+      summary: Channel close-init
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+        - in: body
+          name: "Channel close-init request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}/close-confirm:
+    post:
+      summary: Channel close-confirm
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+        - in: body
+          name: "Channel close-confirm request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              proof_init:
+                $ref: "#/definitions/Proof"
+              proof_height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/ports/{port-id}/channels/{channel-id}/next-sequence-revc:
+    get:
+      summary: Query next sequence receive
+      tags:
+        - IBC
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+      responses:
+        200:
+          description: OK
+          schema:
+            type: integer
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/ibc/ports/{port-id}/channels/{channel-id}/transfer:
+    post:
+      summary: Transfer token
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: path
+          name: port-id
+          description: Port ID
+          required: true
+          type: string
+          x-example: ibcmoduleport
+        - in: path
+          name: channel-id
+          description: Channel ID
+          required: true
+          type: string
+          x-example: ibcchannelid
+        - in: body
+          name: "Transfer token request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              amount:
+                $ref: "#/definitions/Coin"
+              receiver:
+                type: string
+              source:
+                type: boolean
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid port id or channel id
+        500:
+          description: Internal Server Error
+  /ibc/packets/receive:
+    post:
+      summary: Receive packet
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - IBC
+      parameters:
+        - in: body
+          name: "Receive packet request body"
+          required: true
+          schema:
+            type: object
+            properties:
+              base_req:
+                $ref: "#/definitions/BaseReq"
+              packet:
+                $ref: "#/definitions/Packet"
+              proofs:
+                type: array
+                items:
+                  $ref: "#/definitions/Proof"
+              height:
+                type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        500:
+          description: Internal Server Error
   /supply/total:
     get:
       summary: Total supply of coins in the chain
@@ -1908,7 +2755,7 @@ paths:
         200:
           description: OK
           schema:
-             type: string
+            type: string
         400:
           description: Invalid coin denomination
         500:
@@ -2530,3 +3377,172 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
+  ConsensusState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      height:
+        type: integer
+      root:
+        $ref: "#/definitions/Root"
+      next_validator_set:
+        $ref: "#/definitions/ValidatorSet"
+  Root:
+    type: object
+    properties:
+      hash:
+        type: string
+  ValidatorSet:
+    type: object
+    properties:
+      validators:
+        type: array
+        items:
+          $ref: "#/definitions/TendermintValidator"
+      proposer:
+        $ref: "#/definitions/TendermintValidator"
+  ClientState:
+    type: object
+    properties:
+      id:
+        type: string
+      frozen:
+        type: boolean
+  Proof:
+    type: object
+    properties:
+      proof:
+        type: object
+        properties:
+          ops:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                key:
+                  type: string
+                data:
+                  type: string
+  Header:
+    type: object
+    properties:
+      validator_set:
+        $ref: "#/definitions/ValidatorSet"
+      next_validator_set:
+        $ref: "#/definitions/ValidatorSet"
+  ConnectionResponse:
+    type: object
+    properties:
+      connection:
+        $ref: "#/definitions/Connection"
+      proof:
+        $ref: "#/definitions/Proof"
+      proof_path:
+        $ref: "#/definitions/ProofPath"
+      proof_height:
+        type: integer
+  Connection:
+    type: object
+    properties:
+      state:
+        type: string
+      client_id:
+        type: string
+      counterparty:
+        $ref: "#/definitions/ConnectionCounterparty"
+      versions:
+        type: array
+        items:
+          type: string
+  ConnectionCounterparty:
+    type: object
+    properties:
+      client_id:
+        type: string
+      connection_id:
+        type: string
+      prefix:
+        type: object
+        properties:
+          key_prefix:
+            type: string
+  ProofPath:
+    type: object
+    properties:
+      key_path:
+        type: string
+  ClientConnectionsResponse:
+    type: object
+    properties:
+      connection_paths:
+        type: array
+        items:
+          type: string
+      proof:
+        $ref: "#/definitions/Proof"
+      proof_path:
+        $ref: "#/definitions/ProofPath"
+      proof_height:
+        type: integer
+  ChannelResponse:
+    type: object
+    properties:
+      channel:
+        $ref: "#/definitions/Channel"
+      proof:
+        $ref: "#/definitions/Proof"
+      proof_path:
+        $ref: "#/definitions/ProofPath"
+      proof_height:
+        type: integer
+  Channel:
+    type: object
+    properties:
+      state:
+        type: string
+      ordering:
+        type: string
+      counterparty:
+        $ref: "#/definitions/Counterparty"
+      connection_hops:
+        type: array
+        items:
+          type: string
+      version:
+        type: string
+  ChannelCounterparty:
+    type: object
+    properties:
+      port_id:
+        type: string
+      channel_id:
+        type: string
+  Evidence:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      val_power:
+        type: integer
+      total_power:
+        type: integer
+  Packet:
+    type: object
+    properties:
+      sequence:
+        type: integer
+      timeout:
+        type: integer
+      source_port:
+        type: string
+      source_channel:
+        type: string
+      destination_port:
+        type: string
+      destination_channel:
+        type: string
+      data:
+        type: string

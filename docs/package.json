@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "markdown-it": "^8.4.2",
     "markdown-it-meta": "0.0.1",
     "vuepress": "^1.0.2"

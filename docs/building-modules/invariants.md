@@ -1,16 +1,13 @@
 ---
 order: 8
+synopsis: An invariant is a property of the application that should always be true. In the context of the Cosmos SDK, an `Invariant` is a function that checks for a particular invariant. These functions are useful to detect bugs early on and act upon them to limit their potential consequences (e.g. by halting the chain). They are also useful in the development process of the application to detect bugs via simulations. 
 ---
 
 # Invariants
 
-## Pre-requisite Reading
+## Pre-requisite Readings
 
-- [Keepers](./keeper.md)
-
-## Synopsis
-
-An invariant is a property of the application that should always be true. In the context of the Cosmos SDK, an `Invariant` is a function that checks for a particular invariant. These functions are useful to detect bugs early on and act upon them to limit their potential consequences (e.g. by halting the chain). They are also useful in the development process of the application to detect bugs via simulations. 
+- [Keepers](./keeper.md) {prereq}
 
 ## Implementing `Invariant`s
 

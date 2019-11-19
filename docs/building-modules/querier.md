@@ -1,17 +1,14 @@
 ---
 order: 5
+synopsis: A `Querier` designates a function that processes [`queries`](./messages-and-queries.md#queries). `querier`s are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `baseapp`'s [`Query` method](../core/baseapp.md#query).
 ---
 
 # Queriers
 
-## Pre-requisite Reading
+## Pre-requisite Readings
 
-- [Module Manager](./module-manager.md).
-- [Messages and Queries](./messages-and-queries.md)
-
-## Synopsis
-
-A `Querier` designates a function that processes [`queries`](./messages-and-queries.md#queries). `querier`s are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `baseapp`'s [`Query` method](../core/baseapp.md#query).
+- [Module Manager](./module-manager.md) {prereq}
+- [Messages and Queries](./messages-and-queries.md) {prereq}
 
 ## `Querier` type
 

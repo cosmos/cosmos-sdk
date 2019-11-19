@@ -1,17 +1,14 @@
 ---
 order: 1
+synopsis: Modules define most of the logic of SDK applications. Developers compose module together using the Cosmos SDK to build their custom application-specific blockchains. This document outlines the basic concepts behind SDK modules and how to approach module management. 
 ---
 
 # Introduction to SDK Modules
 
-## Pre-requisite Reading
+## Pre-requisite Readings
 
-- [Anatomy of an SDK application](../basics/app-anatomy.md)
-- [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md)
-
-## Synopsis
-
-Modules define most of the logic of SDK applications. Developers compose module together using the Cosmos SDK to build their custom application-specific blockchains. This document outlines the basic concepts behind SDK modules and how to approach module management. 
+- [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
+- [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md) {prereq}
 
 ## Role of Modules in an SDK Application
 

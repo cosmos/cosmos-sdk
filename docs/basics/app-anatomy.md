@@ -1,17 +1,15 @@
 ---
 order: 1
+synopsis: This document describes the core parts of a Cosmos SDK application. Throughout the document, a placeholder application named `app` will be used. 
 ---
 
 # Anatomy of an SDK Application
 
-## Pre-requisite reading
+## Pre-requisite Readings
 
-- [High-level overview of the architecture of an SDK application](../intro/sdk-app-architecture.md)
-- [Cosmos SDK design overview](../intro/sdk-design.md)
+- [High-level overview of the architecture of an SDK application](../intro/sdk-app-architecture.md) {prereq}
+- [Cosmos SDK design overview](../intro/sdk-design.md) {prereq}
 
-## Synopsis
-
-This document describes the core parts of a Cosmos SDK application. Throughout the document, a placeholder application named `app` will be used. 
 
 ## Node Client
 

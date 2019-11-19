@@ -1,17 +1,14 @@
 ---
 order: 4
+synopsis: This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest).
 ---
 
 # REST Interface
 
 ## Prerequisites
 
-* [Query Lifecycle](./query-lifecycle.md)
-* [Application CLI](./cli.md)
-
-## Synopsis
-
-This document describes how to create a REST interface for an SDK **application**. A separate document for creating a [**module**](../building-modules/intro.md) REST interface can be found [here](#../module-interfaces.md#rest).
+* [Query Lifecycle](./query-lifecycle.md) {prereq}
+* [Application CLI](./cli.md) {prereq}
 
 ## Application REST Interface
 

@@ -1,7 +1,6 @@
 ---
 order: 1
-synopsis: This document describes `BaseApp`, the abstraction that implements the core
-functionalities of an SDK application.
+synopsis: This document describes `BaseApp`, the abstraction that implements the core functionalities of an SDK application.
 ---
 
 # Baseapp

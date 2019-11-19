@@ -1,6 +1,6 @@
 ---
 order: 2
-synopsis: This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. The query will be referred to as `Query`.
+synopsis: "This document describes the lifecycle of a query in a SDK application, from the user interface to application stores and back. The query will be referred to as `Query`."
 ---
 
 # Query Lifecycle

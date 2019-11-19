@@ -168,14 +168,14 @@ func handleCustomPacket(ctx sdk.Context, k Keeper, packet MyPacket) sdk.Result {
   return sdk.Result{}
 }
 
-func handleCustomAcknowledgement(ctx sdk.Context, k Keeper, ack MyAcknowledgement) (res sdk.Result) {
+func handleCustomAcknowledgement(ctx sdk.Context, k Keeper, ack MyAcknowledgement) sdk.Result {
   // Handler logic
-  return
+  return sdk.Result{}
 }
 
-func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet MyPacket) (res sdk.Result) {
+func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet MyPacket) sdk.Result {
   // Handler logic
-  return
+  return sdk.Result{}
 }
 ```
 

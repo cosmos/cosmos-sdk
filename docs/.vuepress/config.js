@@ -12,7 +12,6 @@ module.exports = {
     docsRepo: "cosmos/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
-    logo: "/logo.svg",
     label: "sdk",
     sidebar: [
       {

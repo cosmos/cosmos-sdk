@@ -27,15 +27,18 @@ func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, ca
 func (msg MsgGrantAuthorization) Route() string { return RouterKey }
 func (msg MsgGrantAuthorization) Type() string  { return "grant_authorization" }
 
-func (msg MsgGrantAuthorization) GetSigners() sdk.AccAddress {
+func (msg MsgGrantAuthorization) GetSigners() []sdk.AccAddress {
+	//TODO
 	return nil
 }
 
 func (msg MsgGrantAuthorization) GetSignBytes() []byte {
+	//TODO
 	return nil
 }
 
 func (msg MsgGrantAuthorization) ValidateBasic() sdk.Error {
+	//TODO
 	return nil
 }
 
@@ -60,7 +63,7 @@ func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, c
 func (msg MsgRevokeAuthorization) Route() string { return RouterKey }
 func (msg MsgRevokeAuthorization) Type() string  { return "revoke_authorization" }
 
-func (msg MsgRevokeAuthorization) GetSigners() sdk.AccAddress {
+func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
 	//TODO
 	return nil
 }
@@ -92,7 +95,7 @@ func NewMsgExecDelegated(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecDelegate
 func (msg MsgExecDelegated) Route() string { return RouterKey }
 func (msg MsgExecDelegated) Type() string  { return "exec_delegated" }
 
-func (msg MsgExecDelegated) GetSigners() sdk.AccAddress {
+func (msg MsgExecDelegated) GetSigners() []sdk.AccAddress {
 	//TODO
 	return nil
 }

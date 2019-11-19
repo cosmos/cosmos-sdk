@@ -19,7 +19,7 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

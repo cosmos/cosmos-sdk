@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
@@ -13,19 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newGasKVStore() types.KVStore {
-	meter := types.NewGasMeter(10000)
-	mem := dbadapter.Store{dbm.NewMemDB()}
-	return gaskv.NewStore(mem, meter, types.KVGasConfig())
-}
-
 func bz(s string) []byte { return []byte(s) }
 
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestGasKVStoreBasic(t *testing.T) {
-	mem := dbadapter.Store{dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
@@ -37,7 +31,7 @@ func TestGasKVStoreBasic(t *testing.T) {
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
-	mem := dbadapter.Store{dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
@@ -61,14 +55,14 @@ func TestGasKVStoreIterator(t *testing.T) {
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
-	mem := dbadapter.Store{dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(0)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { st.Set(keyFmt(1), valFmt(1)) }, "Expected out-of-gas")
 }
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
-	mem := dbadapter.Store{dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	meter := types.NewGasMeter(20000)
 	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	st.Set(keyFmt(1), valFmt(1))

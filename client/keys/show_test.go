@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -21,27 +21,25 @@ func Test_multiSigKey_Properties(t *testing.T) {
 	pk := multisig.NewPubKeyMultisigThreshold(1, []crypto.PubKey{tmpKey1.PubKey()})
 	tmp := keys.NewMultiInfo("myMultisig", pk)
 
-	assert.Equal(t, "myMultisig", tmp.GetName())
-	assert.Equal(t, keys.TypeMulti, tmp.GetType())
-	assert.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
-	assert.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", tmp.GetAddress().String())
+	require.Equal(t, "myMultisig", tmp.GetName())
+	require.Equal(t, keys.TypeMulti, tmp.GetType())
+	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
+	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", tmp.GetAddress().String())
 }
 
 func Test_showKeysCmd(t *testing.T) {
 	cmd := showKeysCmd()
-	assert.NotNil(t, cmd)
-	assert.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
-	assert.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
+	require.NotNil(t, cmd)
+	require.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
+	require.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
 }
 
 func Test_runShowCmd(t *testing.T) {
+	runningUnattended := isRunningUnattended()
 	cmd := showKeysCmd()
-
-	err := runShowCmd(cmd, []string{"invalid"})
-	assert.EqualError(t, err, "Key invalid not found")
-
-	err = runShowCmd(cmd, []string{"invalid1", "invalid2"})
-	assert.EqualError(t, err, "Key invalid1 not found")
+	mockIn, _, _ := tests.ApplyMockIO(cmd)
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
+	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")
 
 	// Prepare a key base
 	// Now add a temporary keybase
@@ -51,47 +49,76 @@ func Test_runShowCmd(t *testing.T) {
 
 	fakeKeyName1 := "runShowCmd_Key1"
 	fakeKeyName2 := "runShowCmd_Key2"
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
+	kb, err := NewKeyringFromHomeFlag(mockIn)
+	require.NoError(t, err)
+	defer func() {
+		kb.Delete("runShowCmd_Key1", "", false)
+		kb.Delete("runShowCmd_Key2", "", false)
+	}()
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
+	if runningUnattended {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Now try single key
-	err = runShowCmd(cmd, []string{fakeKeyName1})
-	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
+	if runningUnattended {
+		mockIn.Reset("testpass1\n")
+	}
+	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1}), "invalid Bech32 prefix encoding provided: ")
 
 	// Now try single key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	err = runShowCmd(cmd, []string{fakeKeyName1})
-	assert.NoError(t, err)
+	if runningUnattended {
+		mockIn.Reset("testpass1\n")
+	}
+	require.NoError(t, runShowCmd(cmd, []string{fakeKeyName1}))
 
 	// Now try multisig key - set bech to acc
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
-	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.EqualError(t, err, "threshold must be a positive integer")
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	require.EqualError(t, runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2}), "threshold must be a positive integer")
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, sdk.PrefixAccount)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Now try multisig key - set bech to acc + threshold=2
 	viper.Set(FlagBechPrefix, "acc")
 	viper.Set(FlagDevice, true)
 	viper.Set(flagMultiSigThreshold, 2)
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
+	require.EqualError(t, err, "the device flag (-d) can only be used for accounts stored in devices")
 
 	viper.Set(FlagBechPrefix, "val")
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.EqualError(t, err, "the device flag (-d) can only be used for accounts")
+	require.EqualError(t, err, "the device flag (-d) can only be used for accounts")
 
 	viper.Set(FlagPublicKey, true)
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
-	assert.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
+	require.EqualError(t, err, "the device flag (-d) can only be used for addresses not pubkeys")
 
 	// TODO: Capture stdout and compare
 }
@@ -113,6 +140,7 @@ func Test_validateMultisigThreshold(t *testing.T) {
 		{"1-2", args{2, 1}, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := validateMultisigThreshold(tt.args.k, tt.args.nKeys); (err != nil) != tt.wantErr {
 				t.Errorf("validateMultisigThreshold() error = %v, wantErr %v", err, tt.wantErr)
@@ -138,6 +166,7 @@ func Test_getBechKeyOut(t *testing.T) {
 		{"cons", args{sdk.PrefixConsensus}, keys.Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := getBechKeyOut(tt.args.bechPrefix)
 			if (err != nil) != tt.wantErr {
@@ -146,7 +175,7 @@ func Test_getBechKeyOut(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				assert.NotNil(t, got)
+				require.NotNil(t, got)
 			}
 
 			// TODO: Still not possible to compare functions

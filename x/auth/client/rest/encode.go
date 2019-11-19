@@ -45,6 +45,6 @@ func EncodeTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		txBytesBase64 := base64.StdEncoding.EncodeToString(txBytes)
 
 		response := EncodeResp{Tx: txBytesBase64}
-		rest.PostProcessResponse(w, cliCtx, response)
+		rest.PostProcessResponseBare(w, cliCtx, response)
 	}
 }

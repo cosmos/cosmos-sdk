@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
@@ -51,8 +53,8 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "%s\n", string(out)) // nolint: errcheck
-	return nil
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", string(sdk.MustSortJSON(out)))
+	return err
 }
 
 // InitCmd returns a command that initializes all files needed for Tendermint
@@ -86,7 +88,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			}
 			appState, err := codec.MarshalJSONIndent(cdc, mbm.DefaultGenesis())
 			if err != nil {
-				return err
+				return errors.Wrap(err, "Failed to marshall default genesis state")
 			}
 
 			genDoc := &types.GenesisDoc{}
@@ -97,7 +99,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			} else {
 				genDoc, err = types.GenesisDocFromFile(genFile)
 				if err != nil {
-					return err
+					return errors.Wrap(err, "Failed to read genesis doc from file")
 				}
 			}
 
@@ -105,7 +107,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 			genDoc.Validators = nil
 			genDoc.AppState = appState
 			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return err
+				return errors.Wrap(err, "Failed to export gensis file")
 			}
 
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)

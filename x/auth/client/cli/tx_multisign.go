@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -65,7 +66,8 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			return
 		}
 
-		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		keybase, err := keys.NewKeyringFromDir(viper.GetString(cli.HomeFlag), inBuf)
 		if err != nil {
 			return
 		}
@@ -80,8 +82,8 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 
 		multisigPub := multisigInfo.GetPubKey().(multisig.PubKeyMultisigThreshold)
 		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI()
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if !viper.GetBool(flagOffline) {
 			accnum, seq, err := types.NewAccountRetriever(cliCtx).GetAccountNumberSequence(multisigInfo.GetAddress())

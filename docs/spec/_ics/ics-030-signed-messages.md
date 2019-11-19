@@ -65,7 +65,7 @@ JSON representation as defined [here](https://github.com/tendermint/tendermint/b
 
 An example of such a canonical JSON structure is Tendermint's vote structure:
 
-```golang
+```go
 type CanonicalJSONVote struct {
     ChainID   string               `json:"@chain_id"`
     Type      string               `json:"@type"`

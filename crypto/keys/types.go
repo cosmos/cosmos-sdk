@@ -14,18 +14,25 @@ import (
 type Keybase interface {
 	// CRUD on the keystore
 	List() ([]Info, error)
+	// Get returns the public information about one key.
 	Get(name string) (Info, error)
+	// Get performs a by-address lookup and returns the public
+	// information about one key if there's any.
 	GetByAddress(address types.AccAddress) (Info, error)
+	// Delete removes a key.
 	Delete(name, passphrase string, skipPass bool) error
-
-	// Sign some bytes, looking up the private key to use
+	// Sign bytes, looking up the private key to use.
 	Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)
 
-	// CreateMnemonic creates a new mnemonic, and derives a hierarchical deterministic
-	// key from that.
+	// CreateMnemonic generates a new mnemonic, derives a hierarchical deterministic
+	// key from that. and persists it to storage, encrypted using the provided password.
+	// It returns the generated mnemonic and the key Info. It returns an error if it fails to
+	// generate a key for the given algo type, or if another key is already stored under the
+	// same name.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
 
-	// CreateAccount creates an account based using the BIP44 path (44'/118'/{account}'/0/{index}
+	// CreateAccount converts a mnemonic to a private key using a BIP44 path 44'/118'/{account}'/0/{index}
+	// and persists it, encrypted with the given password.
 	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)
 
 	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
@@ -45,11 +52,30 @@ type Keybase interface {
 
 	// The following operations will *only* work on locally-stored keys
 	Update(name, oldpass string, getNewpass func() (string, error)) error
+
+	// Import imports ASCII armored Info objects.
 	Import(name string, armor string) (err error)
+
+	// ImportPrivKey imports a private key in ASCII armor format.
+	// It returns an error if a key with the same name exists or a wrong encryption passphrase is
+	// supplied.
 	ImportPrivKey(name, armor, passphrase string) error
+
+	// ImportPubKey imports ASCII-armored public keys.
+	// Store a new Info object holding a public key only, i.e. it will
+	// not be possible to sign with it as it lacks the secret key.
 	ImportPubKey(name string, armor string) (err error)
+
+	// Export exports an Info object in ASCII armored format.
 	Export(name string) (armor string, err error)
+
+	// ExportPubKey returns public keys in ASCII armored format.
+	// Retrieve a Info object by its name and return the public key in
+	// a portable format.
 	ExportPubKey(name string) (armor string, err error)
+
+	// ExportPrivKey returns a private key in ASCII armored format.
+	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 
 	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
@@ -118,22 +144,27 @@ func newLocalInfo(name string, pub crypto.PubKey, privArmor string) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i localInfo) GetType() KeyType {
 	return TypeLocal
 }
 
+// GetType implements Info interface
 func (i localInfo) GetName() string {
 	return i.Name
 }
 
+// GetType implements Info interface
 func (i localInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetType implements Info interface
 func (i localInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetType implements Info interface
 func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -153,22 +184,27 @@ func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i ledgerInfo) GetType() KeyType {
 	return TypeLedger
 }
 
+// GetName implements Info interface
 func (i ledgerInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i ledgerInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i ledgerInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
@@ -187,22 +223,27 @@ func newOfflineInfo(name string, pub crypto.PubKey) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i offlineInfo) GetType() KeyType {
 	return TypeOffline
 }
 
+// GetName implements Info interface
 func (i offlineInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i offlineInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -211,6 +252,8 @@ type multisigPubKeyInfo struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 	Weight uint          `json:"weight"`
 }
+
+// multiInfo is the public information about a multisig key
 type multiInfo struct {
 	Name      string               `json:"name"`
 	PubKey    crypto.PubKey        `json:"pubkey"`
@@ -218,6 +261,7 @@ type multiInfo struct {
 	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
+// NewMultiInfo creates a new multiInfo instance
 func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	multiPK := pub.(multisig.PubKeyMultisigThreshold)
 
@@ -235,33 +279,38 @@ func NewMultiInfo(name string, pub crypto.PubKey) Info {
 	}
 }
 
+// GetType implements Info interface
 func (i multiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
+// GetName implements Info interface
 func (i multiInfo) GetName() string {
 	return i.Name
 }
 
+// GetPubKey implements Info interface
 func (i multiInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+// GetAddress implements Info interface
 func (i multiInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPath implements Info interface
 func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
 // encoding info
-func writeInfo(i Info) []byte {
+func marshalInfo(i Info) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(i)
 }
 
 // decoding info
-func readInfo(bz []byte) (info Info, err error) {
+func unmarshalInfo(bz []byte) (info Info, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }

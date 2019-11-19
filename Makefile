@@ -6,36 +6,36 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
-SIMAPP = github.com/cosmos/cosmos-sdk/simapp
+SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
 
 all: tools build lint test
 
-# The below include contains the tools target.
+# The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
-
-########################################
-### CI
-
-ci: tools build test_cover lint test
 
 ########################################
 ### Build
 
 build: go.sum
 	@go build -mod=readonly ./...
+.PHONY: build
 
-update-swagger-docs:
-	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
-
-dist:
-	@bash publish/dist.sh
-	@bash publish/publish.sh
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/lcd/swagger-ui -dest=client/lcd -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+        exit 1;\
+    else \
+    	echo "\033[92mSwagger docs are in sync\033[0m";\
+    fi
+.PHONY: update-swagger-docs
 
 mocks: $(MOCKS_DIR)
 	mockgen -source=x/auth/types/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
+.PHONY: mocks
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
@@ -46,21 +46,20 @@ $(MOCKS_DIR):
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
+.PHONY: go-mod-cache
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
 	@go mod tidy
 
-clean:
-	rm -rf snapcraft-local.yaml build/
-
-distclean: clean
+distclean:
 	rm -rf \
     gitian-build-darwin/ \
     gitian-build-linux/ \
     gitian-build-windows/ \
     .gitian-builder-cache/
+.PHONY: distclean
 
 ########################################
 ### Documentation
@@ -69,104 +68,133 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
+build-docs:
+	@cd docs && \
+	while read p; do \
+		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
+		mkdir -p ~/output/$${p} ; \
+		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
+		cp ~/output/$${p}/index.html ~/output ; \
+	done < versions ;
+
+sync-docs:
+	cd ~/output && \
+	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
+	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
+	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
+	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
+.PHONY: sync-docs
 
 ########################################
 ### Testing
 
-test: test_unit
+test: test-unit
+test-all: test-unit test-ledger-mock test-race test-cover
 
-test_ledger_mock:
-		@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+test-ledger-mock:
+	@go test -mod=readonly `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
 
-test_ledger: test_ledger_mock
+test-ledger: test-ledger-mock
 	@go test -mod=readonly -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
-test_unit:
+test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_NOSIMULATION) -tags='ledger test_ledger_mock'
 
-test_race:
+test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race $(PACKAGES_NOSIMULATION)
 
-test_sim_app_nondeterminism:
-	@echo "Running nondeterminism test..."
-	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
+.PHONY: test test-all test-ledger-mock test-ledger test-unit test-race
 
-test_sim_app_custom_genesis_fast:
+test-sim-nondeterminism:
+	@echo "Running non-determinism test..."
+	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+
+test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json \
-		-SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
+	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
+		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
-test_sim_app_fast:
-	@echo "Running quick application simulation. This may take several minutes..."
-	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -SimulationEnabled=true -SimulationNumBlocks=100 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -SimulationPeriod=5 -v -timeout 24h
-
-test_sim_app_import_export: runsim
+test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppImportExport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppImportExport
 
-test_sim_app_simulation_after_import: runsim
+test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	$(BINDIR)/runsim -e $(SIMAPP) 25 5 TestAppSimulationAfterImport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppSimulationAfterImport
 
-test_sim_app_custom_genesis_multi_seed: runsim
+test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	$(BINDIR)/runsim -g ${HOME}/.gaiad/config/genesis.json $(SIMAPP) 400 5 TestFullAppSimulation
+	@$(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=$(SIMAPP) 400 5 TestFullAppSimulation
 
-test_sim_app_multi_seed: runsim
-	@echo "Running multi-seed application simulation. This may take awhile!"
-	$(BINDIR)/runsim $(SIMAPP) 400 5 TestFullAppSimulation
+test-sim-multi-seed-long: runsim
+	@echo "Running long multi-seed application simulation. This may take awhile!"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 500 50 TestFullAppSimulation
 
-test_sim_benchmark_invariants:
+test-sim-multi-seed-short: runsim
+	@echo "Running short multi-seed application simulation. This may take awhile!"
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 10 TestFullAppSimulation
+
+test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
-	-SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 \
-	-SimulationCommit=true -SimulationSeed=57 -v -timeout 24h
+	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
+	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
-# Don't move it into tools - this will be gone once gaia has moved into the new repo
-runsim: $(BINDIR)/runsim
-$(BINDIR)/runsim:
-	go get github.com/cosmos/tools/cmd/runsim/
-	go mod tidy
+.PHONY: \
+test-sim-nondeterminism \
+test-sim-custom-genesis-fast \
+test-sim-import-export \
+test-sim-after-import \
+test-sim-custom-genesis-multi-seed \
+test-sim-multi-seed-short \
+test-sim-multi-seed-long \
+test-sim-benchmark-invariants
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
-test_sim_app_benchmark:
+test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$  \
-		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h
+		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
 
-test_sim_app_profile:
+test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
 	@go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkFullAppSimulation$$ \
-		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
-test_cover:
+.PHONY: test-sim-profile test-sim-benchmark
+
+test-cover:
 	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+.PHONY: test-cover
 
 lint: golangci-lint
-	golangci-lint run
+	$(BINDIR)/golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	go mod verify
+.PHONY: lint
 
 format: tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+.PHONY: format
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
-
+.PHONY: benchmark
 
 ########################################
 ### Devdoc
 
 DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
-devdoc_init:
+devdoc-init:
 	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
 	# TODO make this safer
 	$(call DEVDOC_SAVE)
@@ -174,29 +202,14 @@ devdoc_init:
 devdoc:
 	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
 
-devdoc_save:
+devdoc-save:
 	# TODO make this safer
 	$(call DEVDOC_SAVE)
 
-devdoc_clean:
+devdoc-clean:
 	docker rmi -f $$(docker images -f "dangling=true" -q)
 
-devdoc_update:
+devdoc-update:
 	docker pull tendermint/devdoc
 
-
-########################################
-### Packaging
-
-snapcraft-local.yaml: snapcraft-local.yaml.in
-	sed "s/@VERSION@/${VERSION}/g" < $< > $@
-
-# To avoid unintended conflicts with file names, always add to .PHONY
-# unless there is a reason not to.
-# https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build dist clean test test_unit test_cover lint mocks \
-benchmark devdoc_init devdoc devdoc_save devdoc_update runsim \
-format test_sim_app_nondeterminism test_sim_modules test_sim_app_fast \
-test_sim_app_custom_genesis_fast test_sim_app_custom_genesis_multi_seed \
-test_sim_app_multi_seed test_sim_app_import_export test_sim_benchmark_invariants \
-go-mod-cache
+.PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update

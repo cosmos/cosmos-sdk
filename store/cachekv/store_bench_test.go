@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -14,7 +14,7 @@ import (
 func benchmarkCacheKVStoreIterator(numKVs int, b *testing.B) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	cstore := cachekv.NewStore(mem)
-	keys := make([]string, numKVs, numKVs)
+	keys := make([]string, numKVs)
 
 	for i := 0; i < numKVs; i++ {
 		key := make([]byte, 32)

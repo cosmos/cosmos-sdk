@@ -8,12 +8,12 @@ import (
 
 // names used as root for pool module accounts:
 //
-// - NotBondedPool -> "NotBondedTokensPool"
+// - NotBondedPool -> "not_bonded_tokens_pool"
 //
-// - BondedPool -> "BondedTokensPool"
+// - BondedPool -> "bonded_tokens_pool"
 const (
-	NotBondedPoolName = "NotBondedTokensPool"
-	BondedPoolName    = "BondedTokensPool"
+	NotBondedPoolName = "not_bonded_tokens_pool"
+	BondedPoolName    = "bonded_tokens_pool"
 )
 
 // Pool - tracking bonded and not-bonded token supply of the bond denomination

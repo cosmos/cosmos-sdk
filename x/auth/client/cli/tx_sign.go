@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -72,7 +73,7 @@ be generated via the 'multisign' command.
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
 	cmd.Flags().Bool(
 		flagOffline, false,
-		"Offline mode; Do not query a full node. --account and --sequence options would be ignored if offline is set",
+		"Offline mode; Do not query a full node. --account and --sequence options would be required if offline is set",
 	)
 	cmd.Flags().String(flagOutfile, "", "The document will be written to the given file instead of STDOUT")
 
@@ -98,9 +99,10 @@ func makeSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) error
 			return err
 		}
 
+		inBuf := bufio.NewReader(cmd.InOrStdin())
 		offline := viper.GetBool(flagOffline)
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
-		txBldr := types.NewTxBuilderFromCLI()
+		cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+		txBldr := types.NewTxBuilderFromCLI(inBuf)
 
 		if viper.GetBool(flagValidateSigs) {
 			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
@@ -196,7 +198,7 @@ func printAndValidateSigs(
 	}
 
 	success := true
-	sigs := stdTx.GetSignatures()
+	sigs := stdTx.Signatures
 
 	fmt.Println("")
 	fmt.Println("Signatures:")

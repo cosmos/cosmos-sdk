@@ -3,71 +3,15 @@ package gov
 import (
 	"testing"
 
+	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func TestEqualProposalID(t *testing.T) {
-	state1 := GenesisState{}
-	state2 := GenesisState{}
-	require.Equal(t, state1, state2)
-
-	// Proposals
-	state1.StartingProposalID = 1
-	require.NotEqual(t, state1, state2)
-	require.False(t, state1.Equal(state2))
-
-	state2.StartingProposalID = 1
-	require.Equal(t, state1, state2)
-	require.True(t, state1.Equal(state2))
-}
-
-func TestEqualProposals(t *testing.T) {
-	// Generate mock app and keepers
-	input := getMockApp(t, 2, GenesisState{}, nil)
-	SortAddresses(input.addrs)
-
-	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
-	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
-
-	// Submit two proposals
-	proposal := testProposal()
-	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
-	require.NoError(t, err)
-	proposal2, err := input.keeper.SubmitProposal(ctx, proposal)
-	require.NoError(t, err)
-
-	// They are similar but their IDs should be different
-	require.NotEqual(t, proposal1, proposal2)
-	require.False(t, ProposalEqual(proposal1, proposal2))
-
-	// Now create two genesis blocks
-	state1 := GenesisState{Proposals: []Proposal{proposal1}}
-	state2 := GenesisState{Proposals: []Proposal{proposal2}}
-	require.NotEqual(t, state1, state2)
-	require.False(t, state1.Equal(state2))
-
-	// Now make proposals identical by setting both IDs to 55
-	proposal1.ProposalID = 55
-	proposal2.ProposalID = 55
-	require.Equal(t, proposal1, proposal1)
-	require.True(t, ProposalEqual(proposal1, proposal2))
-
-	// Reassign proposals into state
-	state1.Proposals[0] = proposal1
-	state2.Proposals[0] = proposal2
-
-	// State should be identical now..
-	require.Equal(t, state1, state2)
-	require.True(t, state1.Equal(state2))
-}
-
 func TestImportExportQueues(t *testing.T) {
 	// Generate mock app and keepers
-	input := getMockApp(t, 2, GenesisState{}, nil)
+	input := getMockApp(t, 2, GenesisState{}, nil, ProposalHandler)
 	SortAddresses(input.addrs)
 
 	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
@@ -76,7 +20,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
 
 	// Create two proposals, put the second into the voting period
-	proposal := testProposal()
+	proposal := keep.TestProposal
 	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalID
@@ -100,7 +44,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	// Export the state and import it into a new Mock App
 	genState := ExportGenesis(ctx, input.keeper)
-	input2 := getMockApp(t, 2, genState, genAccs)
+	input2 := getMockApp(t, 2, genState, genAccs, ProposalHandler)
 
 	header = abci.Header{Height: input.mApp.LastBlockHeight() + 1}
 	input2.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -128,4 +72,46 @@ func TestImportExportQueues(t *testing.T) {
 	proposal2, ok = input2.keeper.GetProposal(ctx2, proposalID2)
 	require.True(t, ok)
 	require.True(t, proposal2.Status == StatusRejected)
+}
+
+func TestEqualProposals(t *testing.T) {
+	// Generate mock app and keepers
+	input := getMockApp(t, 2, GenesisState{}, nil, ProposalHandler)
+	SortAddresses(input.addrs)
+
+	header := abci.Header{Height: input.mApp.LastBlockHeight() + 1}
+	input.mApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	ctx := input.mApp.BaseApp.NewContext(false, abci.Header{})
+
+	// Submit two proposals
+	proposal := keep.TestProposal
+	proposal1, err := input.keeper.SubmitProposal(ctx, proposal)
+	require.NoError(t, err)
+	proposal2, err := input.keeper.SubmitProposal(ctx, proposal)
+	require.NoError(t, err)
+
+	// They are similar but their IDs should be different
+	require.NotEqual(t, proposal1, proposal2)
+	require.False(t, keep.ProposalEqual(proposal1, proposal2))
+
+	// Now create two genesis blocks
+	state1 := GenesisState{Proposals: []Proposal{proposal1}}
+	state2 := GenesisState{Proposals: []Proposal{proposal2}}
+	require.NotEqual(t, state1, state2)
+	require.False(t, state1.Equal(state2))
+
+	// Now make proposals identical by setting both IDs to 55
+	proposal1.ProposalID = 55
+	proposal2.ProposalID = 55
+	require.Equal(t, proposal1, proposal1)
+	require.True(t, keep.ProposalEqual(proposal1, proposal2))
+
+	// Reassign proposals into state
+	state1.Proposals[0] = proposal1
+	state2.Proposals[0] = proposal2
+
+	// State should be identical now..
+	require.Equal(t, state1, state2)
+	require.True(t, state1.Equal(state2))
 }

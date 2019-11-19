@@ -189,6 +189,7 @@ func TestArithmetic(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
+		tc := tc
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
@@ -291,6 +292,7 @@ func TestDecMarshalJSON(t *testing.T) {
 		{"12340Int", NewDec(12340), "\"12340.000000000000000000\"", false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.d.MarshalJSON()
 			if (err != nil) != tt.wantErr {
@@ -419,6 +421,25 @@ func TestDecCeil(t *testing.T) {
 
 	for i, tc := range testCases {
 		res := tc.input.Ceil()
+		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
+	}
+}
+
+func TestApproxSqrt(t *testing.T) {
+	testCases := []struct {
+		input    Dec
+		expected Dec
+	}{
+		{OneDec(), OneDec()},                                                // 1.0 => 1.0
+		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
+		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
+		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                // 9 => 3
+		{NewDecFromInt(NewInt(-9)), NewDecFromInt(NewInt(-3))},              // -9 => -3
+		{NewDecFromInt(NewInt(2)), NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+	}
+
+	for i, tc := range testCases {
+		res := tc.input.ApproxSqrt()
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }

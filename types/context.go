@@ -31,6 +31,7 @@ type Context struct {
 	gasMeter      GasMeter
 	blockGasMeter GasMeter
 	checkTx       bool
+	recheckTx     bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice   DecCoins
 	consParams    *abci.ConsensusParams
 	eventManager  *EventManager
@@ -51,6 +52,7 @@ func (c Context) VoteInfos() []abci.VoteInfo  { return c.voteInfo }
 func (c Context) GasMeter() GasMeter          { return c.gasMeter }
 func (c Context) BlockGasMeter() GasMeter     { return c.blockGasMeter }
 func (c Context) IsCheckTx() bool             { return c.checkTx }
+func (c Context) IsReCheckTx() bool           { return c.recheckTx }
 func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
 func (c Context) EventManager() *EventManager { return c.eventManager }
 
@@ -152,6 +154,16 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
+// WithIsRecheckTx called with true will also set true on checkTx in order to
+// enforce the invariant that if recheckTx = true then checkTx = true as well.
+func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
+	if isRecheckTx {
+		c.checkTx = true
+	}
+	c.recheckTx = isRecheckTx
+	return c
+}
+
 func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 	c.minGasPrice = gasPrices
 	return c
@@ -205,10 +217,11 @@ func (c Context) TransientStore(key StoreKey) KVStore {
 	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
 }
 
-// Cache the multistore and return a new cached context. The cached context is
-// written to the context when writeCache is called.
+// CacheContext returns a new Context with the multi-store cached and a new
+// EventManager. The cached context is written to the context when writeCache
+// is called.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cms := c.MultiStore().CacheMultiStore()
-	cc = c.WithMultiStore(cms)
+	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 	return cc, cms.Write
 }

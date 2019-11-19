@@ -1,26 +1,56 @@
+# run:
+#   # timeout for analysis, e.g. 30s, 5m, default is 1m
+#   timeout: 5m
+
 linters:
-  disable-all: true
   enable:
-    - errcheck
-    - golint
-    - ineffassign
-    - unconvert
-    - misspell
-    - govet
-    - unused
+    - bodyclose
     - deadcode
+    - depguard
+    - dogsled
     - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - golint
     - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - interfacer
+    - maligned
+    - misspell
+    - nakedret
+    - prealloc
+    - scopelint
     - staticcheck
-linters-settings:
-  gocyclo:
-    min-complexity: 11
-  errcheck:
-    ignore: fmt:.*,io/ioutil:^Read.*,github.com/spf13/cobra:MarkFlagRequired,github.com/spf13/viper:BindPFlag
-  golint:
-    min-confidence: 1.1
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - misspell
+  disable:
+    - errcheck
+
 issues:
-  exclude:
-    - composite
-run:
-  tests: false
+  exclude-rules:
+    - text: "Use of weak random number generator"
+      linters:
+        - gosec
+    - text: "comment on exported var"
+      linters:
+        - golint
+    - text: "don't use an underscore in package name"
+      linters:
+        - golint
+    - text: "ST1003:"
+      linters:
+        - stylecheck
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
+  maligned:
+    # print struct with more effective memory layout or not, false by default
+    suggest-new: true

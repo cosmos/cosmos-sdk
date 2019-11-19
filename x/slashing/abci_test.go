@@ -9,22 +9,23 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
+	ctx, ck, sk, _, keeper := slashingkeeper.CreateTestInput(t, DefaultParams())
 	power := int64(100)
 	amt := sdk.TokensFromConsensusPower(power)
-	addr, pk := addrs[2], pks[2]
+	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
 
 	// bond the validator
-	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
+	got := staking.NewHandler(sk)(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, initTokens.Sub(amt))),
+		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, slashingkeeper.InitTokens.Sub(amt))),
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
@@ -44,7 +45,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 	BeginBlocker(ctx, req, keeper)
 
-	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
+	info, found := keeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(pk.Address()))
 	require.True(t, found)
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)

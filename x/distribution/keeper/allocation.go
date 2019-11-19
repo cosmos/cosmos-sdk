@@ -57,7 +57,7 @@ func (k Keeper) AllocateTokens(
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeProposerReward,
-				sdk.NewAttribute(types.AttributeKeyAmount, proposerReward.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, proposerReward.String()),
 				sdk.NewAttribute(types.AttributeKeyValidator, proposerValidator.GetOperator().String()),
 			),
 		)
@@ -109,7 +109,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeCommission,
-			sdk.NewAttribute(types.AttributeKeyAmount, commission.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)
@@ -126,7 +126,7 @@ func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val exported.Validato
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRewards,
-			sdk.NewAttribute(types.AttributeKeyAmount, tokens.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, val.GetOperator().String()),
 		),
 	)

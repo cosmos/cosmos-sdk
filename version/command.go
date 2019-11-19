@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/libs/cli"
 )
@@ -22,7 +22,7 @@ var Cmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the app version",
 	RunE: func(_ *cobra.Command, _ []string) error {
-		verInfo := newVersionInfo()
+		verInfo := NewInfo()
 
 		if !viper.GetBool(flagLong) {
 			fmt.Println(verInfo.Version)

@@ -2,9 +2,7 @@ package rpc
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,9 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/version"
+
+	"github.com/tendermint/tendermint/p2p"
 )
 
-// StatusCommand returns the status of the network
+// StatusCommand returns the command to return the status of the network.
 func StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
@@ -32,7 +33,6 @@ func StatusCommand() *cobra.Command {
 }
 
 func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
-	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
@@ -41,9 +41,7 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 	return node.Status()
 }
 
-// CMD
-
-func printNodeStatus(cmd *cobra.Command, args []string) error {
+func printNodeStatus(_ *cobra.Command, _ []string) error {
 	// No need to verify proof in getting node status
 	viper.Set(flags.FlagTrustNode, true)
 	cliCtx := context.NewCLIContext()
@@ -66,7 +64,13 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// REST
+// NodeInfoResponse defines a response type that contains node status and version
+// information.
+type NodeInfoResponse struct {
+	p2p.DefaultNodeInfo `json:"node_info"`
+
+	ApplicationVersion version.Info `json:"application_version"`
+}
 
 // REST handler for node info
 func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
@@ -77,9 +81,17 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		nodeInfo := status.NodeInfo
-		rest.PostProcessResponse(w, cliCtx, nodeInfo)
+		resp := NodeInfoResponse{
+			DefaultNodeInfo:    status.NodeInfo,
+			ApplicationVersion: version.NewInfo(),
+		}
+		rest.PostProcessResponseBare(w, cliCtx, resp)
 	}
+}
+
+// SyncingResponse defines a response type that contains node syncing information.
+type SyncingResponse struct {
+	Syncing bool `json:"syncing"`
 }
 
 // REST handler for node syncing
@@ -91,9 +103,6 @@ func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		syncing := status.SyncInfo.CatchingUp
-		if _, err := w.Write([]byte(strconv.FormatBool(syncing))); err != nil {
-			log.Printf("could not write response: %v", err)
-		}
+		rest.PostProcessResponseBare(w, cliCtx, SyncingResponse{Syncing: status.SyncInfo.CatchingUp})
 	}
 }

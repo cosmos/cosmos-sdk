@@ -25,6 +25,7 @@ func TestGasMeter(t *testing.T) {
 		used := uint64(0)
 
 		for unum, usage := range tc.usage {
+			usage := usage
 			used += usage
 			require.NotPanics(t, func() { meter.ConsumeGas(usage, "") }, "Not exceeded limit but panicked. tc #%d, usage #%d", tcnum, unum)
 			require.Equal(t, used, meter.GasConsumed(), "Gas consumption not match. tc #%d, usage #%d", tcnum, unum)
@@ -40,7 +41,6 @@ func TestGasMeter(t *testing.T) {
 		require.Panics(t, func() { meter.ConsumeGas(1, "") }, "Exceeded but not panicked. tc #%d", tcnum)
 		require.Equal(t, meter.GasConsumedToLimit(), meter.Limit(), "Gas consumption (to limit) not match limit")
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "Gas consumption not match limit+1")
-		break
 
 	}
 }

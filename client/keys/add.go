@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"sort"
 
+	bip39 "github.com/bartekn/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -14,8 +16,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -87,7 +87,6 @@ output
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
-	var encryptPassword string
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	name := args[0]
@@ -99,9 +98,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = keys.NewInMemory()
-		encryptPassword = DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
+		kb, err = NewKeyringFromHomeFlag(cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
@@ -149,16 +147,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 			cmd.PrintErrf("Key %q saved to disk.\n", name)
 			return nil
-		}
-
-		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
-			encryptPassword, err = input.GetCheckPassword(
-				"Enter a passphrase to encrypt your key to disk:",
-				"Repeat the passphrase:", inBuf)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -215,7 +203,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		mnemonic, err = bip39.NewMnemonic(entropySeed[:])
+		mnemonic, err = bip39.NewMnemonic(entropySeed)
 		if err != nil {
 			return err
 		}
@@ -243,7 +231,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, encryptPassword, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index)
 	if err != nil {
 		return err
 	}
@@ -295,7 +283,7 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 		}
 		cmd.PrintErrln(string(jsonString))
 	default:
-		return fmt.Errorf("I can't speak: %s", output)
+		return fmt.Errorf("invalid output format %s", output)
 	}
 
 	return nil

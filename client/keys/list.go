@@ -1,8 +1,9 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 func listKeysCmd() *cobra.Command {
@@ -18,7 +19,7 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

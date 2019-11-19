@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 
@@ -34,7 +34,6 @@ type Store struct {
 
 var _ types.CacheKVStore = (*Store)(nil)
 
-// nolint
 func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
@@ -53,6 +52,7 @@ func (store *Store) GetStoreType() types.StoreType {
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 
 	cacheValue, ok := store.cache[string(key)]
@@ -70,6 +70,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
@@ -86,6 +87,7 @@ func (store *Store) Has(key []byte) bool {
 func (store *Store) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
 	types.AssertValidKey(key)
 
 	store.setCacheValue(key, nil, true, true)
@@ -111,11 +113,12 @@ func (store *Store) Write() {
 	// at least happen atomically.
 	for _, key := range keys {
 		cacheValue := store.cache[key]
-		if cacheValue.deleted {
+		switch {
+		case cacheValue.deleted:
 			store.parent.Delete([]byte(key))
-		} else if cacheValue.value == nil {
+		case cacheValue.value == nil:
 			// Skip, it already doesn't exist in parent.
-		} else {
+		default:
 			store.parent.Set([]byte(key), cacheValue.value)
 		}
 	}

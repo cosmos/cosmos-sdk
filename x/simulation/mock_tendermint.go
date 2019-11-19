@@ -79,7 +79,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) cmn.HexBytes {
 // nolint: unparam
 func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 	current map[string]mockValidator, updates []abci.ValidatorUpdate,
-	event func(string)) map[string]mockValidator {
+	event func(route, op, evResult string)) map[string]mockValidator {
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
@@ -88,13 +88,13 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 			if _, ok := current[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator")
 			}
-			event("endblock/validatorupdates/kicked")
+			event("end_block", "validator_updates", "kicked")
 			delete(current, str)
 
 		} else if mVal, ok := current[str]; ok {
 			// validator already exists
 			mVal.val = update
-			event("endblock/validatorupdates/updated")
+			event("end_block", "validator_updates", "updated")
 
 		} else {
 			// Set this new validator
@@ -102,7 +102,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 				update,
 				GetMemberOfInitialState(r, params.InitialLivenessWeightings),
 			}
-			event("endblock/validatorupdates/added")
+			event("end_block", "validator_updates", "added")
 		}
 	}
 
@@ -114,7 +114,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(string), header abci.Header) abci.RequestBeginBlock {
+	event func(route, op, evResult string), header abci.Header) abci.RequestBeginBlock {
 
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{
@@ -139,9 +139,9 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 
 		if signed {
-			event("beginblock/signing/signed")
+			event("begin_block", "signing", "signed")
 		} else {
-			event("beginblock/signing/missed")
+			event("begin_block", "signing", "missed")
 		}
 
 		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
@@ -158,7 +158,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 
 	// return if no past times
-	if len(pastTimes) <= 0 {
+	if len(pastTimes) == 0 {
 		return abci.RequestBeginBlock{
 			Header: header,
 			LastCommitInfo: abci.LastCommitInfo{
@@ -197,7 +197,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 				TotalVotingPower: totalVotingPower,
 			},
 		)
-		event("beginblock/evidence")
+		event("begin_block", "evidence", "ok")
 	}
 
 	return abci.RequestBeginBlock{

@@ -16,10 +16,11 @@ const (
 	FlagSharesAmount        = "shares-amount"
 	FlagSharesFraction      = "shares-fraction"
 
-	FlagMoniker  = "moniker"
-	FlagIdentity = "identity"
-	FlagWebsite  = "website"
-	FlagDetails  = "details"
+	FlagMoniker         = "moniker"
+	FlagIdentity        = "identity"
+	FlagWebsite         = "website"
+	FlagSecurityContact = "security-contact"
+	FlagDetails         = "details"
 
 	FlagCommissionRate          = "commission-rate"
 	FlagCommissionMaxRate       = "commission-max-rate"
@@ -54,6 +55,7 @@ func init() {
 	fsDescriptionCreate.String(FlagMoniker, "", "The validator's name")
 	fsDescriptionCreate.String(FlagIdentity, "", "The optional identity signature (ex. UPort or Keybase)")
 	fsDescriptionCreate.String(FlagWebsite, "", "The validator's (optional) website")
+	fsDescriptionCreate.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsDescriptionCreate.String(FlagDetails, "", "The validator's (optional) details")
 	fsCommissionUpdate.String(FlagCommissionRate, "", "The new commission rate percentage")
 	FsCommissionCreate.String(FlagCommissionRate, "", "The initial commission rate percentage")
@@ -63,6 +65,7 @@ func init() {
 	fsDescriptionEdit.String(FlagMoniker, types.DoNotModifyDesc, "The validator's name")
 	fsDescriptionEdit.String(FlagIdentity, types.DoNotModifyDesc, "The (optional) identity signature (ex. UPort or Keybase)")
 	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
+	fsDescriptionEdit.String(FlagSecurityContact, types.DoNotModifyDesc, "The validator's (optional) security contact email")
 	fsDescriptionEdit.String(FlagDetails, types.DoNotModifyDesc, "The validator's (optional) details")
 	fsValidator.String(FlagAddressValidator, "", "The Bech32 address of the validator")
 	fsRedelegation.String(FlagAddressValidatorSrc, "", "The Bech32 address of the source validator")

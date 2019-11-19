@@ -10,11 +10,10 @@ import (
 )
 
 var (
-	coinsPos         = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
-	coinsZero        = sdk.NewCoins()
-	coinsPosNotAtoms = sdk.NewCoins(sdk.NewInt64Coin("foo", 10000))
-	coinsMulti       = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
-	addrs            = []sdk.AccAddress{
+	coinsPos   = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
+	coinsZero  = sdk.NewCoins()
+	coinsMulti = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000))
+	addrs      = []sdk.AccAddress{
 		sdk.AccAddress("test1"),
 		sdk.AccAddress("test2"),
 	}
@@ -36,7 +35,6 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, true},
 		{"", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsPos, false},
 		{"Test Proposal", "", ProposalTypeText, addrs[0], coinsPos, false},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeSoftwareUpgrade, addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},

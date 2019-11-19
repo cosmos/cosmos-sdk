@@ -44,12 +44,12 @@ func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.A
 
 	res, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
 	if err != nil {
-		return nil, 0, err
+		return nil, height, err
 	}
 
 	var account exported.Account
 	if err := ModuleCdc.UnmarshalJSON(res, &account); err != nil {
-		return nil, 0, err
+		return nil, height, err
 	}
 
 	return account, height, nil

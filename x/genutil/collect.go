@@ -13,39 +13,20 @@ import (
 	"strings"
 
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// common config options for init
-type InitConfig struct {
-	ChainID   string
-	GenTxsDir string
-	Name      string
-	NodeID    string
-	ValPubKey crypto.PubKey
-}
-
-// NewInitConfig creates a new InitConfig object
-func NewInitConfig(chainID, genTxsDir, name, nodeID string, valPubKey crypto.PubKey) InitConfig {
-	return InitConfig{
-		ChainID:   chainID,
-		GenTxsDir: genTxsDir,
-		Name:      name,
-		NodeID:    nodeID,
-		ValPubKey: valPubKey,
-	}
-}
-
-// get the genesis app state from the config
+// GenAppStateFromConfig gets the genesis app state from the config
 func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	initCfg InitConfig, genDoc tmtypes.GenesisDoc,
-	genAccIterator GenesisAccountsIterator,
+	genAccIterator types.GenesisAccountsIterator,
 ) (appState json.RawMessage, err error) {
 
 	// process genesis transactions, else create default genesis.json
@@ -83,30 +64,11 @@ func GenAppStateFromConfig(cdc *codec.Codec, config *cfg.Config,
 	return appState, err
 }
 
-// Set the genesis transactions int the app genesis state
-func SetGenTxsInAppGenesisState(cdc *codec.Codec, appGenesisState map[string]json.RawMessage,
-	genTxs []auth.StdTx) (map[string]json.RawMessage, error) {
-
-	genesisState := GetGenesisStateFromAppState(cdc, appGenesisState)
-	// convert all the GenTxs to JSON
-	var genTxsBz []json.RawMessage
-	for _, genTx := range genTxs {
-		txBz, err := cdc.MarshalJSON(genTx)
-		if err != nil {
-			return appGenesisState, err
-		}
-		genTxsBz = append(genTxsBz, txBz)
-	}
-
-	genesisState.GenTxs = genTxsBz
-	return SetGenesisStateInAppState(cdc, appGenesisState, genesisState), nil
-}
-
 // CollectStdTxs processes and validates application's genesis StdTxs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
 func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
-	genDoc tmtypes.GenesisDoc, genAccIterator GenesisAccountsIterator,
-) (appGenTxs []auth.StdTx, persistentPeers string, err error) {
+	genDoc tmtypes.GenesisDoc, genAccIterator types.GenesisAccountsIterator,
+) (appGenTxs []authtypes.StdTx, persistentPeers string, err error) {
 
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -121,9 +83,9 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 		return appGenTxs, persistentPeers, err
 	}
 
-	addrMap := make(map[string]auth.Account)
+	addrMap := make(map[string]authexported.Account)
 	genAccIterator.IterateGenesisAccounts(cdc, appState,
-		func(acc auth.Account) (stop bool) {
+		func(acc authexported.Account) (stop bool) {
 			addrMap[acc.GetAddress().String()] = acc
 			return false
 		},
@@ -143,7 +105,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
-		var genStdTx auth.StdTx
+		var genStdTx authtypes.StdTx
 		if err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx); err != nil {
 			return appGenTxs, persistentPeers, err
 		}
@@ -166,7 +128,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string,
 		}
 
 		// TODO abstract out staking message validation back to staking
-		msg := msgs[0].(staking.MsgCreateValidator)
+		msg := msgs[0].(stakingtypes.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
 		delAddr := msg.DelegatorAddress.String()
 		valAddr := sdk.AccAddress(msg.ValidatorAddress).String()

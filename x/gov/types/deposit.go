@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Deposit
+// Deposit defines an amount deposited by an account address to an active proposal
 type Deposit struct {
 	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
 	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     //  Address of the depositor

@@ -5,24 +5,51 @@ import (
 	"io"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	serrors "github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/pkg/errors"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
-
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/errors"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 const (
 	defaultIAVLCacheSize = 10000
 )
 
-// LoadStore loads the iavl store
-func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitStore, error) {
+var (
+	_ types.KVStore       = (*Store)(nil)
+	_ types.CommitStore   = (*Store)(nil)
+	_ types.CommitKVStore = (*Store)(nil)
+	_ types.Queryable     = (*Store)(nil)
+)
+
+// Store Implements types.KVStore and CommitKVStore.
+type Store struct {
+	tree Tree
+
+	// How many old versions we hold onto.
+	// A value of 0 means keep no recent states.
+	numRecent int64
+
+	// This is the distance between state-sync waypoint states to be stored.
+	// See https://github.com/tendermint/tendermint/issues/828
+	// A value of 1 means store every state.
+	// A value of 0 means store no waypoints. (node cannot assist in state-sync)
+	// By default this value should be set the same across all nodes,
+	// so that nodes can know the waypoints their peers store.
+	storeEvery int64
+}
+
+// LoadStore returns an IAVL Store as a CommitKVStore. Internally it will load the
+// store's version (id) from the provided DB. An error is returned if the version
+// fails to load.
+func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyLoading bool) (types.CommitKVStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 
 	var err error
@@ -42,38 +69,15 @@ func LoadStore(db dbm.DB, id types.CommitID, pruning types.PruningOptions, lazyL
 	return iavl, nil
 }
 
-//----------------------------------------
-
-var _ types.KVStore = (*Store)(nil)
-var _ types.CommitStore = (*Store)(nil)
-var _ types.Queryable = (*Store)(nil)
-
-// Store Implements types.KVStore and CommitStore.
-type Store struct {
-	tree Tree
-
-	// How many old versions we hold onto.
-	// A value of 0 means keep no recent states.
-	numRecent int64
-
-	// This is the distance between state-sync waypoint states to be stored.
-	// See https://github.com/tendermint/tendermint/issues/828
-	// A value of 1 means store every state.
-	// A value of 0 means store no waypoints. (node cannot assist in state-sync)
-	// By default this value should be set the same across all nodes,
-	// so that nodes can know the waypoints their peers store.
-	storeEvery int64
-}
-
-// CONTRACT: tree should be fully loaded.
-// nolint: unparam
+// UnsafeNewStore returns a reference to a new IAVL Store.
+//
+// CONTRACT: The IAVL tree should be fully loaded.
 func UnsafeNewStore(tree *iavl.MutableTree, numRecent int64, storeEvery int64) *Store {
-	st := &Store{
+	return &Store{
 		tree:       tree,
 		numRecent:  numRecent,
 		storeEvery: storeEvery,
 	}
-	return st
 }
 
 // GetImmutable returns a reference to a new store backed by an immutable IAVL
@@ -113,7 +117,7 @@ func (st *Store) Commit() types.CommitID {
 		toRelease := previous - st.numRecent
 		if st.storeEvery == 0 || toRelease%st.storeEvery != 0 {
 			err := st.tree.DeleteVersion(toRelease)
-			if err != nil && err.(cmn.Error).Data() != iavl.ErrVersionDoesNotExist {
+			if errCause := errors.Cause(err); errCause != nil && errCause != iavl.ErrVersionDoesNotExist {
 				panic(err)
 			}
 		}
@@ -166,9 +170,9 @@ func (st *Store) Set(key, value []byte) {
 }
 
 // Implements types.KVStore.
-func (st *Store) Get(key []byte) (value []byte) {
-	_, v := st.tree.Get(key)
-	return v
+func (st *Store) Get(key []byte) []byte {
+	_, value := st.tree.Get(key)
+	return value
 }
 
 // Implements types.KVStore.
@@ -233,7 +237,7 @@ func getHeight(tree Tree, req abci.RequestQuery) int64 {
 func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return errors.ErrTxDecode(msg).QueryResult()
+		return serrors.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -293,24 +297,24 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return errors.ErrUnknownRequest(msg).QueryResult()
+		return serrors.ErrUnknownRequest(msg).QueryResult()
 	}
 
-	return
+	return res
 }
 
 //----------------------------------------
 
 // Implements types.Iterator.
 type iavlIterator struct {
-	// Underlying store
-	tree *iavl.ImmutableTree
-
 	// Domain
 	start, end []byte
 
-	// Iteration order
-	ascending bool
+	key   []byte // The current key (mutable)
+	value []byte // The current value (mutable)
+
+	// Underlying store
+	tree *iavl.ImmutableTree
 
 	// Channel to push iteration values.
 	iterCh chan cmn.KVPair
@@ -321,13 +325,11 @@ type iavlIterator struct {
 	// Close this to signal that state is initialized.
 	initCh chan struct{}
 
-	//----------------------------------------
-	// What follows are mutable state.
 	mtx sync.Mutex
 
-	invalid bool   // True once, true forever
-	key     []byte // The current key
-	value   []byte // The current value
+	ascending bool // Iteration order
+
+	invalid bool // True once, true forever (mutable)
 }
 
 var _ types.Iterator = (*iavlIterator)(nil)
@@ -419,9 +421,13 @@ func (iter *iavlIterator) Value() []byte {
 	return val
 }
 
-// Implements types.Iterator.
+// Close closes the IAVL iterator by closing the quit channel and waiting for
+// the iterCh to finish/close.
 func (iter *iavlIterator) Close() {
 	close(iter.quitCh)
+	// wait iterCh to close
+	for range iter.iterCh {
+	}
 }
 
 //----------------------------------------

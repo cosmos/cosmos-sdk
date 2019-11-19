@@ -113,7 +113,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	viper.SetConfigName("app")
 	err = viper.MergeInConfig()
 
-	return
+	return conf, err
 }
 
 // add server commands

@@ -5,9 +5,10 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/stretchr/testify/require"
 )
 
 var (

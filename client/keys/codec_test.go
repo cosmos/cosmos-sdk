@@ -18,6 +18,7 @@ type testCases struct {
 
 func getTestCases() testCases {
 	return testCases{
+		// nolint:govet
 		[]keys.KeyOutput{
 			{"A", "B", "C", "D", "E", 0, nil},
 			{"A", "B", "C", "D", "", 0, nil},
@@ -47,14 +48,15 @@ func TestMarshalJSON(t *testing.T) {
 		want    []byte
 		wantErr bool
 	}{
-		{"basic", args{data.Keys[0]}, []byte(data.JSON[0]), false},
-		{"mnemonic is optional", args{data.Keys[1]}, []byte(data.JSON[1]), false},
+		{"basic", args{data.Keys[0]}, data.JSON[0], false},
+		{"mnemonic is optional", args{data.Keys[1]}, data.JSON[1], false},
 
 		// REVIEW: Are the next results expected??
-		{"empty name", args{data.Keys[2]}, []byte(data.JSON[2]), false},
-		{"empty object", args{data.Keys[3]}, []byte(data.JSON[3]), false},
+		{"empty name", args{data.Keys[2]}, data.JSON[2], false},
+		{"empty object", args{data.Keys[3]}, data.JSON[3], false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := MarshalJSON(tt.args.o)
 			if (err != nil) != tt.wantErr {
@@ -90,9 +92,10 @@ func TestUnmarshalJSON(t *testing.T) {
 		{"empty object", args{data.JSON[3], &data.Answers[3]}, false},
 	}
 	for idx, tt := range tests {
+		idx, tt := idx, tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := UnmarshalJSON(tt.args.bz, tt.args.ptr); (err != nil) != tt.wantErr {
-				t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("unmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			// Confirm deserialized objects are the same

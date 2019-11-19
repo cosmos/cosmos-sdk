@@ -45,7 +45,6 @@ func precisionInt() *big.Int {
 	return new(big.Int).Set(precisionReuse)
 }
 
-// nolint - common values
 func ZeroDec() Dec     { return Dec{new(big.Int).Set(zeroInt)} }
 func OneDec() Dec      { return Dec{precisionInt()} }
 func SmallestDec() Dec { return Dec{new(big.Int).Set(oneInt)} }
@@ -149,7 +148,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 		if lenDecs == 0 || len(combinedStr) == 0 {
 			return d, ErrUnknownRequest("bad decimal length")
 		}
-		combinedStr = combinedStr + strs[1]
+		combinedStr += strs[1]
 
 	} else if len(strs) > 2 {
 		return d, ErrUnknownRequest("too many periods to be a decimal string")
@@ -163,7 +162,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	// add some extra zero's to correct to the Precision factor
 	zerosToAdd := Precision - lenDecs
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
-	combinedStr = combinedStr + zeros
+	combinedStr += zeros
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
@@ -319,6 +318,32 @@ func (d Dec) QuoInt64(i int64) Dec {
 	return Dec{mul}
 }
 
+// ApproxSqrt returns an approximate sqrt estimation using Newton's method to
+// compute square roots x=√d for d > 0. The algorithm starts with some guess and
+// computes the sequence of improved guesses until an answer converges to an
+// approximate answer. It returns -(sqrt(abs(d)) if input is negative.
+func (d Dec) ApproxSqrt() Dec {
+	if d.IsNegative() {
+		return d.MulInt64(-1).ApproxSqrt().MulInt64(-1)
+	}
+
+	if d.IsZero() {
+		return ZeroDec()
+	}
+
+	z := OneDec()
+	// first guess
+	z = z.Sub((z.Mul(z).Sub(d)).Quo(z.MulInt64(2)))
+
+	// iterate until change is very small
+	for zNew, delta := z, z; delta.GT(SmallestDec()); z = zNew {
+		zNew = zNew.Sub((zNew.Mul(zNew).Sub(d)).Quo(zNew.MulInt64(2)))
+		delta = z.Sub(zNew)
+	}
+
+	return z
+}
+
 // is integer, e.g. decimals are zero
 func (d Dec) IsInteger() bool {
 	return new(big.Int).Rem(d.Int, precisionReuse).Sign() == 0
@@ -394,7 +419,6 @@ func (d Dec) String() string {
 // |_____:  /   | $$$    |
 //              |________|
 
-// nolint - go-cyclo
 // Remove a Precision amount of rightmost digits and perform bankers rounding
 // on the remainder (gaussian rounding) on the digits which have been removed.
 //

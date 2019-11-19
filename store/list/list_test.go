@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -90,6 +90,7 @@ func TestListRandom(t *testing.T) {
 	}
 
 	for k, v := range mocklist {
+		k := k
 		var i uint32
 		require.NotPanics(t, func() { list.Get(uint64(k), &i) })
 		require.Equal(t, v, i)

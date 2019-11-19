@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	cmn "github.com/tendermint/tendermint/libs/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // CodeType - ABCI code identifier within codespace
@@ -44,6 +46,9 @@ const (
 	CodeTooManySignatures CodeType = 15
 	CodeGasOverflow       CodeType = 16
 	CodeNoSignatures      CodeType = 17
+	CodeTxInMempoolCache  CodeType = 18
+	CodeMempoolIsFull     CodeType = 19
+	CodeTxTooLarge        CodeType = 20
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -248,10 +253,14 @@ func (err *sdkError) Code() CodeType {
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
 	errMsg := err.cmnError.Error()
+	return encodeErrorLog(err.codespace, err.code, errMsg)
+}
+
+func encodeErrorLog(codespace CodespaceType, code CodeType, msg string) string {
 	jsonErr := humanReadableError{
-		Codespace: err.codespace,
-		Code:      err.code,
-		Message:   errMsg,
+		Codespace: codespace,
+		Code:      code,
+		Message:   msg,
 	}
 
 	var buff bytes.Buffer
@@ -282,6 +291,40 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 	}
 }
 
+// ResultFromError will return err.Result() if it implements sdk.Error
+// Otherwise, it will use the reflecton from types/error to determine
+// the code, codespace, and log.
+//
+// This is intended to provide a bridge to allow both error types
+// to live side-by-side.
+func ResultFromError(err error) Result {
+	if sdk, ok := err.(Error); ok {
+		return sdk.Result()
+	}
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	return Result{
+		Codespace: CodespaceType(space),
+		Code:      CodeType(code),
+		Log:       encodeErrorLog(CodespaceType(space), CodeType(code), log),
+	}
+}
+
+// ConvertError accepts a standard error and attempts to convert it to an sdk.Error.
+// If the given error is already an sdk.Error, it'll simply be returned. Otherwise,
+// it'll convert it to a types.Error. This is meant to provide a migration path
+// away from sdk.Error in favor of types.Error.
+func ConvertError(err error) Error {
+	if err == nil {
+		return nil
+	}
+	if sdkError, ok := err.(Error); ok {
+		return sdkError
+	}
+
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	return NewError(CodespaceType(space), CodeType(code), log)
+}
+
 //----------------------------------------
 // REST error utilities
 
@@ -301,7 +344,7 @@ func AppendMsgToErr(msg string, err string) string {
 }
 
 // returns the index of the message in the ABCI Log
-// nolint: deadcode unused
+// nolint:deadcode,unused
 func mustGetMsgIndex(abciLog string) int {
 	msgIdx := strings.Index(abciLog, "message\":\"")
 	if msgIdx == -1 {

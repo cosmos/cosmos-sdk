@@ -20,7 +20,7 @@ const (
 
 // KVStore key prefixes
 var (
-	KeyPrefixChannel = []byte{0x00}
+	KeyPrefixChannel = []byte{}
 )
 
 // ChannelPath defines the path under which channels are stored

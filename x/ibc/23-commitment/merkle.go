@@ -2,9 +2,12 @@ package commitment
 
 import (
 	"errors"
+	"net/url"
+
 	"github.com/tendermint/tendermint/crypto/merkle"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // ICS 023 Merkle Types Implementation
@@ -90,11 +93,11 @@ func (Path) GetCommitmentType() Type {
 
 // String implements fmt.Stringer. It returns unescaped path of the URL string.
 func (p Path) String() string {
-	//path, err := url.PathUnescape(p.KeyPath.String())
-	//if err != nil {
-	//	panic(err)
-	//}
-	return p.KeyPath.String()
+	path, err := url.PathUnescape(p.KeyPath.String())
+	if err != nil {
+		panic(err)
+	}
+	return path
 }
 
 // ApplyPrefix constructs a new commitment path from the arguments. It interprets
@@ -103,11 +106,10 @@ func (p Path) String() string {
 // CONTRACT: provided path string MUST be a well formated path. See ICS24 for
 // reference.
 func ApplyPrefix(prefix PrefixI, path string) (Path, error) {
-	// TODO: fix path check
-	//err := host.DefaultPathValidator(path)
-	//if err != nil {
-	//	return Path{}, err
-	//}
+	err := host.DefaultPathValidator(path)
+	if err != nil {
+		return Path{}, err
+	}
 
 	if prefix == nil || len(prefix.Bytes()) == 0 {
 		return Path{}, errors.New("prefix can't be empty")

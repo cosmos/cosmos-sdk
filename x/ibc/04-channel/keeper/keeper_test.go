@@ -29,8 +29,6 @@ const (
 	testChannelVersion = "1.0"
 )
 
-var keyPrefix = string([]byte{0x00})
-
 type KeeperTestSuite struct {
 	suite.Suite
 

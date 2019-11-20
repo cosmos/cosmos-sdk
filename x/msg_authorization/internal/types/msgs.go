@@ -1,9 +1,8 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 )
 
 // MsgGrant grants the provided capability to the grantee on the granter's

@@ -93,9 +93,9 @@ func DefaultPathValidator(path string) error {
 	}
 
 	for _, p := range pathArr {
-		// Each path element must either be alphanumeric
-		if !isAlphaNumeric(p) {
-			return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "invalid path element containing non-alphanumeric characters: %s", p)
+		// Each path element must be alphanumeric and non-blank
+		if strings.TrimSpace(p) == "" || !isAlphaNumeric(p) {
+			return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "invalid path element containing non-alphanumeric characters: '%s'", p)
 		}
 	}
 	return nil

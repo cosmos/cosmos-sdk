@@ -91,8 +91,13 @@ func (Path) GetCommitmentType() Type {
 	return Merkle
 }
 
-// String implements fmt.Stringer. It returns unescaped path of the URL string.
+// String implements fmt.Stringer.
 func (p Path) String() string {
+	return p.KeyPath.String()
+}
+
+// Pretty returns the unescaped path of the URL string.
+func (p Path) Pretty() string {
 	path, err := url.PathUnescape(p.KeyPath.String())
 	if err != nil {
 		panic(err)

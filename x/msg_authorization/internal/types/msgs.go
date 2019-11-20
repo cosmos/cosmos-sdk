@@ -28,17 +28,25 @@ func (msg MsgGrantAuthorization) Route() string { return RouterKey }
 func (msg MsgGrantAuthorization) Type() string  { return "grant_authorization" }
 
 func (msg MsgGrantAuthorization) GetSigners() []sdk.AccAddress {
-	//TODO
-	return nil
+	return []sdk.AccAddress{msg.Granter}
 }
 
 func (msg MsgGrantAuthorization) GetSignBytes() []byte {
-	//TODO
-	return nil
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 func (msg MsgGrantAuthorization) ValidateBasic() sdk.Error {
-	//TODO
+	if msg.Granter.Empty() {
+		return ErrInvalidGranter(DefaultCodespace)
+	}
+	if msg.Grantee.Empty() {
+		return ErrInvalidGrantee(DefaultCodespace)
+	}
+	if msg.Expiration.Unix() < time.Now().Unix() {
+		return ErrInvalidExpirationTime(DefaultCodespace)
+	}
+
 	return nil
 }
 
@@ -64,17 +72,21 @@ func (msg MsgRevokeAuthorization) Route() string { return RouterKey }
 func (msg MsgRevokeAuthorization) Type() string  { return "revoke_authorization" }
 
 func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
-	//TODO
-	return nil
+	return []sdk.AccAddress{msg.Granter}
 }
 
 func (msg MsgRevokeAuthorization) GetSignBytes() []byte {
-	//TODO
-	return nil
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 func (msg MsgRevokeAuthorization) ValidateBasic() sdk.Error {
-	//TODO
+	if msg.Granter.Empty() {
+		return sdk.ErrInvalidAddress(msg.Granter.String())
+	}
+	if msg.Grantee.Empty() {
+		return sdk.ErrInvalidAddress(msg.Grantee.String())
+	}
 	return nil
 }
 
@@ -96,16 +108,17 @@ func (msg MsgExecDelegated) Route() string { return RouterKey }
 func (msg MsgExecDelegated) Type() string  { return "exec_delegated" }
 
 func (msg MsgExecDelegated) GetSigners() []sdk.AccAddress {
-	//TODO
-	return nil
+	return []sdk.AccAddress{msg.Grantee}
 }
 
 func (msg MsgExecDelegated) GetSignBytes() []byte {
-	//TODO
-	return nil
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 func (msg MsgExecDelegated) ValidateBasic() sdk.Error {
-	//TODO
+	if msg.Grantee.Empty() {
+		return sdk.ErrInvalidAddress(msg.Grantee.String())
+	}
 	return nil
 }

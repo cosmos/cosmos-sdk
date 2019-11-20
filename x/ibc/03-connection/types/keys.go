@@ -44,3 +44,13 @@ func KeyConnection(connectionID string) []byte {
 func KeyClientConnections(clientID string) []byte {
 	return []byte(ClientConnectionsPath(clientID))
 }
+
+// PrefixKeyConnection returns the prefix store key for a particular connection
+func PrefixKeyConnection(connectionID string) []byte {
+	return append(KeyPrefixConnection, KeyConnection(connectionID)...)
+}
+
+// PrefixKeyClientConnections returns the prefix store key for the the connectios of a given client
+func PrefixKeyClientConnections(clientID string) []byte {
+	return append(KeyPrefixConnection, KeyClientConnections(clientID)...)
+}

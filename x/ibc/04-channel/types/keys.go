@@ -59,6 +59,11 @@ func KeyChannel(portID, channelID string) []byte {
 	return []byte(ChannelPath(portID, channelID))
 }
 
+// PrefixKeyChannel returns the prefix store key for a particular channel
+func PrefixKeyChannel(portID, channelID string) []byte {
+	return append(KeyPrefixChannel, KeyChannel(portID, channelID)...)
+}
+
 // KeyChannelCapabilityPath returns the store key for the capability key of a
 // particular channel binded to a specific port
 func KeyChannelCapabilityPath(portID, channelID string) []byte {

@@ -70,3 +70,13 @@ func KeyConsensusState(clientID string) []byte {
 func KeyRoot(clientID string, height uint64) []byte {
 	return []byte(RootPath(clientID, height))
 }
+
+// PrefixKeyClientState returns the prefix store key for the client state
+func PrefixKeyClientState(clientID string) []byte {
+	return append(KeyPrefixClient, KeyClientState(clientID)...)
+}
+
+// PrefixKeyConsensusState returns the prefix store key for the consensus state
+func PrefixKeyConsensusState(clientID string) []byte {
+	return append(KeyPrefixClient, KeyConsensusState(clientID)...)
+}

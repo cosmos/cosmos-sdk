@@ -71,6 +71,7 @@ func TestMsgTransferValidation(t *testing.T) {
 		NewMsgTransfer("testportid", "testchannel", negativeCoins, addr1, addr2, false),     // amount contains negative coin
 		NewMsgTransfer("testportid", "testchannel", coins, emptyAddr, addr2, false),         // missing sender address
 		NewMsgTransfer("testportid", "testchannel", coins, addr1, emptyAddr, false),         // missing recipient address
+		NewMsgTransfer("testportid", "testchannel", sdk.Coins{}, addr1, addr2, false),       // not possitive coin
 	}
 
 	testCases := []struct {

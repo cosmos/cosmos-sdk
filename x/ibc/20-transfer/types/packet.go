@@ -39,11 +39,11 @@ func (pd PacketData) String() string {
 
 // ValidateBasic performs a basic check of the packet fields
 func (pd PacketData) ValidateBasic() sdk.Error {
-	if !pd.Amount.IsValid() {
-		return sdk.ErrInvalidCoins("transfer amount is invalid")
-	}
 	if !pd.Amount.IsAllPositive() {
 		return sdk.ErrInsufficientCoins("transfer amount must be positive")
+	}
+	if !pd.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("transfer amount is invalid")
 	}
 	if pd.Sender.Empty() {
 		return sdk.ErrInvalidAddress("missing sender address")

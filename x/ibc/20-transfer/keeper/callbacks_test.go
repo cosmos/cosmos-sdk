@@ -11,17 +11,17 @@ func (suite *KeeperTestSuite) TestOnChanOpenInit() {
 
 	counterparty := channel.NewCounterparty(testPort2, testChannel2)
 	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
-	suite.NotNil(err) // invalid channel order
+	suite.Error(err) // invalid channel order
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
-	suite.NotNil(err) // invalid counterparty port ID
+	suite.Error(err) // invalid counterparty port ID
 
 	counterparty = channel.NewCounterparty(testCapKeyName, testChannel2)
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
-	suite.NotNil(err) // invalid version
+	suite.Error(err) // invalid version
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 }
 
 func (suite *KeeperTestSuite) TestOnChanOpenTry() {
@@ -29,28 +29,28 @@ func (suite *KeeperTestSuite) TestOnChanOpenTry() {
 
 	counterparty := channel.NewCounterparty(testPort2, testChannel2)
 	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
-	suite.NotNil(err) // invalid channel order
+	suite.Error(err) // invalid channel order
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
-	suite.NotNil(err) // invalid counterparty port ID
+	suite.Error(err) // invalid counterparty port ID
 
 	counterparty = channel.NewCounterparty(testCapKeyName, testChannel2)
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion, "")
-	suite.NotNil(err) // invalid version
+	suite.Error(err) // invalid version
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", testChannelVersion)
-	suite.NotNil(err) // invalid counterparty version
+	suite.Error(err) // invalid counterparty version
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 }
 
 func (suite *KeeperTestSuite) TestOnChanOpenAck() {
 	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion)
-	suite.NotNil(err) // invalid version
+	suite.Error(err) // invalid version
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, "")
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 }
 
 func (suite *KeeperTestSuite) TestOnRecvPacket() {
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packetDataBz := []byte("invaliddata")
 	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.NotNil(err) // invalid packet data
+	suite.Error(err) // invalid packet data
 
 	// when the source is true
 	source := true
@@ -70,14 +70,14 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.NotNil(err) // invalid denom prefix
+	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
 	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
@@ -93,20 +93,20 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.NotNil(err) // invalid denom prefix
+	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.NotNil(err) // insufficient coins in the corresponding escrow account
+	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
 	suite.Equal(testCoins, receiverCoins)
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	packetDataBz := []byte("invaliddata")
 	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 	err := suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.NotNil(err) // invalid packet data
+	suite.Error(err) // invalid packet data
 
 	// when the source is true
 	source := true
@@ -129,19 +129,19 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.NotNil(err) // invalid denom prefix
+	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
 	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
 
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.NotNil(err) // insufficient coins in the corresponding escrow account
+	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 
 	senderCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Sender)
 	suite.Equal(testCoins, senderCoins)
@@ -158,7 +158,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Sender, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.Nil(err) // successfully executed
+	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
 	suite.Equal(testPrefixedCoins1, totalSupply.GetTotal()) // supply should be inflated

@@ -31,9 +31,9 @@ func TestPacketDataValidation(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.packetData.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "PacketData %d failed: %v", i, err)
+			require.NoError(t, err, "PacketData %d failed: %v", i, err)
 		} else {
-			require.NotNil(t, err, "Invalid PacketData %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "Invalid PacketData %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

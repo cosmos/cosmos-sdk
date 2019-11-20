@@ -1892,6 +1892,11 @@ paths:
           required: true
           type: string
           x-example: ibcclientid
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: false
       responses:
         200:
           description: OK
@@ -1924,6 +1929,11 @@ paths:
           required: true
           type: string
           x-example: ibcclientid
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: false
       responses:
         200:
           description: OK
@@ -2133,6 +2143,11 @@ paths:
           required: true
           type: string
           x-example: ibcconnectionid
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: false
       responses:
         200:
           description: OK
@@ -2156,6 +2171,11 @@ paths:
           required: true
           type: string
           x-example: ibcclientid
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: false
       responses:
         200:
           description: OK
@@ -2353,6 +2373,11 @@ paths:
           required: true
           type: string
           x-example: ibcconnectionid
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: false
       responses:
         200:
           description: OK

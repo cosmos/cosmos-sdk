@@ -113,7 +113,7 @@ func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, erro
 func (ctx CLIContext) QueryABCIWithProof(r *http.Request, module string, data []byte) (abci.ResponseQuery, error) {
 	proveStr := r.FormValue("prove")
 	prove := false
-	if ok, err := strconv.ParseBool(proveStr); err != nil {
+	if ok, err := strconv.ParseBool(proveStr); err == nil {
 		prove = ok
 	}
 	req := abci.RequestQuery{

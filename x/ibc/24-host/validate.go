@@ -88,10 +88,14 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 // checking that all path elements are alphanumeric
 func DefaultPathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
+	if pathArr[0] == path {
+		return sdkerrors.Wrap(ErrInvalidPath(DefaultCodespace, path), "path doesn't contain any separator '/'")
+	}
+
 	for _, p := range pathArr {
-		// Each path element must either be alphanumeric
-		if !isAlphaNumeric(p) {
-			return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "invalid path element containing non-alphanumeric characters: %s", p)
+		// Each path element must be alphanumeric and non-blank
+		if strings.TrimSpace(p) == "" || !isAlphaNumeric(p) {
+			return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "invalid path element containing non-alphanumeric characters: '%s'", p)
 		}
 	}
 	return nil

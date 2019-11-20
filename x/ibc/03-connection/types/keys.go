@@ -20,7 +20,7 @@ const (
 
 // KVStore key prefixes
 var (
-	KeyPrefixConnection = []byte{0x00}
+	KeyPrefixConnection = []byte{}
 )
 
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#store-paths

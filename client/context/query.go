@@ -2,6 +2,8 @@ package context
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -103,6 +105,22 @@ func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, in
 // QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
 // It returns the ResultQuery obtained from the query.
 func (ctx CLIContext) QueryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) {
+	return ctx.queryABCI(req)
+}
+
+// QueryABCI performs a query to a Tendermint node with the provide RequestQuery.
+// It returns the ResultQuery obtained from the query.
+func (ctx CLIContext) QueryABCIWithProof(r *http.Request, module string, data []byte) (abci.ResponseQuery, error) {
+	proveStr := r.FormValue("prove")
+	prove := false
+	if ok, err := strconv.ParseBool(proveStr); err != nil {
+		prove = ok
+	}
+	req := abci.RequestQuery{
+		Path:  fmt.Sprintf("store/%s/key", module),
+		Data:  data,
+		Prove: prove,
+	}
 	return ctx.queryABCI(req)
 }
 

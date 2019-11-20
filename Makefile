@@ -10,6 +10,7 @@ SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
+export COSMOS_SDK_TEST_KEYRING = y
 
 all: tools build lint test
 

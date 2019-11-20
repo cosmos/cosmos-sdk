@@ -27,7 +27,7 @@ func (suite *TendermintTestSuite) TestCheckValidity() {
 
 	// reset and make header fail validatebasic
 	suite.SetupTest()
-	suite.header.ChainID = "not_mychain"
+	suite.header.ChainID = "not_gaia"
 	err = suite.cs.checkValidity(suite.header)
 	require.NotNil(suite.T(), err, "invalid header should fail ValidateBasic")
 }
@@ -44,7 +44,7 @@ func (suite *TendermintTestSuite) TestCheckUpdate() {
 
 	// make header invalid so update should be unsuccessful
 	suite.SetupTest()
-	suite.header.ChainID = "not_mychain"
+	suite.header.ChainID = "not_gaia"
 
 	cs, err = suite.cs.CheckValidityAndUpdateState(suite.header)
 	require.NotNil(suite.T(), err)

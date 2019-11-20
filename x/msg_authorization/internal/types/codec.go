@@ -6,4 +6,8 @@ import (
 
 var ModuleCdc = codec.New()
 
-//ToDO register concrete
+func RegisterCodec(cdc *codec.Codec) {
+	cdc.RegisterConcrete(MsgGrantAuthorization{}, "cosmos-sdk/GrantAuthorization", nil)
+	cdc.RegisterConcrete(MsgRevokeAuthorization{}, "cosmos-sdk/RevokeAuthorization", nil)
+	cdc.RegisterConcrete(MsgExecDelegated{}, "cosmos-sdk/ExecDelegated", nil)
+}

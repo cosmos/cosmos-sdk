@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -45,10 +46,6 @@ func (suite *KeeperTestSuite) TestBind() {
 	// Test that valid BindPort returns capability key
 	capKey := suite.keeper.BindPort(validPort)
 	require.NotNil(suite.T(), capKey, "capabilityKey is nil on valid BindPort")
-
-	// Test that port is added to bound list after BindPort is called
-	ports := suite.keeper.GetPorts()
-	require.Equal(suite.T(), []string{validPort}, ports, "portID not added to bound list")
 
 	// Test that rebinding the same portid causes panic
 	require.Panics(suite.T(), func() { suite.keeper.BindPort(validPort) }, "did not panic on re-binding the same port")

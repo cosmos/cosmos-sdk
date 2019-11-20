@@ -3498,7 +3498,14 @@ definitions:
     type: object
     properties:
       key_path:
-        type: string
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            enc:
+              type: integer
   ClientConnectionsResponse:
     type: object
     properties:

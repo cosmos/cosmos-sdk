@@ -165,7 +165,7 @@ func TestMsgRecvPacketValidation(t *testing.T) {
 		if tc.expPass {
 			require.NoError(t, err, "Msg %d failed: %v", i, err)
 		} else {
-			require.Nil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

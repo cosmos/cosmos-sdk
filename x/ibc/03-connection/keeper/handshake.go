@@ -66,11 +66,11 @@ func (k Keeper) ConnOpenTry(
 	}
 	*/
 
-	// expectedConn defines Chain A's ConnectionEnd
+	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -81,7 +81,7 @@ func (k Keeper) ConnOpenTry(
 
 	ok, err := k.VerifyConnectionState(
 		ctx, proofHeight, prefix, proofInit,
-		counterparty.ConnectionID, expectedConn,
+		counterparty.ConnectionID, expectedConnection,
 	)
 	if err != nil {
 		return err
@@ -168,43 +168,44 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	/* TODO: blocked by #5078
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
-	if !found {
-		return errors.New("client consensus state not found") // TODO: use ICS02 error
-	}
-	*/
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	ok, err := k.VerifyConnectionState(
+		ctx, proofHeight, prefix, proofTry,
+		connection.Counterparty.ConnectionID, expectedConnection,
+	)
 	if err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
-	)
 	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
+		return errors.New("connection state membership verification failed")
 	}
 
 	/* TODO: blocked by #5078
-	expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return clienterrors.ErrClientNotFound(k.codespace, connection.ClientID)
+	}
+
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	if !found {
+		return clienterrors.ErrConsensusStateNotFound(k.codespace)
+	}
+
+	ok, err = k.clientKeeper.VerifyClientConsensusState(
+		ctx, clientState, proofHeight, proofInit, connection.Counterparty.Prefix, expectedConsensusState,
+	)
+
 	if err != nil {
 		return err
 	}
 
-	ok = k.VerifyMembership(
-		ctx, connection, proofHeight, proofConsensus,
-		clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
-	)
 	if !ok {
-		return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
+		return errors.New("client consensus state membership verification failed")
 	}
-
 	*/
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
@@ -237,19 +238,18 @@ func (k Keeper) ConnOpenConfirm(
 
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
 
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	ok, err := k.VerifyConnectionState(
+		ctx, proofHeight, prefix, proofAck,
+		connection.Counterparty.ConnectionID, expectedConnection,
+	)
 	if err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofAck,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
-	)
 	if !ok {
-		return types.ErrInvalidCounterpartyConnection(k.codespace)
+		return errors.New("connection state membership verification failed")
 	}
 
 	connection.State = types.OPEN

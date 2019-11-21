@@ -18,14 +18,6 @@ type ClientKeeper interface {
 // ConnectionKeeper expected account IBC connection keeper
 type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connection.ConnectionEnd, bool)
-	VerifyMembership(
-		ctx sdk.Context, connection connection.ConnectionEnd, height uint64,
-		proof commitment.ProofI, path string, value []byte,
-	) bool
-	VerifyNonMembership(
-		ctx sdk.Context, connection connection.ConnectionEnd, height uint64,
-		proof commitment.ProofI, path string,
-	) bool
 }
 
 // PortKeeper expected account IBC port keeper

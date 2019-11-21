@@ -116,7 +116,6 @@ func (k Keeper) ChanOpenTry(
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
@@ -128,16 +127,15 @@ func (k Keeper) ChanOpenTry(
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	ok, err := k.VerifyChannelState(
+		ctx, proofHeight, connectionEnd.Counterparty.Prefix, proofInit,
+		counterparty.PortID, counterparty.ChannelID, expectedChannel, connectionEnd,
+	)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
-		bz,
-	) {
+	if !ok {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
@@ -193,7 +191,6 @@ func (k Keeper) ChanOpenAck(
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
@@ -204,16 +201,15 @@ func (k Keeper) ChanOpenAck(
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	ok, err := k.VerifyChannelState(
+		ctx, proofHeight, connectionEnd.Counterparty.Prefix, proofTry,
+		counterparty.PortID, counterparty.ChannelID, expectedChannel, connectionEnd,
+	)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofTry,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
+	if !ok {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
@@ -266,7 +262,6 @@ func (k Keeper) ChanOpenConfirm(
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
@@ -276,16 +271,15 @@ func (k Keeper) ChanOpenConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	ok, err := k.VerifyChannelState(
+		ctx, proofHeight, connectionEnd.Counterparty.Prefix, proofAck,
+		counterparty.PortID, counterparty.ChannelID, expectedChannel, connectionEnd,
+	)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofAck,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
+	if !ok {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 
@@ -380,7 +374,6 @@ func (k Keeper) ChanCloseConfirm(
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
-		// Should not reach here, connectionEnd was able to be retrieved above
 		panic("cannot find connection")
 	}
 
@@ -390,16 +383,15 @@ func (k Keeper) ChanCloseConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
+	ok, err := k.VerifyChannelState(
+		ctx, proofHeight, connectionEnd.Counterparty.Prefix, proofInit,
+		counterparty.PortID, counterparty.ChannelID, expectedChannel, connectionEnd,
+	)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
-		bz,
-	) {
+	if !ok {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
 	}
 

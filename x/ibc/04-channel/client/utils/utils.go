@@ -33,7 +33,7 @@ func QueryPacket(
 	destPortID := channel.Channel.Counterparty.PortID
 	destChannelID := channel.Channel.Counterparty.ChannelID
 
-	packet := types.NewPacket(
+	packet := types.NewFullPacket(
 		sequence,
 		timeout,
 		portID,
@@ -44,7 +44,7 @@ func QueryPacket(
 	)
 
 	// FIXME: res.Height+1 is hack, fix later
-	return types.NewPacketResponse(portID, channelID, sequence, packet, res.Proof, res.Height+1), nil
+	return types.NewPacketResponse(packet, res.Proof, res.Height+1), nil
 }
 
 // QueryChannel returns a channel from the store

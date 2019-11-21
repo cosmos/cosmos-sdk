@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -31,12 +30,6 @@ func (k Keeper) SendTransfer(
 	destinationPort := channel.Counterparty.PortID
 	destinationChannel := channel.Counterparty.ChannelID
 
-	// get the next sequence
-	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
-	if !found {
-		return channeltypes.ErrSequenceNotFound(k.codespace, "send")
-	}
-
 	coins := make(sdk.Coins, len(amount))
 	prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 	switch {
@@ -49,23 +42,23 @@ func (k Keeper) SendTransfer(
 		coins = amount
 	}
 
-	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
+	return k.createOutgoingPacket(ctx, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
 }
 
 // ReceivePacket handles receiving packet
-func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
+func (k Keeper) ReceivePacket(ctx sdk.Context, packet types.Packet, proof commitment.ProofI, height uint64) error {
 	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
 	if err != nil {
 		return err
 	}
 
-	var data types.PacketData
+	var data types.PacketDataTransfer
 	err = data.UnmarshalJSON(packet.GetData())
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
-	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
+	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), destChannel, data)
 }
 
 // ReceiveTransfer handles transfer receiving logic
@@ -75,7 +68,7 @@ func (k Keeper) ReceiveTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
-	data types.PacketData,
+	data types.PacketDataTransfer,
 ) error {
 	if data.Source {
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
@@ -114,7 +107,6 @@ func (k Keeper) ReceiveTransfer(
 
 func (k Keeper) createOutgoingPacket(
 	ctx sdk.Context,
-	seq uint64,
 	sourcePort,
 	sourceChannel,
 	destinationPort,
@@ -164,7 +156,7 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.PacketData{
+	packetData := types.PacketDataTransfer{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
@@ -187,5 +179,5 @@ func (k Keeper) createOutgoingPacket(
 		packetDataBz,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, packet, k.boundedCapability)
+	return k.channelKeeper.SendPacket(ctx, packetData, k.boundedCapability)
 }

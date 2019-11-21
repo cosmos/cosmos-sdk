@@ -1,51 +1,45 @@
 package ibc
 
-// // TODO: Should extract timeout msgs too
-// func ExtractMsgPackets(msgs []sdk.Msg) (res []MsgPacket, abort bool) {
-// 	res = make([]MsgPacket, 0, len(msgs))
-// 	for _, msg := range msgs {
-// 		msgp, ok := msg.(MsgPacket)
-// 		if ok {
-// 			res = append(res, msgp)
-// 		}
-// 	}
+import (
+	"errors"
 
-// 	if len(res) >= 2 {
-// 		first := res[0]
-// 		for _, msg := range res[1:] {
-// 			if len(msg.ChannelID) != 0 && msg.ChannelID != first.ChannelID {
-// 				return res, true
-// 			}
-// 			msg.ChannelID = first.ChannelID
-// 		}
-// 	}
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+)
 
-// 	return
-// }
+type ProofVerificationDecorator struct {
+	clientKeeper  ClientKeeper
+	channelKeeper ChannelKeeper
+}
 
-// func VerifyMsgPackets(ctx sdk.Context, channel channel.Manager, msgs []MsgPacket) error {
-// 	for _, msg := range msgs {
-// 		err := channel.Receive(ctx, msg.Proofs, msg.Height, msg.ReceiverPort(), msg.ChannelID, msg.Packet)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
+func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	var flag bool
 
-// 	return nil
-// }
+	for _, msg := range tx.GetMsgs() {
+		var err error
+		switch msg := msg.(type) {
+		case client.MsgUpdateClient:
+			err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
+			flag = true
+		case channel.MsgPacket:
+			err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+			flag = true
+			pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, []byte{})
+		case channel.MsgAcknowledgement:
+			err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+			flag = true
+		case channel.MsgTimeoutPacket:
+			err = pvr.channelKeeper.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+			flag = true
+		default:
+			err = errors.New("Transaction cannot include both IBC packet messages and normal messages")
+		}
 
-// func NewAnteDecorator(channel channel.Manager) sdk.AnteDecorator {
-// 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
-// 		msgs, abort := ExtractMsgPackets(tx.GetMsgs())
-// 		if abort {
-// 			return ctx, host.ErrInvalidPacket
-// 		}
+		if err != nil {
+			return ctx, err
+		}
+	}
 
-// 		err := VerifyMsgPackets(ctx, channel, msgs)
-// 		if err != nil {
-// 			return ctx, sdkerrors.Wrap(host.ErrInvalidPacket, err.Error())
-// 		}
-
-// 		return next(ctx, tx, simulate)
-// 	}
-// }
+	return next(ctx, tx, simulate)
+}

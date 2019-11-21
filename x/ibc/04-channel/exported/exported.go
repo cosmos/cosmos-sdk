@@ -1,13 +1,14 @@
 package exported
 
-// PacketI defines the standard interface for IBC packets
+// PacketI defines the standard interface for IBC packet data
 type PacketI interface {
-	GetSequence() uint64
-	GetTimeoutHeight() uint64
-	GetSourcePort() string
-	GetSourceChannel() string
-	GetDestPort() string
-	GetDestChannel() string
-	GetData() []byte
+	GetTimeoutHeight() uint64 // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
+	GetData() []byte          // opaque value which can be defined by the application logic of the associated modules.
 	ValidateBasic() error
+
+	GetSourcePort() string      // identifies the port on the sending chain.
+	GetDestinationPort() string // identifies the port on the receiving chain.
+
+	Route() string
+	Type() string
 }

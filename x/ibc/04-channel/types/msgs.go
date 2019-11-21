@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -376,4 +377,72 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
+}
+
+type MsgPacket struct {
+	exported.PacketI
+
+	PortID      string
+	ChannelID   string
+	Proof       commitment.ProofI
+	ProofHeight uint64
+
+	Signer sdk.AccAddress
+}
+
+var _ sdk.Msg = MsgPacket{}
+
+func (msg MsgPacket) ValidateBasic() sdk.Error {
+	if msg.Proof == nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if msg.ProofHeight == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+
+	return sdk.ConvertError(msg.PacketI.ValidateBasic())
+}
+
+func (msg MsgPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgTimeout{}
+
+type MsgTimeout struct {
+	exported.PacketI
+
+	PortID      string
+	ChannelID   string
+	Proof       commitment.ProofI
+	ProofHeight uint64
+
+	Signer sdk.AccAddress
+}
+
+func (msg MsgTimeout) ValidateBasic() sdk.Error {
+	if msg.Proof == nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if msg.ProofHeight == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+
+	return sdk.ConvertError(msg.PacketI.ValidateBasic())
+}
+
+func (msg MsgTimeout) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// TODO: Acknowledgement
+type MsgAcknowledgement struct {
 }

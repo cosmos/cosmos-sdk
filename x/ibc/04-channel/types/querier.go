@@ -49,10 +49,33 @@ func NewQueryChannelParams(portID, channelID string) QueryChannelParams {
 	}
 }
 
+type FullPacket struct {
+	Sequence      uint64 `json:"sequence" yaml:"sequence"`
+	Timeout       uint64 `json:"timeout" yaml:"timeout"`
+	PortID        string `json:"port_id" yaml:"port_id"`
+	ChannelID     string `json:"channel_id" yaml:"channel_id"`
+	DestPortID    string `json:"dest_port_id" yaml:"dest_port_id"`
+	DestChannelID string `json:"dest_channel_id" yaml:"dest_channel_id"`
+	Data          []byte `json:"data" yaml:"data"`
+}
+
+func NewFullPacket(sequence uint64, timeout uint64, portID, channelID, destPortID, destChannelID string, data []byte) FullPacket {
+	return FullPacket{
+		sequence,
+		timeout,
+		portID,
+		channelID,
+		destPortID,
+		destChannelID,
+		data,
+	}
+}
+
 // PacketResponse defines the client query response for a packet which also
 // includes a proof, its path and the height form which the proof was retrieved
 type PacketResponse struct {
-	Packet      Packet           `json:"packet" yaml:"packet"`
+	Packet      FullPacket       `json:"packet" yaml:"packet"`
+	Timeout     uint64           `json:"timeout" yaml:"timeout"`
 	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
 	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
 	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
@@ -60,12 +83,13 @@ type PacketResponse struct {
 
 // NewPacketResponse creates a new PacketResponswe instance
 func NewPacketResponse(
-	portID, channelID string, sequence uint64, packet Packet, proof *merkle.Proof, height int64,
+	packet FullPacket, proof *merkle.Proof, height int64,
 ) PacketResponse {
 	return PacketResponse{
-		Packet:      packet,
-		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(PacketCommitmentPath(portID, channelID, sequence), "/")),
+		Packet: packet,
+		Proof:  commitment.Proof{Proof: proof},
+		ProofPath: commitment.NewPath(strings.Split(
+			PacketCommitmentPath(packet.PortID, packet.ChannelID, packet.Sequence), "/")),
 		ProofHeight: uint64(height),
 	}
 }

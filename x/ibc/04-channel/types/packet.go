@@ -7,23 +7,21 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ exported.PacketI = Packet{}
-
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	Sequence           uint64 `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	Timeout            uint64 `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
-	SourcePort         string `json:"source_port"`         // identifies the port on the sending chain.
-	SourceChannel      string `json:"source_channel"`      // identifies the channel end on the sending chain.
-	DestinationPort    string `json:"destination_port"`    // identifies the port on the receiving chain.
-	DestinationChannel string `json:"destination_channel"` // identifies the channel end on the receiving chain.
-	Data               []byte `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
+	Sequence           uint64           `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+	Timeout            uint64           `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
+	SourcePort         string           `json:"source_port"`         // identifies the port on the sending chain.
+	SourceChannel      string           `json:"source_channel"`      // identifies the channel end on the sending chain.
+	DestinationPort    string           `json:"destination_port"`    // identifies the port on the receiving chain.
+	DestinationChannel string           `json:"destination_channel"` // identifies the channel end on the receiving chain.
+	Data               exported.PacketI `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
 }
 
 // NewPacket creates a new Packet instance
 func NewPacket(
 	sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data []byte,
+	destinationPort, destinationChannel string, data exported.PacketI,
 ) Packet {
 	return Packet{
 		sequence,
@@ -55,7 +53,7 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData implements PacketI interface
-func (p Packet) GetData() []byte { return p.Data }
+func (p Packet) GetData() []byte { return p.Data.GetData() }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -77,14 +75,14 @@ func (p Packet) ValidateBasic() error {
 	if p.Timeout == 0 {
 		return ErrPacketTimeout(DefaultCodespace)
 	}
-	if len(p.Data) == 0 {
+	if len(p.Data.GetData()) == 0 {
 		return ErrInvalidPacket(DefaultCodespace, "packet data cannot be empty")
 	}
 	return nil
 }
 
-var _ exported.PacketI = OpaquePacket{}
-
+// XXX: fix before merge
+/*
 // OpaquePacket is a Packet, but cloaked in an obscuring data type by the host
 // state machine, such that a module cannot act upon it other than to pass it to
 // the IBC handler
@@ -105,3 +103,4 @@ func NewOpaquePacket(sequence, timeout uint64, sourcePort, sourceChannel,
 
 // GetData implements PacketI interface
 func (op OpaquePacket) GetData() []byte { return nil }
+*/

@@ -155,48 +155,34 @@ func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, e
 	return clientState, nil
 }
 
-// VerifyMembership state membership verification function defined by the client type
-func (k Keeper) VerifyMembership(
+// VerifyClientConsensusState verifies a proof of the consensus state of the
+// specified client stored on the target machine.
+func (k Keeper) VerifyClientConsensusState(
 	ctx sdk.Context,
-	clientID string,
+	clientState types.State,
 	height uint64, // sequence
+	prefix commitment.PrefixI,
 	proof commitment.ProofI,
-	path commitment.PathI,
-	value []byte,
-) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
-
-	root, found := k.GetVerifiedRoot(ctx, clientID, height)
-	if !found {
-		return false
+	consensusState exported.ConsensusState,
+) (bool, error) {
+	if clientState.Frozen {
+		return false, errors.ErrClientFrozen(k.codespace, clientState.ID)
 	}
 
-	return proof.VerifyMembership(root, path, value)
-}
-
-// VerifyNonMembership state non-membership function defined by the client type
-func (k Keeper) VerifyNonMembership(
-	ctx sdk.Context,
-	clientID string,
-	height uint64, // sequence
-	proof commitment.ProofI,
-	path commitment.PathI,
-) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
-	root, found := k.GetVerifiedRoot(ctx, clientID, height)
-	if !found {
-		return false
+	path, err := commitment.ApplyPrefix(prefix, types.ConsensusStatePath(clientState.ID))
+	if err != nil {
+		return false, err
 	}
 
-	return proof.VerifyNonMembership(root, path)
+	root, found := k.GetVerifiedRoot(ctx, clientState.ID, height)
+	if !found {
+		return false, errors.ErrRootNotFound(k.codespace)
+	}
+
+	bz, err := k.cdc.MarshalBinaryBare(consensusState)
+	if err != nil {
+		return false, err
+	}
+
+	return proof.VerifyMembership(root, path, bz), nil
 }

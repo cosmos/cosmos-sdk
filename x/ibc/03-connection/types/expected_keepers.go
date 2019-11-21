@@ -11,12 +11,13 @@ import (
 type ClientKeeper interface {
 	GetConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
 	GetClientState(ctx sdk.Context, clientID string) (client.State, bool)
-	VerifyMembership(
-		ctx sdk.Context, clientID string, height uint64,
-		proof commitment.ProofI, path commitment.PathI, value []byte,
-	) bool
-	VerifyNonMembership(
-		ctx sdk.Context, clientID string, height uint64,
-		proof commitment.ProofI, path commitment.PathI,
-	) bool
+	GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool)
+	VerifyClientConsensusState(
+		ctx sdk.Context,
+		clientState client.State,
+		height uint64, // sequence
+		proof commitment.ProofI,
+		prefix commitment.PrefixI,
+		consensusState clientexported.ConsensusState,
+	) (bool, error)
 }

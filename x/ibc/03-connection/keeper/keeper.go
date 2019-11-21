@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -119,35 +120,39 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 	return nil
 }
 
-// VerifyMembership helper function for state membership verification
-func (k Keeper) VerifyMembership(
+// VerifyConnectionState verifies a proof of the connection state of the
+// specified connection end stored on the target machine.
+func (k Keeper) VerifyConnectionState(
 	ctx sdk.Context,
-	connection types.ConnectionEnd,
 	height uint64,
+	prefix commitment.PrefixI,
 	proof commitment.ProofI,
-	pathStr string,
-	value []byte,
-) bool {
-	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
-	if err != nil {
-		return false
+	connectionID string,
+	connection types.ConnectionEnd,
+) (bool, error) {
+	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
+	if !found {
+		return false, clienterrors.ErrClientNotFound(k.codespace, connection.ClientID)
 	}
 
-	return k.clientKeeper.VerifyMembership(ctx, connection.ClientID, height, proof, path, value)
-}
-
-// VerifyNonMembership helper function for state non-membership verification
-func (k Keeper) VerifyNonMembership(
-	ctx sdk.Context,
-	connection types.ConnectionEnd,
-	height uint64,
-	proof commitment.ProofI,
-	pathStr string,
-) bool {
-	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
-	if err != nil {
-		return false
+	if clientState.Frozen {
+		return false, clienterrors.ErrClientFrozen(k.codespace, clientState.ID)
 	}
 
-	return k.clientKeeper.VerifyNonMembership(ctx, connection.ClientID, height, proof, path)
+	path, err := commitment.ApplyPrefix(prefix, types.ConnectionPath(connectionID))
+	if err != nil {
+		return false, err
+	}
+
+	root, found := k.clientKeeper.GetVerifiedRoot(ctx, clientState.ID, height)
+	if !found {
+		return false, clienterrors.ErrRootNotFound(k.codespace)
+	}
+
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(connection)
+	if err != nil {
+		return false, err
+	}
+
+	return proof.VerifyMembership(root, path, bz), nil
 }

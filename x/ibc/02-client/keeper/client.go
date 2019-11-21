@@ -91,7 +91,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence eviden
 		return errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID)
 	}
 
-	committer, found := k.GetCommitter(ctx, misbehaviour.ClientID, misbehaviour.GetHeight())
+	committer, found := k.GetCommitter(ctx, misbehaviour.ClientID, uint64(misbehaviour.GetHeight()))
 	if !found {
 		return errors.ErrCommitterNotFound(k.codespace, fmt.Sprintf("committer not found for height %d", misbehaviour.GetHeight()))
 	}

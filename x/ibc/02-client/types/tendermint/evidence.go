@@ -59,9 +59,6 @@ func (ev Evidence) ValidateBasic() error {
 	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
 	}
-	if ev.Header1.ValidatorSet == nil || ev.Header2.ValidatorSet == nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "validator set in header is nil")
-	}
 	// Ensure that Heights are the same
 	if ev.Header1.Height != ev.Header2.Height {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "headers in evidence are on different heights")

@@ -5,11 +5,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // SendTransfer handles transfer sending logic
@@ -44,22 +41,6 @@ func (k Keeper) SendTransfer(
 	}
 
 	return k.createOutgoingPacket(ctx, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
-}
-
-// ReceivePacket handles receiving packet
-func (k Keeper) ReceivePacket(ctx sdk.Context, packet exported.Packet, proof commitment.ProofI, height uint64) error {
-	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
-	if err != nil {
-		return err
-	}
-
-	var data types.PacketDataTransfer
-	err = data.UnmarshalJSON(packet.GetData())
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
-	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), destChannel, data)
 }
 
 // ReceiveTransfer handles transfer receiving logic
@@ -162,23 +143,9 @@ func (k Keeper) createOutgoingPacket(
 		Sender:   sender,
 		Receiver: receiver,
 		Source:   isSourceChain,
+
+		Timeout: uint64(ctx.BlockHeight()) + DefaultPacketTimeout,
 	}
 
-	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
-	packetDataBz, err := packetData.MarshalJSON()
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
-	packet := channeltypes.NewPacket(
-		seq,
-		uint64(ctx.BlockHeight())+DefaultPacketTimeout,
-		sourcePort,
-		sourceChannel,
-		destinationPort,
-		destinationChannel,
-		packetDataBz,
-	)
-
-	return k.channelKeeper.SendPacket(ctx, packetData, k.boundedCapability)
+	return k.channelKeeper.SendPacket(ctx, packetData, sourcePort, sourceChannel, k.boundedCapability)
 }

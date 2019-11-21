@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
@@ -129,11 +129,9 @@ func (k Keeper) onRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.PacketDataTransfer
-
-	err := data.UnmarshalJSON(packet.GetData())
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+	data, ok := packet.Data.(types.PacketDataTransfer)
+	if !ok {
+		return errors.New("invalid packet data")
 	}
 
 	return k.ReceiveTransfer(
@@ -157,11 +155,9 @@ func (k Keeper) onTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.PacketDataTransfer
-
-	err := data.UnmarshalJSON(packet.GetData())
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
+	data, ok := packet.Data.(types.PacketDataTransfer)
+	if !ok {
+		return errors.New("invalid packet data")
 	}
 
 	// check the denom prefix
@@ -181,7 +177,7 @@ func (k Keeper) onTimeoutPacket(
 	}
 
 	// mint from supply
-	err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+	err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
 	if err != nil {
 		return err
 	}

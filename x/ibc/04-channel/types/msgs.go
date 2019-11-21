@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -380,7 +379,7 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 }
 
 type MsgPacket struct {
-	exported.PacketDataI
+	PacketDataI
 
 	PortID      string
 	ChannelID   string
@@ -391,6 +390,23 @@ type MsgPacket struct {
 }
 
 var _ sdk.Msg = MsgPacket{}
+
+func NewMsgPacket(data PacketDataI, portID, channelID string, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
+	return MsgPacket{
+		PacketDataI: data,
+
+		PortID:      portID,
+		ChannelID:   channelID,
+		Proof:       proof,
+		ProofHeight: proofHeight,
+
+		Signer: signer,
+	}
+}
+
+func (msg MsgPacket) Route() string {
+	return msg.PortID
+}
 
 func (msg MsgPacket) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
@@ -414,7 +430,7 @@ func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgTimeout{}
 
 type MsgTimeout struct {
-	exported.PacketDataI
+	PacketDataI
 
 	PortID      string
 	ChannelID   string
@@ -422,6 +438,10 @@ type MsgTimeout struct {
 	ProofHeight uint64
 
 	Signer sdk.AccAddress
+}
+
+func (msg MsgTimeout) Route() string {
+	return msg.PortID
 }
 
 func (msg MsgTimeout) ValidateBasic() sdk.Error {

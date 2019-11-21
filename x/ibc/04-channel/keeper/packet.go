@@ -29,14 +29,15 @@ func (k Keeper) CleanupPacket(
 	sequence uint64,
 	proof commitment.ProofI,
 	proofHeight uint64,
+	sourcePort string,
 	sourceChannel string,
 	nextSequenceRecv uint64,
 	acknowledgement []byte,
 	portCapability sdk.CapabilityKey,
 ) (exported.PacketDataI, error) {
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
+	channel, found := k.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)
+		return nil, types.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
 	if channel.State != types.OPEN {
@@ -46,12 +47,12 @@ func (k Keeper) CleanupPacket(
 		)
 	}
 
-	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), sourceChannel)
+	_, found = k.GetChannelCapability(ctx, sourcePort, sourceChannel)
 	if !found {
 		return nil, types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
+	if !k.portKeeper.Authenticate(portCapability, sourcePort) {
 		return nil, errors.New("port is not valid")
 	}
 
@@ -70,19 +71,22 @@ func (k Keeper) CleanupPacket(
 		return nil, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if packet.GetDestinationPort() != channel.Counterparty.PortID {
-		return nil, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID),
-		)
-	}
+	destPort := channel.Counterparty.PortID
+	/*
+		if packet.GetDestinationPort() != channel.Counterparty.PortID {
+			return nil, types.ErrInvalidPacket(
+				k.codespace,
+				fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID),
+			)
+		}
+	*/
 
 	if nextSequenceRecv >= sequence {
 		return nil, types.ErrInvalidPacket(k.codespace, "packet already received")
 	}
 
-	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), sourceChannel, sequence)
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
+	commitment := k.GetPacketCommitment(ctx, sourcePort, sourceChannel, sequence)
+	if !bytes.Equal(commitment, packet.GetCommitment()) { // TODO: hash packet data
 		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
@@ -91,13 +95,13 @@ func (k Keeper) CleanupPacket(
 	case types.ORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			types.NextSequenceRecvPath(packet.GetDestinationPort(), destChannel),
+			types.NextSequenceRecvPath(destPort, destChannel),
 			sdk.Uint64ToBigEndian(nextSequenceRecv),
 		)
 	case types.UNORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			types.PacketAcknowledgementPath(packet.GetDestinationPort(), destChannel, sequence),
+			types.PacketAcknowledgementPath(destPort, destChannel, sequence),
 			acknowledgement,
 		)
 	default:
@@ -108,7 +112,7 @@ func (k Keeper) CleanupPacket(
 		return nil, types.ErrInvalidPacket(k.codespace, "packet verification failed")
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), sourceChannel, sequence)
+	k.deletePacketCommitment(ctx, sourcePort, sourceChannel, sequence)
 	return packet, nil
 }
 
@@ -118,6 +122,7 @@ func (k Keeper) CleanupPacket(
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
 	packet exported.PacketDataI,
+	sourcePort string,
 	sourceChannel string,
 	portCapability sdk.CapabilityKey,
 ) error {
@@ -125,9 +130,9 @@ func (k Keeper) SendPacket(
 		return err
 	}
 
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
+	channel, found := k.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)
+		return types.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
 	if channel.State == types.CLOSED {
@@ -137,16 +142,18 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
+	if !k.portKeeper.Authenticate(portCapability, sourcePort) {
 		return errors.New("port is not valid")
 	}
 
-	if packet.GetDestinationPort() != channel.Counterparty.PortID {
-		return types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID),
-		)
-	}
+	/*
+		if packet.GetDestinationPort() != channel.Counterparty.PortID {
+			return types.ErrInvalidPacket(
+				k.codespace,
+				fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestinationPort(), channel.Counterparty.PortID),
+			)
+		}
+	*/
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -169,7 +176,7 @@ func (k Keeper) SendPacket(
 		return types.ErrPacketTimeout(k.codespace)
 	}
 
-	nextSequenceSend, found := k.GetNextSequenceSend(ctx, packet.GetSourcePort(), sourceChannel)
+	nextSequenceSend, found := k.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
 		return types.ErrSequenceNotFound(k.codespace, "send")
 	}
@@ -184,8 +191,8 @@ func (k Keeper) SendPacket(
 	*/
 
 	nextSequenceSend++
-	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), sourceChannel, nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), sourceChannel, nextSequenceSend, packet.GetData()) // TODO: hash packet data
+	k.SetNextSequenceSend(ctx, sourcePort, sourceChannel, nextSequenceSend)
+	k.SetPacketCommitment(ctx, sourcePort, sourceChannel, nextSequenceSend, packet.GetCommitment()) // TODO: hash packet data
 
 	return nil
 }
@@ -198,14 +205,15 @@ func (k Keeper) RecvPacket(
 	sequence uint64,
 	proof commitment.ProofI,
 	proofHeight uint64,
+	destPort string,
 	destChannel string,
 	acknowledgement []byte,
 	portCapability sdk.CapabilityKey,
 ) (exported.PacketDataI, error) {
 
-	channel, found := k.GetChannel(ctx, packet.GetDestinationPort(), destChannel)
+	channel, found := k.GetChannel(ctx, destPort, destChannel)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.GetDestinationPort(), destChannel)
+		return nil, types.ErrChannelNotFound(k.codespace, destPort, destChannel)
 	}
 
 	if channel.State != types.OPEN {
@@ -215,17 +223,20 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetDestinationPort()) {
+	if !k.portKeeper.Authenticate(portCapability, destPort) {
 		return nil, errors.New("port is not valid")
 	}
 
-	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
-		return nil, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID),
-		)
-	}
+	sourcePort := channel.Counterparty.PortID
+	/*
+		// packet must come from the channel's counterparty
+		if packet.GetSourcePort() != channel.Counterparty.PortID {
+			return nil, types.ErrInvalidPacket(
+				k.codespace,
+				fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID),
+			)
+		}
+	*/
 
 	sourceChannel := channel.Counterparty.ChannelID
 	/*
@@ -255,21 +266,21 @@ func (k Keeper) RecvPacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		types.PacketCommitmentPath(packet.GetSourcePort(), sourceChannel, sequence),
-		packet.GetData(), // TODO: hash data
+		types.PacketCommitmentPath(sourcePort, sourceChannel, sequence),
+		packet.GetCommitment(), // TODO: hash data
 	) {
 		return nil, errors.New("couldn't verify counterparty packet commitment")
 	}
 
 	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
-			ctx, packet.GetDestinationPort(), destChannel, sequence,
+			ctx, destPort, destChannel, sequence,
 			acknowledgement, // TODO: hash ACK
 		)
 	}
 
 	if channel.Ordering == types.ORDERED {
-		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestinationPort(), destChannel)
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, destPort, destChannel)
 		if !found {
 			return nil, types.ErrSequenceNotFound(k.codespace, "receive")
 		}
@@ -283,7 +294,7 @@ func (k Keeper) RecvPacket(
 
 		nextSequenceRecv++
 
-		k.SetNextSequenceRecv(ctx, packet.GetDestinationPort(), destChannel, nextSequenceRecv)
+		k.SetNextSequenceRecv(ctx, destPort, destChannel, nextSequenceRecv)
 	}
 
 	return packet, nil
@@ -301,12 +312,13 @@ func (k Keeper) AcknowledgePacket(
 	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
+	sourcePort string,
 	sourceChannel string,
 	portCapability sdk.CapabilityKey,
 ) (exported.PacketDataI, error) {
-	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
+	channel, found := k.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)
+		return nil, types.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
 	if channel.State != types.OPEN {
@@ -316,19 +328,20 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
+	if !k.portKeeper.Authenticate(portCapability, sourcePort) {
 		return nil, errors.New("invalid capability key")
 	}
 
 	// packet must come from the channel's counterparty
-	if packet.GetSourcePort() != channel.Counterparty.PortID {
+	if sourcePort != channel.Counterparty.PortID {
 		return nil, types.ErrInvalidPacket(
 			k.codespace,
-			fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", packet.GetSourcePort(), channel.Counterparty.PortID),
+			fmt.Sprintf("packet source port doesn't match the counterparty's port (%s ≠ %s)", sourcePort, channel.Counterparty.PortID),
 		)
 	}
 
 	destChannel := channel.Counterparty.ChannelID
+	destPort := channel.Counterparty.PortID
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
@@ -342,19 +355,19 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), sourceChannel, sequence)
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
+	commitment := k.GetPacketCommitment(ctx, sourcePort, sourceChannel, sequence)
+	if !bytes.Equal(commitment, packet.GetCommitment()) { // TODO: hash packet data
 		return nil, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		types.PacketAcknowledgementPath(packet.GetDestinationPort(), destChannel, sequence),
+		types.PacketAcknowledgementPath(destPort, destChannel, sequence),
 		acknowledgement, // TODO: hash ACK
 	) {
 		return nil, errors.New("invalid acknowledgement on counterparty chain")
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), sourceChannel, sequence)
+	k.deletePacketCommitment(ctx, sourcePort, sourceChannel, sequence)
 	return packet, nil
 }

@@ -5,7 +5,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
+
+var _ channelexported.PacketDataI = PacketDataTransfer{}
 
 // PacketDataTransfer defines a struct for the packet payload
 type PacketDataTransfer struct {
@@ -13,6 +16,12 @@ type PacketDataTransfer struct {
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
 	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
 	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
+
+	Timeout uint64 `json:"timeout" yaml:"timeout"`
+}
+
+func (pt PacketDataTransfer) Type() string {
+	return "transfer"
 }
 
 func (pt PacketDataTransfer) MarshalAmino() ([]byte, error) {
@@ -25,6 +34,19 @@ func (pt *PacketDataTransfer) UnmarshalAmino(bz []byte) (err error) {
 
 func (pt PacketDataTransfer) Marshal() []byte {
 	return ModuleCdc.MustMarshalBinaryBare(pt)
+}
+
+func (pt PacketDataTransfer) GetTimeoutHeight() uint64 {
+	return pt.Timeout
+}
+
+func (pt PacketDataTransfer) GetCommitment() []byte {
+	res, err := pt.MarshalJSON()
+	if err != nil {
+		panic(err)
+	}
+	// TODO: hash
+	return res
 }
 
 type PacketDataTransferAlias PacketDataTransfer

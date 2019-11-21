@@ -3,25 +3,34 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+// PacketDataI defines the standard interface for IBC packet data
+type PacketDataI interface {
+	GetCommitment() []byte // Commitment form that will be stored in the state.
+	GetTimeoutHeight() uint64
+
+	ValidateBasic() sdk.Error
+	Type() string
+}
+
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	Sequence           uint64               `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	Timeout            uint64               `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
-	SourcePort         string               `json:"source_port"`         // identifies the port on the sending chain.
-	SourceChannel      string               `json:"source_channel"`      // identifies the channel end on the sending chain.
-	DestinationPort    string               `json:"destination_port"`    // identifies the port on the receiving chain.
-	DestinationChannel string               `json:"destination_channel"` // identifies the channel end on the receiving chain.
-	Data               exported.PacketDataI `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
+	Sequence           uint64      `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+	Timeout            uint64      `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
+	SourcePort         string      `json:"source_port"`         // identifies the port on the sending chain.
+	SourceChannel      string      `json:"source_channel"`      // identifies the channel end on the sending chain.
+	DestinationPort    string      `json:"destination_port"`    // identifies the port on the receiving chain.
+	DestinationChannel string      `json:"destination_channel"` // identifies the channel end on the receiving chain.
+	Data               PacketDataI `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
 }
 
 // NewPacket creates a new Packet instance
 func NewPacket(
 	sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data exported.PacketDataI,
+	destinationPort, destinationChannel string, data PacketDataI,
 ) Packet {
 	return Packet{
 		sequence,
@@ -52,9 +61,6 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 // GetDestChannel implements PacketDataI interface
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
-// GetData implements PacketDataI interface
-func (p Packet) GetData() []byte { return p.Data.GetData() }
-
 // ValidateBasic implements PacketDataI interface
 func (p Packet) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(p.SourcePort); err != nil {
@@ -75,8 +81,8 @@ func (p Packet) ValidateBasic() error {
 	if p.Timeout == 0 {
 		return ErrPacketTimeout(DefaultCodespace)
 	}
-	if len(p.Data.GetData()) == 0 {
-		return ErrInvalidPacket(DefaultCodespace, "packet data cannot be empty")
+	if len(p.Data.GetCommitment()) == 0 {
+		return ErrInvalidPacket(DefaultCodespace, "packet commitment cannot be empty")
 	}
 	return nil
 }

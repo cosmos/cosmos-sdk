@@ -11,9 +11,9 @@ func NewHandler(k Keeper) sdk.Handler {
 		case ibc.MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		case ibc.MsgPacket:
-			switch packet := msg.Packet.Data.(type) {
+			switch data := msg.Packet.Data.(type) {
 			case PacketDataTransfer:
-				return handlePacketTransfer(ctx, k, packet)
+				return handlePacketTransfer(ctx, k, packet, data)
 			default:
 				// TODO: source chain sent wrong packet, shutdown channel
 				return sdk.Result{}
@@ -42,6 +42,19 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Resu
 	)
 
 	return sdk.Result{Events: ctx.EventManager().Events()}
+}
+
+func handlePacketTransfer(ctx sdk.Context, k Keeper, packet exported.Packet, data types.PacketDataTransfer) (res sdk.Result) {
+	err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
+	if err != nil {
+		return sdk.ResultFromError(err)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			// XXX: write before merge
+		)
+	)
 }
 
 // handlePacketTransfer defines the sdk.Handler for PacketTransfer

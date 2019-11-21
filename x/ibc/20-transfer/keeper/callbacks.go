@@ -6,36 +6,36 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
+	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // nolint: unused
-func (k Keeper) onChanOpenInit(
+func (k Keeper) OnChanOpenInit(
 	ctx sdk.Context,
-	order channeltypes.Order,
+	order channel.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
-	counterparty channeltypes.Counterparty,
+	counterparty channel.Counterparty,
 	version string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+	if order != channel.UNORDERED {
+		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return porttypes.ErrInvalidPort(
+		return port.ErrInvalidPort(
 			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
-		)
+			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name()))
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -44,34 +44,33 @@ func (k Keeper) onChanOpenInit(
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenTry(
+func (k Keeper) OnChanOpenTry(
 	ctx sdk.Context,
-	order channeltypes.Order,
+	order channel.Order,
 	connectionHops []string,
 	portID,
 	channelID string,
-	counterparty channeltypes.Counterparty,
+	counterparty channel.Counterparty,
 	version string,
 	counterpartyVersion string,
 ) error {
-	if order != channeltypes.UNORDERED {
-		return channeltypes.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+	if order != channel.UNORDERED {
+		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return porttypes.ErrInvalidPort(
+		return port.ErrInvalidPort(
 			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", portID, k.boundedCapability.Name()),
-		)
+			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name()))
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	if strings.TrimSpace(counterpartyVersion) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -80,21 +79,21 @@ func (k Keeper) onChanOpenTry(
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenAck(
+func (k Keeper) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 	version string,
 ) error {
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version cannot be blank")
+		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
 	}
 
 	return nil
 }
 
 // nolint: unused
-func (k Keeper) onChanOpenConfirm(
+func (k Keeper) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -104,7 +103,7 @@ func (k Keeper) onChanOpenConfirm(
 }
 
 // nolint: unused
-func (k Keeper) onChanCloseInit(
+func (k Keeper) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -114,7 +113,7 @@ func (k Keeper) onChanCloseInit(
 }
 
 // nolint: unused
-func (k Keeper) onChanCloseConfirm(
+func (k Keeper) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
@@ -125,13 +124,13 @@ func (k Keeper) onChanCloseConfirm(
 
 // onRecvPacket is called when an FTTransfer packet is received
 // nolint: unused
-func (k Keeper) onRecvPacket(
+func (k Keeper) OnRecvPacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.GetData())
+	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
@@ -143,9 +142,9 @@ func (k Keeper) onRecvPacket(
 }
 
 // nolint: unused
-func (k Keeper) onAcknowledgePacket(
+func (k Keeper) OnAcknowledgePacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 	acknowledgement []byte,
 ) error {
 	// no-op
@@ -153,19 +152,19 @@ func (k Keeper) onAcknowledgePacket(
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacket(
+func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
-	packet channeltypes.Packet,
+	packet channelexported.PacketI,
 ) error {
 	var data types.PacketData
 
-	err := data.UnmarshalJSON(packet.GetData())
+	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
 	// check the denom prefix
-	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourcePort())
+	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	coins := make(sdk.Coins, len(data.Amount))
 	for i, coin := range data.Amount {
 		coin := coin
@@ -190,6 +189,6 @@ func (k Keeper) onTimeoutPacket(
 }
 
 // nolint: unused
-func (k Keeper) onTimeoutPacketClose(_ sdk.Context, _ channeltypes.Packet) {
+func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
 	panic("can't happen, only unordered channels allowed")
 }

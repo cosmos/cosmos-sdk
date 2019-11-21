@@ -128,13 +128,6 @@ func (k Keeper) VerifyMembership(
 	pathStr string,
 	value []byte,
 ) bool {
-	// FIXME: commented out for demo
-	/*
-		clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
-		if !found {
-			return false
-		}
-	*/
 	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	if err != nil {
 		return false
@@ -151,14 +144,6 @@ func (k Keeper) VerifyNonMembership(
 	proof commitment.ProofI,
 	pathStr string,
 ) bool {
-	// FIXME: commented out for demo
-	/*
-		clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
-		if !found {
-			return false
-		}
-	*/
-
 	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
 	if err != nil {
 		return false

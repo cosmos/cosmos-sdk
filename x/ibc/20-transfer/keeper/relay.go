@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -23,18 +23,18 @@ func (k Keeper) SendTransfer(
 	isSourceChain bool,
 ) error {
 	// get the port and channel of the counterparty
-	channel, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
+	sourceChan, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
+		return channel.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
 	}
 
-	destinationPort := channel.Counterparty.PortID
-	destinationChannel := channel.Counterparty.ChannelID
+	destinationPort := sourceChan.Counterparty.PortID
+	destinationChannel := sourceChan.Counterparty.ChannelID
 
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channeltypes.ErrSequenceNotFound(k.codespace, "send")
+		return channel.ErrSequenceNotFound(k.codespace, "send")
 	}
 
 	coins := make(sdk.Coins, len(amount))
@@ -54,13 +54,13 @@ func (k Keeper) SendTransfer(
 
 // ReceivePacket handles receiving packet
 func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
-	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
+	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, []byte{}, k.boundedCapability)
 	if err != nil {
 		return err
 	}
 
 	var data types.PacketData
-	err = data.UnmarshalJSON(packet.GetData())
+	err = k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
@@ -164,20 +164,15 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.PacketData{
-		Amount:   amount,
-		Sender:   sender,
-		Receiver: receiver,
-		Source:   isSourceChain,
-	}
+	packetData := types.NewPacketData(amount, sender, receiver, isSourceChain)
 
-	// TODO: This should be binary-marshaled and hashed (for the commitment in the store).
-	packetDataBz, err := packetData.MarshalJSON()
+	// TODO: This should be hashed (for the commitment in the store).
+	packetDataBz, err := k.cdc.MarshalBinaryBare(packetData)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid packet data")
 	}
 
-	packet := channeltypes.NewPacket(
+	packet := channel.NewPacket(
 		seq,
 		uint64(ctx.BlockHeight())+DefaultPacketTimeout,
 		sourcePort,

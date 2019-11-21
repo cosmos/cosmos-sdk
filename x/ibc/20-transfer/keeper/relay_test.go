@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	supply "github.com/cosmos/cosmos-sdk/x/supply"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -193,18 +193,23 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	packetTimeout := uint64(100)
 
 	packetDataBz := []byte("invaliddata")
-	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-	packetCommitmentPath := channel.PacketCommitmentPath(testPort1, testChannel1, packetSeq)
+	packet := channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort2, testChannel1, packetDataBz)
+	packetCommitmentPath := channel.PacketCommitmentPath(testPort2, testChannel2, packetSeq)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, []byte("invalidcommitment"))
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
 	suite.updateClient()
 	proofPacket, proofHeight := suite.queryProof(packetCommitmentPath)
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, channel.OPEN)
+	suite.createChannel(testPort2, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
 	err := suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.Error(err) // invalid port id
+
+	packet.DestinationPort = testPort1
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // packet membership verification failed due to invalid counterparty packet commitment
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
@@ -213,11 +218,40 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	// test the situation where the source is true
 	source := true
 
-	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetData := types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.Error(err) // invalid denom prefix
+
+	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
+	suite.updateClient()
+	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
+	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	suite.NoError(err) // successfully executed
+
+	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
+	suite.Equal(testPrefixedCoins1, totalSupply.GetTotal()) // supply should be inflated
+
+	receiverCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
+	suite.Equal(testPrefixedCoins1, receiverCoins)
+
+	// test the situation where the source is false
+	source = false
+
+	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
+
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
@@ -225,45 +259,17 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
-	suite.updateClient()
-	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
-	suite.NoError(err) // successfully executed
-
-	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
-	suite.Equal(testPrefixedCoins2, totalSupply.GetTotal()) // supply should be inflated
-
-	receiverCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
-	suite.Equal(testPrefixedCoins2, receiverCoins)
-
-	// test the situation where the source is false
-	source = false
-
-	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
-	suite.updateClient()
-	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
-	suite.NoError(err) // invalid denom prefix
-
-	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
-	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
+	escrowAddress := types.GetEscrowAddress(testPort1, testChannel1)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
+	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
 	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 

@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestOnChanOpenInit() {
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
 	suite.Error(err) // invalid counterparty port ID
 
-	counterparty = channel.NewCounterparty(testCapKeyName, testChannel2)
+	counterparty = channel.NewCounterparty(testPort1, testChannel2)
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.Error(err) // invalid version
 
@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestOnChanOpenTry() {
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
 	suite.Error(err) // invalid counterparty port ID
 
-	counterparty = channel.NewCounterparty(testCapKeyName, testChannel2)
+	counterparty = channel.NewCounterparty(testPort1, testChannel2)
 	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion, "")
 	suite.Error(err) // invalid version
 

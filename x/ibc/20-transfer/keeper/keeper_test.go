@@ -23,15 +23,13 @@ const (
 	testClientType = clientexported.Tendermint
 
 	testConnection = "testconnection"
-	testPort1      = "firstport"
-	testPort2      = "secondport"
+	testPort1      = "bank"
+	testPort2      = "testportid"
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
 	testChannelOrder   = channel.UNORDERED
 	testChannelVersion = "1.0"
-
-	testCapKeyName = "bank"
 )
 
 // define variables used for testing

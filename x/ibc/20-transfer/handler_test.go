@@ -27,8 +27,8 @@ const (
 	testClientType = clientexported.Tendermint
 
 	testConnection = "testconnection"
-	testPort1      = "firstport"
-	testPort2      = "secondport"
+	testPort1      = "bank"
+	testPort2      = "testportid"
 	testChannel1   = "firstchannel"
 	testChannel2   = "secondchannel"
 
@@ -186,19 +186,19 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	packetTimeout := uint64(100)
 
 	packetDataBz := []byte("invaliddata")
-	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-	packetCommitmentPath := channel.PacketCommitmentPath(testPort1, testChannel1, packetSeq)
+	packet := channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
+	packetCommitmentPath := channel.PacketCommitmentPath(testPort2, testChannel2, packetSeq)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, []byte("invalidcommitment"))
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
 	suite.updateClient()
 	proofPacket, proofHeight := suite.queryProof(packetCommitmentPath)
 
 	msg := types.NewMsgRecvPacket(packet, []commitment.Proof{proofPacket}, uint64(proofHeight), testAddr1)
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, channel.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
 	res := transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
 	suite.False(res.Code.IsOK(), "%v", res) // packet membership verification failed due to invalid counterparty packet commitment
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 
@@ -209,11 +209,11 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	// test when the source is true
 	source := true
 
-	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetData := types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 
@@ -221,11 +221,11 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
 	suite.False(res.Code.IsOK(), "%v", res) // invalid denom prefix
 
-	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
+	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 
@@ -236,11 +236,11 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	// test when the source is false
 	source = false
 
-	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
+	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 
@@ -248,11 +248,11 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
 	suite.False(res.Code.IsOK(), "%v", res) // invalid denom prefix
 
-	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
+	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
 	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packet = channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
 
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort1, testChannel1, packetSeq, packetDataBz)
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
 
@@ -260,7 +260,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
 	suite.False(res.Code.IsOK(), "%v", res) // insufficient coins in the corresponding escrow account
 
-	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
+	escrowAddress := types.GetEscrowAddress(testPort1, testChannel1)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	res = transfer.HandleMsgRecvPacket(suite.ctx, suite.app.IBCKeeper.TransferKeeper, msg)
 	suite.True(res.Code.IsOK(), "%v", res) // successfully executed

@@ -5,14 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-)
-
-const (
-	Prove = "true"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
@@ -30,7 +27,13 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 			return
 		}
 
-		res, err := cliCtx.QueryABCIWithProof(r, "ibc", types.PrefixKeyChannel(portID, channelID))
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.PrefixKeyChannel(portID, channelID),
+			Prove: rest.ParseQueryProve(r),
+		}
+
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

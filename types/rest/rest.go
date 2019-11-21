@@ -375,3 +375,14 @@ func ParseHTTPArgsWithLimit(r *http.Request, defaultLimit int) (tags []string, p
 func ParseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
 	return ParseHTTPArgsWithLimit(r, DefaultLimit)
 }
+
+// ParseQueryProve sets the prove to execute a query if set by the http request.
+// It returns false if there was an error parsing the prove.
+func ParseQueryProve(r *http.Request) bool {
+	proveStr := r.FormValue("prove")
+	prove := false
+	if ok, err := strconv.ParseBool(proveStr); err == nil {
+		prove = ok
+	}
+	return prove
+}

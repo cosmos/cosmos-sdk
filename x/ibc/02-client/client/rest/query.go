@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -17,10 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-)
-
-const (
-	Prove = "true"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
@@ -42,7 +36,13 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) 
 			return
 		}
 
-		res, err := cliCtx.QueryABCIWithProof(r, "ibc", types.PrefixKeyConsensusState(clientID))
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.PrefixKeyConsensusState(clientID),
+			Prove: rest.ParseQueryProve(r),
+		}
+
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -80,7 +80,13 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		res, err := cliCtx.QueryABCIWithProof(r, "ibc", types.PrefixKeyClientState(clientID))
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.PrefixKeyClientState(clientID),
+			Prove: rest.ParseQueryProve(r),
+		}
+
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -111,32 +117,19 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 			return
 		}
 
-		// return proof if the prove query param is set to true
-		proveStr := r.FormValue("prove")
-		prove := false
-		if strings.ToLower(strings.TrimSpace(proveStr)) == Prove {
-			prove = true
-		}
-
 		bz, err := cliCtx.Codec.MarshalJSON(types.NewQueryCommitmentRootParams(clientID, height))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		req := abci.RequestQuery{
-			Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryVerifiedRoot),
-			Data:  bz,
-			Prove: prove,
-		}
-
-		res, err := cliCtx.QueryABCI(req)
+		res, resHeight, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryVerifiedRoot), bz)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(res.Height)
+		cliCtx = cliCtx.WithHeight(resHeight)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }

@@ -32,7 +32,7 @@ func queryChannelHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
 			Data:  channel.KeyNextSequenceRecv(portID, channelID),
-			Prove: true,
+			Prove: rest.ParseQueryProve(r),
 		}
 
 		res, err := cliCtx.QueryABCI(req)

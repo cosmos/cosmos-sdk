@@ -5,14 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-)
-
-const (
-	Prove = "true"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
@@ -30,7 +27,13 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http
 			return
 		}
 
-		res, err := cliCtx.QueryABCIWithProof(r, "ibc", types.PrefixKeyConnection(connectionID))
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.PrefixKeyConnection(connectionID),
+			Prove: rest.ParseQueryProve(r),
+		}
+
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -55,7 +58,13 @@ func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, queryRoute strin
 			return
 		}
 
-		res, err := cliCtx.QueryABCIWithProof(r, "ibc", types.PrefixKeyClientConnections(clientID))
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.PrefixKeyClientConnections(clientID),
+			Prove: rest.ParseQueryProve(r),
+		}
+
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

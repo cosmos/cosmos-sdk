@@ -76,16 +76,16 @@ the flag --nosort is set.
 	return cmd
 }
 
-func getKeybase(dryrun bool) (keys.Keybase, error) {
+func getKeybase(cmd *cobra.Command, dryrun bool) (keys.Keybase, error) {
 	if dryrun {
 		return keys.NewInMemory(), nil
 	}
 
-	return NewKeyBaseFromHomeFlag()
+	return NewKeyringFromHomeFlag(cmd.InOrStdin())
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
-	kb, err := getKeybase(viper.GetBool(flagDryRun))
+	kb, err := getKeybase(cmd, viper.GetBool(flagDryRun))
 	if err != nil {
 		return err
 	}

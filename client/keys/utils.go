@@ -42,16 +42,16 @@ func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 // NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
-func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
-	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input)
+func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.
-func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
-		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
+		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)
 	}
-	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
 }
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {

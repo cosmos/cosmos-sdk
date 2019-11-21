@@ -19,8 +19,10 @@ const (
 	CodeClientTypeNotFound     sdk.CodeType = 205
 	CodeInvalidClientType      sdk.CodeType = 206
 	CodeRootNotFound           sdk.CodeType = 207
-	CodeInvalidHeader          sdk.CodeType = 207
+	CodeInvalidHeader          sdk.CodeType = 208
 	CodeInvalidEvidence        sdk.CodeType = 209
+	CodeCommitterNotFound      sdk.CodeType = 210
+	CodeInvalidCommitter       sdk.CodeType = 211
 )
 
 // ErrClientExists implements sdk.Error
@@ -109,6 +111,24 @@ func ErrInvalidEvidence(codespace sdk.CodespaceType, msg string) error {
 	return sdkerrors.New(
 		string(codespace),
 		uint32(CodeInvalidEvidence),
+		fmt.Sprintf("invalid evidence: %s", msg),
+	)
+}
+
+// ErrCommitterNotFound implements sdk.Error
+func ErrCommitterNotFound(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.New(
+		string(codespace),
+		uint32(CodeCommitterNotFound),
+		fmt.Sprintf("invalid evidence: %s", msg),
+	)
+}
+
+// ErrInvalidEvidence implements sdk.Error
+func ErrInvalidCommitter(codespace sdk.CodespaceType, msg string) error {
+	return sdkerrors.New(
+		string(codespace),
+		uint32(CodeInvalidCommitter),
 		fmt.Sprintf("invalid evidence: %s", msg),
 	)
 }

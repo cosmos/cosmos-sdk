@@ -40,7 +40,8 @@ func (suite *TendermintTestSuite) TestCheckUpdate() {
 	require.Equal(suite.T(), suite.header.GetHeight(), cs.GetHeight(), "height not updated")
 	require.Equal(suite.T(), suite.header.AppHash.Bytes(), cs.GetRoot().GetHash(), "root not updated")
 	tmCS, _ := cs.(ConsensusState)
-	require.Equal(suite.T(), suite.header.NextValidatorSet, tmCS.NextValidatorSet, "validator set did not update")
+	require.Equal(suite.T(), suite.header.ValidatorSet, tmCS.ValidatorSet, "validator set did not update")
+	require.Equal(suite.T(), suite.header.NextValidatorSet, tmCS.NextValidatorSet, "next validator set did not update")
 
 	// make header invalid so update should be unsuccessful
 	suite.SetupTest()

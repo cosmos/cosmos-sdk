@@ -118,6 +118,31 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 	store.Set(types.KeyRoot(clientID, height), bz)
 }
 
+// GetCommitter will get the Committer of a particular client at the oldest height
+// that is less than or equal to the height passed in
+func (k Keeper) GetCommitter(ctx sdk.Context, clientID string, height uint64) (exported.Committer, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+
+	iter := store.ReverseIterator(types.KeyCommitter(clientID, height), types.KeyCommitter(clientID, 0))
+
+	if !iter.Valid() {
+		return nil, false
+	}
+
+	bz := iter.Value()
+	var committer exported.Committer
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &committer)
+	return committer, true
+}
+
+// SetCommitter sets a committer from a particular height to
+// a particular client
+func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, committer exported.Committer) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(committer)
+	store.Set(types.KeyCommitter(clientID, height), bz)
+}
+
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {

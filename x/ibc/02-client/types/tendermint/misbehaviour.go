@@ -41,6 +41,21 @@ func (m Misbehaviour) ValidateBasic() error {
 }
 
 // CheckMisbehaviour checks if the evidence provided is a misbehaviour
-func CheckMisbehaviour(m Misbehaviour) error {
-	return m.ValidateBasic()
+func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
+	if err := m.ValidateBasic(); err != nil {
+		return err
+	}
+	// check that the validator sets on both headers are valid given the last trusted validatorset
+	// less than or equal to evidence height
+	trustedValSet := trustedCommitter.ValidatorSet
+	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header1.ValidatorSet, m.Evidence.ChainID,
+		m.Evidence.Header1.Commit.BlockID, m.Evidence.Header1.Height, m.Evidence.Header1.Commit); err != nil {
+		return err
+	}
+	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header2.ValidatorSet, m.Evidence.ChainID,
+		m.Evidence.Header2.Commit.BlockID, m.Evidence.Header2.Height, m.Evidence.Header2.Commit); err != nil {
+		return err
+	}
+
+	return nil
 }

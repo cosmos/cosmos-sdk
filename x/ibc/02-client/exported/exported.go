@@ -17,6 +17,9 @@ type ConsensusState interface {
 	// which is used for key-value pair verification.
 	GetRoot() commitment.RootI
 
+	// GetCommitter returns the committer that committed the consensus state
+	GetCommitter() Committer
+
 	// CheckValidityAndUpdateState returns the updated consensus state
 	// only if the header is a descendent of this consensus state.
 	CheckValidityAndUpdateState(Header) (ConsensusState, error)
@@ -31,7 +34,14 @@ type Misbehaviour interface {
 // Header is the consensus state update information
 type Header interface {
 	ClientType() ClientType
+	GetCommitter() Committer
 	GetHeight() uint64
+}
+
+// Committer defines the type that is responsible for
+// updating the consensusState at a given height
+type Committer interface {
+	ClientType() ClientType
 }
 
 // ClientType defines the type of the consensus algorithm

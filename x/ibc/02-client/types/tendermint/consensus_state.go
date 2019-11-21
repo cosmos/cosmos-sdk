@@ -20,6 +20,7 @@ type ConsensusState struct {
 	ChainID          string                `json:"chain_id" yaml:"chain_id"`
 	Height           uint64                `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
 	Root             commitment.RootI      `json:"root" yaml:"root"`
+	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml"validator_set"`
 	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 
@@ -36,6 +37,10 @@ func (cs ConsensusState) GetHeight() uint64 {
 // GetRoot returns the commitment Root for the specific
 func (cs ConsensusState) GetRoot() commitment.RootI {
 	return cs.Root
+}
+
+func (cs ConsensusState) GetCommitter() exported.Committer {
+	return Committer{cs.ValidatorSet}
 }
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
@@ -64,6 +69,11 @@ func (cs ConsensusState) checkValidity(header Header) error {
 		)
 	}
 
+	// basic consistency check
+	if err := header.ValidateBasic(cs.ChainID); err != nil {
+		return err
+	}
+
 	// check if the hash from the consensus set and header
 	// matches
 	nextHash := cs.NextValidatorSet.Hash()
@@ -78,11 +88,6 @@ func (cs ConsensusState) checkValidity(header Header) error {
 		return lerr.ErrUnexpectedValidators(header.NextValidatorsHash, nextHash)
 	}
 
-	// basic consistency check
-	if err := header.ValidateBasic(cs.ChainID); err != nil {
-		return err
-	}
-
 	// abortTransactionUnless(consensusState.publicKey.verify(header.signature))
 	return header.ValidatorSet.VerifyFutureCommit(
 		cs.NextValidatorSet, cs.ChainID, header.Commit.BlockID, header.Height, header.Commit,
@@ -93,6 +98,7 @@ func (cs ConsensusState) checkValidity(header Header) error {
 func (cs ConsensusState) update(header Header) ConsensusState {
 	cs.Height = header.GetHeight()
 	cs.Root = commitment.NewRoot(header.AppHash)
+	cs.ValidatorSet = header.ValidatorSet
 	cs.NextValidatorSet = header.NextValidatorSet
 	return cs
 }

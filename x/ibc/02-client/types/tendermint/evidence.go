@@ -1,9 +1,6 @@
 package tendermint
 
 import (
-	"fmt"
-	"reflect"
-
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -48,6 +45,11 @@ func (ev Evidence) Hash() cmn.HexBytes {
 	return tmhash.Sum(SubModuleCdc.MustMarshalBinaryBare(ev))
 }
 
+// GetHeight returns the height at which misbehaviour occurred
+func (ev Evidence) GetHeight() int64 {
+	return ev.Header1.Height
+}
+
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
 	// ValidateBasic on both validators
@@ -67,21 +69,6 @@ func (ev Evidence) ValidateBasic() error {
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "Headers commit to same blockID")
-	}
-
-	// Ensure that validator sets that voted on differing headers are the same validators
-	// even if headers have different proposers
-	// Require Validators are sorted first
-	valSet1 := ev.Header1.ValidatorSet.Validators
-	valSet2 := ev.Header2.ValidatorSet.Validators
-	if len(valSet1) != len(valSet2) {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("ValidatorSets have different lengths: valSet1: %s, valSet2: %s",
-			tmtypes.ValidatorListString(valSet1), tmtypes.ValidatorListString(valSet2)))
-	}
-	for i, v := range valSet1 {
-		if !reflect.DeepEqual(v, valSet2[i]) {
-			return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("ValidatorSets are different at index %d. v1: %s, v2: %s", i, *v, *valSet2[i]))
-		}
 	}
 
 	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power

@@ -29,6 +29,7 @@ func (k Keeper) CreateClient(
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)
+	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
@@ -68,6 +69,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))
 	return nil
@@ -86,10 +88,19 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence eviden
 
 	clientState, found := k.GetClientState(ctx, misbehaviour.ClientID)
 	if !found {
-		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID))
+		return errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID)
 	}
 
-	if err := tendermint.CheckMisbehaviour(misbehaviour); err != nil {
+	committer, found := k.GetCommitter(ctx, misbehaviour.ClientID, misbehaviour.GetHeight())
+	if !found {
+		return errors.ErrCommitterNotFound(k.codespace, fmt.Sprintf("committer not found for height %d", misbehaviour.GetHeight()))
+	}
+	tmCommitter, ok := committer.(tendermint.Committer)
+	if !ok {
+		return errors.ErrInvalidCommitter(k.codespace, "committer type is not Tendermint")
+	}
+
+	if err := tendermint.CheckMisbehaviour(tmCommitter, misbehaviour); err != nil {
 		return errors.ErrInvalidEvidence(k.codespace, err.Error())
 	}
 

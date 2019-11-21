@@ -72,6 +72,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 		ChainID:          "mychain",
 		Height:           3,
 		Root:             root,
+		ValidatorSet:     valSet,
 		NextValidatorSet: valSet,
 	}
 

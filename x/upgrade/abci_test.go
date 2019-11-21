@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -42,7 +43,7 @@ func (s *TestSuite) SetupTest() {
 	_ = s.cms.LoadLatestVersion()
 	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
 	s.FlagUnsafeSkipUpgrade = FlagUnsafeSkipUpgrade
-	viper.Set(FlagUnsafeSkipUpgrade, -1)
+	viper.Set(FlagUnsafeSkipUpgrade, []int{-1})
 	s.VerifySet()
 }
 
@@ -106,6 +107,22 @@ func (s *TestSuite) VerifyDoUpgrade() {
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
 	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan Plan) {})
+	s.Require().NotPanics(func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	s.VerifyCleared(newCtx)
+}
+
+func (s *TestSuite) VerifyDoUpgradeWithCtx(newCtx sdk.Context, proposalName string) {
+	s.T().Log("Verify that a panic happens at the upgrade time/height")
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	s.Require().Panics(func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
+	s.keeper.SetUpgradeHandler(proposalName, func(ctx sdk.Context, plan Plan) {})
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
@@ -205,26 +222,130 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 
 func (s *TestSuite) VerifySet() {
 	s.T().Log("Verify if the skip upgrade has been set")
-	skipUpgrade := viper.GetInt64(s.FlagUnsafeSkipUpgrade)
+	skipUpgrade := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
 	s.Require().NotNil(skipUpgrade)
 }
 
-func (s *TestSuite) TestSkipUpgrade() {
+func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
+	skipHeightArray := s.keeper.ConvertIntArrayToInt64(skipUpgrade)
+	s.Require().Equal(reflect.TypeOf(skipHeightArray).Elem().Kind(), reflect.Int64)
+}
+
+func (s *TestSuite) TestContains() {
+	skipUpgrade := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
+	skipHeightArray := s.keeper.ConvertIntArrayToInt64(skipUpgrade)
+	s.T().Log("case where array contains the element")
+	present := s.keeper.Contains(skipHeightArray, -1)
+	s.Require().True(present)
+
+	s.T().Log("case where array doesn't contain the element")
+	present = s.keeper.Contains(skipHeightArray, 4)
+	s.Require().False(present)
+}
+
+func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
-	s.T().Log("Verify if skip upgrade flag clears upgrade plan")
-	viper.Set(s.FlagUnsafeSkipUpgrade, s.ctx.BlockHeight()+1)
+	var i int64
+
+	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases")
+	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
 	s.VerifySet()
+
+	skipHeightArray := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
+	s.VerifyConversion(skipHeightArray)
+
+	for i = 1; i <= s.ctx.BlockHeight(); i++ {
+		newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + i)
+		s.Require().NotPanics(func() {
+			s.module.BeginBlock(newCtx, req)
+		})
+	}
+	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	s.Require().Nil(err)
+	s.Require().NotPanics(func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+	//To ensure verification is being done only after both uprades are cleared
+	s.T().Log("Verify if both proposals are cleared")
+	s.VerifyCleared(s.ctx)
+	s.VerifyNotDone(s.ctx, "test")
+	s.VerifyNotDone(s.ctx, "test2")
+}
+
+func (s *TestSuite) TestSkipUpgradeSkippingOne() {
+	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	s.Require().Nil(err)
+
+	var i int64
+
+	s.T().Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
+	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1)})
+	s.VerifySet()
+
+	skipHeightArray := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
+	s.VerifyConversion(skipHeightArray)
+	s.T().Log(s.ctx.BlockHeight(), "this")
+	for i = 1; i < s.ctx.BlockHeight(); i++ {
+		newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + i)
+
+		s.Require().NotPanics(func() {
+			s.module.BeginBlock(newCtx, req)
+		})
+	}
+	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	s.Require().Nil(err)
+	newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
+	s.VerifyDoUpgradeWithCtx(newCtx, "test2")
+
+	//To ensure verification is being done only after both uprades are cleared
+	s.T().Log("Verify first proposal is cleared and second is done")
+	s.VerifyNotDone(s.ctx, "test")
+	s.VerifyDone(s.ctx, "test2")
+}
+
+func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
+	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	s.Require().Nil(err)
+
+	var i int64
+
+	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
+	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
+	s.VerifySet()
+
+	skipHeightArray := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
+	s.VerifyConversion(skipHeightArray)
+	s.T().Log(s.ctx.BlockHeight(), "this")
+	for i = 1; i < s.ctx.BlockHeight(); i++ {
+		newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + i)
+		s.Require().NotPanics(func() {
+			s.module.BeginBlock(newCtx, req)
+		})
+	}
+	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	s.Require().Nil(err)
+	newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	s.VerifyCleared(s.ctx)
+	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop3", Plan: Plan{Name: "test3", Height: s.ctx.BlockHeight() + 10}})
+	s.Require().Nil(err)
+	newCtx = newCtx.WithBlockHeight(newCtx.BlockHeight() + 1)
+	s.VerifyDoUpgradeWithCtx(newCtx, "test3")
+	//To ensure verification is being done only after both uprades are cleared
+	s.T().Log("Verify first proposal is cleared and second is done")
 	s.VerifyNotDone(s.ctx, "test")
-
+	s.VerifyNotDone(s.ctx, "test2")
+	s.VerifyDone(s.ctx, "test3")
 }
 
 func (s *TestSuite) TestUpgradeWithoutSkip() {
@@ -239,7 +360,6 @@ func (s *TestSuite) TestUpgradeWithoutSkip() {
 
 	s.VerifyDoUpgrade()
 	s.VerifyDone(s.ctx, "test")
-
 }
 
 func TestTestSuite(t *testing.T) {

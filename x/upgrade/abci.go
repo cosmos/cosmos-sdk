@@ -15,7 +15,7 @@ import (
 //
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
-func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgradeHeight int64) {
+func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgradeHeightArray []int64) {
 
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
@@ -24,7 +24,8 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgra
 
 	if plan.ShouldExecute(ctx) {
 		//To make sure clear upgrade is executed at the same block
-		if skipUpgradeHeight == ctx.BlockHeight() {
+
+		if k.Contains(skipUpgradeHeightArray, ctx.BlockHeight()) {
 			// If skip upgrade has been set, we clear the upgrade plan
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
 			ctx.Logger().Info(skipUpgradeMsg)

@@ -9,19 +9,19 @@ import (
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	Sequence           uint64           `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	Timeout            uint64           `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
-	SourcePort         string           `json:"source_port"`         // identifies the port on the sending chain.
-	SourceChannel      string           `json:"source_channel"`      // identifies the channel end on the sending chain.
-	DestinationPort    string           `json:"destination_port"`    // identifies the port on the receiving chain.
-	DestinationChannel string           `json:"destination_channel"` // identifies the channel end on the receiving chain.
-	Data               exported.PacketI `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
+	Sequence           uint64               `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+	Timeout            uint64               `json:"timeout"`             // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
+	SourcePort         string               `json:"source_port"`         // identifies the port on the sending chain.
+	SourceChannel      string               `json:"source_channel"`      // identifies the channel end on the sending chain.
+	DestinationPort    string               `json:"destination_port"`    // identifies the port on the receiving chain.
+	DestinationChannel string               `json:"destination_channel"` // identifies the channel end on the receiving chain.
+	Data               exported.PacketDataI `json:"data"`                // opaque value which can be defined by the application logic of the associated modules.
 }
 
 // NewPacket creates a new Packet instance
 func NewPacket(
 	sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data exported.PacketI,
+	destinationPort, destinationChannel string, data exported.PacketDataI,
 ) Packet {
 	return Packet{
 		sequence,
@@ -34,28 +34,28 @@ func NewPacket(
 	}
 }
 
-// GetSequence implements PacketI interface
+// GetSequence implements PacketDataI interface
 func (p Packet) GetSequence() uint64 { return p.Sequence }
 
-// GetTimeoutHeight implements PacketI interface
+// GetTimeoutHeight implements PacketDataI interface
 func (p Packet) GetTimeoutHeight() uint64 { return p.Timeout }
 
-// GetSourcePort implements PacketI interface
+// GetSourcePort implements PacketDataI interface
 func (p Packet) GetSourcePort() string { return p.SourcePort }
 
-// GetSourceChannel implements PacketI interface
+// GetSourceChannel implements PacketDataI interface
 func (p Packet) GetSourceChannel() string { return p.SourceChannel }
 
-// GetDestPort implements PacketI interface
+// GetDestPort implements PacketDataI interface
 func (p Packet) GetDestPort() string { return p.DestinationPort }
 
-// GetDestChannel implements PacketI interface
+// GetDestChannel implements PacketDataI interface
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
-// GetData implements PacketI interface
+// GetData implements PacketDataI interface
 func (p Packet) GetData() []byte { return p.Data.GetData() }
 
-// ValidateBasic implements PacketI interface
+// ValidateBasic implements PacketDataI interface
 func (p Packet) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(p.SourcePort); err != nil {
 		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source port ID: %s", err.Error()))
@@ -101,6 +101,6 @@ func NewOpaquePacket(sequence, timeout uint64, sourcePort, sourceChannel,
 	return OpaquePacket{&Packet}
 }
 
-// GetData implements PacketI interface
+// GetData implements PacketDataI interface
 func (op OpaquePacket) GetData() []byte { return nil }
 */

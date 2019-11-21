@@ -19,8 +19,8 @@ type BankKeeper interface {
 type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channel.Channel, found bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
-	SendPacket(ctx sdk.Context, packet channelexported.PacketI, portCapability sdk.CapabilityKey) error
-	RecvPacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, proofHeight uint64, acknowledgement []byte, portCapability sdk.CapabilityKey) (channelexported.PacketI, error)
+	SendPacket(ctx sdk.Context, packet channelexported.PacketDataI, portCapability sdk.CapabilityKey) error
+	RecvPacket(ctx sdk.Context, packet channelexported.PacketDataI, proof commitment.ProofI, proofHeight uint64, acknowledgement []byte, portCapability sdk.CapabilityKey) (channelexported.PacketDataI, error)
 }
 
 // ClientKeeper defines the expected IBC client keeper

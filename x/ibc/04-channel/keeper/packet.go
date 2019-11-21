@@ -25,7 +25,7 @@ import (
 //written.
 func (k Keeper) CleanupPacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sequence uint64,
 	proof commitment.ProofI,
 	proofHeight uint64,
@@ -33,7 +33,7 @@ func (k Keeper) CleanupPacket(
 	nextSequenceRecv uint64,
 	acknowledgement []byte,
 	portCapability sdk.CapabilityKey,
-) (exported.PacketI, error) {
+) (exported.PacketDataI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
 	if !found {
 		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)
@@ -117,7 +117,7 @@ func (k Keeper) CleanupPacket(
 // chain.
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sourceChannel string,
 	portCapability sdk.CapabilityKey,
 ) error {
@@ -194,14 +194,14 @@ func (k Keeper) SendPacket(
 // sent on the corresponding channel end on the counterparty chain.
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sequence uint64,
 	proof commitment.ProofI,
 	proofHeight uint64,
 	destChannel string,
 	acknowledgement []byte,
 	portCapability sdk.CapabilityKey,
-) (exported.PacketI, error) {
+) (exported.PacketDataI, error) {
 
 	channel, found := k.GetChannel(ctx, packet.GetDestinationPort(), destChannel)
 	if !found {
@@ -296,14 +296,14 @@ func (k Keeper) RecvPacket(
 // and acted upon.
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sequence uint64,
 	acknowledgement []byte,
 	proof commitment.ProofI,
 	proofHeight uint64,
 	sourceChannel string,
 	portCapability sdk.CapabilityKey,
-) (exported.PacketI, error) {
+) (exported.PacketDataI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
 	if !found {
 		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)

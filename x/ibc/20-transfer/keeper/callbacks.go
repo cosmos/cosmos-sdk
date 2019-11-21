@@ -129,7 +129,7 @@ func (k Keeper) onRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.PacketTransfer
+	var data types.PacketDataTransfer
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {
@@ -157,7 +157,7 @@ func (k Keeper) onTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 ) error {
-	var data types.PacketTransfer
+	var data types.PacketDataTransfer
 
 	err := data.UnmarshalJSON(packet.GetData())
 	if err != nil {

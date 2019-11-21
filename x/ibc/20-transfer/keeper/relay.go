@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -46,7 +47,7 @@ func (k Keeper) SendTransfer(
 }
 
 // ReceivePacket handles receiving packet
-func (k Keeper) ReceivePacket(ctx sdk.Context, packet types.Packet, proof commitment.ProofI, height uint64) error {
+func (k Keeper) ReceivePacket(ctx sdk.Context, packet exported.Packet, proof commitment.ProofI, height uint64) error {
 	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, nil, k.storeKey)
 	if err != nil {
 		return err

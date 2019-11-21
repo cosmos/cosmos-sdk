@@ -19,14 +19,14 @@ import (
 // perform appropriate state transitions.
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sequence uint64,
 	proof commitment.ProofI,
 	proofHeight uint64,
 	nextSequenceRecv uint64,
 	sourceChannel string,
 	portCapability sdk.CapabilityKey,
-) (exported.PacketI, error) {
+) (exported.PacketDataI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
 	if !found {
 		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)
@@ -119,14 +119,14 @@ func (k Keeper) TimeoutPacket(
 // never be received (even if the timeoutHeight has not yet been reached).
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet exported.PacketDataI,
 	sequence uint64,
 	sourceChannel string,
 	proofNonMembership,
 	proofClosed commitment.ProofI,
 	proofHeight uint64,
 	portCapability sdk.CapabilityKey,
-) (exported.PacketI, error) {
+) (exported.PacketDataI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), sourceChannel)
 	if !found {
 		return nil, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), sourceChannel)

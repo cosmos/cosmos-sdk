@@ -380,7 +380,7 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 }
 
 type MsgPacket struct {
-	exported.PacketI
+	exported.PacketDataI
 
 	PortID      string
 	ChannelID   string
@@ -400,7 +400,7 @@ func (msg MsgPacket) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 
-	return sdk.ConvertError(msg.PacketI.ValidateBasic())
+	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
 }
 
 func (msg MsgPacket) GetSignBytes() []byte {
@@ -414,7 +414,7 @@ func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = MsgTimeout{}
 
 type MsgTimeout struct {
-	exported.PacketI
+	exported.PacketDataI
 
 	PortID      string
 	ChannelID   string
@@ -432,7 +432,7 @@ func (msg MsgTimeout) ValidateBasic() sdk.Error {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
 
-	return sdk.ConvertError(msg.PacketI.ValidateBasic())
+	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
 }
 
 func (msg MsgTimeout) GetSignBytes() []byte {

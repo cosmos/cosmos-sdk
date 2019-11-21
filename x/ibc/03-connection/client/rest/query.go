@@ -29,7 +29,7 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http
 
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
-			Data:  types.PrefixKeyConnection(connectionID),
+			Data:  types.KeyConnection(connectionID),
 			Prove: rest.ParseQueryProve(r),
 		}
 
@@ -60,7 +60,7 @@ func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, queryRoute strin
 
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
-			Data:  types.PrefixKeyClientConnections(clientID),
+			Data:  types.KeyClientConnections(clientID),
 			Prove: rest.ParseQueryProve(r),
 		}
 

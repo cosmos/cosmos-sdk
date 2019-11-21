@@ -38,7 +38,7 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) 
 
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
-			Data:  types.PrefixKeyConsensusState(clientID),
+			Data:  types.KeyConsensusState(clientID),
 			Prove: rest.ParseQueryProve(r),
 		}
 
@@ -82,7 +82,7 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
-			Data:  types.PrefixKeyClientState(clientID),
+			Data:  types.KeyClientState(clientID),
 			Prove: rest.ParseQueryProve(r),
 		}
 

@@ -29,7 +29,7 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 
 		req := abci.RequestQuery{
 			Path:  "store/ibc/key",
-			Data:  types.PrefixKeyChannel(portID, channelID),
+			Data:  types.KeyChannel(portID, channelID),
 			Prove: rest.ParseQueryProve(r),
 		}
 

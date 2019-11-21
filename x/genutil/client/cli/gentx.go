@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -94,7 +95,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
-			kb, err := client.NewKeyBaseFromDir(viper.GetString(flagClientHome))
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			kb, err := client.NewKeyringFromDir(viper.GetString(flagClientHome), inBuf)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize keybase")
 			}
@@ -121,8 +123,8 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := client.NewCLIContext().WithCodec(cdc)
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := client.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			// Set the generate-only flag here after the CLI context has
 			// been created. This allows the from name/key to be correctly populated.

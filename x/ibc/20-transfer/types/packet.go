@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,28 +14,14 @@ type PacketData struct {
 	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
 }
 
-func (pd PacketData) MarshalAmino() ([]byte, error) {
-	return ModuleCdc.MarshalBinaryBare(pd)
-}
-
-func (pd *PacketData) UnmarshalAmino(bz []byte) (err error) {
-	return ModuleCdc.UnmarshalBinaryBare(bz, pd)
-}
-
-func (pd PacketData) Marshal() []byte {
-	return ModuleCdc.MustMarshalBinaryBare(pd)
-}
-
-type PacketDataAlias PacketData
-
-// MarshalJSON implements the json.Marshaler interface.
-func (pd PacketData) MarshalJSON() ([]byte, error) {
-	return json.Marshal((PacketDataAlias)(pd))
-}
-
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (pd *PacketData) UnmarshalJSON(bz []byte) (err error) {
-	return json.Unmarshal(bz, (*PacketDataAlias)(pd))
+// NewPacketData contructs a new PacketData
+func NewPacketData(amount sdk.Coins, sender, receiver sdk.AccAddress, source bool) PacketData {
+	return PacketData{
+		Amount:   amount,
+		Sender:   sender,
+		Receiver: receiver,
+		Source:   source,
+	}
 }
 
 func (pd PacketData) String() string {
@@ -54,11 +39,11 @@ func (pd PacketData) String() string {
 
 // ValidateBasic performs a basic check of the packet fields
 func (pd PacketData) ValidateBasic() sdk.Error {
-	if !pd.Amount.IsValid() {
-		return sdk.ErrInvalidCoins("transfer amount is invalid")
-	}
 	if !pd.Amount.IsAllPositive() {
 		return sdk.ErrInsufficientCoins("transfer amount must be positive")
+	}
+	if !pd.Amount.IsValid() {
+		return sdk.ErrInvalidCoins("transfer amount is invalid")
 	}
 	if pd.Sender.Empty() {
 		return sdk.ErrInvalidAddress("missing sender address")

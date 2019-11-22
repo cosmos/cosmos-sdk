@@ -11,7 +11,7 @@ import (
 )
 
 // Operation runs a state machine transition, and ensures the transition
-// happened as exported.  The operation could be running and testing a fuzzed
+// happened as expected.  The operation could be running and testing a fuzzed
 // transaction, or doing the same for a message.
 //
 // For ease of debugging, an operation returns a descriptive message "action",
@@ -154,6 +154,7 @@ func queueOperations(queuedOps OperationQueue,
 	}
 
 	for _, futureOp := range futureOps {
+		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
 			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
 				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)

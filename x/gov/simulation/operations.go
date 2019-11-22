@@ -6,8 +6,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -75,8 +73,9 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
 // nolint: funlen
-func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
-	contentSim simulation.ContentSimulatorFn) simulation.Operation {
+func SimulateSubmitProposal(
+	ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn,
+) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -99,7 +98,8 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 	curNumVotesState := 1
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		// 1) submit proposal now
 		content := contentSim(r, ctx, accs)
@@ -136,7 +136,7 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -177,11 +177,21 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 	}
 }
 
+// SimulateTextProposalContent returns random text proposal content.
+func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
+	return types.NewTextProposal(
+		simulation.RandStringOfLength(r, 140),
+		simulation.RandStringOfLength(r, 5000),
+	)
+}
+
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 // nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, types.StatusDepositPeriod)
 		if !ok {
@@ -216,7 +226,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -236,8 +246,10 @@ func SimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper) simulation.Operati
 
 func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 	simAccount simulation.Account, proposalIDInt int64) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if simAccount.Equals(simulation.Account{}) {
 			simAccount, _ = simulation.RandomAcc(r, accs)
 		}
@@ -271,7 +283,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -285,6 +297,8 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 
 // Pick a random deposit with a random denomination with a
 // deposit amount between (0, min(balance, minDepositAmount))
+// This is to simulate multiple users depositing to get the
+// proposal above the minimum deposit amount
 func randomDeposit(r *rand.Rand, ctx sdk.Context,
 	ak types.AccountKeeper, k keeper.Keeper, addr sdk.AccAddress,
 ) (deposit sdk.Coins, skip bool, err error) {

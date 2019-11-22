@@ -17,7 +17,7 @@ The application also enables you to generate transactions, encode them and pass 
 
 ## `baseapp`
 
-`baseApp` is the boilerplate implementation of the ABCI of the Cosmos SDK. It comes with a `router` to route transactions to their respective module. The main `app.go` file of your application will define your custom `app` type that will embed `baseapp`. This way, your custom `app` type will automatically inherit all the ABCI methods of `baseapp`. See an example of this in the [SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/master/app.go#L27).
+`baseApp` is the boilerplate implementation of the ABCI of the Cosmos SDK. It comes with a `router` to route transactions to their respective module. The main `app.go` file of your application will define your custom `app` type that will embed `baseapp`. This way, your custom `app` type will automatically inherit all the ABCI methods of `baseapp`. See an example of this in the [SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/app.go#L73).
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
 
@@ -80,7 +80,7 @@ Here is a simplified view of how a transaction is processed by the application o
                                        v
 ```
 
-Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* `messages` are extracted from `transactions` using `baseapp`). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](../coore/ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called `keepers` that can be passed to other modules to grant a pre-defined set of capabilities. 
+Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* `messages` are extracted from `transactions` using `baseapp`). In general, each module declares its own `KVStore` in the multistore to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos-SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](../core/ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called `keepers` that can be passed to other modules to grant a pre-defined set of capabilities. 
 
 SDK modules are defined in the `x/` folder of the SDK. Some core modules include:
 
@@ -91,4 +91,4 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
 
 
-### Next, learn more about the security model of the Cosmos SDK, [ocap](./ocap.md)
+### Next, learn more about the security model of the Cosmos SDK, [ocap](../core/ocap.md)

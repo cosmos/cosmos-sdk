@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,45 +13,74 @@ import (
 )
 
 func Test_runDeleteCmd(t *testing.T) {
+	runningUnattended := isRunningUnattended()
 	deleteKeyCommand := deleteKeyCommand()
+	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
 
 	yesF, _ := deleteKeyCommand.Flags().GetBool(flagYes)
 	forceF, _ := deleteKeyCommand.Flags().GetBool(flagForce)
-	assert.False(t, yesF)
-	assert.False(t, forceF)
+	require.False(t, yesF)
+	require.False(t, forceF)
 
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
+	if !runningUnattended {
+		kb, err := NewKeyringFromHomeFlag(mockIn)
+		require.NoError(t, err)
+		defer func() {
+			kb.Delete("runDeleteCmd_Key1", "", false)
+			kb.Delete("runDeleteCmd_Key2", "", false)
 
+		}()
+	}
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err := NewKeyBaseFromHomeFlag()
-	assert.NoError(t, err)
+	kb, err := NewKeyringFromHomeFlag(mockIn)
+	require.NoError(t, err)
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	require.NoError(t, err)
+
+	if runningUnattended {
+		mockIn.Reset("testpass1\ntestpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
-	require.Equal(t, "Key blah not found", err.Error())
+	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
-	require.Equal(t, "EOF", err.Error())
+	if runningUnattended {
+		require.Equal(t, "aborted", err.Error())
+	} else {
+		require.Equal(t, "EOF", err.Error())
+	}
 
 	{
+		if runningUnattended {
+			mockIn.Reset("testpass1\n")
+		}
 		_, err = kb.Get(fakeKeyName1)
 		require.NoError(t, err)
 
 		// Now there is a confirmation
-		mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
-		mockIn.Reset("y\n")
+		viper.Set(flagYes, true)
+		if runningUnattended {
+			mockIn.Reset("testpass1\ntestpass1\n")
+		}
 		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
@@ -60,14 +88,18 @@ func Test_runDeleteCmd(t *testing.T) {
 	}
 
 	viper.Set(flagYes, true)
+	if runningUnattended {
+		mockIn.Reset("testpass1\n")
+	}
 	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
+	if runningUnattended {
+		mockIn.Reset("testpass1\ny\ntestpass1\n")
+	}
 	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
 	_, err = kb.Get(fakeKeyName2)
 	require.Error(t, err) // Key2 is gone
-
-	// TODO: Write another case for !keys.Local
 }
 
 func Test_confirmDeletion(t *testing.T) {
@@ -91,6 +123,7 @@ func Test_confirmDeletion(t *testing.T) {
 		{"BAD", args{answerInvalid}, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := confirmDeletion(tt.args.buf); (err != nil) != tt.wantErr {
 				t.Errorf("confirmDeletion() error = %v, wantErr %v", err, tt.wantErr)

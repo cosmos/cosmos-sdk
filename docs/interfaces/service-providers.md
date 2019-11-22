@@ -34,13 +34,14 @@ To generate a new key (default secp256k1 elliptic curve):
 gaiacli keys add <your_key_name>
 ```
 
-You will be asked to create a password (at least 8 characters) for this key-pair. This will return the information listed below:
+The key-pair will be created in your system's password store. This will return the information listed below:
 
 - `NAME`: Name of your key
 - `TYPE`: Type of your key, always `local`. 
 - `ADDRESS`: Your address. Used to receive funds.
 - `PUBKEY`: Your public key. Useful for validators.
-- `MNEMONIC`: 24-words phrase. **Save this mnemonic somewhere safe**. It is used to recover your private key in case you forget the password.
+- `MNEMONIC`: 24-words phrase. **Save this mnemonic somewhere safe**. It is used to recover your
+private key in case you forget the password to unlock your system's credentials store.
 
 You can see all your available keys by typing:
 
@@ -175,7 +176,7 @@ Signatures and public key examples in a signed transaction:
 
 ``` json
 {
-  "type": "auth/StdTx",
+  "type": "cosmos-sdk/StdTx",
   "value": {
     "msg": [...],
     "signatures": [

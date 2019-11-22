@@ -65,6 +65,12 @@ var (
 	// ErrNoSignatures to doc
 	ErrNoSignatures = Register(RootCodespace, 16, "no signatures supplied")
 
+	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
+	ErrJSONMarshal = Register(RootCodespace, 17, "failed to marshal JSON bytes")
+
+	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error
+	ErrJSONUnmarshal = Register(RootCodespace, 18, "failed to unmarshal JSON bytes")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
@@ -121,7 +127,7 @@ func ABCIError(codespace string, code uint32, log string) error {
 	}
 	// This is a unique error, will never match on .Is()
 	// Use Wrap here to get a stack trace
-	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
+	return Wrap(New(codespace, code, "unknown"), log)
 }
 
 // Error represents a root error.
@@ -137,6 +143,10 @@ type Error struct {
 	codespace string
 	code      uint32
 	desc      string
+}
+
+func New(codespace string, code uint32, desc string) *Error {
+	return &Error{codespace: codespace, code: code, desc: desc}
 }
 
 func (e Error) Error() string {

@@ -24,7 +24,7 @@ import (
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := k.Logger(ctx)
 
-	if slashFactor.LT(sdk.ZeroDec()) {
+	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
@@ -105,7 +105,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
-	if validator.Tokens.GT(sdk.ZeroInt()) {
+	if validator.Tokens.IsPositive() {
 		effectiveFraction := tokensToBurn.ToDec().QuoRoundUp(validator.Tokens.ToDec())
 		// possible if power has changed
 		if effectiveFraction.GT(sdk.OneDec()) {

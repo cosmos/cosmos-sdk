@@ -13,7 +13,6 @@ import (
 
 var (
 	_ ProposalContent = TextProposal{}
-	_ ProposalContent = SoftwareUpgradeProposal{}
 )
 
 const (
@@ -35,14 +34,9 @@ const (
 	ProposalTypeNil             ProposalKind = 0x00
 	ProposalTypeText            ProposalKind = 0x01
 	ProposalTypeParameterChange ProposalKind = 0x02
-	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
 type (
-	SoftwareUpgradeProposal struct {
-		TextProposal
-	}
-
 	ProposalQueue []uint64
 
 	ProposalKind byte
@@ -141,8 +135,6 @@ type (
 func (tp TextProposal) GetTitle() string           { return tp.Title }
 func (tp TextProposal) GetDescription() string     { return tp.Description }
 func (tp TextProposal) ProposalType() ProposalKind { return ProposalTypeText }
-
-func (sup SoftwareUpgradeProposal) ProposalType() ProposalKind { return ProposalTypeSoftwareUpgrade }
 
 // ProposalStatusToString turns a string into a ProposalStatus
 func ProposalStatusFromString(str string) (ProposalStatus, error) {
@@ -290,8 +282,6 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 		return ProposalTypeText, nil
 	case "ParameterChange":
 		return ProposalTypeParameterChange, nil
-	case "SoftwareUpgrade":
-		return ProposalTypeSoftwareUpgrade, nil
 	default:
 		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
 	}
@@ -331,8 +321,6 @@ func (pt ProposalKind) String() string {
 		return "Text"
 	case ProposalTypeParameterChange:
 		return "ParameterChange"
-	case ProposalTypeSoftwareUpgrade:
-		return "SoftwareUpgrade"
 	default:
 		return ""
 	}
@@ -341,5 +329,4 @@ func (pt ProposalKind) String() string {
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*ProposalContent)(nil), nil)
 	cdc.RegisterConcrete(TextProposal{}, "gov/TextProposal", nil)
-	cdc.RegisterConcrete(SoftwareUpgradeProposal{}, "gov/SoftwareUpgradeProposal", nil)
 }

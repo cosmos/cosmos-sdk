@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -235,6 +236,7 @@ func TestSetLoader(t *testing.T) {
 	v := []byte("value")
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
 			db := dbm.NewMemDB()
@@ -593,21 +595,24 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
-func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+func anteHandlerTxTest(t *testing.T, capKey sdk.StoreKey, storeKey []byte) sdk.AnteHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 		store := ctx.KVStore(capKey)
 		txTest := tx.(txTest)
 
 		if txTest.FailOnAnte {
-			return newCtx, sdk.ErrInternal("ante handler failure").Result(), true
+			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
-		res = incrementingCounter(t, store, storeKey, txTest.Counter)
+		res := incrementingCounter(t, store, storeKey, txTest.Counter)
+		if !res.IsOK() {
+			err = sdkerrors.ABCIError(string(res.Codespace), uint32(res.Code), res.Log)
+		}
 		return
 	}
 }
 
-func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) sdk.Handler {
+func handlerMsgCounter(t *testing.T, capKey sdk.StoreKey, deliverKey []byte) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		store := ctx.KVStore(capKey)
 		var msgCount int64
@@ -835,7 +840,7 @@ func TestSimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
 			return
 		})
@@ -896,7 +901,7 @@ func TestSimulateTx(t *testing.T) {
 
 func TestRunInvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return
 		})
 	}
@@ -980,17 +985,19 @@ func TestRunInvalidTransaction(t *testing.T) {
 func TestTxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
+			// AnteHandlers must have their own defer/recover in order for the BaseApp
+			// to know how much gas was used! This is because the GasMeter is created in
+			// the AnteHandler, but if it panics the context won't be set properly in
+			// runTx's recover call.
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						res = sdk.ErrOutOfGas(log).Result()
-						res.GasWanted = gasGranted
-						res.GasUsed = newCtx.GasMeter().GasConsumed()
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -999,9 +1006,7 @@ func TestTxGasLimits(t *testing.T) {
 
 			count := tx.(*txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
-			res = sdk.Result{
-				GasWanted: gasGranted,
-			}
+
 			return
 		})
 
@@ -1065,17 +1070,14 @@ func TestTxGasLimits(t *testing.T) {
 func TestMaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
-						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						res = sdk.ErrOutOfGas(log).Result()
-						res.GasWanted = gasGranted
-						res.GasUsed = newCtx.GasMeter().GasConsumed()
+						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
 					}
@@ -1084,9 +1086,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 			count := tx.(*txTest).Counter
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
-			res = sdk.Result{
-				GasWanted: gasGranted,
-			}
+
 			return
 		})
 
@@ -1234,7 +1234,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 func TestGasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
 
 			defer func() {
@@ -1242,9 +1242,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 					switch rType := r.(type) {
 					case sdk.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						res = sdk.ErrOutOfGas(log).Result()
-						res.GasWanted = gasWanted
-						res.GasUsed = newCtx.GasMeter().GasConsumed()
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:
 						panic(r)
 					}
@@ -1254,12 +1252,9 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			txTest := tx.(txTest)
 			newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
 			if txTest.FailOnAnte {
-				return newCtx, sdk.ErrInternal("ante handler failure").Result(), true
+				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
-			res = sdk.Result{
-				GasWanted: gasWanted,
-			}
 			return
 		})
 	}
@@ -1310,7 +1305,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
 			return

@@ -2,7 +2,10 @@
 
 ## Changelog
 
-- July 29, 2019: Initial draft
+- July 29th, 2019: Initial draft
+- September 11th, 2019: Work has started
+- November 4th: SDK changes merged in
+- November 18th: Gaia changes merged in
 
 ## Context
 
@@ -24,11 +27,8 @@ This appears to fulfill the requirement of protecting both key material and meta
 
 
 ## Status
-> Proposed
 
-This change is implemented in [Switch secret store to the keyring secret store by poldsam · Pull Request #4754 · cosmos/cosmos-sdk · GitHub](https://github.com/cosmos/cosmos-sdk/pull/4754)
-
-The audit status on Keyring is currently unknown and may require input from security.
+Accepted
 
 ## Consequences
 
@@ -50,5 +50,9 @@ Running tests locally on a Mac require numerous repetitive password entries.
 
 ## References
 
-- {reference link}
+- #4754 Switch secret store to the keyring secret store (original PR by @poldsam) [__CLOSED__]
+- #5029 Add support for github.com/99designs/keyring-backed keybases [__MERGED__]
+- #5097 Add keys migrate command [__MERGED__]
+- #5180 Drop on-disk keybase in favor of keyring [_PENDING_REVIEW_]
+- cosmos/gaia#164 Drop on-disk keybase in favor of keyring (gaia's changes) [_PENDING_REVIEW_]
 

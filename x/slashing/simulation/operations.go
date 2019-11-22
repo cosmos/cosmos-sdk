@@ -4,8 +4,6 @@ import (
 	"errors"
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -39,11 +37,12 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 // nolint: funlen
-func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
-	sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, chainID string) (simulation.OperationMsg,
-		[]simulation.FutureOperation, error) {
+func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
@@ -70,16 +69,6 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
 			return simulation.NoOpMsg(types.ModuleName), nil, nil // skip
 		}
 
-		// skip if:
-		// - validator cannot be unjailed due to tombstone
-		// - validator is still in jailed period
-		// - self delegation too low
-		if info.Tombstoned ||
-			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
-			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-			return simulation.NoOpMsg(types.ModuleName), nil, nil
-		}
-
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
 		fees, err := simulation.RandomFees(r, ctx, account.SpendableCoins(ctx.BlockTime()))
 		if err != nil {
@@ -94,10 +83,33 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
+
+		// result should fail if:
+		// - validator cannot be unjailed due to tombstone
+		// - validator is still in jailed period
+		// - self delegation too low
+		if info.Tombstoned ||
+			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
+			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
+			if res.IsOK() {
+				if info.Tombstoned {
+					return simulation.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
+				}
+				if ctx.BlockHeader().Time.Before(info.JailedUntil) {
+					return simulation.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed while validator still in jail period")
+				}
+				if validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
+					return simulation.NewOperationMsg(msg, true, ""), nil, errors.New("validator unjailed even though self-delegation too low")
+				}
+			}
+			// msg failed as expected
+			return simulation.NewOperationMsg(msg, false, ""), nil, nil
+		}
+
 		if !res.IsOK() {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}

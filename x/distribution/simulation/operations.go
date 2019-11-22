@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
@@ -59,8 +59,9 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 // nolint: funlen
 func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		if !k.GetWithdrawAddrEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -82,7 +83,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -97,8 +98,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 // nolint: funlen
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
@@ -126,7 +128,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -141,8 +143,10 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 // SimulateMsgWithdrawValidatorCommission generates a MsgWithdrawValidatorCommission with random values.
 // nolint: funlen
 func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
-		chainID string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
 		validator, ok := stakingkeeper.RandomValidator(r, sk, ctx)
 		if !ok {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
@@ -172,7 +176,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
-			[]crypto.PrivKey{simAccount.PrivKey}...,
+			simAccount.PrivKey,
 		)
 
 		res := app.Deliver(tx)
@@ -181,5 +185,31 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+	}
+}
+
+// SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
+// nolint: funlen
+func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
+		simAccount, _ := simulation.RandomAcc(r, accs)
+
+		balance := k.GetFeePool(ctx).CommunityPool
+		if balance.Empty() {
+			return nil
+		}
+
+		denomIndex := r.Intn(len(balance))
+		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
+		if err != nil {
+			return nil
+		}
+
+		return types.NewCommunityPoolSpendProposal(
+			simulation.RandStringOfLength(r, 10),
+			simulation.RandStringOfLength(r, 100),
+			simAccount.Address,
+			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
+		)
 	}
 }

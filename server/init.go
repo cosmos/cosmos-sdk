@@ -25,21 +25,13 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string,
-	overwrite bool) (sdk.AccAddress, string, error) {
-
-	// get the keystore from the client
-	keybase, err := clkeys.NewKeyBaseFromDir(clientRoot)
-	if err != nil {
-		return sdk.AccAddress([]byte{}), "", err
-	}
-
+func GenerateSaveCoinKey(keybase keys.Keybase, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 	// ensure no overwrite
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
 			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
-				"key already exists, overwrite is disabled (clientRoot: %s)", clientRoot)
+				"key already exists, overwrite is disabled")
 		}
 	}
 

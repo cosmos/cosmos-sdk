@@ -130,6 +130,9 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	}
 
 	deposits := keeper.GetDeposits(ctx, params.ProposalID)
+	if deposits == nil {
+		deposits = types.Deposits{}
+	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
 	if err != nil {
@@ -182,6 +185,9 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	}
 
 	votes := keeper.GetVotes(ctx, params.ProposalID)
+	if votes == nil {
+		votes = types.Votes{}
+	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
 	if err != nil {
@@ -198,7 +204,12 @@ func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper K
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("failed to parse params", err.Error()))
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetProposalsFiltered(ctx, params))
+	proposals := keeper.GetProposalsFiltered(ctx, params)
+	if proposals == nil {
+		proposals = types.Proposals{}
+	}
+
+	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
 	}

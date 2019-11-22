@@ -5,7 +5,7 @@
 - 2019 Oct 22: Initial Draft
 
 ## Context
-
+ 
 [ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
 
 `handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the
@@ -133,6 +133,21 @@ func (k PortKeeper) WriteAcknowledgement(ctx sdk.Context, msg MsgPacket, h Packe
 }
 ```
 
+The implementation of this ADR will also change the `Data` field of the `Packet` type from `[]byte` (i.e. arbitrary data) to `PacketDataI`. This also removes the `Timeout` field from the `Packet` struct. This is because the `PacketDataI` interface now contains this information. You can see details about this in [ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#definitions). 
+
+The `PacketDataI` is the application specific interface that provides information for the execuition of the application packet. In the case of ICS20 this would be `denom`, `amount` and `address`
+
+```go
+// PacketDataI defines the standard interface for IBC packet data
+type PacketDataI interface {
+	GetCommitment() []byte // Commitment form that will be stored in the state.
+	GetTimeoutHeight() uint64
+
+	ValidateBasic() sdk.Error
+	Type() string
+}
+```
+
 Example application-side usage:
 
 ```go
@@ -140,19 +155,19 @@ func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
     case ibc.MsgPacket:
-      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.Packet) sdk.Result {
-        switch packet := packet.(type) {
-        case CustomPacket: // i.e fulfills the Packet interface
+      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.PacketDataI) sdk.Result {
+        switch packet := p.(type) {
+        case CustomPacket: // i.e fulfills the PacketDataI interface
           return handleCustomPacket(ctx, k, packet)
         }
       })
     case ibc.MsgAcknowledgement:
-      switch ack := msg.Acknowledgement.(type) {
+      switch ack := msg.Acknowledgement.Data.(type) {
       case CustomAcknowledgement:
         return handleCustomAcknowledgement(ctx, k, msg.Acknowledgement)
       }
     case ibc.MsgTimeoutPacket:
-      switch packet := msg.Packet.(type) {
+      switch packet := msg.Packet.Data.(type) {
       case CustomPacket:
         return handleCustomTimeoutPacket(ctx, k, msg.Packet)
       }
@@ -160,9 +175,9 @@ func NewHandler(k Keeper) sdk.Handler {
   }
 }
 
-func handleCustomPacket(ctx sdk.Context, k Keeper, packet MyPacket) sdk.Result {
+func handleCustomPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
   if failureCondition {
-    return AckInvalidPacketContent(k.codespace, []byte{packet.Data})
+    return AckInvalidPacketContent(k.codespace, []byte{packet.Error()})
   }
   // Handler logic
   return sdk.Result{}
@@ -173,7 +188,7 @@ func handleCustomAcknowledgement(ctx sdk.Context, k Keeper, ack MyAcknowledgemen
   return sdk.Result{}
 }
 
-func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet MyPacket) sdk.Result {
+func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
   // Handler logic
   return sdk.Result{}
 }

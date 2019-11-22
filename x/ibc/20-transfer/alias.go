@@ -36,13 +36,12 @@ var (
 )
 
 type (
-	Keeper           = keeper.Keeper
-	BankKeeper       = types.BankKeeper
-	ChannelKeeper    = types.ChannelKeeper
-	ClientKeeper     = types.ClientKeeper
-	ConnectionKeeper = types.ConnectionKeeper
-	SupplyKeeper     = types.SupplyKeeper
-	MsgTransfer      = types.MsgTransfer
-	MsgRecvPacket    = types.MsgRecvPacket
-	PacketData       = types.PacketData
+	Keeper             = keeper.Keeper
+	BankKeeper         = types.BankKeeper
+	ChannelKeeper      = types.ChannelKeeper
+	ClientKeeper       = types.ClientKeeper
+	ConnectionKeeper   = types.ConnectionKeeper
+	SupplyKeeper       = types.SupplyKeeper
+	MsgTransfer        = types.MsgTransfer
+	PacketDataTransfer = types.PacketDataTransfer
 )

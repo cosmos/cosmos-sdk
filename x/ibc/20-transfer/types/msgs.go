@@ -3,9 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -76,15 +73,17 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 
+// XXX: migrate to channeltypes.MsgPacket
+/*
 type MsgRecvPacket struct {
-	Packet channelexported.PacketI `json:"packet" yaml:"packet"`
-	Proofs []commitment.Proof      `json:"proofs" yaml:"proofs"`
-	Height uint64                  `json:"height" yaml:"height"`
-	Signer sdk.AccAddress          `json:"signer" yaml:"signer"`
+	Packet channelexported.Packet `json:"packet" yaml:"packet"`
+	Proofs []commitment.Proof     `json:"proofs" yaml:"proofs"`
+	Height uint64                 `json:"height" yaml:"height"`
+	Signer sdk.AccAddress         `json:"signer" yaml:"signer"`
 }
 
 // NewMsgRecvPacket creates a new MsgRecvPacket instance
-func NewMsgRecvPacket(packet channelexported.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+func NewMsgRecvPacket(packet channelexported.Packet, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
 	return MsgRecvPacket{
 		Packet: packet,
 		Proofs: proofs,
@@ -135,3 +134,4 @@ func (msg MsgRecvPacket) GetSignBytes() []byte {
 func (msg MsgRecvPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
+*/

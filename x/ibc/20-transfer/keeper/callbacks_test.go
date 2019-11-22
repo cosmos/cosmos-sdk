@@ -57,19 +57,13 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packetSeq := uint64(1)
 	packetTimeout := uint64(100)
 
-	packetDataBz := []byte("invaliddata")
-	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
-	suite.Error(err) // invalid packet data
-
 	// when the source is true
 	source := true
 
-	packetData := types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData := types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
+	packet := channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
+	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetDataI)
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)

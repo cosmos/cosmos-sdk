@@ -3,10 +3,36 @@ package transfer
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// HandleMsgTransfer defines the sdk.Handler for MsgTransfer
-func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Result) {
+func NewHandler(k Keeper) sdk.Handler {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		switch msg := msg.(type) {
+		case MsgTransfer:
+			return handleMsgTransfer(ctx, k, msg)
+		case channeltypes.MsgPacket:
+			switch data := msg.PacketDataI.(type) {
+			case PacketDataTransfer: // i.e fulfills the PacketDataI interface
+				return handlePacketDataTransfer(ctx, k, msg, data)
+			default:
+				return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+			}
+		case channeltypes.MsgTimeout:
+			switch data := msg.PacketDataI.(type) {
+			case PacketDataTransfer:
+				return handleTimeoutDataTransfer(ctx, k, msg, data)
+			default:
+				return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+			}
+		default:
+			return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+		}
+	}
+}
+
+func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
 	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -24,13 +50,12 @@ func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Resu
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-// HandleMsgRecvPacket defines the sdk.Handler for MsgRecvPacket
-func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (res sdk.Result) {
-	err := k.ReceivePacket(ctx, msg.Packet, msg.Proofs[0], msg.Height)
+func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer) sdk.Result {
+	packet := msg.Packet
+	err := k.ReceiveTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		// TODO: Source chain sent invalid packet, shutdown channel
 	}
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -39,5 +64,17 @@ func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (res sdk.
 		),
 	)
 
+	// packet receiving should not fail
 	return sdk.Result{Events: ctx.EventManager().Events()}
+}
+
+func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) sdk.Result {
+	packet := msg.Packet
+	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
+	if err != nil {
+		// This chain sent invalid packet
+		panic(err)
+	}
+	// packet timeout should not fail
+	return sdk.Result{}
 }

@@ -15,8 +15,8 @@ import (
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	channelutils "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // IBC transfer flags
@@ -132,7 +132,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 			}
 			viper.Set(flags.FlagChainID, cid1)
 
-			msg := types.NewMsgRecvPacket(packetRes.Packet, []commitment.Proof{packetRes.Proof}, packetRes.ProofHeight, cliCtx.GetFromAddress())
+			msg := channeltypes.NewMsgPacket(packetRes.Packet, packetRes.Proof, packetRes.ProofHeight, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

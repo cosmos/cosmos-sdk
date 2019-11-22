@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
@@ -126,15 +125,9 @@ func (k Keeper) OnChanCloseConfirm(
 // nolint: unused
 func (k Keeper) OnRecvPacket(
 	ctx sdk.Context,
-	packet channelexported.PacketI,
+	packet channelexported.Packet,
+	data types.PacketDataTransfer,
 ) error {
-	var data types.PacketData
-
-	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
 	return k.ReceiveTransfer(
 		ctx, packet.GetSourcePort(), packet.GetSourceChannel(),
 		packet.GetDestPort(), packet.GetDestChannel(), data,
@@ -144,7 +137,7 @@ func (k Keeper) OnRecvPacket(
 // nolint: unused
 func (k Keeper) OnAcknowledgePacket(
 	ctx sdk.Context,
-	packet channelexported.PacketI,
+	packet channelexported.Packet,
 	acknowledgement []byte,
 ) error {
 	// no-op
@@ -154,15 +147,9 @@ func (k Keeper) OnAcknowledgePacket(
 // nolint: unused
 func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
-	packet channelexported.PacketI,
+	packet channelexported.Packet,
+	data types.PacketDataTransfer,
 ) error {
-	var data types.PacketData
-
-	err := k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
 	// check the denom prefix
 	prefix := types.GetDenomPrefix(packet.GetSourcePort(), packet.GetSourceChannel())
 	coins := make(sdk.Coins, len(data.Amount))
@@ -180,7 +167,7 @@ func (k Keeper) OnTimeoutPacket(
 	}
 
 	// mint from supply
-	err = k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+	err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
 	if err != nil {
 		return err
 	}
@@ -189,6 +176,6 @@ func (k Keeper) OnTimeoutPacket(
 }
 
 // nolint: unused
-func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
+func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.Packet) {
 	panic("can't happen, only unordered channels allowed")
 }

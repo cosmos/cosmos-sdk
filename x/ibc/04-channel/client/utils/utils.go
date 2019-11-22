@@ -33,14 +33,23 @@ func QueryPacket(
 	destPortID := channel.Channel.Counterparty.PortID
 	destChannelID := channel.Channel.Counterparty.ChannelID
 
+	var data types.PacketDataI
+	// XXX: commitment data is stored, not the data
+	// but we are unmarshalling the commitment in a json format
+	// because the current ICS 20 implementation uses json commitment form
+	// need to be changed to use external source of packet
+	err = ctx.Codec.UnmarshalJSON(res.Value, &data)
+	if err != nil {
+		return packetRes, err
+	}
+
 	packet := types.NewPacket(
+		data,
 		sequence,
-		timeout,
 		portID,
 		channelID,
 		destPortID,
 		destChannelID,
-		res.Value,
 	)
 
 	// FIXME: res.Height+1 is hack, fix later

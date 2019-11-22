@@ -223,8 +223,7 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 
 func (s *TestSuite) VerifySet() {
 	s.T().Log("Verify if the skip upgrade has been set")
-	skipUpgrade := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
-	s.Require().NotNil(skipUpgrade)
+	s.Require().NotNil(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 }
 
 func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
@@ -233,8 +232,7 @@ func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
 }
 
 func (s *TestSuite) TestContains() {
-	skipUpgrade := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
-	skipUpgradeHeights := s.keeper.ConvertIntArrayToInt64(skipUpgrade)
+	skipUpgradeHeights := s.keeper.ConvertIntArrayToInt64(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 	s.T().Log("case where array contains the element")
 	present := s.keeper.Contains(skipUpgradeHeights, -1)
 	s.Require().True(present)
@@ -256,8 +254,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
 	s.VerifySet()
 
-	skipUpgradeHeights := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
-	s.VerifyConversion(skipUpgradeHeights)
+	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 
 	for i = 1; i <= s.ctx.BlockHeight(); i++ {
 		newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + i)
@@ -292,8 +289,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingOne() {
 	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1)})
 	s.VerifySet()
 
-	skipUpgradeHeights := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
-	s.VerifyConversion(skipUpgradeHeights)
+	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 
 	for i = 1; i < s.ctx.BlockHeight(); i++ {
 		//To execute begin block multiple times with a new block height
@@ -326,8 +322,7 @@ func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
 	viper.Set(s.FlagUnsafeSkipUpgrade, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
 	s.VerifySet()
 
-	skipUpgradeHeights := viper.GetIntSlice(s.FlagUnsafeSkipUpgrade)
-	s.VerifyConversion(skipUpgradeHeights)
+	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 
 	for i = 1; i < s.ctx.BlockHeight(); i++ {
 		newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + i)

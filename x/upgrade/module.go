@@ -127,8 +127,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	skipUpgradeHeightsInt := viper.GetIntSlice(FlagUnsafeSkipUpgrade)
-	skipUpgradeHeightsInt64 := am.keeper.ConvertIntArrayToInt64(skipUpgradeHeightsInt)
+	skipUpgradeHeightsInt64 := am.keeper.ConvertIntArrayToInt64(viper.GetIntSlice(FlagUnsafeSkipUpgrade))
 	BeginBlocker(am.keeper, ctx, req, skipUpgradeHeightsInt64)
 }
 

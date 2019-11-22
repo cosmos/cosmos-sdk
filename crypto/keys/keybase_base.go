@@ -53,7 +53,7 @@ func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 	}
 }
 
-// newBaseKeybase generates the base keybase with defaulting to tendermint SECP key type
+// newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
 	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
@@ -65,6 +65,7 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
+// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
 func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
 	return secp256k1.PrivKeySecp256k1(bz)
 }

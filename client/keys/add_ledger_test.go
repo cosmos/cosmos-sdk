@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/libs/cli"
@@ -35,7 +34,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
 	cmd := AddKeyCommand()
-	assert.NotNil(t, cmd)
+	require.NotNil(t, cmd)
 
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)

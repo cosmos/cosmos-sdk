@@ -130,6 +130,7 @@ that allows for arbitrary vesting periods.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command
 
 ### Improvements
 

@@ -63,14 +63,13 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packetData := types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
 	packet := channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetDataI)
+	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
-	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData = types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
+	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
@@ -82,24 +81,22 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	// when the source is false
 	source = false
 
-	packetData = types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData = types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
+	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
-	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
+	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
@@ -110,31 +107,24 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	packetSeq := uint64(1)
 	packetTimeout := uint64(100)
 
-	packetDataBz := []byte("invaliddata")
-	packet := channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
-	err := suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
-	suite.Error(err) // invalid packet data
-
 	// when the source is true
 	source := true
 
-	packetData := types.NewPacketData(testPrefixedCoins2, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData := types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
+	packet := channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
+	err := suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
-	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
+	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	senderCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Sender)
@@ -146,12 +136,11 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	// when the source is false
 	source = false
 
-	packetData = types.NewPacketData(testPrefixedCoins1, testAddr1, testAddr2, source)
-	packetDataBz, _ = suite.cdc.MarshalBinaryBare(packetData)
-	packet = channel.NewPacket(packetSeq, packetTimeout, testPort1, testChannel1, testPort2, testChannel2, packetDataBz)
+	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
+	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Sender, sdk.Coins{})
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet)
+	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)

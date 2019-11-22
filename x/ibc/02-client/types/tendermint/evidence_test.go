@@ -2,7 +2,6 @@ package tendermint
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/stretchr/testify/require"
 
@@ -101,8 +100,6 @@ func (suite *TendermintTestSuite) TestValidateBasic() {
 				ChainID: "gaia",
 			},
 			func(ev *Evidence) {
-				fmt.Printf("ValidatorSet: %v\n\n", wrongValSet)
-				fmt.Printf("Signer: %v\n\n", altSigners)
 				wrongVoteSet := tmtypes.NewVoteSet("gaia", ev.Header2.Height, 1, tmtypes.PrecommitType, wrongValSet)
 				var err error
 				ev.Header2.Commit, err = tmtypes.MakeCommit(ev.Header2.Commit.BlockID, ev.Header2.Height, ev.Header2.Commit.Round(), wrongVoteSet, altSigners)
@@ -130,7 +127,6 @@ func (suite *TendermintTestSuite) TestValidateBasic() {
 		suite.Run(tc.name, func() {
 			// reset suite for each subtest
 			suite.SetupTest()
-			fmt.Println(tc.name)
 
 			tc.malleateEvidence(&tc.evidence)
 

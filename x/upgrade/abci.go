@@ -24,7 +24,6 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgra
 
 	if plan.ShouldExecute(ctx) {
 		//To make sure clear upgrade is executed at the same block
-
 		if k.Contains(skipUpgradeHeightArray, ctx.BlockHeight()) {
 			// If skip upgrade has been set, we clear the upgrade plan
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %s: %s", plan.Name, plan.DueAt(), plan.Info)

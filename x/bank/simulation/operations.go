@@ -17,20 +17,20 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSend                 = "op_weight_msg_send"
-	OpWeightSingleInputMsgMultiSend = "op_weight_single_input_msg_multisend"
+	OpWeightMsgSend      = "op_weight_msg_send"
+	OpWeightMsgMultiSend = "op_weight_msg_multisend"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
 	bk keeper.Keeper) simulation.WeightedOperations {
 
-	var weightMsgSend, weightSingleInputMsgMultiSend int
+	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) { weightMsgSend = 100 })
 
-	appParams.GetOrGenerate(cdc, OpWeightSingleInputMsgMultiSend, &weightSingleInputMsgMultiSend, nil,
-		func(_ *rand.Rand) { weightSingleInputMsgMultiSend = 10 })
+	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
+		func(_ *rand.Rand) { weightMsgMultiSend = 10 })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(
@@ -38,8 +38,8 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 			SimulateMsgSend(ak, bk),
 		),
 		simulation.NewWeigthedOperation(
-			weightSingleInputMsgMultiSend,
-			SimulateSingleInputMsgMultiSend(ak, bk),
+			weightMsgMultiSend,
+			SimulateMsgMultiSend(ak, bk),
 		),
 	}
 }

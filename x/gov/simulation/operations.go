@@ -177,14 +177,6 @@ func SimulateSubmitProposal(
 	}
 }
 
-// SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
-	return types.NewTextProposal(
-		simulation.RandStringOfLength(r, 140),
-		simulation.RandStringOfLength(r, 5000),
-	)
-}
-
 // SimulateMsgDeposit generates a MsgDeposit with random values.
 // nolint: funlen
 func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Operation {

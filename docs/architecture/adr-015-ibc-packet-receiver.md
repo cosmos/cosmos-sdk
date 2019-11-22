@@ -43,6 +43,8 @@ type ProofVerificationDecorator struct {
 func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
   var flag bool
 
+  var portID, channelID string
+
   for _, msg := range tx.GetMsgs() {
     var err error
     switch msg := msg.(type) {
@@ -50,14 +52,35 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
       err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
     case channel.MsgPacket:
       err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+      if flag {
+        if msg.PortID != portID || msg.channelID != channelID {
+          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
+        }
+        portID = msg.PortID
+        channelID = msg.ChannelID
+      }
       flag = true
       // Store the empty acknowledgement for convinience
       pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, []byte{})
     case chanel.MsgAcknowledgement:
       err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+      if flag {
+        if msg.PortID != portID || msg.channelID != channelID {
+          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
+        }
+        portID = msg.PortID
+        channelID = msg.ChannelID
+      }
       flag = true
     case channel.MsgTimeoutPacket:
       err = pvr.channelKeeper.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+      if flag {
+        if msg.PortID != portID || msg.channelID != channelID {
+          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
+        }
+        portID = msg.PortID
+        channelID = msg.ChannelID
+      }
       flag = true
     default:
       if flag {
@@ -154,42 +177,46 @@ Example application-side usage:
 func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
+    case MsgTransfer:
+      return handleMsgTransfer(ctx, k, msg)
     case ibc.MsgPacket:
-      return k.port.WriteAcknowledgement(ctx, msg, func(ctx sdk.Context, p ibc.PacketDataI) sdk.Result {
-        switch packet := p.(type) {
-        case CustomPacket: // i.e fulfills the PacketDataI interface
-          return handleCustomPacket(ctx, k, packet)
-        }
-      })
-    case ibc.MsgAcknowledgement:
-      switch ack := msg.Acknowledgement.Data.(type) {
-      case CustomAcknowledgement:
-        return handleCustomAcknowledgement(ctx, k, msg.Acknowledgement)
+      switch data := msg.Packet.Data.(type) {
+      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
+        return handlePacketDataTransfer(ctx, k, msg.Packet, data)
       }
     case ibc.MsgTimeoutPacket:
       switch packet := msg.Packet.Data.(type) {
-      case CustomPacket:
-        return handleCustomTimeoutPacket(ctx, k, msg.Packet)
+      case PacketDataTransfer:
+        return handleTimeoutPacketDataTransfer(ctx, k, msg.Packet)
       }
     }
   }
 }
 
-func handleCustomPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
-  if failureCondition {
-    return AckInvalidPacketContent(k.codespace, []byte{packet.Error()})
+func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
+  err := k.SendTransfer(ctx,msg.PortID, msg.ChannelID, msg.Amount, msg.Sender, msg.Receiver)
+  if err != nil {
+    return sdk.ResultFromError(err)
   }
-  // Handler logic
   return sdk.Result{}
 }
 
-func handleCustomAcknowledgement(ctx sdk.Context, k Keeper, ack MyAcknowledgement) sdk.Result {
-  // Handler logic
+func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data PacketDataTransfer) sdk.Result {
+  err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
+	if err != nil {
+    // Source chain sent invalid packet, shutdown channel
+  }
+  // packet receiving should not fail
   return sdk.Result{}
 }
 
 func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
-  // Handler logic
+  err := k.RecoverTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
+  if err != nil {
+    // This chain sent invalid packet
+    panic(err)
+  }
+  // packet timeout should not fail
   return sdk.Result{}
 }
 ```

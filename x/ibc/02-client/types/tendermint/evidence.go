@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"fmt"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -68,19 +70,31 @@ func (ev Evidence) ValidateBasic() error {
 		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "Headers commit to same blockID")
 	}
 
-	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
-	voteSet1 := tmtypes.CommitToVoteSet(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet)
-	voteSet2 := tmtypes.CommitToVoteSet(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet)
-
-	blockID1, ok1 := voteSet1.TwoThirdsMajority()
-	blockID2, ok2 := voteSet2.TwoThirdsMajority()
-
-	// Check that ValidatorSet did indeed commit to two different headers
-	if !ok1 || !blockID1.Equals(ev.Header1.Commit.BlockID) {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "ValidatorSet did not commit to Header1")
+	if err1 := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err1 != nil {
+		return err1
 	}
-	if !ok2 || !blockID2.Equals(ev.Header2.Commit.BlockID) {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "ValidatorSet did not commit to Header2")
+	if err2 := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err2 != nil {
+		return err2
+	}
+
+	return nil
+}
+
+func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid commit: %v", r))
+		}
+	}()
+
+	// Convert commits to vote-sets given the validator set so we can check if they both have 2/3 power
+	voteSet := tmtypes.CommitToVoteSet(chainID, commit, valSet)
+
+	blockID, ok := voteSet.TwoThirdsMajority()
+
+	// Check that ValidatorSet did indeed commit to blockID in Commit
+	if !ok || !blockID.Equals(commit.BlockID) {
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "ValidatorSet did not commit to Header1")
 	}
 
 	return nil

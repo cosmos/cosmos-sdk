@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	validator := tmtypes.NewValidator(suite.privVal.GetPubKey(), 1)
 	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
-	suite.header = tendermint.MakeHeader(4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+	suite.header = tendermint.MakeHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	suite.consensusState = tendermint.ConsensusState{
 		ChainID:          testClientID,

@@ -24,7 +24,7 @@ func (suite *TendermintTestSuite) SetupTest() {
 	privVal := tmtypes.NewMockPV()
 	val := tmtypes.NewValidator(privVal.GetPubKey(), 10)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
-	suite.header = MakeHeader(4, valSet, valSet, []tmtypes.PrivValidator{privVal})
+	suite.header = MakeHeader("gaia", 4, valSet, valSet, []tmtypes.PrivValidator{privVal})
 	root := commitment.NewRoot(tmhash.Sum([]byte("my root")))
 
 	cs := ConsensusState{

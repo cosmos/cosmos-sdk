@@ -20,7 +20,7 @@ type ConsensusState struct {
 	ChainID          string                `json:"chain_id" yaml:"chain_id"`
 	Height           uint64                `json:"height" yaml:"height"` // NOTE: defined as 'sequence' in the spec
 	Root             commitment.RootI      `json:"root" yaml:"root"`
-	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml"validator_set"`
+	ValidatorSet     *tmtypes.ValidatorSet `json:"validator_set" yaml:"validator_set"`
 	NextValidatorSet *tmtypes.ValidatorSet `json:"next_validator_set" yaml:"next_validator_set"` // contains the PublicKey
 }
 

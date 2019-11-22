@@ -60,10 +60,10 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			suite.keeper.SetClientState(suite.ctx, clientState)
 		}, true},
 		{"past height", func() {
-			suite.header = tendermint.MakeHeader(2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+			suite.header = tendermint.MakeHeader("gaia", 2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 		}, true},
 		{"validatorHash incorrect", func() {
-			suite.header = tendermint.MakeHeader(4, altValSet, suite.valSet, altSigners)
+			suite.header = tendermint.MakeHeader("gaia", 4, altValSet, suite.valSet, altSigners)
 		}, true},
 		{"nextHash incorrect", func() {
 			suite.header.NextValidatorSet = altValSet

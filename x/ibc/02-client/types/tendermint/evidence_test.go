@@ -9,7 +9,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func (suite *TendermintTestSuite) TestValidateBasic() {
+func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	altPrivVal := tmtypes.NewMockPV()
 	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
 

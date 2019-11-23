@@ -189,29 +189,6 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	packetTimeout := uint64(100)
 	handler := transfer.NewHandler(suite.app.IBCKeeper.TransferKeeper)
 
-	// XXX
-	/*
-			packetDataBz := []byte("invaliddata")
-			packet := channel.NewPacket(packetData, packetSeq, testPort2, testChannel2, testPort1, testChannel1)
-
-			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
-			suite.updateClient()
-			proofPacket, proofHeight := suite.queryProof(packetCommitmentPath)
-
-			msg := channel.NewMsgPacket(packet, proofPacket, uint64(proofHeight), testAddr1)
-			suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
-			res := handler(suite.ctx, msg)
-			suite.False(res.Code.IsOK(), "%v", res) // packet membership verification failed due to invalid counterparty packet commitment
-
-			suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetData.GetCommitment())
-			suite.updateClient()
-			proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-
-		msg = channel.NewMsgPacket(packet, proofPacket, uint64(proofHeight), testAddr1)
-		res = handler(suite.ctx, msg)
-		suite.False(res.Code.IsOK(), "%v", res) // invalid packet data
-	*/
-
 	// test when the source is true
 	source := true
 

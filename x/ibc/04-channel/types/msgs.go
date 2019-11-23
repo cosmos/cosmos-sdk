@@ -121,6 +121,9 @@ func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
 	if msg.ProofInit == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
@@ -188,6 +191,9 @@ func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
 	if msg.ProofTry == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.ProofTry.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
@@ -249,6 +255,9 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
 	}
 	if msg.ProofAck == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.ProofAck.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
@@ -361,6 +370,9 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
 	if msg.ProofInit == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
@@ -408,8 +420,14 @@ func (msg MsgPacket) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
 	}
 
 	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
@@ -453,8 +471,14 @@ func (msg MsgTimeout) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
 	}
 
 	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
@@ -508,6 +532,10 @@ func (msg MsgAcknowledgement) ValidateBasic() sdk.Error {
 
 	if err := msg.Acknowledgement.ValidateBasic(); err != nil {
 		return sdk.ConvertError(err)
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
 	}
 
 	return nil

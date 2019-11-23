@@ -14,7 +14,6 @@ func TestPacketDataTransferValidation(t *testing.T) {
 		NewPacketDataTransfer(negativeCoins, addr1, addr2, false, 100),    // amount contains negative coin
 		NewPacketDataTransfer(coins, emptyAddr, addr2, false, 100),        // missing sender address
 		NewPacketDataTransfer(coins, addr1, emptyAddr, false, 100),        // missing recipient address
-		NewPacketDataTransfer(coins, addr1, addr2, true, 0),               // invalid timeout
 	}
 
 	testCases := []struct {
@@ -27,7 +26,6 @@ func TestPacketDataTransferValidation(t *testing.T) {
 		{testPacketDataTransfer[2], false, "amount contains negative coin"},
 		{testPacketDataTransfer[3], false, "missing sender address"},
 		{testPacketDataTransfer[4], false, "missing recipient address"},
-		{testPacketDataTransfer[5], false, "invalid timeout"},
 	}
 
 	for i, tc := range testCases {

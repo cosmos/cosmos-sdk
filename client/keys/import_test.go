@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,12 +13,22 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
+	runningUnattended := isRunningUnattended()
 	importKeyCommand := importKeyCommand()
+	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
 
 	// Now add a temporary keybase
 	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(flags.FlagHome, kbHome)
+
+	if !runningUnattended {
+		kb, err := NewKeyringFromHomeFlag(mockIn)
+		require.NoError(t, err)
+		defer func() {
+			kb.Delete("keyname1", "", false)
+		}()
+	}
 
 	keyfile := filepath.Join(kbHome, "key.asc")
 	armoredKey := `-----BEGIN TENDERMINT PRIVATE KEY-----
@@ -34,7 +43,10 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
 
 	// Now enter password
-	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
-	mockIn.Reset("123456789\n")
-	assert.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
+	if runningUnattended {
+		mockIn.Reset("123456789\n12345678\n12345678\n")
+	} else {
+		mockIn.Reset("123456789\n")
+	}
+	require.NoError(t, runImportCmd(importKeyCommand, []string{"keyname1", keyfile}))
 }

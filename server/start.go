@@ -78,7 +78,7 @@ which accepts a path for the resulting pprof file.
 		FlagMinGasPrices, "",
 		"Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)",
 	)
-	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrade, []int{-1}, "Skip current software upgrade to continue the old binary")
+	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrade, []int{}, "Skip current software upgrade to continue the old binary")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Bool(FlagInterBlockCache, true, "Enable inter-block caching")

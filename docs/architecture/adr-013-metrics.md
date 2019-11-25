@@ -53,6 +53,16 @@ OpenCensus and Open tracing are being merged into Open telemetry.
 
 (TBD)
 
+| Name                  |   type    | Description |
+| --------------------- | :-------: | ----------: |
+| iavl_io               |  Gauage   |             |
+| db_io                 |  Gauage   |             |
+| txs                   | histogram |             |
+| delegations (staking) | histogram |             |
+| Rewards (distr)       | histogram |             |
+| Sends (bank)          | histogram |             |
+| Supply (supply)       |  Counter  |             |
+
 ### B
 
 Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to support registering of metrics could be the best path forward.

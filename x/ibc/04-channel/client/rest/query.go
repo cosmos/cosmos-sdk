@@ -42,7 +42,9 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 		var channel types.Channel
 		if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
 		}
+
 		cliCtx = cliCtx.WithHeight(res.Height)
 		rest.PostProcessResponse(w, cliCtx, types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height))
 	}

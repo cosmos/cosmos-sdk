@@ -2053,7 +2053,12 @@ paths:
               client_id:
                 type: string
               consensus_state:
-                $ref: "#/definitions/ConsensusState"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/ConsensusState"
       responses:
         200:
           description: OK
@@ -2212,10 +2217,7 @@ paths:
               counterparty_connection_id:
                 type: string
               counterparty_prefix:
-                type: object
-                properties:
-                  key_prefix:
-                    type: string
+                $ref: "#/definitions/Prefix"
       responses:
         200:
           description: OK
@@ -2250,18 +2252,25 @@ paths:
               counterparty_connection_id:
                 type: string
               counterparty_prefix:
-                type: object
-                properties:
-                  key_prefix:
-                    type: string
+                $ref: "#/definitions/Prefix"
               counterparty_versions:
                 type: array
                 items:
                   type: string
               proof_init:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_consensus:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
               consensus_height:
@@ -2298,9 +2307,19 @@ paths:
               base_req:
                 $ref: "#/definitions/BaseReq"
               proof_try:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_consensus:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
               consensus_height:
@@ -2341,7 +2360,12 @@ paths:
               base_req:
                 $ref: "#/definitions/BaseReq"
               proof_ack:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
       responses:
@@ -2368,11 +2392,11 @@ paths:
           type: string
           x-example: ibcmoduleport
         - in: path
-          name: connection-id
-          description: Connection ID
+          name: channel-id
+          description: Channel ID
           required: true
           type: string
-          x-example: ibcconnectionid
+          x-example: ibcchannelid
         - in: query
           name: prove
           description: Proof of result
@@ -2462,8 +2486,15 @@ paths:
                 type: string
               counterparty_channel_id:
                 type: string
+              counterparty_version:
+                type: string
               proof_init:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
       responses:
@@ -2506,7 +2537,12 @@ paths:
               counterparty_version:
                 type: string
               proof_try:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
       responses:
@@ -2549,7 +2585,12 @@ paths:
               base_req:
                 $ref: "#/definitions/BaseReq"
               proof_ack:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
       responses:
@@ -2629,7 +2670,12 @@ paths:
               base_req:
                 $ref: "#/definitions/BaseReq"
               proof_init:
-                $ref: "#/definitions/Proof"
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    $ref: "#/definitions/Proof"
               proof_height:
                 type: integer
       responses:
@@ -2641,7 +2687,7 @@ paths:
           description: Invalid port id or channel id
         500:
           description: Internal Server Error
-  /ibc/ports/{port-id}/channels/{channel-id}/next-sequence-revc:
+  /ibc/ports/{port-id}/channels/{channel-id}/next-sequence-recv:
     get:
       summary: Query next sequence receive
       tags:
@@ -2670,7 +2716,7 @@ paths:
           description: Invalid port id or channel id
         500:
           description: Internal Server Error
-  /ibc/ibc/ports/{port-id}/channels/{channel-id}/transfer:
+  /ibc/ports/{port-id}/channels/{channel-id}/transfer:
     post:
       summary: Transfer token
       consumes:
@@ -2701,7 +2747,9 @@ paths:
               base_req:
                 $ref: "#/definitions/BaseReq"
               amount:
-                $ref: "#/definitions/Coin"
+                type: array
+                items:
+                  $ref: "#/definitions/Coin"
               receiver:
                 type: string
               source:
@@ -3402,6 +3450,24 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
+  IBCValidator:
+    type: object
+    properties:
+      address:
+        $ref: "#/definitions/ValidatorAddress"
+      pub_key:
+        type: object
+        properties:
+          type:
+            type: string
+          value:
+            type: string
+      voting_power:
+        type: string
+        example: "1000"
+      proposer_priority:
+        type: string
+        example: "1000"
   ConsensusState:
     type: object
     properties:
@@ -3416,17 +3482,32 @@ definitions:
   Root:
     type: object
     properties:
-      hash:
+      type:
         type: string
+      value:
+        type: object
+        properties:
+          hash:
+            type: string
+  Prefix:
+    type: object
+    properties:
+      type:
+        type: string
+      value:
+        type: object
+        properties:
+          key_prefix:
+            type: string
   ValidatorSet:
     type: object
     properties:
       validators:
         type: array
         items:
-          $ref: "#/definitions/TendermintValidator"
+          $ref: "#/definitions/IBCValidator"
       proposer:
-        $ref: "#/definitions/TendermintValidator"
+        $ref: "#/definitions/IBCValidator"
   ClientState:
     type: object
     properties:
@@ -3451,13 +3532,59 @@ definitions:
                   type: string
                 data:
                   type: string
+  Commit:
+    type: object
+    properties:
+      block_id:
+        $ref: "#/definitions/BlockID"
+      precommits:
+        type: array
+        items:
+          type: object
+          properties:
+            validator_address:
+              type: string
+            validator_index:
+              type: string
+              example: "0"
+            height:
+              type: string
+              example: "0"
+            round:
+              type: string
+              example: "0"
+            timestamp:
+              type: string
+              example: "2017-12-30T05:53:09.287+01:00"
+            type:
+              type: number
+              example: 2
+            block_id:
+              $ref: "#/definitions/BlockID"
+            signature:
+              type: string
+              example: "7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ=="
+  SignedHeader:
+    type: object
+    properties:
+      header:
+        $ref: "#/definitions/BlockHeader"
+      commit:
+        $ref: "#/definitions/Commit"
   Header:
     type: object
     properties:
-      validator_set:
-        $ref: "#/definitions/ValidatorSet"
-      next_validator_set:
-        $ref: "#/definitions/ValidatorSet"
+      type:
+        type: string
+      value:
+        type: object
+        properties:
+          SignedHeader:
+            $ref: "#/definitions/SignedHeader"
+          validator_set:
+            $ref: "#/definitions/ValidatorSet"
+          next_validator_set:
+            $ref: "#/definitions/ValidatorSet"
   ConnectionResponse:
     type: object
     properties:
@@ -3552,29 +3679,44 @@ definitions:
         type: string
       channel_id:
         type: string
-  Evidence:
-    type: object
-    properties:
-      chain_id:
-        type: string
-      val_power:
-        type: integer
-      total_power:
-        type: integer
   Packet:
     type: object
     properties:
-      sequence:
-        type: integer
-      timeout:
-        type: integer
-      source_port:
+      type:
         type: string
-      source_channel:
+      value:
+        type: object
+        properties:
+          sequence:
+            type: integer
+          timeout:
+            type: integer
+          source_port:
+            type: string
+          source_channel:
+            type: string
+          destination_port:
+            type: string
+          destination_channel:
+            type: string
+          data:
+            type: string
+  # TODO: DuplicateVoteEvidence
+  DuplicateVoteEvidence:
+    type: string
+  Evidence:
+    type: object
+    properties:
+      type:
         type: string
-      destination_port:
-        type: string
-      destination_channel:
-        type: string
-      data:
-        type: string
+      value:
+        type: object
+        properties:
+          DuplicateVoteEvidence:
+            $ref: "#/definitions/DuplicateVoteEvidence"
+          chain_id:
+            type: string
+          val_power:
+            type: integer
+          total_power:
+            type: integer

@@ -15,7 +15,7 @@ import (
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/next-sequence", RestChannelID, RestPortID), queryChannelHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/next-sequence-recv", RestPortID, RestChannelID), queryChannelHandlerFn(cliCtx)).Methods("GET")
 }
 
 func queryChannelHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {

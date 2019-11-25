@@ -86,7 +86,6 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	// Create alternative validator set with only altVal
 	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
 
-	signers := []tmtypes.PrivValidator{suite.privVal}
 	// Create signer array and ensure it is in same order as bothValSet
 	var bothSigners []tmtypes.PrivValidator
 	if bytes.Compare(altPrivVal.GetPubKey().Address(), suite.privVal.GetPubKey().Address()) == -1 {
@@ -108,7 +107,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			"misbehavior should pass",
 			&Evidence{
 				Header1: MakeHeader("gaia", 4, bothValSet, suite.valSet, bothSigners),
-				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, signers),
+				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
 				ChainID: "gaia",
 			},
 			"gaiamainnet",

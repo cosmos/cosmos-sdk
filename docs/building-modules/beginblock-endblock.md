@@ -5,7 +5,7 @@ synopsis: `BeginBlocker` and `EndBlocker` are optional methods module developers
 
 # BeginBlocker and EndBlocker
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Module Manager](./module-manager.md) {prereq}
 
@@ -33,6 +33,6 @@ and an example implementation of `EndBlocker` from the `staking` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/handler.go#L44-L96
 
-## Next
+## Next {hide}
 
 Learn about [`keeper`s](./keeper.md).

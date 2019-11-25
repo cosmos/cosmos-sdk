@@ -5,7 +5,7 @@ synopsis: A store is a data structure that holds the state of the application.
 
 # Store
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -234,6 +234,6 @@ When `Store.{Get, Set}()` is called, the store forwards the call to its parent, 
 
 When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
 
-## Next
+## Next {hide}
 
 Learn about [encoding](./encoding.md).

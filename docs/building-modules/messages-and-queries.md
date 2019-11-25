@@ -5,7 +5,7 @@ synopsis: `Message`s and `Queries` are the two primary objects handled by module
 
 # Messages and Queries
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Introduction to SDK Modules](./intro.md) {prereq}
 
@@ -70,6 +70,6 @@ See an example of `query` return types from the `nameservice` module:
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/types/querier.go#L5-L21
 
-## Next
+## Next {hide}
 
 Learn about [`handler`s](./handler.md).

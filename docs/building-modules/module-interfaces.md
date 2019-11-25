@@ -5,7 +5,7 @@ synopsis: This document details how to build CLI and REST interfaces for a modul
 
 # Module Interfaces
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 * [Building Modules Intro](./intro.md) {prereq}
 
@@ -162,6 +162,6 @@ A few things to note:
 * `"GET"` is the HTTP Request method. As to be expected, queries are typically GET requests. Transactions are typically POST and PUT requests.
 
 
-## Next
+## Next {hide}
 
 Read about the recommended [module structure](./structure.md).

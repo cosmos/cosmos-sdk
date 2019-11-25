@@ -3,9 +3,9 @@ order: 1
 synopsis: This document describes the core parts of a Cosmos SDK application. Throughout the document, a placeholder application named `app` will be used. 
 ---
 
-# Anatomy of an SDK Application
+# Anatomy of an SDK Application 
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [High-level overview of the architecture of an SDK application](../intro/sdk-app-architecture.md) {prereq}
 - [Cosmos SDK design overview](../intro/sdk-design.md) {prereq}
@@ -251,6 +251,6 @@ For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefil
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/Makefile
 
-## Next
+## Next {hide}
 
 Learn more about the [Lifecycle of a transaction](./tx-lifecycle.md).

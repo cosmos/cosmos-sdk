@@ -5,7 +5,7 @@ synopsis: The `context` is a data structure intended to be passed from function 
 
 # Context
 
-## Pre-requisites Readings
+## Pre-requisites Readings {hide}
 
 - [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}
@@ -112,6 +112,6 @@ changes - the result is returned immediately.
 4. If the process is running in [`deliverTxMode`](./baseapp.md#delivertx) and the result indicates
 a successful run over all the messages, the cached multistore is written back to the original.
 
-## Next
+## Next {hide}
 
 Learn about the [node client](./node.md)

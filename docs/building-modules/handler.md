@@ -5,7 +5,7 @@ synopsis: A `Handler` designates a function that processes [`message`s](./messag
 
 # Handlers
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Module Manager](./module-manager.md) {prereq}
 - [Messages and Queries](./messages-and-queries.md) {prereq}
@@ -71,6 +71,6 @@ Next is an example of how to return a `Result` from the `gov` module:
 
 For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/handler.go) from the nameservice tutorial. 
 
-## Next
+## Next {hide}
 
 Learn about [queriers](./querier.md). 

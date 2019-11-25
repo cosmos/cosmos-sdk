@@ -5,7 +5,7 @@ synopsis: Modules generally handle a subset of the state and, as such, they need
 
 # Module Genesis
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Module Manager](./module-manager.md) {prereq}
 - [Keepers](./keeper.md) {prereq}
@@ -54,6 +54,6 @@ See an example of `ExportGenesis` from the nameservice tutorial.
 
 +++ https://github.com/cosmos/sdk-tutorials/blob/86a27321cf89cc637581762e953d0c07f8c78ece/nameservice/x/nameservice/genesis.go#L46-L57
 
-## Next
+## Next {hide}
 
 Learn about [modules interfaces](#module-interfaces.md).

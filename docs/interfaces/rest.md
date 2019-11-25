@@ -5,12 +5,12 @@ synopsis: This document describes how to create a REST interface for an SDK **ap
 
 # REST Interface
 
-## Prerequisites
+## Prerequisites {hide}
 
 * [Query Lifecycle](./query-lifecycle.md) {prereq}
 * [Application CLI](./cli.md) {prereq}
 
-## Application REST Interface
+## Application REST Interface 
 
 Building the REST Interface for an application is done by [aggregating REST Routes](#registering-routes) defined in the application's modules. This interface is served by a REST Server [REST server](#rest-server), which route requests and output responses in the application itself. The SDK comes with its own REST Server by default. To enable it, the `rest.ServeCommand` command needs to be added as a subcommand of the `rootCmd` in the `main()` function of the [CLI interface](./cli.md):
 

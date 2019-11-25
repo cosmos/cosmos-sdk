@@ -3,9 +3,9 @@ order: 4
 synopsis: This document describes the default strategies to handle gas and fees within a Cosmos SDK application.
 ---
 
-# Gas and Fees
+# Gas and Fees 
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 
@@ -83,6 +83,6 @@ This enables developers to play with various types for the transaction of their 
 
 As explained above, the `anteHandler` returns a maximum limit of `gas` the transaction can consume during execution called `GasWanted`. The actual amount consumed in the end is denominated `GasUsed`, and we must therefore have `GasUsed =< GasWanted`. Both `GasWanted` and `GasUsed` are relayed to the underlying consensus engine when [`DeliverTx`](../core/baseapp.md#delivertx) returns. 
 
-## Next
+## Next {hide}
 
 Learn about [baseapp](../core/baseapp.md). 

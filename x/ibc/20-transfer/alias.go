@@ -45,5 +45,4 @@ type (
 	MsgTransfer      = types.MsgTransfer
 	MsgRecvPacket    = types.MsgRecvPacket
 	PacketData       = types.PacketData
-	PacketDataAlias  = types.PacketDataAlias
 )

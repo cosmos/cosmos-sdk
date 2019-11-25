@@ -26,6 +26,7 @@ var (
 	NewKeeper       = keeper.NewKeeper
 	ErrPortExists   = types.ErrPortExists
 	ErrPortNotFound = types.ErrPortNotFound
+	ErrInvalidPort  = types.ErrInvalidPort
 	PortPath        = types.PortPath
 	KeyPort         = types.KeyPort
 )

@@ -270,7 +270,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	//To ensure verification is being done only after both uprades are cleared
+	//To ensure verification is being done only after both upgrades are cleared
 	s.T().Log("Verify if both proposals are cleared")
 	s.VerifyCleared(s.ctx)
 	s.VerifyNotDone(s.ctx, "test")

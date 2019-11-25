@@ -32,7 +32,7 @@ const (
 	defaultMultiSigKeyName = "multi"
 )
 
-// ShowKeysCmd shows key info for a key name
+// ShowKeysCmd shows key information for a given key name.
 func ShowKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [name [name...]]",

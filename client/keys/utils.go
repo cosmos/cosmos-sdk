@@ -27,13 +27,15 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
+// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration. Keybase
+// options can be applied when generating this new Keybase.
 func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	rootDir := viper.GetString(flags.FlagHome)
 	return NewKeyBaseFromDir(rootDir, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keybase at a particular dir.
+// NewKeyBaseFromDir initializes a keybase at a particular dir. Keybase
+// options can be applied when generating this new Keybase.
 func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
@@ -41,13 +43,15 @@ func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
-// NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
+// NewKeyBaseFromHomeFlag initializes a keyring based on configuration. Keybase
+// options can be applied when generating this new Keybase.
 func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
 }
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir. It generates a test keyring
-// if the 'COSMOS_SDK_TEST_KEYRING' environment variable is present.
+// if the 'COSMOS_SDK_TEST_KEYRING' environment variable is present. Keybase
+// options can be applied when generating this new Keybase.
 func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
 		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)

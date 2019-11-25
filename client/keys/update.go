@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-// UpdateKeyCommand changes the password of a key in the keybase
+// UpdateKeyCommand changes the password of a key in the keybase.
+// It takes no effect on keys managed by new the keyring-based keybase implementation.
 func UpdateKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",

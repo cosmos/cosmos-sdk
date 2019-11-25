@@ -37,7 +37,8 @@ type keyringKeybase struct {
 
 var maxPassphraseEntryAttempts = 3
 
-// NewKeyring creates a new instance of a keyring.
+// NewKeyring creates a new instance of a keyring. Keybase
+// options can be applied when generating this new Keybase.
 func NewKeyring(
 	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
 ) (Keybase, error) {

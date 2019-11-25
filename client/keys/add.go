@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 
 	bip39 "github.com/bartekn/go-bip39"
@@ -36,7 +37,7 @@ const (
 	DefaultKeyPass = "12345678"
 )
 
-// AddKeyCommand defines a keybase command to add a generated or recovered private key to keybase
+// AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
 func AddKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
@@ -76,21 +77,22 @@ the flag --nosort is set.
 	return cmd
 }
 
-func getKeybase(cmd *cobra.Command, dryrun bool) (keys.Keybase, error) {
+func getKeybase(cmd *cobra.Command, dryrun bool, buf io.Reader) (keys.Keybase, error) {
 	if dryrun {
 		return keys.NewInMemory(), nil
 	}
 
-	return NewKeyringFromHomeFlag(cmd.InOrStdin())
+	return NewKeyringFromHomeFlag(buf)
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
-	kb, err := getKeybase(cmd, viper.GetBool(flagDryRun))
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := getKeybase(cmd, viper.GetBool(flagDryRun), inBuf)
 	if err != nil {
 		return err
 	}
 
-	return RunAddCmd(cmd, args, kb)
+	return RunAddCmd(cmd, args, kb, inBuf)
 }
 
 /*
@@ -102,10 +104,9 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase) error {
+func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.Reader) error {
 	var err error
 
-	inBuf := bufio.NewReader(cmd.InOrStdin())
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)

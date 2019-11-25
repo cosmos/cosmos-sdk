@@ -46,7 +46,7 @@ type (
 	}
 )
 
-// WithKeygenFunc applies an overridden key generation function to generate the private key
+// WithKeygenFunc applies an overridden key generation function to generate the private key.
 func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 	return func(o *kbOptions) {
 		o.keygenFunc = f

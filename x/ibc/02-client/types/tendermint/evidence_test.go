@@ -3,8 +3,6 @@ package tendermint
 import (
 	"bytes"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -127,9 +125,9 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 			err := tc.evidence.ValidateBasic()
 
 			if tc.expErr {
-				require.NotNil(suite.T(), err, "ValidateBasic did not throw error for invalid evidence")
+				suite.Error(err, "ValidateBasic did not throw error for invalid evidence")
 			} else {
-				require.Nil(suite.T(), err, "ValidateBasic returned error on valid evidence: %s", err)
+				suite.NoError(err, "ValidateBasic returned error on valid evidence: %s", err)
 			}
 		})
 	}

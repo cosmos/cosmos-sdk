@@ -3,7 +3,6 @@ package tendermint
 import (
 	"bytes"
 
-	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -71,7 +70,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			if tc.expErr {
 				suite.Error(err, "Invalid Misbehaviour passed ValidateBasic")
 			} else {
-				require.Nil(suite.T(), err, "Valid Misbehaviour failed ValidateBasic: %v", err)
+				suite.NoError(err, "Valid Misbehaviour failed ValidateBasic: %v", err)
 			}
 		})
 	}

@@ -154,35 +154,3 @@ func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, e
 	clientState.Frozen = true
 	return clientState, nil
 }
-
-// VerifyClientConsensusState verifies a proof of the consensus state of the
-// specified client stored on the target machine.
-func (k Keeper) VerifyClientConsensusState(
-	ctx sdk.Context,
-	clientState types.State,
-	height uint64, // sequence
-	prefix commitment.PrefixI,
-	proof commitment.ProofI,
-	consensusState exported.ConsensusState,
-) (bool, error) {
-	if clientState.Frozen {
-		return false, errors.ErrClientFrozen(k.codespace, clientState.ID)
-	}
-
-	path, err := commitment.ApplyPrefix(prefix, types.ConsensusStatePath(clientState.ID))
-	if err != nil {
-		return false, err
-	}
-
-	root, found := k.GetVerifiedRoot(ctx, clientState.ID, height)
-	if !found {
-		return false, errors.ErrRootNotFound(k.codespace)
-	}
-
-	bz, err := k.cdc.MarshalBinaryBare(consensusState)
-	if err != nil {
-		return false, err
-	}
-
-	return proof.VerifyMembership(root, path, bz), nil
-}

@@ -42,6 +42,7 @@ type Header interface {
 // updating the consensusState at a given height
 type Committer interface {
 	ClientType() ClientType
+	GetHeight() uint64
 }
 
 // ClientType defines the type of the consensus algorithm

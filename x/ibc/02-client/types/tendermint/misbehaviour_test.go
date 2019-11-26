@@ -50,8 +50,8 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 		{
 			"invalid ClientID",
 			&Evidence{
-				Header1: MakeHeader("gaia123??", 4, suite.valSet, suite.valSet, signers),
-				Header2: MakeHeader("gaia123?", 4, suite.valSet, suite.valSet, signers),
+				Header1: MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
+				Header2: MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
 				ChainID: "gaia123?",
 			},
 			"gaia123?",
@@ -96,55 +96,56 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
+	committer := Committer{
+		ValidatorSet:   suite.valSet,
+		Height:         3,
+		NextValSetHash: suite.valSet.Hash(),
+	}
+
 	testCases := []struct {
-		name      string
-		evidence  *Evidence
-		clientID  string
-		committer Committer
-		expErr    bool
+		name     string
+		evidence *Evidence
+		clientID string
+		expErr   bool
 	}{
 		{
 			"misbehavior should pass",
 			&Evidence{
-				Header1: MakeHeader("gaia", 4, bothValSet, suite.valSet, bothSigners),
-				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
+				Header1: MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
+				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID: "gaia",
 			},
 			"gaiamainnet",
-			Committer{suite.valSet},
 			false,
 		},
 		{
 			"first valset has too much change",
 			&Evidence{
-				Header1: MakeHeader("gaia", 4, altValSet, bothValSet, altSigners),
-				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
+				Header1: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID: "gaia",
 			},
 			"gaiamainnet",
-			Committer{suite.valSet},
 			true,
 		},
 		{
 			"second valset has too much change",
 			&Evidence{
-				Header1: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
-				Header2: MakeHeader("gaia", 4, altValSet, bothValSet, altSigners),
+				Header1: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID: "gaia",
 			},
 			"gaiamainnet",
-			Committer{suite.valSet},
 			true,
 		},
 		{
 			"both valsets have too much change",
 			&Evidence{
-				Header1: MakeHeader("gaia", 4, altValSet, altValSet, altSigners),
-				Header2: MakeHeader("gaia", 4, altValSet, bothValSet, altSigners),
+				Header1: MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
+				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID: "gaia",
 			},
 			"gaiamainnet",
-			Committer{suite.valSet},
 			true,
 		},
 	}
@@ -156,7 +157,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 				ClientID: tc.clientID,
 			}
 
-			err := CheckMisbehaviour(tc.committer, misbehaviour)
+			err := CheckMisbehaviour(committer, misbehaviour)
 
 			if tc.expErr {
 				require.NotNil(suite.T(), err, "CheckMisbehaviour passed unexpectedly")

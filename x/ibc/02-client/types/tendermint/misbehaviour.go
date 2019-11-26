@@ -75,11 +75,11 @@ func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 	// less than or equal to evidence height
 	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header1.ValidatorSet, m.Evidence.ChainID,
 		m.Evidence.Header1.Commit.BlockID, m.Evidence.Header1.Height, m.Evidence.Header1.Commit); err != nil {
-		return err
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set in Header1 has too much change from last known committer: %v", err))
 	}
 	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header2.ValidatorSet, m.Evidence.ChainID,
 		m.Evidence.Header2.Commit.BlockID, m.Evidence.Header2.Height, m.Evidence.Header2.Commit); err != nil {
-		return err
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set in Header2 has too much change from last known committer: %v", err))
 	}
 
 	return nil

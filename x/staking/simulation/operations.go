@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -35,19 +36,34 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
-		func(_ *rand.Rand) { weightMsgCreateValidator = 100 })
+		func(_ *rand.Rand) {
+			weightMsgCreateValidator = appsimparams.DefaultWeightMsgCreateValidator
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgEditValidator, &weightMsgEditValidator, nil,
-		func(_ *rand.Rand) { weightMsgEditValidator = 5 })
+		func(_ *rand.Rand) {
+			weightMsgEditValidator = appsimparams.DefaultWeightMsgEditValidator
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDelegate, &weightMsgDelegate, nil,
-		func(_ *rand.Rand) { weightMsgDelegate = 100 })
+		func(_ *rand.Rand) {
+			weightMsgDelegate = appsimparams.DefaultWeightMsgDelegate
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgUndelegate, &weightMsgUndelegate, nil,
-		func(_ *rand.Rand) { weightMsgUndelegate = 100 })
+		func(_ *rand.Rand) {
+			weightMsgUndelegate = appsimparams.DefaultWeightMsgUndelegate
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
-		func(_ *rand.Rand) { weightMsgBeginRedelegate = 100 })
+		func(_ *rand.Rand) {
+			weightMsgBeginRedelegate = appsimparams.DefaultWeightMsgBeginRedelegate
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(

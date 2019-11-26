@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -33,10 +34,16 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
-		func(_ *rand.Rand) { weightMsgDeposit = 100 })
+		func(_ *rand.Rand) {
+			weightMsgDeposit = appsimparams.DefaultWeightMsgDeposit
+		},
+	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgVote, &weightMsgVote, nil,
-		func(_ *rand.Rand) { weightMsgVote = 67 })
+		func(_ *rand.Rand) {
+			weightMsgVote = appsimparams.DefaultWeightMsgVote
+		},
+	)
 
 	// generate the weighted operations for the proposal contents
 	var wProposalOps simulation.WeightedOperations

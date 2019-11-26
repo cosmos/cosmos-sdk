@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -28,15 +29,24 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
-		func(_ *rand.Rand) { weightMsgSetWithdrawAddress = 50 })
+		func(_ *rand.Rand) {
+			weightMsgSetWithdrawAddress = appsimparams.DefaultWeightMsgSetWithdrawAddress
+		},
+	)
 
 	var weightMsgWithdrawDelegationReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
-		func(_ *rand.Rand) { weightMsgWithdrawDelegationReward = 50 })
+		func(_ *rand.Rand) {
+			weightMsgWithdrawDelegationReward = appsimparams.DefaultWeightMsgWithdrawDelegationReward
+		},
+	)
 
 	var weightMsgWithdrawValidatorCommission int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
-		func(_ *rand.Rand) { weightMsgWithdrawValidatorCommission = 50 })
+		func(_ *rand.Rand) {
+			weightMsgWithdrawValidatorCommission = appsimparams.DefaultWeightMsgWithdrawValidatorCommission
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(

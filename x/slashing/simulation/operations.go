@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
@@ -25,7 +26,10 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
-		func(_ *rand.Rand) { weightMsgUnjail = 100 })
+		func(_ *rand.Rand) {
+			weightMsgUnjail = appsimparams.DefaultWeightMsgUnjail
+		},
+	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeigthedOperation(

@@ -49,6 +49,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	var wProposalOps simulation.WeightedOperations
 
 	for _, wContent := range wContents {
+		wContent := wContent // pin variable
 		var weight int
 		appParams.GetOrGenerate(cdc, wContent.AppParamsKey, &weight, nil,
 			func(_ *rand.Rand) { weight = wContent.DefaultWeight })

@@ -53,7 +53,7 @@ func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 
 	// Evidence is on same height as trustedCommiter. ValidatorSets must be the same
 	if trustedCommitter.GetHeight() == uint64(m.GetHeight()) {
-		if bytes.Equal(trustedValSet.Hash(), m.Evidence.Header1.ValidatorSet.Hash()) ||
+		if !bytes.Equal(trustedValSet.Hash(), m.Evidence.Header1.ValidatorSet.Hash()) ||
 			!bytes.Equal(trustedValSet.Hash(), m.Evidence.Header2.ValidatorSet.Hash()) {
 			return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set is not valid for height: %d", m.GetHeight()))
 		}

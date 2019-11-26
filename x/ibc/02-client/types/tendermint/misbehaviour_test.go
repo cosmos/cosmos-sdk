@@ -69,7 +69,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 			err := misbehaviour.ValidateBasic()
 
 			if tc.expErr {
-				require.NotNil(suite.T(), err, "Invalid Misbehaviour passed ValidateBasic")
+				suite.Error(err, "Invalid Misbehaviour passed ValidateBasic")
 			} else {
 				require.Nil(suite.T(), err, "Valid Misbehaviour failed ValidateBasic: %v", err)
 			}
@@ -94,6 +94,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
 	}
 
+	signers := []tmtypes.PrivValidator{suite.privVal}
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
 	committer := Committer{
@@ -109,7 +110,47 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 		expErr   bool
 	}{
 		{
-			"misbehavior should pass",
+			"same height misbehaviour should pass",
+			&Evidence{
+				Header1: MakeHeader("gaia", 3, suite.valSet, altValSet, signers),
+				Header2: MakeHeader("gaia", 3, suite.valSet, bothValSet, signers),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			false,
+		},
+		{
+			"same height misbehaviour with wrong valSet",
+			&Evidence{
+				Header1: MakeHeader("gaia", 3, bothValSet, altValSet, bothSigners),
+				Header2: MakeHeader("gaia", 3, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"next height misbehaviour should pass",
+			&Evidence{
+				Header1: MakeHeader("gaia", 4, suite.valSet, altValSet, signers),
+				Header2: MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			false,
+		},
+		{
+			"next height misbehaviour with wrong valSet",
+			&Evidence{
+				Header1: MakeHeader("gaia", 4, bothValSet, altValSet, bothSigners),
+				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"trusting period misbehavior should pass",
 			&Evidence{
 				Header1: MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
 				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
@@ -160,9 +201,9 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 			err := CheckMisbehaviour(committer, misbehaviour)
 
 			if tc.expErr {
-				require.NotNil(suite.T(), err, "CheckMisbehaviour passed unexpectedly")
+				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
 			} else {
-				require.Nil(suite.T(), err, "CheckMisbehaviour failed unexpectedly: %v", err)
+				suite.NoError(err, "CheckMisbehaviour failed unexpectedly: %v", err)
 			}
 		})
 	}

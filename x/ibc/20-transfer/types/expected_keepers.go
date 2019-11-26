@@ -31,6 +31,10 @@ type ConnectionKeeper interface {
 	GetConnection(ctx sdk.Context, connectionID string) (connection connection.ConnectionEnd, found bool)
 }
 
+type PortKeeper interface {
+	BindPort(portID string) sdk.CapabilityKey
+}
+
 // SupplyKeeper expected supply keeper
 type SupplyKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress

@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
-	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -58,18 +58,19 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:              nil,
-		distr.ModuleName:                   nil,
-		mint.ModuleName:                    {supply.Minter},
-		staking.BondedPoolName:             {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName:          {supply.Burner, supply.Staking},
-		gov.ModuleName:                     {supply.Burner},
-		ibctransfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
+		auth.FeeCollectorName:     nil,
+		distr.ModuleName:          nil,
+		mint.ModuleName:           {supply.Minter},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		gov.ModuleName:            {supply.Burner},
+		transfer.ModuleName:       {supply.Minter, supply.Burner},
 	}
 )
 
@@ -112,6 +113,7 @@ type SimApp struct {
 	ParamsKeeper   params.Keeper
 	IBCKeeper      ibc.Keeper
 	EvidenceKeeper evidence.Keeper
+	TransferKeeper transfer.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -198,6 +200,12 @@ func NewSimApp(
 	evidenceKeeper.SetRouter(evidenceRouter)
 	app.EvidenceKeeper = *evidenceKeeper
 
+	app.TransferKeeper = transfer.NewKeeper(
+		app.cdc, keys[transfer.StoreKey], transfer.DefaultCodespace,
+		app.ibcKeeper.ChannelKeeper, app.ibcKeeper.PortKeeper,
+		app.bankKeeper, app.supplyKeeper,
+	)
+
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
@@ -214,7 +222,7 @@ func NewSimApp(
 		staking.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace, app.BankKeeper, app.SupplyKeeper)
+	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace)
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

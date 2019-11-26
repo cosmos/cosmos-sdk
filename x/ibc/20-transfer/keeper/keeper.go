@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -26,20 +27,18 @@ type Keeper struct {
 	// Capability key and port to which ICS20 is binded. Used for packet relaying.
 	boundedCapability sdk.CapabilityKey
 
-	clientKeeper     types.ClientKeeper
-	connectionKeeper types.ConnectionKeeper
-	channelKeeper    types.ChannelKeeper
-	bankKeeper       types.BankKeeper
-	supplyKeeper     types.SupplyKeeper
+	channelKeeper types.ChannelKeeper
+	bankKeeper    types.BankKeeper
+	supplyKeeper  types.SupplyKeeper
 }
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
 	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
-	capKey sdk.CapabilityKey, clientKeeper types.ClientKeeper,
-	connnectionKeeper types.ConnectionKeeper, channelKeeper types.ChannelKeeper,
+	channelKeeper types.ChannelKeeper, portKeeper types.PortKeeper,
 	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper,
 ) Keeper {
+	capKey := portKeeper.BindPort(bank.ModuleName)
 
 	// ensure ibc transfer module account is set
 	if addr := supplyKeeper.GetModuleAddress(types.GetModuleAccountName()); addr == nil {
@@ -51,8 +50,6 @@ func NewKeeper(
 		cdc:               cdc,
 		codespace:         sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/transfer",
 		boundedCapability: capKey,
-		clientKeeper:      clientKeeper,
-		connectionKeeper:  connnectionKeeper,
 		channelKeeper:     channelKeeper,
 		bankKeeper:        bankKeeper,
 		supplyKeeper:      supplyKeeper,

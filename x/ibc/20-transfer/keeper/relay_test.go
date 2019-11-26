@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 
 // XXX: fix befoer merge
 /*
-func (suite *KeeperTestSuite) TestReceivePacket() {
+func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	packetSeq := uint64(1)
 	packetTimeout := uint64(100)
 
@@ -204,18 +204,18 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	proofPacket, proofHeight := suite.queryProof(packetCommitmentPath)
 
 	suite.createChannel(testPort2, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
-	err := suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err := suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // invalid port id
 
 	packet.DestinationPort = testPort1
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // packet membership verification failed due to invalid counterparty packet commitment
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // invalid packet data
 
 	// test the situation where the source is true
@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
@@ -238,7 +238,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
@@ -267,13 +267,13 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, packetDataBz)
 	suite.updateClient()
 	proofPacket, proofHeight = suite.queryProof(packetCommitmentPath)
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort1, testChannel1)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
-	err = suite.app.IBCKeeper.TransferKeeper.ReceivePacket(suite.ctx, packet, proofPacket, uint64(proofHeight))
+	err = suite.app.IBCKeeper.TransferKeeper.ReceiveTransfer(suite.ctx, packet, proofPacket, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)

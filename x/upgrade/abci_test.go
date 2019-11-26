@@ -1,4 +1,4 @@
-package upgrade
+package upgrade_test
 
 import (
 	"reflect"
@@ -8,72 +8,66 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 type TestSuite struct {
 	suite.Suite
-	keeper                Keeper
+
+	module                module.AppModule
+	keeper                upgrade.Keeper
 	querier               sdk.Querier
 	handler               gov.Handler
-	module                module.AppModule
 	ctx                   sdk.Context
-	cms                   store.CommitMultiStore
 	FlagUnsafeSkipUpgrade string
 }
 
 func (s *TestSuite) SetupTest() {
-	db := dbm.NewMemDB()
-	s.cms = store.NewCommitMultiStore(db)
-	key := sdk.NewKVStoreKey("upgrade")
-	cdc := codec.New()
-	RegisterCodec(cdc)
-	s.keeper = NewKeeper(key, cdc)
-	s.handler = NewSoftwareUpgradeProposalHandler(s.keeper)
-	s.querier = NewQuerier(s.keeper)
-	s.module = NewAppModule(s.keeper)
-	s.cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	_ = s.cms.LoadLatestVersion()
-	s.ctx = sdk.NewContext(s.cms, abci.Header{Height: 10, Time: time.Now()}, false, log.NewNopLogger())
-	s.FlagUnsafeSkipUpgrade = FlagUnsafeSkipUpgrade
-	viper.Set(FlagUnsafeSkipUpgrade, []int{})
+	checkTx := false
+	app := simapp.Setup(checkTx)
+
+	s.keeper = app.UpgradeKeeper
+	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
+	s.querier = upgrade.NewQuerier(s.keeper)
+	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 10, Time: time.Now()})
+	s.module = upgrade.NewAppModule(s.keeper)
+	s.FlagUnsafeSkipUpgrade = upgrade.FlagUnsafeSkipUpgrade
+	viper.Set(upgrade.FlagUnsafeSkipUpgrade, []int{})
 	s.VerifySet()
 }
 
 func (s *TestSuite) TestRequireName() {
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureTime() {
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestRequireFutureBlock() {
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight()}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestCantSetBothTimeAndHeight() {
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
 
 func (s *TestSuite) TestDoTimeUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -81,7 +75,7 @@ func (s *TestSuite) TestDoTimeUpgrade() {
 
 func (s *TestSuite) TestDoHeightUpgrade() {
 	s.T().Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -89,9 +83,9 @@ func (s *TestSuite) TestDoHeightUpgrade() {
 
 func (s *TestSuite) TestCanOverwriteScheduleUpgrade() {
 	s.T().Log("Can overwrite plan")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
 	s.Require().Nil(err)
-	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.VerifyDoUpgrade()
@@ -99,14 +93,15 @@ func (s *TestSuite) TestCanOverwriteScheduleUpgrade() {
 
 func (s *TestSuite) VerifyDoUpgrade() {
 	s.T().Log("Verify that a panic happens at the upgrade time/height")
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().Panics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan Plan) {})
+	s.keeper.SetUpgradeHandler("test", func(ctx sdk.Context, plan upgrade.Plan) {})
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
@@ -122,7 +117,7 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(newCtx sdk.Context, proposalName stri
 	})
 
 	s.T().Log("Verify that the upgrade can be successfully applied with a handler")
-	s.keeper.SetUpgradeHandler(proposalName, func(ctx sdk.Context, plan Plan) {})
+	s.keeper.SetUpgradeHandler(proposalName, func(ctx sdk.Context, plan upgrade.Plan) {})
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
@@ -133,9 +128,9 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(newCtx sdk.Context, proposalName stri
 func (s *TestSuite) TestHaltIfTooNew() {
 	s.T().Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
-	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan Plan) { called++ })
+	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan upgrade.Plan) { called++ })
 
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
@@ -143,7 +138,7 @@ func (s *TestSuite) TestHaltIfTooNew() {
 	s.Require().Equal(0, called)
 
 	s.T().Log("Verify we panic if we have a registered handler ahead of time")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "future", Height: s.ctx.BlockHeight() + 3}})
 	s.Require().NoError(err)
 	s.Require().Panics(func() {
 		s.module.BeginBlock(newCtx, req)
@@ -152,7 +147,7 @@ func (s *TestSuite) TestHaltIfTooNew() {
 
 	s.T().Log("Verify we no longer panic if the plan is on time")
 
-	futCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 3, Time: time.Now()}, false, log.NewNopLogger())
+	futCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 3).WithBlockTime(time.Now())
 	req = abci.RequestBeginBlock{Header: futCtx.BlockHeader()}
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(futCtx, req)
@@ -164,17 +159,17 @@ func (s *TestSuite) TestHaltIfTooNew() {
 
 func (s *TestSuite) VerifyCleared(newCtx sdk.Context) {
 	s.T().Log("Verify that the upgrade plan has been cleared")
-	bz, err := s.querier(newCtx, []string{QueryCurrent}, abci.RequestQuery{})
+	bz, err := s.querier(newCtx, []string{upgrade.QueryCurrent}, abci.RequestQuery{})
 	s.Require().NoError(err)
 	s.Require().Nil(bz)
 }
 
 func (s *TestSuite) TestCanClear() {
 	s.T().Log("Verify upgrade is scheduled")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	s.Require().Nil(err)
 
-	err = s.handler(s.ctx, CancelSoftwareUpgradeProposal{Title: "cancel"})
+	err = s.handler(s.ctx, upgrade.CancelSoftwareUpgradeProposal{Title: "cancel"})
 	s.Require().Nil(err)
 
 	s.VerifyCleared(s.ctx)
@@ -183,7 +178,7 @@ func (s *TestSuite) TestCanClear() {
 func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.TestDoTimeUpgrade()
 	s.T().Log("Verify an upgrade named \"test\" can't be scheduled twice")
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	s.Require().NotNil(err)
 	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
 }
@@ -202,11 +197,11 @@ func (s *TestSuite) TestPlanStringer() {
 	s.Require().Equal(`Upgrade Plan
   Name: test
   Time: 2020-01-01T00:00:00Z
-  Info: `, Plan{Name: "test", Time: t}.String())
+  Info: `, upgrade.Plan{Name: "test", Time: t}.String())
 	s.Require().Equal(`Upgrade Plan
   Name: test
   Height: 100
-  Info: `, Plan{Name: "test", Height: 100}.String())
+  Info: `, upgrade.Plan{Name: "test", Height: 100}.String())
 }
 
 func (s *TestSuite) VerifyNotDone(newCtx sdk.Context, name string) {
@@ -245,9 +240,9 @@ func (s *TestSuite) TestContains() {
 }
 
 func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases")
@@ -262,7 +257,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 	})
 
 	s.T().Log("Verify a second proposal also is being cleared")
-	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
 	s.Require().Nil(err)
 
 	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
@@ -278,9 +273,9 @@ func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 }
 
 func (s *TestSuite) TestSkipUpgradeSkippingOne() {
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
@@ -295,7 +290,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingOne() {
 	})
 
 	s.T().Log("Verify the second proposal is not skipped")
-	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
 	s.Require().Nil(err)
 	//Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
@@ -307,9 +302,9 @@ func (s *TestSuite) TestSkipUpgradeSkippingOne() {
 }
 
 func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
@@ -325,7 +320,7 @@ func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
 	})
 
 	//A new proposal with height in skipUpgradeHeights
-	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop2", Plan: Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
 	s.Require().Nil(err)
 	//Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
@@ -334,7 +329,7 @@ func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
 	})
 
 	s.T().Log("Verify a new proposal is not skipped")
-	err = s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop3", Plan: Plan{Name: "test3", Height: s.ctx.BlockHeight() + 15}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: s.ctx.BlockHeight() + 15}})
 	s.Require().Nil(err)
 	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 15)
 	s.VerifyDoUpgradeWithCtx(newCtx, "test3")
@@ -346,9 +341,9 @@ func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
 }
 
 func (s *TestSuite) TestUpgradeWithoutSkip() {
-	newCtx := sdk.NewContext(s.cms, abci.Header{Height: s.ctx.BlockHeight() + 1, Time: time.Now()}, false, log.NewNopLogger())
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, SoftwareUpgradeProposal{Title: "prop", Plan: Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	s.Require().Nil(err)
 	s.T().Log("Verify if upgrade happens without skip upgrade")
 	s.Require().Panics(func() {

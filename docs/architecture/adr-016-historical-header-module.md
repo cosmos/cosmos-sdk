@@ -6,6 +6,9 @@
 
 ## Context
 
+In order for the Cosmos SDK to implement the [IBC specification](https://github.com/cosmos/ics), modules within the SDK must have the ability to introspect recent consensus states (validator sets & commitment roots) as proofs of these values on other chains must be checked during the handshakes.
+
+
 > This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
 > {context body}
 

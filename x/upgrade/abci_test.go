@@ -239,7 +239,7 @@ func (s *TestSuite) TestContains() {
 	s.Require().False(present)
 }
 
-func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
+func (s *TestSuite) TestSkipUpgradeSkippingAll() {
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
@@ -272,7 +272,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingBoth() {
 	s.VerifyNotDone(s.ctx, "test2")
 }
 
-func (s *TestSuite) TestSkipUpgradeSkippingOne() {
+func (s *TestSuite) TestUpgradeSkippingOne() {
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
@@ -301,7 +301,7 @@ func (s *TestSuite) TestSkipUpgradeSkippingOne() {
 	s.VerifyDone(s.ctx, "test2")
 }
 
-func (s *TestSuite) TestSkipUpgradeIgnoringBoth() {
+func (s *TestSuite) TestUpgradeSkippingOnlyTwo() {
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})

@@ -41,6 +41,7 @@ var (
 	DefaultGenesisState          = types.DefaultGenesisState
 	ConvertDuplicateVoteEvidence = types.ConvertDuplicateVoteEvidence
 	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
+	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
 )
 
 type (

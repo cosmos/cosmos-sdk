@@ -2132,6 +2132,8 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/StdTx"
+        400:
+          description: Invalid client id
         500:
           description: Internal Server Error
   /ibc/connections/{connection-id}:

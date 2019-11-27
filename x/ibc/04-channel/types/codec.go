@@ -12,7 +12,6 @@ var SubModuleCdc *codec.Codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*PacketDataI)(nil), nil)
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
-	//	cdc.RegisterConcrete(OpaquePacket{}, "ibc/channel/OpaquePacket", nil)
 
 	cdc.RegisterConcrete(MsgChannelOpenInit{}, "ibc/channel/MsgChannelOpenInit", nil)
 	cdc.RegisterConcrete(MsgChannelOpenTry{}, "ibc/channel/MsgChannelOpenTry", nil)

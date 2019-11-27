@@ -17,7 +17,7 @@ type PacketDataI interface {
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	PacketDataI `json:"data"` // opaque value which can be defined by the application logic of the associated modules.
+	PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
 
 	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
 	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.

@@ -17,17 +17,20 @@ func NewHandler(k Keeper) sdk.Handler {
 			case PacketDataTransfer: // i.e fulfills the PacketDataI interface
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
-				return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+				errMsg := fmt.Sprintf("unrecognized packet data type: %T", data)
+				return sdk.ErrUnknownRequest(errMsg).Result()
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.PacketDataI.(type) {
 			case PacketDataTransfer:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
-				return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+				errMsg := fmt.Sprintf("unrecognized packet data type: %T", data)
+				return sdk.ErrUnknownRequest(errMsg).Result()
 			}
 		default:
-			return sdk.ErrUnknownRequest("fdsa").Result() // XXX
+			errMsg := fmt.Sprintf("unrecognized IBC transfer message type: %T", msg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
@@ -76,5 +79,5 @@ func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTi
 		panic(err)
 	}
 	// packet timeout should not fail
-	return sdk.Result{}
+	return sdk.Result{Events: ctx.EventManager().Events()}
 }

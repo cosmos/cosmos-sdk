@@ -76,7 +76,7 @@ func (k Keeper) CleanupPacket(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetCommitment()) { // TODO: hash packet data
+	if !bytes.Equal(commitment, packet.GetCommitment()) {
 		return types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
@@ -183,7 +183,7 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), packet.GetCommitment()) // TODO: hash packet data
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), packet.GetCommitment())
 
 	return nil
 }
@@ -251,7 +251,7 @@ func (k Keeper) RecvPacket(
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
 		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
-		packet.GetCommitment(), // TODO: hash data
+		packet.GetCommitment(),
 	) {
 		return errors.New("couldn't verify counterparty packet commitment")
 	}
@@ -279,7 +279,7 @@ func (k Keeper) RecvPacket(
 	return nil
 }
 
-// AcknowledgePacket is called by a module to process the acknowledgement of a
+// AcknowledgementPacket is called by a module to process the acknowledgment of a
 // packet previously sent by the calling module on a channel to a counterparty
 // module on the counterparty chain. acknowledgePacket also cleans up the packet
 // commitment, which is no longer necessary since the packet has been received

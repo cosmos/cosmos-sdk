@@ -66,7 +66,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
 	}
 
-	// validator is already tombstoned
+	// ignore if the validator is already tombstoned
 	if k.slashingKeeper.IsTombstoned(ctx, consAddr) {
 		logger.Info(
 			fmt.Sprintf(
@@ -77,7 +77,6 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 		return
 	}
 
-	// double sign confirmed
 	logger.Info(fmt.Sprintf("confirmed double sign from %s at height %d, age of %d", consAddr, infractionHeight, age))
 
 	// We need to retrieve the stake distribution which signed the block, so we
@@ -101,7 +100,5 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 	}
 
 	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
-
-	// permantely tombstone the validator (unrecoverable)
 	k.slashingKeeper.Tombstone(ctx, consAddr)
 }

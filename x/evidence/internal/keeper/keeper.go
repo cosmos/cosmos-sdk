@@ -18,22 +18,27 @@ import (
 // managing persistence, state transitions and query handling for the evidence
 // module.
 type Keeper struct {
-	cdc        *codec.Codec
-	storeKey   sdk.StoreKey
-	paramSpace params.Subspace
-	router     types.Router
-	codespace  sdk.CodespaceType
+	cdc            *codec.Codec
+	storeKey       sdk.StoreKey
+	paramSpace     params.Subspace
+	router         types.Router
+	stakingKeeper  types.StakingKeeper
+	slashingKeeper types.SlashingKeeper
+	codespace      sdk.CodespaceType
 }
 
 func NewKeeper(
 	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace, codespace sdk.CodespaceType,
+	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		codespace:  codespace,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
+		stakingKeeper:  stakingKeeper,
+		slashingKeeper: slashingKeeper,
+		codespace:      codespace,
 	}
 }
 

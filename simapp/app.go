@@ -200,11 +200,7 @@ func NewSimApp(
 	evidenceKeeper.SetRouter(evidenceRouter)
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.TransferKeeper = transfer.NewKeeper(
-		app.cdc, keys[transfer.StoreKey], transfer.DefaultCodespace,
-		app.ibcKeeper.ChannelKeeper, app.ibcKeeper.PortKeeper,
-		app.bankKeeper, app.supplyKeeper,
-	)
+	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace)
 
 	// register the proposal types
 	govRouter := gov.NewRouter()
@@ -222,8 +218,11 @@ func NewSimApp(
 		staking.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace)
-
+	app.TransferKeeper = transfer.NewKeeper(
+		app.cdc, keys[transfer.StoreKey], transfer.DefaultCodespace,
+		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		app.BankKeeper, app.SupplyKeeper,
+	)
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
@@ -239,6 +238,7 @@ func NewSimApp(
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		transfer.NewAppModule(app.TransferKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

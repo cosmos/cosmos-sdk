@@ -10,17 +10,17 @@ func (suite *KeeperTestSuite) TestOnChanOpenInit() {
 	invalidOrder := channel.ORDERED
 
 	counterparty := channel.NewCounterparty(testPort2, testChannel2)
-	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
+	err := suite.app.TransferKeeper.OnChanOpenInit(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
 	suite.Error(err) // invalid channel order
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
+	err = suite.app.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
 	suite.Error(err) // invalid counterparty port ID
 
 	counterparty = channel.NewCounterparty(testPort1, testChannel2)
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
+	err = suite.app.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.Error(err) // invalid version
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
+	err = suite.app.TransferKeeper.OnChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "")
 	suite.NoError(err) // successfully executed
 }
 
@@ -28,28 +28,28 @@ func (suite *KeeperTestSuite) TestOnChanOpenTry() {
 	invalidOrder := channel.ORDERED
 
 	counterparty := channel.NewCounterparty(testPort2, testChannel2)
-	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
+	err := suite.app.TransferKeeper.OnChanOpenTry(suite.ctx, invalidOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
 	suite.Error(err) // invalid channel order
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
+	err = suite.app.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
 	suite.Error(err) // invalid counterparty port ID
 
 	counterparty = channel.NewCounterparty(testPort1, testChannel2)
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion, "")
+	err = suite.app.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion, "")
 	suite.Error(err) // invalid version
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", testChannelVersion)
+	err = suite.app.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", testChannelVersion)
 	suite.Error(err) // invalid counterparty version
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
+	err = suite.app.TransferKeeper.OnChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, "", "")
 	suite.NoError(err) // successfully executed
 }
 
 func (suite *KeeperTestSuite) TestOnChanOpenAck() {
-	err := suite.app.IBCKeeper.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion)
+	err := suite.app.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion)
 	suite.Error(err) // invalid version
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, "")
+	err = suite.app.TransferKeeper.OnChanOpenAck(suite.ctx, testPort1, testChannel1, "")
 	suite.NoError(err) // successfully executed
 }
 
@@ -63,13 +63,13 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packetData := types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
 	packet := channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err := suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
+	err := suite.app.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
 	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)
@@ -84,19 +84,19 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
 	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
 	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Receiver, sdk.Coins{})
-	err = suite.app.IBCKeeper.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnRecvPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	receiverCoins = suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Receiver)
@@ -113,18 +113,18 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	packetData := types.NewPacketDataTransfer(testPrefixedCoins2, testAddr1, testAddr2, source, packetTimeout)
 	packet := channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err := suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
+	err := suite.app.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // invalid denom prefix
 
 	packetData = types.NewPacketDataTransfer(testPrefixedCoins1, testAddr1, testAddr2, source, packetTimeout)
 	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.Error(err) // insufficient coins in the corresponding escrow account
 
 	escrowAddress := types.GetEscrowAddress(testPort2, testChannel2)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, escrowAddress, testCoins)
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	senderCoins := suite.app.BankKeeper.GetCoins(suite.ctx, packetData.Sender)
@@ -140,7 +140,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 	packet = channel.NewPacket(packetData, packetSeq, testPort1, testChannel1, testPort2, testChannel2)
 
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, packetData.Sender, sdk.Coins{})
-	err = suite.app.IBCKeeper.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
+	err = suite.app.TransferKeeper.OnTimeoutPacket(suite.ctx, packet, packetData)
 	suite.NoError(err) // successfully executed
 
 	totalSupply := suite.app.SupplyKeeper.GetSupply(suite.ctx)

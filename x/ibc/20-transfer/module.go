@@ -13,6 +13,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
+)
+
+const (
+	ModuleName = types.SubModuleName
 )
 
 var (
@@ -79,11 +84,8 @@ func (AppModule) QuerierRoute() string {
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.keeper)
-}
-
-func (ap AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+	//	return NewQuerier(am.keeper)
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -91,5 +93,17 @@ func (ap AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.Va
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	// check if the IBC transfer module account is set
 	InitGenesis(ctx, am.keeper)
+	return []abci.ValidatorUpdate{}
+}
+
+func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
+	return nil
+}
+
+func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
+
+}
+
+func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

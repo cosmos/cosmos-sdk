@@ -25,5 +25,6 @@ type (
 		Tombstone(sdk.Context, sdk.ConsAddress)
 		Slash(sdk.Context, sdk.ConsAddress, int64, int64)
 		Jail(sdk.Context, sdk.ConsAddress, time.Time)
+		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
 	}
 )

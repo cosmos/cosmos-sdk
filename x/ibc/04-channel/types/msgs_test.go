@@ -33,7 +33,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitment.Proof{&merkle.Proof{}}
+	proof = commitment.Proof{Proof: &merkle.Proof{}}
 
 	addr = sdk.AccAddress("testaddr")
 )

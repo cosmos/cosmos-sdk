@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
@@ -23,6 +25,7 @@ var _ exported.Evidence = (*Equivocation)(nil)
 // signing misbehavior.
 type Equivocation struct {
 	Height           int64           `json:"height" yaml:"height"`
+	Time             time.Time       `json:"time" yaml:"time"`
 	Power            int64           `json:"power" yaml:"power"`
 	ConsensusAddress sdk.ConsAddress `json:"consensus_address" yaml:"consensus_address"`
 }
@@ -74,9 +77,14 @@ func (e Equivocation) GetConsensusAddress() sdk.ConsAddress {
 	return e.ConsensusAddress
 }
 
-// Height returns the height at time of the Equivocation infraction.
+// GetHeight returns the height at time of the Equivocation infraction.
 func (e Equivocation) GetHeight() int64 {
 	return e.Height
+}
+
+// GetTime returns the time at time of the Equivocation infraction.
+func (e Equivocation) GetTime() time.Time {
+	return e.Time
 }
 
 // GetValidatorPower returns the validator's power at time of the Equivocation
@@ -95,5 +103,6 @@ func ConvertDuplicateVoteEvidence(dupVote abci.Evidence) exported.Evidence {
 		Height:           dupVote.Height,
 		Power:            dupVote.Validator.Power,
 		ConsensusAddress: sdk.ConsAddress(dupVote.Validator.Address),
+		Time:             dupVote.Time,
 	}
 }

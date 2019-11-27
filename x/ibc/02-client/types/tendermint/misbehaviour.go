@@ -1,7 +1,6 @@
 package tendermint
 
 import (
-	"bytes"
 	"fmt"
 
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -50,25 +49,6 @@ func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 	}
 
 	trustedValSet := trustedCommitter.ValidatorSet
-
-	// Evidence is on same height as trustedCommiter. ValidatorSets must be the same
-	if trustedCommitter.GetHeight() == uint64(m.GetHeight()) {
-		if !bytes.Equal(trustedValSet.Hash(), m.Evidence.Header1.ValidatorSet.Hash()) ||
-			!bytes.Equal(trustedValSet.Hash(), m.Evidence.Header2.ValidatorSet.Hash()) {
-			return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set is not valid for height: %d", m.GetHeight()))
-		}
-		return nil
-	}
-
-	// Evidence is on next height of trustedCommitter. Evidence Validator Set must match
-	// trustedCommitter's NextValSetHash
-	if trustedCommitter.GetHeight()+1 == uint64(m.GetHeight()) {
-		if !bytes.Equal(trustedCommitter.NextValSetHash, m.Evidence.Header1.ValidatorSet.Hash()) ||
-			!bytes.Equal(trustedCommitter.NextValSetHash, m.Evidence.Header2.ValidatorSet.Hash()) {
-			return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set is not valid for height: %d", m.GetHeight()))
-		}
-		return nil
-	}
 
 	// Evidence is within trusting period. ValidatorSet must have 2/3 similarity with trustedCommitter ValidatorSet
 	// check that the validator sets on both headers are valid given the last trusted validatorset

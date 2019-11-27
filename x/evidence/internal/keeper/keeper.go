@@ -32,10 +32,15 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return &Keeper{
 		cdc:            cdc,
 		storeKey:       storeKey,
-		paramSpace:     paramSpace.WithKeyTable(types.ParamKeyTable()),
+		paramSpace:     paramSpace,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		codespace:      codespace,

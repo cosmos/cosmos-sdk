@@ -24,7 +24,7 @@ type (
 		HasValidatorSigningInfo(sdk.Context, sdk.ConsAddress) bool
 		Tombstone(sdk.Context, sdk.ConsAddress)
 		Slash(sdk.Context, sdk.ConsAddress, int64, int64)
-		Jail(sdk.Context, sdk.ConsAddress, time.Time)
+		Jail(sdk.Context, sdk.ConsAddress)
 		JailUntil(sdk.Context, sdk.ConsAddress, time.Time)
 	}
 )

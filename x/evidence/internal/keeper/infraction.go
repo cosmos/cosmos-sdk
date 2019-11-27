@@ -96,7 +96,7 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).
 	if !validator.IsJailed() {
-		k.slashingKeeper.Jail(ctx, consAddr, types.DoubleSignJailEndTime)
+		k.slashingKeeper.Jail(ctx, consAddr)
 	}
 
 	k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)

@@ -23,6 +23,7 @@ const (
 	EventTypeSubmitEvidence     = types.EventTypeSubmitEvidence
 	AttributeValueCategory      = types.AttributeValueCategory
 	AttributeKeyEvidenceHash    = types.AttributeKeyEvidenceHash
+	DefaultMaxEvidenceAge       = types.DefaultMaxEvidenceAge
 )
 
 var (
@@ -39,6 +40,7 @@ var (
 	NewGenesisState              = types.NewGenesisState
 	DefaultGenesisState          = types.DefaultGenesisState
 	ConvertDuplicateVoteEvidence = types.ConvertDuplicateVoteEvidence
+	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
 )
 
 type (

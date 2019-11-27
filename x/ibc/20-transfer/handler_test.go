@@ -149,7 +149,7 @@ func (suite *HandlerTestSuite) queryProof(key string) (proof commitment.Proof, h
 func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	source := true
 
-	handler := transfer.NewHandler(suite.app.IBCKeeper.TransferKeeper)
+	handler := transfer.NewHandler(suite.app.TransferKeeper)
 
 	msg := transfer.NewMsgTransfer(testPort1, testChannel1, testCoins, testAddr1, testAddr2, source)
 	res := handler(suite.ctx, msg)
@@ -189,7 +189,7 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 	packetSeq := uint64(1)
 	packetTimeout := uint64(100)
-	handler := transfer.NewHandler(suite.app.IBCKeeper.TransferKeeper)
+	handler := transfer.NewHandler(suite.app.TransferKeeper)
 
 	// test when the source is true
 	source := true

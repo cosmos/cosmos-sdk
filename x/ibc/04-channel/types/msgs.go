@@ -390,17 +390,19 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
+// MsgPacket receives incoming IBC packet
 type MsgPacket struct {
-	Packet
+	Packet `json:"packet" yaml:"packet"`
 
-	Proof       commitment.ProofI
-	ProofHeight uint64
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 
-	Signer sdk.AccAddress
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
 }
 
 var _ sdk.Msg = MsgPacket{}
 
+// NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
 	return MsgPacket{
 		Packet: packet,
@@ -412,10 +414,12 @@ func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, si
 	}
 }
 
+// Implements sdk.Msg
 func (msg MsgPacket) Route() string {
 	return msg.DestinationPort
 }
 
+// Implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
@@ -433,26 +437,30 @@ func (msg MsgPacket) ValidateBasic() sdk.Error {
 	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
 }
 
+// Implements sdk.Msg
 func (msg MsgPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
+// Implements sdk.Msg
 func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
 var _ sdk.Msg = MsgTimeout{}
 
+// MsgTimeout receives timeouted packet
 type MsgTimeout struct {
-	Packet
-	NextSequenceRecv uint64
+	Packet           `json:"packet" yaml:"packet"`
+	NextSequenceRecv uint64 `json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv,omitempty"`
 
-	Proof       commitment.ProofI
-	ProofHeight uint64
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 
-	Signer sdk.AccAddress
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
 }
 
+// NewMsgTimeout constructs new MsgTimeout
 func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgTimeout {
 	return MsgTimeout{
 		Packet:           packet,
@@ -463,10 +471,12 @@ func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.Proo
 	}
 }
 
+// Implements sdk.Msg
 func (msg MsgTimeout) Route() string {
 	return msg.SourcePort
 }
 
+// Implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
@@ -484,26 +494,30 @@ func (msg MsgTimeout) ValidateBasic() sdk.Error {
 	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
 }
 
+// Implements sdk.Msg
 func (msg MsgTimeout) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
+// Implements sdk.Msg
 func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
 
 var _ sdk.Msg = MsgAcknowledgement{}
 
+// MsgAcknowledgement receives incoming IBC acknowledgement
 type MsgAcknowledgement struct {
-	Packet
-	Acknowledgement PacketDataI
+	Packet          `json:"packet" yaml:"packet"`
+	Acknowledgement PacketDataI `json:"acknowledgement" yaml:"acknowledgement"`
 
-	Proof       commitment.ProofI
-	ProofHeight uint64
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 
-	Signer sdk.AccAddress
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
 }
 
+// NewMsgAcknowledgement constructs a new MsgAcknowledgement
 func NewMsgAcknowledgement(packet Packet, ack PacketDataI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
 	return MsgAcknowledgement{
 		Packet:          packet,
@@ -514,10 +528,12 @@ func NewMsgAcknowledgement(packet Packet, ack PacketDataI, proof commitment.Proo
 	}
 }
 
+// Implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
 	return msg.SourcePort
 }
 
+// Implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() sdk.Error {
 	if msg.Proof == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
@@ -541,10 +557,12 @@ func (msg MsgAcknowledgement) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// Implements sdk.Msg
 func (msg MsgAcknowledgement) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
+// Implements sdk.Msg
 func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

@@ -8,22 +8,22 @@ import (
 )
 
 type PacketDataI interface {
-	GetCommitment() []byte
-	GetTimeoutHeight() uint64
+	GetCommitment() []byte    // GetCommitment returns (possibly non-recoverable) commitment bytes from its Data and Timeout
+	GetTimeoutHeight() uint64 // GetTimeoutHeight returns the timeout height defined specifically for each packet data type instance
 
-	ValidateBasic() sdk.Error
-	Type() string
+	ValidateBasic() sdk.Error // ValidateBasic validates basic properties of the packet data, implements sdk.Msg
+	Type() string             // Type returns human readable identifier, implements sdk.Msg
 }
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
 	PacketDataI `json:"data"` // opaque value which can be defined by the application logic of the associated modules.
 
-	Sequence           uint64 `json:"sequence"`            // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	SourcePort         string `json:"source_port"`         // identifies the port on the sending chain.
-	SourceChannel      string `json:"source_channel"`      // identifies the channel end on the sending chain.
-	DestinationPort    string `json:"destination_port"`    // identifies the port on the receiving chain.
-	DestinationChannel string `json:"destination_channel"` // identifies the channel end on the receiving chain.
+	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
+	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
+	SourceChannel      string `json:"source_channel" yaml:"source_channel"`           // identifies the channel end on the sending chain.
+	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
+	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
 }
 
 // NewPacket creates a new Packet instance
@@ -82,28 +82,3 @@ func (p Packet) ValidateBasic() error {
 	}
 	return nil
 }
-
-/*
-var _ exported.PacketI = OpaquePacket{}
-
-// OpaquePacket is a Packet, but cloaked in an obscuring data type by the host
-// state machine, such that a module cannot act upon it other than to pass it to
-// the IBC handler
-type OpaquePacket struct {
-	*Packet
-}
-
-// NewOpaquePacket creates a new OpaquePacket instance
-func NewOpaquePacket(sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data []byte,
-) OpaquePacket {
-	Packet := NewPacket(
-		sequence, timeout, sourcePort, sourceChannel, destinationPort,
-		destinationChannel, data,
-	)
-	return OpaquePacket{&Packet}
-}
-
-// GetData implements PacketI interface
-func (op OpaquePacket) GetData() []byte { return nil }
-*/

@@ -43,6 +43,7 @@ func (pd PacketDataTransfer) String() string {
 	)
 }
 
+// Implements ibc.Packet
 // ValidateBasic performs a basic check of the packet fields
 func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
 	if !pd.Amount.IsAllPositive() {
@@ -60,15 +61,18 @@ func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// Implements ibc.Packet
 // TODO: need to be hashed(non-unmarshalable) format
 func (pd PacketDataTransfer) GetCommitment() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
 }
 
+// Implements ibc.Packet
 func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
 	return pd.Timeout
 }
 
+// Implements ibc.Packet
 func (pd PacketDataTransfer) Type() string {
 	return "ics20/transfer"
 }

@@ -44,10 +44,6 @@ func (e Equivocation) String() string {
 // MarshalYAML returns the YAML representation of an Equivocation object.
 func (e Equivocation) MarshalYAML() (interface{}, error) {
 	bz, err := yaml.Marshal(e)
-	if err != nil {
-		return nil, err
-	}
-
 	return string(bz), err
 }
 

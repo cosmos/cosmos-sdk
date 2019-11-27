@@ -42,6 +42,7 @@ var (
 	ConvertDuplicateVoteEvidence = types.ConvertDuplicateVoteEvidence
 	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
 	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
+	ParamKeyTable                = types.ParamKeyTable
 )
 
 type (

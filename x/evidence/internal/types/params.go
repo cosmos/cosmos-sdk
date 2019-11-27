@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// DONTCOVER
+
 // Default parameter values
 const (
 	DefaultParamspace     = ModuleName

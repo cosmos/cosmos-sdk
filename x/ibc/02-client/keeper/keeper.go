@@ -123,16 +123,17 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 func (k Keeper) GetCommitter(ctx sdk.Context, clientID string, height uint64) (exported.Committer, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
 
-	iter := store.ReverseIterator(types.KeyCommitter(clientID, height), types.KeyCommitter(clientID, 0))
-
-	if !iter.Valid() {
-		return nil, false
-	}
-
-	bz := iter.Value()
 	var committer exported.Committer
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &committer)
-	return committer, true
+
+	// TODO: Replace this for-loop with a ReverseIterator for efficiency
+	for i := height; i > 0; i-- {
+		bz := store.Get(types.KeyCommitter(clientID, i))
+		if bz != nil {
+			k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &committer)
+			return committer, true
+		}
+	}
+	return nil, false
 }
 
 // SetCommitter sets a committer from a particular height to

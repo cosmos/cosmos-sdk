@@ -29,7 +29,7 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
     - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
     - the state machine does not need any historical mapping information which is past more than unbonding period.
 - limits
-    - a validator cannot rotate its consensus key more than N time for any unbonding period, to prevent spam.
+    - a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
     - parameters can be decided by governance and stored in genesis file.
 - key rotation fee
     - a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
@@ -40,6 +40,9 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
     - tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
     - validator consensus key update can be done via creating new + delete old by change the power to zero.
     - therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
+- new genesis parameters
+    - `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period.
+    - `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period.
 
 
 ### Workflow

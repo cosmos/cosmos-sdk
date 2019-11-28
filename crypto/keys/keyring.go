@@ -370,7 +370,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 // deleting it (for security). It returns an error if the key doesn't exist or
 // passphrases don't match. The passphrase is ignored when deleting references to
 // offline and Ledger / HW wallet keys.
-func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
+func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	// verify we have the proper password before deleting
 	info, err := kb.Get(name)
 	if err != nil {

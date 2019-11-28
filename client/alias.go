@@ -65,6 +65,8 @@ const (
 var (
 	// functions aliases
 	NewCLIContextWithFrom              = context.NewCLIContextWithFrom
+	NewCLIContextWithInput             = context.NewCLIContextWithInput
+	NewCLIContextWithInputAndFrom      = context.NewCLIContextWithInputAndFrom
 	NewCLIContext                      = context.NewCLIContext
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount
@@ -81,11 +83,8 @@ var (
 	NewRecoverKey                      = keys.NewRecoverKey
 	NewUpdateKeyReq                    = keys.NewUpdateKeyReq
 	NewDeleteKeyReq                    = keys.NewDeleteKeyReq
-	GetKeyInfo                         = keys.GetKeyInfo
-	GetPassphrase                      = keys.GetPassphrase
-	ReadPassphraseFromStdin            = keys.ReadPassphraseFromStdin
-	NewKeyBaseFromHomeFlag             = keys.NewKeyBaseFromHomeFlag
-	NewKeyBaseFromDir                  = keys.NewKeyBaseFromDir
+	NewKeyringFromDir                  = keys.NewKeyringFromDir
+	NewKeyringFromHomeFlag             = keys.NewKeyringFromHomeFlag
 	NewInMemoryKeyBase                 = keys.NewInMemoryKeyBase
 	NewRestServer                      = lcd.NewRestServer
 	ServeCommand                       = lcd.ServeCommand

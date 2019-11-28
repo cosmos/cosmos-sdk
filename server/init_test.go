@@ -1,14 +1,14 @@
 package server_test
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/tests"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
@@ -24,17 +24,16 @@ func TestGenerateCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tempdir(t)
+	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
-	// Remove the dir to that GenerateSaveCoinKey creates it automatically
-	os.RemoveAll(dir)
 
-	addr, mnemonic, err := server.GenerateSaveCoinKey(dir, "keyname", "012345678", false)
+	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	require.NoError(t, err)
+
+	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", "012345678", false)
 	require.NoError(t, err)
 
 	// Test key was actually saved
-	kb, err := keys.NewKeyBaseFromDir(dir)
-	require.NoError(t, err)
 	info, err := kb.Get("keyname")
 	require.NoError(t, err)
 	require.Equal(t, addr, info.GetAddress())
@@ -47,28 +46,23 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 
 func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
-	dir, cleanup := tempdir(t)
+	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup() // clean after itself
-	// Remove the dir to that GenerateSaveCoinKey creates it automatically
-	os.RemoveAll(dir)
+
+	kb, err := crkeys.NewTestKeyring(t.Name(), dir)
+	require.NoError(t, err)
 
 	keyname := "justakey"
-	addr1, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", false)
+	addr1, _, err := server.GenerateSaveCoinKey(kb, keyname, "012345678", false)
 	require.NoError(t, err)
 
 	// Test overwrite with overwrite=false
-	_, _, err = server.GenerateSaveCoinKey(dir, keyname, "012345678", false)
+	_, _, err = server.GenerateSaveCoinKey(kb, keyname, "012345678", false)
 	require.Error(t, err)
 
 	// Test overwrite with overwrite=true
-	addr2, _, err := server.GenerateSaveCoinKey(dir, keyname, "012345678", true)
+	addr2, _, err := server.GenerateSaveCoinKey(kb, keyname, "012345678", true)
 	require.NoError(t, err)
 
 	require.NotEqual(t, addr1, addr2)
-}
-
-func tempdir(t *testing.T) (string, func()) {
-	dir, err := ioutil.TempDir("", t.Name()+"_")
-	require.NoError(t, err)
-	return dir, func() { os.RemoveAll(dir) }
 }

@@ -39,7 +39,7 @@ func TestGenesisStateValidate_Valid(t *testing.T) {
 		}
 	}
 
-	gs := types.NewGenesisState(evidence)
+	gs := types.NewGenesisState(types.DefaultParams(), evidence)
 	require.NoError(t, gs.Validate())
 }
 
@@ -66,6 +66,6 @@ func TestGenesisStateValidate_Invalid(t *testing.T) {
 		}
 	}
 
-	gs := types.NewGenesisState(evidence)
+	gs := types.NewGenesisState(types.DefaultParams(), evidence)
 	require.Error(t, gs.Validate())
 }

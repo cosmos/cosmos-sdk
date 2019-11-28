@@ -15,6 +15,7 @@ const (
 	DefaultParamspace           = types.DefaultParamspace
 	QueryEvidence               = types.QueryEvidence
 	QueryAllEvidence            = types.QueryAllEvidence
+	QueryParameters             = types.QueryParameters
 	CodeNoEvidenceHandlerExists = types.CodeNoEvidenceHandlerExists
 	CodeInvalidEvidence         = types.CodeInvalidEvidence
 	CodeNoEvidenceExists        = types.CodeNoEvidenceExists

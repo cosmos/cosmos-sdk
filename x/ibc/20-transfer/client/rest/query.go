@@ -15,10 +15,10 @@ import (
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
-	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/next-sequence-recv", RestPortID, RestChannelID), queryChannelHandlerFn(cliCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/next-sequence-recv", RestPortID, RestChannelID), queryNextSequenceRecvHandlerFn(cliCtx)).Methods("GET")
 }
 
-func queryChannelHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryNextSequenceRecvHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]

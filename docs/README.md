@@ -53,6 +53,8 @@ stack:
     color: "#00BB00"
     label: core
     url: http://docs.tendermint.com
+footer:
+  newsletter: false
 ---
 
 # Cosmos SDK Documentation

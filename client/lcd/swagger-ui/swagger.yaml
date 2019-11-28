@@ -1972,6 +1972,11 @@ paths:
           required: true
           type: number
           x-example: 1
+        - in: query
+          name: prove
+          description: Proof of result
+          type: boolean
+          x-example: true
       responses:
         200:
           description: OK

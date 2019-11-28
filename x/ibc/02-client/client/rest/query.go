@@ -117,20 +117,26 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 			return
 		}
 
-		bz, err := cliCtx.Codec.MarshalJSON(types.NewQueryCommitmentRootParams(clientID, height))
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
+		req := abci.RequestQuery{
+			Path:  "store/ibc/key",
+			Data:  types.KeyRoot(clientID, height),
+			Prove: rest.ParseQueryProve(r),
 		}
 
-		res, resHeight, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryVerifiedRoot), bz)
+		res, err := cliCtx.QueryABCI(req)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(resHeight)
-		rest.PostProcessResponse(w, cliCtx, res)
+		var root commitment.Root
+		if err := cliCtx.Codec.UnmarshalJSON(res.Value, &root); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithHeight(res.Height)
+		rest.PostProcessResponse(w, cliCtx, types.NewRootResponse(clientID, height, root, res.Proof, res.Height))
 	}
 }
 

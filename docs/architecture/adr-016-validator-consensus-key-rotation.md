@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2019 Oct 23: Initial draft
+- 2019 Nov 28: Add key rotation fee
 
 ## Context
 
@@ -30,6 +31,9 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 - limits
     - a validator cannot rotate its consensus key more than N time for any unbonding period, to prevent spam.
     - parameters can be decided by governance and stored in genesis file.
+- key rotation fee
+    - a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
+    - `KeyRotationFee` = `InitialKeyRotationFee` * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
 - slash module
     - slash module can search corresponding consensus key for any height so that it can decide which consensus key is supposed to be used for given height.
 - abci.ValidatorUpdate
@@ -54,6 +58,8 @@ validator consensus key rotation implementation mostly onto Cosmos-SDK.
 4. `RotateConsPubKey` 
     - checks if `NewPubKey` is not duplicated on `ValidatorsByConsAddr`
     - checks if the validator is does not exceed parameter `MaxConsPubKeyRotations` by iterating `ConsPubKeyRotationHistory`
+    - checks if the signing account has enough balance to pay `KeyRotationFee`
+    - pays `KeyRotationFee` to community fund
     - overwrites `NewPubKey` in `validator.ConsPubKey`
     - deletes old `ValidatorByConsAddr`
     - `SetValidatorByConsAddr` for `NewPubKey`
@@ -96,10 +102,12 @@ Proposed
 
 - Validators can immediately or periodically rotate their consensus key to have better security policy
 - improved security against Long-Range attacks (https://nearprotocol.com/blog/long-range-attacks-and-a-new-fork-choice-rule) given a validator throws away the old consensus key(s)
+
 ### Negative
 
 - Slash module needs more computation because it needs to lookup corresponding consensus key of validators for each height
 - frequent key rotations will make light client bisection less efficient
+
 ### Neutral
 
 ## References

@@ -29,7 +29,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body ChannelOpenInitReq true "Channel open-init request body"
+// @Param body body rest.ChannelOpenInitReq true "Channel open-init request body"
 // @Success 200 {object} PostChannelOpenInit "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-init [post]
@@ -78,7 +78,7 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body ChannelOpenTryReq true "Channel open-try request body"
+// @Param body body rest.ChannelOpenTryReq true "Channel open-try request body"
 // @Success 200 {object} PostChannelOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/channels/open-try [post]
@@ -132,7 +132,7 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce  json
 // @Param port-id path string true "Port ID"
 // @Param channel-id path string true "Channel ID"
-// @Param body body ChannelOpenAckReq true "Channel open-ack request body"
+// @Param body body rest.ChannelOpenAckReq true "Channel open-ack request body"
 // @Success 200 {object} PostChannelOpenAck "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -186,7 +186,7 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce  json
 // @Param port-id path string true "Port ID"
 // @Param channel-id path string true "Channel ID"
-// @Param body body ChannelOpenConfirmReq true "Channel open-confirm request body"
+// @Param body body rest.ChannelOpenConfirmReq true "Channel open-confirm request body"
 // @Success 200 {object} PostChannelOpenConfirm "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -239,7 +239,7 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce  json
 // @Param port-id path string true "Port ID"
 // @Param channel-id path string true "Channel ID"
-// @Param body body ChannelCloseInitReq true "Channel close-init request body"
+// @Param body body rest.ChannelCloseInitReq true "Channel close-init request body"
 // @Success 200 {object} PostChannelCloseInit "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -290,7 +290,7 @@ func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Produce  json
 // @Param port-id path string true "Port ID"
 // @Param channel-id path string true "Channel ID"
-// @Param body body ChannelCloseConfirmReq true "Channel close-confirm request body"
+// @Param body body rest.ChannelCloseConfirmReq true "Channel close-confirm request body"
 // @Success 200 {object} PostChannelCloseConfirm "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"

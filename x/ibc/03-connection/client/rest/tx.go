@@ -26,7 +26,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body ConnectionOpenInitReq true "Connection open-init request body"
+// @Param body body rest.ConnectionOpenInitReq true "Connection open-init request body"
 // @Success 200 {object} PostConnectionOpenInit "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/open-init [post]
@@ -69,7 +69,7 @@ func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body ConnectionOpenTryReq true "Connection open-try request body"
+// @Param body body rest.ConnectionOpenTryReq true "Connection open-try request body"
 // @Success 200 {object} PostConnectionOpenTry "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/connections/open-try [post]
@@ -115,7 +115,7 @@ func connectionOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param connection-id path string true "Connection ID"
-// @Param body body ConnectionOpenAckReq true "Connection open-ack request body"
+// @Param body body rest.ConnectionOpenAckReq true "Connection open-ack request body"
 // @Success 200 {object} PostConnectionOpenAck "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -163,7 +163,7 @@ func connectionOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param connection-id path string true "Connection ID"
-// @Param body body ConnectionOpenConfirmReq true "Connection open-confirm request body"
+// @Param body body rest.ConnectionOpenConfirmReq true "Connection open-confirm request body"
 // @Success 200 {object} PostConnectionOpenConfirm "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"

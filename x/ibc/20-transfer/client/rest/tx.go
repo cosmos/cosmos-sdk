@@ -26,7 +26,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // @Produce  json
 // @Param port-id path string true "Port ID"
 // @Param channel-id path string true "Channel ID"
-// @Param body body TransferTxReq true "Transfer token request body"
+// @Param body body rest.TransferTxReq true "Transfer token request body"
 // @Success 200 {object} PostTransfer "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
@@ -78,7 +78,7 @@ func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags IBC
 // @Accept  json
 // @Produce  json
-// @Param body body RecvPacketReq true "Receive packet request body"
+// @Param body body rest.RecvPacketReq true "Receive packet request body"
 // @Success 200 {object} PostRecvPacket "OK"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/packets/receive [post]

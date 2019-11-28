@@ -186,7 +186,7 @@ func NewSimApp(
 	// create evidence keeper with router
 	evidenceKeeper := evidence.NewKeeper(
 		app.cdc, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], evidence.DefaultCodespace,
-		app.StakingKeeper, app.SlashingKeeper,
+		&app.StakingKeeper, app.SlashingKeeper,
 	)
 	evidenceRouter := evidence.NewRouter()
 	// TODO: Register evidence routes.

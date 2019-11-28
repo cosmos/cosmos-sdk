@@ -23,6 +23,16 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}/close-confirm", RestPortID, RestChannelID), channelCloseConfirmHandlerFn(cliCtx)).Methods("POST")
 }
 
+// channelOpenInitHandlerFn implements a channel open init handler
+//
+// @Summary Channel open-init
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body ChannelOpenInitReq true "Channel open-init request body"
+// @Success 200 {object} PostChannelOpenInit "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/channels/open-init [post]
 func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenInitReq
@@ -62,6 +72,16 @@ func channelOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// channelOpenTryHandlerFn implements a channel open try handler
+//
+// @Summary Channel open-try
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body ChannelOpenTryReq true "Channel open-try request body"
+// @Success 200 {object} PostChannelOpenTry "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/channels/open-try [post]
 func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChannelOpenTryReq
@@ -104,6 +124,19 @@ func channelOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// channelOpenAckHandlerFn implements a channel open ack handler
+//
+// @Summary Channel open-ack
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param body body ChannelOpenAckReq true "Channel open-ack request body"
+// @Success 200 {object} PostChannelOpenAck "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id}/open-ack [post]
 func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -145,6 +178,19 @@ func channelOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// channelOpenConfirmHandlerFn implements a channel open confirm handler
+//
+// @Summary Channel open-confirm
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param body body ChannelOpenConfirmReq true "Channel open-confirm request body"
+// @Success 200 {object} PostChannelOpenConfirm "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id}/open-confirm [post]
 func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -185,6 +231,19 @@ func channelOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// channelCloseInitHandlerFn implements a channel close init handler
+//
+// @Summary Channel close-init
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param body body ChannelCloseInitReq true "Channel close-init request body"
+// @Success 200 {object} PostChannelCloseInit "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id}/close-init [post]
 func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -223,6 +282,19 @@ func channelCloseInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// channelCloseConfirmHandlerFn implements a channel close confirm handler
+//
+// @Summary Channel close-confirm
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param body body ChannelCloseConfirmReq true "Channel close-confirm request body"
+// @Success 200 {object} PostChannelCloseConfirm "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id}/close-confirm [post]
 func channelCloseConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

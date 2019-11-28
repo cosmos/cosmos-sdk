@@ -20,6 +20,16 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/misbehaviour", RestClientID), submitMisbehaviourHandlerFn(cliCtx)).Methods("POST")
 }
 
+// createClientHandlerFn implements a create client handler
+//
+// @Summary Create client
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body CreateClientReq true "Create client request body"
+// @Success 200 {object} PostCreateClient "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients [post]
 func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateClientReq
@@ -55,6 +65,18 @@ func createClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// updateClientHandlerFn implements a update client handler
+//
+// @Summary update client
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param body body UpdateClientReq true "Update client request body"
+// @Success 200 {object} PostUpdateClient "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/update [post]
 func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -92,6 +114,18 @@ func updateClientHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// submitMisbehaviourHandlerFn implements a submit misbehaviour handler
+//
+// @Summary Submit misbehaviour
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param body body SubmitMisbehaviourReq true "Submit misbehaviour request body"
+// @Success 200 {object} PostSubmitMisbehaviour "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/misbehaviour [post]
 func submitMisbehaviourHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

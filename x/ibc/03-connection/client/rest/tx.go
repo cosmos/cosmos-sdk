@@ -20,6 +20,16 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/connections/{%s}/open-confirm", RestConnectionID), connectionOpenConfirmHandlerFn(cliCtx)).Methods("POST")
 }
 
+// connectionOpenInitHandlerFn implements a connection open init handler
+//
+// @Summary Connection open-init
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body ConnectionOpenInitReq true "Connection open-init request body"
+// @Success 200 {object} PostConnectionOpenInit "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/connections/open-init [post]
 func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenInitReq
@@ -53,6 +63,16 @@ func connectionOpenInitHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// connectionOpenTryHandlerFn implements a connection open try handler
+//
+// @Summary Connection open-try
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body ConnectionOpenTryReq true "Connection open-try request body"
+// @Success 200 {object} PostConnectionOpenTry "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/connections/open-try [post]
 func connectionOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ConnectionOpenTryReq
@@ -88,6 +108,18 @@ func connectionOpenTryHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// connectionOpenAckHandlerFn implements a connection open ack handler
+//
+// @Summary Connection open-ack
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param connection-id path string true "Connection ID"
+// @Param body body ConnectionOpenAckReq true "Connection open-ack request body"
+// @Success 200 {object} PostConnectionOpenAck "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/connections/{connection-id}/open-ack [post]
 func connectionOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -124,6 +156,18 @@ func connectionOpenAckHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// connectionOpenConfirmHandlerFn implements a connection open confirm handler
+//
+// @Summary Connection open-confirm
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param connection-id path string true "Connection ID"
+// @Param body body ConnectionOpenConfirmReq true "Connection open-confirm request body"
+// @Success 200 {object} PostConnectionOpenConfirm "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/connections/{connection-id}/open-confirm [post]
 func connectionOpenConfirmHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

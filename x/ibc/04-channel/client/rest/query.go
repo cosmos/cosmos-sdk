@@ -16,6 +16,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 	r.HandleFunc(fmt.Sprintf("/ibc/ports/{%s}/channels/{%s}", RestPortID, RestChannelID), queryChannelHandlerFn(cliCtx, queryRoute)).Methods("GET")
 }
 
+// queryChannelHandlerFn implements a channel querying route
+//
+// @Summary Query channel
+// @Tags IBC
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param prove query boolean false "Proof of result"
+// @Success 200 {object} QueryChannel "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id} [get]
 func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

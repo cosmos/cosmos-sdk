@@ -18,6 +18,19 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(fmt.Sprintf("/ibc/packets/receive"), recvPacketHandlerFn(cliCtx)).Methods("POST")
 }
 
+// transferHandlerFn implements a transfer handler
+//
+// @Summary Transfer token
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param port-id path string true "Port ID"
+// @Param channel-id path string true "Channel ID"
+// @Param body body TransferTxReq true "Transfer token request body"
+// @Success 200 {object} PostTransfer "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid port id or channel id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/ports/{port-id}/channels/{channel-id}/transfer [post]
 func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -59,6 +72,16 @@ func transferHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// recvPacketHandlerFn implements a receive packet handler
+//
+// @Summary Receive packet
+// @Tags IBC
+// @Accept  json
+// @Produce  json
+// @Param body body RecvPacketReq true "Receive packet request body"
+// @Success 200 {object} PostRecvPacket "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/packets/receive [post]
 func recvPacketHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req RecvPacketReq

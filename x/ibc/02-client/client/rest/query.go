@@ -26,6 +26,17 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 	r.HandleFunc("/ibc/path", queryPathHandlerFn(cliCtx)).Methods("GET")
 }
 
+// queryConsensusStateHandlerFn implements a consensus state querying route
+//
+// @Summary Query cliet consensus-state
+// @Tags IBC
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param prove query boolean false "Proof of result"
+// @Success 200 {object} QueryConsensusState "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/consensus-state [get]
 func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -58,6 +69,14 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) 
 	}
 }
 
+// queryHeaderHandlerFn implements a header querying route
+//
+// @Summary Query header
+// @Tags IBC
+// @Produce  json
+// @Success 200 {object} QueryHeader "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/header [get]
 func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		header, err := utils.GetTendermintHeader(cliCtx)
@@ -70,6 +89,17 @@ func queryHeaderHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
+// queryClientStateHandlerFn implements a client state querying route
+//
+// @Summary Query client state
+// @Tags IBC
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param prove query boolean false "Proof of result"
+// @Success 200 {object} QueryClientState "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/client-state [get]
 func queryClientStateHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -102,6 +132,17 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 	}
 }
 
+// queryRootHandlerFn implements a root querying route
+//
+// @Summary Query client root
+// @Tags IBC
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param height path number true "Root height"
+// @Success 200 {object} QueryRoot "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id or height"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/roots/{height} [get]
 func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -140,6 +181,14 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 	}
 }
 
+// queryNodeConsensusStateHandlerFn implements a node consensus state querying route
+//
+// @Summary Query node consensus-state
+// @Tags IBC
+// @Produce  json
+// @Success 200 {object} QueryNodeConsensusState "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/node-state [get]
 func queryNodeConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		node, err := cliCtx.GetNode()
@@ -182,6 +231,14 @@ func queryNodeConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFun
 	}
 }
 
+// queryPathHandlerFn implements a node consensus path querying route
+//
+// @Summary Query IBC path
+// @Tags IBC
+// @Produce  json
+// @Success 200 {object} QueryPath "OK"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/path [get]
 func queryPathHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := commitment.NewPrefix([]byte("ibc"))

@@ -17,6 +17,17 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/connections", RestClientID), queryClientConnectionsHandlerFn(cliCtx, queryRoute)).Methods("GET")
 }
 
+// queryConnectionHandlerFn implements a connection querying route
+//
+// @Summary Query connection
+// @Tags IBC
+// @Produce  json
+// @Param connection-id path string true "Client ID"
+// @Param prove query boolean false "Proof of result"
+// @Success 200 {object} QueryConnection "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid connection id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/connections/{connection-id} [get]
 func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -48,6 +59,17 @@ func queryConnectionHandlerFn(cliCtx context.CLIContext, queryRoute string) http
 	}
 }
 
+// queryClientConnectionsHandlerFn implements a client connections querying route
+//
+// @Summary Query connections of a client
+// @Tags IBC
+// @Produce  json
+// @Param client-id path string true "Client ID"
+// @Param prove query boolean false "Proof of result"
+// @Success 200 {object} QueryClientConnections "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/connections [get]
 func queryClientConnectionsHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

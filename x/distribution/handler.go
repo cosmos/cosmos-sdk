@@ -24,9 +24,6 @@ func NewHandler(k keeper.Keeper, bankKeeper bank.Keeper) sdk.Handler {
 		case types.MsgWithdrawValidatorCommission:
 			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
 
-		case types.MsgDepositIntoCommunityPool:
-			return handleMsgDepositIntoCommunityPool(ctx, msg, k, bankKeeper)
-
 		default:
 			errMsg := fmt.Sprintf("unrecognized distribution message type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()

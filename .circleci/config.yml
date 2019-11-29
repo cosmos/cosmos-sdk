@@ -215,16 +215,13 @@ workflows:
           filters:
             branches:
               only:
-                - /.*/
-            tags:
-              ignore:
-                - /^v.*/
+                - docs-theme-latest
       - build-docs:
           context: docs-deployment-release
           filters:
             branches:
-              ignore:
-                - /.*/
+              only:
+                - master
             tags:
               only:
                 - /v.*/

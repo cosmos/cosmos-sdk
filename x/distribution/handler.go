@@ -87,26 +87,6 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgDepositIntoCommunityPool(ctx sdk.Context, msg types.MsgDepositIntoCommunityPool, k keeper.Keeper, bankK bank.Keeper) sdk.Result {
-	if _, err := bankK.SubtractCoins(ctx, msg.Depositor, msg.Amount); err != nil {
-		return err.Result()
-	}
-
-	pool := k.GetFeePool(ctx)
-	pool.CommunityPool = pool.CommunityPool.Add(sdk.NewDecCoins(msg.Amount))
-	k.SetFeePool(ctx, pool)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor.String()),
-		),
-	)
-
-	return sdk.Result{Events: ctx.EventManager().Events()}
-}
-
 func NewCommunityPoolSpendProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
 		switch c := content.(type) {

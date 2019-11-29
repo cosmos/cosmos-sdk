@@ -13,9 +13,9 @@ block.
 
 ## Modules specifications
 
-- [Auth](../../x/authspec) - The structure and authentication of accounts and transactions.
+- [Auth](../../x/auth/spec) - The structure and authentication of accounts and transactions.
 - [Bank](../../x/bank/spec) - Sending tokens.
-- [Governance](../../x/governance/spec) - Proposals and voting.
+- [Governance](../../x/gov/spec) - Proposals and voting.
 - [Staking](../../x/staking/spec) - Proof-of-stake bonding, delegation, etc.
 - [Slashing](../../x/slashing/spec) - Validator punishment mechanisms.
 - [Distribution](../../x/distribution/spec) - Fee distribution, and staking token provision distribution.

@@ -309,6 +309,22 @@ func ResultFromError(err error) Result {
 	}
 }
 
+// ConvertError accepts a standard error and attempts to convert it to an sdk.Error.
+// If the given error is already an sdk.Error, it'll simply be returned. Otherwise,
+// it'll convert it to a types.Error. This is meant to provide a migration path
+// away from sdk.Error in favor of types.Error.
+func ConvertError(err error) Error {
+	if err == nil {
+		return nil
+	}
+	if sdkError, ok := err.(Error); ok {
+		return sdkError
+	}
+
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	return NewError(CodespaceType(space), CodeType(code), log)
+}
+
 //----------------------------------------
 // REST error utilities
 

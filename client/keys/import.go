@@ -21,7 +21,8 @@ func importKeyCommand() *cobra.Command {
 }
 
 func runImportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	buf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := NewKeyringFromHomeFlag(buf)
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,6 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	passphrase, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

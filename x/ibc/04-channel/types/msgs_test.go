@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -419,14 +420,13 @@ func TestMsgPacketValidation(t *testing.T) {
 	}
 }
 
-// XXX
-/*
 // TestMsgPacketGetSignBytes tests GetSignBytes for MsgPacket
 func TestMsgPacketGetSignBytes(t *testing.T) {
 	msg := NewMsgPacket(packet, proof, 1, addr1)
+	SubModuleCdc.RegisterConcrete(validPacketT{}, "test/validPacketT", nil)
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"ibc/transfer/MsgPacket","value":{"height":"1","packet":{"type":"ibc/channel/Packet","value":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout":"100"}},"proof":[{"proof":{"ops":[]}}],"signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`
+	expected := `{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/merkle/Proof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -438,4 +438,3 @@ func TestMsgPacketGetSigners(t *testing.T) {
 	expected := "[746573746164647231]"
 	require.Equal(t, expected, fmt.Sprintf("%v", res))
 }
-*/

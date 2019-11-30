@@ -145,14 +145,15 @@ func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.Tx {
 	}
 }
 
-func (suite *HandlerTestSuite) TestHandleMsgPacket() {
+func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 	handler := sdk.ChainAnteDecorators(channel.NewProofVerificationDecorator(
 		suite.app.IBCKeeper.ClientKeeper,
 		suite.app.IBCKeeper.ChannelKeeper,
 	))
 
+	packet := channel.NewPacket(newPacket(12345), 1, portid, chanid, cpportid, cpchanid)
+
 	cctx, _ := suite.ctx.CacheContext()
-	// valid packet, ordered channel
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, 1)
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, packet.GetCommitment())
 	msg := channel.NewMsgPacket(packet, nil, 0, addr1)
@@ -189,11 +190,43 @@ func (suite *HandlerTestSuite) TestHandleMsgPacket() {
 			suite.Error(err, "%d", i) // wrong incoming sequence
 		}
 	}
-
-	// invalid packet
-
 }
 
+func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
+	handler := sdk.ChainAnteDecorators(channel.NewProofVerificationDecorator(
+		suite.app.IBCKeeper.ClientKeeper,
+		suite.app.IBCKeeper.ChannelKeeper,
+	))
+
+	// Not testing nonexist channel, invalid proof, nextseqsend, they are already tested in TestHandleMsgPacketOrdered
+
+	var packet channeltypes.Packet
+	for i := 0; i < 5; i++ {
+		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
+		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(i), packet.GetCommitment())
+	}
+
+	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(10))
+
+	suite.createChannel(cpportid, cpchanid, testConnection, portid, chanid, channel.OPEN, channel.UNORDERED)
+
+	suite.updateClient()
+
+	for i := 10; i >= 0; i-- {
+		cctx, write := suite.ctx.CacheContext()
+		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
+		packetCommitmentPath := channel.PacketCommitmentPath(packet.SourcePort, packet.SourceChannel, uint64(i))
+		proof, proofHeight := suite.queryProof(packetCommitmentPath)
+		msg := channel.NewMsgPacket(packet, proof, uint64(proofHeight), addr1)
+		_, err := handler(cctx, suite.newTx(msg), false)
+		if i < 5 {
+			suite.NoError(err, "%d", i) // successfully executed
+			write()
+		} else {
+			suite.Error(err, "%d", i) // wrong incoming sequence
+		}
+	}
+}
 func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }
@@ -209,51 +242,34 @@ const (
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
 )
 
-var _ channeltypes.PacketDataI = validPacketT{}
+var _ channeltypes.PacketDataI = packetT{}
 
-type validPacketT struct{}
-
-func (validPacketT) GetCommitment() []byte {
-	return []byte("testdata")
+type packetT struct {
+	Data uint64
 }
 
-func (validPacketT) GetTimeoutHeight() uint64 {
+func (packet packetT) GetCommitment() []byte {
+	return []byte(fmt.Sprintf("%d", packet.Data))
+}
+
+func (packetT) GetTimeoutHeight() uint64 {
 	return 100
 }
 
-func (validPacketT) ValidateBasic() sdk.Error {
+func (packetT) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func (validPacketT) Type() string {
+func (packetT) Type() string {
 	return "valid"
 }
 
-var _ channeltypes.PacketDataI = invalidPacketT{}
-
-type invalidPacketT struct{}
-
-func (invalidPacketT) GetCommitment() []byte {
-	return []byte("testdata")
-}
-
-func (invalidPacketT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (invalidPacketT) ValidateBasic() sdk.Error {
-	return nil
-}
-
-func (invalidPacketT) Type() string {
-	return "invalid"
+func newPacket(data uint64) packetT {
+	return packetT{data}
 }
 
 // define variables used for testing
 var (
-	packet        = channel.NewPacket(validPacketT{}, 1, portid, chanid, cpportid, cpchanid)
-	invalidPacket = channel.NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
-
 	proof          = commitment.Proof{Proof: &merkle.Proof{}}
 	emptyProof     = commitment.Proof{Proof: nil}
 	proofs         = proof

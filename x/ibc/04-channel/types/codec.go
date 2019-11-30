@@ -2,10 +2,19 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // SubModuleCdc defines the IBC channel codec.
 var SubModuleCdc *codec.Codec
+
+func init() {
+	SubModuleCdc = codec.New()
+	commitment.RegisterCodec(SubModuleCdc)
+	client.RegisterCodec(SubModuleCdc)
+	RegisterCodec(SubModuleCdc)
+}
 
 // RegisterCodec registers all the necessary types and interfaces for the
 // IBC channel.

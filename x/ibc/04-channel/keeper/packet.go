@@ -209,13 +209,6 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	// XXX: fix before merge
-	/*
-		if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
-			return errors.New("port is not valid")
-		}
-	*/
-
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
 		return types.ErrInvalidPacket(
@@ -302,13 +295,6 @@ func (k Keeper) AcknowledgementPacket(
 			fmt.Sprintf("channel state is not OPEN (got %s)", channel.State.String()),
 		)
 	}
-
-	// XXX: fixme
-	/*
-		if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-			return errors.New("invalid capability key")
-		}
-	*/
 
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {

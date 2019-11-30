@@ -9,6 +9,11 @@ import (
 // SubModuleCdc defines the IBC client codec.
 var SubModuleCdc *codec.Codec
 
+func init() {
+	SubModuleCdc = codec.New()
+	RegisterCodec(SubModuleCdc)
+}
+
 // RegisterCodec registers the IBC client interfaces and types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)

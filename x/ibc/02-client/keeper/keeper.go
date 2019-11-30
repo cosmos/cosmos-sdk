@@ -164,12 +164,13 @@ func (k Keeper) VerifyMembership(
 	path commitment.PathI,
 	value []byte,
 ) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
+	clientState, ok := k.GetClientState(ctx, clientID)
+	if !ok {
+		return false
+	}
+	if clientState.Frozen {
+		return false
+	}
 
 	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
@@ -187,12 +188,13 @@ func (k Keeper) VerifyNonMembership(
 	proof commitment.ProofI,
 	path commitment.PathI,
 ) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
+	clientState, ok := k.GetClientState(ctx, clientID)
+	if !ok {
+		return false
+	}
+	if clientState.Frozen {
+		return false
+	}
 	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
 		return false

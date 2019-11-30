@@ -41,13 +41,6 @@ func (k Keeper) TimeoutPacket(
 		return types.ErrChannelCapabilityNotFound(k.codespace)
 	}
 
-	// XXX: fixme
-	/*
-		if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-			return errors.New("port is not valid")
-		}
-	*/
-
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return types.ErrInvalidPacket(
 			k.codespace,

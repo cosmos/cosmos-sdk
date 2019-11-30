@@ -44,7 +44,6 @@ deprecated and all components removed except the `legacy/` package. This require
 genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
 logic has been implemented for v0.38 target version. Applications can migrate via:
 `$ {appd} migrate v0.38 genesis.json`.
-* (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
 
 ### API Breaking Changes
 

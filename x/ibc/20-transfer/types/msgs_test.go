@@ -5,12 +5,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // define constants used for testing
@@ -24,65 +20,10 @@ const (
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
 )
 
-var _ channeltypes.PacketDataI = validPacketT{}
-
-type validPacketT struct{}
-
-func (validPacketT) GetCommitment() []byte {
-	return []byte("testdata")
-}
-
-func (validPacketT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (validPacketT) ValidateBasic() sdk.Error {
-	return nil
-}
-
-func (validPacketT) Type() string {
-	return "valid"
-}
-
-var _ channeltypes.PacketDataI = invalidPacketT{}
-
-type invalidPacketT struct{}
-
-func (invalidPacketT) GetCommitment() []byte {
-	return []byte("testdata")
-}
-
-func (invalidPacketT) GetTimeoutHeight() uint64 {
-	return 100
-}
-
-func (invalidPacketT) ValidateBasic() sdk.Error {
-	return nil
-}
-
-func (invalidPacketT) Type() string {
-	return "invalid"
-}
-
-// define variables used for testing
 var (
-	packet        = channel.NewPacket(validPacketT{}, 1, portid, chanid, cpportid, cpchanid)
-	invalidPacket = channel.NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
-
-	proof          = commitment.Proof{Proof: &merkle.Proof{}}
-	emptyProof     = commitment.Proof{Proof: nil}
-	proofs         = proof
-	invalidProofs1 = commitment.ProofI(nil)
-	invalidProofs2 = emptyProof
-
 	addr1     = sdk.AccAddress("testaddr1")
 	addr2     = sdk.AccAddress("testaddr2")
 	emptyAddr sdk.AccAddress
-
-	portid   = "testportid"
-	chanid   = "testchannel"
-	cpportid = "testcpport"
-	cpchanid = "testcpchannel"
 
 	coins, _          = sdk.ParseCoins("100atom")
 	invalidDenomCoins = sdk.Coins{sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}}

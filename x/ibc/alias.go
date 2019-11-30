@@ -7,6 +7,7 @@ package ibc
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/types
 
 import (
+	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	"github.com/cosmos/cosmos-sdk/x/ibc/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -26,5 +27,6 @@ var (
 )
 
 type (
-	Keeper = keeper.Keeper
+	Keeper                     = keeper.Keeper
+	ProofVerificationDecorator = channel.ProofVerificationDecorator
 )

@@ -189,7 +189,6 @@ func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	suite.Equal(testCoins, receiverCoins)
 }
 
-// XXX: fix befoer merge
 /*
 func (suite *KeeperTestSuite) TestReceiveTransfer() {
 	packetSeq := uint64(1)

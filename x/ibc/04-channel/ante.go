@@ -1,16 +1,22 @@
-package ibc
+package channel
 
 import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 )
 
 type ProofVerificationDecorator struct {
 	clientKeeper  client.Keeper
-	channelKeeper channel.Keeper
+	channelKeeper Keeper
+}
+
+func NewProofVerificationDecorator(clientKeeper client.Keeper, channelKeeper Keeper) ProofVerificationDecorator {
+	return ProofVerificationDecorator{
+		clientKeeper:  clientKeeper,
+		channelKeeper: channelKeeper,
+	}
 }
 
 func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
@@ -22,7 +28,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 		switch msg := msg.(type) {
 		case client.MsgUpdateClient:
 			err = pvr.clientKeeper.UpdateClient(ctx, msg.ClientID, msg.Header)
-		case channel.MsgPacket:
+		case MsgPacket:
 			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 			if flag {
 				if portID != msg.DestinationPort || channelID != msg.DestinationChannel {
@@ -35,7 +41,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			}
 			pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.DestinationPort, msg.DestinationChannel, msg.Sequence, []byte{})
 
-		case channel.MsgAcknowledgement:
+		case MsgAcknowledgement:
 			err = pvr.channelKeeper.AcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
 			if flag {
 				if portID != msg.SourcePort || channelID != msg.SourceChannel {
@@ -46,7 +52,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				channelID = msg.SourceChannel
 				flag = true
 			}
-		case channel.MsgTimeout:
+		case MsgTimeout:
 			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 			if flag {
 				if portID != msg.SourcePort || channelID != msg.SourceChannel {

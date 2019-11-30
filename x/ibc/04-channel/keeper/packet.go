@@ -197,7 +197,6 @@ func (k Keeper) RecvPacket(
 	proofHeight uint64,
 	// portCapability sdk.CapabilityKey,
 ) error {
-
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, packet.GetDestPort(), packet.GetDestChannel())
@@ -292,8 +291,6 @@ func (k Keeper) AcknowledgementPacket(
 	proofHeight uint64,
 	// portCapability sdk.CapabilityKey,
 ) error {
-	// XXX: check packet.{SourcePort, SourceChannel, DestPort, DestChannel} == acknowledgement.{dp, dc, sp, sc}
-
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), packet.GetSourceChannel())

@@ -37,14 +37,8 @@ func (e Equivocation) Route() string { return RouteEquivocation }
 func (e Equivocation) Type() string { return TypeEquivocation }
 
 func (e Equivocation) String() string {
-	out, _ := e.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of an Equivocation object.
-func (e Equivocation) MarshalYAML() (interface{}, error) {
-	bz, err := yaml.Marshal(e)
-	return string(bz), err
+	bz, _ := yaml.Marshal(e)
+	return string(bz)
 }
 
 // Hash returns the hash of an Equivocation object.
@@ -54,6 +48,9 @@ func (e Equivocation) Hash() cmn.HexBytes {
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.
 func (e Equivocation) ValidateBasic() error {
+	if e.Time.IsZero() {
+		return fmt.Errorf("invalid equivocation time: %s", e.Time)
+	}
 	if e.Height < 1 {
 		return fmt.Errorf("invalid equivocation height: %d", e.Height)
 	}

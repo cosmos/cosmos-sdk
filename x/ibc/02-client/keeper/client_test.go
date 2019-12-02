@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
-	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (

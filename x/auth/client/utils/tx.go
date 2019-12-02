@@ -331,7 +331,7 @@ func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 
 	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
-		return stdTx, nil
+		return stdTx, err
 	}
 
 	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil

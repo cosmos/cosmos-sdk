@@ -32,13 +32,6 @@ const (
 )
 
 // define variables used for testing
-var (
-	testAddr1 = sdk.AccAddress([]byte("testaddr1"))
-	testAddr2 = sdk.AccAddress([]byte("testaddr2"))
-
-	testCoins, _ = sdk.ParseCoins("100atom")
-)
-
 type HandlerTestSuite struct {
 	suite.Suite
 
@@ -231,17 +224,6 @@ func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }
 
-// define constants used for testing
-const (
-	invalidPort      = "invalidport1"
-	invalidShortPort = "p"
-	invalidLongPort  = "invalidlongportinvalidlongport"
-
-	invalidChannel      = "invalidchannel1"
-	invalidShortChannel = "invalidch"
-	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
-)
-
 var _ channeltypes.PacketDataI = packetT{}
 
 type packetT struct {
@@ -270,11 +252,9 @@ func newPacket(data uint64) packetT {
 
 // define variables used for testing
 var (
-	proof          = commitment.Proof{Proof: &merkle.Proof{}}
-	emptyProof     = commitment.Proof{Proof: nil}
-	proofs         = proof
-	invalidProofs1 = commitment.ProofI(nil)
-	invalidProofs2 = emptyProof
+	proof      = commitment.Proof{Proof: &merkle.Proof{}}
+	emptyProof = commitment.Proof{Proof: nil}
+	proofs     = proof
 
 	addr1     = sdk.AccAddress("testaddr1")
 	addr2     = sdk.AccAddress("testaddr2")

@@ -32,7 +32,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			err = pvr.channelKeeper.RecvPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight)
 			if flag {
 				if portID != msg.DestinationPort || channelID != msg.DestinationChannel {
-					return ctx, errors.New("Transaction cannot include IBC packets from different channels")
+					return ctx, errors.New("transaction cannot include IBC packets from different channels")
 				}
 			} else {
 				portID = msg.DestinationPort
@@ -45,7 +45,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			err = pvr.channelKeeper.AcknowledgementPacket(ctx, msg.Packet, msg.Acknowledgement, msg.Proof, msg.ProofHeight)
 			if flag {
 				if portID != msg.SourcePort || channelID != msg.SourceChannel {
-					return ctx, errors.New("Transaction cannot include IBC packets from different channels")
+					return ctx, errors.New("transaction cannot include IBC packets from different channels")
 				}
 			} else {
 				portID = msg.SourcePort
@@ -56,7 +56,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 			err = pvr.channelKeeper.TimeoutPacket(ctx, msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
 			if flag {
 				if portID != msg.SourcePort || channelID != msg.SourceChannel {
-					return ctx, errors.New("Transaction cannot include IBC packets from different channels")
+					return ctx, errors.New("transaction cannot include IBC packets from different channels")
 				}
 			} else {
 				portID = msg.SourcePort
@@ -64,7 +64,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				flag = true
 			}
 		default:
-			err = errors.New("Transaction cannot include both IBC packet messages and normal messages")
+			err = errors.New("transaction cannot include both IBC packet messages and normal messages")
 		}
 
 		if err != nil {

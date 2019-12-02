@@ -1,8 +1,9 @@
-# ADR 16: Historical Header Module
+# ADR 17: Historical Header Module
 
 ## Changelog
 
-- 26 November 2019: First version
+- 26 November 2019: Start of first version
+- 2 December 2019: Final draft of first version
 
 ## Context
 

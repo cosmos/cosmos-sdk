@@ -26,11 +26,11 @@ $ %s query ibc channel end [port-id] [channel-id]
 		`, version.ClientName),
 		),
 		Example: fmt.Sprintf("%s query ibc channel end [port-id] [channel-id]", version.ClientName),
-		Args: cobra.ExactArgs(2),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			portID :=  args[0]
-			channelID :=  args[1]
+			portID := args[0]
+			channelID := args[1]
 			prove := viper.GetBool(flags.FlagProve)
 
 			channelRes, err := utils.QueryChannel(cliCtx, portID, channelID, prove)

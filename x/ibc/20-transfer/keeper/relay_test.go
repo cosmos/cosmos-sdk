@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -11,7 +13,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) createClient() {

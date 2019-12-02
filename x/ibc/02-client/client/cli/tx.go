@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,23 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
-
-// GetTxCmd returns the transaction commands for IBC Clients
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics02ClientTxCmd := &cobra.Command{
-		Use:                        "client",
-		Short:                      "Client transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ics02ClientTxCmd.AddCommand(client.PostCommands(
-		GetCmdCreateClient(cdc),
-		GetCmdUpdateClient(cdc),
-	)...)
-
-	return ics02ClientTxCmd
-}
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create

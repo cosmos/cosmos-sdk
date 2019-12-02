@@ -31,20 +31,6 @@ var (
 	FlagTimeout  = "timeout"
 )
 
-// GetTxCmd returns the transaction commands for IBC fungible token transfer
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:   "transfer",
-		Short: "IBC fungible token transfer transaction subcommands",
-	}
-	txCmd.AddCommand(
-		GetTransferTxCmd(cdc),
-		GetMsgRecvPacketCmd(cdc),
-	)
-
-	return txCmd
-}
-
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -94,6 +80,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
+			prove := viper.GetBool(flags.FlagProve)
 			node2 := viper.GetString(FlagNode2)
 			cid1 := viper.GetString(flags.FlagChainID)
 			cid2 := viper.GetString(FlagChainID2)
@@ -101,7 +88,7 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
 
-			header, err := clientutils.GetTendermintHeader(cliCtx2)
+			header, _, err := clientutils.QueryTendermintHeader(cliCtx2)
 			if err != nil {
 				return err
 			}
@@ -126,16 +113,18 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 
 			viper.Set(flags.FlagChainID, cid2)
 			sequence := uint64(viper.GetInt(FlagSequence))
-			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), "ibc")
+			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
 			if err != nil {
 				return err
 			}
+
 			viper.Set(flags.FlagChainID, cid1)
 
 			msg := types.NewMsgRecvPacket(packetRes.Packet, []commitment.Proof{packetRes.Proof}, packetRes.ProofHeight, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
@@ -146,5 +135,6 @@ func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
 	cmd.Flags().String(FlagSequence, "", "sequence for the packet")
 	cmd.Flags().String(FlagTimeout, "", "timeout for the packet")
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
 	return cmd
 }

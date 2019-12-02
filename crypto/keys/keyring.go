@@ -47,8 +47,8 @@ func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
 	return newKeyringKeybase(db), nil
 }
 
-// NewTestKeyring creates a new instance of a keyring for
-// testing purposes that  does not prompt users for password.
+// NewTestKeyring creates a new instance of an on-disk keyring for
+// testing purposes that does not prompt users for password.
 func NewTestKeyring(name string, dir string) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {

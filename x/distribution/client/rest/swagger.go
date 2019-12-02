@@ -8,9 +8,8 @@ import (
 // Concrete Swagger types used to generate REST documentation. Note, these types
 // are not actually used but since all queries return a generic JSON raw message,
 // they enabled typed documentation.
-//
-//nolint:deadcode,unused
 
+//nolint:deadcode,unused
 type (
 	coinsReturn struct {
 		Height int64       `json:"height"`

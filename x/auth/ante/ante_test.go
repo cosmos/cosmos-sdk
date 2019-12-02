@@ -779,7 +779,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
 	testCases := []struct {
 		name   string
-		params types.Params
+		params types.AuthParams
 	}{
 		{"memo size check", types.NewParams(0, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
 		{"tx sig limit check", types.NewParams(types.DefaultMaxMemoCharacters, 0, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},

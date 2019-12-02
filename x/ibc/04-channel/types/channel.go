@@ -9,6 +9,13 @@ import (
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+// Channel channel is a set of persistent data structures on two chains that
+// contain metadata to facilitate packet ordering, exactly-once delivery, and
+// replay prevention. Packets sent through a channel change its internal state.
+// Channels are associated with connections in a many-to-one relationship —
+// single connection can have any number of associated channels, and all channels
+// must have a single associated connection, which must have been created prior
+// to the creation of the channel.
 type Channel struct {
 	State          State        `json:"state" yaml:"state"`
 	Ordering       Order        `json:"ordering" yaml:"ordering"`
@@ -36,7 +43,7 @@ func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
 		return ErrInvalidChannelState(
 			DefaultCodespace,
-			"channel order should be either 'ORDERED' or 'UNORDERED'",
+			"invalid channel state",
 		)
 	}
 	if ch.Ordering.String() == "" {

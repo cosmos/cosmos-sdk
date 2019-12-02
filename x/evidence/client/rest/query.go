@@ -26,7 +26,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc(
 		"/evidence/params",
 		queryParamsHandler(cliCtx),
-	).Methods("GET")
+	).Methods(MethodGet)
 }
 
 func queryEvidenceHandler(cliCtx context.CLIContext) http.HandlerFunc {

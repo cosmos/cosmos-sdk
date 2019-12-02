@@ -3,6 +3,9 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+
+	"time"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -35,4 +38,17 @@ func (capability SendCapability) Accept(msg sdk.Msg, block abci.Header) (allow b
 		return true, SendCapability{SpendLimit: limitLeft}, false
 	}
 	return false, nil, false
+}
+
+type CapabilityGrant struct {
+	Capability Capability
+
+	Expiration time.Time
+}
+
+// GenericCapability grants the permission to execute any transaction of the provided
+// sdk.Msg type without restrictions
+type GenericCapability struct {
+	// MsgType is the type of Msg this capability grant allows
+	MsgType sdk.Msg
 }

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,35 +84,6 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 			break
 		}
 	}
-}
-
-// Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes.
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, power, distributionHeight int64) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
-		),
-	)
-
-	fraction := k.SlashFractionDoubleSign(ctx)
-	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
-}
-
-// Jail attempts to jail a validator. The slash is delegated to the staking module
-// to make the necessary validator changes.
-func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-		),
-	)
-
-	k.sk.Jail(ctx, consAddr)
 }
 
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing

@@ -187,6 +187,53 @@
                 }
             }
         },
+        "/distribution/community_pool_spend": {
+            "post": {
+                "description": "Spend the community pool based on governance proposals",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "distribution"
+                ],
+                "summary": "Spend the community pool based on governance proposals",
+                "parameters": [
+                    {
+                        "description": "The data required to spend the community pool",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/rest.CommunityPoolSpendProposalReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.communityPoolSpendProposal"
+                        }
+                    },
+                    "400": {
+                        "description": "Returned if the request is invalid",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Returned on server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/distribution/delegators/{delegatorAddr}/rewards": {
             "get": {
                 "description": "Query all delegation rewards from a single delegator address",
@@ -3065,6 +3112,33 @@
                 }
             }
         },
+        "rest.CommunityPoolSpendProposalReq": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "base_req": {
+                    "type": "object",
+                    "$ref": "#/definitions/rest.BaseReq"
+                },
+                "deposit": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "proposer": {
+                    "type": "string"
+                },
+                "recipient": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "rest.CreateValidatorRequest": {
             "type": "object",
             "properties": {
@@ -3359,6 +3433,30 @@
                 "result": {
                     "type": "object",
                     "$ref": "#/definitions/types.Coins"
+                }
+            }
+        },
+        "rest.communityPoolSpendProposal": {
+            "type": "object",
+            "properties": {
+                "fee": {
+                    "type": "object",
+                    "$ref": "#/definitions/auth.StdFee"
+                },
+                "memo": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.CommunityPoolSpendProposal"
+                    }
+                },
+                "signatures": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.StdSignature"
+                    }
                 }
             }
         },
@@ -4162,6 +4260,10 @@
                 }
             }
         },
+        "types.AccAddress": {
+            "type": "array",
+            "items": {}
+        },
         "types.Address": {
             "type": "object"
         },
@@ -4241,7 +4343,27 @@
                 }
             }
         },
+        "types.CommunityPoolSpendProposal": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "recipient": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "types.Content": {
+            "type": "object"
+        },
+        "types.Dec": {
             "type": "object"
         },
         "types.DelegationResponse": {
@@ -4323,6 +4445,14 @@
                 }
             }
         },
+        "types.Int": {
+            "type": "object",
+            "properties": {
+                "i": {
+                    "type": "string"
+                }
+            }
+        },
         "types.MintParams": {
             "type": "object",
             "properties": {
@@ -4356,16 +4486,20 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Coin"
                 },
                 "delegator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.AccAddress"
                 },
                 "validator_dst_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 },
                 "validator_src_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 }
             }
         },
@@ -4377,23 +4511,27 @@
                     "$ref": "#/definitions/types.CommissionRates"
                 },
                 "delegator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.AccAddress"
                 },
                 "description": {
                     "type": "object",
                     "$ref": "#/definitions/types.Description"
                 },
                 "min_self_delegation": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Int"
                 },
                 "pubkey": {
                     "type": "string"
                 },
                 "validator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 },
                 "value": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Coin"
                 }
             }
         },
@@ -4401,13 +4539,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Coin"
                 },
                 "delegator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.AccAddress"
                 },
                 "validator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 }
             }
         },
@@ -4432,11 +4573,13 @@
             "type": "object",
             "properties": {
                 "address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 },
                 "commission_rate": {
                     "description": "We pass a reference to the new commission rate and min self delegation as it's not mandatory to\nupdate. If not updated, the deserialized rate will be zero with no way to\ndistinguish if an update was intended.\n\nREF: #2373",
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Dec"
                 },
                 "details": {
                     "description": "optional details",
@@ -4447,7 +4590,8 @@
                     "type": "string"
                 },
                 "min_self_delegation": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Int"
                 },
                 "moniker": {
                     "description": "name",
@@ -4509,13 +4653,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.Coin"
                 },
                 "delegator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.AccAddress"
                 },
                 "validator_address": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/types.ValAddress"
                 }
             }
         },
@@ -4966,6 +5113,10 @@
                     "type": "string"
                 }
             }
+        },
+        "types.ValAddress": {
+            "type": "array",
+            "items": {}
         },
         "types.Validator": {
             "type": "object",

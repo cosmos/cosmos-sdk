@@ -57,6 +57,24 @@ definitions:
         $ref: '#/definitions/types.StdTx'
         type: object
     type: object
+  rest.CommunityPoolSpendProposalReq:
+    properties:
+      amount:
+        type: string
+      base_req:
+        $ref: '#/definitions/rest.BaseReq'
+        type: object
+      deposit:
+        type: string
+      description:
+        type: string
+      proposer:
+        type: string
+      recipient:
+        type: string
+      title:
+        type: string
+    type: object
   rest.CreateValidatorRequest:
     properties:
       amount:
@@ -259,6 +277,22 @@ definitions:
       result:
         $ref: '#/definitions/types.Coins'
         type: object
+    type: object
+  rest.communityPoolSpendProposal:
+    properties:
+      fee:
+        $ref: '#/definitions/auth.StdFee'
+        type: object
+      memo:
+        type: string
+      msg:
+        items:
+          $ref: '#/definitions/types.CommunityPoolSpendProposal'
+        type: array
+      signatures:
+        items:
+          $ref: '#/definitions/auth.StdSignature'
+        type: array
     type: object
   rest.createValidator:
     properties:
@@ -793,6 +827,9 @@ definitions:
           type: boolean
       type: object
     type: array
+  types.AccAddress:
+    items: {}
+    type: array
   types.Address:
     type: object
   types.Attribute:
@@ -855,7 +892,20 @@ definitions:
         description: the commission rate charged to delegators, as a fraction
         type: string
     type: object
+  types.CommunityPoolSpendProposal:
+    properties:
+      amount:
+        type: string
+      description:
+        type: string
+      recipient:
+        type: string
+      title:
+        type: string
+    type: object
   types.Content:
+    type: object
+  types.Dec:
     type: object
   types.DelegationResponse:
     properties:
@@ -911,6 +961,11 @@ definitions:
         description: optional website link
         type: string
     type: object
+  types.Int:
+    properties:
+      i:
+        type: string
+    type: object
   types.MintParams:
     properties:
       blocks_per_year:
@@ -935,13 +990,17 @@ definitions:
   types.MsgBeginRedelegate:
     properties:
       amount:
-        type: string
+        $ref: '#/definitions/types.Coin'
+        type: object
       delegator_address:
-        type: string
+        $ref: '#/definitions/types.AccAddress'
+        type: object
       validator_dst_address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
       validator_src_address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
     type: object
   types.MsgCreateValidator:
     properties:
@@ -949,27 +1008,34 @@ definitions:
         $ref: '#/definitions/types.CommissionRates'
         type: object
       delegator_address:
-        type: string
+        $ref: '#/definitions/types.AccAddress'
+        type: object
       description:
         $ref: '#/definitions/types.Description'
         type: object
       min_self_delegation:
-        type: string
+        $ref: '#/definitions/types.Int'
+        type: object
       pubkey:
         type: string
       validator_address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
       value:
-        type: string
+        $ref: '#/definitions/types.Coin'
+        type: object
     type: object
   types.MsgDelegate:
     properties:
       amount:
-        type: string
+        $ref: '#/definitions/types.Coin'
+        type: object
       delegator_address:
-        type: string
+        $ref: '#/definitions/types.AccAddress'
+        type: object
       validator_address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
     type: object
   types.MsgDeposit:
     properties:
@@ -986,15 +1052,17 @@ definitions:
   types.MsgEditValidator:
     properties:
       address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
       commission_rate:
+        $ref: '#/definitions/types.Dec'
         description: |-
           We pass a reference to the new commission rate and min self delegation as it's not mandatory to
           update. If not updated, the deserialized rate will be zero with no way to
           distinguish if an update was intended.
 
           REF: #2373
-        type: string
+        type: object
       details:
         description: optional details
         type: string
@@ -1002,7 +1070,8 @@ definitions:
         description: optional identity signature (ex. UPort or Keybase)
         type: string
       min_self_delegation:
-        type: string
+        $ref: '#/definitions/types.Int'
+        type: object
       moniker:
         description: name
         type: string
@@ -1044,11 +1113,14 @@ definitions:
   types.MsgUndelegate:
     properties:
       amount:
-        type: string
+        $ref: '#/definitions/types.Coin'
+        type: object
       delegator_address:
-        type: string
+        $ref: '#/definitions/types.AccAddress'
+        type: object
       validator_address:
-        type: string
+        $ref: '#/definitions/types.ValAddress'
+        type: object
     type: object
   types.MsgUnjail:
     properties:
@@ -1365,6 +1437,9 @@ definitions:
         description: atoms initially scheduled to receive at completion
         type: string
     type: object
+  types.ValAddress:
+    items: {}
+    type: array
   types.Validator:
     properties:
       commission:
@@ -1580,6 +1655,37 @@ paths:
           schema:
             $ref: '#/definitions/rest.ErrorResponse'
       summary: Query community pool data
+      tags:
+      - distribution
+  /distribution/community_pool_spend:
+    post:
+      consumes:
+      - application/json
+      description: Spend the community pool based on governance proposals
+      parameters:
+      - description: The data required to spend the community pool
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.CommunityPoolSpendProposalReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.communityPoolSpendProposal'
+        "400":
+          description: Returned if the request is invalid
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Returned on server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      summary: Spend the community pool based on governance proposals
       tags:
       - distribution
   /distribution/delegators/{delegatorAddr}/rewards:

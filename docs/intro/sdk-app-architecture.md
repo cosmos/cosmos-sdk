@@ -95,6 +95,6 @@ For a more detailed view of the ABCI methods and types, click [here](https://ten
 Any application built on Tendermint needs to implement the ABCI interface in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
 
 
-## Next 
+## Next {hide}
 
 Read about the [high-level design principles of the SDK](./sdk-design.md)

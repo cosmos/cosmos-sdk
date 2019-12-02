@@ -75,6 +75,6 @@ One of the major benefits of application-specific blockchains is sovereignty. A 
 
 The fundamental issue here is that the governance of the application and the governance of the network are not aligned. This issue is solved by application-specific blockchains. Because application-specific blockchains specialize to operate a single application, stakeholders the application has full control over the entire chain. This ensures the community will not be stuck if a bug is discovered, and that it has the entire freedom to choose how it is going to evolve. 
 
-## Next
+## Next {hide}
 
 - Learn more about the [high-level architecture](./sdk-app-architecture.md) of an SDK application.

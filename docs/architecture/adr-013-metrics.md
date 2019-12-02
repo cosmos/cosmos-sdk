@@ -1,4 +1,4 @@
-# ADR 013: Metrics
+# ADR 013: Observability
 
 ## Changelog
 
@@ -69,23 +69,26 @@ Part B of this ADR is geared more towards modules. Extending `AppModuleBasic` to
 
 ```go
 type AppModuleBasic interface {
-	Name() string
+  Name() string
   RegisterCodec(*codec.Codec)
-  + RegisterMetrics(namespace string, labelsAndValues ...string) *Metrics +
+  + RegisterMetrics(namespace string, labelsAndValues ...string) *Metrics
 
-	// genesis
-	DefaultGenesis() json.RawMessage
-	ValidateGenesis(json.RawMessage) error
+  // genesis
+  DefaultGenesis() json.RawMessage
+  ValidateGenesis(json.RawMessage) error
 
-	// client functionality
-	RegisterRESTRoutes(context.CLIContext, *mux.Router)
-	GetTxCmd(*codec.Codec) *cobra.Command
-	GetQueryCmd(*codec.Codec) *cobra.Command
+  // client functionality
+  RegisterRESTRoutes(context.CLIContext, *mux.Router)
+  GetTxCmd(*codec.Codec) *cobra.Command
+  GetQueryCmd(*codec.Codec) *cobra.Command
 }
 
 ```
 
 ## Decision
+
+- Use Prometheus for metric gathering.
+- Add a method to register metrics to the `AppModuleBasic` interface
 
 ## Consequences
 

@@ -201,8 +201,7 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 
 // Proposal types
 const (
-	ProposalTypeText            string = "Text"
-	ProposalTypeSoftwareUpgrade string = "SoftwareUpgrade"
+	ProposalTypeText string = "Text"
 )
 
 // TextProposal defines a standard text proposal whose changes need to be
@@ -243,52 +242,8 @@ func (tp TextProposal) String() string {
 `, tp.Title, tp.Description)
 }
 
-// SoftwareUpgradeProposal defines a proposal for upgrading the network nodes
-// without the need of manually halting at a given height
-//
-// TODO: We have to add fields for SUP specific arguments e.g. commit hash,
-// upgrade date, etc.
-type SoftwareUpgradeProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-}
-
-// NewSoftwareUpgradeProposal creates a software upgrade proposal Content
-func NewSoftwareUpgradeProposal(title, description string) Content {
-	return SoftwareUpgradeProposal{title, description}
-}
-
-// Implements Content Interface
-var _ Content = SoftwareUpgradeProposal{}
-
-// GetTitle returns the proposal title
-func (sup SoftwareUpgradeProposal) GetTitle() string { return sup.Title }
-
-// GetDescription returns the proposal description
-func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-
-// ProposalRoute returns the proposal router key
-func (sup SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
-
-// ProposalType is "SoftwareUpgrade"
-func (sup SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
-
-// ValidateBasic validates the content's title and description of the proposal
-func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
-	return ValidateAbstract(DefaultCodespace, sup)
-}
-
-// String implements Stringer interface
-func (sup SoftwareUpgradeProposal) String() string {
-	return fmt.Sprintf(`Software Upgrade Proposal:
-  Title:       %s
-  Description: %s
-`, sup.Title, sup.Description)
-}
-
 var validProposalTypes = map[string]struct{}{
-	ProposalTypeText:            {},
-	ProposalTypeSoftwareUpgrade: {},
+	ProposalTypeText: {},
 }
 
 // RegisterProposalType registers a proposal type. It will panic if the type is
@@ -307,9 +262,6 @@ func ContentFromProposalType(title, desc, ty string) Content {
 	case ProposalTypeText:
 		return NewTextProposal(title, desc)
 
-	case ProposalTypeSoftwareUpgrade:
-		return NewSoftwareUpgradeProposal(title, desc)
-
 	default:
 		return nil
 	}
@@ -325,12 +277,12 @@ func IsValidProposalType(ty string) bool {
 }
 
 // ProposalHandler implements the Handler interface for governance module-based
-// proposals (ie. TextProposal and SoftwareUpgradeProposal). Since these are
+// proposals (ie. TextProposal ). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
 func ProposalHandler(_ sdk.Context, c Content) sdk.Error {
 	switch c.ProposalType() {
-	case ProposalTypeText, ProposalTypeSoftwareUpgrade:
+	case ProposalTypeText:
 		// both proposal types do not change state so this performs a no-op
 		return nil
 

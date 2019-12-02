@@ -10,10 +10,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -93,13 +93,8 @@ func CompleteAndBroadcastTxCLI(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(fromName)
-	if err != nil {
-		return err
-	}
-
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(fromName, passphrase, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, client.DefaultKeyPass, msgs)
 	if err != nil {
 		return err
 	}
@@ -197,12 +192,7 @@ func SignStdTx(
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
-	if err != nil {
-		return signedStdTx, err
-	}
-
-	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+	return txBldr.SignStdTx(name, client.DefaultKeyPass, stdTx, appendSig)
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
@@ -224,12 +214,7 @@ func SignStdTxWithSignerAddress(txBldr authtypes.TxBuilder, cliCtx context.CLICo
 		}
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
-	if err != nil {
-		return signedStdTx, err
-	}
-
-	return txBldr.SignStdTx(name, passphrase, stdTx, false)
+	return txBldr.SignStdTx(name, client.DefaultKeyPass, stdTx, false)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
@@ -346,7 +331,7 @@ func buildUnsignedStdTxOffline(txBldr authtypes.TxBuilder, cliCtx context.CLICon
 
 	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
-		return stdTx, nil
+		return stdTx, err
 	}
 
 	return authtypes.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil

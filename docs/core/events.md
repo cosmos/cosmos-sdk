@@ -5,7 +5,7 @@ synopsis: "`Event`s are objects that contain information about the execution of 
 
 # Events
 
-## Pre-Requisite Readings
+## Pre-Requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -86,6 +86,6 @@ The `type` and `attribute` value of the `query` allow you to filter the specific
 
 where `senderAddress` is an address following the [`AccAddress`](../basics/accounts.md#addresses) format. 
 
-## Next
+## Next {hide}
 
 Learn about [object-capabilities](./ocap.md)

@@ -6,7 +6,7 @@ synopsis: "Cosmos SDK modules need to implement the [`AppModule` interfaces](#ap
 
 # Module Manager
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Introduction to SDK Modules](./intro.md) {prereq}
 
@@ -139,6 +139,6 @@ The module manager is used throughout the application whenever an action on a co
 - `BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock)`: At the beginning of each block, this function is called from [`baseapp`](../core/baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseBeginBlock` which contains the aforementioned events. 
 - `EndBlock(ctx sdk.Context, req abci.RequestEndBlock)`: At the end of each block, this function is called from [`baseapp`](../core/baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseEndBlock` which contains the aforementioned events, as well as validator set updates (if any).
 
-## Next
+## Next {hide}
 
 Learn more about [`message`s and `queries`](./messages-and-queries.md).

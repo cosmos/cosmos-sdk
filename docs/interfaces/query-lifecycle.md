@@ -5,7 +5,7 @@ synopsis: "This document describes the lifecycle of a query in a SDK application
 
 # Query Lifecycle
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 * [Introduction to Interfaces](./interfaces-intro.md) {prereq}
 
@@ -156,6 +156,6 @@ The [REST server](./rest.md#rest-server) uses the `CLIContext` to format the res
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/utils.go#L115-L148
 
-## Next
+## Next {hide}
 
 Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md).

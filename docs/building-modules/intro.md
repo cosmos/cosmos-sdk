@@ -5,7 +5,7 @@ synopsis: Modules define most of the logic of SDK applications. Developers compo
 
 # Introduction to SDK Modules
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md) {prereq}
@@ -87,7 +87,7 @@ In addition to these components, modules implement the `AppModule` interface in 
 
 Please refer to the [structure document](./structure.md) to learn about the recommended structure of a module's directory. 
 
-## Next
+## Next {hide}
 
 Read more on the [`AppModule` interface and the `module manager`](./module-manager.md)
 

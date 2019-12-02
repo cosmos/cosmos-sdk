@@ -5,7 +5,7 @@ synopsis: "An invariant is a property of the application that should always be t
 
 # Invariants
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Keepers](./keeper.md) {prereq}
 
@@ -83,6 +83,6 @@ Typically, this interface is implemented in the `keeper` of a specific module. T
 
 In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry` can trigger special logic (e.g. have the application panic and print the `Invariant`s message in the log).
 
-## Next
+## Next {hide}
 
 Learn about [genesis functionalities](./genesis.md). 

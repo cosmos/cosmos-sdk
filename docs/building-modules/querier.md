@@ -5,7 +5,7 @@ synopsis: "A `Querier` designates a function that processes [`queries`](./messag
 
 # Queriers
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Module Manager](./module-manager.md) {prereq}
 - [Messages and Queries](./messages-and-queries.md) {prereq}
@@ -48,6 +48,6 @@ The `querier` functions themselves are pretty straighforward. They generally fet
 
 For a deeper look at `querier`s, see this [example implementation of a `querier` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/keeper/querier.go) from the nameservice tutorial. 
 
-## Next
+## Next {hide}
 
 Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md).

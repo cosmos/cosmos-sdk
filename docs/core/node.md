@@ -5,7 +5,7 @@ synopsis: The main endpoint of an SDK application is the daemon client, otherwis
 
 # Node Client (Daemon)
 
-## Pre-requisite Reading
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -65,6 +65,6 @@ if err := tmNode.Start(); err != nil {
 
 Upon starting, the node will bootstrap its RPC and P2P server and start dialing peers. During handshake with its peers, if the node realizes they are ahead, it will query all the blocks sequentially in order to catch up. Then, it will wait for new block proposals and block signatures from validators in order to make progress. 
 
-## Next
+## Next {hide}
 
 Learn about the [store](./store.md).

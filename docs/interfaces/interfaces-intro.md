@@ -5,7 +5,7 @@ synopsis: Typically, SDK applications include interfaces to let end-users intera
 
 # Interfaces
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 * [Anatomy of an SDK Application](../basics/app-anatomy.md) {prereq}
 * [Lifecycle of a Transaction](../basics/tx-lifecycle.md) {prereq}
@@ -38,6 +38,6 @@ With regards to interfaces, application developers need to include:
 * **RegisterRoutes Function:** [Routes](./rest.md#registerroutes) must be registered and passed to an instantiated [REST server](./rest.md#rest-server) so that it knows how to route requests for this particular application.
 
 
-## Next
+## Next {hide}
 
 Read about the [Lifecycle of a Query](./query-lifecycle.md).

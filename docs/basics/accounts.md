@@ -5,7 +5,7 @@ synopsis: This document describes the in-built accounts system of the Cosmos SDK
 
 # Accounts 
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 
@@ -129,6 +129,6 @@ Of note, the `Marhsal()` and `Bytes()` method both return the same raw `[]byte` 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/types/address.go#L230-L243
 
-## Next
+## Next {hide}
 
 Learn about [gas and fees](./gas-fees.md).

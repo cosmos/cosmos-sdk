@@ -5,7 +5,7 @@ synopsis: "This document describes the lifecycle of a transaction from creation 
 
 # Transaction Lifecycle
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 
@@ -240,6 +240,6 @@ At this point, the transaction lifecycle of a `Tx` is over: nodes have verified 
 delivered it by executing its state changes, and committed those changes. The `Tx` itself,
 in `[]byte` form, is stored in a block and appended to the blockchain.
 
-## Next
+## Next {hide}
 
 Learn about [accounts](./accounts.md).

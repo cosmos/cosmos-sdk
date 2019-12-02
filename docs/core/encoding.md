@@ -5,7 +5,7 @@ synopsis: The `codec` is used everywhere in the Cosmos SDK to encode and decode 
 
 # Encoding
 
-## Pre-requisite Reading
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 
@@ -41,6 +41,6 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go#L241-L266
 
-## Next
+## Next {hide}
 
 Learn about [events](./events.md).

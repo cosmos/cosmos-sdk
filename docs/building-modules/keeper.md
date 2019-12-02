@@ -5,7 +5,7 @@ synopsis: "`Keeper`s refer to a Cosmos SDK abstraction whose role is to manage a
 
 # Keepers
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Introduction to SDK Modules](./intro.md) {prereq}
 
@@ -73,6 +73,6 @@ and go through the following steps:
 
 For more, see an example of `keeper`'s [methods implementation from the nameservice tutorial](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/internal/keeper/keeper.go). 
 
-## Next
+## Next {hide}
 
 Learn about [invariants](./invariants.md). 

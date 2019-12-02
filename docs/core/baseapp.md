@@ -5,7 +5,7 @@ synopsis: This document describes `BaseApp`, the abstraction that implements the
 
 # Baseapp
 
-## Pre-requisite Readings
+## Pre-requisite Readings {hide}
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 - [Lifecycle of an SDK transaction](../basics/tx-lifecycle.md) {prereq}
@@ -388,6 +388,6 @@ Each `query` comes with a `path`, which contains multiple `string`s. By conventi
 - P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `baseapp`'s [constructor](#constructor).
 - Custom queries, which encompass most queries, are served via the `handleQueryCustom` method. The `handleQueryCustom` cache-wraps the multistore before using the `queryRoute` obtained from [`app.queryRouter`](#query-routing) to map the query to the appropriate module's `querier`.
 
-## Next
+## Next {hide}
 
 Learn more about [transactions](./transactions.md).

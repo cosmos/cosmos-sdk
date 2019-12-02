@@ -5,11 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
@@ -33,31 +32,20 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
+		prove := rest.ParseQueryProve(r)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
 
-		req := abci.RequestQuery{
-			Path:  "store/ibc/key",
-			Data:  types.KeyChannel(portID, channelID),
-			Prove: rest.ParseQueryProve(r),
-		}
-
-		res, err := cliCtx.QueryABCI(req)
+		channelRes, err := utils.QueryChannel(cliCtx, portID, channelID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		var channel types.Channel
-		if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		cliCtx = cliCtx.WithHeight(res.Height)
-		rest.PostProcessResponse(w, cliCtx, types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height))
+		cliCtx = cliCtx.WithHeight(int64(channelRes.ProofHeight))
+		rest.PostProcessResponse(w, cliCtx, channelRes)
 	}
 }

@@ -38,24 +38,6 @@ const (
 	FlagChainID2 = "chain-id2"
 )
 
-// GetTxCmd returns the transaction commands for IBC Connections
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics03ConnectionTxCmd := &cobra.Command{
-		Use:   "connection",
-		Short: "IBC connection transaction subcommands",
-	}
-
-	ics03ConnectionTxCmd.AddCommand(client.PostCommands(
-		GetCmdConnectionOpenInit(storeKey, cdc),
-		GetCmdConnectionOpenTry(storeKey, cdc),
-		GetCmdConnectionOpenAck(storeKey, cdc),
-		GetCmdConnectionOpenConfirm(storeKey, cdc),
-		GetCmdHandshakeState(storeKey, cdc),
-	)...)
-
-	return ics03ConnectionTxCmd
-}
-
 // GetCmdConnectionOpenInit defines the command to initialize a connection on
 // chain A with a given counterparty chain B
 func GetCmdConnectionOpenInit(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -302,7 +284,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			viper.Set(flags.FlagProve, true)
+			prove := true
 
 			// --chain-id values for each chain
 			cid1 := viper.GetString(flags.FlagChainID)
@@ -387,7 +369,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err := clientutils.GetTendermintHeader(ctx1)
+			header, _, err := clientutils.QueryTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -414,7 +396,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err := clientutils.QueryConsensusStateProof(ctx1.WithHeight(header.Height-1), cdc, clienttypes.QuerierRoute, clientID1)
+			csProof, err := clientutils.QueryConsensusStateProof(ctx1.WithHeight(header.Height-1), clientID1, prove)
 			if err != nil {
 				return err
 			}
@@ -442,7 +424,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = clientutils.GetTendermintHeader(ctx2)
+			header, _, err = clientutils.QueryTendermintHeader(ctx2)
 			if err != nil {
 				return err
 			}
@@ -468,7 +450,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			csProof, err = clientutils.QueryConsensusStateProof(ctx2.WithHeight(header.Height-1), cdc, clienttypes.QuerierRoute, clientID2)
+			csProof, err = clientutils.QueryConsensusStateProof(ctx2.WithHeight(header.Height-1), clientID2, prove)
 			if err != nil {
 				return err
 			}
@@ -495,7 +477,7 @@ func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
 			// remove hardcoding this to 8 seconds.
 			time.Sleep(8 * time.Second)
 
-			header, err = clientutils.GetTendermintHeader(ctx1)
+			header, _, err = clientutils.QueryTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}

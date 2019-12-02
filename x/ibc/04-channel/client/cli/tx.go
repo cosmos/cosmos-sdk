@@ -11,9 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -21,9 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authutils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -38,26 +36,6 @@ const (
 	FlagChainID2   = "chain-id2"
 )
 
-// GetTxCmd returns the transaction commands for IBC Connections
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics04ChannelTxCmd := &cobra.Command{
-		Use:   "channel",
-		Short: "IBC channel transaction subcommands",
-	}
-
-	ics04ChannelTxCmd.AddCommand(client.PostCommands(
-		GetMsgChannelOpenInitCmd(storeKey, cdc),
-		GetMsgChannelOpenTryCmd(storeKey, cdc),
-		GetMsgChannelOpenAckCmd(storeKey, cdc),
-		GetMsgChannelOpenConfirmCmd(storeKey, cdc),
-		GetMsgChannelCloseInitCmd(storeKey, cdc),
-		GetMsgChannelCloseConfirmCmd(storeKey, cdc),
-		GetCmdHandshake(storeKey, cdc),
-	)...)
-
-	return ics04ChannelTxCmd
-}
-
 // TODO: module needs to pass the capability key (i.e store key)
 
 // GetMsgChannelOpenInitCmd returns the command to create a MsgChannelOpenInit transaction
@@ -67,7 +45,7 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 		Short: "Creates and sends a ChannelOpenInit message",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -86,7 +64,7 @@ func GetMsgChannelOpenInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 
@@ -103,7 +81,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "Creates and sends a ChannelOpenTry message",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -140,7 +118,7 @@ func GetMsgChannelOpenTryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
@@ -156,7 +134,7 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "Creates and sends a ChannelOpenAck message",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -187,7 +165,7 @@ func GetMsgChannelOpenAckCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().String(FlagIBCVersion, "1.0.0", "supported IBC version")
@@ -201,7 +179,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 		Short: "Creates and sends a ChannelOpenConfirm message",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -231,7 +209,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -243,7 +221,7 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 		Short: "Creates and sends a ChannelCloseInit message",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -254,7 +232,7 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -266,7 +244,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 		Short: "Creates and sends a ChannelCloseConfirm message",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			portID := args[0]
@@ -296,7 +274,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 }
@@ -342,10 +320,12 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			connid1 := args[3]
 			connid2 := args[7]
 
+			prove := true
+
 			// Create txbldr, clictx, querier for cid1
 			viper.Set(flags.FlagChainID, cid1)
 			txBldr1 := auth.NewTxBuilderFromCLI().
-				WithTxEncoder(utils.GetTxEncoder(cdc))
+				WithTxEncoder(authutils.GetTxEncoder(cdc))
 			ctx1 := context.NewCLIContextIBC(from1, cid1, node1).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
@@ -353,7 +333,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// Create txbldr, clictx, querier for cid2
 			viper.Set(flags.FlagChainID, cid2)
 			txBldr2 := auth.NewTxBuilderFromCLI().
-				WithTxEncoder(utils.GetTxEncoder(cdc))
+				WithTxEncoder(authutils.GetTxEncoder(cdc))
 			ctx2 := context.NewCLIContextIBC(from2, cid2, node2).
 				WithCodec(cdc).
 				WithBroadcastMode(flags.BroadcastBlock)
@@ -377,7 +357,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			res, err := utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
+			res, err := authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
 			}
@@ -386,7 +366,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err := clientutils.GetTendermintHeader(ctx1)
+			header, _, err := clientutils.QueryTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -397,23 +377,23 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid1)
-			proofs, err := queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
+			channelRes, err := utils.QueryChannel(ctx1.WithHeight(header.Height-1), portid1, chanid1, prove)
 			if err != nil {
 				return err
 			}
 
-			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanid1, "v1.0.0", channelRes.Proof, uint64(header.Height), ctx2.GetFromAddress())
 			if err := msgUpdateClient.ValidateBasic(); err != nil {
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
 			}
@@ -422,7 +402,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err = clientutils.GetTendermintHeader(ctx2)
+			header, _, err = clientutils.QueryTendermintHeader(ctx2)
 			if err != nil {
 				return err
 			}
@@ -433,24 +413,24 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid2)
-			proofs, err = queryProofs(ctx2.WithHeight(header.Height-1), portid2, chanid2, storeKey)
+			channelRes, err = utils.QueryChannel(ctx2.WithHeight(header.Height-1), portid2, chanid2, prove)
 			if err != nil {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid1)
-			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0", proofs.Proof, uint64(header.Height), ctx1.GetFromAddress())
+			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0", channelRes.Proof, uint64(header.Height), ctx1.GetFromAddress())
 			if err := msgOpenAck.ValidateBasic(); err != nil {
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
 			if err != nil || !res.IsOK() {
 				return err
 			}
@@ -459,7 +439,7 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 			// to retrieve the correct proofs
 			time.Sleep(8 * time.Second)
 
-			header, err = clientutils.GetTendermintHeader(ctx1)
+			header, _, err = clientutils.QueryTendermintHeader(ctx1)
 			if err != nil {
 				return err
 			}
@@ -470,23 +450,23 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
 			}
 
 			viper.Set(flags.FlagChainID, cid1)
-			proofs, err = queryProofs(ctx1.WithHeight(header.Height-1), portid1, chanid1, storeKey)
+			channelRes, err = utils.QueryChannel(ctx1.WithHeight(header.Height-1), portid1, chanid1, prove)
 			if err != nil {
 				return err
 			}
 
-			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, proofs.Proof, uint64(header.Height), ctx2.GetFromAddress())
+			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, channelRes.Proof, uint64(header.Height), ctx2.GetFromAddress())
 			if err := msgOpenConfirm.ValidateBasic(); err != nil {
 				return err
 			}
 
-			res, err = utils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
+			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
 			if err != nil || !res.IsOK() {
 				return err
 			}
@@ -506,27 +486,6 @@ $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-clie
 	cmd.MarkFlagRequired(FlagFrom2)
 
 	return cmd
-}
-
-func queryProofs(ctx client.CLIContext, portID string, channelID string, queryRoute string) (types.ChannelResponse, error) {
-	var connRes types.ChannelResponse
-
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyChannel(portID, channelID),
-		Prove: true,
-	}
-
-	res, err := ctx.QueryABCI(req)
-	if res.Value == nil || err != nil {
-		return connRes, err
-	}
-
-	var channel types.Channel
-	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
-		return connRes, err
-	}
-	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }
 
 func channelOrder() types.Order {

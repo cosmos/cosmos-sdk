@@ -1,17 +1,14 @@
 package rest
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/utils"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
@@ -34,27 +31,20 @@ func queryNextSequenceRecvHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 		vars := mux.Vars(r)
 		portID := vars[RestPortID]
 		channelID := vars[RestChannelID]
+		prove := rest.ParseQueryProve(r)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
 
-		req := abci.RequestQuery{
-			Path:  "store/ibc/key",
-			Data:  channel.KeyNextSequenceRecv(portID, channelID),
-			Prove: rest.ParseQueryProve(r),
-		}
-
-		res, err := cliCtx.QueryABCI(req)
+		sequenceRes, err := utils.QueryNextSequenceRecv(cliCtx, portID, channelID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		sequence := binary.BigEndian.Uint64(res.Value)
-
-		cliCtx = cliCtx.WithHeight(res.Height)
-		rest.PostProcessResponse(w, cliCtx, sequence)
+		cliCtx = cliCtx.WithHeight(int64(sequenceRes.ProofHeight))
+		rest.PostProcessResponse(w, cliCtx, sequenceRes)
 	}
 }

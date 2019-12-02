@@ -91,7 +91,12 @@ func (k Keeper) HandleDoubleSign(ctx sdk.Context, evidence types.Equivocation) {
 	// to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence. The fraction is passed in to separately
 	// to slash unbonding and rebonding delegations.
-	k.slashingKeeper.Slash(ctx, consAddr, evidence.GetValidatorPower(), distributionHeight)
+	k.slashingKeeper.Slash(
+		ctx,
+		consAddr,
+		k.slashingKeeper.SlashFractionDoubleSign(ctx),
+		evidence.GetValidatorPower(), distributionHeight,
+	)
 
 	// Jail the validator if not already jailed. This will begin unbonding the
 	// validator if not already unbonding (tombstoned).

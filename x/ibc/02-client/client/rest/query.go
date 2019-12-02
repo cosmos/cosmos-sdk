@@ -37,12 +37,12 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
+		prove := rest.ParseQueryProve(r)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
-		prove := rest.ParseQueryProve(r)
 
 		clientStateRes, err := utils.QueryClientState(cliCtx, clientID, prove)
 		if err != nil {
@@ -70,13 +70,12 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext, queryRoute string) 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
+		prove := rest.ParseQueryProve(r)
 
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
-
-		prove := rest.ParseQueryProve(r)
 
 		csRes, err := utils.QueryConsensusStateProof(cliCtx, clientID, prove)
 		if err != nil {
@@ -110,12 +109,12 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 			return
 		}
 
+		prove := rest.ParseQueryProve(r)
+
 		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
 		if !ok {
 			return
 		}
-
-		prove := rest.ParseQueryProve(r)
 
 		rootRes, err := utils.QueryCommitmentRoot(cliCtx, clientID, height, prove)
 		if err != nil {

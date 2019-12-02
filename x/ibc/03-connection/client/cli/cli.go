@@ -22,7 +22,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return ics03ConnectionQueryCmd
 }
 
-// GetTxCmd returns the transaction commands for IBC Connections
+// GetTxCmd returns the transaction commands for IBC connections
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics03ConnectionTxCmd := &cobra.Command{
 		Use:   "connection",

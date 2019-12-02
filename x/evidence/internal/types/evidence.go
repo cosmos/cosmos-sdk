@@ -57,7 +57,7 @@ func (e Equivocation) ValidateBasic() error {
 	if e.Power < 1 {
 		return fmt.Errorf("invalid equivocation validator power: %d", e.Power)
 	}
-	if len(e.ConsensusAddress) == 0 {
+	if e.ConsensusAddress.Empty() {
 		return fmt.Errorf("invalid equivocation validator consensus address: %s", e.ConsensusAddress)
 	}
 

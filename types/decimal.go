@@ -558,9 +558,6 @@ func ValidSortableDec(dec Dec) bool {
 	return dec.LTE(OneDec().Quo(SmallestDec()))
 }
 
-// FormattingStringSortableBytes is the string used in Sprintf to left and right pad the sdk.Dec
-// It adjusts based on the Precision constant
-
 // Returns a byte slice representation of an sdk.Dec that can be sorted.
 // Left and right pads with 0s so there are 18 digits to left and right of decimal point
 // For this reason, there is a maximum and minimum value for this,  enforced by ValidSortableDec

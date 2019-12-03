@@ -551,6 +551,28 @@ func (d Dec) Ceil() Dec {
 
 //___________________________________________________________________________________
 
+// Ensures that an sdk.Dec is within the sortable bounds
+// Dec can't have precision of less that 10^-18
+func ValidSortableDec(dec Dec) bool {
+	return dec.LTE(OneDec().Quo(SmallestDec()))
+}
+
+// FormattingStringSortableBytes is the string used in Sprintf to left and right pad the sdk.Dec
+// It adjusts based on the Precision constant
+var FormattingStringSortableBytes = fmt.Sprintf("%%0%ds", Precision*2+1)
+
+// Returns a byte slice representation of an sdk.Dec that can be sorted.
+// Left and right pads with 0s so there are 18 digits to left and right of decimal point
+// For this reason, there is a maximum and minimum value for this,  enforced by ValidSortableDec
+func SortableDecBytes(dec Dec) []byte {
+	if !ValidSortableDec(dec) {
+		panic("dec must be within bounds")
+	}
+	return []byte(fmt.Sprintf(FormattingStringSortableBytes, dec.String()))
+}
+
+//___________________________________________________________________________________
+
 // reuse nil values
 var (
 	nilAmino string

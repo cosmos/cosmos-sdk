@@ -19,7 +19,7 @@ The application MUST store this information by storing new headers immediately w
 func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
   info := HistoricalInfo{
     Header: ctx.BlockHeader(),
-    ValSet: keeper.StakingKeeper.GetAllValidators(ctx),
+    ValSet: keeper.StakingKeeper.GetAllValidators(ctx), // note that this must be stored in a canonical order
   }
   keeper.SetHistoricalInfo(ctx, ctx.BlockHeight(), info)
   n := keeper.GetParamRecentHeadersToStore()
@@ -28,7 +28,7 @@ func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.Request
 }
 ```
 
-The application MUST make these past `n` committed headers available for querying by SDK modules through the `Keeper`'s `GetHistoricalInfo` function.
+The application MUST make these past `n` committed headers available for querying by SDK modules through the `Keeper`'s `GetHistoricalInfo` function. This can be a new module or integrated into an existing one with similar functionality.
 
 `n` MAY be configured as a parameter store parameter, in which case it could be changed by `ParameterChangeProposal`s, although it will take some blocks for the stored information to catch up if `n` is increased.
 
@@ -42,13 +42,13 @@ Implementation of this ADR will require changes to the Cosmos SDK. It will not r
 
 ### Positive
 
-- Easy retrieval of headers & state roots for recent past heights by modules anywhere in the SDK
-- No RPC calls to Tendermint required
-- No ABCI alterations required
+- Easy retrieval of headers & state roots for recent past heights by modules anywhere in the SDK.
+- No RPC calls to Tendermint required.
+- No ABCI alterations required.
 
 ### Negative
 
-- Duplicates header data in Tendermint & the application (additional disk usage)
+- Duplicates header data in Tendermint & the application (additional disk usage) - in the long term, an approach such as [this](https://github.com/tendermint/tendermint/issues/4210) might be preferable.
 
 ### Neutral
 

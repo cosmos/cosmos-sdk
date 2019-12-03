@@ -75,7 +75,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// get config value for a given key
 	if getAction {
 		switch key {
-		case "trace", "trust-node", "indent":
+		case "trace", "trust-node", "indent", "keyring-file":
 			fmt.Println(tree.GetDefault(key, false).(bool))
 
 		default:
@@ -101,7 +101,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	case "chain-id", "output", "node", "broadcast-mode":
 		tree.Set(key, value)
 
-	case "trace", "trust-node", "indent":
+	case "trace", "trust-node", "indent", "keyring-file":
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err

@@ -15,6 +15,7 @@ along with their associated name and address.`,
 		RunE: runListCmd,
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
+	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
 	return cmd
 }
 

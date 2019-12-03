@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
@@ -34,6 +35,8 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 		"Skip confirmation prompt when deleting offline or ledger key references")
 	cmd.Flags().BoolP(flagForce, "f", false,
 		"Remove the key unconditionally without asking for the passphrase")
+	cmd.Flags().Bool(flags.FlagKeyringFile, false,
+		"Use the keyring's encrypted file backend")
 	return cmd
 }
 

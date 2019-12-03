@@ -53,6 +53,11 @@ func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
 	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
 		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
 	}
+
+	if viper.GetBool(flags.FlagKeyringFile) {
+		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+	}
+
 	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
 }
 

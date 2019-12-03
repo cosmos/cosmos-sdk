@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -17,6 +18,7 @@ func importKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
+	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
 	return cmd
 }
 

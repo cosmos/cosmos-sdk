@@ -47,6 +47,16 @@ func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
 	return newKeyringKeybase(db), nil
 }
 
+// NewKeyringFile creates a new instance of an encrypted file-backed keyring.
+func NewKeyringFile(name string, dir string, userInput io.Reader) (Keybase, error) {
+	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
+	if err != nil {
+		return nil, err
+	}
+
+	return newKeyringKeybase(db), nil
+}
+
 // NewTestKeyring creates a new instance of an on-disk keyring for
 // testing purposes that does not prompt users for password.
 func NewTestKeyring(name string, dir string) (Keybase, error) {
@@ -463,7 +473,24 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		}
 	}
 
-	realPrompt := func(prompt string) (string, error) {
+	return keyring.Config{
+		ServiceName:      name,
+		FileDir:          dir,
+		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
+	return keyring.Config{
+		AllowedBackends:  []keyring.BackendType{"file"},
+		ServiceName:      name,
+		FileDir:          dir,
+		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
+	return func(prompt string) (string, error) {
 		keyhashStored := false
 		keyhashFilePath := filepath.Join(dir, "keyhash")
 
@@ -531,12 +558,6 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 
 			return pass, nil
 		}
-	}
-
-	return keyring.Config{
-		ServiceName:      name,
-		FileDir:          dir,
-		FilePasswordFunc: realPrompt,
 	}
 }
 

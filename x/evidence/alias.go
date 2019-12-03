@@ -15,6 +15,7 @@ const (
 	DefaultParamspace           = types.DefaultParamspace
 	QueryEvidence               = types.QueryEvidence
 	QueryAllEvidence            = types.QueryAllEvidence
+	QueryParameters             = types.QueryParameters
 	CodeNoEvidenceHandlerExists = types.CodeNoEvidenceHandlerExists
 	CodeInvalidEvidence         = types.CodeInvalidEvidence
 	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
@@ -23,21 +24,26 @@ const (
 	EventTypeSubmitEvidence     = types.EventTypeSubmitEvidence
 	AttributeValueCategory      = types.AttributeValueCategory
 	AttributeKeyEvidenceHash    = types.AttributeKeyEvidenceHash
+	DefaultMaxEvidenceAge       = types.DefaultMaxEvidenceAge
 )
 
 var (
 	NewKeeper  = keeper.NewKeeper
 	NewQuerier = keeper.NewQuerier
 
-	NewMsgSubmitEvidence      = types.NewMsgSubmitEvidence
-	NewRouter                 = types.NewRouter
-	NewQueryEvidenceParams    = types.NewQueryEvidenceParams
-	NewQueryAllEvidenceParams = types.NewQueryAllEvidenceParams
-	RegisterCodec             = types.RegisterCodec
-	RegisterEvidenceTypeCodec = types.RegisterEvidenceTypeCodec
-	ModuleCdc                 = types.ModuleCdc
-	NewGenesisState           = types.NewGenesisState
-	DefaultGenesisState       = types.DefaultGenesisState
+	NewMsgSubmitEvidence         = types.NewMsgSubmitEvidence
+	NewRouter                    = types.NewRouter
+	NewQueryEvidenceParams       = types.NewQueryEvidenceParams
+	NewQueryAllEvidenceParams    = types.NewQueryAllEvidenceParams
+	RegisterCodec                = types.RegisterCodec
+	RegisterEvidenceTypeCodec    = types.RegisterEvidenceTypeCodec
+	ModuleCdc                    = types.ModuleCdc
+	NewGenesisState              = types.NewGenesisState
+	DefaultGenesisState          = types.DefaultGenesisState
+	ConvertDuplicateVoteEvidence = types.ConvertDuplicateVoteEvidence
+	KeyMaxEvidenceAge            = types.KeyMaxEvidenceAge
+	DoubleSignJailEndTime        = types.DoubleSignJailEndTime
+	ParamKeyTable                = types.ParamKeyTable
 )
 
 type (
@@ -47,4 +53,5 @@ type (
 	MsgSubmitEvidence = types.MsgSubmitEvidence
 	Handler           = types.Handler
 	Router            = types.Router
+	Equivocation      = types.Equivocation
 )

@@ -39,3 +39,44 @@ func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 	missed = keeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(Addrs[0]), 0)
 	require.True(t, missed) // now should be missed
 }
+
+func TestTombstoned(t *testing.T) {
+	ctx, _, _, _, keeper := CreateTestInput(t, types.DefaultParams())
+	require.Panics(t, func() { keeper.Tombstone(ctx, sdk.ConsAddress(Addrs[0])) })
+	require.False(t, keeper.IsTombstoned(ctx, sdk.ConsAddress(Addrs[0])))
+
+	newInfo := types.NewValidatorSigningInfo(
+		sdk.ConsAddress(Addrs[0]),
+		int64(4),
+		int64(3),
+		time.Unix(2, 0),
+		false,
+		int64(10),
+	)
+	keeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(Addrs[0]), newInfo)
+
+	require.False(t, keeper.IsTombstoned(ctx, sdk.ConsAddress(Addrs[0])))
+	keeper.Tombstone(ctx, sdk.ConsAddress(Addrs[0]))
+	require.True(t, keeper.IsTombstoned(ctx, sdk.ConsAddress(Addrs[0])))
+	require.Panics(t, func() { keeper.Tombstone(ctx, sdk.ConsAddress(Addrs[0])) })
+}
+
+func TestJailUntil(t *testing.T) {
+	ctx, _, _, _, keeper := CreateTestInput(t, types.DefaultParams())
+	require.Panics(t, func() { keeper.JailUntil(ctx, sdk.ConsAddress(Addrs[0]), time.Now()) })
+
+	newInfo := types.NewValidatorSigningInfo(
+		sdk.ConsAddress(Addrs[0]),
+		int64(4),
+		int64(3),
+		time.Unix(2, 0),
+		false,
+		int64(10),
+	)
+	keeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(Addrs[0]), newInfo)
+	keeper.JailUntil(ctx, sdk.ConsAddress(Addrs[0]), time.Unix(253402300799, 0).UTC())
+
+	info, ok := keeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(Addrs[0]))
+	require.True(t, ok)
+	require.Equal(t, time.Unix(253402300799, 0).UTC(), info.JailedUntil)
+}

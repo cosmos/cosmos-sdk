@@ -23,7 +23,6 @@ const (
 	RouterKey                   = types.RouterKey
 	QuerierRoute                = types.QuerierRoute
 	DefaultParamspace           = types.DefaultParamspace
-	DefaultMaxEvidenceAge       = types.DefaultMaxEvidenceAge
 	DefaultSignedBlocksWindow   = types.DefaultSignedBlocksWindow
 	DefaultDowntimeJailDuration = types.DefaultDowntimeJailDuration
 	QueryParameters             = types.QueryParameters
@@ -77,11 +76,9 @@ var (
 	ValidatorSigningInfoKey         = types.ValidatorSigningInfoKey
 	ValidatorMissedBlockBitArrayKey = types.ValidatorMissedBlockBitArrayKey
 	AddrPubkeyRelationKey           = types.AddrPubkeyRelationKey
-	DoubleSignJailEndTime           = types.DoubleSignJailEndTime
 	DefaultMinSignedPerWindow       = types.DefaultMinSignedPerWindow
 	DefaultSlashFractionDoubleSign  = types.DefaultSlashFractionDoubleSign
 	DefaultSlashFractionDowntime    = types.DefaultSlashFractionDowntime
-	KeyMaxEvidenceAge               = types.KeyMaxEvidenceAge
 	KeySignedBlocksWindow           = types.KeySignedBlocksWindow
 	KeyMinSignedPerWindow           = types.KeyMinSignedPerWindow
 	KeyDowntimeJailDuration         = types.KeyDowntimeJailDuration

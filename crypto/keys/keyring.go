@@ -47,8 +47,8 @@ func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
 	return newKeyringKeybase(db), nil
 }
 
-// NewTestKeyring creates a new instance of a keyring for
-// testing purposes that  does not prompt users for password.
+// NewTestKeyring creates a new instance of an on-disk keyring for
+// testing purposes that does not prompt users for password.
 func NewTestKeyring(name string, dir string) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
@@ -370,7 +370,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 // deleting it (for security). It returns an error if the key doesn't exist or
 // passphrases don't match. The passphrase is ignored when deleting references to
 // offline and Ledger / HW wallet keys.
-func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
+func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	// verify we have the proper password before deleting
 	info, err := kb.Get(name)
 	if err != nil {

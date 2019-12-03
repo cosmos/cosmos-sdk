@@ -15,6 +15,7 @@ func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case SoftwareUpgradeProposal:
 			return handleSoftwareUpgradeProposal(ctx, k, c)
+
 		case CancelSoftwareUpgradeProposal:
 			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
 

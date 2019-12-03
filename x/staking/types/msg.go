@@ -64,10 +64,10 @@ func NewMsgCreateValidator(
 func (msg MsgCreateValidator) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgCreateValidator) Type() string  { return "create_validator" }
+func (msg MsgCreateValidator) Type() string { return "create_validator" }
 
 // GetSigners implements the sdk.Msg interface. It returns the address(es) that
-// must sign over msg.GetSignBytes(). 
+// must sign over msg.GetSignBytes().
 // If the validator address is not same as delegator's, then the validator must
 // sign the msg as well.
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
@@ -212,7 +212,7 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 func (msg MsgEditValidator) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgEditValidator) Type() string  { return "edit_validator" }
+func (msg MsgEditValidator) Type() string { return "edit_validator" }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
@@ -268,7 +268,7 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.C
 func (msg MsgDelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgDelegate) Type() string  { return "delegate" }
+func (msg MsgDelegate) Type() string { return "delegate" }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
@@ -308,7 +308,7 @@ type MsgBeginRedelegate struct {
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
 func NewMsgBeginRedelegate(
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Coin,
-	) MsgBeginRedelegate {
+) MsgBeginRedelegate {
 	return MsgBeginRedelegate{
 		DelegatorAddress:    delAddr,
 		ValidatorSrcAddress: valSrcAddr,
@@ -321,7 +321,7 @@ func NewMsgBeginRedelegate(
 func (msg MsgBeginRedelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) Type() string  { return "begin_redelegate" }
+func (msg MsgBeginRedelegate) Type() string { return "begin_redelegate" }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
@@ -368,10 +368,10 @@ func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgUndelegate) Route() string                { return RouterKey }
+func (msg MsgUndelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgUndelegate) Type() string                 { return "begin_unbonding" }
+func (msg MsgUndelegate) Type() string { return "begin_unbonding" }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddress} }

@@ -196,6 +196,8 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
+  has been triggered.
 
 ## [v0.37.4] - 2019-11-04
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"time"
 
@@ -85,8 +86,9 @@ func GetCmdSubmitUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
@@ -124,8 +126,9 @@ func GetCmdSubmitCancelUpgradeProposal(cdc *codec.Codec) *cobra.Command {
 		Short: "Submit a software upgrade proposal",
 		Long:  "Cancel a software upgrade along with an initial deposit.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 			from := cliCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)

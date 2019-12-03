@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
@@ -17,6 +19,13 @@ func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &info)
 	found = true
 	return
+}
+
+// HasValidatorSigningInfo returns if a given validator has signing information
+// persited.
+func (k Keeper) HasValidatorSigningInfo(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
+	_, ok := k.GetValidatorSigningInfo(ctx, consAddr)
+	return ok
 }
 
 // SetValidatorSigningInfo sets the validator signing info to a consensus address key
@@ -75,6 +84,44 @@ func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
 			break
 		}
 	}
+}
+
+// JailUntil attempts to set a validator's JailedUntil attribute in its signing
+// info. It will panic if the signing info does not exist for the validator.
+func (k Keeper) JailUntil(ctx sdk.Context, consAddr sdk.ConsAddress, jailTime time.Time) {
+	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
+	if !ok {
+		panic("cannot jail validator that does not have any signing information")
+	}
+
+	signInfo.JailedUntil = jailTime
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+}
+
+// Tombstone attempts to tombstone a validator. It will panic if signing info for
+// the given validator does not exist.
+func (k Keeper) Tombstone(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
+	if !ok {
+		panic("cannot tombstone validator that does not have any signing information")
+	}
+
+	if signInfo.Tombstoned {
+		panic("cannot tombstone validator that is already tombstoned")
+	}
+
+	signInfo.Tombstoned = true
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+}
+
+// IsTombstoned returns if a given validator by consensus address is tombstoned.
+func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
+	signInfo, ok := k.GetValidatorSigningInfo(ctx, consAddr)
+	if !ok {
+		return false
+	}
+
+	return signInfo.Tombstoned
 }
 
 // SetValidatorMissedBlockBitArray sets the bit that checks if the validator has

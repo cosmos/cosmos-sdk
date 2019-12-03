@@ -44,6 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully
+  after a `halt-height` or `halt-time` has been triggered.
 * (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`.
 * (types) [\#5408](https://github.com/cosmos/cosmos-sdk/issues/5408) `NewDecCoins` constructor now sorts the coins.
 

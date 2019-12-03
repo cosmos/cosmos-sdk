@@ -11,14 +11,11 @@ import (
 // Default parameter namespace
 const (
 	DefaultParamspace           = ModuleName
-	DefaultMaxEvidenceAge       = 60 * 2 * time.Second
 	DefaultSignedBlocksWindow   = int64(100)
 	DefaultDowntimeJailDuration = 60 * 10 * time.Second
 )
 
-// The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
 var (
-	DoubleSignJailEndTime          = time.Unix(253402300799, 0)
 	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
 	DefaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
 	DefaultSlashFractionDowntime   = sdk.NewDec(1).Quo(sdk.NewDec(100))
@@ -26,7 +23,6 @@ var (
 
 // Parameter store keys
 var (
-	KeyMaxEvidenceAge          = []byte("MaxEvidenceAge")
 	KeySignedBlocksWindow      = []byte("SignedBlocksWindow")
 	KeyMinSignedPerWindow      = []byte("MinSignedPerWindow")
 	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
@@ -41,7 +37,6 @@ func ParamKeyTable() params.KeyTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge          time.Duration `json:"max_evidence_age" yaml:"max_evidence_age"`
 	SignedBlocksWindow      int64         `json:"signed_blocks_window" yaml:"signed_blocks_window"`
 	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window" yaml:"min_signed_per_window"`
 	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration" yaml:"downtime_jail_duration"`
@@ -50,12 +45,12 @@ type Params struct {
 }
 
 // NewParams creates a new Params object
-func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
-	minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign, slashFractionDowntime sdk.Dec) Params {
+func NewParams(
+	signedBlocksWindow int64, minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
+	slashFractionDoubleSign, slashFractionDowntime sdk.Dec,
+) Params {
 
 	return Params{
-		MaxEvidenceAge:          maxEvidenceAge,
 		SignedBlocksWindow:      signedBlocksWindow,
 		MinSignedPerWindow:      minSignedPerWindow,
 		DowntimeJailDuration:    downtimeJailDuration,
@@ -67,12 +62,11 @@ func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 // String implements the stringer interface for Params
 func (p Params) String() string {
 	return fmt.Sprintf(`Slashing Params:
-  MaxEvidenceAge:          %s
   SignedBlocksWindow:      %d
   MinSignedPerWindow:      %s
   DowntimeJailDuration:    %s
   SlashFractionDoubleSign: %s
-  SlashFractionDowntime:   %s`, p.MaxEvidenceAge,
+  SlashFractionDowntime:   %s`,
 		p.SignedBlocksWindow, p.MinSignedPerWindow,
 		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
 		p.SlashFractionDowntime)
@@ -81,7 +75,6 @@ func (p Params) String() string {
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge),
 		params.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow),
 		params.NewParamSetPair(KeyMinSignedPerWindow, &p.MinSignedPerWindow),
 		params.NewParamSetPair(KeyDowntimeJailDuration, &p.DowntimeJailDuration),
@@ -93,7 +86,7 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 // DefaultParams defines the parameters for this module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultMaxEvidenceAge, DefaultSignedBlocksWindow, DefaultMinSignedPerWindow,
-		DefaultDowntimeJailDuration, DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,
+		DefaultSignedBlocksWindow, DefaultMinSignedPerWindow, DefaultDowntimeJailDuration,
+		DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,
 	)
 }

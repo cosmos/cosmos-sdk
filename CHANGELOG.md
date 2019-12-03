@@ -44,6 +44,9 @@ deprecated and all components removed except the `legacy/` package. This require
 genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
 logic has been implemented for v0.38 target version. Applications can migrate via:
 `$ {appd} migrate v0.38 genesis.json`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) Handling of `ABCIEvidenceTypeDuplicateVote`
+  during `BeginBlock` along with the corresponding parameters (`MaxEvidenceAge`) have moved from the
+  `x/slashing` module to the `x/evidence` module.
 
 ### API Breaking Changes
 
@@ -71,6 +74,8 @@ if the provided arguments are invalid.
   * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
   returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
+  and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
 
 ### Client Breaking Changes
 
@@ -78,6 +83,7 @@ if the provided arguments are invalid.
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
+* (rest) [\#5336](https://github.com/cosmos/cosmos-sdk/issues/5336) `MsgEditValidator` uses `description` instead of `Description` as a JSON key.
 
 ### Features
 
@@ -191,6 +197,8 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
+  has been triggered.
 
 ## [v0.37.4] - 2019-11-04
 

@@ -48,7 +48,7 @@ Implementation of this ADR will require changes to the Cosmos SDK. It will not r
 
 ### Negative
 
-- Duplicates header data in Tendermint & the application (additional disk usage)
+- Duplicates `n` headers data in Tendermint & the application (additional disk usage)
 
 ### Neutral
 

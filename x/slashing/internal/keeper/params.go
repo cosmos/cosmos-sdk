@@ -7,12 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
-// MaxEvidenceAge - max age for evidence
-func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
-	k.paramspace.Get(ctx, types.KeyMaxEvidenceAge, &res)
-	return
-}
-
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	k.paramspace.Get(ctx, types.KeySignedBlocksWindow, &res)

@@ -79,6 +79,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 	}
 
 	for _, tc := range cases {
+		tc := tc // pin for scopelint
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			// Reset suite on each subtest
 			suite.SetupTest()
@@ -188,6 +189,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
 			misbehaviour := tendermint.Misbehaviour{
 				Evidence: tc.evidence,

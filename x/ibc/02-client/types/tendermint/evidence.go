@@ -18,9 +18,9 @@ var _ evidenceexported.Evidence = Evidence{}
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	Header1 Header `json: "header1" yaml: "header1"`
-	Header2 Header `json: "header2" yaml: "header2"`
-	ChainID string `json: "chain_id" yaml: "chain_id"`
+	Header1 Header `json:"header1" yaml:"header1"`
+	Header2 Header `json:"header2" yaml:"header2"`
+	ChainID string `json:"chain_id" yaml:"chain_id"`
 }
 
 // Route implements Evidence interface

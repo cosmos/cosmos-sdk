@@ -552,7 +552,8 @@ func (d Dec) Ceil() Dec {
 //___________________________________________________________________________________
 
 // Ensures that an sdk.Dec is within the sortable bounds
-// Dec can't have precision of less that 10^-18
+// Dec can't have precision of less than 10^-18
+// Max sortable decimal was set to the reciprocal of SmallestDec
 func ValidSortableDec(dec Dec) bool {
 	return dec.LTE(OneDec().Quo(SmallestDec()))
 }

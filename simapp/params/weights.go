@@ -1,6 +1,6 @@
 package params
 
-// Default simulation weights
+// Default simulation operation weights for messages and gov proposals
 const (
 	DefaultWeightMsgSend                        int = 100
 	DefaultWeightMsgMultiSend                   int = 10
@@ -15,4 +15,8 @@ const (
 	DefaultWeightMsgDelegate                    int = 100
 	DefaultWeightMsgUndelegate                  int = 100
 	DefaultWeightMsgBeginRedelegate             int = 100
+
+	DefaultWeightCommunitySpendProposal int = 5
+	DefaultWeightTextProposal           int = 5
+	DefaultWeightParamChangeProposal    int = 5
 )

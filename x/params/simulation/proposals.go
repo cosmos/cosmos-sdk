@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -12,7 +13,7 @@ func ProposalContents(paramChanges []simulation.ParamChange) []simulation.Weight
 	return []simulation.WeightedProposalContent{
 		{
 			AppParamsKey:       OpWeightSubmitParamChangeProposal,
-			DefaultWeight:      5,
+			DefaultWeight:      appsimparams.DefaultWeightParamChangeProposal,
 			ContentSimulatorFn: SimulateParamChangeProposalContent(paramChanges),
 		},
 	}

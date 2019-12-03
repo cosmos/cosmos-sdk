@@ -32,7 +32,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 
 	return simulation.WeightedOperations{
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgUnjail,
 			SimulateMsgUnjail(ak, k, sk),
 		),

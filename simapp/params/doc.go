@@ -14,6 +14,6 @@ file with the weights defined for each of the transaction operations:
 	}
 
 In the example above, the `MsgSend` has 60% chance to be simulated, while the
-"MsgDelegate" will always be simulated.
+`MsgDelegate` will always be simulated.
 */
 package params

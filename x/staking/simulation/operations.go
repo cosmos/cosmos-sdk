@@ -66,23 +66,23 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 
 	return simulation.WeightedOperations{
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
 			SimulateMsgCreateValidator(ak, k),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgEditValidator,
 			SimulateMsgEditValidator(ak, k),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgDelegate,
 			SimulateMsgDelegate(ak, k),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgUndelegate,
 			SimulateMsgUndelegate(ak, k),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, k),
 		),

@@ -56,7 +56,7 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 
 		wProposalOps = append(
 			wProposalOps,
-			simulation.NewWeigthedOperation(
+			simulation.NewWeightedOperation(
 				weight,
 				SimulateSubmitProposal(ak, k, wContent.ContentSimulatorFn),
 			),
@@ -64,11 +64,11 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	}
 
 	wGovOps := simulation.WeightedOperations{
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgDeposit,
 			SimulateMsgDeposit(ak, k),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgVote,
 			SimulateMsgVote(ak, k),
 		),

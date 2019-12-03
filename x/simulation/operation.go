@@ -199,8 +199,8 @@ type WeightedOperation struct {
 	Op     Operation
 }
 
-// NewWeigthedOperation creates a new WeightedOperation instance
-func NewWeigthedOperation(weight int, op Operation) WeightedOperation {
+// NewWeightedOperation creates a new WeightedOperation instance
+func NewWeightedOperation(weight int, op Operation) WeightedOperation {
 	return WeightedOperation{
 		Weight: weight,
 		Op:     op,

@@ -40,11 +40,11 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	)
 
 	return simulation.WeightedOperations{
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgSend,
 			SimulateMsgSend(ak, bk),
 		),
-		simulation.NewWeigthedOperation(
+		simulation.NewWeightedOperation(
 			weightMsgMultiSend,
 			SimulateMsgMultiSend(ak, bk),
 		),

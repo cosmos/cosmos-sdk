@@ -115,9 +115,6 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
-	_, err := suite.keeper.CreateClient(suite.ctx, "gaiamainnet", exported.Tendermint, suite.consensusState)
-	suite.NoError(err, "CreateClient failed")
-
 	altPrivVal := tmtypes.NewMockPV()
 	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
 
@@ -135,6 +132,12 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	}
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
+
+	_, err := suite.keeper.CreateClient(suite.ctx, "gaiamainnet", exported.Tendermint, suite.consensusState)
+	suite.NoError(err, "CreateClient failed")
+
+	err = suite.keeper.UpdateClient(suite.ctx, "gaiamainnet", tendermint.MakeHeader("gaia", 10, bothValSet, bothValSet, bothSigners))
+	suite.NoError(err, "UpdateClient failed")
 
 	testCases := []struct {
 		name     string

@@ -296,10 +296,11 @@ func queryVoteHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		var vote types.Vote
-		if err := cliCtx.Codec.UnmarshalJSON(res, &vote); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+
+		// XXX: Allow the decoding to potentially fail as the vote may have been
+		// pruned from state. If so, decoding will fail and so we need to check the
+		// Empty() case. Consider updating Vote JSON decoding to not fail when empty.
+		_ = cliCtx.Codec.UnmarshalJSON(res, &vote)
 
 		// For an empty vote, either the proposal does not exist or is inactive in
 		// which case the vote would be removed from state and should be queried for

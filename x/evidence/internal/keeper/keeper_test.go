@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -9,11 +10,42 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
+
+var (
+	pubkeys = []crypto.PubKey{
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
+	}
+
+	valAddresses = []sdk.ValAddress{
+		sdk.ValAddress(pubkeys[0].Address()),
+		sdk.ValAddress(pubkeys[1].Address()),
+		sdk.ValAddress(pubkeys[2].Address()),
+	}
+
+	initAmt   = sdk.TokensFromConsensusPower(200)
+	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+)
+
+func newPubKey(pk string) (res crypto.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+
+	var pubkey ed25519.PubKeyEd25519
+	copy(pubkey[:], pkBytes)
+
+	return pubkey
+}
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -21,6 +53,7 @@ type KeeperTestSuite struct {
 	ctx     sdk.Context
 	querier sdk.Querier
 	keeper  keeper.Keeper
+	app     *simapp.SimApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -34,7 +67,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
 		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName),
-		evidence.DefaultCodespace,
+		evidence.DefaultCodespace, app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
@@ -43,6 +76,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 1})
 	suite.querier = keeper.NewQuerier(*evidenceKeeper)
 	suite.keeper = *evidenceKeeper
+	suite.app = app
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -72,6 +106,18 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 	}
 
 	return evidence
+}
+
+func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
+	// add accounts and set total supply
+	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
+	suite.app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
+	for _, addr := range valAddresses {
+		_, err := suite.app.BankKeeper.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+		suite.NoError(err)
+	}
 }
 
 func (suite *KeeperTestSuite) TestSubmitValidEvidence() {

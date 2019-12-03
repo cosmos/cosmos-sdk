@@ -28,6 +28,56 @@ the handler execution.
 
 ## Decision
 
+The Cosmos SDK will define `FoldHandler` for post-execution cleanup logic. 
+
+```go
+type FoldHandler func(sdk.Context, sdk.Tx, sdk.Result) sdk.Result
+```
+
+`FoldHandler`s will be provided by the top level application and interted into
+the `baseapp`.
+
+`baseapp.runTx` will execute `FoldHandler` after the main application handler
+execution. The logic is equal to that of `AnteHandler`.
+
+```go
+// Pseudocode
+func (app *BaseApp) runTx(tx sdk.Tx) (result sdk.Result) {
+  msgs := tx.GetMsgs()
+  
+  // AnteHandler
+  if app.anteHandler != nil {
+    anteCtx, msCache := app.cacheTxContext(ctx)
+    newCtx, err := app.anteHandler(anteCtx, tx)
+    if !newCtx.IsZero() {
+      ctx = newCtx.WithMultiStore(ms)
+    }
+    
+    if err != nil {
+      // error handling logic
+      return res
+    }
+    
+    msCache.Write()
+  }
+  
+  // Main Handler
+  runMsgCtx, msCache := app.cacheTxContext(ctx)
+  result = app.runMsgs(runMsgCtx, msgs)
+  if !result.IsOK() {
+    msCache.Write()
+  }
+  
+  // BEGIN modification made in this ADR
+  if app.foldHandler != nil {
+    result = app.foldHandler(ctx, tx, result)
+  }
+  // END
+  
+  return result
+}
+```
+
 The Cosmos SDK will define an `AnteDecorator` for IBC packet receiving. The
 `AnteDecorator` will iterate over the messages included in the transaction, type
 `switch` to check whether the message contains an incoming IBC packet, and if so
@@ -41,51 +91,18 @@ type ProofVerificationDecorator struct {
 }
 
 func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-  var flag bool
-
-  var portID, channelID string
-
   for _, msg := range tx.GetMsgs() {
     var err error
     switch msg := msg.(type) {
     case client.MsgUpdateClient:
       err = pvr.clientKeeper.UpdateClient(msg.ClientID, msg.Header)
     case channel.MsgPacket:
-      err = pvr.channelKeeper.VerifyPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
-      if flag {
-        if msg.PortID != portID || msg.channelID != channelID {
-          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
-        }
-        portID = msg.PortID
-        channelID = msg.ChannelID
-      }
-      flag = true
-      // Store the empty acknowledgement for convinience
-      pvr.channelKeeper.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, []byte{})
+      err = pvr.channelKeeper.RecvPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
     case chanel.MsgAcknowledgement:
-      err = pvr.channelKeeper.VerifyAcknowledgement(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
-      if flag {
-        if msg.PortID != portID || msg.channelID != channelID {
-          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
-        }
-        portID = msg.PortID
-        channelID = msg.ChannelID
-      }
-      flag = true
+      err = pvr.channelKeeper.AcknowledgementPacket(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
     case channel.MsgTimeoutPacket:
-      err = pvr.channelKeeper.VerifyTimeout(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
-      if flag {
-        if msg.PortID != portID || msg.channelID != channelID {
-          return ctx, errors.New("Transaction cannot include IBC packets from different ports")
-        }
-        portID = msg.PortID
-        channelID = msg.ChannelID
-      }
-      flag = true
+      err = pvr.channelKeeper.TimeoutPacket(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
     default:
-      if flag {
-        return ctx, errors.New("Transaction cannot include both IBC packet messasges and normal messages")
-      }
       continue
     }
 
@@ -93,6 +110,7 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
       return ctx, err
     }
   }
+  
   return next(ctx, tx, simulate)
 }
 ```
@@ -102,10 +120,60 @@ are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
 `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module,
 respectively.
 
-An attacker can insert a failiing message before any of packet receiving message
-preventing the packet messages to be processed but keeping the sequence increased.
-If a transaction contains a packet receiving messages, any possibly failing 
-messages should not be included in the transaction.
+The side effects of `RecvPacket`, `VerifyAcknowledgement`, 
+`VerifyTimeout` will be extracted out into separated functions. 
+
+```go
+// Pseudocode
+func (keeper ChannelKeeper) RecvFinalize(packet Packet, proofs []commitment.ProofI, height uint64) {
+  keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+}
+
+// Pseudocode
+func (keeper ChannelKeeper) AcknowledgementFinalize(packet Packet, acknowledgement PacketDataI, proofs []commitment.ProofI, height uint64) {
+  keeper.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+}
+
+// Pseudocode
+func (keeper ChannelKeeper) TimeoutFinalize(packet Packet, proofs []commitment.ProofI, height uint64, nextSequenceRecv uint64) {
+  k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+  
+  if channel.Ordering == types.ORDERED [
+    channel.State = types.CLOSED
+    k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+  }
+}
+```
+
+The Cosmos SDK will define a `FoldHandler` for remaining state mutation. The
+`FoldHandler` will execute the side effect of the verification, including 
+sequence increase and commitment deletion.
+
+```go
+func NewFoldHandler(k ChannelKeeper) sdk.FoldHandler {
+  return func(ctx sdk.Context, tx sdk.Tx, result sdk.Result) sdk.Result {
+    if !result.IsOK() {
+      // Transaction aborted, no side effect need to be committed
+      return result
+    }
+    
+    for _, msg := range tx.GetMsgs() {
+      switch msg := msg.(type) {
+      case channel.MsgPacket:
+        pvr.channelKeeper.FinalizeRecvPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
+      case chanel.MsgAcknowledgement:
+        pvr.channelKeeper.FinalizeAcknowledgementPacket(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
+      case channel.MsgTimeoutPacket:
+        pvr.channelKeeper.FinalizeTimeoutPacket(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+      default:
+        continue
+      }
+    }
+    
+    return result
+  }
+}
+```
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
 It should come right after the default sybil attack resistent layer from the
@@ -122,37 +190,6 @@ func NewAnteHandler(
     NewIncrementSequenceDecorator(ak),
     ibcante.ProofVerificationDecorator(ibcKeeper.ClientKeeper, ibcKeeper.ChannelKeeper), // innermost AnteDecorator
   )
-}
-```
-
-The Cosmos SDK will define the wrapper function `WriteAcknowledgement` under the
-ICS05 port keeper. The function will wrap packet handlers to automatically handle
-the acknowledgments.
-
-```go
-type PacketHandler func(sdk.Context, Packet) sdk.Result
-
-func (k PortKeeper) WriteAcknowledgement(ctx sdk.Context, msg MsgPacket, h PacketHandler) sdk.Result {
-  // Cache context
-  cacheCtx, write := ctx.CacheContext()
-
-  // verification already done inside the antehandler
-  res := h(cacheCtx, msg.Packet)
-  
-  // write the cache only if succedded
-  if res.IsOK() {
-    write()
-  }
-  
-  // set the result to OK to persist the state change
-  res.Code = sdk.CodeOK
-  
-  // res.Data will be stored as acknowledgement; noop if not exists(empty bytes already stored)
-  if res.Data != nil {
-    k.SetPacketAcknowledgement(ctx, msg.PortID, msg.ChannelID, msg.Sequence, res.Data)
-  }
-
-  return res
 }
 ```
 
@@ -198,15 +235,16 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
   if err != nil {
     return sdk.ResultFromError(err)
   }
+
   return sdk.Result{}
 }
 
 func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data PacketDataTransfer) sdk.Result {
   err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
-	if err != nil {
+  if err != nil {
     // Source chain sent invalid packet, shutdown channel
   }
-  // packet receiving should not fail
+  k.PortKeeper.WriteAcknowledgement([]byte{0x00})
   return sdk.Result{}
 }
 

@@ -1,5 +1,15 @@
 # Evidence Module Specification
 
+## Table of Contents
+
+<!-- TOC -->
+1. **[Concepts](01_concepts.md)**
+2. **[State](02_state.md)**
+3. **[Messages](03_messages.md)**
+4. **[Events](04_events.md)**
+5. **[Params](05_params.md)**
+6. **[BeginBlock](06_begin_block.md)**
+
 ## Abstract
 
 `x/evidence` is an implementation of a Cosmos SDK module, per [ADR 009](./../../../docs/architecture/adr-009-evidence-module.md),
@@ -20,9 +30,3 @@ keeper in order for it to be successfully routed and executed.
 Each corresponding handler must also fulfill the `Handler` interface contract. The
 `Handler` for a given `Evidence` type can perform any arbitrary state transitions
 such as slashing, jailing, and tombstoning.
-
-<!-- TOC -->
-1. **[Concepts](01_concepts.md)**
-2. **[State](02_state.md)**
-3. **[Messages](03_messages.md)**
-4. **[Events](04_events.md)**

@@ -80,6 +80,11 @@ func (ev Evidence) ValidateBasic() error {
 	return nil
 }
 
+// ValidCommit checks if the given commit is a valid commit from the passed-in validatorset
+//
+// CommitToVoteSet will panic if the commit cannot be converted to a valid voteset given the validatorset
+// This implies that someone tried to submit evidence that wasn't actually committed by the validatorset
+// thus we should return an error here and reject the evidence rather than panicing.
 func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

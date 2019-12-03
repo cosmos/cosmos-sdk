@@ -116,6 +116,7 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
 			// reset suite for each subtest
 			suite.SetupTest()

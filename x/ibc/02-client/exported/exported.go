@@ -40,6 +40,8 @@ type Header interface {
 
 // Committer defines the type that is responsible for
 // updating the consensusState at a given height
+//
+// In Tendermint, this is the ValidatorSet at the given height
 type Committer interface {
 	ClientType() ClientType
 	GetHeight() uint64

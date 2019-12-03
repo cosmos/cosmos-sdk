@@ -59,6 +59,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
 			misbehaviour := Misbehaviour{
 				Evidence: tc.evidence,
@@ -150,6 +151,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
 			misbehaviour := Misbehaviour{
 				Evidence: tc.evidence,

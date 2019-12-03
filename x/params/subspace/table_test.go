@@ -39,4 +39,12 @@ func TestKeyTable(t *testing.T) {
 
 	require.NotPanics(t, func() { table.RegisterParamSet(&testparams{}) })
 	require.Panics(t, func() { table.RegisterParamSet(&testparams{}) })
+
+	require.Panics(t, func() { NewKeyTable(testParam{[]byte("test")}) })
+	require.NotPanics(t, func() {
+		NewKeyTable(
+			testParam{[]byte("test")}, int64(0),
+			testParam{[]byte("test2")}, bool(true),
+		)
+	})
 }

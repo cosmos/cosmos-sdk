@@ -45,5 +45,5 @@ type ephemeralParam struct {
 }
 
 func NewEphemeralParam(key, subkey []byte) Param { return ephemeralParam{key: concatKeys(key, subkey)} }
-func (ep ephemeralParam) Key() []byte {	return ep.key}
-func (ep ephemeralParam) Validate() error { return nil }
+func (ep ephemeralParam) Key() []byte            { return ep.key }
+func (ep ephemeralParam) Validate() error        { return nil }

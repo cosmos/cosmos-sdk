@@ -11,25 +11,26 @@ In order for the Cosmos SDK to implement the [IBC specification](https://github.
 
 ## Decision
 
-The application MUST instruct Tendermint to provide requisite information for the application to track the past `n` headers by indicating as such in a field on `abci.ResponseInitChain` containing the value of `n`.
-- The value of this field MAY default to `0` for ease of backwards compatibility with other ABCI clients which do not require this header-introspection functionality.
+The application MUST store the most recent `n` headers in a persistent store. At first, this store MAY be the current Merklised store. A non-Merklised store MAY be used later as no proofs are necessary.
 
-Tendermint MUST read this field when handling the `abci.ResponseInitChain` response, and then behave as follows:
-- With the first `abci.RequestBeginBlock`, Tendermint MUST send the `n` most recent committed headers in order.
-  - If fewer than `n` previous headers exist, Tendermint MUST send all previous headers.
-- With subsequent `abci.RequestBeginBlock` calls, Tendermint MUST send the the most recent committed header.
-
-The application MUST use this header data provided by `abci.RequestBeginBlock` to track the past `n` committed headers in the `BaseApp`:
-- When handling the first `abci.RequestBeginBlock` invocation, the application must store all `n` committed headers in memory.
-- When handling subsequent `abci.RequestBeginBlock` invocations, the application must remove the oldest commmited header from memory and store the most recent one (provided as a field of `abci.RequestBeginBlock`).
-
-The application MUST make these past `n` committed headers available for querying by SDK modules through the `sdk.Context` as follows:
+The application MUST store this information by storing new headers immediately when handling `abci.RequestBeginBlock`:
 
 ```golang
-func (c Context) PreviousHeader(height uint64) tmtypes.Header {
-  // implemented in the context
+func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+  info := HistoricalInfo{
+    Header: ctx.BlockHeader(),
+    ValSet: keeper.StakingKeeper.GetAllValidators(ctx),
+  }
+  keeper.SetHistoricalInfo(ctx, ctx.BlockHeight(), info)
+  n := keeper.GetParamRecentHeadersToStore()
+  keeper.PruneHistoricalInfo(ctx, ctx.BlockHeight() - n)
+  // continue handling request
 }
 ```
+
+The application MUST make these past `n` committed headers available for querying by SDK modules through the `Keeper`'s `GetHistoricalInfo` function.
+
+`n` MAY be configured as a parameter store parameter, in which case it could be changed by `ParameterChangeProposal`s, although it will take some blocks for the stored information to catch up if `n` is increased.
 
 ## Status
 
@@ -37,17 +38,17 @@ Proposed.
 
 ## Consequences
 
-Implementation of this ADR will require synchronised changes to Tendermint & the Cosmos SDK. It should be backwards-compatible with other ABCI clients, which can simply elect to ignore the field.
+Implementation of this ADR will require changes to the Cosmos SDK. It will not require changes to Tendermint.
 
 ### Positive
 
 - Easy retrieval of headers & state roots for recent past heights by modules anywhere in the SDK
-- Maintains existing deliver-only interface (no "backwards queries" from the SDK to Tendermint)
+- No RPC calls to Tendermint required
+- No ABCI alterations required
 
 ### Negative
 
-- Additional memory usage (to store `n` headers)
-- Additional state tracking in Tendermint & the SDK
+- Duplicates header data in Tendermint & the application (additional disk usage)
 
 ### Neutral
 

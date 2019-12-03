@@ -44,6 +44,9 @@ deprecated and all components removed except the `legacy/` package. This require
 genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
 logic has been implemented for v0.38 target version. Applications can migrate via:
 `$ {appd} migrate v0.38 genesis.json`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) Handling of `ABCIEvidenceTypeDuplicateVote`
+  during `BeginBlock` along with the corresponding parameters (`MaxEvidenceAge`) have moved from the
+  `x/slashing` module to the `x/evidence` module.
 
 ### API Breaking Changes
 
@@ -71,6 +74,8 @@ if the provided arguments are invalid.
   * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
   returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
+  and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
 
 ### Client Breaking Changes
 

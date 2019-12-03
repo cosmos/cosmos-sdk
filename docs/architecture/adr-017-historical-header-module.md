@@ -48,7 +48,7 @@ Implementation of this ADR will require changes to the Cosmos SDK. It will not r
 
 ### Negative
 
-- Duplicates header data in Tendermint & the application (additional disk usage) - in the long term, an approach such as [this](https://github.com/tendermint/tendermint/issues/4210) might be preferable.
+- Duplicates `n` headers data in Tendermint & the application (additional disk usage) - in the long term, an approach such as [this](https://github.com/tendermint/tendermint/issues/4210) might be preferable.
 
 ### Neutral
 

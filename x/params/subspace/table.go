@@ -13,9 +13,8 @@ type KeyTable struct {
 	m map[string]attribute
 }
 
-// Constructs new table
-func NewKeyTable(keytypes ...interface{}) (res KeyTable) {
-	if len(keytypes)%2 != 0 {
+func NewKeyTable(keyTypes ...interface{}) (res KeyTable) {
+	if len(keyTypes)%2 != 0 {
 		panic("odd number arguments in NewTypeKeyTable")
 	}
 
@@ -23,8 +22,8 @@ func NewKeyTable(keytypes ...interface{}) (res KeyTable) {
 		m: make(map[string]attribute),
 	}
 
-	for i := 0; i < len(keytypes); i += 2 {
-		res = res.RegisterType(keytypes[i].([]byte), keytypes[i+1])
+	for i := 0; i < len(keyTypes); i += 2 {
+		res = res.RegisterType(NewParamSetPair(keyTypes[i].(Param), keyTypes[i+1]))
 	}
 
 	return
@@ -41,20 +40,23 @@ func isAlphaNumeric(key []byte) bool {
 	return true
 }
 
-// Register single key-type pair
-func (t KeyTable) RegisterType(key []byte, ty interface{}) KeyTable {
+// RegisterType registers a single ParamSetPair (key-type pair) in a KeyTable.
+func (t KeyTable) RegisterType(psp ParamSetPair) KeyTable {
+	key := psp.Param.Key()
+
 	if len(key) == 0 {
 		panic("cannot register empty key")
 	}
 	if !isAlphaNumeric(key) {
 		panic("non alphanumeric parameter key")
 	}
+
 	keystr := string(key)
 	if _, ok := t.m[keystr]; ok {
 		panic("duplicate parameter key")
 	}
 
-	rty := reflect.TypeOf(ty)
+	rty := reflect.TypeOf(psp.Value)
 
 	// Indirect rty if it is ptr
 	if rty.Kind() == reflect.Ptr {
@@ -68,10 +70,10 @@ func (t KeyTable) RegisterType(key []byte, ty interface{}) KeyTable {
 	return t
 }
 
-// Register multiple pairs from ParamSet
+// RegisterParamSet registers multiple ParamSetPairs from a ParamSet in a KeyTable.
 func (t KeyTable) RegisterParamSet(ps ParamSet) KeyTable {
-	for _, kvp := range ps.ParamSetPairs() {
-		t = t.RegisterType(kvp.Key, kvp.Value)
+	for _, psp := range ps.ParamSetPairs() {
+		t = t.RegisterType(psp)
 	}
 	return t
 }

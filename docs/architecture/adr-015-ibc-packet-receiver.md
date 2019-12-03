@@ -6,7 +6,7 @@
 
 ## Context
  
-[ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
+[ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines a function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
 
 `handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the
 packet merkle proof, and pushes the acknowledgement bytes, if present, to the IBC
@@ -84,7 +84,6 @@ The Cosmos SDK will define an `AnteDecorator` for IBC packet receiving. The
 verify the Merkle proof.
 
 ```go
-// Pseudocode
 type ProofVerificationDecorator struct {
   clientKeeper ClientKeeper
   channelKeeper ChannelKeeper

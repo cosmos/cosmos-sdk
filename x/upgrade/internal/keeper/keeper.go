@@ -37,10 +37,10 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
-	err := plan.ValidateBasic()
-	if err != nil {
+	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
+
 	if !plan.Time.IsZero() {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
 			return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
@@ -65,6 +65,7 @@ func (k Keeper) getDoneHeight(ctx sdk.Context, name string) int64 {
 	if len(bz) == 0 {
 		return 0
 	}
+
 	return int64(binary.BigEndian.Uint64(bz))
 }
 
@@ -87,6 +88,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 	if bz == nil {
 		return plan, false
 	}
+
 	k.cdc.MustUnmarshalBinaryBare(bz, &plan)
 	return plan, true
 }
@@ -111,7 +113,9 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	if handler == nil {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
+
 	handler(ctx, plan)
+
 	k.ClearUpgradePlan(ctx)
 	k.setDone(ctx, plan.Name)
 }

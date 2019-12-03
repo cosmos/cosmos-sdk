@@ -33,7 +33,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
 		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName),
-		evidence.DefaultCodespace,
+		evidence.DefaultCodespace, app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
@@ -67,7 +67,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Valid() {
 	}
 
 	suite.NotPanics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(types.DefaultParams(), testEvidence))
 	})
 
 	for _, e := range testEvidence {
@@ -100,7 +100,7 @@ func (suite *GenesisTestSuite) TestInitGenesis_Invalid() {
 	}
 
 	suite.Panics(func() {
-		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(testEvidence))
+		evidence.InitGenesis(suite.ctx, suite.keeper, evidence.NewGenesisState(types.DefaultParams(), testEvidence))
 	})
 
 	suite.Empty(suite.keeper.GetAllEvidence(suite.ctx))

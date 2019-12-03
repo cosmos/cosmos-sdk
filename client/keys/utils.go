@@ -49,9 +49,9 @@ func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.K
 	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keybase at a particular dir. It generates a test keyring
-// if the 'COSMOS_SDK_TEST_KEYRING' environment variable is present. Keybase
-// options can be applied when generating this new Keybase.
+// NewKeyBaseFromDir initializes a keyring at a particular dir.
+// If the COSMOS_SDK_TEST_KEYRING environment variable is set and not empty it will
+// return an on-disk, password-less keyring that could be used for testing purposes.
 func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
 		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)

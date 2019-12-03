@@ -82,8 +82,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	)
 
 	params := types.NewParams(
-		simState.UnbondTime, signedBlocksWindow, minSignedPerWindow,
-		downtimeJailDuration, slashFractionDoubleSign, slashFractionDowntime,
+		signedBlocksWindow, minSignedPerWindow, downtimeJailDuration,
+		slashFractionDoubleSign, slashFractionDowntime,
 	)
 
 	slashingGenesis := types.NewGenesisState(params, nil, nil)

@@ -84,3 +84,12 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence_InvalidPagination() {
 	suite.Nil(types.TestingCdc.UnmarshalJSON(bz, &e))
 	suite.Len(e, 0)
 }
+
+func (suite *KeeperTestSuite) TestQueryParams() {
+	ctx := suite.ctx.WithIsCheckTx(false)
+
+	bz, err := suite.querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
+	suite.Nil(err)
+	suite.NotNil(bz)
+	suite.Equal("{\n  \"max_evidence_age\": \"120000000000\"\n}", string(bz))
+}

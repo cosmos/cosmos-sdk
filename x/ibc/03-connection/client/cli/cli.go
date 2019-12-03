@@ -34,7 +34,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		GetCmdConnectionOpenTry(storeKey, cdc),
 		GetCmdConnectionOpenAck(storeKey, cdc),
 		GetCmdConnectionOpenConfirm(storeKey, cdc),
-		GetCmdHandshakeState(storeKey, cdc),
+		GetCmdHandshakeConnection(storeKey, cdc),
 	)...)
 
 	return ics03ConnectionTxCmd

@@ -42,18 +42,18 @@ const (
 // chain A with a given counterparty chain B
 func GetCmdConnectionOpenInit(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: strings.TrimSpace(`open-init [connection-id] [client-id] [counterparty-connection-id] 
-		[counterparty-client-id] [path/to/counterparty_prefix.json]`),
+		Use:   strings.TrimSpace(`open-init [connection-id] [client-id] [counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json]`),
 		Short: "initialize connection on chain A",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
 
 Example:
-$ %s tx ibc connection open-init [connection-id] [client-id] [counterparty-connection-id] 
-[counterparty-client-id] [path/to/counterparty_prefix.json]
+$ %s tx ibc connection open-init [connection-id] [client-id] \
+[counterparty-connection-id] [counterparty-client-id] \
+[path/to/counterparty_prefix.json]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(6),
+		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -92,20 +92,20 @@ $ %s tx ibc connection open-init [connection-id] [client-id] [counterparty-conne
 // chain B
 func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: strings.TrimSpace(`open-try [connection-id] [client-id] 
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-[counterparty-versions] [path/to/proof_init.json]`),
+		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
+		[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
+		[counterparty-versions] [path/to/proof_init.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
 
 Example:
-$ %s tx ibc connection open-try connection-id] [client-id] 
-[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
+$ %s tx ibc connection open-try connection-id] [client-id] \
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] \
 [counterparty-versions] [path/to/proof_init.json]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(6),
+		Args: cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -227,7 +227,7 @@ Example:
 $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -277,7 +277,10 @@ func lastHeight(cliCtx context.CLIContext) (uint64, error) {
 	return uint64(info.Response.LastBlockHeight), nil
 }
 
-func GetCmdHandshakeState(storeKey string, cdc *codec.Codec) *cobra.Command {
+// GetCmdHandshakeConnection performs the full handshake to set an IBC connection.
+// Note: Only for demo purposes.
+// TODO: Remove for IBC v1.0.0
+func GetCmdHandshakeConnection(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake [conn-id-chain-1] [client-id-chain-1] [path-chain-1] [conn-id-chain-2] [client-id-chain-2] [path-chain-2] ",
 		Short: "initiate connection handshake between two chains",

@@ -177,7 +177,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 	return &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof-ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -219,7 +219,7 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 	return &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -242,7 +242,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 	return &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof-init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -279,7 +279,10 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 	}
 }
 
-func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
+// GetCmdHandshakeChannel performs the full handshake to set an IBC channel.
+// Note: Only for demo purposes.
+// TODO: Remove for IBC v1.0.0
+func GetCmdHandshakeChannel(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "handshake",
 		Short: "initiate connection handshake between two chains",

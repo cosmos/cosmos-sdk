@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	evidence "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
@@ -133,7 +134,7 @@ $ %s tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0
 
 			clientID := args[0]
 
-			var evidence exported.Evidence
+			var evidence evidence.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &evidence); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
 

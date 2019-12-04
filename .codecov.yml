@@ -35,7 +35,6 @@ flags:
     paths:
       - "x/"
       - "!x/**/client/" # ignore client package
-
   client:
     paths:
       - client/

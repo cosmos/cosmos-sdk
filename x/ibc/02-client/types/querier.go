@@ -30,6 +30,21 @@ func NewQueryClientStateParams(id string) QueryClientStateParams {
 	}
 }
 
+// QueryAllClientsParams defines the parameters necessary for querying for all
+// light client states.
+type QueryAllClientsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllClientsParams creates a new QueryAllClientsParams instance.
+func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
+	return QueryAllClientsParams{
+		Page:  page,
+		Limit: limit,
+	}
+}
+
 // QueryCommitmentRootParams defines the params for the following queries:
 // - 'custom/ibc/clients/<clientID>/roots/<height>'
 type QueryCommitmentRootParams struct {

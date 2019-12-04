@@ -119,6 +119,33 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 	store.Set(types.KeyRoot(clientID, height), bz)
 }
 
+// IterateClients provides an iterator over all stored light client State
+// objects. For each State object, cb will be called. If the cb returns true,
+// the iterator will close and stop.
+func (k Keeper) IterateClients(ctx sdk.Context, cb func(types.State) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var clientState types.State
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
+
+		if cb(clientState) {
+			break
+		}
+	}
+}
+
+// GetAllClients returns all stored light client State objects.
+func (k Keeper) GetAllClients(ctx sdk.Context) (states []types.State) {
+	k.IterateClients(ctx, func(state types.State) bool {
+		states = append(states, state)
+		return false
+	})
+	return states
+}
+
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {

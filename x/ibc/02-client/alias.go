@@ -61,6 +61,7 @@ var (
 	KeyRoot                      = types.KeyRoot
 	NewMsgCreateClient           = types.NewMsgCreateClient
 	NewMsgUpdateClient           = types.NewMsgUpdateClient
+	NewMsgSubmitMibehaviour      = types.NewMsgSubmitMisbehaviour
 	NewQueryClientStateParams    = types.NewQueryClientStateParams
 	NewQueryCommitmentRootParams = types.NewQueryCommitmentRootParams
 	NewClientState               = types.NewClientState
@@ -76,6 +77,7 @@ type (
 	Keeper                    = keeper.Keeper
 	MsgCreateClient           = types.MsgCreateClient
 	MsgUpdateClient           = types.MsgUpdateClient
+	MsgSubmitMisbehaviour     = types.MsgSubmitMisbehaviour
 	QueryClientStateParams    = types.QueryClientStateParams
 	QueryCommitmentRootParams = types.QueryCommitmentRootParams
 	State                     = types.State

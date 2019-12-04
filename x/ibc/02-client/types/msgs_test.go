@@ -6,11 +6,40 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	cmn "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidence "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
+
+var _ evidence.Evidence = mockEvidence{}
+var _ evidence.Evidence = mockBadEvidence{}
+
+const mockStr = "mock"
+
+// mock GoodEvidence
+type mockEvidence struct{}
+
+// Implement Evidence interface
+func (me mockEvidence) Route() string        { return mockStr }
+func (me mockEvidence) Type() string         { return mockStr }
+func (me mockEvidence) String() string       { return mockStr }
+func (me mockEvidence) Hash() cmn.HexBytes   { return cmn.HexBytes([]byte(mockStr)) }
+func (me mockEvidence) ValidateBasic() error { return nil }
+func (me mockEvidence) GetHeight() int64     { return 3 }
+
+// mock bad evidence
+type mockBadEvidence struct {
+	mockEvidence
+}
+
+// Override ValidateBasic
+func (mbe mockBadEvidence) ValidateBasic() error {
+	return errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence")
+}
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {
 	cs := tendermint.ConsensusState{}
@@ -65,6 +94,39 @@ func TestMsgUpdateClient(t *testing.T) {
 		{testMsgs[1], false, "invalid client id passed"},
 		{testMsgs[2], false, "Nil Header passed"},
 		{testMsgs[3], false, "Empty address passed"},
+	}
+
+	for i, tc := range cases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			require.Nil(t, err, "Msg %d failed: %v", i, err)
+		} else {
+			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}
+
+func TestMsgSubmitMisbehaviour(t *testing.T) {
+	privKey := secp256k1.GenPrivKey()
+	signer := sdk.AccAddress(privKey.PubKey().Address())
+	testMsgs := []MsgSubmitMisbehaviour{
+		NewMsgSubmitMisbehaviour(exported.ClientTypeTendermint, mockEvidence{}, signer),           // valid msg
+		NewMsgSubmitMisbehaviour("badClient", mockEvidence{}, signer),                             // bad client id
+		NewMsgSubmitMisbehaviour(exported.ClientTypeTendermint, nil, signer),                      // nil evidence
+		NewMsgSubmitMisbehaviour(exported.ClientTypeTendermint, mockBadEvidence{}, signer),        // invalid evidence
+		NewMsgSubmitMisbehaviour(exported.ClientTypeTendermint, mockEvidence{}, sdk.AccAddress{}), // empty signer
+	}
+
+	cases := []struct {
+		msg     MsgSubmitMisbehaviour
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "invalid client id passed"},
+		{testMsgs[2], false, "Nil Evidence passed"},
+		{testMsgs[3], false, "Invalid Evidence passed"},
+		{testMsgs[4], false, "Empty address passed"},
 	}
 
 	for i, tc := range cases {

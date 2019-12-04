@@ -457,8 +457,14 @@ func TestDecSortableBytes(t *testing.T) {
 		{NewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
 		{NewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
 		{NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
+		{NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
+		{NewDec(1000000000000000000), []byte("max")},
+		{NewDec(-1000000000000000000), []byte("--")},
 	}
 	for tcIndex, tc := range tests {
 		assert.Equal(t, tc.want, SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
 	}
+
+	assert.Panics(t, func() { SortableDecBytes(NewDec(1000000000000000001)) })
+	assert.Panics(t, func() { SortableDecBytes(NewDec(-1000000000000000001)) })
 }

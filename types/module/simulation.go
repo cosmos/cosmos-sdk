@@ -49,12 +49,13 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 
 // GetProposalContents returns each module's proposal content generator function
 // with their default operation weight and key.
-func (sm *SimulationManager) GetProposalContents(simState SimulationState) (wContents []simulation.WeightedProposalContent) {
+func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
+	var wContents []simulation.WeightedProposalContent
 	for _, module := range sm.Modules {
 		wContents = append(wContents, module.ProposalContents(simState)...)
 	}
 
-	return
+	return wContents
 }
 
 // RegisterStoreDecoders registers each of the modules' store decoders into a map
@@ -85,12 +86,13 @@ func (sm *SimulationManager) GenerateParamChanges(seed int64) (paramChanges []si
 }
 
 // WeightedOperations returns all the modules' weighted operations of an application
-func (sm *SimulationManager) WeightedOperations(simState SimulationState) (wOps []simulation.WeightedOperation) {
+func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simulation.WeightedOperation {
+	var wOps []simulation.WeightedOperation
 	for _, module := range sm.Modules {
 		wOps = append(wOps, module.WeightedOperations(simState)...)
 	}
 
-	return
+	return wOps
 }
 
 // SimulationState is the input parameters used on each of the module's randomized

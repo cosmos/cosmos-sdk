@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -19,7 +19,7 @@ func ProposalContents(k keeper.Keeper) []simulation.WeightedProposalContent {
 	return []simulation.WeightedProposalContent{
 		{
 			AppParamsKey:       OpWeightSubmitCommunitySpendProposal,
-			DefaultWeight:      appsimparams.DefaultWeightCommunitySpendProposal,
+			DefaultWeight:      simappparams.DefaultWeightCommunitySpendProposal,
 			ContentSimulatorFn: SimulateCommunityPoolSpendProposalContent(k),
 		},
 	}

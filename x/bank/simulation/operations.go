@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	appsimparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
@@ -29,13 +29,13 @@ func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak typ
 	var weightMsgSend, weightMsgMultiSend int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgSend = appsimparams.DefaultWeightMsgSend
+			weightMsgSend = simappparams.DefaultWeightMsgSend
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgMultiSend, &weightMsgMultiSend, nil,
 		func(_ *rand.Rand) {
-			weightMsgMultiSend = appsimparams.DefaultWeightMsgMultiSend
+			weightMsgMultiSend = simappparams.DefaultWeightMsgMultiSend
 		},
 	)
 

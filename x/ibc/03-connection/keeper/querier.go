@@ -56,9 +56,9 @@ func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 	return bz, nil
 }
 
-// QueryAllConnections defines the sdk.Querier to query all the light client states.
+// QueryAllConnections defines the sdk.Querier to query all the connections.
 func QueryAllConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryAllConnectionParams
+	var params types.QueryAllConnectionsParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

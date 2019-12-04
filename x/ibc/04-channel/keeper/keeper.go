@@ -150,3 +150,30 @@ func (k Keeper) GetPacketAcknowledgement(ctx sdk.Context, portID, channelID stri
 	}
 	return bz, true
 }
+
+// IterateChannels provides an iterator over all Channel objects. For each
+// Channel, cb will be called. If the cb returns true, the iterator will close
+// and stop.
+func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.Channel) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixChannel)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var channel types.Channel
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &channel)
+
+		if cb(channel) {
+			break
+		}
+	}
+}
+
+// GetAllChannels returns all stored Channel objects.
+func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.Channel) {
+	k.IterateChannels(ctx, func(channel types.Channel) bool {
+		channels = append(channels, channel)
+		return false
+	})
+	return channels
+}

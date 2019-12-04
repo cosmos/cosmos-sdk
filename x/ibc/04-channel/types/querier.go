@@ -49,6 +49,21 @@ func NewQueryChannelParams(portID, channelID string) QueryChannelParams {
 	}
 }
 
+// QueryAllChannelsParams defines the parameters necessary for querying for all
+// channels.
+type QueryAllChannelsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllChannelsParams creates a new QueryAllChannelsParams instance.
+func NewQueryAllChannelsParams(page, limit int) QueryAllChannelsParams {
+	return QueryAllChannelsParams{
+		Page:  page,
+		Limit: limit,
+	}
+}
+
 // PacketResponse defines the client query response for a packet which also
 // includes a proof, its path and the height form which the proof was retrieved
 type PacketResponse struct {

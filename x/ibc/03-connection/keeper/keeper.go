@@ -84,9 +84,9 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	store.Set(types.KeyClientConnections(clientID), bz)
 }
 
-// IterateConnections provides an iterator over all ConnectionEnd
-// objects. For each State object, cb will be called. If the cb returns true,
-// the iterator will close and stop.
+// IterateConnections provides an iterator over all ConnectionEnd objects.
+// For each ConnectionEnd, cb will be called. If the cb returns true, the
+// iterator will close and stop.
 func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
 	iterator := sdk.KVStorePrefixIterator(store, nil)

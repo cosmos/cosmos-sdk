@@ -2,12 +2,12 @@ package types
 
 // GenesisState - minter state
 type GenesisState struct {
-	Minter Minter     `json:"minter" yaml:"minter"` // minter object
-	Params MintParams `json:"params" yaml:"params"` // inflation params
+	Minter Minter `json:"minter" yaml:"minter"` // minter object
+	Params Params `json:"params" yaml:"params"` // inflation params
 }
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(minter Minter, params MintParams) GenesisState {
+func NewGenesisState(minter Minter, params Params) GenesisState {
 	return GenesisState{
 		Minter: minter,
 		Params: params,

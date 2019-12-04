@@ -6,7 +6,7 @@ import (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	Params               StakeParams           `json:"params" yaml:"params"`
+	Params               Params                `json:"params" yaml:"params"`
 	LastTotalPower       sdk.Int               `json:"last_total_power" yaml:"last_total_power"`
 	LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers" yaml:"last_validator_powers"`
 	Validators           Validators            `json:"validators" yaml:"validators"`
@@ -22,7 +22,7 @@ type LastValidatorPower struct {
 	Power   int64
 }
 
-func NewGenesisState(params StakeParams, validators []Validator, delegations []Delegation) GenesisState {
+func NewGenesisState(params Params, validators []Validator, delegations []Delegation) GenesisState {
 	return GenesisState{
 		Params:      params,
 		Validators:  validators,

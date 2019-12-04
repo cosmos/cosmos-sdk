@@ -51,5 +51,5 @@ type (
 	Keeper       = keeper.Keeper
 	GenesisState = types.GenesisState
 	Minter       = types.Minter
-	Params       = types.MintParams
+	Params       = types.Params
 )

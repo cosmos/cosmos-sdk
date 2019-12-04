@@ -695,7 +695,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.AuthParams) error {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -779,7 +779,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
 	testCases := []struct {
 		name   string
-		params types.AuthParams
+		params types.Params
 	}{
 		{"memo size check", types.NewParams(0, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
 		{"tx sig limit check", types.NewParams(types.DefaultMaxMemoCharacters, 0, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},

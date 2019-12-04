@@ -154,7 +154,7 @@ type (
 	DepositParams           = types.DepositParams
 	TallyParams             = types.TallyParams
 	VotingParams            = types.VotingParams
-	Params                  = types.GovParams
+	Params                  = types.Params
 	Proposal                = types.Proposal
 	Proposals               = types.Proposals
 	ProposalQueue           = types.ProposalQueue

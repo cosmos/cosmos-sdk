@@ -15,7 +15,7 @@ const (
 
 // ParamTable for staking module
 func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&types.StakeParams{})
+	return params.NewKeyTable().RegisterParamSet(&types.Params{})
 }
 
 // UnbondingTime
@@ -43,8 +43,8 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
-// Get all parameteras as types.StakeParams
-func (k Keeper) GetParams(ctx sdk.Context) types.StakeParams {
+// Get all parameteras as types.Params
+func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.UnbondingTime(ctx),
 		k.MaxValidators(ctx),
@@ -54,6 +54,6 @@ func (k Keeper) GetParams(ctx sdk.Context) types.StakeParams {
 }
 
 // set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.StakeParams) {
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)
 }

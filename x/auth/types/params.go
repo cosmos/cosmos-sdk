@@ -29,10 +29,10 @@ var (
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
 
-var _ subspace.ParamSet = &AuthParams{}
+var _ subspace.ParamSet = &Params{}
 
 // Params defines the parameters for the auth module.
-type AuthParams struct {
+type Params struct {
 	MaxMemoCharacters      uint64 `json:"max_memo_characters" yaml:"max_memo_characters"`
 	TxSigLimit             uint64 `json:"tx_sig_limit" yaml:"tx_sig_limit"`
 	TxSizeCostPerByte      uint64 `json:"tx_size_cost_per_byte" yaml:"tx_size_cost_per_byte"`
@@ -42,9 +42,9 @@ type AuthParams struct {
 
 // NewParams creates a new Params object
 func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
-	sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) AuthParams {
+	sigVerifyCostED25519, sigVerifyCostSecp256k1 uint64) Params {
 
-	return AuthParams{
+	return Params{
 		MaxMemoCharacters:      maxMemoCharacters,
 		TxSigLimit:             txSigLimit,
 		TxSizeCostPerByte:      txSizeCostPerByte,
@@ -55,13 +55,13 @@ func NewParams(maxMemoCharacters, txSigLimit, txSizeCostPerByte,
 
 // ParamKeyTable for auth module
 func ParamKeyTable() subspace.KeyTable {
-	return subspace.NewKeyTable().RegisterParamSet(&AuthParams{})
+	return subspace.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
 // nolint
-func (p *AuthParams) ParamSetPairs() subspace.ParamSetPairs {
+func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
 		{KeyTxSigLimit, &p.TxSigLimit},
@@ -72,15 +72,15 @@ func (p *AuthParams) ParamSetPairs() subspace.ParamSetPairs {
 }
 
 // Equal returns a boolean determining if two Params types are identical.
-func (p AuthParams) Equal(p2 AuthParams) bool {
+func (p Params) Equal(p2 Params) bool {
 	bz1 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p)
 	bz2 := ModuleCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
 // DefaultParams returns a default set of parameters.
-func DefaultParams() AuthParams {
-	return AuthParams{
+func DefaultParams() Params {
+	return Params{
 		MaxMemoCharacters:      DefaultMaxMemoCharacters,
 		TxSigLimit:             DefaultTxSigLimit,
 		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
@@ -90,7 +90,7 @@ func DefaultParams() AuthParams {
 }
 
 // String implements the stringer interface.
-func (p AuthParams) String() string {
+func (p Params) String() string {
 	var sb strings.Builder
 	sb.WriteString("Params: \n")
 	sb.WriteString(fmt.Sprintf("MaxMemoCharacters: %d\n", p.MaxMemoCharacters))
@@ -102,7 +102,7 @@ func (p AuthParams) String() string {
 }
 
 // Validate checks that the parameters have valid values.
-func (p AuthParams) Validate() error {
+func (p Params) Validate() error {
 	if p.TxSigLimit == 0 {
 		return fmt.Errorf("invalid tx signature limit: %d", p.TxSigLimit)
 	}

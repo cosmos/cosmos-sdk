@@ -27,7 +27,7 @@ func TestQueryParams(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, _, _, keeper := CreateTestInput(t, TestParams())
 
-	var params types.SlashParams
+	var params types.Params
 
 	res, errRes := queryParams(ctx, keeper)
 	require.NoError(t, errRes)

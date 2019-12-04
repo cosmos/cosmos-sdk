@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/stumble/gorocksdb v0.0.3 // indirect
 	github.com/swaggo/http-swagger v0.0.0-20190614090009-c2865af9083e
-	github.com/swaggo/swag v1.6.3
+	github.com/swaggo/swag v1.6.4-0.20191203234307-b734f40071cd
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1

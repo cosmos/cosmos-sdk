@@ -230,7 +230,7 @@ type (
 	MsgDelegate               = types.MsgDelegate
 	MsgBeginRedelegate        = types.MsgBeginRedelegate
 	MsgUndelegate             = types.MsgUndelegate
-	Params                    = types.StakeParams
+	Params                    = types.Params
 	Pool                      = types.Pool
 	QueryDelegatorParams      = types.QueryDelegatorParams
 	QueryValidatorParams      = types.QueryValidatorParams

@@ -34,7 +34,7 @@ func init() {
 // SignatureVerificationGasConsumer is the type of function that is used to both
 // consume gas when verifying signatures and also to accept or reject different types of pubkeys
 // This is where apps can define their own PubKey
-type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.AuthParams) error
+type SignatureVerificationGasConsumer = func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error
 
 // SigVerifiableTx defines a Tx interface for all signature verification decorators
 type SigVerifiableTx interface {
@@ -297,7 +297,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
 func DefaultSigVerificationGasConsumer(
-	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.AuthParams,
+	meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params,
 ) error {
 	switch pubkey := pubkey.(type) {
 	case ed25519.PubKeyEd25519:
@@ -322,7 +322,7 @@ func DefaultSigVerificationGasConsumer(
 
 func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
-	params types.AuthParams) {
+	params types.Params) {
 	size := sig.BitArray.Size()
 	sigIndex := 0
 	for i := 0; i < size; i++ {

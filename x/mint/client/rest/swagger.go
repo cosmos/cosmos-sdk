@@ -8,9 +8,11 @@ import "github.com/cosmos/cosmos-sdk/x/mint/internal/types"
 // they enabled typed documentation.
 
 type (
+	// alias the params type for use in swagger auto gendoc
+	MintParams types.Params
 	mintParams struct {
-		Height int64            `json:"height"`
-		Result types.MintParams `json:"result"`
+		Height int64      `json:"height"`
+		Result MintParams `json:"result"`
 	}
 
 	mintInflation struct {

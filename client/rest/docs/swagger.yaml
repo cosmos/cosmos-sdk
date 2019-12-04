@@ -168,6 +168,27 @@ definitions:
       error:
         type: string
     type: object
+  rest.MintParams:
+    properties:
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
+        type: string
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
+        type: string
+    type: object
   rest.PostProposalReq:
     properties:
       base_req:
@@ -413,7 +434,7 @@ definitions:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.MintParams'
+        $ref: '#/definitions/rest.MintParams'
         type: object
     type: object
   rest.pool:
@@ -657,21 +678,64 @@ definitions:
       withdraw_address:
         type: string
     type: object
+  rest.slashParams:
+    items:
+      properties:
+        blocks_per_year:
+          description: expected blocks per year
+          type: integer
+        goal_bonded:
+          description: goal of percent bonded atoms
+          type: string
+        inflation_max:
+          description: maximum inflation rate
+          type: string
+        inflation_min:
+          description: minimum inflation rate
+          type: string
+        inflation_rate_change:
+          description: maximum annual change in inflation rate
+          type: string
+        mint_denom:
+          description: type of coin to mint
+          type: string
+      type: object
+    type: array
   rest.slashingParams:
     properties:
       height:
         type: integer
       result:
-        items:
-          $ref: '#/definitions/types.SlashParams'
-        type: array
+        $ref: '#/definitions/rest.slashParams'
+        type: object
+    type: object
+  rest.stakeParams:
+    properties:
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
+        type: string
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
+        type: string
     type: object
   rest.stakingParams:
     properties:
       height:
         type: integer
       result:
-        $ref: '#/definitions/types.StakeParams'
+        $ref: '#/definitions/rest.stakeParams'
         type: object
     type: object
   rest.totalDenomSupply:
@@ -966,27 +1030,6 @@ definitions:
       i:
         type: string
     type: object
-  types.MintParams:
-    properties:
-      blocks_per_year:
-        description: expected blocks per year
-        type: integer
-      goal_bonded:
-        description: goal of percent bonded atoms
-        type: string
-      inflation_max:
-        description: maximum inflation rate
-        type: string
-      inflation_min:
-        description: minimum inflation rate
-        type: string
-      inflation_rate_change:
-        description: maximum annual change in inflation rate
-        type: string
-      mint_denom:
-        description: type of coin to mint
-        type: string
-    type: object
   types.MsgBeginRedelegate:
     properties:
       amount:
@@ -1152,6 +1195,27 @@ definitions:
       validator_address:
         type: string
     type: object
+  types.Params:
+    properties:
+      blocks_per_year:
+        description: expected blocks per year
+        type: integer
+      goal_bonded:
+        description: goal of percent bonded atoms
+        type: string
+      inflation_max:
+        description: maximum inflation rate
+        type: string
+      inflation_min:
+        description: minimum inflation rate
+        type: string
+      inflation_rate_change:
+        description: maximum annual change in inflation rate
+        type: string
+      mint_denom:
+        description: type of coin to mint
+        type: string
+    type: object
   types.Pool:
     properties:
       bonded_tokens:
@@ -1279,38 +1343,6 @@ definitions:
         items:
           $ref: '#/definitions/types.TxResponse'
         type: array
-    type: object
-  types.SlashParams:
-    properties:
-      downtime_jail_duration:
-        type: string
-      max_evidence_age:
-        type: string
-      min_signed_per_window:
-        type: string
-      signed_blocks_window:
-        type: integer
-      slash_fraction_double_sign:
-        type: string
-      slash_fraction_downtime:
-        type: string
-    type: object
-  types.StakeParams:
-    properties:
-      bond_denom:
-        description: 'note: we need to be a bit careful about potential overflow here,
-          since this is user-determined'
-        type: string
-      max_entries:
-        description: max entries for either unbonding delegation or redelegation (per
-          pair/trio)
-        type: integer
-      max_validators:
-        description: maximum number of validators (max uint16 = 65535)
-        type: integer
-      unbonding_time:
-        description: time duration of unbonding
-        type: string
     type: object
   types.StdFee:
     properties:

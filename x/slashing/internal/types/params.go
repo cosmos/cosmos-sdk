@@ -36,11 +36,11 @@ var (
 
 // ParamKeyTable for slashing module
 func ParamKeyTable() params.KeyTable {
-	return params.NewKeyTable().RegisterParamSet(&SlashParams{})
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // Params - used for initializing default parameter for slashing at genesis
-type SlashParams struct {
+type Params struct {
 	MaxEvidenceAge          time.Duration `json:"max_evidence_age" yaml:"max_evidence_age"`
 	SignedBlocksWindow      int64         `json:"signed_blocks_window" yaml:"signed_blocks_window"`
 	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window" yaml:"min_signed_per_window"`
@@ -52,9 +52,9 @@ type SlashParams struct {
 // NewParams creates a new Params object
 func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 	minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign, slashFractionDowntime sdk.Dec) SlashParams {
+	slashFractionDoubleSign, slashFractionDowntime sdk.Dec) Params {
 
-	return SlashParams{
+	return Params{
 		MaxEvidenceAge:          maxEvidenceAge,
 		SignedBlocksWindow:      signedBlocksWindow,
 		MinSignedPerWindow:      minSignedPerWindow,
@@ -65,7 +65,7 @@ func NewParams(maxEvidenceAge time.Duration, signedBlocksWindow int64,
 }
 
 // String implements the stringer interface for Params
-func (p SlashParams) String() string {
+func (p Params) String() string {
 	return fmt.Sprintf(`Slashing Params:
   MaxEvidenceAge:          %s
   SignedBlocksWindow:      %d
@@ -79,7 +79,7 @@ func (p SlashParams) String() string {
 }
 
 // ParamSetPairs - Implements params.ParamSet
-func (p *SlashParams) ParamSetPairs() params.ParamSetPairs {
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge),
 		params.NewParamSetPair(KeySignedBlocksWindow, &p.SignedBlocksWindow),
@@ -91,7 +91,7 @@ func (p *SlashParams) ParamSetPairs() params.ParamSetPairs {
 }
 
 // DefaultParams defines the parameters for this module
-func DefaultParams() SlashParams {
+func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxEvidenceAge, DefaultSignedBlocksWindow, DefaultMinSignedPerWindow,
 		DefaultDowntimeJailDuration, DefaultSlashFractionDoubleSign, DefaultSlashFractionDowntime,

@@ -106,8 +106,10 @@ type (
 		Result types.Pool `json:"result"`
 	}
 
+	// alias the params type for use in swagger auto gendoc
+	stakeParams   types.Params
 	stakingParams struct {
-		Height int64             `json:"height"`
-		Result types.StakeParams `json:"result"`
+		Height int64       `json:"height"`
+		Result stakeParams `json:"result"`
 	}
 )

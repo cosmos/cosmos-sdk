@@ -21,9 +21,11 @@ type (
 		Result []types.ValidatorSigningInfo `json:"result"`
 	}
 
+	// alias the params type for use in swagger auto gendoc
+	slashParams    []types.Params
 	slashingParams struct {
-		Height int64               `json:"height"`
-		Result []types.SlashParams `json:"result"`
+		Height int64       `json:"height"`
+		Result slashParams `json:"result"`
 	}
 
 	postUnjail struct {

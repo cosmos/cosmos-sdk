@@ -52,17 +52,17 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	for _, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return sdk.ErrUnknownRequest("can only dispatch a delegated msg with 1 signer").Result()
+			return sdk.ErrUnknownRequest("authorization can be given to msg with only one signer").Result()
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
 			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
 			if capability == nil {
-				return sdk.ErrUnauthorized("unauthorized").Result()
+				return sdk.ErrUnauthorized("authorization not found").Result()
 			}
 			allow, updated, del := capability.Accept(msg, ctx.BlockHeader())
 			if !allow {
-				return sdk.ErrUnauthorized("unauthorized").Result()
+				return sdk.ErrUnauthorized(" ").Result()
 			}
 			if del {
 				k.Revoke(ctx, grantee, granter, msg)

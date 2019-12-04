@@ -26,6 +26,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	keyringDirName     = "keyring"
+	testKeyringDirName = "keyring-test"
+)
+
 var _ Keybase = keyringKeybase{}
 
 // keyringKeybase implements the Keybase interface by using the Keyring library
@@ -468,7 +473,7 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		return keyring.Config{
 			AllowedBackends:  []keyring.BackendType{"file"},
 			ServiceName:      name,
-			FileDir:          dir,
+			FileDir:          filepath.Join(dir, testKeyringDirName),
 			FilePasswordFunc: fakePrompt,
 		}
 	}
@@ -481,11 +486,12 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 }
 
 func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
+	fileDir := filepath.Join(dir, keyringDirName)
 	return keyring.Config{
 		AllowedBackends:  []keyring.BackendType{"file"},
 		ServiceName:      name,
-		FileDir:          dir,
-		FilePasswordFunc: newRealPrompt(dir, buf),
+		FileDir:          fileDir,
+		FilePasswordFunc: newRealPrompt(fileDir, buf),
 	}
 }
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,26 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	evidence "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
-
-// GetTxCmd returns the transaction commands for IBC Clients
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	ics02ClientTxCmd := &cobra.Command{
-		Use:                        "client",
-		Short:                      "Client transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
-
-	ics02ClientTxCmd.AddCommand(client.PostCommands(
-		GetCmdCreateClient(cdc),
-		GetCmdUpdateClient(cdc),
-	)...)
-
-	return ics02ClientTxCmd
-}
 
 // GetCmdCreateClient defines the command to create a new IBC Client as defined
 // in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#create
@@ -51,8 +35,9 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			clientID := args[0]
 
@@ -98,8 +83,9 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			clientID := args[0]
 
@@ -117,6 +103,51 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 			}
 
 			msg := types.NewMsgUpdateClient(clientID, header, cliCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}
+
+// GetCmdSubmitMisbehaviour defines the command to submit a misbehaviour to invalidate
+// previous state roots and prevent future updates as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour
+func GetCmdSubmitMisbehaviour(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "misbehaviour [client-it] [path/to/evidence.json]",
+		Short: "submit a client misbehaviour",
+		Long: strings.TrimSpace(fmt.Sprintf(`submit a client misbehaviour to invalidate to invalidate previous state roots and prevent future updates:
+
+Example:
+$ %s tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0 --home ../node0/<app>cli --chain-id $CID
+		`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+
+			clientID := args[0]
+
+			var evidence evidence.Evidence
+			if err := cdc.UnmarshalJSON([]byte(args[1]), &evidence); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
+
+				contents, err := ioutil.ReadFile(args[1])
+				if err != nil {
+					return fmt.Errorf("error opening proof file: %v", err)
+				}
+				if err := cdc.UnmarshalJSON(contents, &evidence); err != nil {
+					return fmt.Errorf("error unmarshalling evidence file: %v", err)
+				}
+			}
+
+			msg := types.NewMsgSubmitMisbehaviour(clientID, evidence, cliCtx.GetFromAddress())
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

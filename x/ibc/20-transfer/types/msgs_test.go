@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/merkle"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/merkle"
 )
 
 // define constants used for testing

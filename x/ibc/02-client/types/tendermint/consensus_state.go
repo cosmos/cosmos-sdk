@@ -40,7 +40,11 @@ func (cs ConsensusState) GetRoot() commitment.RootI {
 }
 
 func (cs ConsensusState) GetCommitter() exported.Committer {
-	return Committer{cs.ValidatorSet}
+	return Committer{
+		ValidatorSet:   cs.ValidatorSet,
+		Height:         cs.Height,
+		NextValSetHash: cs.NextValidatorSet.Hash(),
+	}
 }
 
 // CheckValidityAndUpdateState checks if the provided header is valid and updates

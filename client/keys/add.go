@@ -122,7 +122,6 @@ output
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
-	var encryptPassword string
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	name := args[0]
@@ -134,9 +133,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = keys.NewInMemory()
-		encryptPassword = DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
+		kb, err = NewKeyringFromHomeFlag(cmd.InOrStdin())
 		if err != nil {
 			return err
 		}
@@ -184,16 +182,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 			cmd.PrintErrf("Key %q saved to disk.\n", name)
 			return nil
-		}
-
-		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
-			encryptPassword, err = input.GetCheckPassword(
-				"Enter a passphrase to encrypt your key to disk:",
-				"Repeat the passphrase:", inBuf)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -278,7 +266,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, encryptPassword, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index)
 	if err != nil {
 		return err
 	}

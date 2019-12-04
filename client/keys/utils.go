@@ -1,18 +1,19 @@
 package keys
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // available output formats.
@@ -25,55 +26,6 @@ const (
 )
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
-
-// GetKeyInfo returns key info for a given name. An error is returned if the
-// keybase cannot be retrieved or getting the info fails.
-func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := NewKeyBaseFromHomeFlag()
-	if err != nil {
-		return nil, err
-	}
-
-	return keybase.Get(name)
-}
-
-// GetPassphrase returns a passphrase for a given name. It will first retrieve
-// the key info for that name if the type is local, it'll fetch input from
-// STDIN. Otherwise, an empty passphrase is returned. An error is returned if
-// the key info cannot be fetched or reading from STDIN fails.
-func GetPassphrase(name string) (string, error) {
-	var passphrase string
-
-	keyInfo, err := GetKeyInfo(name)
-	if err != nil {
-		return passphrase, err
-	}
-
-	// we only need a passphrase for locally stored keys
-	// TODO: (ref: #864) address security concerns
-	if keyInfo.GetType() == keys.TypeLocal {
-		passphrase, err = ReadPassphraseFromStdin(name)
-		if err != nil {
-			return passphrase, err
-		}
-	}
-
-	return passphrase, nil
-}
-
-// ReadPassphraseFromStdin attempts to read a passphrase from STDIN return an
-// error upon failure.
-func ReadPassphraseFromStdin(name string) (string, error) {
-	buf := bufio.NewReader(os.Stdin)
-	prompt := fmt.Sprintf("Password to sign with '%s':", name)
-
-	passphrase, err := input.GetPassword(prompt, buf)
-	if err != nil {
-		return passphrase, fmt.Errorf("error reading passphrase: %v", err)
-	}
-
-	return passphrase, nil
-}
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
 func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
@@ -88,6 +40,21 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
+
+// NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
+func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
+	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input)
+}
+
+// NewKeyBaseFromDir initializes a keyring at a particular dir.
+// If the COSMOS_SDK_TEST_KEYRING environment variable is set and not empty it will
+// return an on-disk, password-less keyring that could be used for testing purposes.
+func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
+		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
+	}
+	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+}
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
@@ -170,4 +137,9 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	fmt.Println(ko.PubKey)
+}
+
+func isRunningUnattended() bool {
+	backends := keyring.AvailableBackends()
+	return len(backends) == 2 && backends[1] == keyring.BackendType("file")
 }

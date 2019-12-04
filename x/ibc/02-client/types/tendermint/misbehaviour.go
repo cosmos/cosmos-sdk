@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"fmt"
+
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
@@ -45,16 +47,19 @@ func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 	if err := m.ValidateBasic(); err != nil {
 		return err
 	}
+
+	trustedValSet := trustedCommitter.ValidatorSet
+
+	// Evidence is within trusting period. ValidatorSet must have 2/3 similarity with trustedCommitter ValidatorSet
 	// check that the validator sets on both headers are valid given the last trusted validatorset
 	// less than or equal to evidence height
-	trustedValSet := trustedCommitter.ValidatorSet
 	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header1.ValidatorSet, m.Evidence.ChainID,
 		m.Evidence.Header1.Commit.BlockID, m.Evidence.Header1.Height, m.Evidence.Header1.Commit); err != nil {
-		return err
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set in Header1 has too much change from last known committer: %v", err))
 	}
 	if err := trustedValSet.VerifyFutureCommit(m.Evidence.Header2.ValidatorSet, m.Evidence.ChainID,
 		m.Evidence.Header2.Commit.BlockID, m.Evidence.Header2.Height, m.Evidence.Header2.Commit); err != nil {
-		return err
+		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("validator set in Header2 has too much change from last known committer: %v", err))
 	}
 
 	return nil

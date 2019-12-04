@@ -1,34 +1,18 @@
 package cli
 
 import (
-	"encoding/binary"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/utils"
 )
-
-// GetQueryCmd returns the query commands for IBC fungible token transfer
-func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
-	queryCmd := &cobra.Command{
-		Use:   "transfer",
-		Short: "IBC fungible token transfer query subcommands",
-	}
-
-	queryCmd.AddCommand(
-		GetCmdQueryNextSequence(cdc, queryRoute),
-	)
-
-	return queryCmd
-}
 
 // GetCmdQueryNextSequence defines the command to query a next receive sequence
 func GetCmdQueryNextSequence(cdc *codec.Codec, queryRoute string) *cobra.Command {
@@ -41,26 +25,20 @@ Example:
 $ %s query ibc channel next-recv [port-id] [channel-id]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(2),
+		Example: fmt.Sprintf("%s query ibc channel next-recv [port-id] [channel-id]", version.ClientName),
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			portID := args[0]
 			channelID := args[1]
+			prove := viper.GetBool(flags.FlagProve)
 
-			req := abci.RequestQuery{
-				Path:  "store/ibc/key",
-				Data:  channel.KeyNextSequenceRecv(portID, channelID),
-				Prove: true,
-			}
-
-			res, err := cliCtx.QueryABCI(req)
+			sequenceRes, err := utils.QueryNextSequenceRecv(cliCtx, portID, channelID, prove)
 			if err != nil {
 				return err
 			}
 
-			sequence := binary.BigEndian.Uint64(res.Value)
-
-			return cliCtx.PrintOutput(sequence)
+			return cliCtx.PrintOutput(sequenceRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")

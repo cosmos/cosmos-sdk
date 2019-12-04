@@ -20,12 +20,12 @@ func exportKeyCommand() *cobra.Command {
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	buf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := NewKeyringFromHomeFlag(buf)
 	if err != nil {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

@@ -24,7 +24,11 @@ func (h Header) ClientType() exported.ClientType {
 
 // GetCommitter returns the ValidatorSet that committed header
 func (h Header) GetCommitter() exported.Committer {
-	return Committer{h.ValidatorSet}
+	return Committer{
+		ValidatorSet:   h.ValidatorSet,
+		Height:         uint64(h.Height),
+		NextValSetHash: h.NextValidatorsHash,
+	}
 }
 
 // GetHeight returns the current height

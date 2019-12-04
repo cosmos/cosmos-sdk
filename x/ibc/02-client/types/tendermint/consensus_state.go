@@ -39,6 +39,7 @@ func (cs ConsensusState) GetRoot() commitment.RootI {
 	return cs.Root
 }
 
+// GetCommitter returns the commmitter that committed the ConsensusState
 func (cs ConsensusState) GetCommitter() exported.Committer {
 	return Committer{
 		ValidatorSet:   cs.ValidatorSet,

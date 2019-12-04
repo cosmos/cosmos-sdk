@@ -551,16 +551,16 @@ func (d Dec) Ceil() Dec {
 
 //___________________________________________________________________________________
 
-// Ensures that an sdk.Dec is within the sortable bounds
-// Dec can't have precision of less than 10^-18
-// Max sortable decimal was set to the reciprocal of SmallestDec
+// ValidSortableDec ensures that a Dec is within the sortable bounds,
+// a Dec can't have a precision of less than 10^-18.
+// Max sortable decimal was set to the reciprocal of SmallestDec.
 func ValidSortableDec(dec Dec) bool {
 	return dec.LTE(OneDec().Quo(SmallestDec()))
 }
 
-// Returns a byte slice representation of an sdk.Dec that can be sorted.
-// Left and right pads with 0s so there are 18 digits to left and right of decimal point
-// For this reason, there is a maximum and minimum value for this,  enforced by ValidSortableDec
+// SortableDecBytes returns a byte slice representation of a Dec that can be sorted.
+// Left and right pads with 0s so there are 18 digits to left and right of the decimal point.
+// For this reason, there is a maximum and minimum value for this, enforced by ValidSortableDec.
 func SortableDecBytes(dec Dec) []byte {
 	if !ValidSortableDec(dec) {
 		panic("dec must be within bounds")

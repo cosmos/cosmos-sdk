@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -46,9 +47,10 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	app    *simapp.SimApp
+	valSet *tmtypes.ValidatorSet
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -58,6 +60,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
+
+	privVal := tmtypes.NewMockPV()
+
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
 	suite.createConnection(connection.OPEN)

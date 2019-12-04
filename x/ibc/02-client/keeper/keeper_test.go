@@ -119,6 +119,7 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 	suite.keeper.SetCommitter(suite.ctx, "gaia", 3, committer)
 	suite.keeper.SetCommitter(suite.ctx, "gaia", 6, nextCommitter)
 
+	// fetch the commiter on each respective height
 	for i := 0; i < 3; i++ {
 		committer, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
 		require.False(suite.T(), ok, "GetCommitter passed on nonexistent height: %d", i)
@@ -129,6 +130,7 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 		recv, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
 		tmRecv, _ := recv.(tendermint.Committer)
 		if tmRecv.ValidatorSet != nil {
+			// update validator set's power
 			tmRecv.ValidatorSet.TotalVotingPower()
 		}
 		require.True(suite.T(), ok, "GetCommitter failed on existing height: %d", i)
@@ -139,6 +141,7 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 		recv, ok := suite.keeper.GetCommitter(suite.ctx, "gaia", uint64(i))
 		tmRecv, _ := recv.(tendermint.Committer)
 		if tmRecv.ValidatorSet != nil {
+			// update validator set's power
 			tmRecv.ValidatorSet.TotalVotingPower()
 		}
 		require.True(suite.T(), ok, "GetCommitter failed on existing height: %d", i)

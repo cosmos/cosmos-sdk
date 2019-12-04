@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evidence "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -128,12 +128,12 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 // MsgSubmitMisbehaviour defines a message to update an IBC client
 type MsgSubmitMisbehaviour struct {
 	ClientID string            `json:"id" yaml:"id"`
-	Evidence evidence.Evidence `json:"evidence" yaml:"evidence"`
+	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
 	Signer   sdk.AccAddress    `json:"address" yaml:"address"`
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance
-func NewMsgSubmitMisbehaviour(id string, evidence evidence.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
+func NewMsgSubmitMisbehaviour(id string, evidence evidenceexported.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
 	return MsgSubmitMisbehaviour{
 		ClientID: id,
 		Evidence: evidence,

@@ -95,6 +95,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence eviden
 	if !found {
 		return errors.ErrCommitterNotFound(k.codespace, fmt.Sprintf("committer not found for height %d", misbehaviour.GetHeight()))
 	}
+	
 	tmCommitter, ok := committer.(tendermint.Committer)
 	if !ok {
 		return errors.ErrInvalidCommitter(k.codespace, "committer type is not Tendermint")

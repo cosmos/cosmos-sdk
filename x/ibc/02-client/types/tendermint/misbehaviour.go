@@ -12,7 +12,8 @@ import (
 var _ exported.Misbehaviour = Misbehaviour{}
 var _ evidenceexported.Evidence = Misbehaviour{}
 
-// Misbehaviour contains an evidence that a
+// Misbehaviour contains evidence that a light client submitted a different header from
+// a full node at the same height.
 type Misbehaviour struct {
 	*Evidence
 	ClientID string `json:"client_id" yaml:"client_id"`
@@ -42,7 +43,7 @@ func (m Misbehaviour) ValidateBasic() error {
 	return host.DefaultClientIdentifierValidator(m.ClientID)
 }
 
-// CheckMisbehaviour checks if the evidence provided is a misbehaviour
+// CheckMisbehaviour checks if the evidence provided is a valid light client misbehaviour
 func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 	if err := m.ValidateBasic(); err != nil {
 		return err

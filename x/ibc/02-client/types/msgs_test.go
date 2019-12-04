@@ -9,14 +9,14 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evidence "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
-var _ evidence.Evidence = mockEvidence{}
-var _ evidence.Evidence = mockBadEvidence{}
+var _ evidenceexported.Evidence = mockEvidence{}
+var _ evidenceexported.Evidence = mockBadEvidence{}
 
 const mockStr = "mock"
 

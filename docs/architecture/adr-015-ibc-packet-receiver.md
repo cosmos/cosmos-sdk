@@ -10,7 +10,7 @@
 
 `handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the
 packet merkle proof, and pushes the acknowledgement bytes, if present, to the IBC
-channel `Keeper` state (ICS04).
+channel `Keeper` state ([ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics)).
 
 `handlePacketAcknowledgement` executes per-module `onAcknowledgementPacket`
 callbacks, and verifies the acknowledgement commitment proof.
@@ -175,8 +175,13 @@ func NewFoldHandler(k ChannelKeeper) sdk.FoldHandler {
 ```
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
-It should come right after the default sybil attack resistent layer from the
-current `auth.NewAnteHandler`:
+It is not safe to make each application responsible to call proof verification 
+logic, whereas application can misbehave(in terms of IBC protocol) either by 
+mistake or purposefully. Also this eliminates the neccesity for multistore
+cacheing inside the app handlers.
+
+The `ProofVerificationDecorator` should come right after the default sybil attack 
+resistent layer from the current `auth.NewAnteHandler`:
 
 ```go
 // add IBC ProofVerificationDecorator to the Chain of

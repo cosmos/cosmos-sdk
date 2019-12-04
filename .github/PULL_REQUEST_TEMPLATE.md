@@ -6,10 +6,6 @@ v    If a checkbox is n/a - please still include it but + a little note why
 
 Closes: #XXX
 
-<!-- For bugs use: 
-Fixes: #XXX 
--->
-
 ## Description
 
 <!-- Add a description of the changes that this PR introduces and the files that

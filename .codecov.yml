@@ -15,10 +15,12 @@ coverage:
         threshold: 1% # allow this much decrease on project
       app:
         target: 65%
-        flags: modules
+        flags: app
       modules:
         target: 70%
         flags: modules
+      client:
+        flags: client
     changes: false
 
 comment:
@@ -37,7 +39,7 @@ flags:
       - "!x/**/client/" # ignore client package
   client:
     paths:
-      - client/
+      - "client/"
       - "x/**/client/"
 
 ignore:

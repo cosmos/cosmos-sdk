@@ -88,8 +88,8 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 func GetCmdConnectionOpenTry(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: strings.TrimSpace(`open-try [connection-id] [client-id]
-		[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
-		[counterparty-versions] [path/to/proof_init.json]`),
+[counterparty-connection-id] [counterparty-client-id] [path/to/counterparty_prefix.json] 
+[counterparty-versions] [path/to/proof_init.json]`),
 		Short: "initiate connection handshake between two chains",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:

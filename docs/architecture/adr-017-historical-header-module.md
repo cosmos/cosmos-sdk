@@ -30,7 +30,7 @@ func BeginBlock(ctx sdk.Context, keeper HistoricalHeaderKeeper, req abci.Request
 
 Alternatively, the application MAY store only the hash of the validator set.
 
-The application MUST make these past `n` committed headers available for querying by SDK modules through the `Keeper`'s `GetHistoricalInfo` function. This can be a new module or integrated into an existing one with similar functionality.
+The application MUST make these past `n` committed headers available for querying by SDK modules through the `Keeper`'s `GetHistoricalInfo` function. This MAY be implemented in a new module, or it MAY also be integrated into an existing one (likely `x/staking`).
 
 `n` MAY be configured as a parameter store parameter, in which case it could be changed by `ParameterChangeProposal`s, although it will take some blocks for the stored information to catch up if `n` is increased.
 

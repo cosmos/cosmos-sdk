@@ -84,6 +84,33 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 	store.Set(types.KeyClientConnections(clientID), bz)
 }
 
+// IterateConnections provides an iterator over all ConnectionEnd
+// objects. For each State object, cb will be called. If the cb returns true,
+// the iterator will close and stop.
+func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var connection types.ConnectionEnd
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &connection)
+
+		if cb(connection) {
+			break
+		}
+	}
+}
+
+// GetAllConnections returns all stored ConnectionEnd objects.
+func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.ConnectionEnd) {
+	k.IterateConnections(ctx, func(connection types.ConnectionEnd) bool {
+		connections = append(connections, connection)
+		return false
+	})
+	return connections
+}
+
 // addConnectionToClient is used to add a connection identifier to the set of
 // connections associated with a client.
 //

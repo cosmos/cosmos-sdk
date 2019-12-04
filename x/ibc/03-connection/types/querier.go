@@ -48,6 +48,21 @@ func NewQueryConnectionParams(clientID string) QueryConnectionParams {
 	}
 }
 
+// QueryAllConnectionsParams defines the parameters necessary for querying for all
+// connections.
+type QueryAllConnectionsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllConnectionsParams creates a new QueryAllConnectionsParams instance.
+func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
+	return QueryAllConnectionsParams{
+		Page:  page,
+		Limit: limit,
+	}
+}
+
 // ClientConnectionsResponse defines the client query response for a client
 // connection paths which also includes a proof and the height from which the
 // proof was retrieved.

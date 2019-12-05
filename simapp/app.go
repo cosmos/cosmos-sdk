@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -201,8 +202,9 @@ func NewSimApp(
 		app.cdc, keys[evidence.StoreKey], app.subspaces[evidence.ModuleName], evidence.DefaultCodespace,
 		&app.StakingKeeper, app.SlashingKeeper,
 	)
-	evidenceRouter := evidence.NewRouter()
-	// TODO: Register evidence routes.
+	evidenceRouter := evidence.NewRouter().
+		AddRoute(ibcclient.RouterKey, ibcclient.HandlerClientMisbehaviour(app.IBCKeeper.ClientKeeper))
+
 	evidenceKeeper.SetRouter(evidenceRouter)
 	app.EvidenceKeeper = *evidenceKeeper
 

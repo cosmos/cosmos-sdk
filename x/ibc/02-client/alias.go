@@ -61,17 +61,16 @@ var (
 	KeyRoot                      = types.KeyRoot
 	NewMsgCreateClient           = types.NewMsgCreateClient
 	NewMsgUpdateClient           = types.NewMsgUpdateClient
-	NewMsgSubmitMisbehaviour     = types.NewMsgSubmitMisbehaviour
+	NewMsgSubmitMibehaviour      = types.NewMsgSubmitMisbehaviour
 	NewQueryClientStateParams    = types.NewQueryClientStateParams
 	NewQueryCommitmentRootParams = types.NewQueryCommitmentRootParams
 	NewClientState               = types.NewClientState
 
 	// variable aliases
-	SubModuleCdc                = types.SubModuleCdc
-	EventTypeCreateClient       = types.EventTypeCreateClient
-	EventTypeUpdateClient       = types.EventTypeUpdateClient
-	EventTypeSubmitMisbehaviour = types.EventTypeSubmitMisbehaviour
-	AttributeValueCategory      = types.AttributeValueCategory
+	SubModuleCdc           = types.SubModuleCdc
+	EventTypeCreateClient  = types.EventTypeCreateClient
+	EventTypeUpdateClient  = types.EventTypeUpdateClient
+	AttributeValueCategory = types.AttributeValueCategory
 )
 
 type (

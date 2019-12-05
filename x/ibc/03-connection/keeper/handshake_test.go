@@ -267,9 +267,11 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID: chainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		ChainID:          chainID,
+		Height:           uint64(commitID.Version),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSet:     suite.valSet,
+		NextValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)

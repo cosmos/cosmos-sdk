@@ -57,7 +57,16 @@ func Test_runListCmd(t *testing.T) {
 			if runningUnattended {
 				mockIn.Reset("testpass1\ntestpass1\n")
 			}
+			viper.Set(flagListNames, false)
 			viper.Set(flags.FlagHome, tt.kbDir)
+			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
+				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if runningUnattended {
+				mockIn.Reset("testpass1\ntestpass1\n")
+			}
+			viper.Set(flagListNames, true)
 			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}

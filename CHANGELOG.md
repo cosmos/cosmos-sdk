@@ -109,6 +109,9 @@ upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --in
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
+* (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
+command can delete multiple keys by passing their names as arguments. The aforementioned commands can then be piped together, e.g.
+`appcli keys list -n | xargs appcli keys delete`
 * (modules) [\#4233](https://github.com/cosmos/cosmos-sdk/pull/4233) Add upgrade module that coordinates software upgrades of live chains.
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
 that allows for arbitrary vesting periods.
@@ -176,12 +179,15 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
-* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) `SimApp` and simulation refactors
+* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
   * Add `RegisterStoreDecoders` to the `SimulationManager` for decoding each module's types
   * Add `GenerateGenesisStates` to the `SimulationManager` to generate a randomized `GenState` for each module
-  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
-  `ParamChangeProposal`s
+  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters in order to
+  simulate `ParamChangeProposal`s' `Content`s
+  * Add `WeightedOperations` to the `SimulationManager` that define simulation operations (modules' `Msg`s) with their
+  respective weights (i.e chance of being simulated).
+  * Add `ProposalContents` to the `SimulationManager` to register each module's governance proposal `Content`s.
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (simulation) [\#4935](https://github.com/cosmos/cosmos-sdk/issues/4935) Update simulation to reflect a proper `ABCI` application without bypassing `BaseApp` semantics

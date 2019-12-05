@@ -2,9 +2,12 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
+
+const flagListNames = "list-names"
 
 func listKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -16,18 +19,30 @@ along with their associated name and address.`,
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
 	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
+	cmd.Flags().BoolP(flagListNames, "n", false, "List names only")
 	return cmd
 }
 
-func runListCmd(cmd *cobra.Command, args []string) error {
+func runListCmd(cmd *cobra.Command, _ []string) error {
 	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
 
 	infos, err := kb.List()
-	if err == nil {
-		printInfos(infos)
+	if err != nil {
+		return err
 	}
-	return err
+
+	if !viper.GetBool(flagListNames) {
+		printInfos(infos)
+		return nil
+	}
+
+	cmd.SetOut(cmd.OutOrStdout())
+	for _, info := range infos {
+		cmd.Println(info.GetName())
+	}
+
+	return nil
 }

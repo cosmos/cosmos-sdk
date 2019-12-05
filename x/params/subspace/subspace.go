@@ -167,7 +167,8 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 // parameter type has been registered. It will panic if the parameter type has
 // not been registered or if the value cannot be encoded. An error is returned
 // if the raw value is not compatible with the registered type for the parameter
-// key.
+// key or if the new value is invalid as determined by the registered type's
+// validation function.
 func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
@@ -180,6 +181,10 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 
 	if err := s.cdc.UnmarshalJSON(value, dest); err != nil {
 		return err
+	}
+
+	if err := attr.vfn(dest); err != nil {
+		return fmt.Errorf("updated parameter value is invalid: %s", err)
 	}
 
 	s.Set(ctx, key, dest)

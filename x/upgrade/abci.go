@@ -33,7 +33,7 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgra
 		}
 
 		if !k.HasHandler(plan.Name) {
-			upgradeMsg := fmt.Sprintf("UPGRADE \"%s\" NEEDED at %d: %s", plan.Name, plan.Height, plan.Info)
+			upgradeMsg := fmt.Sprintf("UPGRADE \"%s\" NEEDED at %d: %s", plan.Name, plan.DueAt(), plan.Info)
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(upgradeMsg)
 			panic(upgradeMsg)

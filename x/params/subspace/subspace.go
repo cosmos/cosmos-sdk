@@ -183,7 +183,10 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 		return err
 	}
 
-	if err := attr.vfn(dest); err != nil {
+	// destValue contains the dereferenced value of dest so validation function do
+	// not have to operate on pointers.
+	destValue := reflect.Indirect(reflect.ValueOf(dest)).Interface()
+	if err := attr.vfn(destValue); err != nil {
 		return fmt.Errorf("updated parameter value is invalid: %s", err)
 	}
 

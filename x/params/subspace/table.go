@@ -51,7 +51,8 @@ func (t KeyTable) RegisterType(psp ParamSetPair) KeyTable {
 	}
 
 	t.m[keystr] = attribute{
-		ty: rty,
+		vfn: psp.ValidatorFn,
+		ty:  rty,
 	}
 
 	return t

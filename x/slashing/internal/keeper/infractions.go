@@ -2,114 +2,12 @@ package keeper
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
-
-// HandleDoubleSign handles a validator signing two blocks at the same height.
-// power: power of the double-signing validator at the height of infraction
-func (k Keeper) HandleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
-	logger := k.Logger(ctx)
-
-	// calculate the age of the evidence
-	time := ctx.BlockHeader().Time
-	age := time.Sub(timestamp)
-
-	// fetch the validator public key
-	consAddr := sdk.ConsAddress(addr)
-	if _, err := k.GetPubkey(ctx, addr); err != nil {
-		// Ignore evidence that cannot be handled.
-		// NOTE:
-		// We used to panic with:
-		// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
-		// but this couples the expectations of the app to both Tendermint and
-		// the simulator.  Both are expected to provide the full range of
-		// allowable but none of the disallowed evidence types.  Instead of
-		// getting this coordination right, it is easier to relax the
-		// constraints and ignore evidence that cannot be handled.
-		return
-	}
-
-	// Reject evidence if the double-sign is too old
-	if age > k.MaxEvidenceAge(ctx) {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d",
-			consAddr, infractionHeight, age, k.MaxEvidenceAge(ctx)))
-		return
-	}
-
-	// Get validator and signing info
-	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
-	if validator == nil || validator.IsUnbonded() {
-		// Defensive.
-		// Simulation doesn't take unbonding periods into account, and
-		// Tendermint might break this assumption at some point.
-		return
-	}
-
-	// fetch the validator signing info
-	signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
-	}
-
-	// validator is already tombstoned
-	if signInfo.Tombstoned {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", consAddr, infractionHeight))
-		return
-	}
-
-	// double sign confirmed
-	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", consAddr, infractionHeight, age))
-
-	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
-	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
-	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
-	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - sdk.ValidatorUpdateDelay
-
-	// get the percentage slash penalty fraction
-	fraction := k.SlashFractionDoubleSign(ctx)
-
-	// Slash validator
-	// `power` is the int64 power of the validator as provided to/by
-	// Tendermint. This value is validator.Tokens as sent to Tendermint via
-	// ABCI, and now received as evidence.
-	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeSlash,
-			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
-		),
-	)
-	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
-
-	// Jail validator if not already jailed
-	// begin unbonding validator if not already unbonding (tombstone)
-	if !validator.IsJailed() {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeSlash,
-				sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-			),
-		)
-		k.sk.Jail(ctx, consAddr)
-	}
-
-	// Set tombstoned to be true
-	signInfo.Tombstoned = true
-
-	// Set jailed until to be forever (max time)
-	signInfo.JailedUntil = types.DoubleSignJailEndTime
-
-	// Set validator signing info
-	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
-}
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {

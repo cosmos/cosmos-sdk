@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.37.5] - TBD
 
+### Features
+
+* (types) [\#5360](https://github.com/cosmos/cosmos-sdk/pull/5360) Implement `SortableDecBytes` which
+  allows the `Dec` type be sortable.
+
 ### Bug Fixes
 
 * (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`.

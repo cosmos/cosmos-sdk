@@ -109,6 +109,10 @@ func (suite *SubspaceTestSuite) TestModified() {
 }
 
 func (suite *SubspaceTestSuite) TestUpdate() {
+	suite.Panics(func() {
+		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil)
+	})
+
 	t := time.Hour * 48
 	suite.NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
@@ -131,6 +135,67 @@ func (suite *SubspaceTestSuite) TestUpdate() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
 	})
 	suite.Equal(good, v)
+}
+
+func (suite *SubspaceTestSuite) TestGetParamSet() {
+	a := params{
+		UnbondingTime: time.Hour * 48,
+		MaxValidators: 100,
+		BondDenom:     "stake",
+	}
+	suite.NotPanics(func() {
+		suite.ss.Set(suite.ctx, keyUnbondingTime, a.UnbondingTime)
+		suite.ss.Set(suite.ctx, keyMaxValidators, a.MaxValidators)
+		suite.ss.Set(suite.ctx, keyBondDenom, a.BondDenom)
+	})
+
+	b := params{}
+	suite.NotPanics(func() {
+		suite.ss.GetParamSet(suite.ctx, &b)
+	})
+	suite.Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Equal(a.MaxValidators, b.MaxValidators)
+	suite.Equal(a.BondDenom, b.BondDenom)
+}
+
+func (suite *SubspaceTestSuite) TestSetParamSet() {
+	testCases := []struct {
+		name string
+		ps   subspace.ParamSet
+	}{
+		{"invalid unbonding time", &params{time.Hour * 1, 100, "stake"}},
+		{"invalid bond denom", &params{time.Hour * 48, 100, ""}},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.Panics(func() {
+				suite.ss.SetParamSet(suite.ctx, tc.ps)
+			})
+		})
+	}
+
+	a := params{
+		UnbondingTime: time.Hour * 48,
+		MaxValidators: 100,
+		BondDenom:     "stake",
+	}
+	suite.NotPanics(func() {
+		suite.ss.SetParamSet(suite.ctx, &a)
+	})
+
+	b := params{}
+	suite.NotPanics(func() {
+		suite.ss.GetParamSet(suite.ctx, &b)
+	})
+	suite.Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Equal(a.MaxValidators, b.MaxValidators)
+	suite.Equal(a.BondDenom, b.BondDenom)
+}
+
+func (suite *SubspaceTestSuite) TestName() {
+	suite.Equal("testsubspace", suite.ss.Name())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

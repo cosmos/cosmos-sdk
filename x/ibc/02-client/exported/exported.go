@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cmn "github.com/tendermint/tendermint/libs/common"
-
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -20,41 +17,32 @@ type ConsensusState interface {
 	// which is used for key-value pair verification.
 	GetRoot() commitment.RootI
 
+	// GetCommitter returns the committer that committed the consensus state
+	GetCommitter() Committer
+
 	// CheckValidityAndUpdateState returns the updated consensus state
 	// only if the header is a descendent of this consensus state.
 	CheckValidityAndUpdateState(Header) (ConsensusState, error)
 }
 
-// Evidence from ADR 009: Evidence Module
-// TODO: use evidence module interface once merged
-type Evidence interface {
-	Route() string
-	Type() string
-	String() string
-	Hash() cmn.HexBytes
-	ValidateBasic() sdk.Error
-
-	// The consensus address of the malicious validator at time of infraction
-	GetConsensusAddress() sdk.ConsAddress
-
-	// Height at which the infraction occurred
-	GetHeight() int64
-
-	// The total power of the malicious validator at time of infraction
-	GetValidatorPower() int64
-
-	// The total validator set power at time of infraction
-	GetTotalPower() int64
-}
-
 // Misbehaviour defines a specific consensus kind and an evidence
 type Misbehaviour interface {
 	ClientType() ClientType
-	Evidence() Evidence
+	GetEvidence() evidenceexported.Evidence
 }
 
 // Header is the consensus state update information
 type Header interface {
+	ClientType() ClientType
+	GetCommitter() Committer
+	GetHeight() uint64
+}
+
+// Committer defines the type that is responsible for
+// updating the consensusState at a given height
+//
+// In Tendermint, this is the ValidatorSet at the given height
+type Committer interface {
 	ClientType() ClientType
 	GetHeight() uint64
 }

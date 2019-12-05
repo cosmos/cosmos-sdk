@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
@@ -35,5 +36,5 @@ type UpdateClientReq struct {
 // SubmitMisbehaviourReq defines the properties of a submit misbehaviour request's body.
 type SubmitMisbehaviourReq struct {
 	BaseReq  rest.BaseReq      `json:"base_req" yaml:"base_req"`
-	Evidence exported.Evidence `json:"evidence" yaml:"evidence"`
+	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
 }

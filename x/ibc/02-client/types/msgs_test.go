@@ -9,10 +9,37 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
+
+var _ evidenceexported.Evidence = mockEvidence{}
+var _ evidenceexported.Evidence = mockBadEvidence{}
+
+const mockStr = "mock"
+
+// mock GoodEvidence
+type mockEvidence struct{}
+
+// Implement Evidence interface
+func (me mockEvidence) Route() string        { return mockStr }
+func (me mockEvidence) Type() string         { return mockStr }
+func (me mockEvidence) String() string       { return mockStr }
+func (me mockEvidence) Hash() cmn.HexBytes   { return cmn.HexBytes([]byte(mockStr)) }
+func (me mockEvidence) ValidateBasic() error { return nil }
+func (me mockEvidence) GetHeight() int64     { return 3 }
+
+// mock bad evidence
+type mockBadEvidence struct {
+	mockEvidence
+}
+
+// Override ValidateBasic
+func (mbe mockBadEvidence) ValidateBasic() error {
+	return errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence")
+}
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {
 	cs := tendermint.ConsensusState{}
@@ -77,34 +104,6 @@ func TestMsgUpdateClient(t *testing.T) {
 			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
-}
-
-var _ exported.Evidence = mockEvidence{}
-
-const mockStr = "mock"
-
-// mock GoodEvidence
-type mockEvidence struct{}
-
-// Implement Evidence interface
-func (me mockEvidence) Route() string                        { return mockStr }
-func (me mockEvidence) Type() string                         { return mockStr }
-func (me mockEvidence) String() string                       { return mockStr }
-func (me mockEvidence) Hash() cmn.HexBytes                   { return cmn.HexBytes([]byte(mockStr)) }
-func (me mockEvidence) ValidateBasic() sdk.Error             { return nil }
-func (me mockEvidence) GetConsensusAddress() sdk.ConsAddress { return sdk.ConsAddress{} }
-func (me mockEvidence) GetHeight() int64                     { return 3 }
-func (me mockEvidence) GetValidatorPower() int64             { return 3 }
-func (me mockEvidence) GetTotalPower() int64                 { return 5 }
-
-// mock bad evidence
-type mockBadEvidence struct {
-	mockEvidence
-}
-
-// Override ValidateBasic
-func (mbe mockBadEvidence) ValidateBasic() sdk.Error {
-	return sdk.ConvertError(errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence"))
 }
 
 func TestMsgSubmitMisbehaviour(t *testing.T) {

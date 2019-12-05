@@ -20,7 +20,7 @@ func deleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>...",
 		Short: "Delete the given keys",
-		Long: `Delete keys from the store.
+		Long: `Delete keys from the Keybase backend.
 
 Note that removing offline or ledger keys will remove
 only the public key references stored locally, i.e.

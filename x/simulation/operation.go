@@ -199,6 +199,14 @@ type WeightedOperation struct {
 	Op     Operation
 }
 
+// NewWeightedOperation creates a new WeightedOperation instance
+func NewWeightedOperation(weight int, op Operation) WeightedOperation {
+	return WeightedOperation{
+		Weight: weight,
+		Op:     op,
+	}
+}
+
 // WeightedOperations is the group of all weighted operations to simulate.
 type WeightedOperations []WeightedOperation
 

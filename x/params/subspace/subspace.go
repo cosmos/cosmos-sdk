@@ -81,6 +81,21 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.TransientStore(s.tkey), append(s.name, '/'))
 }
 
+// Validate attempts to validate a parameter value by its key. If the key is not
+// registered or if the validation of the value fails, an error is returned.
+func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
+	attr, ok := s.table.m[string(key)]
+	if !ok {
+		return fmt.Errorf("parameter %s not registered", string(key))
+	}
+
+	if err := attr.vfn(value); err != nil {
+		return fmt.Errorf("invalid parameter value: %s", err)
+	}
+
+	return nil
+}
+
 // Get queries for a parameter by key from the Subspace's KVStore and sets the
 // value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
@@ -186,8 +201,8 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	// destValue contains the dereferenced value of dest so validation function do
 	// not have to operate on pointers.
 	destValue := reflect.Indirect(reflect.ValueOf(dest)).Interface()
-	if err := attr.vfn(destValue); err != nil {
-		return fmt.Errorf("updated parameter value is invalid: %s", err)
+	if err := s.Validate(ctx, key, destValue); err != nil {
+		return err
 	}
 
 	s.Set(ctx, key, dest)

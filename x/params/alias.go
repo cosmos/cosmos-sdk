@@ -14,7 +14,6 @@ import (
 const (
 	StoreKey             = subspace.StoreKey
 	TStoreKey            = subspace.TStoreKey
-	TestParamStore       = subspace.TestParamStore
 	DefaultCodespace     = types.DefaultCodespace
 	CodeUnknownSubspace  = types.CodeUnknownSubspace
 	CodeSettingParameter = types.CodeSettingParameter
@@ -29,7 +28,6 @@ var (
 	NewParamSetPair            = subspace.NewParamSetPair
 	NewSubspace                = subspace.NewSubspace
 	NewKeyTable                = subspace.NewKeyTable
-	DefaultTestComponents      = subspace.DefaultTestComponents
 	RegisterCodec              = types.RegisterCodec
 	ErrUnknownSubspace         = types.ErrUnknownSubspace
 	ErrSettingParameter        = types.ErrSettingParameter
@@ -39,7 +37,6 @@ var (
 	ErrEmptyValue              = types.ErrEmptyValue
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 	NewParamChange             = types.NewParamChange
-	NewParamChangeWithSubkey   = types.NewParamChangeWithSubkey
 	ValidateChanges            = types.ValidateChanges
 
 	// variable aliases

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -10,6 +12,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
+
+// QueryAllClientStates returns all the light client states. It _does not_ return
+// any merkle proof.
+func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.State, int64, error) {
+	params := types.NewQueryAllClientsParams(page, limit)
+	bz, err := cliCtx.Codec.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClients)
+	res, height, err := cliCtx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var clients []types.State
+	err = cliCtx.Codec.UnmarshalJSON(res, &clients)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
+	}
+	return clients, height, nil
+}
 
 // QueryClientState queries the store to get the light client state and a merkle
 // proof.

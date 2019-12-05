@@ -11,6 +11,7 @@ import (
 
 // query routes supported by the IBC client Querier
 const (
+	QueryAllClients     = "client_states"
 	QueryClientState    = "client_state"
 	QueryConsensusState = "consensus_state"
 	QueryVerifiedRoot   = "roots"

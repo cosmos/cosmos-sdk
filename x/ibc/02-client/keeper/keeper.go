@@ -124,6 +124,7 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 // the iterator will close and stop.
 func (k Keeper) IterateClients(ctx sdk.Context, cb func(types.State) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+	// TODO: add key prefix for iterator
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()

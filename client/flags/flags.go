@@ -19,7 +19,9 @@ const (
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
+)
 
+const (
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
 	BroadcastBlock = "block"
@@ -29,7 +31,10 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+)
 
+// List of CLI flags
+const (
 	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
@@ -55,6 +60,8 @@ const (
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
 	FlagProve              = "prove"
+	FlagPage               = "page"
+	FlagLimit              = "limit"
 )
 
 // LineBreak can be included in a command list to provide a blank line

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
+// REST client flags
 const (
 	RestClientID   = "client-id"
 	RestRootHeight = "height"
@@ -15,7 +16,7 @@ const (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r, queryRoute)
+	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r)
 }
 

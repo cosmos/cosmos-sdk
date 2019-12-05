@@ -23,9 +23,6 @@ func NewHandler(k Keeper) sdk.Handler {
 		case client.MsgUpdateClient:
 			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
 
-		case client.MsgSubmitMisbehaviour:
-			return client.HandleMsgSubmitMisbehaviour(ctx, k.ClientKeeper, msg)
-
 		// IBC connection  msgs
 		case connection.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)

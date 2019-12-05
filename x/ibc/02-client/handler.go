@@ -1,8 +1,13 @@
 package client
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	exported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -12,7 +17,6 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.R
 		return sdk.ResultFromError(ErrInvalidClientType(DefaultCodespace, err.Error()))
 	}
 
-	// TODO: should we create an event with the new client state id ?
 	_, err = k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
@@ -55,24 +59,17 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.R
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-// HandleMsgSubmitMisbehaviour defines the sdk.Handler for MsgSubmitMisbehaviour
-func HandleMsgSubmitMisbehaviour(ctx sdk.Context, k Keeper, msg MsgSubmitMisbehaviour) sdk.Result {
-	err := k.CheckMisbehaviourAndUpdateState(ctx, msg.ClientID, msg.Evidence)
-	if err != nil {
-		return sdk.ResultFromError(err)
+// HandlerClientMisbehaviour defines the Evidence module handler for submitting a
+// light client misbehaviour.
+func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
+	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
+		switch e := evidence.(type) {
+		case tendermint.Misbehaviour:
+			return k.CheckMisbehaviourAndUpdateState(ctx, evidence)
+
+		default:
+			errMsg := fmt.Sprintf("unrecognized IBC client evidence type: %T", e)
+			return sdk.ErrUnknownRequest(errMsg)
+		}
 	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			EventTypeSubmitMisbehaviour,
-			sdk.NewAttribute(AttributeKeyClientID, msg.ClientID),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Signer.String()),
-		),
-	})
-
-	return sdk.Result{Events: ctx.EventManager().Events()}
 }

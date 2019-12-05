@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -147,30 +146,38 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []types.State) {
 	return states
 }
 
+// GetCommitter will get the Committer of a particular client at the oldest height
+// that is less than or equal to the height passed in
+func (k Keeper) GetCommitter(ctx sdk.Context, clientID string, height uint64) (exported.Committer, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+
+	var committer exported.Committer
+
+	// TODO: Replace this for-loop with a ReverseIterator for efficiency
+	for i := height; i > 0; i-- {
+		bz := store.Get(types.KeyCommitter(clientID, i))
+		if bz != nil {
+			k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &committer)
+			return committer, true
+		}
+	}
+	return nil, false
+}
+
+// SetCommitter sets a committer from a particular height to
+// a particular client
+func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, committer exported.Committer) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(committer)
+	store.Set(types.KeyCommitter(clientID, height), bz)
+}
+
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {
 	clientState := types.NewClientState(clientID)
 	k.SetConsensusState(ctx, clientID, consensusState)
 	return clientState
-}
-
-func (k Keeper) checkMisbehaviour(ctx sdk.Context, evidence exported.Evidence) error {
-	switch evidence.Type() {
-	case exported.ClientTypeTendermint:
-		var tmEvidence tendermint.Evidence
-		_, ok := evidence.(tendermint.Evidence)
-		if !ok {
-			return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
-		}
-		err := tendermint.CheckMisbehaviour(tmEvidence)
-		if err != nil {
-			return errors.ErrInvalidEvidence(k.codespace, err.Error())
-		}
-	default:
-		panic(fmt.Sprintf("unregistered evidence type: %s", evidence.Type()))
-	}
-	return nil
 }
 
 // freeze updates the state of the client in the event of a misbehaviour
@@ -192,12 +199,14 @@ func (k Keeper) VerifyMembership(
 	path commitment.PathI,
 	value []byte,
 ) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
+	clientState, found := k.GetClientState(ctx, clientID)
+	if !found {
+		return false
+	}
+
+	if clientState.Frozen {
+		return false
+	}
 
 	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
@@ -215,12 +224,15 @@ func (k Keeper) VerifyNonMembership(
 	proof commitment.ProofI,
 	path commitment.PathI,
 ) bool {
-	// XXX: commented out for demo
-	/*
-		if clientState.Frozen {
-			return false
-		}
-	*/
+	clientState, found := k.GetClientState(ctx, clientID)
+	if !found {
+		return false
+	}
+
+	if clientState.Frozen {
+		return false
+	}
+
 	root, found := k.GetVerifiedRoot(ctx, clientID, height)
 	if !found {
 		return false

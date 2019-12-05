@@ -5,9 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -27,6 +29,7 @@ func (k Keeper) CreateClient(
 	}
 
 	clientState := k.initialize(ctx, clientID, consensusState)
+	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
@@ -66,6 +69,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	}
 
 	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))
 	return nil
@@ -73,23 +77,47 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 // CheckMisbehaviourAndUpdateState checks for client misbehaviour and freezes the
 // client if so.
-func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, clientID string, evidence exported.Evidence) error {
-	clientState, found := k.GetClientState(ctx, clientID)
+//
+// NOTE: In the first implementation, only Tendermint misbehaviour evidence is
+// supported.
+func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence evidenceexported.Evidence) error {
+	misbehaviour, ok := evidence.(tendermint.Misbehaviour)
+	if !ok {
+		return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
+	}
+
+	clientState, found := k.GetClientState(ctx, misbehaviour.ClientID)
 	if !found {
-		sdk.ResultFromError(errors.ErrClientNotFound(k.codespace, clientID))
+		return errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID)
 	}
 
-	err := k.checkMisbehaviour(ctx, evidence)
-	if err != nil {
-		return err
+	committer, found := k.GetCommitter(ctx, misbehaviour.ClientID, uint64(misbehaviour.GetHeight()))
+	if !found {
+		return errors.ErrCommitterNotFound(k.codespace, fmt.Sprintf("committer not found for height %d", misbehaviour.GetHeight()))
+	}
+	tmCommitter, ok := committer.(tendermint.Committer)
+	if !ok {
+		return errors.ErrInvalidCommitter(k.codespace, "committer type is not Tendermint")
 	}
 
-	clientState, err = k.freeze(ctx, clientState)
+	if err := tendermint.CheckMisbehaviour(tmCommitter, misbehaviour); err != nil {
+		return errors.ErrInvalidEvidence(k.codespace, err.Error())
+	}
+
+	clientState, err := k.freeze(ctx, clientState)
 	if err != nil {
 		return err
 	}
 
 	k.SetClientState(ctx, clientState)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", clientID))
+	k.Logger(ctx).Info(fmt.Sprintf("client %s frozen due to misbehaviour", misbehaviour.ClientID))
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeSubmitMisbehaviour,
+			sdk.NewAttribute(types.AttributeKeyClientID, misbehaviour.ClientID),
+		),
+	)
+
 	return nil
 }

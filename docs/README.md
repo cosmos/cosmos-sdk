@@ -19,29 +19,29 @@ features:
     image: window
 sections:
   - title: Introduction
-    desc: Short sentence describing this section.
+    desc: High-level overview of the Cosmos SDK.
     url: /intro
     icon: introduction
   - title: Basics
-    desc: Short sentence describing this section.
+    desc: Anatomy of a blockchain, transaction lifecycle, accounts and more.
     icon: basics
     url: /basics
   - title: SDK Core
-    desc: Short sentence describing this section.
+    desc: Read about the core concepts like `baseapp`, the store, or the server. 
     icon: core
     url: /core
   - title: Building Modules
-    desc: Short sentence describing this section.
+    desc: Discover how to build modules for the Cosmos SDK.
     icon: modules
     url: /building-modules
   - title: Interfaces
-    desc: Short sentence describing this section.
+    desc: Build interfaces for Cosmos SDK applications.
     icon: interfaces
     url: /interfaces
-  - title: Specifications
-    desc: Short sentence describing this section.
+  - title: Modules
+    desc: Explore existing modules to build your application with.
     icon: specifications
-    url: /
+    url: /modules
 stack:
   - title: Cosmos Hub
     desc: Short description about Cosmos Hub, no longer than a few of lines.

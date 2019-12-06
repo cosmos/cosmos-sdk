@@ -1,3 +1,8 @@
+---
+parent:
+  order: false
+---
+
 # Cosmos SDK
 
 ![banner](docs/cosmos-sdk-image.jpg)

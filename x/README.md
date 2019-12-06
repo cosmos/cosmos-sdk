@@ -1,3 +1,8 @@
+---
+parent:
+  order: false
+---
+
 # List of Modules
 
 This repository contains a working implementation of modules that can be used in Cosmos SDK applications, along with their respective documentation. 

@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -8,11 +11,59 @@ import (
 // type declaration for parameters
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(
-		ParamStoreKeyCommunityTax, sdk.Dec{},
-		ParamStoreKeyBaseProposerReward, sdk.Dec{},
-		ParamStoreKeyBonusProposerReward, sdk.Dec{},
-		ParamStoreKeyWithdrawAddrEnabled, false,
+		params.NewParamSetPair(ParamStoreKeyCommunityTax, sdk.Dec{}, validateCommunityTax),
+		params.NewParamSetPair(ParamStoreKeyBaseProposerReward, sdk.Dec{}, validateBaseProposerReward),
+		params.NewParamSetPair(ParamStoreKeyBonusProposerReward, sdk.Dec{}, validateBonusProposerReward),
+		params.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, false, validateWithdrawAddrEnabled),
 	)
+}
+
+func validateCommunityTax(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("negative community tax: %s", v)
+	}
+
+	return nil
+}
+
+func validateBaseProposerReward(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return errors.New("negative base proposer reward")
+	}
+
+	return nil
+}
+
+func validateBonusProposerReward(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return errors.New("negative bonus proposer reward")
+	}
+
+	return nil
+}
+
+func validateWithdrawAddrEnabled(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
 }
 
 // returns the current CommunityTax rate from the global param store

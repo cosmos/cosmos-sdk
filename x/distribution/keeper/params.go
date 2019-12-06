@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +24,7 @@ func validateCommunityTax(i interface{}) error {
 	}
 
 	if v.IsNegative() {
-		return fmt.Errorf("negative community tax: %s", v)
+		return fmt.Errorf("community tax must be positive: %s", v)
 	}
 
 	return nil
@@ -38,7 +37,7 @@ func validateBaseProposerReward(i interface{}) error {
 	}
 
 	if v.IsNegative() {
-		return errors.New("negative base proposer reward")
+		return fmt.Errorf("base proposer reward must be positive: %s", v)
 	}
 
 	return nil
@@ -51,7 +50,7 @@ func validateBonusProposerReward(i interface{}) error {
 	}
 
 	if v.IsNegative() {
-		return errors.New("negative bonus proposer reward")
+		return fmt.Errorf("bonus proposer reward must be positive: %s", v)
 	}
 
 	return nil

@@ -10,7 +10,8 @@ import (
 
 // query routes supported by the IBC channel Querier
 const (
-	QueryChannel = "channel"
+	QueryAllChannels = "channels"
+	QueryChannel     = "channel"
 )
 
 // ChannelResponse defines the client query response for a channel which also

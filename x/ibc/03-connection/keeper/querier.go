@@ -34,30 +34,8 @@ func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 	return bz, nil
 }
 
-// QuerierClientConnections defines the sdk.Querier to query the client connections
-func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params types.QueryClientConnectionsParams
-
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
-	}
-
-	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
-	if !found {
-		return nil, sdk.ConvertError(types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID))
-	}
-
-	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)
-	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
-	}
-
-	return bz, nil
-}
-
-// QueryAllConnections defines the sdk.Querier to query all the connections.
-func QueryAllConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+// QuerierConnections defines the sdk.Querier to query all the connections.
+func QuerierConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllConnectionsParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
@@ -80,4 +58,26 @@ func QueryAllConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 	}
 
 	return res, nil
+}
+
+// QuerierClientConnections defines the sdk.Querier to query the client connections
+func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryClientConnectionsParams
+
+	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	}
+
+	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
+	if !found {
+		return nil, sdk.ConvertError(types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID))
+	}
+
+	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
 }

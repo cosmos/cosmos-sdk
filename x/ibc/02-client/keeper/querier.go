@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
-// QueryAllClients defines the sdk.Querier to query all the light client states.
-func QueryAllClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+// QuerierClients defines the sdk.Querier to query all the light client states.
+func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllClientsParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)

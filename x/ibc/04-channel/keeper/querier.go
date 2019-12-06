@@ -34,8 +34,8 @@ func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 	return bz, nil
 }
 
-// QueryAllChannels defines the sdk.Querier to query all the channels.
-func QueryAllChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
+// QuerierChannels defines the sdk.Querier to query all the channels.
+func QuerierChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllChannelsParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)

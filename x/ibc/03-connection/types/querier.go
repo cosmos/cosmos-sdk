@@ -10,6 +10,7 @@ import (
 
 // query routes supported by the IBC connection Querier
 const (
+	QueryAllConnections    = "connections"
 	QueryConnection        = "connection"
 	QueryClientConnections = "client_connections"
 )

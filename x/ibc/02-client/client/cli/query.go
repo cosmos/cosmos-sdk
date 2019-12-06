@@ -18,7 +18,7 @@ import (
 )
 
 // GetCmdQueryClientStates defines the command to query all the light clients
-// that this chain mantains
+// that this chain mantains.
 func GetCmdQueryClientStates(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "states",
@@ -31,14 +31,8 @@ $ %s query ibc client states
 		`, version.ClientName),
 		),
 		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
-		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
 			page := viper.GetInt(flags.FlagPage)
 			limit := viper.GetInt(flags.FlagLimit)
 

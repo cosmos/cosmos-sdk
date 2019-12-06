@@ -21,7 +21,7 @@ func TestRandSubsetCoins(t *testing.T) {
 		{"seed=99", rand.New(rand.NewSource(99)), mustParseCoins("100stake,2testtoken")},
 	}
 	for _, tt := range tests {
-	    tt := tt
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := simulation.RandSubsetCoins(tt.r, tt.coins)
 			gotStringRep := got.String()

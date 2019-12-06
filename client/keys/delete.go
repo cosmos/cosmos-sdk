@@ -18,27 +18,26 @@ const (
 
 func deleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name>",
-		Short: "Delete the given key",
-		Long: `Delete a key from the store.
+		Use:   "delete <name>...",
+		Short: "Delete the given keys",
+		Long: `Delete keys from the Keybase backend.
 
 Note that removing offline or ledger keys will remove
 only the public key references stored locally, i.e.
 private keys stored in a ledger device cannot be deleted with the CLI.
 `,
 		RunE: runDeleteCmd,
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MinimumNArgs(1),
 	}
 
 	cmd.Flags().BoolP(flagYes, "y", false,
 		"Skip confirmation prompt when deleting offline or ledger key references")
 	cmd.Flags().BoolP(flagForce, "f", false,
-		"Remove the key unconditionally without asking for the passphrase")
+		"Remove the key unconditionally without asking for the passphrase. Deprecated.")
 	return cmd
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
-	name := args[0]
 	buf := bufio.NewReader(cmd.InOrStdin())
 
 	kb, err := NewKeyringFromHomeFlag(buf)
@@ -46,31 +45,34 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	info, err := kb.Get(name)
-	if err != nil {
-		return err
-	}
-
-	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
-		// confirm deletion, unless -y is passed
-		if !viper.GetBool(flagYes) {
-			if err := confirmDeletion(buf); err != nil {
-				return err
-			}
+	for _, name := range args {
+		info, err := kb.Get(name)
+		if err != nil {
+			return err
 		}
 
+		if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+			// confirm deletion, unless -y is passed
+			if !viper.GetBool(flagYes) {
+				if err := confirmDeletion(buf); err != nil {
+					return err
+				}
+			}
+
+			if err := kb.Delete(name, "", true); err != nil {
+				return err
+			}
+			cmd.PrintErrln("Public key reference deleted")
+			return nil
+		}
+
+		// old password and skip flag arguments are ignored
 		if err := kb.Delete(name, "", true); err != nil {
 			return err
 		}
-		cmd.PrintErrln("Public key reference deleted")
-		return nil
+		cmd.PrintErrln("Key deleted forever (uh oh!)")
 	}
 
-	// old password and skip flag arguments are ignored
-	if err := kb.Delete(name, "", true); err != nil {
-		return err
-	}
-	cmd.PrintErrln("Key deleted forever (uh oh!)")
 	return nil
 }
 

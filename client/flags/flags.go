@@ -20,6 +20,12 @@ const (
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
 
+	// DefaultKeyringBackend
+	DefaultKeyringBackend = KeyringBackendOS
+	KeyringBackendOS      = "os"
+	KeyringBackendFile    = "file"
+	KeyringBackendTest    = "test"
+
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
 	BroadcastBlock = "block"
@@ -54,14 +60,15 @@ const (
 	FlagRPCWriteTimeout    = "write-timeout"
 	FlagOutputDocument     = "output-document" // inspired by wget -O
 	FlagSkipConfirmation   = "yes"
-	FlagKeyringFile        = "keyring-file"
+	FlagKeyringBackend     = "keyring-backend"
 )
 
 // LineBreak can be included in a command list to provide a blank line
 // to help with readability
 var (
-	LineBreak  = &cobra.Command{Run: func(*cobra.Command, []string) {}}
-	GasFlagVar = GasSetting{Gas: DefaultGasLimit}
+	LineBreak             = &cobra.Command{Run: func(*cobra.Command, []string) {}}
+	GasFlagVar            = GasSetting{Gas: DefaultGasLimit}
+	KeyringBackendFlagVar = KeyringBackend{Backend: DefaultKeyringBackend}
 )
 
 // GetCommands adds common flags to query commands
@@ -100,18 +107,18 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible and the node operates offline)")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
-		c.Flags().Bool(FlagKeyringFile, false, "Use the keyring's encrypted file backend")
 
+		// --keyring-backend can accept "os", "file", "test"
+		c.Flags().Var(&KeyringBackendFlagVar, FlagKeyringBackend, "Select keyring's backend (os|file|test)")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
 			GasFlagAuto, DefaultGasLimit,
 		))
-
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
-		viper.BindPFlag(FlagKeyringFile, c.Flags().Lookup(FlagKeyringFile))
+		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
 
 		c.MarkFlagRequired(FlagChainID)
 	}
@@ -168,6 +175,37 @@ func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
 		}
 	}
 	return
+}
+
+// Keyring backend flag parsing
+
+// KeyringBackend encapsulates the possible values passed through the --keyring-backend flag.
+type KeyringBackend struct {
+	Backend string
+}
+
+// Type returns the flag's value type.
+func (v *KeyringBackend) Type() string { return "string" }
+
+// Set parses and sets the value of the --keyring-backend flag.
+func (v *KeyringBackend) Set(s string) (err error) {
+	v.Backend, err = ParseKeyringBackend(s)
+	return
+}
+
+// String returns a string representation.
+func (v *KeyringBackend) String() string { return v.Backend }
+
+// ParseKeyringBackend parses the value of the keyring backend option.
+func ParseKeyringBackend(str string) (string, error) {
+	switch str {
+	case "":
+		return KeyringBackendOS, nil
+	case KeyringBackendOS, KeyringBackendFile, KeyringBackendTest:
+		return str, nil
+	default:
+		return "", fmt.Errorf("unknown keyring backend %q", str)
+	}
 }
 
 // NewCompletionCmd builds a cobra.Command that generate bash completion

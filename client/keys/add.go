@@ -72,7 +72,6 @@ the flag --nosort is set.
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
-	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
 	return cmd
 }
 

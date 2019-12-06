@@ -29,7 +29,6 @@ The command asks for every passphrase. If the passphrase is incorrect, it skips 
 		RunE: runMigrateCmd,
 	}
 
-	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
 	cmd.Flags().Bool(flags.FlagDryRun, false, "Do everything which is supposed to be done, but don't write any changes to the keyring.")
 	return cmd
 }

@@ -6,20 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
 func importKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "import <name> <keyfile>",
 		Short: "Import private keys into the local keybase",
 		Long:  "Import a ASCII armored private key into the local keybase.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
-	cmd.Flags().Bool(flags.FlagKeyringFile, false, "Use the keyring's encrypted file backend")
-	return cmd
 }
 
 func runImportCmd(cmd *cobra.Command, args []string) error {

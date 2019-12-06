@@ -158,11 +158,15 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 		types.NewClientState(testClientID3),
 	}
 
-	for _, state := range expClients {
-		suite.keeper.SetClientState(suite.ctx, state)
+	// set other type to store to see if the keys collide
+	// FIXME: this panics
+	// suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
+
+	for i, _ := range expClients {
+		suite.keeper.SetClientState(suite.ctx, expClients[i])
 	}
 
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
-	suite.Require().Equal(clients, expClients)
+	suite.Require().ElementsMatch(expClients, clients)
 }

@@ -22,8 +22,8 @@ const (
 
 	// DefaultKeyringBackend
 	DefaultKeyringBackend = KeyringBackendOS
-	KeyringBackendOS      = "os"
 	KeyringBackendFile    = "file"
+	KeyringBackendOS      = "os"
 	KeyringBackendTest    = "test"
 
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for

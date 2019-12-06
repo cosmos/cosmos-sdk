@@ -77,7 +77,7 @@ func validateDepositParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.MinDeposit.IsValid() {
+	if !v.MinDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
 	}
 	if v.MaxDepositPeriod <= 0 {

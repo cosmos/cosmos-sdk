@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,8 +15,7 @@ import (
 func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllClientsParams
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -40,66 +37,63 @@ func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 }
 
 // QuerierClientState defines the sdk.Querier to query the IBC client state
-func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryClientStateParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	clientState, found := k.GetClientState(ctx, params.ClientID)
 	if !found {
-		return nil, sdk.ConvertError(errors.ErrClientTypeNotFound(k.codespace))
+		return nil, errors.ErrClientTypeNotFound(k.codespace)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(clientState)
+	bz, err := codec.MarshalJSONIndent(k.cdc, clientState)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
 }
 
 // QuerierConsensusState defines the sdk.Querier to query a consensus state
-func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryClientStateParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
 	if !found {
-		return nil, sdk.ConvertError(errors.ErrConsensusStateNotFound(k.codespace))
+		return nil, errors.ErrConsensusStateNotFound(k.codespace)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(consensusState)
+	bz, err := codec.MarshalJSONIndent(k.cdc, consensusState)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
 }
 
 // QuerierVerifiedRoot defines the sdk.Querier to query a verified commitment root
-func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryCommitmentRootParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
-		return nil, sdk.ConvertError(errors.ErrRootNotFound(k.codespace))
+		return nil, errors.ErrRootNotFound(k.codespace)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(root)
+	bz, err := codec.MarshalJSONIndent(k.cdc, root)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil

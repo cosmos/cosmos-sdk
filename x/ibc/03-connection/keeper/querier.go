@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,20 +11,19 @@ import (
 )
 
 // QuerierConnection defines the sdk.Querier to query a connection end
-func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryConnectionParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	connection, found := k.GetConnection(ctx, params.ConnectionID)
 	if !found {
-		return nil, sdk.ConvertError(types.ErrConnectionNotFound(k.codespace, params.ConnectionID))
+		return nil, types.ErrConnectionNotFound(k.codespace, params.ConnectionID)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(connection)
+	bz, err := codec.MarshalJSONIndent(k.cdc, connection)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -38,8 +35,7 @@ func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 func QuerierConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllConnectionsParams
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
@@ -61,22 +57,21 @@ func QuerierConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 }
 
 // QuerierClientConnections defines the sdk.Querier to query the client connections
-func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryClientConnectionsParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
 	if !found {
-		return nil, sdk.ConvertError(types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID))
+		return nil, types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID)
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil

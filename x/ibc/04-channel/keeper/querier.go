@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,22 +11,21 @@ import (
 )
 
 // QuerierChannel defines the sdk.Querier to query a module's channel
-func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryChannelParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	channel, found := k.GetChannel(ctx, params.PortID, params.ChannelID)
 	if !found {
-		return nil, sdk.ConvertError(types.ErrChannelNotFound(k.codespace, params.PortID, params.ChannelID))
+		return nil, types.ErrChannelNotFound(k.codespace, params.PortID, params.ChannelID)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(channel)
+	bz, err := codec.MarshalJSONIndent(k.cdc, channel)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -38,8 +35,7 @@ func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 func QuerierChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAllChannelsParams
 
-	err := k.cdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 

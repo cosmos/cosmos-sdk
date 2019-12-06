@@ -21,7 +21,9 @@ import (
 )
 
 const (
-	testClientID = "gaia"
+	testClientID  = "gaia"
+	testClientID2 = "ethbridge"
+	testClientID3 = "ethermint"
 )
 
 type KeeperTestSuite struct {
@@ -147,5 +149,20 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 		require.True(suite.T(), ok, "GetCommitter failed on existing height: %d", i)
 		require.Equal(suite.T(), nextCommitter, recv, "GetCommitter returned committer on nonexistent height: %d", i)
 	}
+}
 
+func (suite KeeperTestSuite) TestGetAllClients() {
+	expClients := []types.State{
+		types.NewClientState(testClientID),
+		types.NewClientState(testClientID2),
+		types.NewClientState(testClientID3),
+	}
+
+	for _, state := range expClients {
+		suite.keeper.SetClientState(suite.ctx, state)
+	}
+
+	clients := suite.keeper.GetAllClients(suite.ctx)
+	suite.Require().Len(clients, len(expClients))
+	suite.Require().Equal(clients, expClients)
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// nolint: scopelint
 func TestRandSubsetCoins(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -22,6 +21,7 @@ func TestRandSubsetCoins(t *testing.T) {
 		{"seed=99", rand.New(rand.NewSource(99)), mustParseCoins("100stake,2testtoken")},
 	}
 	for _, tt := range tests {
+	    tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := simulation.RandSubsetCoins(tt.r, tt.coins)
 			gotStringRep := got.String()

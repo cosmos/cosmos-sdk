@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -68,7 +67,7 @@ func validateMaxEvidenceAge(i interface{}) error {
 	}
 
 	if v <= 0 {
-		return errors.New("negative max evidence age")
+		return fmt.Errorf("max evidence age must be positive: %s", v)
 	}
 
 	return nil

@@ -126,11 +126,20 @@ func validateTallyParams(i interface{}) error {
 	if v.Quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
 	}
+	if v.Quorum.GT(sdk.OneDec()) {
+		return fmt.Errorf("quorom too large: %s", v)
+	}
 	if !v.Threshold.IsPositive() {
 		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
 	}
+	if v.Threshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("threshold too large: %s", v)
+	}
 	if !v.Veto.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
+	}
+	if v.Veto.GT(sdk.OneDec()) {
+		return fmt.Errorf("veto threshold too large: %s", v)
 	}
 
 	return nil

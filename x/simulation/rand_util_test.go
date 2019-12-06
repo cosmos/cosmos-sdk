@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// nolint: scopelint
 func TestRandSubsetCoins(t *testing.T) {
 	tests := []struct {
 		name  string

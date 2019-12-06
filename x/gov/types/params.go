@@ -133,7 +133,7 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
 	}
 	if v.Threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("threshold too large: %s", v)
+		return fmt.Errorf("vote threshold too large: %s", v)
 	}
 	if !v.Veto.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)

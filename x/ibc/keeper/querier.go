@@ -41,7 +41,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			case connection.QueryClientConnections:
 				res, err = connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
 			default:
-				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest,"unknown IBC %s query endpoint", connection.SubModuleName)
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connection.SubModuleName)
 			}
 		case channel.SubModuleName:
 			switch path[1] {
@@ -50,7 +50,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			case channel.QueryAllChannels:
 				res, err = channel.QuerierChannels(ctx, req, k.ChannelKeeper)
 			default:
-				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest,"unknown IBC %s query endpoint", channel.SubModuleName)
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
 			}
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")

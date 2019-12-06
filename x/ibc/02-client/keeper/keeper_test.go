@@ -168,5 +168,5 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
-	suite.Require().ElementsMatch(expClients, clients)
+	suite.Require().Equal(expClients, clients) // FIXME: non-determinism
 }

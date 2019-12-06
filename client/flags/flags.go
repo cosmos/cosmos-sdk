@@ -188,9 +188,13 @@ type KeyringBackend struct {
 func (v *KeyringBackend) Type() string { return "string" }
 
 // Set parses and sets the value of the --keyring-backend flag.
-func (v *KeyringBackend) Set(s string) (err error) {
-	v.Backend, err = ParseKeyringBackend(s)
-	return
+func (v *KeyringBackend) Set(s string) error {
+	val, err := ParseKeyringBackend(s)
+	if err != nil {
+		return err
+	}
+	v.Backend = val
+	return nil
 }
 
 // String returns a string representation.

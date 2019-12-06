@@ -23,6 +23,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	kbkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -194,6 +195,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
+	cmd.Flags().Var(&flags.KeyringBackendFlagVar, client.FlagKeyringBackend, "Select keyring's backend (os|file|test)")
 
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd

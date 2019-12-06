@@ -103,7 +103,7 @@ func (p Params) String() string {
 }
 
 func validateTxSigLimit(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -116,7 +116,7 @@ func validateTxSigLimit(i interface{}) error {
 }
 
 func validateSigVerifyCostED25519(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -129,7 +129,7 @@ func validateSigVerifyCostED25519(i interface{}) error {
 }
 
 func validateSigVerifyCostSecp256k1(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -142,7 +142,7 @@ func validateSigVerifyCostSecp256k1(i interface{}) error {
 }
 
 func validateMaxMemoCharacters(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -155,7 +155,7 @@ func validateMaxMemoCharacters(i interface{}) error {
 }
 
 func validateTxSizeCostPerByte(i interface{}) error {
-	v, ok := i.(uint16)
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

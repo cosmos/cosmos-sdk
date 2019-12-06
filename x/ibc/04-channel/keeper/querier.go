@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -29,4 +30,30 @@ func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, s
 	}
 
 	return bz, nil
+}
+
+// QuerierChannels defines the sdk.Querier to query all the light client states.
+func QuerierChannels(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryAllChannelsParams
+
+	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to unmarshall json: %s", err.Error()))
+	}
+
+	clients := k.GetAllChannels(ctx)
+
+	start, end := client.Paginate(len(clients), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		clients = []types.State{}
+	} else {
+		clients = clients[start:end]
+	}
+
+	res, err := types.SubModuleCdc.MarshalJSON(clients)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to unmarshall json: %s", err.Error()))
+	}
+
+	return res, nil
 }

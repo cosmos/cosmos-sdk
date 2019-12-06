@@ -45,12 +45,14 @@ const (
 	RouterKey                      = types.RouterKey
 	QuerierRoute                   = types.QuerierRoute
 	QueryChannel                   = types.QueryChannel
+	QueryChannels                  = types.QueryChannels
 )
 
 var (
 	// functions aliases
 	NewKeeper                     = keeper.NewKeeper
 	QuerierChannel                = keeper.QuerierChannel
+	QuerierChannels               = keeper.QuerierChannels
 	NewChannel                    = types.NewChannel
 	NewCounterparty               = types.NewCounterparty
 	OrderFromString               = types.OrderFromString
@@ -87,6 +89,7 @@ var (
 	NewOpaquePacket               = types.NewOpaquePacket
 	NewChannelResponse            = types.NewChannelResponse
 	NewQueryChannelParams         = types.NewQueryChannelParams
+	NewQueryAllChannelsParams     = types.NewQueryAllChannelsParams
 
 	// variable aliases
 	SubModuleCdc                 = types.SubModuleCdc

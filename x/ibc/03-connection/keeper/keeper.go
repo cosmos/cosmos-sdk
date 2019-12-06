@@ -56,6 +56,31 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 	return connection, true
 }
 
+// IterateConnections returns an iterator to all connections on the chain
+func (k Keeper) IterateConnections(ctx sdk.Context, cb func(state types.State) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var connection types.State
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &connection)
+
+		if cb(connection) {
+			break
+		}
+	}
+}
+
+// GetAllConnections returns all stored light client State objects.
+func (k Keeper) GetAllConnections(ctx sdk.Context) (states []types.State) {
+	k.IterateConnections(ctx, func(state types.State) bool {
+		states = append(states, state)
+		return false
+	})
+	return states
+}
+
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)

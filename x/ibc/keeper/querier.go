@@ -23,6 +23,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 				return client.QuerierConsensusState(ctx, req, k.ClientKeeper)
 			case client.QueryVerifiedRoot:
 				return client.QuerierVerifiedRoot(ctx, req, k.ClientKeeper)
+			case client.QueryClients:
+				return client.QuerierAllClients(ctx, req, k.ClientKeeper)
 			default:
 				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName))
 			}
@@ -30,6 +32,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			switch path[1] {
 			case connection.QueryConnection:
 				return connection.QuerierConnection(ctx, req, k.ConnectionKeeper)
+			case connection.QueryConnections:
+				return connection.QueryAllConnections(ctx, req, k.ConnectionKeeper)
 			case connection.QueryClientConnections:
 				return connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
 			default:
@@ -39,6 +43,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			switch path[1] {
 			case channel.QueryChannel:
 				return channel.QuerierChannel(ctx, req, k.ChannelKeeper)
+			case channel.QueryChannels:
+				return channel.QuerierChannels(ctx, req, k.ChannelKeeper)
 			default:
 				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", channel.SubModuleName))
 			}

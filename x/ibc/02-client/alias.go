@@ -32,6 +32,7 @@ const (
 	QueryClientState           = types.QueryClientState
 	QueryConsensusState        = types.QueryConsensusState
 	QueryVerifiedRoot          = types.QueryVerifiedRoot
+	QueryClients               = types.QueryClients
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 	QuerierClientState           = keeper.QuerierClientState
 	QuerierConsensusState        = keeper.QuerierConsensusState
 	QuerierVerifiedRoot          = keeper.QuerierVerifiedRoot
+	QuerierAllClients            = keeper.QuerierAllClients
 	RegisterCodec                = types.RegisterCodec
 	ErrClientExists              = errors.ErrClientExists
 	ErrClientNotFound            = errors.ErrClientNotFound
@@ -64,6 +66,7 @@ var (
 	NewMsgSubmitMibehaviour      = types.NewMsgSubmitMisbehaviour
 	NewQueryClientStateParams    = types.NewQueryClientStateParams
 	NewQueryCommitmentRootParams = types.NewQueryCommitmentRootParams
+	NewQueryAllClientsParams     = types.NewQueryAllClientsParams
 	NewClientState               = types.NewClientState
 
 	// variable aliases

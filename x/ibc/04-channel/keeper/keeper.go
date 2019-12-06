@@ -57,6 +57,31 @@ func (k Keeper) GetChannel(ctx sdk.Context, portID, channelID string) (types.Cha
 	return channel, true
 }
 
+// IterateChannels returns an iterator for Channels
+func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.State) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixChannel)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var channel types.State
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &channel)
+
+		if cb(channel) {
+			break
+		}
+	}
+}
+
+// GetAllChannels returns all stored light client State objects.
+func (k Keeper) GetAllChannels(ctx sdk.Context) (states []types.State) {
+	k.IterateChannels(ctx, func(state types.State) bool {
+		states = append(states, state)
+		return false
+	})
+	return states
+}
+
 // SetChannel sets a channel to the store
 func (k Keeper) SetChannel(ctx sdk.Context, portID, channelID string, channel types.Channel) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixChannel)

@@ -12,6 +12,7 @@ import (
 const (
 	QueryConnection        = "connection"
 	QueryClientConnections = "client_connections"
+	QueryConnections       = "connections"
 )
 
 // ConnectionResponse defines the client query response for a connection which
@@ -46,6 +47,17 @@ func NewQueryConnectionParams(clientID string) QueryConnectionParams {
 	return QueryConnectionParams{
 		ConnectionID: clientID,
 	}
+}
+
+// QueryAllConnectionsParams defines the params for the following queries:
+type QueryAllConnectionsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllConnectionsParams creates a new QueryAllConnectionsParams instance
+func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
+	return QueryAllConnectionsParams{page, limit}
 }
 
 // ClientConnectionsResponse defines the client query response for a client

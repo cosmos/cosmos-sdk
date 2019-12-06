@@ -14,6 +14,7 @@ const (
 	QueryClientState    = "client_state"
 	QueryConsensusState = "consensus_state"
 	QueryVerifiedRoot   = "roots"
+	QueryClients        = "clients"
 )
 
 // QueryClientStateParams defines the params for the following queries:
@@ -28,6 +29,18 @@ func NewQueryClientStateParams(id string) QueryClientStateParams {
 	return QueryClientStateParams{
 		ClientID: id,
 	}
+}
+
+// QueryAllClientsParams defines the params for the following queries:
+// - 'custom/ibc/clients/clients'
+type QueryAllClientsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllClientsParams creates a new QueryAllClientsParams instance
+func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
+	return QueryAllClientsParams{page, limit}
 }
 
 // QueryCommitmentRootParams defines the params for the following queries:

@@ -37,6 +37,7 @@ const (
 	RouterKey                         = types.RouterKey
 	QuerierRoute                      = types.QuerierRoute
 	QueryConnection                   = types.QueryConnection
+	QueryConnections                  = types.QueryConnections
 	QueryClientConnections            = types.QueryClientConnections
 )
 
@@ -44,6 +45,7 @@ var (
 	// functions aliases
 	NewKeeper                        = keeper.NewKeeper
 	QuerierConnection                = keeper.QuerierConnection
+	QueryAllConnections              = keeper.QueryAllConnections
 	QuerierClientConnections         = keeper.QuerierClientConnections
 	RegisterCodec                    = types.RegisterCodec
 	NewConnectionEnd                 = types.NewConnectionEnd
@@ -67,6 +69,7 @@ var (
 	NewMsgConnectionOpenConfirm      = types.NewMsgConnectionOpenConfirm
 	NewConnectionResponse            = types.NewConnectionResponse
 	NewQueryConnectionParams         = types.NewQueryConnectionParams
+	NewQueryAllConnectionsParams     = types.NewQueryAllConnectionsParams
 	NewClientConnectionsResponse     = types.NewClientConnectionsResponse
 	NewQueryClientConnectionsParams  = types.NewQueryClientConnectionsParams
 	GetCompatibleVersions            = types.GetCompatibleVersions

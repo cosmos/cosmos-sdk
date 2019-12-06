@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -35,6 +36,31 @@ func (k Keeper) CreateClient(
 	k.SetClientType(ctx, clientID, clientType)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, consensusState.GetHeight()))
 	return clientState, nil
+}
+
+// IterateClients returns an iterator that allows for returning a list of clients
+func (k Keeper) IterateClients(ctx sdk.Context, cb func(types.State) bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var clientState types.State
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
+
+		if cb(clientState) {
+			break
+		}
+	}
+}
+
+// GetAllClients returns all stored light client State objects.
+func (k Keeper) GetAllClients(ctx sdk.Context) (states []types.State) {
+	k.IterateClients(ctx, func(state types.State) bool {
+		states = append(states, state)
+		return false
+	})
+	return states
 }
 
 // UpdateClient updates the consensus state and the state root from a provided header

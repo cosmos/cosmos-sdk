@@ -8,8 +8,8 @@ func (k Keeper) ConvertIntArrayToInt64(blockHeight []int) []int64 {
 	return blockHeightInt64
 }
 
-func (k Keeper) Contains(BlockHeightArray []int64, skipHeight int64) bool {
-	for _, height := range BlockHeightArray {
+func (k Keeper) Contains(blockHeightArray []int64, skipHeight int64) bool {
+	for _, height := range blockHeightArray {
 		if height == skipHeight {
 			return true
 		}

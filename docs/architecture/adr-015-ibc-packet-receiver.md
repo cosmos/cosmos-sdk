@@ -8,37 +8,31 @@
  
 [ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines a function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
 
-`handlePacketRecv` executes per-module `onRecvPacket` callbacks, verifies the
-packet merkle proof, and pushes the acknowledgement bytes, if present, to the IBC
-channel `Keeper` state ([ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics)).
+In ICS 26, the routing module is defined as a layer above each application module
+which verifies and routes messages to the destination modules. It is possible to 
+implement it as a separate module, however, we already have functionality to route
+messages upon the destination identifiers in the baseapp. This ADR suggests 
+to utilize existing `baseapp.router` tp route packets to application modules.
 
-`handlePacketAcknowledgement` executes per-module `onAcknowledgementPacket`
-callbacks, and verifies the acknowledgement commitment proof.
-
-`handlePacketTimeout` and `handlePacketTimeoutOnClose` executes per-module
-`onTimeoutPacket` callbacks, and verifies the timeout proof.
-
-The mechanism is similar to the transaction handling logic in `baseapp`. After
-authentication, the handler is executed, and the authentication state change
-must be committed regardless of the result of the handler execution.
-
-`handlePacketRecv` also requires acknowledgement writing which has to be done
-after the handler execution and also must be commited regardless of the result of
-the handler execution.
+Generally, each routing module callbacks have two separate steps in them, 
+verificaton and execution. This corresponds to the `AnteHandler`-`Handler`
+moodel inside the SDK. We can do the verificaton inside the `AnteHandler`
+in order to increase developer ergonomics by reducing boilerplate 
+verification code.
 
 ## Decision
 
-The Cosmos SDK will define `FoldHandler` for post-execution cleanup logic. 
+`PortKeeper` will have the capability key that is able to access only on the 
+channels binded to the port. Entities those holding a `PortKeeper` will be
+able to call the corresponding `ChannelKeeper`s method, but only with the
+allowed port. `ChannelKeeper.Port(string, ChannelChecker)` will be defined to
+easily construct a capability-safe `PortKeeper`. This will be address in 
+another ADR and we will use unsecure `ChannelKeeper` for now.
 
-```go
-type FoldHandler func(sdk.Context, sdk.Tx, sdk.Result) sdk.Result
-```
-
-`FoldHandler`s will be provided by the top level application and interted into
-the `baseapp`.
-
-`baseapp.runTx` will execute `FoldHandler` after the main application handler
-execution. The logic is equal to that of `AnteHandler`.
+`baseapp.runMsgs` will break the loop over the messages if one of the handlers
+returns `!Result.IsOK()`. However, the outer logic will write the cached 
+store if `Result.IsOK() || Result.Code.IsBreak()`. `Result.Code.IsBreak()` if
+`Result.Code == CodeTxBreak`.
 
 ```go
 // Pseudocode
@@ -64,16 +58,12 @@ func (app *BaseApp) runTx(tx sdk.Tx) (result sdk.Result) {
   // Main Handler
   runMsgCtx, msCache := app.cacheTxContext(ctx)
   result = app.runMsgs(runMsgCtx, msgs)
-  if !result.IsOK() {
+  // BEGIN modification made in this ADR
+  if result.IsOK() || result.IsBreak() {
+  // END
     msCache.Write()
   }
-  
-  // BEGIN modification made in this ADR
-  if app.foldHandler != nil {
-    result = app.foldHandler(ctx, tx, result)
-  }
-  // END
-  
+
   return result
 }
 ```
@@ -101,6 +91,8 @@ func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
       err = pvr.channelKeeper.AcknowledgementPacket(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
     case channel.MsgTimeoutPacket:
       err = pvr.channelKeeper.TimeoutPacket(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
+    case channel.MsgChannelOpenInit;
+      err = pvr.channelKeeper.CheckOpen(msg.PortID, msg.ChannelID, msg.Channel)
     default:
       continue
     }
@@ -120,21 +112,20 @@ are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
 respectively.
 
 The side effects of `RecvPacket`, `VerifyAcknowledgement`, 
-`VerifyTimeout` will be extracted out into separated functions. 
+`VerifyTimeout` will be extracted out into separated functions, which will
+be called by the application handlers after the execution.
 
 ```go
-// Pseudocode
-func (keeper ChannelKeeper) RecvFinalize(packet Packet, proofs []commitment.ProofI, height uint64) {
-  keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
+func (keeper ChannelKeeper) WriteAcknowledgement(ctx sdk.Context, packet Packet, ack []byte) {
+  keeper.SetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
+  keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 }
 
-// Pseudocode
-func (keeper ChannelKeeper) AcknowledgementFinalize(packet Packet, acknowledgement PacketDataI, proofs []commitment.ProofI, height uint64) {
+func (keeper ChannelKeeper) DeleteCommitment(ctx sdk.Context, packet Packet) {
   keeper.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }
 
-// Pseudocode
-func (keeper ChannelKeeper) TimeoutFinalize(packet Packet, proofs []commitment.ProofI, height uint64, nextSequenceRecv uint64) {
+func (keeper ChannelKeeper) DeleteCommitmentTimeout(ctx sdk.Context, packet Packet) {
   k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
   
   if channel.Ordering == types.ORDERED [
@@ -144,41 +135,25 @@ func (keeper ChannelKeeper) TimeoutFinalize(packet Packet, proofs []commitment.P
 }
 ```
 
-The Cosmos SDK will define a `FoldHandler` for remaining state mutation. The
-`FoldHandler` will execute the side effect of the verification, including 
-sequence increase and commitment deletion.
+Each application handler should call respective finalization methods on the `PortKeeper`
+in order to increase sequence(in case of packet) or remove the commitment
+(in case of acknowledgement and timeout).
+Calling those functions implies that the application logic has successfully executed. 
+However, the handlers can return `Result` with `CodeTxBreak` after calling those methods
+which will persist the state changes that has been already done but prevent any further 
+messages to be executed in case of semantically invalid packet. In any case the 
+application modules should never return state reverting result, which will make the 
+channel unable to proceed.
 
-```go
-func NewFoldHandler(k ChannelKeeper) sdk.FoldHandler {
-  return func(ctx sdk.Context, tx sdk.Tx, result sdk.Result) sdk.Result {
-    if !result.IsOK() {
-      // Transaction aborted, no side effect need to be committed
-      return result
-    }
-    
-    for _, msg := range tx.GetMsgs() {
-      switch msg := msg.(type) {
-      case channel.MsgPacket:
-        pvr.channelKeeper.FinalizeRecvPacket(msg.Packet, msg.Proofs, msg.ProofHeight)
-      case chanel.MsgAcknowledgement:
-        pvr.channelKeeper.FinalizeAcknowledgementPacket(msg.Acknowledgement, msg.Proof, msg.ProofHeight)
-      case channel.MsgTimeoutPacket:
-        pvr.channelKeeper.FinalizeTimeoutPacket(msg.Packet, msg.Proof, msg.ProofHeight, msg.NextSequenceRecv)
-      default:
-        continue
-      }
-    }
-    
-    return result
-  }
-}
-```
+`ChannelKeeper.CheckOpen` method will be introduced. `ChannelChecker` function will be 
+provided by each of the `AppModule` and injected to `ChannelKeeper.Port()` at the 
+top level application. `CheckOpen` will find the correct `ChennelChecker` using the 
+`PortID` and call it, which will return an error if it is unacceptible by the application.
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
 It is not safe to make each application responsible to call proof verification 
-logic, whereas application can misbehave(in terms of IBC protocol) either by 
-mistake or purposefully. Also this eliminates the neccesity for multistore
-cacheing inside the app handlers.
+logic, whereas application can misbehave(in terms of IBC protocol) by 
+mistake.
 
 The `ProofVerificationDecorator` should come right after the default sybil attack 
 resistent layer from the current `auth.NewAnteHandler`:
@@ -215,6 +190,21 @@ type PacketDataI interface {
 Example application-side usage:
 
 ```go
+type AppModule struct {}
+
+func (module AppModule) CheckChannel(portID, channelID string, channel Channel) error {
+  if channel.Ordering != UNORDERED {
+    return ErrUncompatibleOrdering()
+  }
+  if channel.CounterpartyPort != "bank" {
+    return ErrUncompatiblePort()
+  }
+  if channel.Version != "" {
+    return ErrUncompatibleVersion()
+  }
+  return nil
+}
+
 func NewHandler(k Keeper) sdk.Handler {
   return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
     switch msg := msg.(type) {
@@ -225,11 +215,15 @@ func NewHandler(k Keeper) sdk.Handler {
       case PacketDataTransfer: // i.e fulfills the PacketDataI interface
         return handlePacketDataTransfer(ctx, k, msg.Packet, data)
       }
-    case ibc.MsgTimeoutPacket:
+    case ibc.MsgTimeoutPacket: 
       switch packet := msg.Packet.Data.(type) {
-      case PacketDataTransfer:
+      case PacketDataTransfer: // i.e fulfills the PacketDataI interface
         return handleTimeoutPacketDataTransfer(ctx, k, msg.Packet)
       }
+    // interface { PortID() string; ChannelID() string; Channel() ibc.Channel }
+    // MsgChanInit, MsgChanTry
+    case ibc.MsgChannelOpen: 
+      return handleMsgChannelOpen(ctx, k, msg)
     }
   }
 }
@@ -246,19 +240,24 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
 func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data PacketDataTransfer) sdk.Result {
   err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
   if err != nil {
-    // Source chain sent invalid packet, shutdown channel
+    // TODO: Source chain sent invalid packet, shutdown channel
   }
-  k.PortKeeper.WriteAcknowledgement([]byte{0x00})
+  k.PortKeeper.WriteAcknowledgement([]byte{0x00}) // WriteAcknowledgement increases the sequence, preventing double spending
   return sdk.Result{}
 }
 
 func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
   err := k.RecoverTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
   if err != nil {
-    // This chain sent invalid packet
+    // This chain sent invalid packet or cannot recover the funds
     panic(err)
   }
   // packet timeout should not fail
+  return sdk.Result{}
+}
+
+func handleMsgChannelOpen(ctx sdk.Context, k Keeper, msg ibc.MsgOpenChannel) sdk.Result {
+  k.AllocateEscrowAddress(ctx, msg.ChannelID())
   return sdk.Result{}
 }
 ```

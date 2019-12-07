@@ -200,7 +200,7 @@ func validateBlocksPerYear(i interface{}) error {
 	}
 
 	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %s", v)
+		return fmt.Errorf("blocks per year must be positive: %d", v)
 	}
 
 	return nil

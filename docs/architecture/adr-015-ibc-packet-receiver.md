@@ -242,7 +242,7 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data
   if err != nil {
     // TODO: Source chain sent invalid packet, shutdown channel
   }
-  k.PortKeeper.WriteAcknowledgement([]byte{0x00}) // WriteAcknowledgement increases the sequence, preventing double spending
+  k.ChannelKeeper.WriteAcknowledgement([]byte{0x00}) // WriteAcknowledgement increases the sequence, preventing double spending
   return sdk.Result{}
 }
 
@@ -252,6 +252,7 @@ func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) s
     // This chain sent invalid packet or cannot recover the funds
     panic(err)
   }
+  k.ChannelKeeper.DeleteCommitmentTimeout(ctx, packet)
   // packet timeout should not fail
   return sdk.Result{}
 }

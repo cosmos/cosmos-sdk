@@ -66,9 +66,8 @@ const (
 // LineBreak can be included in a command list to provide a blank line
 // to help with readability
 var (
-	LineBreak             = &cobra.Command{Run: func(*cobra.Command, []string) {}}
-	GasFlagVar            = GasSetting{Gas: DefaultGasLimit}
-	KeyringBackendFlagVar = KeyringBackend{Backend: DefaultKeyringBackend}
+	LineBreak  = &cobra.Command{Run: func(*cobra.Command, []string) {}}
+	GasFlagVar = GasSetting{Gas: DefaultGasLimit}
 )
 
 // GetCommands adds common flags to query commands
@@ -107,9 +106,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible and the node operates offline)")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
+		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
-		// --keyring-backend can accept "os", "file", "test"
-		c.Flags().Var(&KeyringBackendFlagVar, FlagKeyringBackend, "Select keyring's backend (os|file|test)")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
@@ -175,41 +173,6 @@ func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
 		}
 	}
 	return
-}
-
-// Keyring backend flag parsing
-
-// KeyringBackend encapsulates the possible values passed through the --keyring-backend flag.
-type KeyringBackend struct {
-	Backend string
-}
-
-// Type returns the flag's value type.
-func (v *KeyringBackend) Type() string { return "string" }
-
-// Set parses and sets the value of the --keyring-backend flag.
-func (v *KeyringBackend) Set(s string) error {
-	val, err := ParseKeyringBackend(s)
-	if err != nil {
-		return err
-	}
-	v.Backend = val
-	return nil
-}
-
-// String returns a string representation.
-func (v *KeyringBackend) String() string { return v.Backend }
-
-// ParseKeyringBackend parses the value of the keyring backend option.
-func ParseKeyringBackend(str string) (string, error) {
-	switch str {
-	case "":
-		return KeyringBackendOS, nil
-	case KeyringBackendOS, KeyringBackendFile, KeyringBackendTest:
-		return str, nil
-	default:
-		return "", fmt.Errorf("unknown keyring backend %q", str)
-	}
 }
 
 // NewCompletionCmd builds a cobra.Command that generate bash completion

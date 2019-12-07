@@ -50,14 +50,16 @@ func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
 // CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
 // password-less keyring that could be used for testing purposes.
 func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
-	switch flags.KeyringBackendFlagVar.Backend {
-	case "test":
+	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
+	switch keyringBackend {
+	case flags.KeyringBackendTest:
 		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
-	case "file":
+	case flags.KeyringBackendFile:
 		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
-	default:
+	case flags.KeyringBackendOS:
 		return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
 	}
+	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
 }
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {

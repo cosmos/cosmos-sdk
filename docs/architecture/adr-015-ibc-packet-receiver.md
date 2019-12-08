@@ -12,9 +12,9 @@ In ICS 26, the routing module is defined as a layer above each application modul
 which verifies and routes messages to the destination modules. It is possible to 
 implement it as a separate module, however, we already have functionality to route
 messages upon the destination identifiers in the baseapp. This ADR suggests 
-to utilize existing `baseapp.router` tp route packets to application modules.
+to utilize existing `baseapp.router` to route packets to application modules.
 
-Generally, each routing module callbacks have two separate steps in them, 
+Generally, routing module callbacks have two separate steps in them, 
 verificaton and execution. This corresponds to the `AnteHandler`-`Handler`
 moodel inside the SDK. We can do the verificaton inside the `AnteHandler`
 in order to increase developer ergonomics by reducing boilerplate 
@@ -22,11 +22,11 @@ verification code.
 
 ## Decision
 
-`PortKeeper` will have the capability key that is able to access only on the 
-channels binded to the port. Entities those holding a `PortKeeper` will be
+`PortKeeper` will have the capability key that is able to access only the 
+channels bound to the port. Entities that hold a `PortKeeper` will be
 able to call the corresponding `ChannelKeeper`s method, but only with the
 allowed port. `ChannelKeeper.Port(string, ChannelChecker)` will be defined to
-easily construct a capability-safe `PortKeeper`. This will be address in 
+easily construct a capability-safe `PortKeeper`. This will be addressed in 
 another ADR and we will use unsecure `ChannelKeeper` for now.
 
 `baseapp.runMsgs` will break the loop over the messages if one of the handlers
@@ -136,7 +136,7 @@ func (keeper ChannelKeeper) DeleteCommitmentTimeout(ctx sdk.Context, packet Pack
 ```
 
 Each application handler should call respective finalization methods on the `PortKeeper`
-in order to increase sequence(in case of packet) or remove the commitment
+in order to increase sequence (in case of packet) or remove the commitment
 (in case of acknowledgement and timeout).
 Calling those functions implies that the application logic has successfully executed. 
 However, the handlers can return `Result` with `CodeTxBreak` after calling those methods
@@ -151,7 +151,7 @@ top level application. `CheckOpen` will find the correct `ChennelChecker` using 
 `PortID` and call it, which will return an error if it is unacceptible by the application.
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
-It is not safe to make each application responsible to call proof verification 
+It is not safe to make each module responsible to call proof verification 
 logic, whereas application can misbehave(in terms of IBC protocol) by 
 mistake.
 

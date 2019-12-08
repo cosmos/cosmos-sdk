@@ -40,7 +40,7 @@ func NewCommission(rate, maxRate, maxChangeRate sdk.Dec) Commission {
 	}
 }
 
-// NewCommission returns an initialized validator commission with a specified
+// NewCommissionWithTime returns an initialized validator commission with a specified
 // update time which should be the current block BFT time.
 func NewCommissionWithTime(rate, maxRate, maxChangeRate sdk.Dec, updatedAt time.Time) Commission {
 	return Commission{

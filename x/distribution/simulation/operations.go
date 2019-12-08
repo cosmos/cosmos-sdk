@@ -6,15 +6,65 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
+
+// Simulation operation weights constants
+const (
+	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
+	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
+	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	k keeper.Keeper, sk stakingkeeper.Keeper,
+) simulation.WeightedOperations {
+
+	var weightMsgSetWithdrawAddress int
+	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
+		func(_ *rand.Rand) {
+			weightMsgSetWithdrawAddress = simappparams.DefaultWeightMsgSetWithdrawAddress
+		},
+	)
+
+	var weightMsgWithdrawDelegationReward int
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgWithdrawDelegationReward = simappparams.DefaultWeightMsgWithdrawDelegationReward
+		},
+	)
+
+	var weightMsgWithdrawValidatorCommission int
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
+		func(_ *rand.Rand) {
+			weightMsgWithdrawValidatorCommission = simappparams.DefaultWeightMsgWithdrawValidatorCommission
+		},
+	)
+
+	return simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgSetWithdrawAddress,
+			SimulateMsgSetWithdrawAddress(ak, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgWithdrawDelegationReward,
+			SimulateMsgWithdrawDelegatorReward(ak, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgWithdrawValidatorCommission,
+			SimulateMsgWithdrawValidatorCommission(ak, k, sk),
+		),
+	}
+}
 
 // SimulateMsgSetWithdrawAddress generates a MsgSetWithdrawAddress with random values.
 // nolint: funlen
@@ -22,7 +72,6 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		if !k.GetWithdrawAddrEnabled(ctx) {
 			return simulation.NoOpMsg(types.ModuleName), nil, nil
 		}
@@ -59,9 +108,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
 // nolint: funlen
 func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
 	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-
 		simAccount, _ := simulation.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
@@ -146,31 +195,5 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
-	}
-}
-
-// SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-// nolint: funlen
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) govsim.ContentSimulator {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) govtypes.Content {
-		simAccount, _ := simulation.RandomAcc(r, accs)
-
-		balance := k.GetFeePool(ctx).CommunityPool
-		if balance.Empty() {
-			return nil
-		}
-
-		denomIndex := r.Intn(len(balance))
-		amount, err := simulation.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
-		if err != nil {
-			return nil
-		}
-
-		return types.NewCommunityPoolSpendProposal(
-			simulation.RandStringOfLength(r, 10),
-			simulation.RandStringOfLength(r, 100),
-			simAccount.Address,
-			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
-		)
 	}
 }

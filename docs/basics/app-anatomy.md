@@ -5,10 +5,6 @@ synopsis: "This document describes the core parts of a Cosmos SDK application. T
 
 # Anatomy of an SDK Application 
 
-## Pre-requisite Readings {hide}
-
-- [High-level overview of the architecture of an SDK application](../intro/sdk-app-architecture.md) {prereq}
-- [Cosmos SDK design overview](../intro/sdk-design.md) {prereq}
 
 
 ## Node Client

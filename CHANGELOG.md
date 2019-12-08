@@ -105,7 +105,7 @@ the following [issue](https://github.com/keybase/go-keychain/issues/47) with the
 you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
 upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
-* Client commands accept a new `--keyring-backend` option through which users can specify which backend should be used
+* [\#5355](https://github.com/cosmos/cosmos-sdk/pull/5355) Client commands accept a new `--keyring-backend` option through which users can specify which backend should be used
 by the new key store:
   - `os`: use OS default credentials storage (default).
   - `file`: use encrypted file-based store.

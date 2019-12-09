@@ -112,7 +112,7 @@ func SimulationOperations(app types.SimulationApp, cdc *codec.Codec, config simu
 // Simulation Utils
 
 // ExportStateToJSON util function to export the app state to JSON
-func ExportStateToJSON(app types.SdkApp, path string) error {
+func ExportStateToJSON(app types.App, path string) error {
 	fmt.Println("exporting app state...")
 	appState, _, err := app.ExportAppStateAndValidators(false, nil)
 	if err != nil {

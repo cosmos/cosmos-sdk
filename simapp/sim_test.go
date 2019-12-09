@@ -174,7 +174,7 @@ func TestAppImportExport(t *testing.T) {
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
-	err = app.cdc.UnmarshalJSON(appState, &genesisState)
+	err = app.Codec().UnmarshalJSON(appState, &genesisState)
 	require.NoError(t, err)
 
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
@@ -216,7 +216,7 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
-		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.SimulationManager().StoreDecoders, app.cdc, failedKVAs, failedKVBs))
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.SimulationManager().StoreDecoders, app.Codec(), failedKVAs, failedKVBs))
 	}
 }
 

@@ -43,3 +43,6 @@ on-disk implementations backed by the [Keyring](https://github.com/99designs/key
 Whilst `NewKeyringFile` returns a secure, encrypted file-based type that requires user's password in order to
 function correctly, the implementation returned by `NewTestKeyring` stores keys information in clear text and **must be used
 only for testing purposes**.
+
+`NewKeyringFile` and `NewTestKeyring` store key files in the client home directory's `keyring`
+and `keyring-test` subdirectories respectively.

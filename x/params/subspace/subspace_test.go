@@ -40,11 +40,11 @@ func (suite *SubspaceTestSuite) SetupTest() {
 }
 
 func (suite *SubspaceTestSuite) TestKeyTable() {
-	suite.True(suite.ss.HasKeyTable())
-	suite.Panics(func() {
+	suite.Require().True(suite.ss.HasKeyTable())
+	suite.Require().Panics(func() {
 		suite.ss.WithKeyTable(paramKeyTable())
 	})
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		ss := subspace.NewSubspace(codec.New(), key, tkey, "testsubspace2")
 		ss = ss.WithKeyTable(paramKeyTable())
 	})
@@ -54,87 +54,87 @@ func (suite *SubspaceTestSuite) TestGetSet() {
 	var v time.Duration
 	t := time.Hour * 48
 
-	suite.Panics(func() {
+	suite.Require().Panics(func() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
 	})
-	suite.NotEqual(t, v)
-	suite.NotPanics(func() {
+	suite.Require().NotEqual(t, v)
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
 	})
-	suite.Equal(t, v)
+	suite.Require().Equal(t, v)
 }
 
 func (suite *SubspaceTestSuite) TestGetIfExists() {
 	var v time.Duration
 
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.GetIfExists(suite.ctx, keyUnbondingTime, &v)
 	})
-	suite.Equal(time.Duration(0), v)
+	suite.Require().Equal(time.Duration(0), v)
 }
 
 func (suite *SubspaceTestSuite) TestGetRaw() {
 	t := time.Hour * 48
 
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		res := suite.ss.GetRaw(suite.ctx, keyUnbondingTime)
-		suite.Equal("2231373238303030303030303030303022", fmt.Sprintf("%X", res))
+		suite.Require().Equal("2231373238303030303030303030303022", fmt.Sprintf("%X", res))
 	})
 }
 
 func (suite *SubspaceTestSuite) TestHas() {
 	t := time.Hour * 48
 
-	suite.False(suite.ss.Has(suite.ctx, keyUnbondingTime))
-	suite.NotPanics(func() {
+	suite.Require().False(suite.ss.Has(suite.ctx, keyUnbondingTime))
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
-	suite.True(suite.ss.Has(suite.ctx, keyUnbondingTime))
+	suite.Require().True(suite.ss.Has(suite.ctx, keyUnbondingTime))
 }
 
 func (suite *SubspaceTestSuite) TestModified() {
 	t := time.Hour * 48
 
-	suite.False(suite.ss.Modified(suite.ctx, keyUnbondingTime))
-	suite.NotPanics(func() {
+	suite.Require().False(suite.ss.Modified(suite.ctx, keyUnbondingTime))
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
-	suite.True(suite.ss.Modified(suite.ctx, keyUnbondingTime))
+	suite.Require().True(suite.ss.Modified(suite.ctx, keyUnbondingTime))
 }
 
 func (suite *SubspaceTestSuite) TestUpdate() {
-	suite.Panics(func() {
+	suite.Require().Panics(func() {
 		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil)
 	})
 
 	t := time.Hour * 48
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, t)
 	})
 
 	bad := time.Minute * 5
 
 	bz, err := suite.cdc.MarshalJSON(bad)
-	suite.NoError(err)
-	suite.Error(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
+	suite.Require().NoError(err)
+	suite.Require().Error(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
 	good := time.Hour * 360
 	bz, err = suite.cdc.MarshalJSON(good)
-	suite.NoError(err)
-	suite.NoError(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.ss.Update(suite.ctx, keyUnbondingTime, bz))
 
 	var v time.Duration
 
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.Get(suite.ctx, keyUnbondingTime, &v)
 	})
-	suite.Equal(good, v)
+	suite.Require().Equal(good, v)
 }
 
 func (suite *SubspaceTestSuite) TestGetParamSet() {
@@ -143,19 +143,19 @@ func (suite *SubspaceTestSuite) TestGetParamSet() {
 		MaxValidators: 100,
 		BondDenom:     "stake",
 	}
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.Set(suite.ctx, keyUnbondingTime, a.UnbondingTime)
 		suite.ss.Set(suite.ctx, keyMaxValidators, a.MaxValidators)
 		suite.ss.Set(suite.ctx, keyBondDenom, a.BondDenom)
 	})
 
 	b := params{}
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.GetParamSet(suite.ctx, &b)
 	})
-	suite.Equal(a.UnbondingTime, b.UnbondingTime)
-	suite.Equal(a.MaxValidators, b.MaxValidators)
-	suite.Equal(a.BondDenom, b.BondDenom)
+	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
+	suite.Require().Equal(a.BondDenom, b.BondDenom)
 }
 
 func (suite *SubspaceTestSuite) TestSetParamSet() {
@@ -170,7 +170,7 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
-			suite.Panics(func() {
+			suite.Require().Panics(func() {
 				suite.ss.SetParamSet(suite.ctx, tc.ps)
 			})
 		})
@@ -181,21 +181,21 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 		MaxValidators: 100,
 		BondDenom:     "stake",
 	}
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.SetParamSet(suite.ctx, &a)
 	})
 
 	b := params{}
-	suite.NotPanics(func() {
+	suite.Require().NotPanics(func() {
 		suite.ss.GetParamSet(suite.ctx, &b)
 	})
-	suite.Equal(a.UnbondingTime, b.UnbondingTime)
-	suite.Equal(a.MaxValidators, b.MaxValidators)
-	suite.Equal(a.BondDenom, b.BondDenom)
+	suite.Require().Equal(a.UnbondingTime, b.UnbondingTime)
+	suite.Require().Equal(a.MaxValidators, b.MaxValidators)
+	suite.Require().Equal(a.BondDenom, b.BondDenom)
 }
 
 func (suite *SubspaceTestSuite) TestName() {
-	suite.Equal("testsubspace", suite.ss.Name())
+	suite.Require().Equal("testsubspace", suite.ss.Name())
 }
 
 func TestKeeperTestSuite(t *testing.T) {

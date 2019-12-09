@@ -169,7 +169,7 @@ func validateBondDenom(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if len(v) == 0 {
+	if strings.TrimSpace(v) == "" {
 		return errors.New("bond denom cannot be blank")
 	}
 

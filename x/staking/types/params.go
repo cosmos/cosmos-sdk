@@ -173,6 +173,9 @@ func validateBondDenom(i interface{}) error {
 	if strings.TrimSpace(v) == "" {
 		return errors.New("bond denom cannot be blank")
 	}
+	if err := sdk.ValidateDenom(v); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -39,7 +39,10 @@ func TestKeeper(t *testing.T) {
 	cdc, ctx, skey, _, keeper := testComponents()
 
 	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
-	space := keeper.Subspace("test").WithKeyTable(table)
+	space := keeper.Subspace("test")
+	require.False(t, space.HasKeyTable())
+	space = space.WithKeyTable(table)
+	require.True(t, space.HasKeyTable())
 
 	// Set params
 	for i, kv := range kvs {

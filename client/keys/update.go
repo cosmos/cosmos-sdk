@@ -12,8 +12,14 @@ func updateKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",
 		Short: "Change the password used to protect private key",
-		RunE:  runUpdateCmd,
-		Args:  cobra.ExactArgs(1),
+		Deprecated: `it takes no effect with the new keyring
+based backend and is provided only for backward compatibility with the
+legacy LevelDB based backend.
+Refer to your operating system's manual to learn how to change your
+keyring's password.
+`,
+		RunE: runUpdateCmd,
+		Args: cobra.ExactArgs(1),
 	}
 	return cmd
 }

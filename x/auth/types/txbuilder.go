@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -51,8 +53,8 @@ func NewTxBuilder(
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
-func NewTxBuilderFromCLI() TxBuilder {
-	kb, err := keys.NewKeyBaseFromHomeFlag()
+func NewTxBuilderFromCLI(input io.Reader) TxBuilder {
+	kb, err := keys.NewKeyringFromHomeFlag(input)
 	if err != nil {
 		panic(err)
 	}
@@ -274,7 +276,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx StdTx, appendSig 
 func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
 	msg StdSignMsg) (sig StdSignature, err error) {
 	if keybase == nil {
-		keybase, err = keys.NewKeyBaseFromHomeFlag()
+		keybase, err = keys.NewKeyringFromHomeFlag(os.Stdin)
 		if err != nil {
 			return
 		}

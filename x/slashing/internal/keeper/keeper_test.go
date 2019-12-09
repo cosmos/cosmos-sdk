@@ -5,110 +5,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
-
-// ______________________________________________________________
-
-// Test that a validator is slashed correctly
-// when we discover evidence of infraction
-func TestHandleDoubleSign(t *testing.T) {
-
-	// initial setup
-	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
-	// validator added pre-genesis
-	ctx = ctx.WithBlockHeight(-1)
-	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := Addrs[0], Pks[0]
-	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
-	require.True(t, got.IsOK())
-	staking.EndBlocker(ctx, sk)
-	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
-	)
-	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
-
-	// handle a signature to set signing info
-	keeper.HandleValidatorSignature(ctx, val.Address(), amt.Int64(), true)
-
-	oldTokens := sk.Validator(ctx, operatorAddr).GetTokens()
-
-	// double sign less than max age
-	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
-
-	// should be jailed
-	require.True(t, sk.Validator(ctx, operatorAddr).IsJailed())
-
-	// tokens should be decreased
-	newTokens := sk.Validator(ctx, operatorAddr).GetTokens()
-	require.True(t, newTokens.LT(oldTokens))
-
-	// New evidence
-	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
-
-	// tokens should be the same (capped slash)
-	require.True(t, sk.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
-
-	// Jump to past the unbonding period
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
-
-	// Still shouldn't be able to unjail
-	require.Error(t, keeper.Unjail(ctx, operatorAddr))
-
-	// Should be able to unbond now
-	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
-	validator, _ := sk.GetValidator(ctx, operatorAddr)
-
-	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
-	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(sk.GetParams(ctx).BondDenom, totalBond))
-	res := staking.NewHandler(sk)(ctx, msgUnbond)
-	require.True(t, res.IsOK())
-}
-
-// ______________________________________________________________
-
-// Test that a validator is slashed correctly
-// when we discover evidence of infraction
-func TestPastMaxEvidenceAge(t *testing.T) {
-
-	// initial setup
-	ctx, ck, sk, _, keeper := CreateTestInput(t, TestParams())
-	// validator added pre-genesis
-	ctx = ctx.WithBlockHeight(-1)
-	power := int64(100)
-	amt := sdk.TokensFromConsensusPower(power)
-	operatorAddr, val := Addrs[0], Pks[0]
-	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
-	require.True(t, got.IsOK())
-	staking.EndBlocker(ctx, sk)
-	require.Equal(
-		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
-		sdk.NewCoins(sdk.NewCoin(sk.GetParams(ctx).BondDenom, InitTokens.Sub(amt))),
-	)
-	require.Equal(t, amt, sk.Validator(ctx, operatorAddr).GetBondedTokens())
-
-	// handle a signature to set signing info
-	keeper.HandleValidatorSignature(ctx, val.Address(), power, true)
-
-	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
-
-	oldPower := sk.Validator(ctx, operatorAddr).GetConsensusPower()
-
-	// double sign past max age
-	keeper.HandleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), power)
-
-	// should still be bonded
-	require.True(t, sk.Validator(ctx, operatorAddr).IsBonded())
-
-	// should still have same power
-	require.Equal(t, oldPower, sk.Validator(ctx, operatorAddr).GetConsensusPower())
-}
 
 // Test a new validator entering the validator set
 // Ensure that SigningInfo.StartHeight is set correctly

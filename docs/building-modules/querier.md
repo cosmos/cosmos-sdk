@@ -14,7 +14,7 @@ synopsis: "A `Querier` designates a function that processes [`queries`](./messag
 
 The `querier` type defined in the Cosmos SDK specifies the typical structure of a `querier` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/queryable.go#L6
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/queryable.go#L6
 
 Let us break it down:
 
@@ -50,4 +50,4 @@ For a deeper look at `querier`s, see this [example implementation of a `querier`
 
 ## Next {hide}
 
-Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md).
+Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md) {hide}

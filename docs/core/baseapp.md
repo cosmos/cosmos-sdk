@@ -46,7 +46,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L54-L108
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L54-L108
 
 Let us go through the most important components.
 
@@ -114,14 +114,12 @@ func NewBaseApp(
 ```
 
 The `BaseApp` constructor function is pretty straightforward. The only thing worth noting is the
-possibility to provide additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go)
+possibility to provide additional [`options`](https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/options.go)
 to the `BaseApp`, which will execute them in order. The `options` are generally `setter` functions
 for important parameters, like `SetPruning()` to set pruning options or `SetMinGasPrices()` to set
 the node's `min-gas-prices`.
 
-A list of `options` examples can be found
-[here](https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/options.go). Naturally, developers
-can add additional `options` based on their application's needs.
+Naturally, developers can add additional `options` based on their application's needs.
 
 ## State Updates 
 
@@ -257,7 +255,7 @@ The response contains:
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
 - `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/basic.go#L98
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/ante/basic.go#L104
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
@@ -283,7 +281,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 
 During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L142-L150
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L142-L150
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails. 
 
@@ -294,7 +292,7 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 - `Log (string):` The output of the application's logger. May be non-deterministic.
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction. 
-- `GasUsed (int64)`: Amount of gas consumed by transaction. During `DeliverTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction (click [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/basic.go#L98) for an example), and by adding gas each time a read/write to the store occurs. 
+- `GasUsed (int64)`: Amount of gas consumed by transaction. During `DeliverTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction, and by adding gas each time a read/write to the store occurs. 
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
@@ -310,7 +308,7 @@ After that, `RunTx()` calls `ValidateBasic()` on each `message`in the `Tx`, whic
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are cached-wrapped using the `cacheTxContext()` function. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L781-L798
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L587
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK. 
 
@@ -320,7 +318,7 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `messages
 
 The `AnteHandler` is a special handler that implements the `anteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/handler.go#L8
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/handler.go#L8
 
 The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
 
@@ -355,7 +353,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `baseapp` calls th
 The [`BeginBlock` ABCI message](#https://tendermint.com/docs/app-dev/abci-spec.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 - Initialize [`deliverState`](#volatile-states) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function. 
-  +++ https://github.com/cosmos/cosmos-sdk/blob/master/baseapp/baseapp.go#L283-L289
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/baseapp/baseapp.go#L387-L397
 This function also resets the [main gas meter](../basics/gas-fees.md#main-gas-meter).
 - Initialize the [block gas meter](../basics/gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters. 
 - Run the application's [`beginBlocker()`](../basics/app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/beginblock-endblock.md#beginblock) method of each of the application's modules.
@@ -390,4 +388,4 @@ Each `query` comes with a `path`, which contains multiple `string`s. By conventi
 
 ## Next {hide}
 
-Learn more about [transactions](./transactions.md).
+Learn more about [transactions](./transactions.md) {hide}

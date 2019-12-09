@@ -44,6 +44,9 @@ deprecated and all components removed except the `legacy/` package. This require
 genesis state. Namely, `accounts` now exist under `app_state.auth.accounts`. The corresponding migration
 logic has been implemented for v0.38 target version. Applications can migrate via:
 `$ {appd} migrate v0.38 genesis.json`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) Handling of `ABCIEvidenceTypeDuplicateVote`
+  during `BeginBlock` along with the corresponding parameters (`MaxEvidenceAge`) have moved from the
+  `x/slashing` module to the `x/evidence` module.
 
 ### API Breaking Changes
 
@@ -71,15 +74,20 @@ if the provided arguments are invalid.
   * `StdTx#GetSignatures` will return an array of just signature byte slices `[][]byte` instead of
   returning an array of `StdSignature` structs. To replicate the old behavior, use the public field
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
+* (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
+  and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
 
 ### Client Breaking Changes
 
+* (rest) [\#5270](https://github.com/cosmos/cosmos-sdk/issues/5270) All account types now implement custom JSON serialization.
 * (rest) [\#4783](https://github.com/cosmos/cosmos-sdk/issues/4783) The balance field in the DelegationResponse type is now sdk.Coin instead of sdk.Int
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
+* (rest) [\#5336](https://github.com/cosmos/cosmos-sdk/issues/5336) `MsgEditValidator` uses `description` instead of `Description` as a JSON key.
 
 ### Features
 
+* (x/evidence) [\#5240](https://github.com/cosmos/cosmos-sdk/pull/5240) Initial implementation of the `x/evidence` module.
 * (cli) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) The `q gov proposals` command now supports pagination.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
 `Baseapp` supports `StoreLoader` to enable various upgrade strategies. It no
@@ -98,6 +106,10 @@ upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --in
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
+* (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
+command can delete multiple keys by passing their names as arguments. The aforementioned commands can then be piped together, e.g.
+`appcli keys list -n | xargs appcli keys delete`
+* (modules) [\#4233](https://github.com/cosmos/cosmos-sdk/pull/4233) Add upgrade module that coordinates software upgrades of live chains.
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
 that allows for arbitrary vesting periods.
 * (baseapp) [\#5196](https://github.com/cosmos/cosmos-sdk/pull/5196) Baseapp has a new `runTxModeReCheck` to allow applications to skip expensive and unnecessary re-checking of transactions.
@@ -126,8 +138,7 @@ that allows for arbitrary vesting periods.
     * `SigVerificationDecorator`: Verify each signature is valid, return if there is an error.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
-* (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported. 
-
+* (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
 
 ### Improvements
 
@@ -164,12 +175,15 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
-* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) `SimApp` and simulation refactors
+* (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
   * Implement `SimulationManager` for executing modules' simulation functionalities in a modularized way
   * Add `RegisterStoreDecoders` to the `SimulationManager` for decoding each module's types
   * Add `GenerateGenesisStates` to the `SimulationManager` to generate a randomized `GenState` for each module
-  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters `Content` to simulate
-  `ParamChangeProposal`s
+  * Add `RandomizedParams` to the `SimulationManager` that registers each modules' parameters in order to
+  simulate `ParamChangeProposal`s' `Content`s
+  * Add `WeightedOperations` to the `SimulationManager` that define simulation operations (modules' `Msg`s) with their
+  respective weights (i.e chance of being simulated).
+  * Add `ProposalContents` to the `SimulationManager` to register each module's governance proposal `Content`s.
 * (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (simulation) [\#4935](https://github.com/cosmos/cosmos-sdk/issues/4935) Update simulation to reflect a proper `ABCI` application without bypassing `BaseApp` semantics
@@ -183,13 +197,27 @@ to detail this new feature and how state transitions occur.
 
 ### Bug Fixes
 
+* (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
+* (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
 * (keys) Fix ledger custom coin type support bug
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
-* (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
+  has been triggered.
 
-## [v0.37.2] - 2019-10-10
+## [v0.37.4] - 2019-11-04
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.7](https://github.com/tendermint/tendermint/releases/tag/v0.32.7)
+* (ledger) [\#4716](https://github.com/cosmos/cosmos-sdk/pull/4716) Fix ledger custom coin type support bug.
+
+### Bug Fixes
+
+* (baseapp) [\#5200](https://github.com/cosmos/cosmos-sdk/issues/5200) Remove duplicate events from previous messages.
+
+## [v0.37.3] - 2019-10-10
 
 ### Bug Fixes
 
@@ -482,6 +510,12 @@ that error is that the account doesn't exist.
 
 * Fix gas consumption bug in `Undelegate` preventing the ability to sync from
 genesis.
+
+## 0.34.10
+
+### Bug Fixes
+
+* Bump Tendermint version to [v0.31.11](https://github.com/tendermint/tendermint/releases/tag/v0.31.11) to address the vulnerability found in the `consensus` package.
 
 ## 0.34.9
 
@@ -2735,8 +2769,9 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.2...HEAD
-[v0.37.2]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.2
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.4...HEAD
+[v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4
+[v0.37.3]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.3
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0

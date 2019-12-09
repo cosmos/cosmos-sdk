@@ -29,7 +29,7 @@ type MsgSubmitProposal struct {
 
 The `Msg` is typically accompanied by a standard constructor function, that is called from one of the [module's interface](./module-interfaces.md). `message`s also need to implement the [`Msg`] interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L7-L29
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L7-L29
 
 It contains the following methods:
 
@@ -72,4 +72,4 @@ See an example of `query` return types from the `nameservice` module:
 
 ## Next {hide}
 
-Learn about [`handler`s](./handler.md).
+Learn about [`handler`s](./handler.md) {hide}

@@ -242,4 +242,4 @@ in `[]byte` form, is stored in a block and appended to the blockchain.
 
 ## Next {hide}
 
-Learn about [accounts](./accounts.md).
+Learn about [accounts](./accounts.md) {hide}

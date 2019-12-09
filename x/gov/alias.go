@@ -41,7 +41,6 @@ const (
 	StatusRejected               = types.StatusRejected
 	StatusFailed                 = types.StatusFailed
 	ProposalTypeText             = types.ProposalTypeText
-	ProposalTypeSoftwareUpgrade  = types.ProposalTypeSoftwareUpgrade
 	QueryParams                  = types.QueryParams
 	QueryProposals               = types.QueryProposals
 	QueryProposal                = types.QueryProposal
@@ -111,7 +110,6 @@ var (
 	ProposalStatusFromString      = types.ProposalStatusFromString
 	ValidProposalStatus           = types.ValidProposalStatus
 	NewTextProposal               = types.NewTextProposal
-	NewSoftwareUpgradeProposal    = types.NewSoftwareUpgradeProposal
 	RegisterProposalType          = types.RegisterProposalType
 	ContentFromProposalType       = types.ContentFromProposalType
 	IsValidProposalType           = types.IsValidProposalType
@@ -142,32 +140,31 @@ var (
 )
 
 type (
-	Keeper                  = keeper.Keeper
-	Content                 = types.Content
-	Handler                 = types.Handler
-	Deposit                 = types.Deposit
-	Deposits                = types.Deposits
-	GenesisState            = types.GenesisState
-	MsgSubmitProposal       = types.MsgSubmitProposal
-	MsgDeposit              = types.MsgDeposit
-	MsgVote                 = types.MsgVote
-	DepositParams           = types.DepositParams
-	TallyParams             = types.TallyParams
-	VotingParams            = types.VotingParams
-	Params                  = types.Params
-	Proposal                = types.Proposal
-	Proposals               = types.Proposals
-	ProposalQueue           = types.ProposalQueue
-	ProposalStatus          = types.ProposalStatus
-	TextProposal            = types.TextProposal
-	SoftwareUpgradeProposal = types.SoftwareUpgradeProposal
-	QueryProposalParams     = types.QueryProposalParams
-	QueryDepositParams      = types.QueryDepositParams
-	QueryVoteParams         = types.QueryVoteParams
-	QueryProposalsParams    = types.QueryProposalsParams
-	ValidatorGovInfo        = types.ValidatorGovInfo
-	TallyResult             = types.TallyResult
-	Vote                    = types.Vote
-	Votes                   = types.Votes
-	VoteOption              = types.VoteOption
+	Keeper               = keeper.Keeper
+	Content              = types.Content
+	Handler              = types.Handler
+	Deposit              = types.Deposit
+	Deposits             = types.Deposits
+	GenesisState         = types.GenesisState
+	MsgSubmitProposal    = types.MsgSubmitProposal
+	MsgDeposit           = types.MsgDeposit
+	MsgVote              = types.MsgVote
+	DepositParams        = types.DepositParams
+	TallyParams          = types.TallyParams
+	VotingParams         = types.VotingParams
+	Params               = types.Params
+	Proposal             = types.Proposal
+	Proposals            = types.Proposals
+	ProposalQueue        = types.ProposalQueue
+	ProposalStatus       = types.ProposalStatus
+	TextProposal         = types.TextProposal
+	QueryProposalParams  = types.QueryProposalParams
+	QueryDepositParams   = types.QueryDepositParams
+	QueryVoteParams      = types.QueryVoteParams
+	QueryProposalsParams = types.QueryProposalsParams
+	ValidatorGovInfo     = types.ValidatorGovInfo
+	TallyResult          = types.TallyResult
+	Vote                 = types.Vote
+	Votes                = types.Votes
+	VoteOption           = types.VoteOption
 )

@@ -25,7 +25,7 @@ appcli query staking delegations <delegatorAddress>
 
 This query command was defined by the [`staking`](https://github.com/cosmos/cosmos-sdk/tree/master/x/staking/spec) module developer and added to the list of subcommands by the application developer when creating the CLI. The code for this particular command is the following:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L253-L294
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/cli/query.go#L250-L293
 
 Note that the general format is as follows:
 
@@ -49,7 +49,7 @@ To provide values such as `--node` (the full-node the CLI connects to) that are 
 
 The router automatically routes the `Query` HTTP request to the staking module `delegatorDelegationsHandlerFn()` function.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/query.go#L103-L106
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/rest/query.go#L103-L106
 
 Since this function is defined within the module and thus has no inherent knowledge of the application `Query` belongs to, it takes in the application `codec` and `CLIContext` as parameters.
 
@@ -72,7 +72,7 @@ The first thing that is created in the execution of a CLI command is a `CLIConte
 
 The `CLIContext` also contains various functions such as `Query()` which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/context.go#L36-L59
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/context/context.go#L23-L47
 
 The `CLIContext`'s primary role is to store data used during interactions with the end-user and provide methods to interact with this data - it is used before and after the query is processed by the full-node. Specifically, in handling `Query`, the `CLIContext` is utilized to encode the query parameters, retrieve the full-node, and write the output. Prior to being relayed to a full-node, the query needs to be encoded into a `[]byte` form, as full-nodes are application-agnostic and do not understand specific types. The full-node (RPC Client) itself is retrieved using the `CLIContext`, which knows which node the user CLI is connected to. The query is relayed to this full-node to be processed. Finally, the `CLIContext` contains a `Writer` to write output when the response is returned. These steps are further described in later sections.
 
@@ -122,7 +122,7 @@ The `CLIContext` has a `Query()` function used to retrieve the pre-configured no
 
 Here is what the code looks like:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go#L80-L112
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/context/query.go#L75-L112
 
 ## RPC
 
@@ -142,20 +142,20 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://tendermint.com/docs/spec/abci/abci.html#messages) type. The `CLIContext` `Query()` routine receives the response and, if `--trust-node` is toggled to `false` and a proof needs to be verified, the response is verified with the `CLIContext` `verifyProof()` function before the response is returned.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/client/context/query.go#L136-L173
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/context/query.go#L127-L165
 
 ### CLI Response
 
 The application [`codec`](../core/encoding.md) is used to unmarshal the response to a JSON and the `CLIContext` prints the output to the command line, applying any configurations such as `--indent`. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/cli/query.go#L252-L293
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/cli/query.go#L252-L293
 
 ### REST Response
 
 The [REST server](./rest.md#rest-server) uses the `CLIContext` to format the response properly, then uses the HTTP package to write the appropriate response or error. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/client/rest/utils.go#L115-L148
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/staking/client/rest/utils.go#L115-L148
 
 ## Next {hide}
 
-Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md).
+Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md) {hide}

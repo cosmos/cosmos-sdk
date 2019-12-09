@@ -83,4 +83,4 @@ interfaces.
 
 ## Next {hide}
 
-Learn about [interfaces](../interfaces/interfaces-intro.md).
+Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}

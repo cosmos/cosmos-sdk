@@ -56,4 +56,4 @@ See an example of `ExportGenesis` from the nameservice tutorial.
 
 ## Next {hide}
 
-Learn about [modules interfaces](#module-interfaces.md).
+Learn about [modules interfaces](#module-interfaces.md) {hide}

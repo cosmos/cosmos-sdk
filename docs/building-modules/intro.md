@@ -89,5 +89,5 @@ Please refer to the [structure document](./structure.md) to learn about the reco
 
 ## Next {hide}
 
-Read more on the [`AppModule` interface and the `module manager`](./module-manager.md)
+Read more on the [`AppModule` interface and the `module manager`](./module-manager.md) {hide}
 

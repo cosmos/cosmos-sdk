@@ -29,7 +29,7 @@ are only used for genesis can take advantage of the `Module` patterns without ha
 
 The `AppModuleBasic` interface defines the independent methods modules need to implement. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L45-L57
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/module/module.go#L46-L59
 
 Let us go through the methods:
 
@@ -47,7 +47,7 @@ All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#
 
 The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L123-L127
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/module/module.go#L126-L131
 
 Let us go through the two added methods:
 
@@ -60,7 +60,7 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 
 The `AppModule` interface defines the inter-dependent methods modules need to implement. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L130-L144
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/module/module.go#L133-L149
 
 `AppModule`s are managed by the [module manager](#manager). This interface embeds the `AppModuleGenesis` interface so that the manager can access all the independent and genesis inter-dependent methods of the module. This means that a concrete type implementing the `AppModule` interface must either implement all the methods of `AppModuleGenesis` (and by extension `AppModuleBasic`), or include a concrete type that does as parameter. 
 
@@ -102,11 +102,9 @@ Module managers are used to manage collections of `AppModuleBasic` and `AppModul
 
 ### `BasicManager`
 
-The [`BasicManager`](https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L60) is a structure that lists all the `AppModuleBasic` of an application: 
+The `BasicManager` is a structure that lists all the `AppModuleBasic` of an application: 
 
-```go
-type BasicManager map[string]AppModuleBasic
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/module/module.go#L61-L63
 
 It implements the following methods:
 
@@ -123,7 +121,7 @@ It implements the following methods:
 
 The `Manager` is a structure that holds all the `AppModule` of an application, and defines the order of execution between several key components of these modules:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/module/module.go#L203-L209
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/module/module.go#L190-L198
 
 The module manager is used throughout the application whenever an action on a collection of modules is required. It implements the following methods:
 
@@ -141,4 +139,4 @@ The module manager is used throughout the application whenever an action on a co
 
 ## Next {hide}
 
-Learn more about [`message`s and `queries`](./messages-and-queries.md).
+Learn more about [`message`s and `queries`](./messages-and-queries.md) {hide}

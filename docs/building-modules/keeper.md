@@ -75,4 +75,4 @@ For more, see an example of `keeper`'s [methods implementation from the nameserv
 
 ## Next {hide}
 
-Learn about [invariants](./invariants.md). 
+Learn about [invariants](./invariants.md) {hide}

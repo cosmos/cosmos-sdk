@@ -40,4 +40,4 @@ With regards to interfaces, application developers need to include:
 
 ## Next {hide}
 
-Read about the [Lifecycle of a Query](./query-lifecycle.md).
+Read about the [Lifecycle of a Query](./query-lifecycle.md) {hide}

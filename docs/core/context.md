@@ -114,4 +114,4 @@ a successful run over all the messages, the cached multistore is written back to
 
 ## Next {hide}
 
-Learn about the [node client](./node.md)
+Learn about the [node client](./node.md) {hide}

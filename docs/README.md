@@ -61,7 +61,7 @@ footer:
 
 ## Get Started
 
-- **[SDK Intro](./intro/intro.md)**: High-level overview of the Cosmos SDK.
+- **[SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
 - **[SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial that showcases how to build an SDK-based blockchain from scratch and explains the basic principles of the SDK in the process.
 
 ## Reference

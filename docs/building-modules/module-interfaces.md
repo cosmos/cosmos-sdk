@@ -73,7 +73,7 @@ For full details on flags, visit the [Cobra Documentation](https://github.com/sp
 
 For example, the SDK `./client/flags` package includes a `PostCommands()` function that adds necessary flags to transaction commands, such as the `from` flag to indicate which address the transaction originates from. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/client/flags/flags.go#L85-L116
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/client/flags/flags.go#L85-L116
 
 Here is an example of how to add a flag using the `from` flag from this function.
 
@@ -164,4 +164,4 @@ A few things to note:
 
 ## Next {hide}
 
-Read about the recommended [module structure](./structure.md).
+Read about the recommended [module structure](./structure.md) {hide}

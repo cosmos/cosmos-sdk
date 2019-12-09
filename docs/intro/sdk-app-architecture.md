@@ -56,9 +56,9 @@ Blockchain node |  |           Consensus           |  |
 ```
 
 
-Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of a blockchain. In practice, this means that Tendermint is responsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html).
+[Tendermint](https://tendermint.com/docs/introduction/what-is-tendermint.html) is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of a blockchain. In practice, this means that Tendermint is responsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. 
 
-The Tendermint consensus algorithm works with a set of special nodes called *Validators*. Validators are responsible for adding blocks of transactions to the blockchain. At any given block, there is a validator set V. A validator in V is chosen by the algorithm to be the proposer of the next block. This block is considered valid if more than two thirds of V signed a *[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)* and a *[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)* on it, and if all the transactions that it contains are valid. The validator set can be changed by rules written in the state-machine. For a deeper look at the algorithm, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview).
+The Tendermint [consensus algorithm](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview) works with a set of special nodes called *Validators*. Validators are responsible for adding blocks of transactions to the blockchain. At any given block, there is a validator set V. A validator in V is chosen by the algorithm to be the proposer of the next block. This block is considered valid if more than two thirds of V signed a *[prevote](https://tendermint.com/docs/spec/consensus/consensus.html#prevote-step-height-h-round-r)* and a *[precommit](https://tendermint.com/docs/spec/consensus/consensus.html#precommit-step-height-h-round-r)* on it, and if all the transactions that it contains are valid. The validator set can be changed by rules written in the state-machine. 
 
 ## ABCI
 
@@ -90,11 +90,11 @@ Here are the most important messages of the ABCI:
 - `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by Tendermint Core, each transaction in the block is passed to the application via `DeliverTx` in order to be processed. It is during this stage that the state transitions occur. The `AnteHandler` executes again along with the actual [`handler`s](../building-modules/handler.md) for each message in the transaction.
  - `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
 
-For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
+Find a more detailed view of the ABCI methods from the [Tendermint docs](https://tendermint.com/docs/spec/abci/abci.html#overview).
 
 Any application built on Tendermint needs to implement the ABCI interface in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
 
 
-## Next 
+## Next {hide}
 
-Read about the [high-level design principles of the SDK](./sdk-design.md)
+Read about the [high-level design principles of the SDK](./sdk-design.md) {hide}

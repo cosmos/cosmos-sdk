@@ -5,6 +5,6 @@ parent:
 
 # Using the SDK
 
-- [Modules](../x/README.md)
+- [Modules](../../x/README.md)
 - [Simulation](./simulation.md)
 

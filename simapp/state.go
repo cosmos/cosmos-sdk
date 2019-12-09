@@ -30,6 +30,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			genesisTimestamp = time.Unix(FlagGenesisTimeValue, 0)
 		}
 
+		chainID = config.ChainID
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")

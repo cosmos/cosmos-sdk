@@ -13,6 +13,16 @@
   },
   "author": "",
   "license": "ISC",
+<<<<<<< HEAD
+=======
+  "devDependencies": {
+    "@vuepress/plugin-google-analytics": "^1.2.0",
+    "lodash": "^4.17.13",
+    "markdown-it": "^8.4.2",
+    "markdown-it-meta": "0.0.1",
+    "vuepress": "^1.0.2"
+  },
+>>>>>>> master
   "dependencies": {
     "vuepress-theme-cosmos": "^1.0.93"
   }

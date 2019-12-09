@@ -10,6 +10,7 @@ SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 
 export GO111MODULE = on
+export COSMOS_SDK_TEST_KEYRING = y
 
 all: tools build lint test
 
@@ -74,7 +75,7 @@ build-docs:
 		(git checkout $${p} && npm install && VUEPRESS_BASE="/$${p}/" npm run build) ; \
 		mkdir -p ~/output/$${p} ; \
 		cp -r .vuepress/dist/* ~/output/$${p}/ ; \
-		echo "<a href='$${p}'>$${p}</a>" >> ~/output/index.html ; \
+		cp ~/output/$${p}/index.html ~/output ; \
 	done < versions ;
 
 sync-docs:

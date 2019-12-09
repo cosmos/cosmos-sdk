@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -30,10 +31,26 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
-	err = RunSimulation(b, os.Stdout, db, app, app.BaseApp, config)
-	if err != nil {
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	if err = CheckExportSimulation(app, config, simParams); err != nil {
 		fmt.Println(err)
-		b.FailNow()
+		b.Fail()
+	}
+
+	if simErr != nil {
+		fmt.Println(simErr)
+		b.Fail()
+	}
+
+	if config.Commit {
+		PrintStats(db)
 	}
 }
 
@@ -58,11 +75,26 @@ func BenchmarkInvariants(b *testing.B) {
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
-	// 2. Run parameterized simulation (w/o invariants)
-	err = RunSimulation(b, os.Stdout, db, app, app.BaseApp, config)
-	if err != nil {
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		b, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	if err = CheckExportSimulation(app, config, simParams); err != nil {
 		fmt.Println(err)
-		b.FailNow()
+		b.Fail()
+	}
+
+	if simErr != nil {
+		fmt.Println(simErr)
+		b.Fail()
+	}
+
+	if config.Commit {
+		PrintStats(db)
 	}
 
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight() + 1})

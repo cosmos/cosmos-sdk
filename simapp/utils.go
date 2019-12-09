@@ -2,17 +2,13 @@ package simapp
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"testing"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/types"
@@ -52,49 +48,6 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 	return config, db, dir, logger, false, nil
 }
 
-// RunSimulation runs a randomized simulation from the operations defined in an
-// app. It also exports the state and params and prints the DB stats.
-func RunSimulation(
-	tb testing.TB, w io.Writer, db dbm.DB, app types.App, bapp *baseapp.BaseApp,
-	config simulation.Config,
-) error {
-	// run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		tb, w, bapp, AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		if err := ExportStateToJSON(app, config.ExportStatePath); err != nil {
-			return err
-		}
-	}
-
-	if config.ExportParamsPath != "" {
-		if err := ExportParamsToJSON(simParams, config.ExportParamsPath); err != nil {
-			return err
-		}
-	}
-
-	if simErr != nil {
-		return simErr
-	}
-
-	if config.Commit {
-		fmt.Println("\nLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
-
-	if stopEarly {
-		return errors.New("can't export or import a zero-validator genesis")
-	}
-
-	return nil
-}
-
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
 func SimulationOperations(app types.App, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
@@ -117,26 +70,42 @@ func SimulationOperations(app types.App, cdc *codec.Codec, config simulation.Con
 	return app.SimulationManager().WeightedOperations(simState)
 }
 
-// ExportStateToJSON util function to export the app state to JSON
-func ExportStateToJSON(app types.App, path string) error {
-	fmt.Println("exporting app state...")
-	appState, _, err := app.ExportAppStateAndValidators(false, nil)
-	if err != nil {
-		return err
+// CheckExportSimulation exports the app state and simulation parameters to JSON
+// if the export paths are defined.
+func CheckExportSimulation(
+	app types.App, config simulation.Config, params simulation.Params,
+) error {
+	if config.ExportStatePath != "" {
+		fmt.Println("exporting app state...")
+		appState, _, err := app.ExportAppStateAndValidators(false, nil)
+		if err != nil {
+			return err
+		}
+
+		if err := ioutil.WriteFile(config.ExportStatePath, []byte(appState), 0644); err != nil {
+			return err
+		}
 	}
 
-	return ioutil.WriteFile(path, []byte(appState), 0644)
+	if config.ExportParamsPath != "" {
+		fmt.Println("exporting simulation params...")
+		paramsBz, err := json.MarshalIndent(params, "", " ")
+		if err != nil {
+			return err
+		}
+
+		if err := ioutil.WriteFile(config.ExportParamsPath, paramsBz, 0644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-// ExportParamsToJSON util function to export the simulation parameters to JSON
-func ExportParamsToJSON(params simulation.Params, path string) error {
-	fmt.Println("exporting simulation params...")
-	paramsBz, err := json.MarshalIndent(params, "", " ")
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(path, paramsBz, 0644)
+// PrintStats prints the corresponding statistics from the app DB.
+func PrintStats(db dbm.DB) {
+	fmt.Println("\nLevelDB Stats")
+	fmt.Println(db.Stats()["leveldb.stats"])
+	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 }
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the

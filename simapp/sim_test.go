@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -64,8 +65,21 @@ func TestFullAppSimulation(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		PrintStats(db)
+	}
 }
 
 func TestAppImportExport(t *testing.T) {
@@ -83,8 +97,21 @@ func TestAppImportExport(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
+	// Run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		PrintStats(db)
+	}
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -156,8 +183,26 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
+	// Run randomized simulation
+	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		PrintStats(db)
+	}
+
+	if stopEarly {
+		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
+		return
+	}
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -181,7 +226,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: appState,
 	})
 
-	err = RunSimulation(t, os.Stdout, db, newApp, newApp.BaseApp, config)
+	_, _, err = simulation.SimulateFromSeed(
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(newApp, newApp.Codec(), config),
+		newApp.ModuleAccountAddrs(), config,
+	)
 	require.NoError(t, err)
 }
 
@@ -198,7 +247,6 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
-	config.Commit = false
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -224,8 +272,16 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			err := RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
+			_, _, err := simulation.SimulateFromSeed(
+				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+				SimulationOperations(app, app.Codec(), config),
+				app.ModuleAccountAddrs(), config,
+			)
 			require.NoError(t, err)
+
+			if config.Commit {
+				PrintStats(db)
+			}
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

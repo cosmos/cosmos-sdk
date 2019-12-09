@@ -42,20 +42,6 @@ foundation of an object capability system.
 
 For an introduction to object-capabilities, see [this article](https://en.wikipedia.org/wiki/Object-capability_model).
 
-Strictly speaking, Golang does not implement object capabilities
-completely, because of several issues:
-
-- pervasive ability to import primitive modules (e.g. "unsafe", "os")
-- pervasive ability to [override module vars](https://github.com/golang/go/issues/23161)
-- data-race vulnerability where 2+ goroutines can create illegal interface values
-
-The first is easy to catch by auditing imports and using a proper
-dependency version control system like Dep. The second and third are
-unfortunate but it can be audited with some cost.
-
-Perhaps [Go2 will implement the object capability
-model](https://github.com/golang/go/issues/23157).
-
 ## Ocaps in practice
 
 The idea is to only reveal what is necessary to get the work done.

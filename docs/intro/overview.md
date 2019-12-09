@@ -16,7 +16,7 @@ One development paradigm in the blockchain world today is that of virtual-machin
 
 Application-specific blockchains offer a radically different development paradigm than virtual-machine blockchains. An application-specific blockchain is a blockchain customized to operate a single application: developers have all the freedom to make the design decisions required for the application to run optimally. They can also provide better sovereignty, security and performance. 
 
-To learn more about application-specific blockchains, [click here](./why-app-specific.md).
+Learn more about [application-specific blockchains](./why-app-specific.md).
 
 ## Why the Cosmos SDK?
 
@@ -25,7 +25,7 @@ The Cosmos SDK is the most advanced framework for building custom application-sp
 - The default consensus engine available within the SDK is [Tendermint Core](https://github.com/tendermint/tendermint). Tendermint is the most (and only) mature BFT consensus engine in existence. It is widely used across the industry and is considered the gold standard consensus engine for building Proof-of-Stake systems.
 - The SDK is open source and designed to make it easy to build blockchains out of composable [modules](../../x/). As the ecosystem of open source SDK modules grows, it will become increasingly easier to build complex decentralised platforms with it. 
 - The SDK is inspired by capabilities-based security, and informed by years of wrestling with blockchain state-machines. This makes the Cosmos SDK a very secure environment to build blockchains. 
-- Most importantly, the Cosmos SDK has already been used to build many application-specific blockchains that are already in production. Among others, we can cite [Cosmos Hub](https://hub.cosmos.network), [IRIS Hub](https://irisnet.org), [Binance Chain](https://docs.binance.org/), [Terra](https://terra.money/) or [Lino](https://lino.network/). Many more are building on the Cosmos SDK. You can get a view of the ecosystem [here](https://cosmos.network/ecosystem).
+- Most importantly, the Cosmos SDK has already been used to build many application-specific blockchains that are already in production. Among others, we can cite [Cosmos Hub](https://hub.cosmos.network), [IRIS Hub](https://irisnet.org), [Binance Chain](https://docs.binance.org/), [Terra](https://terra.money/) or [Lino](https://lino.network/). [Many more](https://cosmos.network/ecosystem) are building on the Cosmos SDK. 
 
 ## Getting started with the Cosmos SDK
 

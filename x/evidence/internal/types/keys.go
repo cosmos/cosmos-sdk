@@ -12,9 +12,6 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
-
-	// DefaultParamspace defines the module's default paramspace name
-	DefaultParamspace = ModuleName
 )
 
 // KVStore key prefixes

@@ -297,9 +297,6 @@ func NewSimApp(
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
-// GetBaseApp returns the application's BaseApp
-func (app *SimApp) GetBaseApp() *bam.BaseApp { return app.BaseApp }
-
 // BeginBlocker application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)

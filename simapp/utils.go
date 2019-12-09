@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/types"
@@ -194,11 +195,12 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 // RunSimulation runs a randomized simulation from the operations defined in an
 // app. It also exports the state and params and prints the DB stats.
 func RunSimulation(
-	tb testing.TB, w io.Writer, db dbm.DB, app types.App, config simulation.Config,
+	tb testing.TB, w io.Writer, db dbm.DB, app types.App, bapp *baseapp.BaseApp,
+	config simulation.Config,
 ) error {
 	// run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		tb, w, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
+		tb, w, bapp, AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)

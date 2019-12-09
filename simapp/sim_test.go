@@ -58,7 +58,7 @@ func TestFullAppSimulation(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, config)
+	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
 	require.NoError(t, err)
 }
 
@@ -77,7 +77,7 @@ func TestAppImportExport(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, config)
+	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
 	require.NoError(t, err)
 
 	fmt.Printf("exporting genesis...\n")
@@ -159,7 +159,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	err = RunSimulation(t, os.Stdout, db, app, config)
+	err = RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
 	require.NoError(t, err)
 
 	fmt.Printf("exporting genesis...\n")
@@ -184,7 +184,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: appState,
 	})
 
-	err = RunSimulation(t, os.Stdout, db, newApp, config)
+	err = RunSimulation(t, os.Stdout, db, newApp, newApp.BaseApp, config)
 	require.NoError(t, err)
 }
 
@@ -227,7 +227,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			err := RunSimulation(t, os.Stdout, db, app, config)
+			err := RunSimulation(t, os.Stdout, db, app, app.BaseApp, config)
 			require.NoError(t, err)
 
 			appHash := app.LastCommitID().Hash

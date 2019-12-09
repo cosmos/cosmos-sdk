@@ -30,7 +30,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	logger := log.NewNopLogger()
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
-	err = RunSimulation(b, os.Stdout, db, app, config)
+	err = RunSimulation(b, os.Stdout, db, app, app.BaseApp, config)
 	if err != nil {
 		fmt.Println(err)
 		b.FailNow()
@@ -59,7 +59,7 @@ func BenchmarkInvariants(b *testing.B) {
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, interBlockCacheOpt())
 
 	// 2. Run parameterized simulation (w/o invariants)
-	err = RunSimulation(b, os.Stdout, db, app, config)
+	err = RunSimulation(b, os.Stdout, db, app, app.BaseApp, config)
 	if err != nil {
 		fmt.Println(err)
 		b.FailNow()

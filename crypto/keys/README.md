@@ -23,7 +23,7 @@ release**.
 ### NewInMemory
 
 The [NewInMemory](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys#NewInMemory) constructor returns
-an implementation backed by an in-memory LevelDB storage that we've historically used for testing purposes or on-the-fly
+an implementation backed by an in-memory, goroutine-safe map that we've historically used for testing purposes or on-the-fly
 key generation and we consider safe for the aforementioned use cases since the generated keys are discarded when the process
 terminates or the type instance is garbage collected.
 

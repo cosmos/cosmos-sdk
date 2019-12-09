@@ -170,7 +170,7 @@ func validateBondDenom(i interface{}) error {
 	}
 
 	if len(v) == 0 {
-		return errors.New("bond denom cannot be empty")
+		return errors.New("bond denom cannot be blank")
 	}
 
 	return nil

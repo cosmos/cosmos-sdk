@@ -222,20 +222,20 @@ func (s *TestSuite) VerifySet() {
 }
 
 func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
-	skipUpgradeHeights := s.keeper.ConvertIntArrayToInt64(skipUpgrade)
+	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(skipUpgrade)
 	s.Require().Equal(reflect.TypeOf(skipUpgradeHeights).Elem().Kind(), reflect.Int64)
 }
 
 func (s *TestSuite) TestContains() {
 	viper.Set(s.FlagUnsafeSkipUpgrade, []int{1, 2})
 	s.VerifySet()
-	skipUpgradeHeights := s.keeper.ConvertIntArrayToInt64(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
+	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(viper.GetIntSlice(s.FlagUnsafeSkipUpgrade))
 	s.T().Log("case where array contains the element")
-	present := s.keeper.Contains(skipUpgradeHeights, 1)
+	present := upgrade.Contains(skipUpgradeHeights, 1)
 	s.Require().True(present)
 
 	s.T().Log("case where array doesn't contain the element")
-	present = s.keeper.Contains(skipUpgradeHeights, 4)
+	present = upgrade.Contains(skipUpgradeHeights, 4)
 	s.Require().False(present)
 }
 

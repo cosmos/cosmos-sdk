@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
@@ -24,12 +25,30 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k Keeper) sdk.Result {
-	//TODO
+	k.Grant(ctx, msg.Grantee, msg.Granter, msg.Capability, msg.Expiration)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Granter.String()),
+		),
+	)
+
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) sdk.Result {
-	//TODO
+	k.Revoke(ctx, msg.Grantee, msg.Granter, msg.CapabilityMsgType)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Granter.String()),
+		),
+	)
+
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 

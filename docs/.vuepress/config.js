@@ -6,6 +6,20 @@ module.exports = {
       permalinkSymbol: ""
     }
   },
+  locales: {
+    '/': {
+      lang: 'en-US'
+    },
+    'kr': {
+      lang: "kr"
+    },
+    'cn': {
+      lang: 'cn'
+    },
+    'ru': {
+      lang: 'ru'
+    }
+  },
   base: process.env.VUEPRESS_BASE || "/",
   themeConfig: {
     repo: "cosmos/cosmos-sdk",

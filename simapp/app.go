@@ -11,6 +11,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -83,6 +84,12 @@ func MakeCodec() *codec.Codec {
 	codec.RegisterCrypto(cdc)
 	return cdc
 }
+
+// Verify app interfaces at compile time
+var (
+	_ types.App           = (*SimApp)(nil)
+	_ types.SimulationApp = (*SimApp)(nil)
+)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -290,6 +297,12 @@ func NewSimApp(
 	return app
 }
 
+// Name returns the name of the App
+func (app *SimApp) Name() string { return app.BaseApp.Name() }
+
+// GetBaseApp returns the application's BaseApp
+func (app *SimApp) GetBaseApp() *bam.BaseApp { return app.BaseApp }
+
 // BeginBlocker application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -349,6 +362,11 @@ func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
 	return app.subspaces[moduleName]
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *SimApp) SimulationManager() *module.SimulationManager {
+	return app.sm
 }
 
 // GetMaccPerms returns a copy of the module account permissions

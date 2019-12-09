@@ -9,6 +9,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -87,7 +88,7 @@ func NewConfigFromFlags() simulation.Config {
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app *SimApp, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
+func SimulationOperations(app types.SimulationApp, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simulation.AppParams),
 		Cdc:       cdc,
@@ -99,19 +100,19 @@ func SimulationOperations(app *SimApp, cdc *codec.Codec, config simulation.Confi
 			panic(err)
 		}
 
-		app.cdc.MustUnmarshalJSON(bz, &simState.AppParams)
+		app.Codec().MustUnmarshalJSON(bz, &simState.AppParams)
 	}
 
-	simState.ParamChanges = app.sm.GenerateParamChanges(config.Seed)
-	simState.Contents = app.sm.GetProposalContents(simState)
-	return app.sm.WeightedOperations(simState)
+	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)
+	simState.Contents = app.SimulationManager().GetProposalContents(simState)
+	return app.SimulationManager().WeightedOperations(simState)
 }
 
 //---------------------------------------------------------------------
 // Simulation Utils
 
 // ExportStateToJSON util function to export the app state to JSON
-func ExportStateToJSON(app *SimApp, path string) error {
+func ExportStateToJSON(app types.SdkApp, path string) error {
 	fmt.Println("exporting app state...")
 	appState, _, err := app.ExportAppStateAndValidators(false, nil)
 	if err != nil {

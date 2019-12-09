@@ -74,7 +74,7 @@ func TestFullAppSimulation(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -130,7 +130,7 @@ func TestAppImportExport(t *testing.T) {
 
 	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -216,7 +216,7 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
-		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.SimulationManager().StoreDecoders, app.cdc, failedKVAs, failedKVBs))
 	}
 }
 
@@ -248,7 +248,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
@@ -304,7 +304,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, newApp.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(newApp, newApp.Codec(), config),
 		newApp.ModuleAccountAddrs(), config,
 	)
@@ -351,7 +351,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+				t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
 				SimulationOperations(app, app.Codec(), config),
 				app.ModuleAccountAddrs(), config,
 			)

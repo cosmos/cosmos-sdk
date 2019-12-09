@@ -17,7 +17,7 @@ In general, developers will implement the `main.go` function with the following 
 
 - First, a [`codec`](./encoding.md) is instanciated for the application.
 - Then, the `config` is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
-	+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/config.go#L10-L21
+	+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/config.go#L10-L21
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`. 
 - Add default server commands to `rootCmd` using the `server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)` method. These commands are separated from the ones added above since they are standard and defined at SDK level. They should be shared by all SDK-based applications. They include the most important command: the [`start` command](#start-command).
 - Prepare and execute the `executor`.  
@@ -43,15 +43,15 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L144
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/start.go#L144
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature. In practice, the [constructor the application](../basics/app-anatomy.md#constructor-function) is passed as the `appCreator`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/server/constructors.go#L20
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/constructors.go#L17-L25
 
 Then, the instance of `app` is used to instanciate a new Tendermint node:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/server/start.go#L153-L163
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/server/start.go#L153-L163
 
 The Tendermint node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://github.com/tendermint/tendermint/blob/bc572217c07b90ad9cee851f193aaa8e9557cbc7/abci/types/application.go#L11-L26) (given that `app` extends [`baseapp`](./baseapp.md)). As part of the `NewNode` method, Tendermint makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the Tendermint node. The difference between these two heights should always be negative or null. If it is strictly negative, `NewNode` will replay blocks until the height of the application reaches the height of the Tendermint node. Finally, if the height of the application is `0`, the Tendermint node will call [`InitChain`](./baseapp.md#initchain) on the application to initialize the state from the genesis file. 
 

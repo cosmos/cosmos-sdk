@@ -14,14 +14,14 @@ synopsis: A `Handler` designates a function that processes [`message`s](./messag
 
 The `handler` type defined in the Cosmos SDK specifies the typical structure of a `handler` function.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/handler.go#L4
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/handler.go#L4
 
 Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a cache-wrapped copy of the latest state. If the `msg` is succesfully processed, the modified version of the temporary state contained in the `ctx` will be written to the main state.
 - The [`Result`] returned to `baseapp`, which contains (among other things) information on the execution of the `handler`, [`gas`](../basics/gas-fees.md) consumption and [`events`](../core/events.md).
-	+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L14-L38
+	+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
 
 ## Implementation of a module `handler`s
 
@@ -63,11 +63,11 @@ These `events` are relayed back to the underlying consensus engine and can be us
 
 Finally, the `handler` function returns a `sdk.Result` which contains the aforementioned `events` and an optional `Data` field. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/result.go#L15-L40
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/result.go#L15-L40
 
 Next is an example of how to return a `Result` from the `gov` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/gov/handler.go#L59-L62
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/gov/handler.go#L59-L62
 
 For a deeper look at `handler`s, see this [example implementation of a `handler` function](https://github.com/cosmos/sdk-application-tutorial/blob/c6754a1e313eb1ed973c5c91dcc606f2fd288811/x/nameservice/handler.go) from the nameservice tutorial. 
 

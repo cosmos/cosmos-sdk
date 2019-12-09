@@ -20,7 +20,7 @@ In the Cosmos SDK, `gas` is a special unit that is used to track the consumption
 
 In the Cosmos SDK, `gas` is a simple alias for `uint64`, and is managed by an object called a *gas meter*. Gas meters implement the `GasMeter` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/store/types/gas.go#L32-L44
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/store/types/gas.go#L31-L39
 
 where:
 
@@ -73,9 +73,9 @@ type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, result
 The `anteHandler` is not implemented in the core SDK but in a module. This gives the possibility to developers to choose which version of `AnteHandler`  fits their application's needs. That said, most applications today use the default implementation defined in the [`auth` module](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth). Here is what the `anteHandler` is intended to do in a normal Cosmos SDK application:
 
 - Verify that the transaction are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
-	+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L34-L41
+	+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L33-L41
 This enables developers to play with various types for the transaction of their application. In the default `auth` module, the standard transaction type is `StdTx`:
-	+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go#L23-L28
+	+++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L22-L29
 - Verify signatures for each [`message`](../building-modules/messages-and-queries.md#messages) contained in the transaction. Each `message` should be signed by one or multiple sender(s), and these signatures must be verified in the `anteHandler`. 
 - During `CheckTx`, verify that the gas prices provided with the transaction is greater than the local `min-gas-prices` (as a reminder, gas-prices can be deducted from the following equation: `fees = gas * gas-prices`). `min-gas-prices` is a parameter local to each full-node and used during `CheckTx` to discard transactions that do not provide a minimum amount of fees. This ensure that the mempool cannot be spammed with garbage transactions. 
 - Verify that the sender of the transaction has enough funds to cover for the `fees`. When the end-user generates a transaction, they must indicate 2 of the 3 following parameters (the third one being implicit): `fees`, `gas` and `gas-prices`. This signals how much they are willing to pay for nodes to execute their transaction. The provided `gas` value is stored in a parameter called `GasWanted` for later use. 

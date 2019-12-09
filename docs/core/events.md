@@ -19,7 +19,7 @@ They contain:
 
 - A **`type`** of type `string`, which can refer to the type of action that led to the `event`'s emission (e.g. a certain value going above a threshold), or to the type of `message` if the event is triggered at the end of that `message` processing. 
 - A list of `attributes`, which are key-value pairs that give more information about the `event`. 
-    +++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L53-L56
+    +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/events.go#L51-L56
 
 `Event`s are returned to the underlying consensus engine in the response of the following ABCI messages: [`CheckTx`](./baseapp.md#checktx), [`DeliverTx`](./baseapp.md#delivertx), [`BeginBlock`](./baseapp.md#beginblock) and [`EndBlock`](./baseapp.md#endblock). 
 
@@ -29,11 +29,11 @@ Typically, `event` `type`s and `attributes` are defined on a **per-module basis*
 
 In Cosmos SDK applications, `event`s are generally managed by an object called the `EventManager`. It is implemented as a simple wrapper around a slice of `event`s: 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L18-L20
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/events.go#L16-L20
 
 The `EventManager` comes with a set of useful methods to manage `event`s. Among them, the one that is used the most by module and application developers is the `EmitEvent` method, which registers an `event` in the `EventManager`. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/events.go#L29-L31
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/events.go#L29-L31
 
 Typically, module developers will implement event emission via the `EventManager` in the [`handler`](../building-modules/handler.md) of modules, as well as in the [`BeginBlocker` and/or`EndBlocker` functions](../building-modules/beginblock-endblock.md). The `EventManager` is accessed via the context [`ctx`](./context.md), and event emission generally follows this pattern:
 

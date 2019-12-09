@@ -33,13 +33,11 @@ Alternatively, it is possible to use `MustMarshalBinaryLengthPrefixed`/`MustUnma
 
 Another important use of the `codec` is the encoding and decoding of [transactions](./transactions.md). Transactions are defined at the Cosmos SDK level, but passed to the underlying consensus engine in order to be relayed to other peers. Since the underlying consensus engine is agnostic to the application, it only accepts transactions in the form of `[]byte`. The encoding is done by an object called `TxEncoder` and the decoding by an object called `TxDecoder`. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L48-L49
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L45-L47
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L45-L49
 
 A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/stdtx.go#L241-L266
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/stdtx.go#L241-L266
 
 ## Next {hide}
 

@@ -19,7 +19,7 @@ When users want to interact with an application and make state changes (e.g. sen
 
 Transaction objects are SDK types that implement the `Tx` interface
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L34-L41
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L34-L41
 
 It contains the following methods:
 
@@ -46,7 +46,7 @@ When users interact with the application's interfaces, they invoke the underlyin
 
 **`Message`s** are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the `message`s for their module by implementing the `Msg` interface, and also define a [`Handler`](../building-modules/handler.md) to process them. 
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/types/tx_msg.go#L8-L29
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/tx_msg.go#L8-L29
 
 `Message`s in a module are typically defined in a `msgs.go` file (though not always), and one handler with multiple functions to handle each of the module's `message`s is defined in a `handler.go` file.
 
@@ -64,7 +64,7 @@ Transactions are first created by end-users through an `appcli tx` command throu
 
 The `TxBuilder` contains data closely related with the processing of transactions.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/types/txbuilder.go#L18-L31
++++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/types/txbuilder.go#L18-L31
 
 - `TxEncoder` defined by the developer for this type of transaction. Used to encode messages before being processed by nodes running Tendermint.
 - `Keybase` that manages the user's keys and is used to perform signing operations.

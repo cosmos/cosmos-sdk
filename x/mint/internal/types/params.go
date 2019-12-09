@@ -124,7 +124,7 @@ func validateMintDenom(i interface{}) error {
 	}
 
 	if strings.TrimSpace(v) == "" {
-		return errors.New("mint denom cannot be empty")
+		return errors.New("mint denom cannot be blank")
 	}
 
 	return nil

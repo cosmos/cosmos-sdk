@@ -31,6 +31,12 @@ func init() {
 	GetSimulatorFlags()
 }
 
+type StoreKeysPrefixes struct {
+	A        sdk.StoreKey
+	B        sdk.StoreKey
+	Prefixes [][]byte
+}
+
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 // an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
@@ -89,6 +95,7 @@ func TestAppImportExport(t *testing.T) {
 
 	_, newDB, newDir, _, _, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
 	require.NoError(t, err, "simulation setup failed")
+
 	defer func() {
 		newDB.Close()
 		require.NoError(t, os.RemoveAll(newDir))
@@ -101,17 +108,11 @@ func TestAppImportExport(t *testing.T) {
 	err = app.Codec().UnmarshalJSON(appState, &genesisState)
 	require.NoError(t, err)
 
+	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("comparing stores...\n")
-	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
-
-	type StoreKeysPrefixes struct {
-		A        sdk.StoreKey
-		B        sdk.StoreKey
-		Prefixes [][]byte
-	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
@@ -128,19 +129,15 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
-	for _, storeKeysPrefix := range storeKeysPrefixes {
-		storeKeyA := storeKeysPrefix.A
-		storeKeyB := storeKeysPrefix.B
-		prefixes := storeKeysPrefix.Prefixes
+	for _, skp := range storeKeysPrefixes {
+		storeA := ctxA.KVStore(skp.A)
+		storeB := ctxB.KVStore(skp.B)
 
-		storeA := ctxA.KVStore(storeKeyA)
-		storeB := ctxB.KVStore(storeKeyB)
-
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
-		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
-		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.SimulationManager().StoreDecoders, app.Codec(), failedKVAs, failedKVBs))
+		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, app.Codec(), failedKVAs, failedKVBs))
 	}
 }
 

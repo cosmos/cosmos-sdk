@@ -16,7 +16,7 @@ to utilize existing `baseapp.router` to route packets to application modules.
 
 Generally, routing module callbacks have two separate steps in them, 
 verificaton and execution. This corresponds to the `AnteHandler`-`Handler`
-moodel inside the SDK. We can do the verificaton inside the `AnteHandler`
+model inside the SDK. We can do the verification inside the `AnteHandler`
 in order to increase developer ergonomics by reducing boilerplate 
 verification code.
 
@@ -79,7 +79,7 @@ type ProofVerificationDecorator struct {
   channelKeeper ChannelKeeper
 }
 
-func (pvr ProofVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (pvr ProofVerificationDecorator) AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (Context, error) {
   for _, msg := range tx.GetMsgs() {
     var err error
     switch msg := msg.(type) {
@@ -116,16 +116,16 @@ The side effects of `RecvPacket`, `VerifyAcknowledgement`,
 be called by the application handlers after the execution.
 
 ```go
-func (keeper ChannelKeeper) WriteAcknowledgement(ctx sdk.Context, packet Packet, ack []byte) {
+func (keeper ChannelKeeper) WriteAcknowledgement(ctx Context, packet Packet, ack []byte) {
   keeper.SetPacketAcknowledgement(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(), ack)
   keeper.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())
 }
 
-func (keeper ChannelKeeper) DeleteCommitment(ctx sdk.Context, packet Packet) {
+func (keeper ChannelKeeper) DeleteCommitment(ctx Context, packet Packet) {
   keeper.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }
 
-func (keeper ChannelKeeper) DeleteCommitmentTimeout(ctx sdk.Context, packet Packet) {
+func (keeper ChannelKeeper) DeleteCommitmentTimeout(ctx Context, packet Packet) {
   k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
   
   if channel.Ordering == types.ORDERED [
@@ -205,8 +205,8 @@ func (module AppModule) CheckChannel(portID, channelID string, channel Channel) 
   return nil
 }
 
-func NewHandler(k Keeper) sdk.Handler {
-  return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+func NewHandler(k Keeper) Handler {
+  return func(ctx Context, msg Msg) Result {
     switch msg := msg.(type) {
     case MsgTransfer:
       return handleMsgTransfer(ctx, k, msg)
@@ -228,7 +228,7 @@ func NewHandler(k Keeper) sdk.Handler {
   }
 }
 
-func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
+func handleMsgTransfer(ctx Context, k Keeper, msg MsgTransfer) Result {
   err := k.SendTransfer(ctx,msg.PortID, msg.ChannelID, msg.Amount, msg.Sender, msg.Receiver)
   if err != nil {
     return sdk.ResultFromError(err)
@@ -237,7 +237,7 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
   return sdk.Result{}
 }
 
-func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data PacketDataTransfer) sdk.Result {
+func handlePacketDataTransfer(ctx Context, k Keeper, packet Packet, data PacketDataTransfer) Result {
   err := k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
   if err != nil {
     // TODO: Source chain sent invalid packet, shutdown channel
@@ -246,7 +246,7 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, packet ibc.Packet, data
   return sdk.Result{}
 }
 
-func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) sdk.Result {
+func handleCustomTimeoutPacket(ctx Context, k Keeper, packet CustomPacket) Result {
   err := k.RecoverTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestinationPort(), packet.GetDestinationChannel(), data)
   if err != nil {
     // This chain sent invalid packet or cannot recover the funds
@@ -257,7 +257,7 @@ func handleCustomTimeoutPacket(ctx sdk.Context, k Keeper, packet CustomPacket) s
   return sdk.Result{}
 }
 
-func handleMsgChannelOpen(ctx sdk.Context, k Keeper, msg ibc.MsgOpenChannel) sdk.Result {
+func handleMsgChannelOpen(sdk.Context, k Keeper, msg MsgOpenChannel) Result {
   k.AllocateEscrowAddress(ctx, msg.ChannelID())
   return sdk.Result{}
 }

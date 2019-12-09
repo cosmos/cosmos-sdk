@@ -46,7 +46,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	if simErr != nil {
 		fmt.Println(simErr)
-		b.Fail()
+		b.FailNow()
 	}
 
 	if config.Commit {
@@ -90,7 +90,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	if simErr != nil {
 		fmt.Println(simErr)
-		b.Fail()
+		b.FailNow()
 	}
 
 	if config.Commit {

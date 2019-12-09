@@ -17,14 +17,15 @@ few implementations out-of-the-box.
 The [New](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys#New) constructor returns
 an on-disk implementation backed by LevelDB storage that has been the default implementation used by the SDK until v0.38.0.
 Due to [security concerns](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-006-secret-store-replacement.md), we recommend to drop
-it in favor of the `NewKeyring` or `NewKeyringFile` constructors.
+it in favor of the `NewKeyring` or `NewKeyringFile` constructors. We strongly advise to migrate away from this function as **it may be removed in a future
+release**.
 
 ### NewInMemory
 
 The [NewInMemory](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys#NewInMemory) constructor returns
 an implementation backed by an in-memory LevelDB storage that we've historically used for testing purposes or on-the-fly
-key generation and we consider safe for the aforementioned use cases as keys generated are discarded the process terminates
-or the type instance is garbage collected.
+key generation and we consider safe for the aforementioned use cases since the generated keys are discarded when the process
+terminates or the type instance is garbage collected.
 
 ### NewKeyring
 

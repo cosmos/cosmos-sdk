@@ -265,6 +265,7 @@ Where proposal.json contains:
 func GetCmdFundCommunityPool(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "fund-community-pool [amount]",
+		Args:  cobra.ExactArgs(1),
 		Short: "funds the community pool with the specified amount",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Funds the community pool with the specified amount

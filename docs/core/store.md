@@ -236,4 +236,4 @@ When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`,
 
 ## Next {hide}
 
-Learn about [encoding](./encoding.md).
+Learn about [encoding](./encoding.md) {hide}

@@ -35,4 +35,4 @@ and an example implementation of `EndBlocker` from the `staking` module:
 
 ## Next {hide}
 
-Learn about [`keeper`s](./keeper.md).
+Learn about [`keeper`s](./keeper.md) {hide}

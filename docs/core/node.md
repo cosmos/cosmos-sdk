@@ -67,4 +67,4 @@ Upon starting, the node will bootstrap its RPC and P2P server and start dialing 
 
 ## Next {hide}
 
-Learn about the [store](./store.md).
+Learn about the [store](./store.md) {hide}

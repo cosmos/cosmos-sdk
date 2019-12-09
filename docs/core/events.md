@@ -88,4 +88,4 @@ where `senderAddress` is an address following the [`AccAddress`](../basics/accou
 
 ## Next {hide}
 
-Learn about [object-capabilities](./ocap.md)
+Learn about [object-capabilities](./ocap.md) {hide}

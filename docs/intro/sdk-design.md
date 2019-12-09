@@ -90,5 +90,7 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 
 In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
 
+## Next {hide}
 
+Learn more about the [anatomy of an SDK application](../basics/app-anatomy.md) {hide}
 

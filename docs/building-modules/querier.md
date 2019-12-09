@@ -50,4 +50,4 @@ For a deeper look at `querier`s, see this [example implementation of a `querier`
 
 ## Next {hide}
 
-Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md).
+Learn about [`BeginBlocker` and `EndBlocker`](./beginblock-endblock.md) {hide}

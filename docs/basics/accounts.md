@@ -131,4 +131,4 @@ Of note, the `Marhsal()` and `Bytes()` method both return the same raw `[]byte` 
 
 ## Next {hide}
 
-Learn about [gas and fees](./gas-fees.md).
+Learn about [gas and fees](./gas-fees.md) {hide}

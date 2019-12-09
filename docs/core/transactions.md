@@ -88,4 +88,4 @@ Since `message`s are module-specific types, each module needs a [`handler`](../b
 
 ## Next {hide}
 
-Learn about the [context](./context.md).
+Learn about the [context](./context.md) {hide}

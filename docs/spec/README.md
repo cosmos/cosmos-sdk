@@ -18,7 +18,7 @@ block.
 
 ## Modules specifications
 
-Go the [module directory](../x/README.md)
+Go the [module directory](../../x/README.md)
 
 ## Tendermint
 

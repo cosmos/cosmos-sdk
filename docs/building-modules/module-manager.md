@@ -141,4 +141,4 @@ The module manager is used throughout the application whenever an action on a co
 
 ## Next {hide}
 
-Learn more about [`message`s and `queries`](./messages-and-queries.md).
+Learn more about [`message`s and `queries`](./messages-and-queries.md) {hide}

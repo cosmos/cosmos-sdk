@@ -85,4 +85,4 @@ In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry`
 
 ## Next {hide}
 
-Learn about [genesis functionalities](./genesis.md). 
+Learn about [genesis functionalities](./genesis.md) {hide}

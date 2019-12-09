@@ -86,4 +86,4 @@ gaia app.
 
 ## Next
 
-Learn about [building modules](../building-modules/intro.md).
+Learn about [building modules](../building-modules/intro.md) {hide}

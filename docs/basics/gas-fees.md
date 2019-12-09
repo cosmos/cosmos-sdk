@@ -85,4 +85,4 @@ As explained above, the `anteHandler` returns a maximum limit of `gas` the trans
 
 ## Next {hide}
 
-Learn about [baseapp](../core/baseapp.md). 
+Learn about [baseapp](../core/baseapp.md) {hide}

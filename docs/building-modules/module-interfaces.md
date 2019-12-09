@@ -164,4 +164,4 @@ A few things to note:
 
 ## Next {hide}
 
-Read about the recommended [module structure](./structure.md).
+Read about the recommended [module structure](./structure.md) {hide}

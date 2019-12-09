@@ -33,7 +33,7 @@ Blockchain Node |  |           Consensus           |  |
                 v  +-------------------------------+  v
 ```
 
-The blockchain full-node presents itself as a binary, generally suffixed by `-d` for "daemon" (e.g. `appd` for `app` or `gaiad` for `gaia`). This binary is built by running a simple [`main.go`]((../core/node.md#main-function)) function placed in `./cmd/appd/`. This operation usually happens through the [Makefile](#dependencies-and-makefile).
+The blockchain full-node presents itself as a binary, generally suffixed by `-d` for "daemon" (e.g. `appd` for `app` or `gaiad` for `gaia`). This binary is built by running a simple [`main.go`](../core/node.md#main-function) function placed in `./cmd/appd/`. This operation usually happens through the [Makefile](#dependencies-and-makefile).
 
 Once the main binary is built, the node can be started by running the [`start` command](../core/node.md#start-command). This command function primarily does three things:
 
@@ -253,4 +253,4 @@ For building the application, a [Makefile](https://en.wikipedia.org/wiki/Makefil
 
 ## Next {hide}
 
-Learn more about the [Lifecycle of a transaction](./tx-lifecycle.md).
+Learn more about the [Lifecycle of a transaction](./tx-lifecycle.md) {hide}

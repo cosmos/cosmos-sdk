@@ -158,4 +158,4 @@ The [REST server](./rest.md#rest-server) uses the `CLIContext` to format the res
 
 ## Next {hide}
 
-Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md).
+Read about how to build a [Command-Line Interface](./cli.md), or a [REST Interface](./rest.md) {hide}

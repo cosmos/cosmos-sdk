@@ -391,4 +391,4 @@ Each `query` comes with a `path`, which contains multiple `string`s. By conventi
 
 ## Next {hide}
 
-Learn more about [transactions](./transactions.md).
+Learn more about [transactions](./transactions.md) {hide}

@@ -43,4 +43,4 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 ## Next {hide}
 
-Learn about [events](./events.md).
+Learn about [events](./events.md) {hide}

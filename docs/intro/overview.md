@@ -34,4 +34,4 @@ The Cosmos SDK is the most advanced framework for building custom application-sp
 
 ## Next {hide}
 
-Learn about [application-specific blockchains](./why-app-specific.md).
+Learn about [application-specific blockchains](./why-app-specific.md) {hide}

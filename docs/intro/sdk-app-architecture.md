@@ -97,4 +97,4 @@ Any application built on Tendermint needs to implement the ABCI interface in ord
 
 ## Next {hide}
 
-Read about the [high-level design principles of the SDK](./sdk-design.md)
+Read about the [high-level design principles of the SDK](./sdk-design.md) {hide}

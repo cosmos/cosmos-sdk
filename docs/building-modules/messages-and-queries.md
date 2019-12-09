@@ -72,4 +72,4 @@ See an example of `query` return types from the `nameservice` module:
 
 ## Next {hide}
 
-Learn about [`handler`s](./handler.md).
+Learn about [`handler`s](./handler.md) {hide}

@@ -141,9 +141,11 @@ in order to increase sequence (in case of packet) or remove the commitment
 Calling those functions implies that the application logic has successfully executed. 
 However, the handlers can return `Result` with `CodeTxBreak` after calling those methods
 which will persist the state changes that has been already done but prevent any further 
-messages to be executed in case of semantically invalid packet. In any case the 
-application modules should never return state reverting result, which will make the 
-channel unable to proceed.
+messages to be executed in case of semantically invalid packet. This will keep the sequence
+increased in the previous IBC packets(thus preventing double execution) without 
+proceeding to the following messages.
+In any case the application modules should never return state reverting result, 
+which will make the channel unable to proceed.
 
 `ChannelKeeper.CheckOpen` method will be introduced. `ChannelChecker` function will be 
 provided by each of the `AppModule` and injected to `ChannelKeeper.Port()` at the 
@@ -192,6 +194,7 @@ Example application-side usage:
 ```go
 type AppModule struct {}
 
+// CheckChannel will be provided to the ChannelKeeper as ChannelKeeper.Port(module.CheckChannel)
 func (module AppModule) CheckChannel(portID, channelID string, channel Channel) error {
   if channel.Ordering != UNORDERED {
     return ErrUncompatibleOrdering()
@@ -221,7 +224,7 @@ func NewHandler(k Keeper) Handler {
         return handleTimeoutPacketDataTransfer(ctx, k, msg.Packet)
       }
     // interface { PortID() string; ChannelID() string; Channel() ibc.Channel }
-    // MsgChanInit, MsgChanTry
+    // MsgChanInit, MsgChanTry implements ibc.MsgChannelOpen
     case ibc.MsgChannelOpen: 
       return handleMsgChannelOpen(ctx, k, msg)
     }
@@ -277,11 +280,11 @@ Proposed
 ### Negative
 
 - Cannot support dynamic ports, routing is tied to the baseapp router
-  Dynamic ports can be supported using hierarchical port identifier, see #5290 for detail
 
 ### Neutral
 
 - Introduces new `AnteHandler` decorator.
+- Dynamic ports can be supported using hierarchical port identifier, see #5290 for detail
 
 ## References
 

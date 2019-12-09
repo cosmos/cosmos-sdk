@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -34,7 +32,7 @@ func makeTestCodec() *codec.Codec {
 
 	return cdc
 }
-func setupTestInput(t *testing.T) (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, sdk.Router) {
+func SetupTestInput() (sdk.Context, auth.AccountKeeper, params.Keeper, bank.BaseKeeper, Keeper, sdk.Router) {
 	db := dbm.NewMemDB()
 
 	cdc := codec.New()
@@ -51,10 +49,10 @@ func setupTestInput(t *testing.T) (sdk.Context, auth.AccountKeeper, params.Keepe
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyAuthorization, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
-	err := ms.LoadLatestVersion()
-	require.Nil(t, err)
+	ms.LoadLatestVersion()
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewNopLogger())
 	cdc = makeTestCodec()
@@ -77,10 +75,10 @@ func setupTestInput(t *testing.T) (sdk.Context, auth.AccountKeeper, params.Keepe
 }
 
 var (
-	senderPub      = ed25519.GenPrivKey().PubKey()
-	recipientPub   = ed25519.GenPrivKey().PubKey()
-	authorizedPub  = ed25519.GenPrivKey().PubKey()
-	senderAddr     = sdk.AccAddress(senderPub.Address())
-	recipientAddr  = sdk.AccAddress(recipientPub.Address())
-	authorizedAddr = sdk.AccAddress(authorizedPub.Address())
+	granteePub    = ed25519.GenPrivKey().PubKey()
+	granterPub    = ed25519.GenPrivKey().PubKey()
+	recepientPub  = ed25519.GenPrivKey().PubKey()
+	granteeAddr   = sdk.AccAddress(granteePub.Address())
+	granterAddr   = sdk.AccAddress(granterPub.Address())
+	recepientAddr = sdk.AccAddress(recepientPub.Address())
 )

@@ -151,7 +151,7 @@ func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 }
 
 // DepositFunds allows to transfer the specified amount from the sender into the community pool
-func (k Keeper) DepositFunds(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+func (k Keeper) DepositCommunityPoolFunds(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
 	if err := k.supplyKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
 		return err
 	}

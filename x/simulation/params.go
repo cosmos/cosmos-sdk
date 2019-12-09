@@ -6,6 +6,8 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -45,7 +47,8 @@ type ParamSimulator func(r *rand.Rand)
 
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
-// ParamSimulator is used to generate a random value.
+// ParamSimulator is used to generate a random value or default value (eg: in the
+// case of operation weights where Rand is not used).
 func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)
@@ -54,6 +57,10 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 
 	ps(r)
 }
+
+// ContentSimulatorFn defines a function type alias for generating random proposal
+// content.
+type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {
@@ -65,7 +72,7 @@ type Params struct {
 	BlockSizeTransitionMatrix TransitionMatrix
 }
 
-// RandomParams for simulation
+// RandomParams returns random simulation parameters
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
@@ -104,4 +111,15 @@ func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChang
 // ComposedKey creates a new composed key for the param change proposal
 func (spc ParamChange) ComposedKey() string {
 	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
+}
+
+//-----------------------------------------------------------------------------
+// Proposal Contents
+
+// WeightedProposalContent defines a common struct for proposal contents defined by
+// external modules (i.e outside gov)
+type WeightedProposalContent struct {
+	AppParamsKey       string             // key used to retrieve the value of the weight from the simulation application params
+	DefaultWeight      int                // default weight
+	ContentSimulatorFn ContentSimulatorFn // content simulator function
 }

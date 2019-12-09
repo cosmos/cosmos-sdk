@@ -1,93 +1,12 @@
 # BeginBlock
 
-## Evidence Handling
-
-Tendermint blocks can include
-[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence), which indicates that a validator committed malicious
-behavior. The relevant information is forwarded to the application as ABCI Evidence
-in `abci.RequestBeginBlock` so that the validator an be accordingly punished.
-
-For some `Evidence` submitted in `block` to be valid, it must satisfy:
-
-`Evidence.Timestamp >= block.Timestamp - MaxEvidenceAge`
-
-Where `Evidence.Timestamp` is the timestamp in the block at height
-`Evidence.Height` and `block.Timestamp` is the current block timestamp.
-
-If valid evidence is included in a block, the validator's stake is reduced by
-some penalty (`SlashFractionDoubleSign` for equivocation) of what their stake was
-when the infraction occurred (rather than when the evidence was discovered). We
-want to "follow the stake", i.e. the stake which contributed to the infraction
-should be slashed, even if it has since been redelegated or started unbonding.
-
-We first need to loop through the unbondings and redelegations from the slashed
-validator and track how much stake has since moved:
-
-```go
-slashAmountUnbondings := 0
-slashAmountRedelegations := 0
-
-unbondings := getUnbondings(validator.Address)
-for unbond in unbondings {
-
-    if was not bonded before evidence.Height or started unbonding before unbonding period ago {
-        continue
-    }
-
-    burn := unbond.InitialTokens * SLASH_PROPORTION
-    slashAmountUnbondings += burn
-
-    unbond.Tokens = max(0, unbond.Tokens - burn)
-}
-
-// only care if source gets slashed because we're already bonded to destination
-// so if destination validator gets slashed our delegation just has same shares
-// of smaller pool.
-redels := getRedelegationsBySource(validator.Address)
-for redel in redels {
-
-    if was not bonded before evidence.Height or started redelegating before unbonding period ago {
-        continue
-    }
-
-    burn := redel.InitialTokens * SLASH_PROPORTION
-    slashAmountRedelegations += burn
-
-    amount := unbondFromValidator(redel.Destination, burn)
-    destroy(amount)
-}
-```
-
-We then slash the validator and tombstone them:
-
-```
-curVal := validator
-oldVal := loadValidator(evidence.Height, evidence.Address)
-
-slashAmount := SLASH_PROPORTION * oldVal.Shares
-slashAmount -= slashAmountUnbondings
-slashAmount -= slashAmountRedelegations
-
-curVal.Shares = max(0, curVal.Shares - slashAmount)
-
-signInfo = SigningInfo.Get(val.Address)
-signInfo.JailedUntil = MAX_TIME
-signInfo.Tombstoned = true
-SigningInfo.Set(val.Address, signInfo)
-```
-
-This ensures that offending validators are punished the same amount whether they
-act as a single validator with X stake or as N validators with collectively X
-stake. The amount slashed for all double signature infractions committed within a
-single slashing period is capped as described in [overview.md](overview.md) under Tombstone Caps.
-
 ## Liveness Tracking
 
 At the beginning of each block, we update the `ValidatorSigningInfo` for each
 validator and check if they've crossed below the liveness threshold over a
 sliding window. This sliding window is defined by `SignedBlocksWindow` and the
 index in this window is determined by `IndexOffset` found in the validator's
-`ValidatorSigningInfo`. For each block processed, the `IndexOffset` is incrimented
+`ValidatorSigningInfo`. For each block processed, the `IndexOffset` is incremented
 regardless if the validator signed or not. Once the index is determined, the
 `MissedBlocksBitArray` and `MissedBlocksCounter` are updated accordingly.
 

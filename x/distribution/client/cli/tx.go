@@ -280,7 +280,7 @@ $ %s tx fund-community-pool 100uatom --from mykey
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			depositorAddr := cliCtx.GetFromAddress()
 			amount, err := sdk.ParseCoins(args[0])

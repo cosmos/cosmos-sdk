@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -22,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
@@ -46,128 +44,54 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !FlagEnabledValue {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
 		t.Skip("skipping application simulation")
 	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ = sdk.NewLevelDB("Simulation", dir)
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		os.RemoveAll(dir)
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
+	err = RunSimulation(t, os.Stdout, db, app, config)
+	require.NoError(t, err)
 }
 
 func TestAppImportExport(t *testing.T) {
-	if !FlagEnabledValue {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
 		t.Skip("skipping application import/export simulation")
 	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ = sdk.NewLevelDB("Simulation", dir)
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		os.RemoveAll(dir)
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and simParams before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
+	err = RunSimulation(t, os.Stdout, db, app, config)
+	require.NoError(t, err)
 
 	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
+
 	fmt.Printf("importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
-	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
-
+	_, newDB, newDir, _, _, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
 	defer func() {
 		newDB.Close()
-		_ = os.RemoveAll(newDir)
+		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
@@ -221,64 +145,22 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !FlagEnabledValue {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
 		t.Skip("skipping application simulation after import")
 	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ := sdk.NewLevelDB("Simulation", dir)
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		os.RemoveAll(dir)
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	// Run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
-
-	if stopEarly {
-		// we can't export or import a zero-validator genesis
-		fmt.Printf("we can't export or import a zero-validator genesis, exiting test...\n")
-		return
-	}
+	err = RunSimulation(t, os.Stdout, db, app, config)
+	require.NoError(t, err)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -287,12 +169,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
-	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
+	_, newDB, newDir, _, _, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		newDB.Close()
-		_ = os.RemoveAll(newDir)
+		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
@@ -302,13 +184,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: appState,
 	})
 
-	// Run randomized simulation on imported app
-	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
-		SimulationOperations(newApp, newApp.Codec(), config),
-		newApp.ModuleAccountAddrs(), config,
-	)
-
+	err = RunSimulation(t, os.Stdout, db, newApp, config)
 	require.NoError(t, err)
 }
 
@@ -325,6 +201,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.Commit = false
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
@@ -350,11 +227,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.GetBaseApp(), AppStateFn(app.Codec(), app.SimulationManager()),
-				SimulationOperations(app, app.Codec(), config),
-				app.ModuleAccountAddrs(), config,
-			)
+			err := RunSimulation(t, os.Stdout, db, app, config)
 			require.NoError(t, err)
 
 			appHash := app.LastCommitID().Hash

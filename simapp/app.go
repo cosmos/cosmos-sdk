@@ -85,11 +85,8 @@ func MakeCodec() *codec.Codec {
 	return cdc
 }
 
-// Verify app interfaces at compile time
-var (
-	_ types.App           = (*SimApp)(nil)
-	_ types.SimulationApp = (*SimApp)(nil)
-)
+// Verify app interface at compile time
+var _ types.App = (*SimApp)(nil)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object

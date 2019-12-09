@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -88,4 +89,20 @@ func TestGetTotalRewards(t *testing.T) {
 	totalRewards := keeper.GetTotalRewards(ctx)
 
 	require.Equal(t, expectedRewards, totalRewards)
+}
+
+func TestDepositFunds(t *testing.T) {
+	ctx, _, bankKeeper, keeper, _, _, _ := CreateTestInputAdvanced(t, false, 1000, sdk.NewDecWithPrec(2, 2))
+
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	_ = bankKeeper.SetCoins(ctx, delAddr1, amount)
+
+	initPool := keeper.GetFeePool(ctx)
+	assert.Empty(t, initPool.CommunityPool)
+
+	err := keeper.DepositFunds(ctx, amount, delAddr1)
+	assert.Nil(t, err)
+
+	assert.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoins(amount)), keeper.GetFeePool(ctx).CommunityPool)
+	assert.Empty(t, bankKeeper.GetCoins(ctx, delAddr1))
 }

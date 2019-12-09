@@ -7,7 +7,7 @@
 ## The Keybase interface
 
 The [Keybase](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys#Keybase) interface defines
-the methods that a type needs to implement to be used as key storage backend. This package provided
+the methods that a type needs to implement to be used as key storage backend. This package provides
 few implementations out-of-the-box.
 
 ## Constructors

@@ -217,3 +217,7 @@ func ErrMissingSignature(codespace sdk.CodespaceType) sdk.Error {
 func ErrInvalidHistoricalInfo(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidHistoricalInfo, "invalid historical info")
 }
+
+func ErrNoHistoricalInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidHistoricalInfo, "no historical info found")
+}

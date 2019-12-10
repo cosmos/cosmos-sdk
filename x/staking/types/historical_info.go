@@ -15,6 +15,7 @@ type HistoricalInfo struct {
 }
 
 func NewHistoricalInfo(header abci.Header, valSet []Validator) HistoricalInfo {
+	sort.Sort(Validators(valSet))
 	return HistoricalInfo{
 		Header: header,
 		ValSet: valSet,

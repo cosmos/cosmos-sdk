@@ -101,9 +101,9 @@ func NewQueryValidatorsParams(page, limit int, status string) QueryValidatorsPar
 // QueryHistoricalInfoParams defines the params for the following queries:
 // - 'custom/staking/historicalInfo'
 type QueryHistoricalInfoParams struct {
-	Height int
+	Height int64
 }
 
-func NewQueryHistoricalInfoParams(height int) QueryHistoricalInfoParams {
+func NewQueryHistoricalInfoParams(height int64) QueryHistoricalInfoParams {
 	return QueryHistoricalInfoParams{height}
 }

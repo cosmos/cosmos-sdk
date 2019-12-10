@@ -47,6 +47,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
 		GetCmdWithdrawAllRewards(cdc, storeKey),
+		GetCmdFundCommunityPool(cdc),
 	)...)
 
 	return distTxCmd
@@ -258,4 +259,36 @@ Where proposal.json contains:
 	}
 
 	return cmd
+}
+
+// command to fund the community pool
+func GetCmdFundCommunityPool(cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "fund-community-pool [amount]",
+		Args:  cobra.ExactArgs(1),
+		Short: "funds the community pool with the specified amount",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Funds the community pool with the specified amount
+
+Example:
+$ %s tx fund-community-pool 100uatom --from mykey
+`,
+				version.ClientName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+
+			depositorAddr := cliCtx.GetFromAddress()
+			amount, err := sdk.ParseCoins(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDepositIntoCommunityPool(amount, depositorAddr)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
 }

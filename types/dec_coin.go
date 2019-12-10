@@ -470,7 +470,7 @@ func (coins DecCoins) IsValid() bool {
 		return true
 
 	case 1:
-		if err := validateDenom(coins[0].Denom); err != nil {
+		if err := ValidateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -570,7 +570,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 		return DecCoin{}, errors.Wrap(err, fmt.Sprintf("failed to parse decimal coin amount: %s", amountStr))
 	}
 
-	if err := validateDenom(denomStr); err != nil {
+	if err := ValidateDenom(denomStr); err != nil {
 		return DecCoin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 

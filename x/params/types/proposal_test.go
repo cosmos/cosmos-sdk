@@ -24,8 +24,4 @@ func TestParameterChangeProposal(t *testing.T) {
 	pc4 := NewParamChange("sub", "", "cat")
 	pcp = NewParameterChangeProposal("test title", "test description", []ParamChange{pc4})
 	require.Error(t, pcp.ValidateBasic())
-
-	pc5 := NewParamChange("sub", "foo", "cat")
-	pcp = NewParameterChangeProposal("test title", "test description", []ParamChange{pc5})
-	require.Error(t, pcp.ValidateBasic())
 }

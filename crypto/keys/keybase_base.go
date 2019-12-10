@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -111,21 +112,30 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 
 // CreateAccount creates an account Info object.
 func (kb baseKeybase) CreateAccount(
-	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
+	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo
 ) (Info, error) {
 
 	hdPath := CreateHDPath(account, index)
-	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath, algo)
 }
 
 func (kb baseKeybase) persistDerivedKey(
-	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string,
+	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string, algo SigningAlgo
 ) (Info, error) {
 
 	// create master key and derive first key for keyring
 	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
 	if err != nil {
 		return nil, err
+	}
+	
+	var key tmcrypto.PubKey
+
+	switch algo {
+	case Secp256k1:
+		key = secp256k1.PrivKeySecp256k1(derivedPriv)
+	case Ed25519:
+		key = Ed25519
 	}
 
 	var info Info
@@ -188,7 +198,7 @@ func (kb baseKeybase) CreateMnemonic(
 	info, err = kb.persistDerivedKey(
 		keyWriter,
 		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
-		name, types.GetConfig().GetFullFundraiserPath(),
+		name, types.GetConfig().GetFullFundraiserPath(), algo,
 	)
 
 	return info, mnemonic, err
@@ -243,3 +253,4 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 // and addressing.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/4941
 func IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }
+func IsAlgoSupportedLedger(algo SigningAlgo) bool { return algo == Secp256k1 }

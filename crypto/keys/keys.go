@@ -9,4 +9,6 @@ const (
 	// Ed25519 represents the Ed25519 signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Ed25519 = SigningAlgo("ed25519")
+	// Sr25519 represents the Sr25519 signature system.
+	Sr25519 = SigningAlgo("sr25519")
 )

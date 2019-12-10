@@ -31,6 +31,10 @@ For more, please go to the [Cosmos SDK Docs](./docs/README.md)
 
 The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
 
+## Scaffolding
+
+If you are starting a new app or a new module we provide a [scaffolding tool](https://github.com/cosmos/scaffold) to help you get started and speed up development. If you have any questions or find a bug, feel free to open an issue in the repo.
+
 ## Disambiguation
 
 This Cosmos-SDK project is not related to the [React-Cosmos](https://github.com/react-cosmos/react-cosmos) project (yet). Many thanks to Evan Coury and Ovidiu (@skidding) for this Github organization name. As per our agreement, this disambiguation notice will stay here.

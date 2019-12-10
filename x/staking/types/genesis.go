@@ -16,12 +16,13 @@ type GenesisState struct {
 	Exported             bool                  `json:"exported" yaml:"exported"`
 }
 
-// Last validator power, needed for validator set update logic
+// LastValidatorPower required for validator set update logic
 type LastValidatorPower struct {
 	Address sdk.ValAddress
 	Power   int64
 }
 
+// NewGenesisState creates a new GenesisState instanc e
 func NewGenesisState(params Params, validators []Validator, delegations []Delegation) GenesisState {
 	return GenesisState{
 		Params:      params,
@@ -30,7 +31,7 @@ func NewGenesisState(params Params, validators []Validator, delegations []Delega
 	}
 }
 
-// get raw genesis raw message for testing
+// DefaultGenesisState gets the raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params: DefaultParams(),

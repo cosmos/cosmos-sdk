@@ -42,7 +42,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute strin
 	// Fund the community pool
 	r.HandleFunc(
 		"/distribution/community_pool",
-		withdrawValidatorRewardsHandlerFn(cliCtx),
+		fundCommunityPoolHandlerFn(cliCtx),
 	).Methods("POST")
 
 }

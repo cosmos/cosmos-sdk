@@ -69,9 +69,8 @@ func (pcp ParameterChangeProposal) String() string {
 		b.WriteString(fmt.Sprintf(`    Param Change:
       Subspace: %s
       Key:      %s
-      Subkey:   %X
       Value:    %X
-`, pc.Subspace, pc.Key, pc.Subkey, pc.Value))
+`, pc.Subspace, pc.Key, pc.Value))
 	}
 
 	return b.String()
@@ -81,16 +80,11 @@ func (pcp ParameterChangeProposal) String() string {
 type ParamChange struct {
 	Subspace string `json:"subspace" yaml:"subspace"`
 	Key      string `json:"key" yaml:"key"`
-	Subkey   string `json:"subkey,omitempty" yaml:"subkey,omitempty"`
 	Value    string `json:"value" yaml:"value"`
 }
 
 func NewParamChange(subspace, key, value string) ParamChange {
-	return ParamChange{subspace, key, "", value}
-}
-
-func NewParamChangeWithSubkey(subspace, key, subkey, value string) ParamChange {
-	return ParamChange{subspace, key, subkey, value}
+	return ParamChange{subspace, key, value}
 }
 
 // String implements the Stringer interface.
@@ -98,9 +92,8 @@ func (pc ParamChange) String() string {
 	return fmt.Sprintf(`Param Change:
   Subspace: %s
   Key:      %s
-  Subkey:   %X
   Value:    %X
-`, pc.Subspace, pc.Key, pc.Subkey, pc.Value)
+`, pc.Subspace, pc.Key, pc.Value)
 }
 
 // ValidateChanges performs basic validation checks over a set of ParamChange. It

@@ -40,7 +40,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 			// add a new distinct parameter to the set of changes and register the key
 			// to avoid further duplicates
 			paramChangesKeys[spc.ComposedKey()] = struct{}{}
-			paramChanges[i] = types.NewParamChangeWithSubkey(spc.Subspace, spc.Key, spc.Subkey, spc.SimValue(r))
+			paramChanges[i] = types.NewParamChange(spc.Subspace, spc.Key, spc.SimValue(r))
 		}
 
 		return types.NewParameterChangeProposal(

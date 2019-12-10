@@ -87,7 +87,7 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 }
 
 func handleMsgDepositIntoCommunityPool(ctx sdk.Context, msg types.MsgDepositIntoCommunityPool, k keeper.Keeper) sdk.Result {
-	if err := k.DepositFunds(ctx, msg.Amount, msg.Depositor); err != nil {
+	if err := k.DepositCommunityPoolFunds(ctx, msg.Amount, msg.Depositor); err != nil {
 		return sdk.ResultFromError(err)
 	}
 

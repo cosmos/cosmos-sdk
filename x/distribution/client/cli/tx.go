@@ -276,9 +276,8 @@ $ %s tx fund-community-pool 100uatom --from mykey
 				version.ClientName,
 			),
 		),
-		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-inBuf := bufio.NewReader(cmd.InOrStdin())
+			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 

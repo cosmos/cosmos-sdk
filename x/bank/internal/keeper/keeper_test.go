@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/stretchr/testify/require"
@@ -97,7 +98,8 @@ func TestKeeper(t *testing.T) {
 
 	// Test retrieving black listed accounts
 	for acc := range simapp.GetMaccPerms() {
-		require.True(t, app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+		addr := supply.NewModuleAddress(acc)
+		require.Equal(t, app.BlacklistedAccAddrs()[addr.String()], app.BankKeeper.BlacklistedAddr(addr))
 	}
 }
 

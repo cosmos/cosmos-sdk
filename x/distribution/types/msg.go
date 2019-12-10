@@ -116,3 +116,41 @@ func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
 	}
 	return nil
 }
+
+// msg struct for delegation withdraw from a single validator
+type MsgDepositIntoCommunityPool struct {
+	Amount    sdk.Coins      `json:"amount" yaml:"amount"`
+	Depositor sdk.AccAddress `json:"depositor" yaml:"depositor"`
+}
+
+func NewMsgDepositIntoCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgDepositIntoCommunityPool {
+	return MsgDepositIntoCommunityPool{
+		Amount:    amount,
+		Depositor: depositor,
+	}
+}
+
+func (msg MsgDepositIntoCommunityPool) Route() string { return ModuleName }
+func (msg MsgDepositIntoCommunityPool) Type() string  { return "deposit_into_community_pool" }
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgDepositIntoCommunityPool) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Depositor}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgDepositIntoCommunityPool) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgDepositIntoCommunityPool) ValidateBasic() sdk.Error {
+	if !msg.Amount.IsValid() {
+		return sdk.ErrInvalidCoins(msg.Amount.String())
+	}
+	if msg.Depositor.Empty() {
+		return sdk.ErrInvalidAddress(msg.Depositor.String())
+	}
+	return nil
+}

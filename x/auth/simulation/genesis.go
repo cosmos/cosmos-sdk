@@ -81,7 +81,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var sigVerifyCostSECP256K1 uint64
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, SigVerifyCostSECP256K1, &sigVerifyCostSECP256K1, simState.Rand,
-		func(r *rand.Rand) { sigVerifyCostED25519 = GenSigVerifyCostSECP256K1(r) },
+		func(r *rand.Rand) { sigVerifyCostSECP256K1 = GenSigVerifyCostSECP256K1(r) },
 	)
 
 	params := types.NewParams(maxMemoChars, txSigLimit, txSizeCostPerByte,

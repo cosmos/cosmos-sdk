@@ -105,7 +105,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	res := app.AccountKeeper.GetAccount(ctxCheck, addr)
 
-	require.Equal(t, exp, res.GetCoins())
+	require.True(t, exp.IsEqual(res.GetCoins()))
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a

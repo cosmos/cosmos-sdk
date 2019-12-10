@@ -331,7 +331,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 			vals[j] = it
 		})
 
-		sort.Sort(Validators(vals))
+		Validators(vals).Sort()
 		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
 	}
 }

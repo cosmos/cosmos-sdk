@@ -9,11 +9,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// HistoricalInfo contains the historical information that gets stored at each height
 type HistoricalInfo struct {
 	Header abci.Header
 	ValSet []Validator
 }
 
+//NewHistoricalInfo will create a historical information struct from header and valset
+// it will first sort valset before inclusion into historical info
 func NewHistoricalInfo(header abci.Header, valSet []Validator) HistoricalInfo {
 	sort.Sort(Validators(valSet))
 	return HistoricalInfo{
@@ -22,10 +25,12 @@ func NewHistoricalInfo(header abci.Header, valSet []Validator) HistoricalInfo {
 	}
 }
 
+// MustMarshalHistoricalInfo wll marshal historical info and panic on error
 func MustMarshalHistoricalInfo(cdc *codec.Codec, hi HistoricalInfo) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(hi)
 }
 
+// MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
 func MustUnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)
 	if err != nil {
@@ -34,11 +39,13 @@ func MustUnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) HistoricalInfo 
 	return hi
 }
 
+// UnmarshalHistoricalInfo will unmarshal historical info and return any error
 func UnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) (hi HistoricalInfo, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &hi)
 	return hi, err
 }
 
+// ValidateHistoricalInfo will ensure HistoricalInfo is not nil and sorted
 func ValidateHistoricalInfo(hi HistoricalInfo) error {
 	if hi.ValSet != nil {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo(DefaultCodespace), "ValidatorSer is nil")

@@ -5,7 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// BeginBlocker will
+// BeginBlocker will persist the current header and validator set as a historical entry
+// and prune the oldest entry based on the HistoricalEntries parameter
 func BeginBlocker(ctx sdk.Context, k Keeper) {
 	entryNum := k.HistoricalEntries(ctx)
 	// if there is no need to persist historicalInfo, return

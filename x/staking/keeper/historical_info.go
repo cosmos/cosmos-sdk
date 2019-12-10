@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// GetHistoricalInfo gets the historical info at a given height
 func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (hi types.HistoricalInfo, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
@@ -19,6 +20,7 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (hi types.Histo
 	return hi, true
 }
 
+// SetHistoricalInfo sets the historical info at a given height
 func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi types.HistoricalInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
@@ -27,6 +29,7 @@ func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi types.Histor
 	store.Set(key, value)
 }
 
+// DeleteHistoricalInfo deletes the historical info at a given height
 func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)

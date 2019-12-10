@@ -2,6 +2,8 @@ package cli
 
 import (
 	"bufio"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -53,6 +56,11 @@ func GetCmdGrantCapability(cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			expirationString := viper.GetString(FlagExpiration)
+			expiration, err := time.Parse(time.RFC3339, expirationString)
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgGrantAuthorization(granter, grantee, capability, expiration)
 			if err := msg.ValidateBasic(); err != nil {
@@ -63,6 +71,8 @@ func GetCmdGrantCapability(cdc *codec.Codec) *cobra.Command {
 
 		},
 	}
+	cmd.Flags().String(FlagExpiration, "9999-12-31 23:59:59.52Z", "The time upto which the authorization is active for the user")
+
 	return cmd
 }
 

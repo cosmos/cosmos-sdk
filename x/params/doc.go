@@ -1,11 +1,10 @@
-package params
-
 /*
-Package params provides a globally available parameter store.
+Package params provides a namespaced module parameter store.
 
-There are two main types, Keeper and Subspace. Subspace is an isolated namespace for a
-paramstore, where keys are prefixed by preconfigured spacename. Keeper has a
-permission to access all existing spaces.
+There are two core components, Keeper and Subspace. Subspace is an isolated
+namespace for a parameter store, where keys are prefixed by pre-configured
+subspace names which modules provide. The Keeper has a permission to access all
+existing subspaces.
 
 Subspace can be used by the individual keepers, who needs a private parameter store
 that the other keeper cannot modify. Keeper can be used by the Governance keeper,
@@ -13,12 +12,10 @@ who need to modify any parameter in case of the proposal passes.
 
 Basic Usage:
 
-First, declare parameter space and parameter keys for the module. Then include
-params.Subspace in the keeper. Since we prefix the keys with the spacename, it is
-recommended to use the same name with the module's.
+1. Declare constant module parameter keys and the globally unique Subspace name:
 
 	const (
-		DefaultParamspace = "mymodule"
+		ModuleSubspace = "mymodule"
 	)
 
 	const (
@@ -26,93 +23,89 @@ recommended to use the same name with the module's.
 		KeyParameter2 = "myparameter2"
 	)
 
-	type Keeper struct {
-		cdc *codec.Codec
-		key sdk.StoreKey
-
-		ps params.Subspace
-	}
-
-	func ParamKeyTable() params.KeyTable {
-		return params.NewKeyTable(
-			KeyParameter1, MyStruct{},
-			KeyParameter2, MyStruct{},
-		)
-	}
-
-	func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Subspace) Keeper {
-		return Keeper {
-			cdc: cdc,
-			key: key,
-			ps: ps.WithKeyTable(ParamKeyTable()),
-		}
-	}
-
-Pass a params.Subspace to NewKeeper with DefaultParamspace (or another)
-
-	app.myKeeper = mymodule.NewKeeper(app.paramStore.SubStore(mymodule.DefaultParamspace))
-
-Now we can access to the paramstore using Paramstore Keys
-
-	var param MyStruct
-	k.ps.Get(ctx, KeyParameter1, &param)
-	k.ps.Set(ctx, KeyParameter2, param)
-
-If you want to store an unknown number of parameters, or want to store a mapping,
-you can use subkeys. Subkeys can be used with a main key, where the subkeys are
-inheriting the key properties.
-
-	func ParamKeyTable() params.KeyTable {
-		return params.NewKeyTable(
-			KeyParamMain, MyStruct{},
-		)
-	}
-
-
-	func (k Keeper) GetDynamicParameter(ctx sdk.Context, subkey []byte) (res MyStruct) {
-		k.ps.GetWithSubkey(ctx, KeyParamMain, subkey, &res)
-	}
-
-Genesis Usage:
-
-Declare a struct for parameters and make it implement params.ParamSet. It will then
-be able to be passed to SetParamSet.
+2. Create a concrete parameter struct and define the validation functions:
 
 	type MyParams struct {
-		Parameter1 uint64
-		Parameter2 string
+		MyParam1 int64 `json:"my_param1" yaml:"my_param1"`
+		MyParam2 bool `json:"my_param2" yaml:"my_param2"`
 	}
 
-	// Implements params.ParamSet
-	// KeyValuePairs must return the list of (ParamKey, PointerToTheField)
-	func (p *MyParams) KeyValuePairs() params.KeyValuePairs {
-		return params.KeyFieldPairs {
-			{KeyParameter1, &p.Parameter1},
-			{KeyParameter2, &p.Parameter2},
-		}
-	}
-
-	func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-		k.ps.SetParamSet(ctx, &data.params)
-	}
-
-The method is pointer receiver because there could be a case that we read from
-the store and set the result to the struct.
-
-Master Keeper Usage:
-
-Keepers that require master permission to the paramstore, such as gov, can take
-params.Keeper itself to access all subspace(using GetSubspace)
-
-	type MasterKeeper struct {
-		pk params.Keeper
-	}
-
-	func (k MasterKeeper) SetParam(ctx sdk.Context, space string, key string, param interface{}) {
-		space, ok := k.pk.GetSubspace(space)
+	func validateMyParam1(i interface{}) error {
+		_, ok := i.(int64)
 		if !ok {
-			return
+			return fmt.Errorf("invalid parameter type: %T", i)
 		}
-		space.Set(ctx, key, param)
+
+		// validate (if necessary)...
+
+		return nil
 	}
+
+	func validateMyParam2(i interface{}) error {
+		_, ok := i.(bool)
+		if !ok {
+			return fmt.Errorf("invalid parameter type: %T", i)
+		}
+
+		// validate (if necessary)...
+
+		return nil
+	}
+
+3. Implement the params.ParamSet interface:
+
+	func (p *MyParams) ParamSetPairs() params.ParamSetPairs {
+		return params.ParamSetPairs{
+			{KeyParameter1, &p.MyParam1, validateMyParam1},
+			{KeyParameter2, &p.MyParam2, validateMyParam2},
+		}
+	}
+
+	func paramKeyTable() params.KeyTable {
+		return params.NewKeyTable().RegisterParamSet(&MyParams{})
+	}
+
+4. Have the module accept a Subspace in the constructor and set the KeyTable (if necessary):
+
+	func NewKeeper(..., paramSpace params.Subspace, ...) Keeper {
+		// set KeyTable if it has not already been set
+		if !paramSpace.HasKeyTable() {
+			paramSpace = paramSpace.WithKeyTable(paramKeyTable())
+		}
+
+		return Keeper {
+			// ...
+			paramSpace: paramSpace,
+		}
+	}
+
+Now we have access to the module's parameters that are namespaced using the keys defined:
+
+	func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
+		// ...
+		k.SetParams(ctx, gs.Params)
+	}
+
+	func (k Keeper) SetParams(ctx sdk.Context, params Params) {
+		k.paramSpace.SetParamSet(ctx, &params)
+	}
+
+	func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
+		k.paramSpace.GetParamSet(ctx, &params)
+		return params
+	}
+
+	func (k Keeper) MyParam1(ctx sdk.Context) (res int64) {
+		k.paramSpace.Get(ctx, KeyParameter1, &res)
+		return res
+	}
+
+	func (k Keeper) MyParam2(ctx sdk.Context) (res bool) {
+		k.paramSpace.Get(ctx, KeyParameter2, &res)
+		return res
+	}
+
+NOTE: Any call to SetParamSet will panic or any call to Update will error if any
+given parameter value is invalid based on the registered value validation function.
 */
+package params

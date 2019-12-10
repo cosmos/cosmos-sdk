@@ -7,8 +7,11 @@ module.exports = {
     }
   },
   locales: {
-    "/": {
-      lang: "en-US"
+    '/': {
+      lang: 'en-US'
+    },
+    'kr': {
+      lang: "kr"
     },
     kr: {
       lang: "kr"
@@ -35,7 +38,7 @@ module.exports = {
             title: "Modules",
             directory: true,
             path: "/modules"
-          }
+          },
         ]
       },
       {

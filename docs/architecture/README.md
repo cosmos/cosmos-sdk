@@ -36,9 +36,5 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 009: Evidence Module](./adr-009-evidence-module.md)
 - [ADR 010: Modular AnteHandler](./adr-010-modular-antehandler.md)
 - [ADR 011: Generalize Genesis Accounts](./adr-011-generalize-genesis-accounts.md)
-<<<<<<< HEAD:docs/architecture/README.md
-- [ADR 012: State Accessors](./adr-012-state-accessors.md)
-=======
 - [ADR 012: State Accessors](./adr-012-state-accessors.md)
 - [ADR 017: Historical Header Module](./adr-017-historical-header-module.md)
->>>>>>> master:docs/architecture/README.MD

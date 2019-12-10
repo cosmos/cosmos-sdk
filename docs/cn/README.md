@@ -1,3 +1,8 @@
+---
+parent:
+  order: false
+---
+
 # Cosmos SDK 文档
 
 ## 开始

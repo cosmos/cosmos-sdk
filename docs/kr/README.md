@@ -1,3 +1,8 @@
+---
+parent:
+  order: false
+---
+
 # 코스모스 SDK 문서에 오신 걸 환영합니다! 
 
 ::: warning

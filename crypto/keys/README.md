@@ -1,8 +1,7 @@
-# Keys
+# Keys API
 
 [![API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys?status.svg)](https://godoc.org/github.com/cosmos/cosmos-sdk/crypto/keys)
 
-# Keybase API
 
 ## The Keybase interface
 

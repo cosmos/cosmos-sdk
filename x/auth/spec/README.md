@@ -1,4 +1,4 @@
-# Auth module specification
+# `auth`
 
 ## Abstract
 

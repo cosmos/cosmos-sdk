@@ -92,10 +92,9 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
 
-- If your change relates to the core SDK (baseapp, store, ...), please update the docs/cosmos-hub folder and possibly the docs/spec folder.
-- If your changes relate specifically to the gaia application (not including modules), please modify the docs/cosmos-hub folder.
-- If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/cosmos-hub.
-- If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
+- If your change relates to the core SDK (baseapp, store, ...), please update the `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
+- If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the `docs/interfaces/` folder.
+- If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
 
 ## Forking
 

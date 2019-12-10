@@ -85,7 +85,7 @@ func TestMsgDepositIntoCommunityPool(t *testing.T) {
 		{sdk.NewCoins(sdk.NewInt64Coin("uatom", 1000)), delAddr1, true},
 	}
 	for i, tc := range tests {
-		msg := NewMsgDepositIntoCommunityPool(tc.amount, tc.depositor)
+		msg := NewMsgFundCommunityPool(tc.amount, tc.depositor)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {

@@ -79,7 +79,7 @@ Basic Usage:
 		}
 	}
 
-Now we have access to the module's paramters that are namespaced using the keys defined:
+Now we have access to the module's parameters that are namespaced using the keys defined:
 
 	func InitGenesis(ctx sdk.Context, k Keeper, gs GenesisState) {
 		// ...

@@ -38,6 +38,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryDelegatorValidators(ctx, req, k)
 		case types.QueryDelegatorValidator:
 			return queryDelegatorValidator(ctx, req, k)
+		case types.QueryHistoricalInfo:
+			return queryHistoricalInfo(ctx, req, k)
 		case types.QueryPool:
 			return queryPool(ctx, k)
 		case types.QueryParameters:
@@ -334,8 +336,18 @@ func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(string(req.Data))
 	}
-	return nil, nil
 
+	hi, found := k.GetHistoricalInfo(ctx, params.Height)
+	if !found {
+		return nil, types.ErrNoHistoricalInfo(types.DefaultCodespace)
+	}
+
+	res, err := codec.MarshalJSONIndent(types.ModuleCdc, hi)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return res, nil
 }
 
 func queryPool(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {

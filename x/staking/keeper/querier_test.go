@@ -31,6 +31,13 @@ func TestNewQuerier(t *testing.T) {
 		keeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
 
+	header := abci.Header{
+		ChainID: "HelloChain",
+		Height:  5,
+	}
+	hi := types.NewHistoricalInfo(header, validators[:])
+	keeper.SetHistoricalInfo(ctx, 5, hi)
+
 	query := abci.RequestQuery{
 		Path: "",
 		Data: []byte{},
@@ -85,6 +92,16 @@ func TestNewQuerier(t *testing.T) {
 	query.Data = bz
 
 	_, err = querier(ctx, []string{"redelegations"}, query)
+	require.Nil(t, err)
+
+	queryHisParams := types.NewQueryHistoricalInfoParams(5)
+	bz, errRes = cdc.MarshalJSON(queryHisParams)
+	require.Nil(t, errRes)
+
+	query.Path = "/custom/staking/historicalInfo"
+	query.Data = bz
+
+	_, err = querier(ctx, []string{"historicalInfo"}, query)
 	require.Nil(t, err)
 }
 
@@ -550,4 +567,46 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	require.NotNil(t, res)
 	require.NoError(t, cdc.UnmarshalJSON(res, &ubDels))
 	require.Equal(t, 0, len(ubDels))
+}
+
+func TestQueryHistoricalInfo(t *testing.T) {
+	cdc := codec.New()
+	ctx, _, keeper, _ := CreateTestInput(t, false, 10000)
+
+	// Create Validators and Delegation
+	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
+	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
+	vals := []types.Validator{val1, val2}
+	keeper.SetValidator(ctx, val1)
+	keeper.SetValidator(ctx, val2)
+
+	header := abci.Header{
+		ChainID: "HelloChain",
+		Height:  5,
+	}
+	hi := types.NewHistoricalInfo(header, vals)
+	keeper.SetHistoricalInfo(ctx, 5, hi)
+
+	queryHistoricalParams := types.NewQueryHistoricalInfoParams(4)
+	bz, errRes := cdc.MarshalJSON(queryHistoricalParams)
+	require.Nil(t, errRes)
+	query := abci.RequestQuery{
+		Path: "/custom/staking/historicalInfo",
+		Data: bz,
+	}
+	res, err := queryHistoricalInfo(ctx, query, keeper)
+	require.NotNil(t, err, "Invalid query passed")
+	require.Nil(t, res, "Invalid query returned non-nil result")
+
+	queryHistoricalParams = types.NewQueryHistoricalInfoParams(5)
+	bz, errRes = cdc.MarshalJSON(queryHistoricalParams)
+	require.Nil(t, errRes)
+	query.Data = bz
+	res, err = queryHistoricalInfo(ctx, query, keeper)
+	require.Nil(t, err, "Valid query passed")
+	require.NotNil(t, res, "Valid query returned nil result")
+
+	var recv types.HistoricalInfo
+	require.NoError(t, cdc.UnmarshalJSON(res, &recv))
+	require.Equal(t, hi, recv, "HistoricalInfo query returned wrong result")
 }

@@ -7,17 +7,17 @@ module.exports = {
     }
   },
   locales: {
-    '/': {
-      lang: 'en-US'
+    "/": {
+      lang: "en-US"
     },
-    'kr': {
+    kr: {
       lang: "kr"
     },
-    'cn': {
-      lang: 'cn'
+    cn: {
+      lang: "cn"
     },
-    'ru': {
-      lang: 'ru'
+    ru: {
+      lang: "ru"
     }
   },
   base: process.env.VUEPRESS_BASE || "/",
@@ -35,7 +35,7 @@ module.exports = {
             title: "Modules",
             directory: true,
             path: "/modules"
-          },
+          }
         ]
       },
       {
@@ -164,6 +164,12 @@ module.exports = {
       {
         ga: "UA-51029217-12"
       }
+    ],
+    [
+      "sitemap",
+      {
+        hostname: "https://docs.cosmos.network"
+      }
     ]
-  ],
+  ]
 };

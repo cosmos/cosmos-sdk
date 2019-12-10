@@ -3,10 +3,6 @@ package upgrade
 import (
 	"encoding/json"
 
-	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/rest"
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -126,8 +124,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions
 func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	skipUpgradeHeightsInt64 := ConvertIntArrayToInt64(viper.GetIntSlice(FlagUnsafeSkipUpgrades))
-	BeginBlocker(am.keeper, ctx, req, skipUpgradeHeightsInt64)
+	BeginBlocker(am.keeper, ctx, req, am.keeper.GetSkipUpgradeHeights())
 }
 
 // EndBlock does nothing

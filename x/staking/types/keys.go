@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,6 +46,8 @@ var (
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
+
+	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 )
 
 // gets the key for the validator with address
@@ -277,4 +280,11 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 	return append(
 		GetREDsToValDstIndexKey(valDstAddr),
 		delAddr.Bytes()...)
+}
+
+//________________________________________________________________________________
+
+// gets the key for historicalinfo
+func GetHistoricalInfoKey(height int64) []byte {
+	return append(HistoricalInfoKey, []byte(fmt.Sprintf("%d", height))...)
 }

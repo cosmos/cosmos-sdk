@@ -327,6 +327,17 @@ func queryRedelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 	return res, nil
 }
 
+func queryHistoricalInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryHistoricalInfoParams
+
+	err := types.ModuleCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(string(req.Data))
+	}
+	return nil, nil
+
+}
+
 func queryPool(ctx sdk.Context, k Keeper) ([]byte, sdk.Error) {
 	bondDenom := k.BondDenom(ctx)
 	bondedPool := k.GetBondedPool(ctx)

@@ -1,4 +1,4 @@
-# Params module specification
+# `params`
 
 ## Abstract
 

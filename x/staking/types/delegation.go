@@ -52,12 +52,13 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	}
 }
 
-// return the delegation
+// MustMarshalDelegation returns the delegation bytes. Panics if fails
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(delegation)
 }
 
-// return the delegation
+// MustUnmarshalDelegation return the unmarshaled delegation from bytes.
+// Panics if fails.
 func MustUnmarshalDelegation(cdc *codec.Codec, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
@@ -137,7 +138,7 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 	}
 }
 
-// NewUnbondingDelegation - create a new unbonding delegation object
+// NewUnbondingDelegationEntry - create a new unbonding delegation object
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 	balance sdk.Int) UnbondingDelegationEntry {
 
@@ -251,7 +252,7 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	}
 }
 
-// NewRedelegation - create a new redelegation object
+// NewRedelegationEntry - create a new redelegation object
 func NewRedelegationEntry(creationHeight int64,
 	completionTime time.Time, balance sdk.Int,
 	sharesDst sdk.Dec) RedelegationEntry {
@@ -283,12 +284,12 @@ func (d *Redelegation) RemoveEntry(i int64) {
 	d.Entries = append(d.Entries[:i], d.Entries[i+1:]...)
 }
 
-// return the redelegation
+// MustMarshalRED returns the Redelegation bytes. Panics if fails.
 func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(red)
 }
 
-// unmarshal a redelegation from a store value
+// MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
 func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
@@ -297,7 +298,7 @@ func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
 	return red
 }
 
-// unmarshal a redelegation from a store value
+// UnmarshalRED unmarshals a redelegation from a store value
 func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &red)
 	return red, err
@@ -355,8 +356,14 @@ type DelegationResponse struct {
 	Balance sdk.Coin `json:"balance" yaml:"balance"`
 }
 
-func NewDelegationResp(d sdk.AccAddress, v sdk.ValAddress, s sdk.Dec, b sdk.Coin) DelegationResponse {
-	return DelegationResponse{NewDelegation(d, v, s), b}
+// NewDelegationResp creates a new DelegationResponse instance
+func NewDelegationResp(
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
+) DelegationResponse {
+	return DelegationResponse{
+		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
+		Balance:    balance,
+	}
 }
 
 // String implements the Stringer interface for DelegationResponse.
@@ -397,6 +404,20 @@ type RedelegationResponse struct {
 	Entries []RedelegationEntryResponse `json:"entries" yaml:"entries"`
 }
 
+// NewRedelegationResponse crates a new RedelegationEntryResponse instance.
+func NewRedelegationResponse(
+	delegatorAddr sdk.AccAddress, validatorSrc, validatorDst sdk.ValAddress, entries []RedelegationEntryResponse,
+) RedelegationResponse {
+	return RedelegationResponse{
+		Redelegation: Redelegation{
+			DelegatorAddress:    delegatorAddr,
+			ValidatorSrcAddress: validatorSrc,
+			ValidatorDstAddress: validatorDst,
+		},
+		Entries: entries,
+	}
+}
+
 // RedelegationEntryResponse is equivalent to a RedelegationEntry except that it
 // contains a balance in addition to shares which is more suitable for client
 // responses.
@@ -405,19 +426,13 @@ type RedelegationEntryResponse struct {
 	Balance sdk.Int `json:"balance"`
 }
 
-func NewRedelegationResponse(d sdk.AccAddress, vSrc, vDst sdk.ValAddress, entries []RedelegationEntryResponse) RedelegationResponse {
-	return RedelegationResponse{
-		Redelegation{
-			DelegatorAddress:    d,
-			ValidatorSrcAddress: vSrc,
-			ValidatorDstAddress: vDst,
-		},
-		entries,
+// NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
+func NewRedelegationEntryResponse(
+	creationHeight int64, completionTime time.Time, sharesDst sdk.Dec, initialBalance, balance sdk.Int) RedelegationEntryResponse {
+	return RedelegationEntryResponse{
+		RedelegationEntry: NewRedelegationEntry(creationHeight, completionTime, initialBalance, sharesDst),
+		Balance:           balance,
 	}
-}
-
-func NewRedelegationEntryResponse(ch int64, ct time.Time, s sdk.Dec, ib, b sdk.Int) RedelegationEntryResponse {
-	return RedelegationEntryResponse{NewRedelegationEntry(ch, ct, ib, s), b}
 }
 
 // String implements the Stringer interface for RedelegationResp.

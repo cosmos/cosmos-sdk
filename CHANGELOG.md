@@ -194,6 +194,14 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+* (docs/) [\#5379](https://github.com/cosmos/cosmos-sdk/pull/5379) Major documentation refactor, including:
+  * (docs/intro/) Add and improve introduction material for newcomers.
+  * (docs/basics/) Add documentation about basic concepts of the cosmos sdk such as the anatomy of an SDK application, the transaction lifecycle or accounts. 
+  * (docs/core/) Add documentation about core conepts of the cosmos sdk such as `baseapp`, `server`, `store`s, `context` and more. 
+  * (docs/building-modules/) Add reference documentation on concepts relevant for module developers (`keeper`, `handler`, `messages`, `queries`,...).
+  * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
+  * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
+
 
 ### Bug Fixes
 
@@ -205,6 +213,8 @@ to detail this new feature and how state transitions occur.
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 * (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
   has been triggered.
+
+
 
 ## [v0.37.4] - 2019-11-04
 

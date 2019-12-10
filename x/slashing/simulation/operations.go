@@ -5,13 +5,41 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
+
+// Simulation operation weights constants
+const (
+	OpWeightMsgUnjail = "op_weight_msg_unjail"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(
+	appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	k keeper.Keeper, sk stakingkeeper.Keeper,
+) simulation.WeightedOperations {
+
+	var weightMsgUnjail int
+	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
+		func(_ *rand.Rand) {
+			weightMsgUnjail = simappparams.DefaultWeightMsgUnjail
+		},
+	)
+
+	return simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgUnjail,
+			SimulateMsgUnjail(ak, k, sk),
+		),
+	}
+}
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 // nolint: funlen

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ const (
 func (suite *KeeperTestSuite) TestCreateClient() {
 	// Test Valid CreateClient
 	state, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-	require.Nil(suite.T(), err, "CreateClient failed")
+	suite.NoError(err, "CreateClient failed")
 
 	// Test ClientState stored correctly
 	expectedState := types.State{
@@ -36,7 +37,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 
 	// Test that trying to CreateClient on existing client fails
 	_, err = suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-	require.NotNil(suite.T(), err, "CreateClient on existing client: %s passed", testClientID)
+	suite.Error(err, "CreateClient on existing client: %s passed", testClientID)
 }
 
 func (suite *KeeperTestSuite) TestUpdateClient() {
@@ -61,10 +62,10 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			suite.keeper.SetClientState(suite.ctx, clientState)
 		}, true},
 		{"past height", func() {
-			suite.header = tendermint.MakeHeader(2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
+			suite.header = tendermint.MakeHeader("gaia", 2, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 		}, true},
 		{"validatorHash incorrect", func() {
-			suite.header = tendermint.MakeHeader(4, altValSet, suite.valSet, altSigners)
+			suite.header = tendermint.MakeHeader("gaia", 4, altValSet, suite.valSet, altSigners)
 		}, true},
 		{"nextHash incorrect", func() {
 			suite.header.NextValidatorSet = altValSet
@@ -79,28 +80,30 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 	}
 
 	for _, tc := range cases {
+		tc := tc // pin for scopelint
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			// Reset suite on each subtest
 			suite.SetupTest()
 
 			_, err := suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
-			require.Nil(suite.T(), err, "CreateClient failed")
+			suite.NoError(err, "CreateClient failed")
 
 			tc.malleate()
 			err = suite.keeper.UpdateClient(suite.ctx, testClientID, suite.header)
 
 			retrievedConsState, _ := suite.keeper.GetConsensusState(suite.ctx, testClientID)
 			tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
+			tmConsState.ValidatorSet.TotalVotingPower()
 			tmConsState.NextValidatorSet.TotalVotingPower()
 			retrievedRoot, _ := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, suite.consensusState.GetHeight()+1)
 			if tc.expErr {
-				require.NotNil(suite.T(), err, "Invalid UpdateClient passed", tc.name)
+				suite.Error(err, "Invalid UpdateClient passed", tc.name)
 
 				// require no state changes occurred
 				require.Equal(suite.T(), suite.consensusState, tmConsState, "Consensus state changed after invalid UpdateClient")
 				require.Nil(suite.T(), retrievedRoot, "Root added for new height after invalid UpdateClient")
 			} else {
-				require.Nil(suite.T(), err, "Valid UpdateClient failed", tc.name)
+				suite.NoError(err, "Valid UpdateClient failed", tc.name)
 
 				// require state changes were performed correctly
 				require.Equal(suite.T(), suite.header.GetHeight(), retrievedConsState.GetHeight(), "height not updated correctly")
@@ -109,6 +112,100 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 
 			}
 
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
+	altPrivVal := tmtypes.NewMockPV()
+	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
+
+	// Create bothValSet with both suite validator and altVal
+	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	// Create alternative validator set with only altVal
+	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
+
+	// Create signer array and ensure it is in same order as bothValSet
+	var bothSigners []tmtypes.PrivValidator
+	if bytes.Compare(altPrivVal.GetPubKey().Address(), suite.privVal.GetPubKey().Address()) == -1 {
+		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
+	} else {
+		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
+	}
+
+	altSigners := []tmtypes.PrivValidator{altPrivVal}
+
+	_, err := suite.keeper.CreateClient(suite.ctx, "gaiamainnet", exported.Tendermint, suite.consensusState)
+	suite.NoError(err, "CreateClient failed")
+
+	testCases := []struct {
+		name     string
+		evidence *tendermint.Evidence
+		clientID string
+		expErr   bool
+	}{
+		{
+			"trusting period misbehavior should pass",
+			&tendermint.Evidence{
+				Header1: tendermint.MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
+				Header2: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			false,
+		},
+		{
+			"first valset has too much change",
+			&tendermint.Evidence{
+				Header1: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header2: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"second valset has too much change",
+			&tendermint.Evidence{
+				Header1: tendermint.MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header2: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"both valsets have too much change",
+			&tendermint.Evidence{
+				Header1: tendermint.MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
+				Header2: tendermint.MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc // pin for scopelint
+		suite.Run(tc.name, func() {
+			misbehaviour := tendermint.Misbehaviour{
+				Evidence: tc.evidence,
+				ClientID: tc.clientID,
+			}
+
+			err = suite.keeper.CheckMisbehaviourAndUpdateState(suite.ctx, misbehaviour)
+
+			if tc.expErr {
+				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
+			} else {
+				suite.NoError(err, "CheckMisbehaviour failed unexpectedly: %v", err)
+			}
+
+			// reset Frozen flag to false
+			clientState, _ := suite.keeper.GetClientState(suite.ctx, tc.clientID)
+			clientState.Frozen = false
+			suite.keeper.SetClientState(suite.ctx, clientState)
 		})
 	}
 }

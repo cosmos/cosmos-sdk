@@ -6,16 +6,16 @@ import (
 
 const (
 	// SubModuleName defines the IBC client name
-	SubModuleName = "client"
+	SubModuleName string = "client"
 
 	// StoreKey is the store key string for IBC client
-	StoreKey = SubModuleName
+	StoreKey string = SubModuleName
 
 	// RouterKey is the message route for IBC client
-	RouterKey = SubModuleName
+	RouterKey string = SubModuleName
 
 	// QuerierRoute is the querier route for IBC client
-	QuerierRoute = SubModuleName
+	QuerierRoute string = SubModuleName
 )
 
 // KVStore key prefixes
@@ -44,9 +44,15 @@ func ConsensusStatePath(clientID string) string {
 }
 
 // RootPath takes an Identifier and returns a Path under which to
-// store the consensus state of a client.
+// store the root for a particular height of a client.
 func RootPath(clientID string, height uint64) string {
 	return fmt.Sprintf("clients/%s/roots/%d", clientID, height)
+}
+
+// CommitterPath takes an Identifier and returns a Path under which
+// to store the committer of a client at a particular height
+func CommitterPath(clientID string, height uint64) string {
+	return fmt.Sprintf("clients/%s/committer/%d", clientID, height)
 }
 
 // KeyClientState returns the store key for a particular client state
@@ -69,4 +75,10 @@ func KeyConsensusState(clientID string) []byte {
 // client at a given height
 func KeyRoot(clientID string, height uint64) []byte {
 	return []byte(RootPath(clientID, height))
+}
+
+// KeyValidatorSet returns the store key for a validator of a particular
+// client at a given height. Key => clientID||height
+func KeyCommitter(clientID string, height uint64) []byte {
+	return []byte(CommitterPath(clientID, height))
 }

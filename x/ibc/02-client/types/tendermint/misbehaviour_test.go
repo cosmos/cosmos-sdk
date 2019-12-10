@@ -1,64 +1,170 @@
 package tendermint
 
 import (
-	"testing"
+	"bytes"
 
-	"github.com/stretchr/testify/require"
-
-	yaml "gopkg.in/yaml.v2"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func TestString(t *testing.T) {
-	dupEv := randomDuplicatedVoteEvidence()
-	ev := Evidence{
-		DuplicateVoteEvidence: dupEv,
-		ChainID:               "mychain",
-		ValidatorPower:        10,
-		TotalPower:            50,
+func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
+	altPrivVal := tmtypes.NewMockPV()
+	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
+
+	// Create bothValSet with both suite validator and altVal
+	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+
+	signers := []tmtypes.PrivValidator{suite.privVal}
+	testCases := []struct {
+		name     string
+		evidence *Evidence
+		clientID string
+		expErr   bool
+	}{
+		{
+			"valid misbehavior",
+			&Evidence{
+				Header1: suite.header,
+				Header2: MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			false,
+		},
+		{
+			"nil evidence",
+			nil,
+			"gaiamainnet",
+			true,
+		},
+		{
+			"invalid evidence",
+			&Evidence{
+				Header1: suite.header,
+				Header2: suite.header,
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"invalid ClientID",
+			&Evidence{
+				Header1: MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
+				Header2: MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
+				ChainID: "gaia123?",
+			},
+			"gaia123?",
+			true,
+		},
 	}
 
-	byteStr, err := yaml.Marshal(ev)
-	require.Nil(t, err)
-	require.Equal(t, string(byteStr), ev.String(), "Evidence String method does not work as expected")
+	for _, tc := range testCases {
+		tc := tc // pin for scopelint
+		suite.Run(tc.name, func() {
+			misbehaviour := Misbehaviour{
+				Evidence: tc.evidence,
+				ClientID: tc.clientID,
+			}
 
+			err := misbehaviour.ValidateBasic()
+
+			if tc.expErr {
+				suite.Error(err, "Invalid Misbehaviour passed ValidateBasic")
+			} else {
+				suite.NoError(err, "Valid Misbehaviour failed ValidateBasic: %v", err)
+			}
+		})
+	}
 }
 
-func TestValidateBasic(t *testing.T) {
-	dupEv := randomDuplicatedVoteEvidence()
+func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
+	altPrivVal := tmtypes.NewMockPV()
+	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
 
-	// good evidence
-	ev := Evidence{
-		DuplicateVoteEvidence: dupEv,
-		ChainID:               "mychain",
-		ValidatorPower:        10,
-		TotalPower:            50,
+	// Create bothValSet with both suite validator and altVal
+	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
+	// Create alternative validator set with only altVal
+	altValSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{altVal})
+
+	// Create signer array and ensure it is in same order as bothValSet
+	var bothSigners []tmtypes.PrivValidator
+	if bytes.Compare(altPrivVal.GetPubKey().Address(), suite.privVal.GetPubKey().Address()) == -1 {
+		bothSigners = []tmtypes.PrivValidator{altPrivVal, suite.privVal}
+	} else {
+		bothSigners = []tmtypes.PrivValidator{suite.privVal, altPrivVal}
 	}
 
-	err := ev.ValidateBasic()
-	require.Nil(t, err, "good evidence failed on ValidateBasic: %v", err)
+	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	// invalid duplicate evidence
-	ev.DuplicateVoteEvidence.VoteA = nil
-	err = ev.ValidateBasic()
-	require.NotNil(t, err, "invalid duplicate evidence passed on ValidateBasic")
+	committer := Committer{
+		ValidatorSet:   suite.valSet,
+		Height:         3,
+		NextValSetHash: suite.valSet.Hash(),
+	}
 
-	// reset duplicate evidence to be valid, and set empty chainID
-	dupEv = randomDuplicatedVoteEvidence()
-	ev.DuplicateVoteEvidence = dupEv
-	ev.ChainID = ""
-	err = ev.ValidateBasic()
-	require.NotNil(t, err, "invalid chain-id passed on ValidateBasic")
+	testCases := []struct {
+		name     string
+		evidence *Evidence
+		clientID string
+		expErr   bool
+	}{
+		{
+			"trusting period misbehavior should pass",
+			&Evidence{
+				Header1: MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
+				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			false,
+		},
+		{
+			"first valset has too much change",
+			&Evidence{
+				Header1: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"second valset has too much change",
+			&Evidence{
+				Header1: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+		{
+			"both valsets have too much change",
+			&Evidence{
+				Header1: MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
+				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID: "gaia",
+			},
+			"gaiamainnet",
+			true,
+		},
+	}
 
-	// reset chainID and set 0 validator power
-	ev.ChainID = "mychain"
-	ev.ValidatorPower = 0
-	err = ev.ValidateBasic()
-	require.NotNil(t, err, "invalid validator power passed on ValidateBasic")
+	for _, tc := range testCases {
+		tc := tc // pin for scopelint
+		suite.Run(tc.name, func() {
+			misbehaviour := Misbehaviour{
+				Evidence: tc.evidence,
+				ClientID: tc.clientID,
+			}
 
-	// reset validator power and set invalid total power
-	ev.ValidatorPower = 10
-	ev.TotalPower = 9
-	err = ev.ValidateBasic()
-	require.NotNil(t, err, "invalid total power passed on ValidateBasic")
+			err := CheckMisbehaviour(committer, misbehaviour)
 
+			if tc.expErr {
+				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
+			} else {
+				suite.NoError(err, "CheckMisbehaviour failed unexpectedly: %v", err)
+			}
+		})
+	}
 }

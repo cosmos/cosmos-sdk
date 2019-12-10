@@ -20,11 +20,21 @@ model inside the SDK. We can do the verification inside the `AnteHandler`
 in order to increase developer ergonomics by reducing boilerplate 
 verification code.
 
+For atomic multimessage transaction, we want to keep the IBC related 
+state modification to be preserved even the application side state change
+reverts. One of the example might be IBC token sending message following with
+stake delegation which uses the tokens received by the previous packet message.
+If the token receiving failes for any reason, we might not want to keep 
+executing the transaction, but we also don't want to abort the transaction 
+or the sequence and commitment will be reverted and the channel will be stuck. 
+This ADR suggests new `CodeType`, `CodeTxBreak`, to fix this problem.
+
 ## Decision
 
 `PortKeeper` will have the capability key that is able to access only the 
 channels bound to the port. Entities that hold a `PortKeeper` will be
-able to call the corresponding `ChannelKeeper`s method, but only with the
+able to call the methods on it which are corresponding with the methods with
+the same names on the `ChannelKeeper`, but only with the
 allowed port. `ChannelKeeper.Port(string, ChannelChecker)` will be defined to
 easily construct a capability-safe `PortKeeper`. This will be addressed in 
 another ADR and we will use unsecure `ChannelKeeper` for now.
@@ -36,7 +46,7 @@ store if `Result.IsOK() || Result.Code.IsBreak()`. `Result.Code.IsBreak()` if
 
 ```go
 // Pseudocode
-func (app *BaseApp) runTx(tx sdk.Tx) (result sdk.Result) {
+func (app *BaseApp) runTx(tx Tx) (result Result) {
   msgs := tx.GetMsgs()
   
   // AnteHandler
@@ -112,8 +122,15 @@ are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
 respectively.
 
 The side effects of `RecvPacket`, `VerifyAcknowledgement`, 
-`VerifyTimeout` will be extracted out into separated functions, which will
-be called by the application handlers after the execution.
+`VerifyTimeout` will be extracted out into separated functions, 
+`WriteAcknowledgement`, `DeleteCommitment`, `DeleteCommitmentTimeout`, respectively,
+which will be called by the application handlers after the execution.
+
+`WriteAcknowledgement` writes the acknowledgement to the state that can be
+verified by the counterparty chain and increments the sequence to prevent 
+double execution. `DeleteCommitment` will delete the commitment stored,
+`DeleteCommitmentTimeout` will delete the commitment and close channel in case
+of ordered channel.
 
 ```go
 func (keeper ChannelKeeper) WriteAcknowledgement(ctx Context, packet Packet, ack []byte) {
@@ -147,9 +164,11 @@ proceeding to the following messages.
 In any case the application modules should never return state reverting result, 
 which will make the channel unable to proceed.
 
-`ChannelKeeper.CheckOpen` method will be introduced. `ChannelChecker` function will be 
-provided by each of the `AppModule` and injected to `ChannelKeeper.Port()` at the 
-top level application. `CheckOpen` will find the correct `ChennelChecker` using the 
+`ChannelKeeper.CheckOpen` method will be introduced. This will replace `onChanOpen*` defined 
+under the routing module specification. Instead of define each channel handshake callback
+functions, application modules can provide `ChannelChecker` function with the `AppModule`
+which wille be injected to `ChannelKeeper.Port()` at the top level application. 
+`CheckOpen` will find the correct `ChennelChecker` using the 
 `PortID` and call it, which will return an error if it is unacceptible by the application.
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
@@ -174,9 +193,11 @@ func NewAnteHandler(
 }
 ```
 
-The implementation of this ADR will also change the `Data` field of the `Packet` type from `[]byte` (i.e. arbitrary data) to `PacketDataI`. This also removes the `Timeout` field from the `Packet` struct. This is because the `PacketDataI` interface now contains this information. You can see details about this in [ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#definitions). 
+The implementation of this ADR will also change the `Data` field of the `Packet` type from `[]byte` (i.e. arbitrary data) to `PacketDataI`. We want to make application modules be able to register custom packet data type which is automatically unmarshaled at `TxDecoder` time and can be simply type switched inside the application handler. Also, by having `GetCommitment()` method instead of manually generate the commitment inside the IBC keeper, the applications can define their own commitment method, including bare bytes, hashing, etc.
 
-The `PacketDataI` is the application specific interface that provides information for the execuition of the application packet. In the case of ICS20 this would be `denom`, `amount` and `address`
+This also removes the `Timeout` field from the `Packet` struct. This is because the `PacketDataI` interface now contains this information. You can see details about this in [ICS04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#definitions). 
+
+The `PacketDataI` is the application specific interface that provides information for the execution of the application packet. In the case of ICS20 this would be `denom`, `amount` and `address`
 
 ```go
 // PacketDataI defines the standard interface for IBC packet data

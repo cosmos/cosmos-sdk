@@ -31,7 +31,7 @@ func (k Keeper) ConnOpenInit(
 
 	err := k.addConnectionToClient(ctx, clientID, connectionID)
 	if err != nil {
-		sdkerrors.Wrap(err, "cannot initialize connection")
+		return sdkerrors.Wrap(err, "cannot initialize connection")
 	}
 
 	k.Logger(ctx).Info(fmt.Sprintf("connection %s state updated: NONE -> INIT", connectionID))

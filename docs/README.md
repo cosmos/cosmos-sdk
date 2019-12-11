@@ -1,7 +1,7 @@
 ---
 layout: index
 title: Cosmos SDK Documentation
-description: The Cosmos-SDK is a framework for building blockchain applications in Golang. It is being used to build Gaia, the first implementation of the Cosmos Hub.
+description: Cosmos SDK is the world’s most popular framework for building application-specific blockchains.
 features:
   - cta: Read
     title: Introduction to Cosmos SDK
@@ -27,7 +27,7 @@ sections:
     icon: basics
     url: /basics
   - title: SDK Core
-    desc: Read about the core concepts like `baseapp`, the store, or the server. 
+    desc: Read about the core concepts like `baseapp`, the store, or the server.
     icon: core
     url: /core
   - title: Building Modules
@@ -66,14 +66,14 @@ footer:
 
 ## Reference
 
-- **[Basics](./basics/)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle and accounts management.  
-- **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`. 
-- **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s. 
-- **[Interfaces](./interfaces/)**: Documentation on building interfaces for Cosmos SDK applications. 
+- **[Basics](./basics/)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle and accounts management.
+- **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`.
+- **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s.
+- **[Interfaces](./interfaces/)**: Documentation on building interfaces for Cosmos SDK applications.
 
 ## Other Resources
 
-- **[Module Directory](../x/)**: Module implementations and their respective documentation. 
+- **[Module Directory](../x/)**: Module implementations and their respective documentation.
 - **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
 - **[SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
 - **[REST API spec](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node through REST.
@@ -92,5 +92,3 @@ Contact us for information about funding an implementation in another language.
 
 See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.
-
-

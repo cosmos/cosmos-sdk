@@ -117,40 +117,51 @@ func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// msg struct for delegation withdraw from a single validator
-type MsgDepositIntoCommunityPool struct {
+const TypeMsgFundCommunityPool = "fund_community_pool"
+
+// MsgFundCommunityPool defines a Msg type that allows an account to directly
+// fund the community pool.
+type MsgFundCommunityPool struct {
 	Amount    sdk.Coins      `json:"amount" yaml:"amount"`
 	Depositor sdk.AccAddress `json:"depositor" yaml:"depositor"`
 }
 
-func NewMsgDepositIntoCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgDepositIntoCommunityPool {
-	return MsgDepositIntoCommunityPool{
+// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
+// a funding amount.
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgFundCommunityPool {
+	return MsgFundCommunityPool{
 		Amount:    amount,
 		Depositor: depositor,
 	}
 }
 
-func (msg MsgDepositIntoCommunityPool) Route() string { return ModuleName }
-func (msg MsgDepositIntoCommunityPool) Type() string  { return "deposit_into_community_pool" }
+// Route returns the MsgFundCommunityPool message route.
+func (msg MsgFundCommunityPool) Route() string { return ModuleName }
 
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgDepositIntoCommunityPool) GetSigners() []sdk.AccAddress {
+// Type returns the MsgFundCommunityPool message type.
+func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Depositor}
 }
 
-// get the bytes for the message signer to sign on
-func (msg MsgDepositIntoCommunityPool) GetSignBytes() []byte {
+// GetSignBytes returns the raw bytes for a MsgFundCommunityPool message that
+// the expected signer needs to sign.
+func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-// quick validity check
-func (msg MsgDepositIntoCommunityPool) ValidateBasic() sdk.Error {
+// ValidateBasic performs basic MsgFundCommunityPool message validation.
+func (msg MsgFundCommunityPool) ValidateBasic() sdk.Error {
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
 	if msg.Depositor.Empty() {
 		return sdk.ErrInvalidAddress(msg.Depositor.String())
 	}
+
 	return nil
 }

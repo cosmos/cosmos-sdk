@@ -92,7 +92,7 @@ func TestGetTotalRewards(t *testing.T) {
 	require.Equal(t, expectedRewards, totalRewards)
 }
 
-func TestDepositCommunityPoolFunds(t *testing.T) {
+func TestFundCommunityPool(t *testing.T) {
 	// nolint dogsled
 	ctx, _, bk, keeper, _, _, _ := CreateTestInputAdvanced(t, false, 1000, sdk.NewDecWithPrec(2, 2))
 
@@ -102,7 +102,7 @@ func TestDepositCommunityPoolFunds(t *testing.T) {
 	initPool := keeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)
 
-	err := keeper.DepositCommunityPoolFunds(ctx, amount, delAddr1)
+	err := keeper.FundCommunityPool(ctx, amount, delAddr1)
 	assert.Nil(t, err)
 
 	assert.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoins(amount)), keeper.GetFeePool(ctx).CommunityPool)

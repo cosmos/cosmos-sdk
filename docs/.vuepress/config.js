@@ -7,10 +7,10 @@ module.exports = {
     }
   },
   locales: {
-    '/': {
-      lang: 'en-US'
+    "/": {
+      lang: "en-US"
     },
-    'kr': {
+    kr: {
       lang: "kr"
     },
     kr: {
@@ -38,7 +38,7 @@ module.exports = {
             title: "Modules",
             directory: true,
             path: "/modules"
-          },
+          }
         ]
       },
       {
@@ -150,7 +150,8 @@ module.exports = {
           children: [
             {
               title: "Contributing to the docs",
-              url: "https://github.com/cosmos/cosmos-sdk/tree/master/docs"
+              url:
+                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
             },
             {
               title: "Source code on GitHub",

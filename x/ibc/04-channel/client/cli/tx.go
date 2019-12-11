@@ -174,7 +174,7 @@ func GetMsgChannelOpenConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comma
 	return &cobra.Command{
 		Use:   "open-confirm [port-id] [channel-id] [/path/to/proof-ack.json] [proof-height]",
 		Short: "Creates and sends a ChannelOpenConfirm message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
@@ -217,7 +217,7 @@ func GetMsgChannelCloseInitCmd(storeKey string, cdc *codec.Codec) *cobra.Command
 	return &cobra.Command{
 		Use:   "close-init [port-id] [channel-id]",
 		Short: "Creates and sends a ChannelCloseInit message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
@@ -241,7 +241,7 @@ func GetMsgChannelCloseConfirmCmd(storeKey string, cdc *codec.Codec) *cobra.Comm
 	return &cobra.Command{
 		Use:   "close-confirm [port-id] [channel-id] [/path/to/proof-init.json] [proof-height]",
 		Short: "Creates and sends a ChannelCloseConfirm message",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
@@ -285,213 +285,3 @@ func channelOrder() types.Order {
 	}
 	return types.UNORDERED
 }
-
-// func GetCmdHandshake(storeKey string, cdc *codec.Codec) *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "handshake",
-// 		Short: "initiate connection handshake between two chains",
-// 		Long: strings.TrimSpace(
-// 			fmt.Sprintf(`initialize a connection on chain A with a given counterparty chain B:
-
-// Example:
-// $ %s tx ibc channel handshake [client-id] [port-id] [chan-id] [conn-id] [cp-client-id] [cp-port-id] [cp-chain-id] [cp-conn-id]
-// 		`, version.ClientName)),
-// 		Args: cobra.ExactArgs(8),
-// 		// Args: []string{portid1, chanid1, connid1, portid2, chanid2, connid2}
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			// --chain-id values for each chain
-// 			cid1 := viper.GetString(flags.FlagChainID)
-// 			cid2 := viper.GetString(FlagChainID2)
-
-// 			// --from values for each wallet
-// 			from1 := viper.GetString(FlagFrom1)
-// 			from2 := viper.GetString(FlagFrom2)
-
-// 			// --node values for each RPC
-// 			node1 := viper.GetString(FlagNode1)
-// 			node2 := viper.GetString(FlagNode2)
-
-// 			// client IDs
-// 			clientid1 := args[0]
-// 			clientid2 := args[4]
-
-// 			// port IDs
-// 			portid1 := args[1]
-// 			portid2 := args[5]
-
-// 			// channel IDs
-// 			chanid1 := args[2]
-// 			chanid2 := args[6]
-
-// 			// connection IDs
-// 			connid1 := args[3]
-// 			connid2 := args[7]
-
-// 			inBuf := bufio.NewReader(cmd.InOrStdin())
-// 			prove := true
-
-// 			// Create txbldr, clictx, querier for cid1
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			txBldr1 := auth.NewTxBuilderFromCLI(inBuf).
-// 				WithTxEncoder(authutils.GetTxEncoder(cdc))
-// 			ctx1 := context.NewCLIContextIBC(inBuf, from1, cid1, node1).
-// 				WithCodec(cdc).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-
-// 			// Create txbldr, clictx, querier for cid2
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			txBldr2 := auth.NewTxBuilderFromCLI(inBuf).
-// 				WithTxEncoder(authutils.GetTxEncoder(cdc))
-// 			ctx2 := context.NewCLIContextIBC(inBuf, from2, cid2, node2).
-// 				WithCodec(cdc).
-// 				WithBroadcastMode(flags.BroadcastBlock)
-
-// 			// get passphrase for key from1
-// 			passphrase1, err := keys.GetPassphrase(from1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// get passphrase for key from2
-// 			passphrase2, err := keys.GetPassphrase(from2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// TODO: check state and if not Idle continue existing process
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			msgOpenInit := types.NewMsgChannelOpenInit(portid1, chanid1, "v1.0.0", channelOrder(), []string{connid1}, portid2, chanid2, ctx1.GetFromAddress())
-// 			if err := msgOpenInit.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err := authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenInit}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is committed
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, _, err := clientutils.QueryTendermintHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-// 			if err := msgUpdateClient.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			channelRes, err := utils.QueryChannel(ctx1.WithHeight(header.Height-1), portid1, chanid1, prove)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgOpenTry := types.NewMsgChannelOpenTry(portid2, chanid2, "v1.0.0", channelOrder(), []string{connid2}, portid1, chanid1, "v1.0.0", channelRes.Proof, uint64(header.Height), ctx2.GetFromAddress())
-// 			if err := msgUpdateClient.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenTry}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is committed
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, _, err = clientutils.QueryTendermintHeader(ctx2)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientid1, header, ctx1.GetFromAddress())
-// 			if err := msgUpdateClient.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgUpdateClient}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			channelRes, err = utils.QueryChannel(ctx2.WithHeight(header.Height-1), portid2, chanid2, prove)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			msgOpenAck := types.NewMsgChannelOpenAck(portid1, chanid1, "v1.0.0", channelRes.Proof, uint64(header.Height), ctx1.GetFromAddress())
-// 			if err := msgOpenAck.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr1, ctx1, []sdk.Msg{msgOpenAck}, passphrase1)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			// Another block has to be passed after msginit is committed
-// 			// to retrieve the correct proofs
-// 			time.Sleep(8 * time.Second)
-
-// 			header, _, err = clientutils.QueryTendermintHeader(ctx1)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid2)
-// 			msgUpdateClient = clienttypes.NewMsgUpdateClient(clientid2, header, ctx2.GetFromAddress())
-// 			if err := msgUpdateClient.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgUpdateClient}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			viper.Set(flags.FlagChainID, cid1)
-// 			channelRes, err = utils.QueryChannel(ctx1.WithHeight(header.Height-1), portid1, chanid1, prove)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msgOpenConfirm := types.NewMsgChannelOpenConfirm(portid2, chanid2, channelRes.Proof, uint64(header.Height), ctx2.GetFromAddress())
-// 			if err := msgOpenConfirm.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			res, err = authutils.CompleteAndBroadcastTx(txBldr2, ctx2, []sdk.Msg{msgOpenConfirm}, passphrase2)
-// 			if err != nil || !res.IsOK() {
-// 				return err
-// 			}
-
-// 			return nil
-// 		},
-// 	}
-
-// 	cmd.Flags().String(FlagNode1, "tcp://localhost:26657", "RPC port for the first chain")
-// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-// 	cmd.Flags().String(FlagFrom1, "", "key in local keystore for first chain")
-// 	cmd.Flags().String(FlagFrom2, "", "key in local keystore for second chain")
-// 	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
-// 	cmd.Flags().Bool(FlagOrdered, true, "Pass flag for opening ordered channels")
-
-// 	cmd.MarkFlagRequired(FlagFrom1)
-// 	cmd.MarkFlagRequired(FlagFrom2)
-
-// 	return cmd
-// }

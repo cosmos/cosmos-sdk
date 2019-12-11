@@ -1,3 +1,8 @@
+---
+order: 0
+title: Overview
+---
+
 # Concepts
 
 ## The Minting Mechanism

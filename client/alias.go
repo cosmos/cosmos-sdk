@@ -24,6 +24,7 @@ import (
 const (
 	DefaultGasAdjustment   = flags.DefaultGasAdjustment
 	DefaultGasLimit        = flags.DefaultGasLimit
+	DefaultKeyringBackend  = flags.DefaultKeyringBackend
 	GasFlagAuto            = flags.GasFlagAuto
 	BroadcastBlock         = flags.BroadcastBlock
 	BroadcastSync          = flags.BroadcastSync
@@ -46,12 +47,16 @@ const (
 	FlagDryRun             = flags.FlagDryRun
 	FlagGenerateOnly       = flags.FlagGenerateOnly
 	FlagIndentResponse     = flags.FlagIndentResponse
+	FlagKeyringBackend     = flags.FlagKeyringBackend
 	FlagListenAddr         = flags.FlagListenAddr
 	FlagMaxOpenConnections = flags.FlagMaxOpenConnections
 	FlagRPCReadTimeout     = flags.FlagRPCReadTimeout
 	FlagRPCWriteTimeout    = flags.FlagRPCWriteTimeout
 	FlagOutputDocument     = flags.FlagOutputDocument
 	FlagSkipConfirmation   = flags.FlagSkipConfirmation
+	KeyringBackendFile     = flags.KeyringBackendFile
+	KeyringBackendOS       = flags.KeyringBackendOS
+	KeyringBackendTest     = flags.KeyringBackendTest
 	DefaultKeyPass         = keys.DefaultKeyPass
 	FlagAddress            = keys.FlagAddress
 	FlagPublicKey          = keys.FlagPublicKey

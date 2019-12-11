@@ -21,16 +21,14 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, codespace sdk.CodespaceType) (k Keeper) {
-	k = Keeper{
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, codespace sdk.CodespaceType) Keeper {
+	return Keeper{
 		cdc:       cdc,
 		key:       key,
 		tkey:      tkey,
 		codespace: codespace,
 		spaces:    make(map[string]*Subspace),
 	}
-
-	return k
 }
 
 // Logger returns a module-specific logger.

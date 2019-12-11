@@ -1,35 +1,45 @@
-package subspace
+package subspace_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/stretchr/testify/require"
 )
 
-type testparams struct {
-	i int64
-	b bool
-}
-
-func (tp *testparams) ParamSetPairs() ParamSetPairs {
-	return ParamSetPairs{
-		{[]byte("i"), &tp.i},
-		{[]byte("b"), &tp.b},
-	}
-}
-
 func TestKeyTable(t *testing.T) {
-	table := NewKeyTable()
+	table := subspace.NewKeyTable()
 
-	require.Panics(t, func() { table.RegisterType([]byte(""), nil) })
-	require.Panics(t, func() { table.RegisterType([]byte("!@#$%"), nil) })
-	require.Panics(t, func() { table.RegisterType([]byte("hello,"), nil) })
-	require.Panics(t, func() { table.RegisterType([]byte("hello"), nil) })
+	require.Panics(t, func() { table.RegisterType(subspace.ParamSetPair{[]byte(""), nil, nil}) })
+	require.Panics(t, func() { table.RegisterType(subspace.ParamSetPair{[]byte("!@#$%"), nil, nil}) })
+	require.Panics(t, func() { table.RegisterType(subspace.ParamSetPair{[]byte("hello,"), nil, nil}) })
+	require.Panics(t, func() { table.RegisterType(subspace.ParamSetPair{[]byte("hello"), nil, nil}) })
 
-	require.NotPanics(t, func() { table.RegisterType([]byte("hello"), bool(false)) })
-	require.NotPanics(t, func() { table.RegisterType([]byte("world"), int64(0)) })
-	require.Panics(t, func() { table.RegisterType([]byte("hello"), bool(false)) })
+	require.NotPanics(t, func() {
+		table.RegisterType(subspace.ParamSetPair{keyBondDenom, string("stake"), validateBondDenom})
+	})
+	require.NotPanics(t, func() {
+		table.RegisterType(subspace.ParamSetPair{keyMaxValidators, uint16(100), validateMaxValidators})
+	})
+	require.Panics(t, func() {
+		table.RegisterType(subspace.ParamSetPair{keyUnbondingTime, time.Duration(1), nil})
+	})
+	require.NotPanics(t, func() {
+		table.RegisterType(subspace.ParamSetPair{keyUnbondingTime, time.Duration(1), validateMaxValidators})
+	})
+	require.NotPanics(t, func() {
+		newTable := subspace.NewKeyTable()
+		newTable.RegisterParamSet(&params{})
+	})
 
-	require.NotPanics(t, func() { table.RegisterParamSet(&testparams{}) })
-	require.Panics(t, func() { table.RegisterParamSet(&testparams{}) })
+	require.Panics(t, func() { table.RegisterParamSet(&params{}) })
+	require.Panics(t, func() { subspace.NewKeyTable(subspace.ParamSetPair{[]byte(""), nil, nil}) })
+
+	require.NotPanics(t, func() {
+		subspace.NewKeyTable(
+			subspace.ParamSetPair{[]byte("test"), string("stake"), validateBondDenom},
+			subspace.ParamSetPair{[]byte("test2"), uint16(100), validateMaxValidators},
+		)
+	})
 }

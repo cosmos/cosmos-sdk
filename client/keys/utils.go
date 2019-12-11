@@ -52,7 +52,7 @@ func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.K
 // If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
 // CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
 // password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
 	switch keyringBackend {
 	case flags.KeyringBackendTest:

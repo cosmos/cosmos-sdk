@@ -10,7 +10,7 @@ import (
 
 // ExportKeyCommand exports private keys from the key store.
 func ExportKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
 		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,

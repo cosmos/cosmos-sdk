@@ -6,6 +6,16 @@ module.exports = {
       permalinkSymbol: ""
     }
   },
+  head: [
+    [
+      "link",
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href: "https://cloud.typography.com/6138116/7255612/css/fonts.css"
+      }
+    ],
+  ],
   locales: {
     "/": {
       lang: "en-US"

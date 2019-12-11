@@ -9,43 +9,42 @@
 [ICS 26 - Routing Module](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module) defines a function [`handlePacketRecv`](https://github.com/cosmos/ics/tree/master/spec/ics-026-routing-module#packet-relay).
 
 In ICS 26, the routing module is defined as a layer above each application module
-which verifies and routes messages to the destination modules. It is possible to 
+which verifies and routes messages to the destination modules. It is possible to
 implement it as a separate module, however, we already have functionality to route
-messages upon the destination identifiers in the baseapp. This ADR suggests 
+messages upon the destination identifiers in the baseapp. This ADR suggests
 to utilize existing `baseapp.router` to route packets to application modules.
 
-Generally, routing module callbacks have two separate steps in them, 
-verificaton and execution. This corresponds to the `AnteHandler`-`Handler`
+Generally, routing module callbacks have two separate steps in them,
+verification and execution. This corresponds to the `AnteHandler`-`Handler`
 model inside the SDK. We can do the verification inside the `AnteHandler`
-in order to increase developer ergonomics by reducing boilerplate 
+in order to increase developer ergonomics by reducing boilerplate
 verification code.
 
-For atomic multimessage transaction, we want to keep the IBC related 
+For atomic multi-message transaction, we want to keep the IBC related
 state modification to be preserved even the application side state change
 reverts. One of the example might be IBC token sending message following with
 stake delegation which uses the tokens received by the previous packet message.
-If the token receiving failes for any reason, we might not want to keep 
-executing the transaction, but we also don't want to abort the transaction 
-or the sequence and commitment will be reverted and the channel will be stuck. 
+If the token receiving fails for any reason, we might not want to keep
+executing the transaction, but we also don't want to abort the transaction
+or the sequence and commitment will be reverted and the channel will be stuck.
 This ADR suggests new `CodeType`, `CodeTxBreak`, to fix this problem.
 
 ## Decision
 
-`PortKeeper` will have the capability key that is able to access only the 
+`PortKeeper` will have the capability key that is able to access only the
 channels bound to the port. Entities that hold a `PortKeeper` will be
 able to call the methods on it which are corresponding with the methods with
 the same names on the `ChannelKeeper`, but only with the
 allowed port. `ChannelKeeper.Port(string, ChannelChecker)` will be defined to
-easily construct a capability-safe `PortKeeper`. This will be addressed in 
-another ADR and we will use unsecure `ChannelKeeper` for now.
+easily construct a capability-safe `PortKeeper`. This will be addressed in
+another ADR and we will use insecure `ChannelKeeper` for now.
 
 `baseapp.runMsgs` will break the loop over the messages if one of the handlers
-returns `!Result.IsOK()`. However, the outer logic will write the cached 
+returns `!Result.IsOK()`. However, the outer logic will write the cached
 store if `Result.IsOK() || Result.Code.IsBreak()`. `Result.Code.IsBreak()` if
 `Result.Code == CodeTxBreak`.
 
 ```go
-// Pseudocode
 func (app *BaseApp) runTx(tx Tx) (result Result) {
   msgs := tx.GetMsgs()
   
@@ -56,12 +55,12 @@ func (app *BaseApp) runTx(tx Tx) (result Result) {
     if !newCtx.IsZero() {
       ctx = newCtx.WithMultiStore(ms)
     }
-    
+
     if err != nil {
       // error handling logic
       return res
     }
-    
+
     msCache.Write()
   }
   
@@ -121,13 +120,13 @@ are `sdk.Msg` types correspond to `handleUpdateClient`, `handleRecvPacket`,
 `handleAcknowledgementPacket`, `handleTimeoutPacket` of the routing module,
 respectively.
 
-The side effects of `RecvPacket`, `VerifyAcknowledgement`, 
-`VerifyTimeout` will be extracted out into separated functions, 
+The side effects of `RecvPacket`, `VerifyAcknowledgement`,
+`VerifyTimeout` will be extracted out into separated functions,
 `WriteAcknowledgement`, `DeleteCommitment`, `DeleteCommitmentTimeout`, respectively,
 which will be called by the application handlers after the execution.
 
 `WriteAcknowledgement` writes the acknowledgement to the state that can be
-verified by the counterparty chain and increments the sequence to prevent 
+verified by the counter-party chain and increments the sequence to prevent
 double execution. `DeleteCommitment` will delete the commitment stored,
 `DeleteCommitmentTimeout` will delete the commitment and close channel in case
 of ordered channel.
@@ -167,16 +166,16 @@ which will make the channel unable to proceed.
 `ChannelKeeper.CheckOpen` method will be introduced. This will replace `onChanOpen*` defined 
 under the routing module specification. Instead of define each channel handshake callback
 functions, application modules can provide `ChannelChecker` function with the `AppModule`
-which wille be injected to `ChannelKeeper.Port()` at the top level application. 
-`CheckOpen` will find the correct `ChennelChecker` using the 
-`PortID` and call it, which will return an error if it is unacceptible by the application.
+which will be injected to `ChannelKeeper.Port()` at the top level application.
+`CheckOpen` will find the correct `ChennelChecker` using the
+`PortID` and call it, which will return an error if it is unacceptable by the application.
 
 The `ProofVerificationDecorator` will be inserted to the top level application.
-It is not safe to make each module responsible to call proof verification 
-logic, whereas application can misbehave(in terms of IBC protocol) by 
+It is not safe to make each module responsible to call proof verification
+logic, whereas application can misbehave(in terms of IBC protocol) by
 mistake.
 
-The `ProofVerificationDecorator` should come right after the default sybil attack 
+The `ProofVerificationDecorator` should come right after the default sybil attack
 resistent layer from the current `auth.NewAnteHandler`:
 
 ```go

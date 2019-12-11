@@ -20,17 +20,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyCommunityTax, "",
+		simulation.NewSimParamChange(types.ModuleName, keyCommunityTax,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenCommunityTax(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyBaseProposerReward, "",
+		simulation.NewSimParamChange(types.ModuleName, keyBaseProposerReward,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBaseProposerReward(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyBonusProposerReward, "",
+		simulation.NewSimParamChange(types.ModuleName, keyBonusProposerReward,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBonusProposerReward(r))
 			},

@@ -1,4 +1,9 @@
-# Upgrade Module Specification
+---
+order: 0
+title: Overview
+---
+
+# `upgrade`
 
 ## Abstract
 

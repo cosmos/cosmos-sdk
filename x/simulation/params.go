@@ -94,23 +94,21 @@ type SimValFn func(r *rand.Rand) string
 type ParamChange struct {
 	Subspace string
 	Key      string
-	Subkey   string
 	SimValue SimValFn
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChange {
+func NewSimParamChange(subspace, key string, simVal SimValFn) ParamChange {
 	return ParamChange{
 		Subspace: subspace,
 		Key:      key,
-		Subkey:   subkey,
 		SimValue: simVal,
 	}
 }
 
 // ComposedKey creates a new composed key for the param change proposal
 func (spc ParamChange) ComposedKey() string {
-	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
+	return fmt.Sprintf("%s/%s", spc.Subspace, spc.Key)
 }
 
 //-----------------------------------------------------------------------------

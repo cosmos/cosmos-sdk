@@ -11,7 +11,7 @@ var denomUnits = map[string]Dec{}
 // RegisterDenom registers a denomination with a corresponding unit. If the
 // denomination is already registered, an error will be returned.
 func RegisterDenom(denom string, unit Dec) error {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		return err
 	}
 
@@ -26,7 +26,7 @@ func RegisterDenom(denom string, unit Dec) error {
 // GetDenomUnit returns a unit for a given denomination if it exists. A boolean
 // is returned if the denomination is registered.
 func GetDenomUnit(denom string) (Dec, bool) {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		return ZeroDec(), false
 	}
 
@@ -42,7 +42,7 @@ func GetDenomUnit(denom string) (Dec, bool) {
 // denomination is invalid or if neither denomination is registered, an error
 // is returned.
 func ConvertCoin(coin Coin, denom string) (Coin, error) {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		return Coin{}, err
 	}
 

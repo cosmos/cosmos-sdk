@@ -37,6 +37,7 @@ const (
 	ParamBaseProposerReward          = types.ParamBaseProposerReward
 	ParamBonusProposerReward         = types.ParamBonusProposerReward
 	ParamWithdrawAddrEnabled         = types.ParamWithdrawAddrEnabled
+	TypeMsgFundCommunityPool         = types.TypeMsgFundCommunityPool
 )
 
 var (
@@ -90,6 +91,7 @@ var (
 	NewMsgSetWithdrawAddress                   = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward              = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorCommission          = types.NewMsgWithdrawValidatorCommission
+	MsgFundCommunityPool                       = types.NewMsgFundCommunityPool
 	NewCommunityPoolSpendProposal              = types.NewCommunityPoolSpendProposal
 	NewQueryValidatorOutstandingRewardsParams  = types.NewQueryValidatorOutstandingRewardsParams
 	NewQueryValidatorCommissionParams          = types.NewQueryValidatorCommissionParams

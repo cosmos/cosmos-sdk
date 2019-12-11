@@ -52,7 +52,7 @@ func (coin Coin) String() string {
 // validate returns an error if the Coin has a negative amount or if
 // the denom is invalid.
 func validate(denom string, amount Int) error {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		return err
 	}
 
@@ -203,7 +203,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if err := validateDenom(coins[0].Denom); err != nil {
+		if err := ValidateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -599,7 +599,9 @@ var (
 	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
-func validateDenom(denom string) error {
+// ValidateDenom validates a denomination string returning an error if it is
+// invalid.
+func ValidateDenom(denom string) error {
 	if !reDnm.MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
@@ -607,7 +609,7 @@ func validateDenom(denom string) error {
 }
 
 func mustValidateDenom(denom string) {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		panic(err)
 	}
 }
@@ -629,7 +631,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if err := validateDenom(denomStr); err != nil {
+	if err := ValidateDenom(denomStr); err != nil {
 		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 

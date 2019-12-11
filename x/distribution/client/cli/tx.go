@@ -261,12 +261,13 @@ Where proposal.json contains:
 	return cmd
 }
 
-// command to fund the community pool
+// GetCmdFundCommunityPool returns a command implementation that supports directly
+// funding the community pool.
 func GetCmdFundCommunityPool(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "fund-community-pool [amount]",
 		Args:  cobra.ExactArgs(1),
-		Short: "funds the community pool with the specified amount",
+		Short: "Funds the community pool with the specified amount",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Funds the community pool with the specified amount
 
@@ -287,7 +288,11 @@ $ %s tx fund-community-pool 100uatom --from mykey
 				return err
 			}
 
-			msg := types.NewMsgDepositIntoCommunityPool(amount, depositorAddr)
+			msg := types.NewMsgFundCommunityPool(amount, depositorAddr)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}

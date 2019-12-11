@@ -1,4 +1,4 @@
-# Supply Specification
+# `supply`
 
 ## Contents
 

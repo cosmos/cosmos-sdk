@@ -28,22 +28,12 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 			return ErrUnknownSubspace(k.codespace, c.Subspace)
 		}
 
-		var err error
-		if len(c.Subkey) == 0 {
-			k.Logger(ctx).Info(
-				fmt.Sprintf("setting new parameter; key: %s, value: %s", c.Key, c.Value),
-			)
+		k.Logger(ctx).Info(
+			fmt.Sprintf("attempt to set new parameter value; key: %s, value: %s", c.Key, c.Value),
+		)
 
-			err = ss.Update(ctx, []byte(c.Key), []byte(c.Value))
-		} else {
-			k.Logger(ctx).Info(
-				fmt.Sprintf("setting new parameter; key: %s, subkey: %s, value: %s", c.Key, c.Subspace, c.Value),
-			)
-			err = ss.UpdateWithSubkey(ctx, []byte(c.Key), []byte(c.Subkey), []byte(c.Value))
-		}
-
-		if err != nil {
-			return ErrSettingParameter(k.codespace, c.Key, c.Subkey, c.Value, err.Error())
+		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
+			return ErrSettingParameter(k.codespace, c.Key, c.Value, err.Error())
 		}
 	}
 

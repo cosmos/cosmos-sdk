@@ -41,7 +41,7 @@ sections:
   - title: Modules
     desc: Explore existing modules to build your application with.
     icon: specifications
-    url: /modules
+    url: /modules/auth/
 stack:
   - title: Cosmos Hub
     desc: The first of thousands of interconnected blockchains on the Cosmos Network.

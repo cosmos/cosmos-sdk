@@ -8,5 +8,3 @@ for D in ../x/*; do
     mkdir -p "modules/$(echo $D | awk -F/ '{print $NF}')" && cp -r $D/spec/* "$_"
   fi
 done
-
-cp ../x/README.md modules/

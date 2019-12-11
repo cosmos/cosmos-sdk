@@ -1,8 +1,3 @@
----
-parent:
-  order: false
----
-
 # List of Modules
 
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
@@ -19,4 +14,3 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 - [Supply](./x/supply/spec/README.md) - Total token supply of the chain.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](../docs/building-modules/README.md).
-

@@ -20,8 +20,13 @@ func TestBeginBlocker(t *testing.T) {
 	params.HistoricalEntries = 5
 	k.SetParams(ctx, params)
 
-	// set historical info at 5 which should be pruned
-	header := abci.Header{
+	// set historical info at 5, 4 which should be pruned
+	// and check that it has been stored
+	h4 := abci.Header{
+		ChainID: "HelloChain",
+		Height:  4,
+	}
+	h5 := abci.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}
@@ -29,9 +34,14 @@ func TestBeginBlocker(t *testing.T) {
 		types.NewValidator(sdk.ValAddress(keeper.Addrs[0]), keeper.PKs[0], types.Description{}),
 		types.NewValidator(sdk.ValAddress(keeper.Addrs[1]), keeper.PKs[1], types.Description{}),
 	}
-	hi5 := types.NewHistoricalInfo(header, valSet)
+	hi4 := types.NewHistoricalInfo(h4, valSet)
+	hi5 := types.NewHistoricalInfo(h5, valSet)
+	k.SetHistoricalInfo(ctx, 4, hi4)
 	k.SetHistoricalInfo(ctx, 5, hi5)
-	recv, found := k.GetHistoricalInfo(ctx, 5)
+	recv, found := k.GetHistoricalInfo(ctx, 4)
+	require.True(t, found)
+	require.Equal(t, hi4, recv)
+	recv, found = k.GetHistoricalInfo(ctx, 5)
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
@@ -46,7 +56,7 @@ func TestBeginBlocker(t *testing.T) {
 	k.SetLastValidatorPower(ctx, val2.OperatorAddress, 8)
 
 	// Set Header for BeginBlock context
-	header = abci.Header{
+	header := abci.Header{
 		ChainID: "HelloChain",
 		Height:  10,
 	}
@@ -63,8 +73,11 @@ func TestBeginBlocker(t *testing.T) {
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")
 	require.Equal(t, expected, recv, "GetHistoricalInfo returned eunexpected result")
 
-	// Check HistoricalInfo at height 5 is pruned
+	// Check HistoricalInfo at height 5, 4 is pruned
+	recv, found = k.GetHistoricalInfo(ctx, 4)
+	require.False(t, found, "GetHistoricalInfo did not prune earlier height")
+	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo at height 4 is not empty after prune")
 	recv, found = k.GetHistoricalInfo(ctx, 5)
-	require.False(t, found, "GetHistoricalInfo did not prune")
-	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo is not empty after prune")
+	require.False(t, found, "GetHistoricalInfo did not prune first prune height")
+	require.Equal(t, types.HistoricalInfo{}, recv, "GetHistoricalInfo at height 5 is not empty after prune")
 }

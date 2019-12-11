@@ -2,89 +2,115 @@
 
 ## Prerequisites
 
-* [Cosmos Blockchain Simulator](../concepts/using-the-sdk/simulation.md)
-<!-- Application SimulationManager -->
+* [Cosmos Blockchain Simulator](./../using-the-sdk/simulation.md)
 
 ## Synopsis
 
 This document details how to define each module simulation functions to be
 integrated with the application `SimulationManager`.
 
-* [Simulation Package](#cli)
-  * [Type decoders](#type-decoders)
+* [Simulation package](#simulation-package)
+  * [Store decoders](#store-decoders)
   * [Randomized genesis](#randomized-genesis)
   * [Randomized parameters](#randomized-parameters)
   * [Random weighted operations](#random-weighted-operations)
   * [Random proposal contents](#random-proposal-contents)
-* [Registering simulation functions](#registering-simulation-functions)
+* [Registering the module simulation functions](#registering-simulation-functions)
+* [App simulator manager](#app-simulator-manager)
+* [Simulation tests](#simulation-tests)
 
 ## Simulation package
 
-### Type decoders
+Every module that implements the SDK simulator needs to have a `x/<module>/simulation`
+package which contains the primary functions required by the fuzz tests: store
+decoders, randomized genesis state and parameters, weighted operations and proposal
+contents.
+
+### Store decoders
+
+Registering the store decoders is required for the `AppImportExport`. This allows
+for the key-value pairs from the stores to be decoded (_i.e_ unmarshalled)
+to their corresponding types. In particular, it matches the key to a concrete type
+and then unmarshals the value from the `KVPair` to the type provided.
+
+You can use the example here from the distribution module to implement your store decoders.
 
 ### Randomized genesis
 
+The simulator must test different scenarios and values for the genesis parameter
+in order to succesfully check. The `simulator` package from each module must
+expose a `RandomizedGenState` function to generate the initial random `GenesisState`
+from a given seed. In
+
+Once the module genesis parameter are generated randomly (or with the key and
+values defined in a `params` file), they are marshaled to JSON format and added
+to the app genesis JSON to use it on the simulations.
+
+You can check an example on how to create the randomized genesis here.
+
 ### Randomized parameters
+
+<!-- TODO: -->
 
 ### Random weighted operations
 
+Operations are one of the crucial parts of the SDK simulation. They are the transactions
+(`Msg`) that are simulated with random field values. The sender of the operation
+is also assigned randomly.
+
+Operations on the simulation are simulated using the full [transaction cycle](TODO:link) of a
+`ABCI` application that exposes the `BaseApp`.
+
+<!-- TODO: Operation weights -->
+
+<!-- TODO: Skip results -->
+
 ### Random proposal contents
+
+Randomized governance proposals are also supported on the SDK simulator. Each
+module must define the governance proposal `Content`s that they expose and register
+them to be used on the parameters.
 
 ## Registering simulation functions
 
-Now that all the required functions are defined, we need to integrate them into the module pattern:
+Now that all the required functions are defined, we need to integrate them into 
+the module pattern within the `module.go`:
+
+<!-- TODO: add link to module.go example -->
+
+## App Simulator manager
+
+The following step is setting up the [`SimulatorManager`] at the app level. This
+is required for the simulation test files on the next step.
 
 ```go
-// x/<module>/module.go
-
-import (
-  // ...
-  "github.com/cosmos/cosmos-sdk/x/<module>/simulation"
-  sim "github.com/cosmos/cosmos-sdk/x/simulation"
-)
-
-var (
-  _ module.AppModule           = AppModule{}
-  _ module.AppModuleBasic      = AppModuleBasic{}
-  _ module.AppModuleSimulation = AppModule{} //  <-- AppModule now implements the module.AppModuleSimulation interface
-)
-
-// ...
-//____________________________________________________________________________
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the <module> module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
- simulation.RandomizedGenState(simState)
+type CustomApp struct {
+  ...
+  sm *module.SimulationManager
 }
+```
 
-// ProposalContents returns all the <module> content functions used to
-// simulate governance proposals.
-//
-// NOTE: return nil if your module doesn't integrate the goverance module
-func (am AppModule) ProposalContents(simState module.SimulationState) []sim.WeightedProposalContent {
- return simulation.ProposalContents(simState,
-   // keepers defined in AppModule
- )
-}
+Then at the intantiation of the application, we create the `SimulationManager`
+instance in the same way we create the `ModuleManager` but this time we only pass
+the modules that implement the simulation functions from the `AppModuleSimulation`
+interface described above.
 
-// RandomizedParams creates randomized <module> param changes for the simulator.
-//
-// NOTE: return nil if your module doesn't integrate the params module
-func (AppModule) RandomizedParams(r *rand.Rand) []sim.ParamChange {
- return simulation.ParamChanges(r)
-}
+```go
+func NewCustomApp(...) {
+  // create the simulation manager and define the order of the modules for deterministic simulations
+  app.sm = module.NewSimulationManager(
+    auth.NewAppModule(app.accountKeeper),
+    bank.NewAppModule(app.bankKeeper, app.accountKeeper),
+    supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
+    ov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
+    mint.NewAppModule(app.mintKeeper),
+    distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
+    staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+    slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
+  )
 
-// RegisterStoreDecoder registers a decoder for <module> module's types
-func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-  sdr[StoreKey] = simulation.DecodeStore
-}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []sim.WeightedOperation {
- return simulation.WeightedOperations(
-   simState.AppParams, simState.Cdc,
-   // keepers defined in AppModule
-   )
+  // register the store decoders for simulation tests
+  app.sm.RegisterStoreDecoders()
+  ...
 }
 ```

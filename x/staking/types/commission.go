@@ -40,7 +40,7 @@ func NewCommission(rate, maxRate, maxChangeRate sdk.Dec) Commission {
 	}
 }
 
-// NewCommission returns an initialized validator commission with a specified
+// NewCommissionWithTime returns an initialized validator commission with a specified
 // update time which should be the current block BFT time.
 func NewCommissionWithTime(rate, maxRate, maxChangeRate sdk.Dec, updatedAt time.Time) Commission {
 	return Commission{
@@ -69,7 +69,7 @@ func (c Commission) String() string {
 // parameters. If validation fails, an SDK error is returned.
 func (c CommissionRates) Validate() sdk.Error {
 	switch {
-	case c.MaxRate.LT(sdk.ZeroDec()):
+	case c.MaxRate.IsNegative():
 		// max rate cannot be negative
 		return ErrCommissionNegative(DefaultCodespace)
 
@@ -77,7 +77,7 @@ func (c CommissionRates) Validate() sdk.Error {
 		// max rate cannot be greater than 1
 		return ErrCommissionHuge(DefaultCodespace)
 
-	case c.Rate.LT(sdk.ZeroDec()):
+	case c.Rate.IsNegative():
 		// rate cannot be negative
 		return ErrCommissionNegative(DefaultCodespace)
 
@@ -85,7 +85,7 @@ func (c CommissionRates) Validate() sdk.Error {
 		// rate cannot be greater than the max rate
 		return ErrCommissionGTMaxRate(DefaultCodespace)
 
-	case c.MaxChangeRate.LT(sdk.ZeroDec()):
+	case c.MaxChangeRate.IsNegative():
 		// change rate cannot be negative
 		return ErrCommissionChangeRateNegative(DefaultCodespace)
 
@@ -105,7 +105,7 @@ func (c Commission) ValidateNewRate(newRate sdk.Dec, blockTime time.Time) sdk.Er
 		// new rate cannot be changed more than once within 24 hours
 		return ErrCommissionUpdateTime(DefaultCodespace)
 
-	case newRate.LT(sdk.ZeroDec()):
+	case newRate.IsNegative():
 		// new rate cannot be negative
 		return ErrCommissionNegative(DefaultCodespace)
 

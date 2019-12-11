@@ -15,7 +15,7 @@ var (
 	holder     = "holder"
 )
 
-// nolint: deadcode unused
+// nolint:deadcode,unused
 func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(isCheckTx)
 

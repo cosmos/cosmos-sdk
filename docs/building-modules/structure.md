@@ -1,8 +1,9 @@
-# Module Specification
+---
+order: 12
+synopsis: This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design.
+---
 
-This document outlines the recommended structure of Cosmos SDK modules. These
-ideas are meant to be applied as suggestions. Application developers are encouraged
-to improve upon and contribute to module structure and development design.
+# Recommended Folder Structure
 
 ## Structure
 
@@ -86,3 +87,7 @@ interfaces.
 - `simulation/`: The module's simulation package defines all the required functions
 used on the blockchain simulator: randomized genesis state, parameters, weigthed
 operations, proposal contents and types decoders.
+
+## Next {hide}
+
+Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}

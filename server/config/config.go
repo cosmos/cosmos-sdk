@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,20 +22,20 @@ type BaseConfig struct {
 	// HaltHeight contains a non-zero block height at which a node will gracefully
 	// halt and shutdown that can be used to assist upgrades and testing.
 	//
-	// Note: State will not be committed on the corresponding height and any logs
-	// indicating such can be safely ignored.
+	// Note: Commitment of state will be attempted on the corresponding block.
 	HaltHeight uint64 `mapstructure:"halt-height"`
 
 	// HaltTime contains a non-zero minimum block time (in Unix seconds) at which
 	// a node will gracefully halt and shutdown that can be used to assist
 	// upgrades and testing.
 	//
-	// Note: State will not be committed on the corresponding height and any logs
-	// indicating such can be safely ignored.
+	// Note: Commitment of state will be attempted on the corresponding block.
 	HaltTime uint64 `mapstructure:"halt-time"`
 
 	// InterBlockCache enables inter-block caching.
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
+
+	Pruning string `mapstructure:"pruning"`
 }
 
 // Config defines the server's top level configuration
@@ -75,6 +76,7 @@ func DefaultConfig() *Config {
 		BaseConfig{
 			MinGasPrices:    defaultMinGasPrices,
 			InterBlockCache: true,
+			Pruning:         store.PruningStrategySyncable,
 		},
 	}
 }

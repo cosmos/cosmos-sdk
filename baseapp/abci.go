@@ -60,7 +60,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 	// NOTE: We don't commit, but BeginBlock for block 1 starts from this
 	// deliverState.
-	return
+	return res
 }
 
 // Info implements the ABCI interface.
@@ -137,7 +137,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
-	return
+	return res
 }
 
 // EndBlock implements the ABCI interface.
@@ -162,10 +162,15 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) 
 	var result sdk.Result
 
 	tx, err := app.txDecoder(req.Tx)
-	if err != nil {
+	switch {
+	case err != nil:
 		result = err.Result()
-	} else {
+	case req.Type == abci.CheckTxType_New:
 		result = app.runTx(runTxModeCheck, req.Tx, tx)
+	case req.Type == abci.CheckTxType_Recheck:
+		result = app.runTx(runTxModeReCheck, req.Tx, tx)
+	default:
+		panic(fmt.Sprintf("Unknown RequestCheckTx Type: %v", req.Type))
 	}
 
 	return abci.ResponseCheckTx{
@@ -210,24 +215,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
-	var halt bool
-
-	switch {
-	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
-		halt = true
-
-	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
-		halt = true
-	}
-
-	if halt {
-		app.halt()
-
-		// Note: State is not actually committed when halted. Logs from Tendermint
-		// can be ignored.
-		return abci.ResponseCommit{}
-	}
-
 	// Write the DeliverTx state which is cache-wrapped and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
@@ -243,6 +230,24 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// empty/reset the deliver state
 	app.deliverState = nil
+
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		// Halt the binary and allow Tendermint to receive the ResponseCommit
+		// response with the commit ID hash. This will allow the node to successfully
+		// restart and process blocks assuming the halt configuration has been
+		// reset or moved to a more distant value.
+		app.halt()
+	}
 
 	return abci.ResponseCommit{
 		Data: commitID.Hash,
@@ -391,8 +396,8 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	// path[0] should be "custom" because "/custom" prefix is required for keeper
 	// queries.
 	//
-	// The queryRouter routes using path[1]. For example, in the path
-	// "custom/gov/proposal", queryRouter routes using "gov".
+	// The QueryRouter routes using path[1]. For example, in the path
+	// "custom/gov/proposal", QueryRouter routes using "gov".
 	if len(path) < 2 || path[1] == "" {
 		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}

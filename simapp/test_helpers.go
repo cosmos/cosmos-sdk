@@ -13,9 +13,10 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 )
 
@@ -45,13 +46,17 @@ func Setup(isCheckTx bool) *SimApp {
 
 // SetupWithGenesisAccounts initializes a new SimApp with the passed in
 // genesis accounts.
-func SetupWithGenesisAccounts(genAccs genaccounts.GenesisAccounts) *SimApp {
+func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
-	genesisState = genaccounts.SetGenesisStateInAppState(app.Codec(), genesisState, genaccounts.GenesisState(genAccs))
+
+	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
+	genesisStateBz := app.cdc.MustMarshalJSON(authGenesis)
+	genesisState[auth.ModuleName] = genesisStateBz
+
 	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
 	if err != nil {
 		panic(err)
@@ -100,34 +105,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	res := app.AccountKeeper.GetAccount(ctxCheck, addr)
 
-	require.Equal(t, exp, res.GetCoins())
-}
-
-// GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
-	// Make the transaction free
-	fee := auth.StdFee{
-		Amount: sdk.NewCoins(sdk.NewInt64Coin("foocoin", 0)),
-		Gas:    100000,
-	}
-
-	sigs := make([]auth.StdSignature, len(priv))
-	memo := "testmemotestmemo"
-
-	for i, p := range priv {
-		// use a empty chainID for ease of testing
-		sig, err := p.Sign(auth.StdSignBytes("", accnums[i], seq[i], fee, msgs, memo))
-		if err != nil {
-			panic(err)
-		}
-
-		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey(),
-			Signature: sig,
-		}
-	}
-
-	return auth.NewStdTx(msgs, fee, sigs, memo)
+	require.True(t, exp.IsEqual(res.GetCoins()))
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a
@@ -139,7 +117,14 @@ func SignCheckDeliver(
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
 
-	tx := GenTx(msgs, accNums, seq, priv...)
+	tx := helpers.GenTx(
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		"",
+		accNums,
+		seq,
+		priv...,
+	)
 
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.Nil(t, err)
@@ -172,10 +157,17 @@ func SignCheckDeliver(
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
+func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
 	txs := make([]auth.StdTx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
-		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
+		txs[i] = helpers.GenTx(
+			msgs,
+			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+			"",
+			accNums,
+			initSeqNums,
+			priv...,
+		)
 		incrementAllSequenceNumbers(initSeqNums)
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 )
 
-// set the proposer for determining distribution during endblock
+// BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 	// determine the total power signing the block

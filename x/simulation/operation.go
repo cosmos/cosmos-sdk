@@ -11,7 +11,7 @@ import (
 )
 
 // Operation runs a state machine transition, and ensures the transition
-// happened as exported.  The operation could be running and testing a fuzzed
+// happened as expected.  The operation could be running and testing a fuzzed
 // transaction, or doing the same for a message.
 //
 // For ease of debugging, an operation returns a descriptive message "action",
@@ -20,7 +20,7 @@ import (
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []Account) (
+	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 
 // entry kinds for use within OperationEntry
@@ -82,11 +82,11 @@ func (oe OperationEntry) MustMarshal() json.RawMessage {
 
 // OperationMsg - structure for operation output
 type OperationMsg struct {
-	Route   string          `json:"route" yaml:"route"`
-	Name    string          `json:"name" yaml:"name"`
-	Comment string          `json:"comment" yaml:"comment"`
-	OK      bool            `json:"ok" yaml:"ok"`
-	Msg     json.RawMessage `json:"msg" yaml:"msg"`
+	Route   string          `json:"route" yaml:"route"`     // msg route (i.e module name)
+	Name    string          `json:"name" yaml:"name"`       // operation name (msg Type or "no-operation")
+	Comment string          `json:"comment" yaml:"comment"` // additional comment
+	OK      bool            `json:"ok" yaml:"ok"`           // success
+	Msg     json.RawMessage `json:"msg" yaml:"msg"`         // JSON encoded msg
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
@@ -154,6 +154,7 @@ func queueOperations(queuedOps OperationQueue,
 	}
 
 	for _, futureOp := range futureOps {
+		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
 			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
 				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
@@ -196,6 +197,14 @@ type FutureOperation struct {
 type WeightedOperation struct {
 	Weight int
 	Op     Operation
+}
+
+// NewWeightedOperation creates a new WeightedOperation instance
+func NewWeightedOperation(weight int, op Operation) WeightedOperation {
+	return WeightedOperation{
+		Weight: weight,
+		Op:     op,
+	}
 }
 
 // WeightedOperations is the group of all weighted operations to simulate.

@@ -92,10 +92,9 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
 
-- If your change relates to the core SDK (baseapp, store, ...), please update the docs/cosmos-hub folder and possibly the docs/spec folder.
-- If your changes relate specifically to the gaia application (not including modules), please modify the docs/cosmos-hub folder.
-- If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/cosmos-hub.
-- If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
+- If your change relates to the core SDK (baseapp, store, ...), please update the `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
+- If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the `docs/interfaces/` folder.
+- If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
 
 ## Forking
 
@@ -232,3 +231,33 @@ releases will be based off of that release.
 - delete the `pre-rc/vX.X.X` and `RC` branches
 - create a PR into `master` containing ONLY the CHANGELOG.md updates
 - tag and release `release/vX.XX.X`
+
+## Code Owner Membership 
+
+In the ethos of open source projects, and out of necessity to keep the code
+alive, the core contributor team will strive to permit special repo privileges
+to developers who show an aptitude towards developing with this code base. 
+
+Several different kinds of privileges may be granted however most common
+privileges to be granted are merge rights to either part of, or the entire the
+code base (though the github `CODEOWNERS` file). The on-boarding process for
+new code owners is as follows: On a bi-monthly basis (or more frequently if
+agreeable) all the existing code owners will privately convene to discuss
+potential new candidates as well as the potential for existing code-owners to
+exit or "pass on the torch". This private meeting is to be a held as a
+phone/video meeting. Subsequently at the end of the meeting, one of the existing
+code owners should open a PR modifying the `CODEOWNERS` file. The other code
+owners should then all approve this PR to publicly display their support. 
+
+Only if unanimous consensus is reached among all the existing code-owners will
+an invitation be extended to a new potential-member. Likewise, when an existing
+member is suggested to be removed/or have their privileges reduced, the member
+in question must agree on the decision for their removal or else no action
+should be taken. If however, a code-owner is verifiably shown to intentionally
+have had acted maliciously or grossly negligent, code-owner privileges may be
+stripped with no prior warning or consent from the member in question. 
+
+Earning this privilege should be considered to be no small feat and is by no
+means guaranteed by any quantifiable metric. It is a symbol of great trust of
+the community of this project.  
+

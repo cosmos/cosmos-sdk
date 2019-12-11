@@ -91,7 +91,7 @@ func TestLogContext(t *testing.T) {
 	require.Equal(t, *logger.logs, []string{"debug", "info", "error"})
 }
 
-type dummy int64
+type dummy int64 //nolint:unused
 
 func (d dummy) Clone() interface{} {
 	return d
@@ -194,6 +194,7 @@ func TestContextHeaderClone(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := types.NewContext(nil, tc.h, false, nil)
 			require.Equal(t, tc.h.Height, ctx.BlockHeight())

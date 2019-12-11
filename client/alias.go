@@ -24,6 +24,7 @@ import (
 const (
 	DefaultGasAdjustment   = flags.DefaultGasAdjustment
 	DefaultGasLimit        = flags.DefaultGasLimit
+	DefaultKeyringBackend  = flags.DefaultKeyringBackend
 	GasFlagAuto            = flags.GasFlagAuto
 	BroadcastBlock         = flags.BroadcastBlock
 	BroadcastSync          = flags.BroadcastSync
@@ -46,12 +47,16 @@ const (
 	FlagDryRun             = flags.FlagDryRun
 	FlagGenerateOnly       = flags.FlagGenerateOnly
 	FlagIndentResponse     = flags.FlagIndentResponse
+	FlagKeyringBackend     = flags.FlagKeyringBackend
 	FlagListenAddr         = flags.FlagListenAddr
 	FlagMaxOpenConnections = flags.FlagMaxOpenConnections
 	FlagRPCReadTimeout     = flags.FlagRPCReadTimeout
 	FlagRPCWriteTimeout    = flags.FlagRPCWriteTimeout
 	FlagOutputDocument     = flags.FlagOutputDocument
 	FlagSkipConfirmation   = flags.FlagSkipConfirmation
+	KeyringBackendFile     = flags.KeyringBackendFile
+	KeyringBackendOS       = flags.KeyringBackendOS
+	KeyringBackendTest     = flags.KeyringBackendTest
 	DefaultKeyPass         = keys.DefaultKeyPass
 	FlagAddress            = keys.FlagAddress
 	FlagPublicKey          = keys.FlagPublicKey
@@ -65,6 +70,8 @@ const (
 var (
 	// functions aliases
 	NewCLIContextWithFrom              = context.NewCLIContextWithFrom
+	NewCLIContextWithInput             = context.NewCLIContextWithInput
+	NewCLIContextWithInputAndFrom      = context.NewCLIContextWithInputAndFrom
 	NewCLIContext                      = context.NewCLIContext
 	GetFromFields                      = context.GetFromFields
 	ErrInvalidAccount                  = context.ErrInvalidAccount
@@ -81,11 +88,8 @@ var (
 	NewRecoverKey                      = keys.NewRecoverKey
 	NewUpdateKeyReq                    = keys.NewUpdateKeyReq
 	NewDeleteKeyReq                    = keys.NewDeleteKeyReq
-	GetKeyInfo                         = keys.GetKeyInfo
-	GetPassphrase                      = keys.GetPassphrase
-	ReadPassphraseFromStdin            = keys.ReadPassphraseFromStdin
-	NewKeyBaseFromHomeFlag             = keys.NewKeyBaseFromHomeFlag
-	NewKeyBaseFromDir                  = keys.NewKeyBaseFromDir
+	NewKeyringFromDir                  = keys.NewKeyringFromDir
+	NewKeyringFromHomeFlag             = keys.NewKeyringFromHomeFlag
 	NewInMemoryKeyBase                 = keys.NewInMemoryKeyBase
 	NewRestServer                      = lcd.NewRestServer
 	ServeCommand                       = lcd.ServeCommand

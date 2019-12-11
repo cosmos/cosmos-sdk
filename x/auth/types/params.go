@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -63,11 +64,11 @@ func ParamKeyTable() subspace.KeyTable {
 // nolint
 func (p *Params) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
-		{KeyTxSigLimit, &p.TxSigLimit},
-		{KeyTxSizeCostPerByte, &p.TxSizeCostPerByte},
-		{KeySigVerifyCostED25519, &p.SigVerifyCostED25519},
-		{KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1},
+		params.NewParamSetPair(KeyMaxMemoCharacters, &p.MaxMemoCharacters, validateMaxMemoCharacters),
+		params.NewParamSetPair(KeyTxSigLimit, &p.TxSigLimit, validateTxSigLimit),
+		params.NewParamSetPair(KeyTxSizeCostPerByte, &p.TxSizeCostPerByte, validateTxSizeCostPerByte),
+		params.NewParamSetPair(KeySigVerifyCostED25519, &p.SigVerifyCostED25519, validateSigVerifyCostED25519),
+		params.NewParamSetPair(KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1, validateSigVerifyCostSecp256k1),
 	}
 }
 
@@ -99,4 +100,90 @@ func (p Params) String() string {
 	sb.WriteString(fmt.Sprintf("SigVerifyCostED25519: %d\n", p.SigVerifyCostED25519))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))
 	return sb.String()
+}
+
+func validateTxSigLimit(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid tx signature limit: %d", v)
+	}
+
+	return nil
+}
+
+func validateSigVerifyCostED25519(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid ED25519 signature verification cost: %d", v)
+	}
+
+	return nil
+}
+
+func validateSigVerifyCostSecp256k1(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", v)
+	}
+
+	return nil
+}
+
+func validateMaxMemoCharacters(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid max memo characters: %d", v)
+	}
+
+	return nil
+}
+
+func validateTxSizeCostPerByte(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("invalid tx size cost per byte: %d", v)
+	}
+
+	return nil
+}
+
+// Validate checks that the parameters have valid values.
+func (p Params) Validate() error {
+	if err := validateTxSigLimit(p.TxSigLimit); err != nil {
+		return err
+	}
+	if err := validateSigVerifyCostED25519(p.SigVerifyCostED25519); err != nil {
+		return err
+	}
+	if err := validateSigVerifyCostSecp256k1(p.SigVerifyCostSecp256k1); err != nil {
+		return err
+	}
+	if err := validateSigVerifyCostSecp256k1(p.MaxMemoCharacters); err != nil {
+		return err
+	}
+	if err := validateTxSizeCostPerByte(p.TxSizeCostPerByte); err != nil {
+		return err
+	}
+
+	return nil
 }

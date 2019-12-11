@@ -3,6 +3,8 @@ package bank_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 )
 
 type (
@@ -93,7 +95,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -118,36 +120,70 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.Equal(t, res2.GetSequence(), origSeq+1)
 }
 
-// A module account cannot be the recipient of bank sends
+// A module account cannot be the recipient of bank sends unless it has been marked as such
 func TestSendToModuleAcc(t *testing.T) {
-	acc := &auth.BaseAccount{
-		Address: addr1,
-		Coins:   coins,
+	tests := []struct {
+		name           string
+		fromBalance    sdk.Coins
+		msg            types.MsgSend
+		expSimPass     bool
+		expPass        bool
+		expFromBalance sdk.Coins
+		expToBalance   sdk.Coins
+	}{
+		{
+			name:           "Normal module account cannot be the recipient of bank sends",
+			fromBalance:    coins,
+			msg:            types.NewMsgSend(addr1, moduleAccAddr, coins),
+			expSimPass:     false,
+			expPass:        false,
+			expFromBalance: coins,
+			expToBalance:   sdk.NewCoins(),
+		},
+		{
+			name:           "Allowed module account can be the recipient of bank sends",
+			fromBalance:    coins,
+			msg:            types.NewMsgSend(addr1, supply.NewModuleAddress(distribution.ModuleName), coins),
+			expPass:        true,
+			expSimPass:     true,
+			expFromBalance: sdk.NewCoins(),
+			expToBalance:   coins,
+		},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			acc := &auth.BaseAccount{
+				Address: test.msg.FromAddress,
+				Coins:   test.fromBalance,
+			}
 
-	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
+			genAccs := []authexported.GenesisAccount{acc}
+			app := simapp.SetupWithGenesisAccounts(genAccs)
 
-	res1 := app.AccountKeeper.GetAccount(ctxCheck, addr1)
-	require.NotNil(t, res1)
-	require.Equal(t, acc, res1.(*auth.BaseAccount))
+			ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 
-	origAccNum := res1.GetAccountNumber()
-	origSeq := res1.GetSequence()
+			res1 := app.AccountKeeper.GetAccount(ctxCheck, test.msg.FromAddress)
+			require.NotNil(t, res1)
+			require.Equal(t, acc, res1.(*auth.BaseAccount))
 
-	header := abci.Header{Height: app.LastBlockHeight() + 1}
-	simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{sendMsg2}, []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+			origAccNum := res1.GetAccountNumber()
+			origSeq := res1.GetSequence()
 
-	simapp.CheckBalance(t, app, addr1, coins)
-	simapp.CheckBalance(t, app, moduleAccAddr, sdk.Coins(nil))
+			header := abci.Header{Height: app.LastBlockHeight() + 1}
+			simapp.SignCheckDeliver(t, app.Codec(), app.BaseApp, header, []sdk.Msg{test.msg}, []uint64{origAccNum}, []uint64{origSeq}, test.expSimPass, test.expPass, priv1)
 
-	res2 := app.AccountKeeper.GetAccount(app.NewContext(true, abci.Header{}), addr1)
-	require.NotNil(t, res2)
+			simapp.CheckBalance(t, app, test.msg.FromAddress, test.expFromBalance)
+			simapp.CheckBalance(t, app, test.msg.ToAddress, test.expToBalance)
 
-	require.Equal(t, res2.GetAccountNumber(), origAccNum)
-	require.Equal(t, res2.GetSequence(), origSeq+1)
+			res2 := app.AccountKeeper.GetAccount(app.NewContext(true, abci.Header{}), addr1)
+			require.NotNil(t, res2)
+
+			require.Equal(t, res2.GetAccountNumber(), origAccNum)
+			require.Equal(t, res2.GetSequence(), origSeq+1)
+		})
+	}
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
@@ -156,7 +192,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 67)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc)}
+	genAccs := []authexported.GenesisAccount{acc}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
@@ -217,7 +253,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2)}
+	genAccs := []authexported.GenesisAccount{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
@@ -261,7 +297,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 		Coins:   sdk.Coins{sdk.NewInt64Coin("foocoin", 42)},
 	}
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(acc1), genaccounts.NewGenesisAccount(acc2), genaccounts.NewGenesisAccount(acc4)}
+	genAccs := []authexported.GenesisAccount{acc1, acc2, acc4}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{
@@ -299,7 +335,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
-	genAccs := []genaccounts.GenesisAccount{genaccounts.NewGenesisAccount(&acc1), genaccounts.NewGenesisAccount(&acc2)}
+	genAccs := []authexported.GenesisAccount{&acc1, &acc2}
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 
 	testCases := []appTestCase{

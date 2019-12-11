@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	keep "github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/types"
 )
@@ -96,7 +98,8 @@ func TestKeeper(t *testing.T) {
 
 	// Test retrieving black listed accounts
 	for acc := range simapp.GetMaccPerms() {
-		require.True(t, app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+		addr := supply.NewModuleAddress(acc)
+		require.Equal(t, app.BlacklistedAccAddrs()[addr.String()], app.BankKeeper.BlacklistedAddr(addr))
 	}
 }
 
@@ -146,7 +149,7 @@ func TestSendKeeper(t *testing.T) {
 	// validate coins with invalid denoms or negative values cannot be sent
 	// NOTE: We must use the Coin literal as the constructor does not allow
 	// negative values.
-	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{"FOOCOIN", sdk.NewInt(-5)}})
+	err = sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.Coin{Denom: "FOOCOIN", Amount: sdk.NewInt(-5)}})
 	require.Error(t, err)
 }
 
@@ -231,7 +234,7 @@ func TestVestingAccountSend(t *testing.T) {
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc := vesting.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that no coins be sendable at the beginning of the vesting schedule
@@ -245,7 +248,42 @@ func TestVestingAccountSend(t *testing.T) {
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	err = app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
-	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
+	require.NoError(t, err)
+	require.Equal(t, origCoins, vacc.GetCoins())
+}
+
+func TestPeriodicVestingAccountSend(t *testing.T) {
+	app, ctx := createTestApp(false)
+	now := tmtime.Now()
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	periods := vesting.Periods{
+		vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+	}
+	vacc := vesting.NewPeriodicVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), periods)
+	app.AccountKeeper.SetAccount(ctx, vacc)
+
+	// require that no coins be sendable at the beginning of the vesting schedule
+	err := app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	require.Error(t, err)
+
+	// receive some coins
+	vacc.SetCoins(origCoins.Add(sendCoins))
+	app.AccountKeeper.SetAccount(ctx, vacc)
+
+	// require that all vested coins are spendable plus any received
+	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	err = app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, origCoins, vacc.GetCoins())
 }
@@ -264,7 +302,7 @@ func TestVestingAccountReceive(t *testing.T) {
 
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
-	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc := vesting.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
@@ -274,7 +312,43 @@ func TestVestingAccountReceive(t *testing.T) {
 	app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins)
 
 	// require the coins are spendable
-	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
+	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
+	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
+
+	// require coins are spendable plus any that have vested
+	require.Equal(t, vacc.SpendableCoins(now.Add(12*time.Hour)), origCoins)
+}
+
+func TestPeriodicVestingAccountReceive(t *testing.T) {
+	app, ctx := createTestApp(false)
+	now := tmtime.Now()
+	ctx = ctx.WithBlockHeader(abci.Header{Time: now})
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	periods := vesting.Periods{
+		vesting.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 50)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+		vesting.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin("stake", 25)}},
+	}
+	vacc := vesting.NewPeriodicVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), periods)
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	app.AccountKeeper.SetAccount(ctx, vacc)
+	app.AccountKeeper.SetAccount(ctx, acc)
+	app.BankKeeper.SetCoins(ctx, addr2, origCoins)
+
+	// send some coins to the vesting account
+	app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins)
+
+	// require the coins are spendable
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
 	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
@@ -299,7 +373,7 @@ func TestDelegateCoins(t *testing.T) {
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
 	macc := ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
-	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc := vesting.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := ak.NewAccountWithAddress(ctx, addr2)
 	ak.SetAccount(ctx, vacc)
 	ak.SetAccount(ctx, acc)
@@ -318,7 +392,7 @@ func TestDelegateCoins(t *testing.T) {
 
 	// require the ability for a vesting account to delegate
 	err = app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
-	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = ak.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, delCoins, vacc.GetCoins())
 }
@@ -340,7 +414,7 @@ func TestUndelegateCoins(t *testing.T) {
 	bacc := auth.NewBaseAccountWithAddress(addr1)
 	bacc.SetCoins(origCoins)
 	macc := ak.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
-	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
+	vacc := vesting.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := ak.NewAccountWithAddress(ctx, addr2)
 	ak.SetAccount(ctx, vacc)
 	ak.SetAccount(ctx, acc)
@@ -371,7 +445,7 @@ func TestUndelegateCoins(t *testing.T) {
 	err = app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins)
 	require.NoError(t, err)
 
-	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = ak.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
 	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins.Sub(delCoins), vacc.GetCoins())
 	require.Equal(t, delCoins, macc.GetCoins())
@@ -380,7 +454,7 @@ func TestUndelegateCoins(t *testing.T) {
 	err = app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins)
 	require.NoError(t, err)
 
-	vacc = ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	vacc = ak.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
 	macc = ak.GetAccount(ctx, addrModule)
 	require.Equal(t, origCoins, vacc.GetCoins())
 	require.True(t, macc.GetCoins().Empty())

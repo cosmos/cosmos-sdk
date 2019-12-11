@@ -72,3 +72,24 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		}
 	}
 }
+
+// test ValidateBasic for MsgDepositIntoCommunityPool
+func TestMsgDepositIntoCommunityPool(t *testing.T) {
+	tests := []struct {
+		amount     sdk.Coins
+		depositor  sdk.AccAddress
+		expectPass bool
+	}{
+		{sdk.NewCoins(sdk.NewInt64Coin("uatom", 10000)), sdk.AccAddress{}, false},
+		{sdk.Coins{sdk.NewInt64Coin("uatom", 10), sdk.NewInt64Coin("uatom", 10)}, delAddr1, false},
+		{sdk.NewCoins(sdk.NewInt64Coin("uatom", 1000)), delAddr1, true},
+	}
+	for i, tc := range tests {
+		msg := NewMsgFundCommunityPool(tc.amount, tc.depositor)
+		if tc.expectPass {
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
+		} else {
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
+		}
+	}
+}

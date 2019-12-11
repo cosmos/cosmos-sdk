@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -13,37 +14,78 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // run the tx through the anteHandler and ensure its valid
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
-	_, result, abort := anteHandler(ctx, tx, simulate)
-	require.Equal(t, "", result.Log)
-	require.False(t, abort)
-	require.Equal(t, sdk.CodeOK, result.Code)
-	require.True(t, result.IsOK())
+	_, err := anteHandler(ctx, tx, simulate)
+	require.Nil(t, err)
 }
 
 // run the tx through the anteHandler and ensure it fails with the given code
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
-	newCtx, result, abort := anteHandler(ctx, tx, simulate)
-	require.True(t, abort)
+	_, err := anteHandler(ctx, tx, simulate)
+	require.NotNil(t, err)
+
+	result := sdk.ResultFromError(err)
 
 	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))
 	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
+}
 
-	if code == sdk.CodeOutOfGas {
-		stdTx, ok := tx.(types.StdTx)
-		require.True(t, ok, "tx must be in form auth.types.StdTx")
-		// GasWanted set correctly
-		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
-		require.True(t, result.GasUsed > result.GasWanted, "GasUsed not greated than GasWanted")
-		// Check that context is set correctly
-		require.Equal(t, result.GasUsed, newCtx.GasMeter().GasConsumed(), "Context not updated correctly")
-	}
+// Test that simulate transaction accurately estimates gas cost
+func TestSimulateGasCost(t *testing.T) {
+	// setup
+	app, ctx := createTestApp(true)
+	ctx = ctx.WithBlockHeight(1)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+
+	// keys and addresses
+	priv1, _, addr1 := types.KeyTestPubAddr()
+	priv2, _, addr2 := types.KeyTestPubAddr()
+	priv3, _, addr3 := types.KeyTestPubAddr()
+
+	// set the accounts
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc1.SetAccountNumber(0))
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc2.SetAccountNumber(1))
+	app.AccountKeeper.SetAccount(ctx, acc2)
+	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
+	acc3.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc3.SetAccountNumber(2))
+	app.AccountKeeper.SetAccount(ctx, acc3)
+
+	// set up msgs and fee
+	var tx sdk.Tx
+	msg1 := types.NewTestMsg(addr1, addr2)
+	msg2 := types.NewTestMsg(addr3, addr1)
+	msg3 := types.NewTestMsg(addr2, addr3)
+	msgs := []sdk.Msg{msg1, msg2, msg3}
+	fee := types.NewTestStdFee()
+
+	// signers in order. accnums are all 0 because it is in genesis block
+	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
+	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
+
+	cc, _ := ctx.CacheContext()
+	newCtx, err := anteHandler(cc, tx, true)
+	require.Nil(t, err, "transaction failed on simulate mode")
+
+	simulatedGas := newCtx.GasMeter().GasConsumed()
+	fee.Gas = simulatedGas
+
+	// update tx with simulated gas estimate
+	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	_, err = anteHandler(ctx, tx, false)
+
+	require.Nil(t, err, "transaction failed with gas estimate")
 }
 
 // Test various error cases in the AnteHandler control flow.
@@ -97,7 +139,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 // Test logic around account number checking with one signer and many signers.
 func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -154,7 +196,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 // Test logic around account number checking with many signers when BlockHeight is 0.
 func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -210,7 +252,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -354,19 +396,19 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = types.NewStdFee(9000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
+	fee = types.NewStdFee(50000, sdk.NewCoins(sdk.NewInt64Coin("atom", 0)))
 	tx = types.NewTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
 
 func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
 	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
 
@@ -481,7 +523,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// test wrong signer if public key exist
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{0}, []uint64{1}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	// test wrong signer if public doesn't exist
 	msg = types.NewTestMsg(addr2)
@@ -528,7 +570,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	msg = types.NewTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	tx = types.NewTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	sigs := tx.(types.StdTx).GetSignatures()
+	sigs := tx.(types.StdTx).Signatures
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
@@ -541,84 +583,6 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 	acc2 = app.AccountKeeper.GetAccount(ctx, addr2)
 	require.Nil(t, acc2.GetPubKey())
-}
-
-func TestProcessPubKey(t *testing.T) {
-	app, ctx := createTestApp(true)
-
-	// keys
-	_, _, addr1 := types.KeyTestPubAddr()
-	priv2, _, addr2 := types.KeyTestPubAddr()
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-
-	acc2.SetPubKey(priv2.PubKey())
-
-	type args struct {
-		acc      exported.Account
-		sig      types.StdSignature
-		simulate bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"no sigs, simulate off", args{acc1, types.StdSignature{}, false}, true},
-		{"no sigs, simulate on", args{acc1, types.StdSignature{}, true}, false},
-		{"no sigs, account with pub, simulate on", args{acc2, types.StdSignature{}, true}, false},
-		{"pubkey doesn't match addr, simulate off", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, false}, true},
-		{"pubkey doesn't match addr, simulate on", args{acc1, types.StdSignature{PubKey: priv2.PubKey()}, true}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := ante.ProcessPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
-			require.Equal(t, tt.wantErr, !err.IsOK())
-		})
-	}
-}
-
-func TestConsumeSignatureVerificationGas(t *testing.T) {
-	params := types.DefaultParams()
-	msg := []byte{1, 2, 3, 4}
-
-	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
-	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
-	multisignature1 := multisig.NewMultisig(len(pkSet1))
-	expectedCost1 := expectedGasCostByKeys(pkSet1)
-	for i := 0; i < len(pkSet1); i++ {
-		multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
-	}
-
-	type args struct {
-		meter  sdk.GasMeter
-		sig    []byte
-		pubkey crypto.PubKey
-		params types.Params
-	}
-	tests := []struct {
-		name        string
-		args        args
-		gasConsumed uint64
-		shouldErr   bool
-	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1.Marshal(), multisigKey1, params}, expectedCost1, false},
-		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			res := ante.DefaultSigVerificationGasConsumer(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
-
-			if tt.shouldErr {
-				require.False(t, res.IsOK())
-			} else {
-				require.True(t, res.IsOK())
-				require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
-			}
-		})
-	}
 }
 
 func generatePubKeysAndSignatures(n int, msg []byte, keyTypeed25519 bool) (pubkeys []crypto.PubKey, signatures [][]byte) {
@@ -680,6 +644,7 @@ func TestCountSubkeys(t *testing.T) {
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(T *testing.T) {
 			require.Equal(t, tt.want, types.CountSubKeys(tt.args.pub))
 		})
@@ -702,14 +667,15 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	priv7, _, addr7 := types.KeyTestPubAddr()
 	priv8, _, addr8 := types.KeyTestPubAddr()
 
+	addrs := []sdk.AccAddress{addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8}
+
 	// set the accounts
-	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
-	acc1.SetCoins(types.NewTestCoins())
-	app.AccountKeeper.SetAccount(ctx, acc1)
-	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
-	acc2.SetCoins(types.NewTestCoins())
-	require.NoError(t, acc2.SetAccountNumber(1))
-	app.AccountKeeper.SetAccount(ctx, acc2)
+	for i, addr := range addrs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		acc.SetCoins(types.NewTestCoins())
+		acc.SetAccountNumber(uint64(i))
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
 
 	var tx sdk.Tx
 	msg := types.NewTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
@@ -718,60 +684,9 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 
 	// test rejection logic
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
-		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
+		[]uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
-}
-
-func TestEnsureSufficientMempoolFees(t *testing.T) {
-	// setup
-	_, ctx := createTestApp(true)
-	ctx = ctx.WithMinGasPrices(
-		sdk.DecCoins{
-			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001stake
-		},
-	)
-
-	testCases := []struct {
-		input      types.StdFee
-		expectedOK bool
-	}{
-		{types.NewStdFee(200000, sdk.Coins{}), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 5))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 1))), false},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("stake", 2))), true},
-		{types.NewStdFee(200000, sdk.NewCoins(sdk.NewInt64Coin("photino", 10))), true},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-		{
-			types.NewStdFee(
-				200000,
-				sdk.NewCoins(
-					sdk.NewInt64Coin("atom", 5),
-					sdk.NewInt64Coin("photino", 10),
-					sdk.NewInt64Coin("stake", 2),
-				),
-			),
-			true,
-		},
-	}
-
-	for i, tc := range testCases {
-		res := ante.EnsureSufficientMempoolFees(ctx, tc.input)
-		require.Equal(
-			t, tc.expectedOK, res.IsOK(),
-			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
-		)
-	}
 }
 
 // Test custom SignatureVerificationGasConsumer
@@ -780,13 +695,13 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) sdk.Result {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-			return sdk.Result{}
+			return nil
 		default:
-			return sdk.ErrInvalidPubKey(fmt.Sprintf("unrecognized public key type: %T", pubkey)).Result()
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 		}
 	})
 
@@ -818,4 +733,85 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	msgs = []sdk.Msg{msg}
 	tx = types.NewTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkValidTx(t, anteHandler, ctx, tx, false)
+}
+
+func TestAnteHandlerReCheck(t *testing.T) {
+	// setup
+	app, ctx := createTestApp(true)
+	// set blockheight and recheck=true
+	ctx = ctx.WithBlockHeight(1)
+	ctx = ctx.WithIsReCheckTx(true)
+
+	// keys and addresses
+	priv1, _, addr1 := types.KeyTestPubAddr()
+	// priv2, _, addr2 := types.KeyTestPubAddr()
+
+	// set the accounts
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(types.NewTestCoins())
+	require.NoError(t, acc1.SetAccountNumber(0))
+	app.AccountKeeper.SetAccount(ctx, acc1)
+
+	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+
+	// test that operations skipped on recheck do not run
+
+	msg := types.NewTestMsg(addr1)
+	msgs := []sdk.Msg{msg}
+	fee := types.NewTestStdFee()
+
+	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	tx := types.NewTestTxWithMemo(ctx, msgs, privs, accnums, seqs, fee, "thisisatestmemo")
+
+	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
+	// since these decorators don't run on recheck, the tx should pass the antehandler
+	stdTx := tx.(types.StdTx)
+	stdTx.Signatures = []types.StdSignature{}
+
+	_, err := antehandler(ctx, stdTx, false)
+	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
+
+	tx = types.NewTestTxWithMemo(ctx, msgs, privs, accnums, seqs, fee, "thisisatestmemo")
+	txBytes, err := json.Marshal(tx)
+	require.Nil(t, err, "Error marshalling tx: %v", err)
+	ctx = ctx.WithTxBytes(txBytes)
+
+	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
+	testCases := []struct {
+		name   string
+		params types.Params
+	}{
+		{"memo size check", types.NewParams(1, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
+		{"txsize check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, 10000000, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
+		{"sig verify cost check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, 100000000)},
+	}
+	for _, tc := range testCases {
+		// set testcase parameters
+		app.AccountKeeper.SetParams(ctx, tc.params)
+
+		_, err := antehandler(ctx, tx, false)
+
+		require.NotNil(t, err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
+
+		// reset parameters to default values
+		app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+	}
+
+	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
+	// create new minimum gas price so antehandler fails on recheck
+	ctx = ctx.WithMinGasPrices([]sdk.DecCoin{{
+		Denom:  "dnecoin", // fee does not have this denom
+		Amount: sdk.NewDec(5),
+	}})
+	_, err = antehandler(ctx, tx, false)
+	require.NotNil(t, err, "antehandler on recheck did not fail when mingasPrice was changed")
+	// reset min gasprice
+	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
+
+	// remove funds for account so antehandler fails on recheck
+	acc1.SetCoins(sdk.Coins{})
+	app.AccountKeeper.SetAccount(ctx, acc1)
+
+	_, err = antehandler(ctx, tx, false)
+	require.NotNil(t, err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

@@ -20,17 +20,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMaxMemoCharacters, "",
+		simulation.NewSimParamChange(types.ModuleName, keyMaxMemoCharacters,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenMaxMemoChars(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyTxSigLimit, "",
+		simulation.NewSimParamChange(types.ModuleName, keyTxSigLimit,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenTxSigLimit(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyTxSizeCostPerByte, "",
+		simulation.NewSimParamChange(types.ModuleName, keyTxSizeCostPerByte,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenTxSizeCostPerByte(r))
 			},

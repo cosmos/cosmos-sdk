@@ -40,6 +40,7 @@ func TestStackTrace(t *testing.T) {
 	const thisTestSrc = "types/errors/stacktrace_test.go"
 
 	for testName, tc := range cases {
+		tc := tc
 		t.Run(testName, func(t *testing.T) {
 			if !reflect.DeepEqual(tc.err.Error(), tc.wantError) {
 				t.Fatalf("errors not equal, got '%s', want '%s'", tc.err.Error(), tc.wantError)

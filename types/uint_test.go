@@ -84,6 +84,7 @@ func TestIdentUint(t *testing.T) {
 
 		cases := []uint64{
 			i.Uint64(),
+			i.BigInt().Uint64(),
 			i.i.Uint64(),
 			ifromstr.Uint64(),
 			NewUintFromBigInt(new(big.Int).SetUint64(n)).Uint64(),
@@ -208,6 +209,7 @@ func TestSafeSub(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
+		tc := tc
 		if tc.panic {
 			require.Panics(t, func() { tc.x.Sub(tc.y) })
 			continue
@@ -236,6 +238,7 @@ func TestParseUint(t *testing.T) {
 		{"zero", args{"0"}, ZeroUint(), false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ParseUint(tt.args.s)
 			if tt.wantErr {

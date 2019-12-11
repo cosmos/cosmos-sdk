@@ -1,4 +1,4 @@
-// nolint:deadcode unused
+// nolint:deadcode,unused
 // DONTCOVER
 // noalias
 package keeper
@@ -58,7 +58,6 @@ func createTestCodec() *codec.Codec {
 func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
-	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
@@ -68,7 +67,6 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
@@ -104,7 +102,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens.MulRaw(int64(len(Addrs)))))
 	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
 
-	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
 	// set module accounts
@@ -133,7 +131,7 @@ func newPubKey(pk string) (res crypto.PubKey) {
 		panic(err)
 	}
 	var pkEd ed25519.PubKeyEd25519
-	copy(pkEd[:], pkBytes[:])
+	copy(pkEd[:], pkBytes)
 	return pkEd
 }
 

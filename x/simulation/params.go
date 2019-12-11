@@ -6,6 +6,8 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 const (
@@ -45,7 +47,8 @@ type ParamSimulator func(r *rand.Rand)
 
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
-// ParamSimulator is used to generate a random value.
+// ParamSimulator is used to generate a random value or default value (eg: in the
+// case of operation weights where Rand is not used).
 func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		cdc.MustUnmarshalJSON(v, ptr)
@@ -54,6 +57,10 @@ func (sp AppParams) GetOrGenerate(cdc *codec.Codec, key string, ptr interface{},
 
 	ps(r)
 }
+
+// ContentSimulatorFn defines a function type alias for generating random proposal
+// content.
+type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) govtypes.Content
 
 // Params define the parameters necessary for running the simulations
 type Params struct {
@@ -65,11 +72,11 @@ type Params struct {
 	BlockSizeTransitionMatrix TransitionMatrix
 }
 
-// RandomParams for simulation
+// RandomParams returns random simulation parameters
 func RandomParams(r *rand.Rand) Params {
 	return Params{
 		PastEvidenceFraction:      r.Float64(),
-		NumKeys:                   RandIntBetween(r, 2, 250),
+		NumKeys:                   RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
 		EvidenceFraction:          r.Float64(),
 		InitialLivenessWeightings: []int{RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		LivenessTransitionMatrix:  defaultLivenessTransitionMatrix,
@@ -87,21 +94,30 @@ type SimValFn func(r *rand.Rand) string
 type ParamChange struct {
 	Subspace string
 	Key      string
-	Subkey   string
 	SimValue SimValFn
 }
 
 // NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key, subkey string, simVal SimValFn) ParamChange {
+func NewSimParamChange(subspace, key string, simVal SimValFn) ParamChange {
 	return ParamChange{
 		Subspace: subspace,
 		Key:      key,
-		Subkey:   subkey,
 		SimValue: simVal,
 	}
 }
 
 // ComposedKey creates a new composed key for the param change proposal
 func (spc ParamChange) ComposedKey() string {
-	return fmt.Sprintf("%s/%s/%s", spc.Subspace, spc.Key, spc.Subkey)
+	return fmt.Sprintf("%s/%s", spc.Subspace, spc.Key)
+}
+
+//-----------------------------------------------------------------------------
+// Proposal Contents
+
+// WeightedProposalContent defines a common struct for proposal contents defined by
+// external modules (i.e outside gov)
+type WeightedProposalContent struct {
+	AppParamsKey       string             // key used to retrieve the value of the weight from the simulation application params
+	DefaultWeight      int                // default weight
+	ContentSimulatorFn ContentSimulatorFn // content simulator function
 }

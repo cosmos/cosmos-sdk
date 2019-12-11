@@ -3,6 +3,9 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	yaml "gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Convenience struct for CLI output
@@ -31,4 +34,45 @@ func (pp PrettyParams) String() string {
   Withdraw Addr Enabled:  %s`, pp.CommunityTax,
 		pp.BaseProposerReward, pp.BonusProposerReward, pp.WithdrawAddrEnabled)
 
+}
+func (pp PrettyParams) MarshalYAML() (interface{}, error) {
+
+	var CommunityTax sdk.Dec
+	var BaseProposerReward sdk.Dec
+	var BonusProposerReward sdk.Dec
+	var WithdrawAddrEnabled bool
+
+	err := json.Unmarshal(pp.CommunityTax, &CommunityTax)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(pp.BaseProposerReward, &BaseProposerReward)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(pp.BonusProposerReward, &BonusProposerReward)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(pp.WithdrawAddrEnabled, &WithdrawAddrEnabled)
+	if err != nil {
+		return nil, err
+	}
+
+	bz, err := yaml.Marshal(
+		struct {
+			CommunityTax        sdk.Dec
+			BaseProposerReward  sdk.Dec
+			BonusProposerReward sdk.Dec
+			WithdrawAddrEnabled bool
+		}{
+			CommunityTax:        CommunityTax,
+			BaseProposerReward:  BaseProposerReward,
+			BonusProposerReward: BonusProposerReward,
+			WithdrawAddrEnabled: WithdrawAddrEnabled,
+		})
+	if err != nil {
+		return nil, err
+	}
+	return string(bz), nil
 }

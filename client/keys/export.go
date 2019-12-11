@@ -17,7 +17,6 @@ func ExportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  runExportCmd,
 	}
-	return cmd
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {

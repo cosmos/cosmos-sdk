@@ -18,7 +18,6 @@ func ImportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
-	return cmd
 }
 
 func runImportCmd(cmd *cobra.Command, args []string) error {

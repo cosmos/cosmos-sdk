@@ -2,6 +2,7 @@
 package keys
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -322,4 +323,12 @@ func TestLazySeedPhraseKeyRing(t *testing.T) {
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+func TestNewKeyringFile(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+	buf := strings.NewReader("password\npassword\n")
+	_, err := NewKeyringFile("test", dir, buf)
+	require.NoError(t, err)
 }

@@ -3,7 +3,6 @@ package keys
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
@@ -49,14 +48,21 @@ func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.K
 	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keyring at a particular dir.
-// If the COSMOS_SDK_TEST_KEYRING environment variable is set and not empty it will
-// return an on-disk, password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
-		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)
+// NewKeyBaseFromDir initializes a keyring at the given directory.
+// If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
+// CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
+// password-less keyring that could be used for testing purposes.
+func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
+	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
+	switch keyringBackend {
+	case flags.KeyringBackendTest:
+		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
+	case flags.KeyringBackendFile:
+		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+	case flags.KeyringBackendOS:
+		return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
 	}
-	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
+	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
 }
 
 func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {

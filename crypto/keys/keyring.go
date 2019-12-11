@@ -26,6 +26,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	keyringDirName     = "keyring"
+	testKeyringDirName = "keyring-test"
+)
+
 var _ Keybase = keyringKeybase{}
 
 // keyringKeybase implements the Keybase interface by using the Keyring library
@@ -48,6 +53,16 @@ func NewKeyring(
 	}
 
 	return newKeyringKeybase(db, opts...), nil
+}
+
+// NewKeyringFile creates a new instance of an encrypted file-backed keyring.
+func NewKeyringFile(name string, dir string, userInput io.Reader) (Keybase, error) {
+	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
+	if err != nil {
+		return nil, err
+	}
+
+	return newKeyringKeybase(db), nil
 }
 
 // NewTestKeyring creates a new instance of an on-disk keyring for
@@ -461,12 +476,30 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		return keyring.Config{
 			AllowedBackends:  []keyring.BackendType{"file"},
 			ServiceName:      name,
-			FileDir:          dir,
+			FileDir:          filepath.Join(dir, testKeyringDirName),
 			FilePasswordFunc: fakePrompt,
 		}
 	}
 
-	realPrompt := func(prompt string) (string, error) {
+	return keyring.Config{
+		ServiceName:      name,
+		FileDir:          dir,
+		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
+	fileDir := filepath.Join(dir, keyringDirName)
+	return keyring.Config{
+		AllowedBackends:  []keyring.BackendType{"file"},
+		ServiceName:      name,
+		FileDir:          fileDir,
+		FilePasswordFunc: newRealPrompt(fileDir, buf),
+	}
+}
+
+func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
+	return func(prompt string) (string, error) {
 		keyhashStored := false
 		keyhashFilePath := filepath.Join(dir, "keyhash")
 
@@ -534,12 +567,6 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 
 			return pass, nil
 		}
-	}
-
-	return keyring.Config{
-		ServiceName:      name,
-		FileDir:          dir,
-		FilePasswordFunc: realPrompt,
 	}
 }
 

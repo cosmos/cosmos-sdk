@@ -26,7 +26,7 @@ sections:
     desc: Anatomy of a blockchain, transaction lifecycle, accounts and more.
     icon: basics
     url: /basics/app-anatomy.html
-  - title: SDK Core
+  - title: Core Concepts
     desc: Read about the core concepts like `baseapp`, the store, or the server.
     icon: core
     url: /core/baseapp.html

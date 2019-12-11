@@ -26,7 +26,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	k.SetHistoricalInfo(ctx, ctx.BlockHeight(), historicalEntry)
 
 	// prune store to ensure we only have parameter-defined historical entries
-	// in most cases, this will invole removing a single historical entry
+	// in most cases, this will involve removing a single historical entry
 	// In the rare scenario when the historical entries gets reduced to a lower value k'
 	// from the original value k. k - k' entries must be deleted from the store
 	// Since the entries to be deleted are always in a continuous range, we can iterate

@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Params Overview
+parent:
+  title: "params"
 ---
 
 # `params`

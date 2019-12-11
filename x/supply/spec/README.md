@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Supply Overview
+parent:
+  title: "supply"
 ---
 
 # `supply`

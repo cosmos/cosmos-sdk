@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Bank Overview
+parent:
+  title: "bank"
 ---
 
 # `bank`

@@ -1,6 +1,8 @@
 ---
 order: 0
-title: "Overview"
+title: "Auth Overview"
+parent:
+  title: "auth"
 ---
 
 # `auth`

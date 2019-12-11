@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Staking Overview
+parent:
+  title: "staking"
 ---
 
 # `staking`

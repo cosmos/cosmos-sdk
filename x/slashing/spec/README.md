@@ -1,6 +1,8 @@
 ---
 order: 20
-title: Overview
+title: Slashing Overview
+parent:
+  title: "slashing"
 ---
 
 # `slashing`

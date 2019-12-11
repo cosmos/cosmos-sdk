@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Mint Overview
+parent:
+  title: "mint"
 ---
 
 # `mint`

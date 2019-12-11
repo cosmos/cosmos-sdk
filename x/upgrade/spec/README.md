@@ -1,6 +1,8 @@
 ---
 order: 0
-title: Overview
+title: Upgrade Overview
+parent:
+  title: "upgrade"
 ---
 
 # `upgrade`

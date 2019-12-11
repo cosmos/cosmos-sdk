@@ -22,28 +22,22 @@ const (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc  *codec.Codec
-	key  sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey sdk.StoreKey // []byte -> bool, stores parameter change
-
-	name []byte
-
+	cdc   *codec.Codec
+	key   sdk.StoreKey // []byte -> []byte, stores parameter
+	tkey  sdk.StoreKey // []byte -> bool, stores parameter change
+	name  []byte
 	table KeyTable
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) (res Subspace) {
-	res = Subspace{
-		cdc:  cdc,
-		key:  key,
-		tkey: tkey,
-		name: []byte(name),
-		table: KeyTable{
-			m: make(map[string]attribute),
-		},
+func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) Subspace {
+	return Subspace{
+		cdc:   cdc,
+		key:   key,
+		tkey:  tkey,
+		name:  []byte(name),
+		table: NewKeyTable(),
 	}
-
-	return
 }
 
 // HasKeyTable returns if the Subspace has a KeyTable registered.
@@ -64,7 +58,7 @@ func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 		s.table.m[k] = v
 	}
 
-	// Allocate additional capicity for Subspace.name
+	// Allocate additional capacity for Subspace.name
 	// So we don't have to allocate extra space each time appending to the key
 	name := s.name
 	s.name = make([]byte, len(name), len(name)+table.maxKeyLength())
@@ -87,105 +81,110 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.TransientStore(s.tkey), append(s.name, '/'))
 }
 
-func concatKeys(key, subkey []byte) (res []byte) {
-	res = make([]byte, len(key)+1+len(subkey))
-	copy(res, key)
-	res[len(key)] = '/'
-	copy(res[len(key)+1:], subkey)
-	return
+// Validate attempts to validate a parameter value by its key. If the key is not
+// registered or if the validation of the value fails, an error is returned.
+func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
+	attr, ok := s.table.m[string(key)]
+	if !ok {
+		return fmt.Errorf("parameter %s not registered", string(key))
+	}
+
+	if err := attr.vfn(value); err != nil {
+		return fmt.Errorf("invalid parameter value: %s", err)
+	}
+
+	return nil
 }
 
-// Get parameter from store
+// Get queries for a parameter by key from the Subspace's KVStore and sets the
+// value to the provided pointer. If the value does not exist, it will panic.
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
-	err := s.cdc.UnmarshalJSON(bz, ptr)
-	if err != nil {
+
+	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
 
-// GetIfExists do not modify ptr if the stored parameter is nil
+// GetIfExists queries for a parameter by key from the Subspace's KVStore and
+// sets the value to the provided pointer. If the value does not exist, it will
+// perform a no-op.
 func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
 		return
 	}
-	err := s.cdc.UnmarshalJSON(bz, ptr)
-	if err != nil {
+
+	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
 		panic(err)
 	}
 }
 
-// GetWithSubkey returns a parameter with a given key and a subkey.
-func (s Subspace) GetWithSubkey(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.Get(ctx, concatKeys(key, subkey), ptr)
-}
-
-// GetWithSubkeyIfExists  returns a parameter with a given key and a subkey but does not
-// modify ptr if the stored parameter is nil.
-func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.GetIfExists(ctx, concatKeys(key, subkey), ptr)
-}
-
-// Get raw bytes of parameter from store
+// GetRaw queries for the raw values bytes for a parameter by key.
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
 	return store.Get(key)
 }
 
-// Check if the parameter is set in the store
+// Has returns if a parameter key exists or not in the Subspace's KVStore.
 func (s Subspace) Has(ctx sdk.Context, key []byte) bool {
 	store := s.kvStore(ctx)
 	return store.Has(key)
 }
 
-// Returns true if the parameter is set in the block
+// Modified returns true if the parameter key is set in the Subspace's transient
+// KVStore.
 func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 	tstore := s.transientStore(ctx)
 	return tstore.Has(key)
 }
 
-func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
+// checkType verifies that the provided key and value are comptable and registered.
+func (s Subspace) checkType(key []byte, value interface{}) {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic(fmt.Sprintf("parameter %s not registered", string(key)))
 	}
 
 	ty := attr.ty
-	pty := reflect.TypeOf(param)
+	pty := reflect.TypeOf(value)
 	if pty.Kind() == reflect.Ptr {
 		pty = pty.Elem()
 	}
 
 	if pty != ty {
-		panic("Type mismatch with registered table")
+		panic("type mismatch with registered table")
 	}
 }
 
-// Set stores the parameter. It returns error if stored parameter has different type from input.
-// It also set to the transient store to record change.
-func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
+// Set stores a value for given a parameter key assuming the parameter type has
+// been registered. It will panic if the parameter type has not been registered
+// or if the value cannot be encoded. A change record is also set in the Subspace's
+// transient KVStore to mark the parameter as modified.
+func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
+	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	s.checkType(store, key, param)
-
-	bz, err := s.cdc.MarshalJSON(param)
+	bz, err := s.cdc.MarshalJSON(value)
 	if err != nil {
 		panic(err)
 	}
+
 	store.Set(key, bz)
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
-
 }
 
-// Update stores raw parameter bytes. It returns error if the stored parameter
-// has a different type from the input. It also sets to the transient store to
-// record change.
-func (s Subspace) Update(ctx sdk.Context, key []byte, param []byte) error {
+// Update stores an updated raw value for a given parameter key assuming the
+// parameter type has been registered. It will panic if the parameter type has
+// not been registered or if the value cannot be encoded. An error is returned
+// if the raw value is not compatible with the registered type for the parameter
+// key or if the new value is invalid as determined by the registered type's
+// validation function.
+func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic(fmt.Sprintf("parameter %s not registered", string(key)))
@@ -194,72 +193,33 @@ func (s Subspace) Update(ctx sdk.Context, key []byte, param []byte) error {
 	ty := attr.ty
 	dest := reflect.New(ty).Interface()
 	s.GetIfExists(ctx, key, dest)
-	err := s.cdc.UnmarshalJSON(param, dest)
-	if err != nil {
+
+	if err := s.cdc.UnmarshalJSON(value, dest); err != nil {
+		return err
+	}
+
+	// destValue contains the dereferenced value of dest so validation function do
+	// not have to operate on pointers.
+	destValue := reflect.Indirect(reflect.ValueOf(dest)).Interface()
+	if err := s.Validate(ctx, key, destValue); err != nil {
 		return err
 	}
 
 	s.Set(ctx, key, dest)
-
-	// TODO: Remove; seems redundant as Set already does this.
-	tStore := s.transientStore(ctx)
-	tStore.Set(key, []byte{})
-
 	return nil
 }
 
-// SetWithSubkey set a parameter with a key and subkey
-// Checks parameter type only over the key
-func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
-	store := s.kvStore(ctx)
-
-	s.checkType(store, key, param)
-
-	newkey := concatKeys(key, subkey)
-
-	bz, err := s.cdc.MarshalJSON(param)
-	if err != nil {
-		panic(err)
-	}
-	store.Set(newkey, bz)
-
-	tstore := s.transientStore(ctx)
-	tstore.Set(newkey, []byte{})
-}
-
-// UpdateWithSubkey stores raw parameter bytes  with a key and subkey. It checks
-// the parameter type only over the key.
-func (s Subspace) UpdateWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param []byte) error {
-	concatkey := concatKeys(key, subkey)
-
-	attr, ok := s.table.m[string(concatkey)]
-	if !ok {
-		return fmt.Errorf("parameter %s not registered", string(key))
-	}
-
-	ty := attr.ty
-	dest := reflect.New(ty).Interface()
-	s.GetWithSubkeyIfExists(ctx, key, subkey, dest)
-	err := s.cdc.UnmarshalJSON(param, dest)
-	if err != nil {
-		return err
-	}
-
-	s.SetWithSubkey(ctx, key, subkey, dest)
-	tStore := s.transientStore(ctx)
-	tStore.Set(concatkey, []byte{})
-
-	return nil
-}
-
-// Get to ParamSet
+// GetParamSet iterates through each ParamSetPair where for each pair, it will
+// retrieve the value and set it to the corresponding value pointer provided
+// in the ParamSetPair by calling Subspace#Get.
 func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.ParamSetPairs() {
 		s.Get(ctx, pair.Key, pair.Value)
 	}
 }
 
-// Set from ParamSet
+// SetParamSet iterates through each ParamSetPair and sets the value with the
+// corresponding parameter key in the Subspace's KVStore.
 func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.ParamSetPairs() {
 		// pair.Field is a pointer to the field, so indirecting the ptr.
@@ -267,11 +227,16 @@ func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 		// since SetStruct is meant to be used in InitGenesis
 		// so this method will not be called frequently
 		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
+
+		if err := pair.ValidatorFn(v); err != nil {
+			panic(fmt.Sprintf("value from ParamSetPair is invalid: %s", err))
+		}
+
 		s.Set(ctx, pair.Key, v)
 	}
 }
 
-// Returns name of Subspace
+// Name returns the name of the Subspace.
 func (s Subspace) Name() string {
 	return string(s.name)
 }
@@ -281,27 +246,27 @@ type ReadOnlySubspace struct {
 	s Subspace
 }
 
-// Exposes Get
+// Get delegates a read-only Get call to the Subspace.
 func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	ros.s.Get(ctx, key, ptr)
 }
 
-// Exposes GetRaw
+// GetRaw delegates a read-only GetRaw call to the Subspace.
 func (ros ReadOnlySubspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	return ros.s.GetRaw(ctx, key)
 }
 
-// Exposes Has
+// Has delegates a read-only Has call to the Subspace.
 func (ros ReadOnlySubspace) Has(ctx sdk.Context, key []byte) bool {
 	return ros.s.Has(ctx, key)
 }
 
-// Exposes Modified
+// Modified delegates a read-only Modified call to the Subspace.
 func (ros ReadOnlySubspace) Modified(ctx sdk.Context, key []byte) bool {
 	return ros.s.Modified(ctx, key)
 }
 
-// Exposes Space
+// Name delegates a read-only Name call to the Subspace.
 func (ros ReadOnlySubspace) Name() string {
 	return ros.s.Name()
 }

@@ -1,4 +1,4 @@
-# Mint Specification
+# `mint`
 
 ## Contents
 

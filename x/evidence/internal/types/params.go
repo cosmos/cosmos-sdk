@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -48,7 +49,7 @@ func (p Params) String() string {
 // ParamSetPairs returns the parameter set pairs.
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
-		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge),
+		params.NewParamSetPair(KeyMaxEvidenceAge, &p.MaxEvidenceAge, validateMaxEvidenceAge),
 	}
 }
 
@@ -57,4 +58,17 @@ func DefaultParams() Params {
 	return Params{
 		MaxEvidenceAge: DefaultMaxEvidenceAge,
 	}
+}
+
+func validateMaxEvidenceAge(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v <= 0 {
+		return fmt.Errorf("max evidence age must be positive: %s", v)
+	}
+
+	return nil
 }

@@ -1,4 +1,4 @@
-# Bank module specification
+# `bank`
 
 ## Abstract
 

@@ -37,8 +37,7 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 10, Time: time.Now()})
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.FlagUnsafeSkipUpgrades = upgrade.FlagUnsafeSkipUpgrades
-	viper.Set(upgrade.FlagUnsafeSkipUpgrades, []int{})
-	s.VerifySet()
+	s.keeper.SetSkipUpgradeHeights([]int64{1, 2, 3})
 }
 
 func (s *TestSuite) TestRequireName() {
@@ -218,7 +217,7 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 
 func (s *TestSuite) VerifySet() {
 	s.T().Log("Verify if the skip upgrade has been set")
-	s.Require().NotNil(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
+	s.Require().NotEmpty(s.keeper.GetSkipUpgradeHeights())
 }
 
 func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
@@ -227,7 +226,7 @@ func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
 }
 
 func (s *TestSuite) TestContains() {
-	viper.Set(s.FlagUnsafeSkipUpgrades, []int{1, 2})
+	s.keeper.SetSkipUpgradeHeights([]int64{1, 2})
 	s.VerifySet()
 	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
 	s.T().Log("case where array contains the element")
@@ -246,11 +245,9 @@ func (s *TestSuite) TestSkipUpgradeSkippingAll() {
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	viper.Set(s.FlagUnsafeSkipUpgrades, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
+	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1, s.ctx.BlockHeight() + 10})
 	s.VerifySet()
-
-	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
-
+	s.T().Log("this is get", s.keeper.GetSkipUpgradeHeights())
 	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
@@ -279,7 +276,7 @@ func (s *TestSuite) TestUpgradeSkippingOne() {
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	viper.Set(s.FlagUnsafeSkipUpgrades, []int{int(s.ctx.BlockHeight() + 1)})
+	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1})
 	s.VerifySet()
 
 	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
@@ -308,7 +305,7 @@ func (s *TestSuite) TestUpgradeSkippingOnlyTwo() {
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	viper.Set(s.FlagUnsafeSkipUpgrades, []int{int(s.ctx.BlockHeight() + 1), int(s.ctx.BlockHeight() + 10)})
+	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1, s.ctx.BlockHeight() + 10})
 	s.VerifySet()
 
 	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))

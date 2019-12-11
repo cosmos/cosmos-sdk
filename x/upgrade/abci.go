@@ -15,8 +15,8 @@ import (
 // The purpose is to ensure the binary is switched EXACTLY at the desired block, and to allow
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
-func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock, skipUpgradeHeightArray []int64) {
-
+func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
+	skipUpgradeHeightArray := k.GetSkipUpgradeHeights()
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return

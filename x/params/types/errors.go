@@ -21,8 +21,8 @@ func ErrUnknownSubspace(codespace sdk.CodespaceType, space string) sdk.Error {
 }
 
 // ErrSettingParameter returns an error for failing to set a parameter.
-func ErrSettingParameter(codespace sdk.CodespaceType, key, subkey, value, msg string) sdk.Error {
-	return sdk.NewError(codespace, CodeSettingParameter, fmt.Sprintf("error setting parameter %s on %s (%s): %s", value, key, subkey, msg))
+func ErrSettingParameter(codespace sdk.CodespaceType, key, value, msg string) sdk.Error {
+	return sdk.NewError(codespace, CodeSettingParameter, fmt.Sprintf("error setting parameter %s on %s: %s", value, key, msg))
 }
 
 // ErrEmptyChanges returns an error for empty parameter changes.

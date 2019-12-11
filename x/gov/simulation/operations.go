@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -16,16 +18,72 @@ import (
 
 var initialProposalID = uint64(100000000000000)
 
-// ContentSimulator defines a function type alias for generating random proposal
-// content.
-type ContentSimulator func(r *rand.Rand, ctx sdk.Context, accs []simulation.Account) types.Content
+// Simulation operation weights constants
+const (
+	OpWeightMsgDeposit = "op_weight_msg_deposit"
+	OpWeightMsgVote    = "op_weight_msg_vote"
+)
+
+// WeightedOperations returns all the operations from the module with their respective weights
+func WeightedOperations(appParams simulation.AppParams, cdc *codec.Codec, ak types.AccountKeeper,
+	k keeper.Keeper, wContents []simulation.WeightedProposalContent) simulation.WeightedOperations {
+
+	var (
+		weightMsgDeposit int
+		weightMsgVote    int
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
+		func(_ *rand.Rand) {
+			weightMsgDeposit = simappparams.DefaultWeightMsgDeposit
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgVote, &weightMsgVote, nil,
+		func(_ *rand.Rand) {
+			weightMsgVote = simappparams.DefaultWeightMsgVote
+		},
+	)
+
+	// generate the weighted operations for the proposal contents
+	var wProposalOps simulation.WeightedOperations
+
+	for _, wContent := range wContents {
+		wContent := wContent // pin variable
+		var weight int
+		appParams.GetOrGenerate(cdc, wContent.AppParamsKey, &weight, nil,
+			func(_ *rand.Rand) { weight = wContent.DefaultWeight })
+
+		wProposalOps = append(
+			wProposalOps,
+			simulation.NewWeightedOperation(
+				weight,
+				SimulateSubmitProposal(ak, k, wContent.ContentSimulatorFn),
+			),
+		)
+	}
+
+	wGovOps := simulation.WeightedOperations{
+		simulation.NewWeightedOperation(
+			weightMsgDeposit,
+			SimulateMsgDeposit(ak, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgVote,
+			SimulateMsgVote(ak, k),
+		),
+	}
+
+	return append(wProposalOps, wGovOps...)
+}
 
 // SimulateSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
 // nolint: funlen
-func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
-	contentSim ContentSimulator) simulation.Operation {
+func SimulateSubmitProposal(
+	ak types.AccountKeeper, k keeper.Keeper, contentSim simulation.ContentSimulatorFn,
+) simulation.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -125,14 +183,6 @@ func SimulateSubmitProposal(ak types.AccountKeeper, k keeper.Keeper,
 
 		return opMsg, fops, nil
 	}
-}
-
-// SimulateTextProposalContent returns random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simulation.Account) types.Content {
-	return types.NewTextProposal(
-		simulation.RandStringOfLength(r, 140),
-		simulation.RandStringOfLength(r, 5000),
-	)
 }
 
 // SimulateMsgDeposit generates a MsgDeposit with random values.

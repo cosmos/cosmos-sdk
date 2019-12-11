@@ -3,10 +3,11 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
-	"testing"
 )
 
 func TestPrettyParams_MarshalYAML(t *testing.T) {

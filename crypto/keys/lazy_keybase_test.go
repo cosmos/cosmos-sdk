@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -422,7 +421,7 @@ func TestKeygenOverride(t *testing.T) {
 	CryptoCdc = testCdc
 
 	overrideCalled := false
-	dummyFunc := func(bz [32]byte) tmcrypto.PrivKey {
+	dummyFunc := func(bz [32]byte) crypto.PrivKey {
 		overrideCalled = true
 		return testPriv(bz[:])
 	}

@@ -7,10 +7,10 @@ features:
     title: Introduction to Cosmos SDK
     desc: Learn about all the parts of the Cosmos SDK.
     label: 5 min
-    url: /intro/
+    url: /intro/overview.html
     image: spaceship
   - cta: Learn
-    title: SDK Tutorial
+    title: SDK Tutorials
     desc: Build a complete blockchain application from scratch.
     label: 30-40 min
     special: dark
@@ -20,24 +20,24 @@ features:
 sections:
   - title: Introduction
     desc: High-level overview of the Cosmos SDK.
-    url: /intro
+    url: /intro/overview.html
     icon: introduction
   - title: Basics
     desc: Anatomy of a blockchain, transaction lifecycle, accounts and more.
     icon: basics
-    url: /basics
-  - title: SDK Core
+    url: /basics/app-anatomy.html
+  - title: Core Concepts
     desc: Read about the core concepts like `baseapp`, the store, or the server.
     icon: core
-    url: /core
+    url: /core/baseapp.html
   - title: Building Modules
     desc: Discover how to build modules for the Cosmos SDK.
     icon: modules
-    url: /building-modules
+    url: /building-modules/intro.html
   - title: Interfaces
     desc: Build interfaces for Cosmos SDK applications.
     icon: interfaces
-    url: /interfaces
+    url: /interfaces/interfaces-intro.html
   - title: Modules
     desc: Explore existing modules to build your application with.
     icon: specifications

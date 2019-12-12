@@ -129,6 +129,16 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 }
 
 // queryCommitterHandlerFn implements a committer querying route
+//
+// @Summary Query committer
+// @Tags IBC
+// @Produce json
+// @Param client-id path string true "Client ID"
+// @Param height path number true "Committer height"
+// @Success 200 {object} QueryCommitter "OK"
+// @Failure 400 {object} rest.ErrorResponse "Invalid client id or height"
+// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
+// @Router /ibc/clients/{client-id}/committers/{height} [get]
 func queryCommitterHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

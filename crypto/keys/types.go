@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -318,7 +317,7 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 
 type (
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz [32]byte) tmcrypto.PrivKey
+	PrivKeyGenFunc func(bz [32]byte) crypto.PrivKey
 
 	// KeybaseOption overrides options for the db
 	KeybaseOption func(*kbOptions)

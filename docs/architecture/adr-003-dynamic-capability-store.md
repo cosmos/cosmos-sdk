@@ -185,6 +185,66 @@ The memory store will work just like the current transient store, except that it
 
 Initially the memory store will only be used by the `CapabilityKeeper`, but it could be used by other modules in the future.
 
+### Usage patterns
+
+#### Initialisation
+
+Any modules which use dynamic capabilities must be provided a `ScopedCapabilityKeeper` in `app.go`:
+
+```golang
+ck := NewCapabilityKeeper(persistentKey, memoryKey)
+mod1Keeper := NewMod1Keeper(ck.ScopeToModule("mod1"), ....)
+mod2Keeper := NewMod2Keeper(ck.ScopeToModule("mod2"), ....)
+
+// other initialisation logic ...
+
+// load initial state...
+
+ck.InitialiseAndSeal(initialContext)
+```
+
+#### Creating, passing, claiming and using capabilities
+
+Consider the case where `mod1` wants to create a capability, associate it with a resource (e.g. an IBC channel) by name, then pass it to `mod2` which will use it later:
+
+Module 1 would have the following code:
+
+```golang
+capability := scopedCapabilityKeeper.NewCapability(ctx, "resourceABC")
+mod2Keeper.SomeFunction(ctx, capability, args...)
+```
+
+`SomeFunction`, running in module 2, could then claim the capability:
+
+```golang
+func (k Mod2Keeper) SomeFunction(ctx Context, capability Capability) {
+  k.sck.ClaimCapability(ctx, capability)
+  // other logic...
+}
+```
+
+Later on, module 2 can retrieve that capability by name and pass it to module 1, which will authenticate it against the resource:
+
+```golang
+func (k Mod2Keeper) SomeOtherFunction(ctx Context, name string) {
+  capability := k.sck.GetCapability(ctx, name)
+  mod1.UseResource(ctx, capability, "resourceABC")
+}
+```
+
+Module 1 will then check that this capability key is authenticated to use the resource before allowing module 2 to use it:
+
+```golang
+func (k Mod1Keeper) UseResource(ctx Context, capability Capability, resource string) {
+  if !k.sck.AuthenticateCapability(name, capability) {
+    return errors.New("unauthenticated")
+  }
+  // do something with the resource
+}
+```
+
+If module 2 passed the capability key to module 3, module 3 could then claim it and call module 1 just like module 2 did.
+
 ## Status
 
 Proposed.

@@ -17,6 +17,7 @@ import (
 )
 
 type TestSuite struct {
+	// TODO: remove this when we
 	suite.Suite
 
 	module                 module.AppModule
@@ -28,15 +29,30 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
+	setupTestSuiteInPlace(s, []int64{})
+}
+
+// this should be called by all functions that do not belong to the suite
+func setupTest(skip []int64) TestSuite {
+	var s TestSuite
+	setupTestSuiteInPlace(&s, skip)
+	return s
+}
+
+// this is a temporary way to unify TestSuite.SetupTest and setupTest
+// can be merged into setupTest when TestSuite goes away
+func setupTestSuiteInPlace(s *TestSuite, skip []int64) {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 
 	s.keeper = app.UpgradeKeeper
-	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
-	s.querier = upgrade.NewQuerier(s.keeper)
 	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 10, Time: time.Now()})
-	s.module = upgrade.NewAppModule(s.keeper)
 	s.FlagUnsafeSkipUpgrades = upgrade.FlagUnsafeSkipUpgrades
+
+	s.module = upgrade.NewAppModule(s.keeper)
+	s.querier = s.module.NewQuerierHandler()
+
+	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 }
 
 func (s *TestSuite) TestRequireName() {

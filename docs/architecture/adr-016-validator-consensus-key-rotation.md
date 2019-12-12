@@ -42,7 +42,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     - tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
     - validator consensus key update can be done via creating new + delete old by change the power to zero.
     - therefore, we expect we even do not need to change tendermint codebase at all to implement this feature.
-- new genesis parameters
+- new genesis parameters in `staking` module
     - `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
     - `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
 
@@ -95,7 +95,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
 
 6. at `previousVotes` Iteration logic of `AllocateTokens`,  `previousVote` using `OldConsPubKey` match up with `ConsPubKeyRotationHistory`, and replace validator for token allocation
 7. Migrate `ValidatorSigningInfo` and `ValidatorMissedBlockBitArray` from `OldConsPubKey` to `NewConsPubKey`
-
+- Note : All above features shall be implemented in `staking` module.
 
 ## Status
 

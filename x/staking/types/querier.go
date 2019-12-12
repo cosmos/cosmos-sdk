@@ -104,6 +104,7 @@ type QueryHistoricalInfoParams struct {
 	Height int64
 }
 
+// NewQueryHistoricalInfoParams creates a new QueryHistoricalInfoParams instance
 func NewQueryHistoricalInfoParams(height int64) QueryHistoricalInfoParams {
 	return QueryHistoricalInfoParams{height}
 }

@@ -284,7 +284,7 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 
 //________________________________________________________________________________
 
-// gets the key for historicalinfo
+// GetHistoricalInfoKey gets the key for the historical info
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(fmt.Sprintf("%d", height))...)
 }

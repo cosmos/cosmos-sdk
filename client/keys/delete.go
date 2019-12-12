@@ -16,7 +16,8 @@ const (
 	flagForce = "force"
 )
 
-func deleteKeyCommand() *cobra.Command {
+// DeleteKeyCommand deletes a key from the key store.
+func DeleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>...",
 		Short: "Delete the given keys",

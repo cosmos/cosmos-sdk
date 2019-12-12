@@ -9,7 +9,8 @@ import (
 
 const flagListNames = "list-names"
 
-func listKeysCmd() *cobra.Command {
+// ListKeysCmd lists all keys in the key store.
+func ListKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all keys",

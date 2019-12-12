@@ -7,10 +7,10 @@ features:
     title: Introduction to Cosmos SDK
     desc: Learn about all the parts of the Cosmos SDK.
     label: 5 min
-    url: /intro/
+    url: /intro/overview.html
     image: spaceship
   - cta: Learn
-    title: SDK Tutorial
+    title: SDK Tutorials
     desc: Build a complete blockchain application from scratch.
     label: 30-40 min
     special: dark

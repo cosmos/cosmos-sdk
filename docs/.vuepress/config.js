@@ -6,18 +6,31 @@ module.exports = {
       permalinkSymbol: ""
     }
   },
+  head: [
+    [
+      "link",
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href: "https://cloud.typography.com/6138116/7255612/css/fonts.css"
+      }
+    ],
+  ],
   locales: {
-    '/': {
-      lang: 'en-US'
+    "/": {
+      lang: "en-US"
     },
-    'kr': {
+    kr: {
       lang: "kr"
     },
-    'cn': {
-      lang: 'cn'
+    kr: {
+      lang: "kr"
     },
-    'ru': {
-      lang: 'ru'
+    cn: {
+      lang: "cn"
+    },
+    ru: {
+      lang: "ru"
     }
   },
   base: process.env.VUEPRESS_BASE || "/",
@@ -35,7 +48,7 @@ module.exports = {
             title: "Modules",
             directory: true,
             path: "/modules"
-          },
+          }
         ]
       },
       {
@@ -81,7 +94,7 @@ module.exports = {
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",
-        url: "https://cosmos.network"
+        url: "/"
       },
       services: [
         {
@@ -147,7 +160,8 @@ module.exports = {
           children: [
             {
               title: "Contributing to the docs",
-              url: "https://github.com/cosmos/cosmos-sdk/tree/master/docs"
+              url:
+                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
             },
             {
               title: "Source code on GitHub",
@@ -164,6 +178,12 @@ module.exports = {
       {
         ga: "UA-51029217-12"
       }
+    ],
+    [
+      "sitemap",
+      {
+        hostname: "https://docs.cosmos.network"
+      }
     ]
-  ],
+  ]
 };

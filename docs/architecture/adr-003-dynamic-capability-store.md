@@ -1,4 +1,4 @@
-# ADR 18: Dynamic Capability Store
+# ADR 3: Dynamic Capability Store
 
 ## Changelog
 
@@ -11,8 +11,8 @@ as described in [ICS 5](https://github.com/cosmos/ics/tree/master/spec/ics-005-p
 port & channel, and are used to authenticate future usage of the port or channel. Since channels and potentially ports can be initialised during transaction execution, the state machine must be able to create
 object-capability keys at this time.
 
-At present, the Cosmos SDK does not have the ability to do this. Object-capability keys are currently pointers (memory addresses) of `sdk.StoreKey` structs created at application initialisation in `app.go` ([example](https://github.com/cosmos/gaia/blob/master/app/app.go#L132))
-and passed to Keepers as fixed arguments ([example](https://github.com/cosmos/gaia/blob/master/app/app.go#L160)). Keepers cannot create or store capability keys during transaction execution — although they could call `sdk.NewKVStoreKey` and take the memory address
+At present, the Cosmos SDK does not have the ability to do this. Object-capability keys are currently pointers (memory addresses) of `StoreKey` structs created at application initialisation in `app.go` ([example](https://github.com/cosmos/gaia/blob/master/app/app.go#L132))
+and passed to Keepers as fixed arguments ([example](https://github.com/cosmos/gaia/blob/master/app/app.go#L160)). Keepers cannot create or store capability keys during transaction execution — although they could call `NewKVStoreKey` and take the memory address
 of the returned struct, storing this in the Merklised store would result in a consensus fault, since the memory address will be different on each machine (this is intentional — were this not the case, the keys would be predictable and couldn't serve as object capabilities).
 
 Keepers need a way to keep a private map of store keys which can be altered during transacton execution, along with a suitable mechanism for regenerating the unique memory addresses (capability keys) in this map whenever the application is started or restarted.
@@ -20,13 +20,13 @@ This ADR proposes such an interface & mechanism.
 
 ## Decision
 
-The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning, tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`, the `sdk.CapabilityKeeper` will
-be hooked up to modules through unique function references so that it can identify the calling module when later invoked. When the initial state is loaded from disk, the `sdk.CapabilityKeeper` instance will create new capability keys
+The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning, tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`, the `CapabilityKeeper` will
+be hooked up to modules through unique function references so that it can identify the calling module when later invoked. When the initial state is loaded from disk, the `CapabilityKeeper` instance will create new capability keys
 for all previously allocated capability identifiers (allocated during execution of past transactions), and keep them in a memory-only store while the chain is running. The SDK will include a new `MemoryStore` store type, similar
 to the existing `TransientStore` but without erasure on `Commit()`, which this `CapabilityKeeper` will use to privately store capability keys.
 
-The `sdk.CapabilityKeeper` will use two stores: a regular, persistent `sdk.KVStore`, which will track what capabilities have been created by each module, and an in-memory `sdk.MemoryStore` (described below), which will
-store the actual capabilities. The `sdk.CapabilityKeeper` will define the following types & functions:
+The `CapabilityKeeper` will use two stores: a regular, persistent `KVStore`, which will track what capabilities have been created by each module, and an in-memory `MemoryStore` (described below), which will
+store the actual capabilities. The `CapabilityKeeper` will define the following types & functions:
 
 The `Capability` interface, similar to `StoreKey`, provides `Name()` and `String()` methods.
 
@@ -49,8 +49,8 @@ A `CapabilityKeeper` contains a persistent store key, memory store key, and mapp
 
 ```golang
 type CapabilityKeeper struct {
-  persistentKey sdk.StoreKey
-  memoryKey sdk.MemoryStoreKey
+  persistentKey StoreKey
+  memoryKey MemoryStoreKey
   moduleNames map[string]interface{}
 }
 ```
@@ -60,7 +60,7 @@ reference. The newly created capability is *not* automatically persisted, `Claim
 called on a `ScopedCapabilityKeeper` in order to persist it.
 
 ```golang
-func (ck CapabilityKeeper) NewCapability(ctx sdk.Context, name string) (Capability, error) {
+func (ck CapabilityKeeper) NewCapability(ctx Context, name string) (Capability, error) {
   memoryStore := ctx.KVStore(ck.memoryKey)
   // check name not taken in memory store
   if memoryStore.Get("rev/" + name) != nil {
@@ -92,7 +92,7 @@ func (ck CapabilityKeeper) AuthenticateCapability(name string, capability Capabi
 in accordance with the keys previously claimed by particular modules.
 
 ```golang
-func (ck CapabilityKeeper) Initialise(ctx sdk.Context) {
+func (ck CapabilityKeeper) Initialise(ctx Context) {
   persistentStore := ctx.KVStore(ck.persistentKey)
   memoryStore := ctx.KVStore(ck.memoryKey)
   // initialise memory store for all names in persistent store
@@ -135,7 +135,7 @@ func (ck CapabilityKeeper) ScopeToModule(moduleName string) CapabilityKeeper {
 to call `ClaimCapability` will own it. To avoid confusion, a module which calls `NewCapability` SHOULD either call `ClaimCapability` or pass the capability to another module which will then claim it.
 
 ```golang
-func (sck ScopedCapabilityKeeper) ClaimCapability(ctx sdk.Context, capability Capability) error {
+func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability) error {
   persistentStore := ctx.KVStore(sck.ck.persistentKey)
   memoryStore := ctx.KVStore(sck.ck.memoryKey)
   // fetch name from memory store
@@ -151,7 +151,7 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(ctx sdk.Context, capability Ca
 `GetCapability` allows a module to fetch a capability which it has previously claimed by name. The module is not allowed to retrieve capabilities which it does not own.
 
 ```golang
-func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (Capability, error) {
+func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {
   persistentStore := ctx.KVStore(sck.ck.persistentKey)
   memoryStore := ctx.KVStore(sck.ck.memoryKey)
   // check that this module owns the capability with this name
@@ -167,11 +167,11 @@ func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (C
 
 ### Memory store
 
-A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `sdk.StoreKey`s.
+A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `StoreKey`s.
 
 The memory store will work just like the current transient store, except that it will not create a new `dbadapter.Store` when `Commit()` is called, but instead retain the current one (so that state will persist across blocks).
 
-Initially the memory store will only be used by the `sdk.CapabilityKeeper`, but it could be used by other modules in the future.
+Initially the memory store will only be used by the `CapabilityKeeper`, but it could be used by other modules in the future.
 
 ## Status
 
@@ -186,7 +186,7 @@ Proposed.
 ### Negative
 
 - Requires an additional keeper.
-- Some overlap with existing `sdk.StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+- Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
 
 ### Neutral
 

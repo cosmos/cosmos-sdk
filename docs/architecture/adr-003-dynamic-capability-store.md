@@ -243,7 +243,8 @@ func (k Mod1Keeper) UseResource(ctx Context, capability Capability, resource str
 }
 ```
 
-If module 2 passed the capability key to module 3, module 3 could then claim it and call module 1 just like module 2 did.
+If module 2 passed the capability key to module 3, module 3 could then claim it and call module 1 just like module 2 did
+(in which case module 2 could no longer call `GetCapability`, since it would then be owned uniquely by module 3).
 
 ## Status
 

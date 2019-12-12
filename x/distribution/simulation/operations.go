@@ -21,6 +21,7 @@ const (
 	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
+	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -50,6 +51,13 @@ func WeightedOperations(
 		},
 	)
 
+	var weightMsgFundCommunityPool int
+	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
+		func(_ *rand.Rand) {
+			weightMsgFundCommunityPool = simappparams.DefaultWeightMsgFundCommunityPool
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
@@ -62,6 +70,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgWithdrawValidatorCommission,
 			SimulateMsgWithdrawValidatorCommission(ak, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgFundCommunityPool,
+			SimulateMsgFundCommunityPool(ak, k, sk),
 		),
 	}
 }
@@ -187,6 +199,55 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
+		)
+
+		res := app.Deliver(tx)
+		if !res.IsOK() {
+			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		}
+
+		return simulation.NewOperationMsg(msg, true, ""), nil, nil
+	}
+}
+
+// SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
+// a random account sends a random amount of its funds to the community pool.
+func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simulation.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, chainID string,
+	) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+
+		funder, _ := simulation.RandomAcc(r, accs)
+
+		account := ak.GetAccount(ctx, funder.Address)
+		coins := account.SpendableCoins(ctx.BlockTime())
+
+		fundAmount := simulation.RandSubsetCoins(r, coins)
+		if fundAmount.Empty() {
+			return simulation.NoOpMsg(types.ModuleName), nil, nil
+		}
+
+		var (
+			fees sdk.Coins
+			err  error
+		)
+
+		coins, hasNeg := coins.SafeSub(fundAmount)
+		if !hasNeg {
+			fees, err = simulation.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simulation.NoOpMsg(types.ModuleName), nil, err
+			}
+		}
+
+		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
+		tx := helpers.GenTx(
+			[]sdk.Msg{msg},
+			fees,
+			chainID,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			funder.PrivKey,
 		)
 
 		res := app.Deliver(tx)

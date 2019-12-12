@@ -23,8 +23,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case types.MsgWithdrawValidatorCommission:
 			return handleMsgWithdrawValidatorCommission(ctx, msg, k)
 
-		case types.MsgDepositIntoCommunityPool:
-			return handleMsgDepositIntoCommunityPool(ctx, msg, k)
+		case types.MsgFundCommunityPool:
+			return handleMsgFundCommunityPool(ctx, msg, k)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized distribution message type: %T", msg)
@@ -86,8 +86,8 @@ func handleMsgWithdrawValidatorCommission(ctx sdk.Context, msg types.MsgWithdraw
 	return sdk.Result{Events: ctx.EventManager().Events()}
 }
 
-func handleMsgDepositIntoCommunityPool(ctx sdk.Context, msg types.MsgDepositIntoCommunityPool, k keeper.Keeper) sdk.Result {
-	if err := k.DepositCommunityPoolFunds(ctx, msg.Amount, msg.Depositor); err != nil {
+func handleMsgFundCommunityPool(ctx sdk.Context, msg types.MsgFundCommunityPool, k keeper.Keeper) sdk.Result {
+	if err := k.FundCommunityPool(ctx, msg.Amount, msg.Depositor); err != nil {
 		return sdk.ResultFromError(err)
 	}
 

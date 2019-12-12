@@ -124,7 +124,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 }
 
 // SetSkipUpgradeHeights assigns the given array to keeper's skipUpgradeHeights
-func (k Keeper) SetSkipUpgradeHeights(skipUpgradeHeightArray []int64) {
+func (k *Keeper) SetSkipUpgradeHeights(skipUpgradeHeightArray []int64) {
 	k.skipUpgradeHeights = skipUpgradeHeightArray
 }
 

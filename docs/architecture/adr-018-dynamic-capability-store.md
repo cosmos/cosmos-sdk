@@ -20,6 +20,12 @@ This ADR proposes such an interface & mechanism.
 
 ## Decision
 
+The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning, tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`, the `sdk.CapabilityKeeper` will
+be hooked up to modules through unique function references so that it can identify the calling module when later invoked. When the initial state is loaded from disk, the `sdk.CapabilityKeeper` instance will create new capability keys
+for all previously allocated capability identifiers (allocated during execution of past transactions), and keep them in a memory-only store while the chain is running. The SDK will include a new `MemoryStore` store type, similar
+to the existing `TransientStore` but without erasure on `Commit()`, which this `CapabilityKeeper` will use to privately store capability keys.
+
+
 Need some notion of module identity, denoted by passing specific closures over module name to `sdk.CapabilityKeeper` and keepers in `app.go`.
 
 `sdk.CapabilityKeeper`
@@ -33,6 +39,14 @@ Need some notion of module identity, denoted by passing specific closures over m
 `keeper.Initialise(ctx sdk.Context)` (actually generates capabilities)
 
 - Capability transfer? Either have a temporary identifier (never stored) or add `keeper.TransferCapability` (but then you need the other module name) or have `keeper.ClaimCapability` for unique use.
+
+### Memory store
+
+- A new store type, `StoreTypeMemory`, will be added to the `store` package.
+- A new store key type, `MemoryStoreKey`, will be added to the `store` package.
+- The memory store will work just like the current transient store, except that it will not create a new `dbadapter.Store` when `Commit()` is called, but instead retain the current one
+  (so that state will persist across blocks).
+- Initially the memory store will only be used by the `sdk.CapabilityKeeper`, but it could be used by other modules in the future.
 
 ## Status
 

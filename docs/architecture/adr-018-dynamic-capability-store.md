@@ -26,7 +26,9 @@ for all previously allocated capability identifiers (allocated during execution 
 to the existing `TransientStore` but without erasure on `Commit()`, which this `CapabilityKeeper` will use to privately store capability keys.
 
 The `sdk.CapabilityKeeper` will use two stores: a regular, persistent `sdk.KVStore`, which will track what capabilities have been created by each module, and an in-memory `sdk.MemoryStore` (described below), which will
-store the actual capabilities. The `sdk.CapabilityKeeper` will define the following functions:
+store the actual capabilities. The `sdk.CapabilityKeeper` will define the following types & functions:
+
+The `Capability` interface, similar to `sdk.Storekey`, provides `Name()` and `String()` methods.
 
 ```golang
 type Capability interface {
@@ -34,6 +36,16 @@ type Capability interface {
   String() string
 }
 ```
+
+A `CapabilityKey` is simply a struct, the address of which is taken for the actual capability.
+
+```golang
+type CapabilityKey struct {
+  name string
+}
+```
+
+A `CapabilityKeeper` contains a persistent store key, memory store key, and mapping of allocated module names.
 
 ```golang
 type CapabilityKeeper struct {
@@ -43,23 +55,52 @@ type CapabilityKeeper struct {
 }
 ```
 
+`NewCapability` can be called by any module to create a new unique, unforgeable object-capability
+reference. The newly created capability is *not* automatically persisted, `ClaimCapability` must be
+called on a `ScopedCapabilityKeeper` in order to persist it.
+
 ```golang
-func (ck CapabilityKeeper) NewCapability(ctx sdk.Context, name string) Capability {
+func (ck CapabilityKeeper) NewCapability(ctx sdk.Context, name string) (Capability, error) {
+  memoryStore := ctx.KVStore(ck.memoryKey)
   // check name not taken in memory store
-  // set forward map in memory store from capability to name
-  // set backward mamp in memory store from name to capability
+  if memoryStore.Get("rev/" + name) != nil {
+    return nil, errors.New("name already taken")
+  }
+  // create a new capability
+  capability := &CapabilityKey{name: name}
+  // set forward mapping in memory store from capability to name
+  memoryStore.Set("fwd/" + capability, name)
+  // set reverse mapping in memory store from name to capability
+  memoryStore.Set("rev/" + name, capability)
+  // return the newly created capability
+  return capability
 }
 ```
+
+`AuthenticateCapability` can be called by any module to check that a capability
+does in fact correspond to a particular name (the name can be untrusted user input).
 
 ```golang
 func (ck CapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
-  // check forward map in memory store === name
+  memoryStore := ctx.KVStore(ck.memoryKey)
+  // return whether forward mapping in memory store matches name
+  return memoryStore.Get("fwd/" + capability) === name
 }
 ```
 
+`Initialise` MUST be called exactly once, after loading the initial state, to populate the memory store with newly-created capability keys
+in accordance with the keys previously claimed by particular modules.
+
 ```golang
 func (ck CapabilityKeeper) Initialise(ctx sdk.Context) {
+  persistentStore := ctx.KVStore(ck.persistentKey)
+  memoryStore := ctx.KVStore(ck.memoryKey)
   // initialise memory store for all names in persistent store
+  for key, value := range persistentStore.Iter() {
+    capability = &CapabilityKey{name: key}
+    memoryStore.Set("fwd/" + capability, name)
+    memoryStore.Set("rev/" + name, capability)
+  }
 }
 ```
 
@@ -94,9 +135,16 @@ func (ck CapabilityKeeper) ScopeToModule (moduleName string) {
 to call `ClaimCapability` will own it. To avoid confusion, a module which calls `NewCapability` SHOULD either call `ClaimCapability` or pass the capability to another module which will then claim it.
 
 ```golang
-func (sck ScopedCapabilityKeeper) ClaimCapability(capability Capability) {
+func (sck ScopedCapabilityKeeper) ClaimCapability(ctx sdk.Context, capability Capability) error {
+  persistentStore := ctx.KVStore(sck.ck.persistentKey)
+  memoryStore := ctx.KVStore(sck.ck.memoryKey)
   // fetch name from memory store
+  name := memoryStore.Get("fwd/" + capability)
+  if name === nil {
+    return errors.New("capability not found")
+  }
   // set name to module in persistent store
+  persistentStore.Set(name, sck.moduleName)
 }
 ```
 
@@ -104,18 +152,18 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(capability Capability) {
 
 ```golang
 func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (Capability, error) {
-  // fetch name from persistent store, check === module
+  persistentStore := ctx.KVStore(sck.ck.persistentKey)
+  memoryStore := ctx.KVStore(sck.ck.memoryKey)
+  // check that this module owns the capability with this name
+  res := persistentStore.Get(name)
+  if res != sck.moduleName {
+    return errors.New("capability of this name not owned by module")
+  }
   // fetch capability from memory store, return it
+  capability := memoryStore.Get("rev/" + name)
+  return capability
 }
 ```
-
-`keeper.GetCapability(name: string) -> capability` (exposed in closure version with module name)
-
-`keeper.NewCapability(name: string) -> capability` (exposed in closure version with module name)
-
-`keeper.Initialise(ctx sdk.Context)` (actually generates capabilities)
-
-- Capability transfer? Either have a temporary identifier (never stored) or add `keeper.TransferCapability` (but then you need the other module name) or have `keeper.ClaimCapability` for unique use.
 
 ### Memory store
 
@@ -137,8 +185,8 @@ Proposed.
 
 ### Negative
 
-- Additional implementation complexity.
-- Possible confusion between capability store & regular store.
+- Requires an additional keeper.
+- Some overlap with existing `sdk.StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
 
 ### Neutral
 

@@ -21,8 +21,8 @@ This ADR proposes such an interface & mechanism.
 ## Decision
 
 The SDK will include a new `CapabilityKeeper` abstraction, which is responsible for provisioning, tracking, and authenticating capabilities at runtime. During application initialisation in `app.go`, the `CapabilityKeeper` will
-be hooked up to modules through unique function references (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later invoked. When the initial state is loaded from disk, the `CapabilityKeeper` instance will create new capability keys
-for all previously allocated capability identifiers (allocated during execution of past transactions), and keep them in a memory-only store while the chain is running. The SDK will include a new `MemoryStore` store type, similar
+be hooked up to modules through unique function references (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later invoked. When the initial state is loaded from disk, the `CapabilityKeeper`'s `Initialise` function will create new capability keys
+for all previously allocated capability identifiers (allocated during execution of past transactions and assigned to particular modes), and keep them in a memory-only store while the chain is running. The SDK will include a new `MemoryStore` store type, similar
 to the existing `TransientStore` but without erasure on `Commit()`, which this `CapabilityKeeper` will use to privately store capability keys.
 
 The `CapabilityKeeper` will use two stores: a regular, persistent `KVStore`, which will track what capabilities have been created by each module, and an in-memory `MemoryStore` (described below), which will

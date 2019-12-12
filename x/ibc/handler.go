@@ -7,7 +7,6 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 )
 
 // NewHandler defines the IBC handler
@@ -21,7 +20,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
 		case client.MsgUpdateClient:
-			return client.HandleMsgUpdateClient(ctx, k.ClientKeeper, msg)
+			return sdk.Result{} // XXX: add events either here or in ante
 
 		// IBC connection  msgs
 		case connection.MsgConnectionOpenInit:
@@ -54,13 +53,6 @@ func NewHandler(k Keeper) sdk.Handler {
 
 		case channel.MsgChannelCloseConfirm:
 			return channel.HandleMsgChannelCloseConfirm(ctx, k.ChannelKeeper, msg)
-
-		// IBC transfer msgs
-		case transfer.MsgTransfer:
-			return transfer.HandleMsgTransfer(ctx, k.TransferKeeper, msg)
-
-		case transfer.MsgRecvPacket:
-			return transfer.HandleMsgRecvPacket(ctx, k.TransferKeeper, msg)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized IBC message type: %T", msg)

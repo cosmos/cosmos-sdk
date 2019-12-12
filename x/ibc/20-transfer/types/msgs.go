@@ -77,14 +77,14 @@ func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
 }
 
 type MsgRecvPacket struct {
-	Packet channelexported.PacketI `json:"packet" yaml:"packet"`
-	Proofs []commitment.Proof      `json:"proofs" yaml:"proofs"`
-	Height uint64                  `json:"height" yaml:"height"`
-	Signer sdk.AccAddress          `json:"signer" yaml:"signer"`
+	Packet channelexported.Packet `json:"packet" yaml:"packet"`
+	Proofs []commitment.Proof     `json:"proofs" yaml:"proofs"`
+	Height uint64                 `json:"height" yaml:"height"`
+	Signer sdk.AccAddress         `json:"signer" yaml:"signer"`
 }
 
 // NewMsgRecvPacket creates a new MsgRecvPacket instance
-func NewMsgRecvPacket(packet channelexported.PacketI, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
+func NewMsgRecvPacket(packet channelexported.Packet, proofs []commitment.Proof, height uint64, signer sdk.AccAddress) MsgRecvPacket {
 	return MsgRecvPacket{
 		Packet: packet,
 		Proofs: proofs,

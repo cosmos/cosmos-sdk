@@ -31,8 +31,8 @@ type TransferTxReq struct {
 
 // RecvPacketReq defines the properties of a receive packet request's body.
 type RecvPacketReq struct {
-	BaseReq rest.BaseReq            `json:"base_req" yaml:"base_req"`
-	Packet  channelexported.PacketI `json:"packet" yaml:"packet"`
-	Proofs  []commitment.Proof      `json:"proofs" yaml:"proofs"`
-	Height  uint64                  `json:"height" yaml:"height"`
+	BaseReq rest.BaseReq           `json:"base_req" yaml:"base_req"`
+	Packet  channelexported.Packet `json:"packet" yaml:"packet"`
+	Proofs  []commitment.Proof     `json:"proofs" yaml:"proofs"`
+	Height  uint64                 `json:"height" yaml:"height"`
 }

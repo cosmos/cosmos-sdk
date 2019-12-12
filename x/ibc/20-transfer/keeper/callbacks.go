@@ -1,18 +1,6 @@
 package keeper
 
-import (
-	"fmt"
-	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
-	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-)
-
+/*
 // nolint: unused
 func (k Keeper) OnChanOpenInit(
 	ctx sdk.Context,
@@ -192,3 +180,4 @@ func (k Keeper) OnTimeoutPacket(
 func (k Keeper) OnTimeoutPacketClose(_ sdk.Context, _ channelexported.PacketI) {
 	panic("can't happen, only unordered channels allowed")
 }
+*/

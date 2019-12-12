@@ -46,10 +46,10 @@ func (msg MsgChannelOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	// Signer can be empty
@@ -109,10 +109,10 @@ func (msg MsgChannelOpenTry) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
@@ -120,6 +120,9 @@ func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
 	}
 	if msg.ProofInit == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
@@ -176,10 +179,10 @@ func (msg MsgChannelOpenAck) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
@@ -187,6 +190,9 @@ func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
 	}
 	if msg.ProofTry == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.ProofTry.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
@@ -241,14 +247,17 @@ func (msg MsgChannelOpenConfirm) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	if msg.ProofAck == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.ProofAck.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
 	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
@@ -296,10 +305,10 @@ func (msg MsgChannelCloseInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelCloseInit) ValidateBasic() sdk.Error {
-	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
-	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
+	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
 	}
 	// Signer can be empty
@@ -361,6 +370,9 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
 	if msg.ProofInit == nil {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
 	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
 	if msg.ProofHeight == 0 {
 		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
 	}
@@ -375,5 +387,182 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// MsgPacket receives incoming IBC packet
+type MsgPacket struct {
+	Packet `json:"packet" yaml:"packet"`
+
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
+
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+}
+
+var _ sdk.Msg = MsgPacket{}
+
+// NewMsgPacket constructs new MsgPacket
+func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
+	return MsgPacket{
+		Packet: packet,
+
+		Proof:       proof,
+		ProofHeight: proofHeight,
+
+		Signer: signer,
+	}
+}
+
+// Implements sdk.Msg
+func (msg MsgPacket) Route() string {
+	return msg.DestinationPort
+}
+
+// Implements sdk.Msg
+func (msg MsgPacket) ValidateBasic() sdk.Error {
+	if msg.Proof == nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
+	if msg.ProofHeight == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
+
+	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
+}
+
+// Implements sdk.Msg
+func (msg MsgPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// Implements sdk.Msg
+func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgTimeout{}
+
+// MsgTimeout receives timeouted packet
+type MsgTimeout struct {
+	Packet           `json:"packet" yaml:"packet"`
+	NextSequenceRecv uint64 `json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv,omitempty"`
+
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
+
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+}
+
+// NewMsgTimeout constructs new MsgTimeout
+func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgTimeout {
+	return MsgTimeout{
+		Packet:           packet,
+		NextSequenceRecv: nextSequenceRecv,
+		Proof:            proof,
+		ProofHeight:      proofHeight,
+		Signer:           signer,
+	}
+}
+
+// Implements sdk.Msg
+func (msg MsgTimeout) Route() string {
+	return msg.SourcePort
+}
+
+// Implements sdk.Msg
+func (msg MsgTimeout) ValidateBasic() sdk.Error {
+	if msg.Proof == nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, err.Error()))
+	}
+	if msg.ProofHeight == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
+
+	return sdk.ConvertError(msg.PacketDataI.ValidateBasic())
+}
+
+// Implements sdk.Msg
+func (msg MsgTimeout) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// Implements sdk.Msg
+func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgAcknowledgement{}
+
+// MsgAcknowledgement receives incoming IBC acknowledgement
+type MsgAcknowledgement struct {
+	Packet          `json:"packet" yaml:"packet"`
+	Acknowledgement PacketDataI `json:"acknowledgement" yaml:"acknowledgement"`
+
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
+
+	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+}
+
+// NewMsgAcknowledgement constructs a new MsgAcknowledgement
+func NewMsgAcknowledgement(packet Packet, ack PacketDataI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+	return MsgAcknowledgement{
+		Packet:          packet,
+		Acknowledgement: ack,
+		Proof:           proof,
+		ProofHeight:     proofHeight,
+		Signer:          signer,
+	}
+}
+
+// Implements sdk.Msg
+func (msg MsgAcknowledgement) Route() string {
+	return msg.SourcePort
+}
+
+// Implements sdk.Msg
+func (msg MsgAcknowledgement) ValidateBasic() sdk.Error {
+	if msg.Proof == nil {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+	}
+	if msg.ProofHeight == 0 {
+		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+	}
+
+	if err := msg.Packet.ValidateBasic(); err != nil {
+		return sdk.ConvertError(err)
+	}
+
+	if err := msg.Acknowledgement.ValidateBasic(); err != nil {
+		return sdk.ConvertError(err)
+	}
+
+	if msg.Signer.Empty() {
+		return sdk.ErrInvalidAddress("missing signer address")
+	}
+
+	return nil
+}
+
+// Implements sdk.Msg
+func (msg MsgAcknowledgement) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// Implements sdk.Msg
+func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

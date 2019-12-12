@@ -4,28 +4,34 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
-// PacketData defines a struct for the packet payload
-type PacketData struct {
+var _ channeltypes.PacketDataI = PacketDataTransfer{}
+
+// PacketDataTransfer defines a struct for the packet payload
+type PacketDataTransfer struct {
 	Amount   sdk.Coins      `json:"amount" yaml:"amount"`     // the tokens to be transferred
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`     // the sender address
 	Receiver sdk.AccAddress `json:"receiver" yaml:"receiver"` // the recipient address on the destination chain
 	Source   bool           `json:"source" yaml:"source"`     // indicates if the sending chain is the source chain of the tokens to be transferred
+	Timeout  uint64         `json:"timeout" yaml:"timeout"`
 }
 
-// NewPacketData contructs a new PacketData
-func NewPacketData(amount sdk.Coins, sender, receiver sdk.AccAddress, source bool) PacketData {
-	return PacketData{
+// NewPacketDataTransfer contructs a new PacketDataTransfer
+func NewPacketDataTransfer(amount sdk.Coins, sender, receiver sdk.AccAddress, source bool, timeout uint64) PacketDataTransfer {
+	return PacketDataTransfer{
 		Amount:   amount,
 		Sender:   sender,
 		Receiver: receiver,
 		Source:   source,
+		Timeout:  timeout,
 	}
 }
 
-func (pd PacketData) String() string {
-	return fmt.Sprintf(`PacketData:
+func (pd PacketDataTransfer) String() string {
+	return fmt.Sprintf(`PacketDataTransfer:
 	Amount:               %s
 	Sender:               %s
 	Receiver:             %s
@@ -37,8 +43,9 @@ func (pd PacketData) String() string {
 	)
 }
 
+// Implements ibc.Packet
 // ValidateBasic performs a basic check of the packet fields
-func (pd PacketData) ValidateBasic() sdk.Error {
+func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
 	if !pd.Amount.IsAllPositive() {
 		return sdk.ErrInsufficientCoins("transfer amount must be positive")
 	}
@@ -52,4 +59,20 @@ func (pd PacketData) ValidateBasic() sdk.Error {
 		return sdk.ErrInvalidAddress("missing recipient address")
 	}
 	return nil
+}
+
+// Implements ibc.Packet
+// TODO: need to be hashed(non-unmarshalable) format
+func (pd PacketDataTransfer) GetCommitment() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
+}
+
+// Implements ibc.Packet
+func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
+	return pd.Timeout
+}
+
+// Implements ibc.Packet
+func (pd PacketDataTransfer) Type() string {
+	return "ics20/transfer"
 }

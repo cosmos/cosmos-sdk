@@ -10,6 +10,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -401,7 +402,8 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := NewInMemory()
+	customKeyGenFunc := func(bz [32]byte) crypto.PrivKey { return secp256k1.PrivKeySecp256k1(bz) }
+	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
 
 	sec := Secp256k1
 

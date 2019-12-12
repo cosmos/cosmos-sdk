@@ -112,7 +112,6 @@ func (k Keeper) CleanupPacket(
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
 	packet types.Packet,
-	portCapability sdk.CapabilityKey,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
 		return err
@@ -128,10 +127,6 @@ func (k Keeper) SendPacket(
 			k.codespace,
 			fmt.Sprintf("channel is CLOSED (got %s)", channel.State.String()),
 		)
-	}
-
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-		return errors.New("port is not valid")
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {

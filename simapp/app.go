@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -65,17 +65,18 @@ var (
 		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:              nil,
-		distr.ModuleName:                   nil,
-		mint.ModuleName:                    {supply.Minter},
-		staking.BondedPoolName:             {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName:          {supply.Burner, supply.Staking},
-		gov.ModuleName:                     {supply.Burner},
-		ibctransfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
+		auth.FeeCollectorName:           nil,
+		distr.ModuleName:                nil,
+		mint.ModuleName:                 {supply.Minter},
+		staking.BondedPoolName:          {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName:       {supply.Burner, supply.Staking},
+		gov.ModuleName:                  {supply.Burner},
+		transfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
 	}
 )
 
@@ -119,6 +120,7 @@ type SimApp struct {
 	ParamsKeeper   params.Keeper
 	IBCKeeper      ibc.Keeper
 	EvidenceKeeper evidence.Keeper
+	TransferKeeper transfer.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -143,6 +145,7 @@ func NewSimApp(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey, supply.StoreKey,
 		mint.StoreKey, distr.StoreKey, slashing.StoreKey, gov.StoreKey,
 		params.StoreKey, ibc.StoreKey, upgrade.StoreKey, evidence.StoreKey,
+		transfer.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
@@ -226,6 +229,11 @@ func NewSimApp(
 	)
 
 	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], ibc.DefaultCodespace, app.BankKeeper, app.SupplyKeeper)
+
+	app.TransferKeeper = transfer.NewKeeper(
+		app.cdc, keys[transfer.StoreKey], transfer.DefaultCodespace,
+		app.IBCKeeper.ChannelKeeper, app.BankKeeper, app.SupplyKeeper,
+	)
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

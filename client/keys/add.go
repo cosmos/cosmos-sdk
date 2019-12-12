@@ -77,8 +77,8 @@ the flag --nosort is set.
 	return cmd
 }
 
-func getKeybase(cmd *cobra.Command, dryrun bool, buf io.Reader) (keys.Keybase, error) {
-	if dryrun {
+func getKeybase(transient bool, buf io.Reader) (keys.Keybase, error) {
+	if transient {
 		return keys.NewInMemory(), nil
 	}
 
@@ -87,7 +87,7 @@ func getKeybase(cmd *cobra.Command, dryrun bool, buf io.Reader) (keys.Keybase, e
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := getKeybase(cmd, viper.GetBool(flagDryRun), inBuf)
+	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
 	if err != nil {
 		return err
 	}

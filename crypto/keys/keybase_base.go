@@ -16,15 +16,9 @@ import (
 )
 
 type (
-	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz [32]byte) tmcrypto.PrivKey
-
 	kbOptions struct {
 		keygenFunc PrivKeyGenFunc
 	}
-
-	// KeybaseOption overrides options for the db
-	KeybaseOption func(*kbOptions)
 
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.

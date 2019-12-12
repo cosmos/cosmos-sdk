@@ -33,7 +33,7 @@ func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	return NewKeyBaseFromDir(rootDir, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keybase at a particular dir. Keybase
+// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
 func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	return getLazyKeyBaseFromDir(rootDir, opts...)

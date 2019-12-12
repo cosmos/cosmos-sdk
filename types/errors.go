@@ -25,6 +25,10 @@ func (code CodeType) IsOK() bool {
 	return code == CodeOK
 }
 
+func (code CodeType) IsBreak() bool {
+	return code == CodeTxBreak
+}
+
 // SDK error codes
 const (
 	// Base error codes
@@ -49,6 +53,7 @@ const (
 	CodeTxInMempoolCache  CodeType = 18
 	CodeMempoolIsFull     CodeType = 19
 	CodeTxTooLarge        CodeType = 20
+	CodeTxBreak           CodeType = 21
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -96,6 +101,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "maximum numer of signatures exceeded"
 	case CodeNoSignatures:
 		return "no signatures supplied"
+	case CodeTxBreak:
+		return "transaction break"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -156,6 +163,9 @@ func ErrNoSignatures(msg string) Error {
 }
 func ErrGasOverflow(msg string) Error {
 	return newErrorWithRootCodespace(CodeGasOverflow, msg)
+}
+func ErrTxBreak(msg string) Error {
+	return newErrorWithRootCodespace(CodeTxBreak, msg)
 }
 
 //----------------------------------------

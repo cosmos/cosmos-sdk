@@ -15,6 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "@vuepress/plugin-google-analytics": "^1.2.0",
-    "vuepress-theme-cosmos": "^1.0.104"
+    "vuepress-theme-cosmos": "^1.0.105"
   }
 }

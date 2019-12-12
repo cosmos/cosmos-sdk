@@ -436,7 +436,7 @@ func TestKeygenOverride(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), testName)
 
-	// Assert overriden function was called
+	// Assert overridden function was called
 	require.True(t, overrideCalled)
 
 	// export private key object

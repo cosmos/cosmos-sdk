@@ -57,7 +57,8 @@ type CapabilityKeeper struct {
 ```
 
 The `CapabilityKeeper` provides the ability to create *scoped* sub-keepers which are tied to a particular module name. These `ScopedCapabilityKeeper`s must be created at application
-initialisation and passed to modules, which can then use them to claim capabilities they receive and retrieve capabilities which they own by name.
+initialisation and passed to modules, which can then use them to claim capabilities they receive and retrieve capabilities which they own by name, in addition
+to creating new capabilities & authenticating capabilities passed by other modules.
 
 ```golang
 type ScopedCapabilityKeeper struct {

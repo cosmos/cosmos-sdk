@@ -6,8 +6,12 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,29 +33,33 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	setupTestSuiteInPlace(s, []int64{})
+	setupTestSuiteInPlace(s, 10, []int64{})
 }
 
 // this should be called by all functions that do not belong to the suite
-func setupTest(skip []int64) TestSuite {
+func setupTest(height int64, skip []int64) TestSuite {
 	var s TestSuite
-	setupTestSuiteInPlace(&s, skip)
+	setupTestSuiteInPlace(&s, height, skip)
 	return s
 }
 
 // this is a temporary way to unify TestSuite.SetupTest and setupTest
 // can be merged into setupTest when TestSuite goes away
-func setupTestSuiteInPlace(s *TestSuite, skip []int64) {
+func setupTestSuiteInPlace(s *TestSuite, height int64, skip []int64) {
+	// create the app with the proper skip flags set
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	db := dbm.NewMemDB()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
+	simapp.SetupDeliverTx(app)
 
+	// get info from the generic simapp
 	s.keeper = app.UpgradeKeeper
-	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: 10, Time: time.Now()})
+	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: height, Time: time.Now()})
 	s.FlagUnsafeSkipUpgrades = upgrade.FlagUnsafeSkipUpgrades
 
+	// and construct a few upgrade-specific structs
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.querier = s.module.NewQuerierHandler()
-
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
 }
 
@@ -253,33 +261,43 @@ func (s *TestSuite) TestContains() {
 	s.Require().False(present)
 }
 
-func (s *TestSuite) TestSkipUpgradeSkippingAll() {
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
-	s.Require().Nil(err)
+func TestSkipUpgradeSkippingAll(t *testing.T) {
+	// we are at 11, [11, 20] set for skipping
+	var (
+		skipOne int64 = 11
+		skipTwo int64 = 20
+	)
+	s := setupTest(10, []int64{skipOne, skipTwo})
+	// this is a workaround... we should really change all Verify functions
+	// from eg. s.VerifySet()
+	// to eg. verifySet(t)
+	s.Suite.SetT(t)
+	newCtx := s.ctx
 
-	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1, s.ctx.BlockHeight() + 10})
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
+	require.NoError(t, err)
+
+	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
+	t.Log("this is get", s.keeper.GetSkipUpgradeHeights())
 	s.VerifySet()
-	//s.module = upgrade.NewAppModule(s.keeper)
-	s.T().Log("this is get", s.keeper.GetSkipUpgradeHeights())
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.Require().NotPanics(func() {
+
+	newCtx = newCtx.WithBlockHeight(skipOne)
+	require.NotPanics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	s.T().Log("Verify a second proposal also is being cleared")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
-	s.Require().Nil(err)
+	t.Log("Verify a second proposal also is being cleared")
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
+	require.NoError(t, err)
 
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
-	s.Require().NotPanics(func() {
+	newCtx = newCtx.WithBlockHeight(skipTwo)
+	require.NotPanics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	//To ensure verification is being done only after both upgrades are cleared
-	s.T().Log("Verify if both proposals are cleared")
+	t.Log("Verify if both proposals are cleared")
 	s.VerifyCleared(s.ctx)
 	s.VerifyNotDone(s.ctx, "test")
 	s.VerifyNotDone(s.ctx, "test2")

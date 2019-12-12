@@ -11,8 +11,8 @@ import (
 
 // HistoricalInfo contains the historical information that gets stored at each height
 type HistoricalInfo struct {
-	Header abci.Header
-	ValSet []Validator
+	Header abci.Header `json:"header" yaml:"header"`
+	ValSet []Validator `json:"valset" yaml:"valset"`
 }
 
 //NewHistoricalInfo will create a historical information struct from header and valset
@@ -45,9 +45,9 @@ func UnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) (hi HistoricalInfo,
 	return hi, err
 }
 
-// ValidateHistoricalInfo will ensure HistoricalInfo is not nil and sorted
-func ValidateHistoricalInfo(hi HistoricalInfo) error {
-	if hi.ValSet != nil {
+// ValidateBasic will ensure HistoricalInfo is not nil and sorted
+func ValidateBasic(hi HistoricalInfo) error {
+	if len(hi.ValSet) == 0 {
 		return sdkerrors.Wrap(ErrInvalidHistoricalInfo(DefaultCodespace), "ValidatorSer is nil")
 	}
 	if !sort.IsSorted(Validators(hi.ValSet)) {

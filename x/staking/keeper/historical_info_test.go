@@ -11,10 +11,10 @@ import (
 
 func TestHistoricalInfo(t *testing.T) {
 	ctx, _, keeper, _ := CreateTestInput(t, false, 10)
-	var validators []types.Validator
+	validators := make([]types.Validator, len(addrVals))
 
 	for i, valAddr := range addrVals {
-		validators = append(validators, types.NewValidator(valAddr, PKs[i], types.Description{}))
+		validators[i] = types.NewValidator(valAddr, PKs[i], types.Description{})
 	}
 
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators)

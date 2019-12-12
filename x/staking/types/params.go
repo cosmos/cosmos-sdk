@@ -25,6 +25,8 @@ const (
 	// Default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint16 = 7
 
+	// DefaultHistorical entries is 0 since it must only be non-zero for
+	// IBC connected chains
 	DefaultHistoricalEntries uint16 = 0
 )
 

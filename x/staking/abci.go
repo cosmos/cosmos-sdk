@@ -16,11 +16,10 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	// Create HistoricalInfo struct
 	lastVals := k.GetLastValidators(ctx)
-	types.Validators(lastVals).Sort()
-	historicalEntry := types.HistoricalInfo{
-		Header: ctx.BlockHeader(),
-		ValSet: lastVals,
-	}
+	historicalEntry := types.NewHistoricalInfo(
+		ctx.BlockHeader(),
+		lastVals,
+	)
 
 	// Set latest HistoricalInfo at current height
 	k.SetHistoricalInfo(ctx, ctx.BlockHeight(), historicalEntry)

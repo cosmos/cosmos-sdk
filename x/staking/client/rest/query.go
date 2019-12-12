@@ -89,7 +89,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 	// Get HistoricalInfo at a given height
 	r.HandleFunc(
-		"/staking/historicalinfo/{height}",
+		"/staking/historical_info/{height}",
 		historicalInfoHandlerFn(cliCtx),
 	).Methods("GET")
 

@@ -28,7 +28,7 @@ to the existing `TransientStore` but without erasure on `Commit()`, which this `
 The `sdk.CapabilityKeeper` will use two stores: a regular, persistent `sdk.KVStore`, which will track what capabilities have been created by each module, and an in-memory `sdk.MemoryStore` (described below), which will
 store the actual capabilities. The `sdk.CapabilityKeeper` will define the following types & functions:
 
-The `Capability` interface, similar to `sdk.Storekey`, provides `Name()` and `String()` methods.
+The `Capability` interface, similar to `StoreKey`, provides `Name()` and `String()` methods.
 
 ```golang
 type Capability interface {
@@ -117,7 +117,7 @@ type ScopedCapabilityKeeper struct {
 `ScopeToModule` is used to create a scoped sub-keeper with a particular name, which must be unique.
 
 ```golang
-func (ck CapabilityKeeper) ScopeToModule (moduleName string) {
+func (ck CapabilityKeeper) ScopeToModule(moduleName string) CapabilityKeeper {
   if _, present := ck.moduleNames[moduleName]; present {
     panic("cannot create multiple scoped capability keepers for the same module name")
   }
@@ -167,7 +167,7 @@ func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (C
 
 ### Memory store
 
-A new store type, `StoreTypeMemory`, will be added to the `store` package. A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `sdk.StoreKey`s.
+A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `sdk.StoreKey`s.
 
 The memory store will work just like the current transient store, except that it will not create a new `dbadapter.Store` when `Commit()` is called, but instead retain the current one (so that state will persist across blocks).
 

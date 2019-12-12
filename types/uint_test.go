@@ -140,7 +140,7 @@ func TestArithUint(t *testing.T) {
 }
 
 func TestCompUint(t *testing.T) {
-	for d := 0; d < 1000; d++ {
+	for d := 0; d < 10000; d++ {
 		n1 := rand.Uint64()
 		i1 := NewUint(n1)
 		n2 := rand.Uint64()
@@ -155,6 +155,8 @@ func TestCompUint(t *testing.T) {
 			{i1.LT(i2), n1 < n2},
 			{i1.GTE(i2), !i1.LT(i2)},
 			{!i1.GTE(i2), i1.LT(i2)},
+			{i1.LTE(i2), n1 <= n2},
+			{i2.LTE(i1), n2 <= n1},
 		}
 
 		for tcnum, tc := range cases {

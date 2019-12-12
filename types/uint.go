@@ -69,7 +69,7 @@ func (u Uint) GTE(u2 Uint) bool { return u.GT(u2) || u.Equal(u2) }
 func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 
 // LTE returns true if first Uint is lesser than or equal to the second
-func (u Uint) LTE(u2 Uint) bool { return !u.GTE(u2) }
+func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 
 // Add adds Uint from another
 func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }

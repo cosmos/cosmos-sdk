@@ -52,16 +52,68 @@ type CapabilityKeeper struct {
   persistentKey StoreKey
   memoryKey MemoryStoreKey
   moduleNames map[string]interface{}
+  sealed bool
+}
+```
+
+The `CapabilityKeeper` provides the ability to create *scoped* sub-keepers which are tied to a particular module name. These `ScopedCapabilityKeeper`s must be created at application
+initialisation and passed to modules, which can then use them to claim capabilities they receive and retrieve capabilities which they own by name.
+
+```golang
+type ScopedCapabilityKeeper struct {
+  persistentKey StoreKey
+  memoryKey MemoryStoreKey
+  moduleName string
+}
+```
+
+`ScopeToModule` is used to create a scoped sub-keeper with a particular name, which must be unique. It MUST be called before `InitialiseAndSeal`.
+
+```golang
+func (ck CapabilityKeeper) ScopeToModule(moduleName string) ScopedCapabilityKeeper {
+  if ck.sealed {
+    panic("capability keeper is sealed")
+  }
+  if _, present := ck.moduleNames[moduleName]; present {
+    panic("cannot create multiple scoped capability keepers for the same module name")
+  }
+  ck.moduleNames[moduleName] = interface{}
+  return ScopedCapabilityKeeper{
+    persistentKey: ck.persistentKey,
+    memoryKey: ck.memoryKey,
+    moduleName: moduleName
+  }
+}
+```
+
+`InitialiseAndSeal` MUST be called exactly once, after loading the initial state and creating all necessary `ScopedCapabilityKeeper`s,
+in order to populate the memory store with newly-created capability keys in accordance with the keys previously claimed by particular modules
+and prevent the creation of any new `ScopedCapabilityKeeper`s.
+
+```golang
+func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
+  if ck.sealed {
+    panic("capability keeper is sealed")
+  }
+  persistentStore := ctx.KVStore(ck.persistentKey)
+  memoryStore := ctx.KVStore(ck.memoryKey)
+  // initialise memory store for all names in persistent store
+  for key, value := range persistentStore.Iter() {
+    capability = &CapabilityKey{name: key}
+    memoryStore.Set("fwd/" + capability, name)
+    memoryStore.Set("rev/" + name, capability)
+  }
+  ck.sealed = true
 }
 ```
 
 `NewCapability` can be called by any module to create a new unique, unforgeable object-capability
 reference. The newly created capability is *not* automatically persisted, `ClaimCapability` must be
-called on a `ScopedCapabilityKeeper` in order to persist it.
+called on the `ScopedCapabilityKeeper` in order to persist it.
 
 ```golang
-func (ck CapabilityKeeper) NewCapability(ctx Context, name string) (Capability, error) {
-  memoryStore := ctx.KVStore(ck.memoryKey)
+func (sck ScopedCapabilityKeeper) NewCapability(ctx Context, name string) (Capability, error) {
+  memoryStore := ctx.KVStore(sck.memoryKey)
   // check name not taken in memory store
   if memoryStore.Get("rev/" + name) != nil {
     return nil, errors.New("name already taken")
@@ -81,51 +133,10 @@ func (ck CapabilityKeeper) NewCapability(ctx Context, name string) (Capability, 
 does in fact correspond to a particular name (the name can be untrusted user input).
 
 ```golang
-func (ck CapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
-  memoryStore := ctx.KVStore(ck.memoryKey)
+func (sck ScopedCapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
+  memoryStore := ctx.KVStore(sck.memoryKey)
   // return whether forward mapping in memory store matches name
   return memoryStore.Get("fwd/" + capability) === name
-}
-```
-
-`Initialise` MUST be called exactly once, after loading the initial state, to populate the memory store with newly-created capability keys
-in accordance with the keys previously claimed by particular modules.
-
-```golang
-func (ck CapabilityKeeper) Initialise(ctx Context) {
-  persistentStore := ctx.KVStore(ck.persistentKey)
-  memoryStore := ctx.KVStore(ck.memoryKey)
-  // initialise memory store for all names in persistent store
-  for key, value := range persistentStore.Iter() {
-    capability = &CapabilityKey{name: key}
-    memoryStore.Set("fwd/" + capability, name)
-    memoryStore.Set("rev/" + name, capability)
-  }
-}
-```
-
-The `CapabilityKeeper` also provides the ability to create *scoped* sub-keepers which are tied to a particular module name. These `ScopedCapabilityKeeper`s must be created at application
-initialisation and passed to modules, which can then use them to claim capabilities they receive and retrieve capabilities which they own by name.
-
-```golang
-type ScopedCapabilityKeeper struct {
-  capabilityKeeper CapabilityKeeper
-  moduleName string
-}
-```
-
-`ScopeToModule` is used to create a scoped sub-keeper with a particular name, which must be unique.
-
-```golang
-func (ck CapabilityKeeper) ScopeToModule(moduleName string) CapabilityKeeper {
-  if _, present := ck.moduleNames[moduleName]; present {
-    panic("cannot create multiple scoped capability keepers for the same module name")
-  }
-  ck.moduleNames[moduleName] = interface{}
-  return ScopedCapabilityKeeper{
-    capabilityKeeper: ck,
-    moduleName: moduleName
-  }
 }
 ```
 
@@ -136,8 +147,8 @@ to call `ClaimCapability` will own it. To avoid confusion, a module which calls 
 
 ```golang
 func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability) error {
-  persistentStore := ctx.KVStore(sck.ck.persistentKey)
-  memoryStore := ctx.KVStore(sck.ck.memoryKey)
+  persistentStore := ctx.KVStore(sck.persistentKey)
+  memoryStore := ctx.KVStore(sck.memoryKey)
   // fetch name from memory store
   name := memoryStore.Get("fwd/" + capability)
   if name === nil {
@@ -152,8 +163,8 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capabi
 
 ```golang
 func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {
-  persistentStore := ctx.KVStore(sck.ck.persistentKey)
-  memoryStore := ctx.KVStore(sck.ck.memoryKey)
+  persistentStore := ctx.KVStore(sck.persistentKey)
+  memoryStore := ctx.KVStore(sck.memoryKey)
   // check that this module owns the capability with this name
   res := persistentStore.Get(name)
   if res != sck.moduleName {

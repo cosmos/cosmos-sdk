@@ -221,8 +221,6 @@ to detail this new feature and how state transitions occur.
 * (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
   has been triggered.
 
-
-
 ## [v0.37.4] - 2019-11-04
 
 ### Improvements

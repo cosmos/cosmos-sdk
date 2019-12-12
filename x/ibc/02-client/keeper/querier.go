@@ -75,3 +75,26 @@ func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 
 	return bz, nil
 }
+
+// QuerierCommitter defines the sdk.Querier to query a committer
+func QuerierCommitter(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params types.QueryCommitterParams
+
+	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	}
+
+	committer, found := k.GetCommitter(ctx, params.ClientID, params.Height)
+	if !found {
+		return nil, sdk.ConvertError(errors.ErrCommitterNotFound(k.codespace,
+			fmt.Sprintf("committer not found on height: %d", params.Height)))
+	}
+
+	bz, err := types.SubModuleCdc.MarshalJSON(committer)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
+}

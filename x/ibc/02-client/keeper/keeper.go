@@ -118,8 +118,7 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 	store.Set(types.KeyRoot(clientID, height), bz)
 }
 
-// GetCommitter will get the Committer of a particular client at the oldest height
-// that is less than or equal to the height passed in
+// GetCommitter will get the Committer of a particular client at the oldest height // that is less than or equal to the height passed in
 func (k Keeper) GetCommitter(ctx sdk.Context, clientID string, height uint64) (exported.Committer, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClient)
 

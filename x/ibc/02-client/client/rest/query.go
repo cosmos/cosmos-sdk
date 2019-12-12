@@ -17,6 +17,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute st
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/roots/{%s}", RestClientID, RestRootHeight), queryRootHandlerFn(cliCtx, queryRoute)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/committers/{%s}", RestClientID, RestRootHeight), queryCommitterHandlerFn(cliCtx, queryRoute)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/path", queryPathHandlerFn(cliCtx)).Methods("GET")
@@ -124,6 +125,35 @@ func queryRootHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Handl
 
 		cliCtx = cliCtx.WithHeight(int64(rootRes.ProofHeight))
 		rest.PostProcessResponse(w, cliCtx, rootRes)
+	}
+}
+
+// queryCommitterHandlerFn implements a committer querying route
+func queryCommitterHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clientID := vars[RestClientID]
+		height, err := strconv.ParseUint(vars[RestRootHeight], 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		prove := rest.ParseQueryProve(r)
+
+		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
+		if !ok {
+			return
+		}
+
+		committerRes, err := utils.QueryCommitter(cliCtx, clientID, height, prove)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithHeight(int64(committerRes.ProofHeight))
+		rest.PostProcessResponse(w, cliCtx, committerRes)
 	}
 }
 

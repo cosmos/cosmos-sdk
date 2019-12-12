@@ -167,11 +167,11 @@ func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (C
 
 ### Memory store
 
-- A new store type, `StoreTypeMemory`, will be added to the `store` package.
-- A new store key type, `MemoryStoreKey`, will be added to the `store` package.
-- The memory store will work just like the current transient store, except that it will not create a new `dbadapter.Store` when `Commit()` is called, but instead retain the current one
-  (so that state will persist across blocks).
-- Initially the memory store will only be used by the `sdk.CapabilityKeeper`, but it could be used by other modules in the future.
+A new store type, `StoreTypeMemory`, will be added to the `store` package. A new store key type, `MemoryStoreKey`, will be added to the `store` package. The `MemoryStoreKey`s work just like `sdk.StoreKey`s.
+
+The memory store will work just like the current transient store, except that it will not create a new `dbadapter.Store` when `Commit()` is called, but instead retain the current one (so that state will persist across blocks).
+
+Initially the memory store will only be used by the `sdk.CapabilityKeeper`, but it could be used by other modules in the future.
 
 ## Status
 

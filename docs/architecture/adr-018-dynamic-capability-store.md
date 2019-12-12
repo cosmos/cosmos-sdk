@@ -25,12 +25,89 @@ be hooked up to modules through unique function references so that it can identi
 for all previously allocated capability identifiers (allocated during execution of past transactions), and keep them in a memory-only store while the chain is running. The SDK will include a new `MemoryStore` store type, similar
 to the existing `TransientStore` but without erasure on `Commit()`, which this `CapabilityKeeper` will use to privately store capability keys.
 
+The `sdk.CapabilityKeeper` will use two stores: a regular, persistent `sdk.KVStore`, which will track what capabilities have been created by each module, and an in-memory `sdk.MemoryStore` (described below), which will
+store the actual capabilities. The `sdk.CapabilityKeeper` will define the following functions:
 
-Need some notion of module identity, denoted by passing specific closures over module name to `sdk.CapabilityKeeper` and keepers in `app.go`.
+```golang
+type Capability interface {
+  Name() string
+  String() string
+}
+```
 
-`sdk.CapabilityKeeper`
+```golang
+type CapabilityKeeper struct {
+  persistentKey sdk.StoreKey
+  memoryKey sdk.MemoryStoreKey
+  moduleNames map[string]interface{}
+}
+```
 
-`keeper.AuthenticateCapability(name: string, cap: capability) -> bool`
+```golang
+func (ck CapabilityKeeper) NewCapability(ctx sdk.Context, name string) Capability {
+  // check name not taken in memory store
+  // set forward map in memory store from capability to name
+  // set backward mamp in memory store from name to capability
+}
+```
+
+```golang
+func (ck CapabilityKeeper) AuthenticateCapability(name string, capability Capability) bool {
+  // check forward map in memory store === name
+}
+```
+
+```golang
+func (ck CapabilityKeeper) Initialise(ctx sdk.Context) {
+  // initialise memory store for all names in persistent store
+}
+```
+
+The `CapabilityKeeper` also provides the ability to create *scoped* sub-keepers which are tied to a particular module name. These `ScopedCapabilityKeeper`s must be created at application
+initialisation and passed to modules, which can then use them to claim capabilities they receive and retrieve capabilities which they own by name.
+
+```golang
+type ScopedCapabilityKeeper struct {
+  capabilityKeeper CapabilityKeeper
+  moduleName string
+}
+```
+
+`ScopeToModule` is used to create a scoped sub-keeper with a particular name, which must be unique.
+
+```golang
+func (ck CapabilityKeeper) ScopeToModule (moduleName string) {
+  if _, present := ck.moduleNames[moduleName]; present {
+    panic("cannot create multiple scoped capability keepers for the same module name")
+  }
+  ck.moduleNames[moduleName] = interface{}
+  return ScopedCapabilityKeeper{
+    capabilityKeeper: ck,
+    moduleName: moduleName
+  }
+}
+```
+
+`ClaimCapability` allows a module to claim a capability key which it has received (perhaps by calling `NewCapability`, or from another module), so that future `GetCapability` calls will succeed.
+
+`ClaimCapability` MUST be called, even if `NewCapability` was called by the same module. Capabilities are single-owner, so if multiple modules have a single `Capability` reference, the last module
+to call `ClaimCapability` will own it. To avoid confusion, a module which calls `NewCapability` SHOULD either call `ClaimCapability` or pass the capability to another module which will then claim it.
+
+```golang
+func (sck ScopedCapabilityKeeper) ClaimCapability(capability Capability) {
+  // fetch name from memory store
+  // set name to module in persistent store
+}
+```
+
+`GetCapability` allows a module to fetch a capability which it has previously claimed by name. The module is not allowed to retrieve capabilities which it does not own.
+
+```golang
+func (sck ScopedCapabilityKeeper) GetCapability(ctx sdk.Context, name string) (Capability, error) {
+  // fetch name from persistent store, check === module
+  // fetch capability from memory store, return it
+}
+```
 
 `keeper.GetCapability(name: string) -> capability` (exposed in closure version with module name)
 
@@ -53,8 +130,6 @@ Need some notion of module identity, denoted by passing specific closures over m
 Proposed.
 
 ## Consequences
-
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
 ### Positive
 

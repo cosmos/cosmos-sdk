@@ -3,6 +3,7 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -11,6 +12,7 @@ import (
 )
 
 func TestRandSubsetCoins(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		r     *rand.Rand
@@ -27,6 +29,26 @@ func TestRandSubsetCoins(t *testing.T) {
 			gotStringRep := got.String()
 			sortedStringRep := got.Sort().String()
 			require.Equal(t, gotStringRep, sortedStringRep)
+		})
+	}
+}
+
+func TestRandStringOfLength(t *testing.T) {
+	t.Parallel()
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	tests := []struct {
+		name string
+		n    int
+		want int
+	}{
+		{"0-size", 0, 0},
+		{"10-size", 10, 10},
+		{"10-size", 1_000_000_000, 1_000_000_000},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := simulation.RandStringOfLength(r, tt.n)
+			require.Equal(t, tt.want, len(got))
 		})
 	}
 }

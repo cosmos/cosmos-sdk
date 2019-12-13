@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -100,23 +102,24 @@ func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 }
 
 // QuerierCommitter defines the sdk.Querier to query a committer
-func QuerierCommitter(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func QuerierCommitter(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryCommitterParams
 
-	err := types.SubModuleCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	committer, found := k.GetCommitter(ctx, params.ClientID, params.Height)
 	if !found {
-		return nil, sdk.ConvertError(errors.ErrCommitterNotFound(k.codespace,
-			fmt.Sprintf("committer not found on height: %d", params.Height)))
+		return nil, errors.ErrCommitterNotFound(
+			k.codespace,
+			fmt.Sprintf("committer not found on height: %d", params.Height),
+		)
 	}
 
-	bz, err := types.SubModuleCdc.MarshalJSON(committer)
+	bz, err := codec.MarshalJSONIndent(k.cdc, committer)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil

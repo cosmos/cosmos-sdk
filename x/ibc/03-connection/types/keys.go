@@ -25,22 +25,22 @@ var (
 
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#store-paths
 
-// ConnectionPath defines the path under which connection paths are stored
-func ConnectionPath(connectionID string) string {
-	return fmt.Sprintf("connections/%s", connectionID)
-}
-
 // ClientConnectionsPath defines a reverse mapping from clients to a set of connections
 func ClientConnectionsPath(clientID string) string {
 	return fmt.Sprintf("clients/%s/connections", clientID)
 }
 
-// KeyConnection returns the store key for a particular connection
-func KeyConnection(connectionID string) []byte {
-	return []byte(ConnectionPath(connectionID))
-}
-
 // KeyClientConnections returns the store key for the connectios of a given client
 func KeyClientConnections(clientID string) []byte {
 	return []byte(ClientConnectionsPath(clientID))
+}
+
+// ConnectionPath defines the path under which connection paths are stored
+func ConnectionPath(connectionID string) string {
+	return fmt.Sprintf("connections/%s", connectionID)
+}
+
+// KeyConnection returns the store key for a particular connection
+func KeyConnection(connectionID string) []byte {
+	return []byte(ConnectionPath(connectionID))
 }

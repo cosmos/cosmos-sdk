@@ -31,27 +31,27 @@ func ChannelPath(portID, channelID string) string {
 // ChannelCapabilityPath defines the path under which capability keys associated
 // with a channel are stored
 func ChannelCapabilityPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/key", ChannelPath(portID, channelID))
+	return ChannelPath(portID, channelID) + "/key"
 }
 
 // NextSequenceSendPath defines the next send sequence counter store path
 func NextSequenceSendPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/nextSequenceSend", ChannelPath(portID, channelID))
+	return ChannelPath(portID, channelID) + "/nextSequenceSend"
 }
 
 // NextSequenceRecvPath defines the next receive sequence counter store path
 func NextSequenceRecvPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/nextSequenceRecv", ChannelPath(portID, channelID))
+	return ChannelPath(portID, channelID) + "/nextSequenceRecv"
 }
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/packets/%d", ChannelPath(portID, channelID), sequence)
+	return ChannelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
 }
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/acknowledgements/%d", ChannelPath(portID, channelID), sequence)
+	return ChannelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }
 
 // KeyChannel returns the store key for a particular channel

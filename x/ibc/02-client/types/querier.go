@@ -92,7 +92,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(string(KeyClientState(clientID)), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -113,7 +113,7 @@ func NewConsensusStateResponse(
 	return ConsensusStateResponse{
 		ConsensusState: cs,
 		Proof:          commitment.Proof{Proof: proof},
-		ProofPath:      commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
+		ProofPath:      commitment.NewPath(strings.Split(string(KeyConsensusState(clientID)), "/")),
 		ProofHeight:    uint64(height),
 	}
 }
@@ -134,7 +134,7 @@ func NewRootResponse(
 	return RootResponse{
 		Root:        root,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(string(KeyRoot(clientID, height)), "/")),
 		ProofHeight: uint64(proofHeight),
 	}
 }
@@ -155,7 +155,7 @@ func NewCommitterResponse(
 	return CommitterResponse{
 		Committer:   committer,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(string(KeyCommitter(clientID, height)), "/")),
 		ProofHeight: uint64(proofHeight),
 	}
 }

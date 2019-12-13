@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -16,11 +18,6 @@ const (
 
 	// QuerierRoute is the querier route for IBC client
 	QuerierRoute string = SubModuleName
-)
-
-// KVStore key prefixes
-var (
-	KeyPrefixClient = []byte{}
 )
 
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#path-space
@@ -57,28 +54,33 @@ func CommitterPath(clientID string, height uint64) string {
 
 // KeyClientState returns the store key for a particular client state
 func KeyClientState(clientID string) []byte {
-	return []byte(ClientStatePath(clientID))
+	return append(ibctypes.KeyPrefixBytes(ibctypes.KeyClientPrefix), []byte(ClientStatePath(clientID))...)
 }
 
 // KeyClientType returns the store key for type of a particular client
 func KeyClientType(clientID string) []byte {
-	return []byte(ClientTypePath(clientID))
+	return append(ibctypes.KeyPrefixBytes(ibctypes.KeyClientTypePrefix), []byte(ClientTypePath(clientID))...)
 }
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
 func KeyConsensusState(clientID string) []byte {
-	return []byte(ConsensusStatePath(clientID))
+	return append(ibctypes.KeyPrefixBytes(ibctypes.KeyConsensusStatePrefix), []byte(ConsensusStatePath(clientID))...)
 }
 
 // KeyRoot returns the store key for a commitment root of a particular
 // client at a given height
 func KeyRoot(clientID string, height uint64) []byte {
-	return []byte(RootPath(clientID, height))
+	return append(ibctypes.KeyPrefixBytes(ibctypes.KeyRootPrefix), []byte(RootPath(clientID, height))...)
 }
 
-// KeyValidatorSet returns the store key for a validator of a particular
-// client at a given height. Key => clientID||height
+// KeyCommitter returns the store key for a validator (aka commiter) of a particular
+// client at a given height.
 func KeyCommitter(clientID string, height uint64) []byte {
-	return []byte(CommitterPath(clientID, height))
+	return append(ibctypes.KeyPrefixBytes(ibctypes.KeyCommiterPrefix), []byte(CommitterPath(clientID, height))...)
+}
+
+// GetClientKeysPrefix return the client prefixes
+func GetClientKeysPrefix(prefix int) []byte {
+	return []byte(fmt.Sprintf("%d/clients", prefix))
 }

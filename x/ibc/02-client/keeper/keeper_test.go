@@ -153,14 +153,10 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 
 func (suite KeeperTestSuite) TestGetAllClients() {
 	expClients := []types.State{
-		types.NewClientState(testClientID),
 		types.NewClientState(testClientID2),
 		types.NewClientState(testClientID3),
+		types.NewClientState(testClientID),
 	}
-
-	// set other type to store to see if the keys collide
-	// FIXME: this panics
-	// suite.keeper.SetClientType(suite.ctx, testClientID, exported.Tendermint)
 
 	for i, _ := range expClients {
 		suite.keeper.SetClientState(suite.ctx, expClients[i])
@@ -168,5 +164,5 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 
 	clients := suite.keeper.GetAllClients(suite.ctx)
 	suite.Require().Len(clients, len(expClients))
-	suite.Require().Equal(expClients, clients) // FIXME: non-determinism
+	suite.Require().Equal(expClients, clients)
 }

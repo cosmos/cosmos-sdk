@@ -4,11 +4,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {

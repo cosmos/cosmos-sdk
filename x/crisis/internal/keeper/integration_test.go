@@ -11,7 +11,7 @@ import (
 
 func createTestApp() *simapp.SimApp {
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, 5)
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, []int64{}, 5)
 	// init chain must be called to stop deliverState from being nil
 	genesisState := simapp.NewDefaultGenesisState()
 	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)

@@ -238,9 +238,9 @@ func (s *TestSuite) VerifyDone(newCtx sdk.Context, name string) {
 	s.Require().NotZero(height)
 }
 
-func (s *TestSuite) VerifySet() {
+func (s *TestSuite) VerifySet(skipUpgradeHeights []int64) {
 	s.T().Log("Verify if the skip upgrade has been set")
-	s.Require().NotEmpty(s.keeper.GetSkipUpgradeHeights())
+	s.Require().Equal(s.keeper.GetSkipUpgradeHeights(), skipUpgradeHeights)
 }
 
 func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
@@ -248,29 +248,30 @@ func (s *TestSuite) VerifyConversion(skipUpgrade []int) {
 	s.Require().Equal(reflect.TypeOf(skipUpgradeHeights).Elem().Kind(), reflect.Int64)
 }
 
-func (s *TestSuite) TestContains() {
-	s.keeper.SetSkipUpgradeHeights([]int64{1, 2})
-	s.VerifySet()
-	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
+func TestContains(t *testing.T) {
+	var (
+		skipOne int64 = 11
+	)
+	s := setupTest(10, []int64{skipOne})
+
+	s.Suite.SetT(t)
+	s.VerifySet([]int64{skipOne})
 	s.T().Log("case where array contains the element")
-	present := upgrade.Contains(skipUpgradeHeights, 1)
+	present := upgrade.Contains(s.keeper.GetSkipUpgradeHeights(), 11)
 	s.Require().True(present)
 
 	s.T().Log("case where array doesn't contain the element")
-	present = upgrade.Contains(skipUpgradeHeights, 4)
+	present = upgrade.Contains(s.keeper.GetSkipUpgradeHeights(), 4)
 	s.Require().False(present)
 }
 
 func TestSkipUpgradeSkippingAll(t *testing.T) {
-	// we are at 11, [11, 20] set for skipping
 	var (
 		skipOne int64 = 11
 		skipTwo int64 = 20
 	)
 	s := setupTest(10, []int64{skipOne, skipTwo})
-	// this is a workaround... we should really change all Verify functions
-	// from eg. s.VerifySet()
-	// to eg. verifySet(t)
+
 	s.Suite.SetT(t)
 	newCtx := s.ctx
 
@@ -279,8 +280,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	t.Log("this is get", s.keeper.GetSkipUpgradeHeights())
-	s.VerifySet()
+	s.VerifySet([]int64{skipOne, skipTwo})
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
@@ -303,28 +303,34 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	s.VerifyNotDone(s.ctx, "test2")
 }
 
-func (s *TestSuite) TestUpgradeSkippingOne() {
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+func TestUpgradeSkippingOne(t *testing.T) {
+	var (
+		skipOne int64 = 11
+		skipTwo int64 = 20
+	)
+	s := setupTest(10, []int64{skipOne})
+
+	s.Suite.SetT(t)
+	newCtx := s.ctx
+
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
-	s.Require().Nil(err)
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
+	require.Nil(t, err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1})
-	s.VerifySet()
+	s.VerifySet([]int64{skipOne})
 
-	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
 	//Setting block height of proposal test
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	newCtx = newCtx.WithBlockHeight(skipOne)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.T().Log("Verify the second proposal is not skipped")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
 	s.Require().Nil(err)
 	//Setting block height of proposal test2
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
+	newCtx = newCtx.WithBlockHeight(skipTwo)
 	s.VerifyDoUpgradeWithCtx(newCtx, "test2")
 
 	s.T().Log("Verify first proposal is cleared and second is done")
@@ -332,37 +338,45 @@ func (s *TestSuite) TestUpgradeSkippingOne() {
 	s.VerifyDone(s.ctx, "test2")
 }
 
-func (s *TestSuite) TestUpgradeSkippingOnlyTwo() {
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+func TestUpgradeSkippingOnlyTwo(t *testing.T) {
+	var (
+		skipOne   int64 = 11
+		skipTwo   int64 = 20
+		skipThree int64 = 25
+	)
+	s := setupTest(10, []int64{skipOne, skipTwo})
+
+	s.Suite.SetT(t)
+	newCtx := s.ctx
+
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: skipOne}})
 	s.Require().Nil(err)
 
 	s.T().Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	s.keeper.SetSkipUpgradeHeights([]int64{s.ctx.BlockHeight() + 1, s.ctx.BlockHeight() + 10})
-	s.VerifySet()
+	s.VerifySet([]int64{skipOne, skipTwo})
 
 	s.VerifyConversion(viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
 
 	//Setting block height of proposal test
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	newCtx = newCtx.WithBlockHeight(skipOne)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	//A new proposal with height in skipUpgradeHeights
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: s.ctx.BlockHeight() + 10}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop2", Plan: upgrade.Plan{Name: "test2", Height: skipTwo}})
 	s.Require().Nil(err)
 	//Setting block height of proposal test2
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 10)
+	newCtx = newCtx.WithBlockHeight(skipTwo)
 	s.Require().NotPanics(func() {
 		s.module.BeginBlock(newCtx, req)
 	})
 
 	s.T().Log("Verify a new proposal is not skipped")
-	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: s.ctx.BlockHeight() + 15}})
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: skipThree}})
 	s.Require().Nil(err)
-	newCtx = newCtx.WithBlockHeight(s.ctx.BlockHeight() + 15)
+	newCtx = newCtx.WithBlockHeight(skipThree)
 	s.VerifyDoUpgradeWithCtx(newCtx, "test3")
 
 	s.T().Log("Verify two proposals are cleared and third is done")

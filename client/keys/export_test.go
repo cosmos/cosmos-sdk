@@ -12,7 +12,7 @@ import (
 
 func Test_runExportCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	exportKeyCommand := exportKeyCommand()
+	exportKeyCommand := ExportKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
 
 	// Now add a temporary keybase

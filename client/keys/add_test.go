@@ -15,7 +15,7 @@ import (
 
 func Test_runAddCmdBasic(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	cmd := addKeyCommand()
+	cmd := AddKeyCommand()
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 

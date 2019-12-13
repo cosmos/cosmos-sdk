@@ -9,15 +9,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func importKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+// ImportKeyCommand imports private keys from a keyfile.
+func ImportKeyCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "import <name> <keyfile>",
 		Short: "Import private keys into the local keybase",
 		Long:  "Import a ASCII armored private key into the local keybase.",
 		Args:  cobra.ExactArgs(2),
 		RunE:  runImportCmd,
 	}
-	return cmd
 }
 
 func runImportCmd(cmd *cobra.Command, args []string) error {

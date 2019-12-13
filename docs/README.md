@@ -1,5 +1,5 @@
 ---
-layout: index
+layout: homepage
 title: Cosmos SDK Documentation
 description: Cosmos SDK is the world’s most popular framework for building application-specific blockchains.
 features:
@@ -55,6 +55,7 @@ stack:
     url: http://docs.tendermint.com
 footer:
   newsletter: false
+aside: false
 ---
 
 # Cosmos SDK Documentation

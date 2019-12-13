@@ -306,11 +306,19 @@ func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(i)
+	return CryptoCdc.MustMarshalBinaryLengthPrefixed(i)
 }
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = CryptoCdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }
+
+type (
+	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
+	PrivKeyGenFunc func(bz [32]byte) crypto.PrivKey
+
+	// KeybaseOption overrides options for the db
+	KeybaseOption func(*kbOptions)
+)

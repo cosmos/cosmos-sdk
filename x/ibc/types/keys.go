@@ -16,7 +16,7 @@ const (
 	RouterKey string = ModuleName
 )
 
-// KVStore key prefixes
+// KVStore key prefixes for IBC
 const (
 	KeyClientPrefix int = iota + 1
 	KeyClientTypePrefix

@@ -116,7 +116,6 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort2, testChannel2, expChannels[1])
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort3, testChannel3, expChannels[2])
 
-	// FIXME: this test panics
 	channels := suite.app.IBCKeeper.ChannelKeeper.GetAllChannels(suite.ctx)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)

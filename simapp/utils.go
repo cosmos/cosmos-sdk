@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/simapp/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -50,7 +49,7 @@ func SetupSimulation(dirPrefix, dbName string) (simulation.Config, dbm.DB, strin
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
-func SimulationOperations(app types.App, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
+func SimulationOperations(app sdk.App, cdc *codec.Codec, config simulation.Config) []simulation.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simulation.AppParams),
 		Cdc:       cdc,
@@ -73,7 +72,7 @@ func SimulationOperations(app types.App, cdc *codec.Codec, config simulation.Con
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
 func CheckExportSimulation(
-	app types.App, config simulation.Config, params simulation.Params,
+	app sdk.App, config simulation.Config, params simulation.Params,
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")

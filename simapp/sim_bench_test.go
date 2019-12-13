@@ -15,16 +15,14 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	config, db, dir, _, _, err := SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
-		fmt.Println(err, "simulation setup failed")
-		b.Fail()
+		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
 
 	defer func() {
 		db.Close()
 		err = os.RemoveAll(dir)
 		if err != nil {
-			fmt.Println(err.Error())
-			b.Fail()
+			b.Fatal(err)
 		}
 	}()
 
@@ -41,12 +39,11 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	// export state and simParams before the simulation error is checked
 	if err = CheckExportSimulation(app, config, simParams); err != nil {
 		fmt.Println(err)
-		b.Fail()
+		b.Fatal(err)
 	}
 
 	if simErr != nil {
-		fmt.Println(simErr)
-		b.FailNow()
+		b.Fatal(simErr)
 	}
 
 	if config.Commit {
@@ -57,8 +54,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 func BenchmarkInvariants(b *testing.B) {
 	config, db, dir, _, _, err := SetupSimulation("leveldb-app-invariant-bench", "Simulation")
 	if err != nil {
-		fmt.Println(err, "simulation setup failed")
-		b.Fail()
+		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
 
 	logger := log.NewNopLogger()
@@ -68,8 +64,7 @@ func BenchmarkInvariants(b *testing.B) {
 		db.Close()
 		err = os.RemoveAll(dir)
 		if err != nil {
-			fmt.Println(err.Error())
-			b.Fail()
+			b.Fatal(err)
 		}
 	}()
 
@@ -84,13 +79,11 @@ func BenchmarkInvariants(b *testing.B) {
 
 	// export state and simParams before the simulation error is checked
 	if err = CheckExportSimulation(app, config, simParams); err != nil {
-		fmt.Println(err)
-		b.Fail()
+		b.Fatal(err)
 	}
 
 	if simErr != nil {
-		fmt.Println(simErr)
-		b.FailNow()
+		b.Fatal(simErr)
 	}
 
 	if config.Commit {
@@ -107,8 +100,10 @@ func BenchmarkInvariants(b *testing.B) {
 		cr := cr
 		b.Run(fmt.Sprintf("%s/%s", cr.ModuleName, cr.Route), func(b *testing.B) {
 			if res, stop := cr.Invar(ctx); stop {
-				fmt.Printf("broken invariant at block %d of %d\n%s", ctx.BlockHeight()-1, config.NumBlocks, res)
-				b.FailNow()
+				b.Fatalf(
+					"broken invariant at block %d of %d\n%s",
+					ctx.BlockHeight()-1, config.NumBlocks, res,
+				)
 			}
 		})
 	}

@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+func validateNoOp(_ interface{}) error { return nil }
+
 type testInput struct {
 	ctx    sdk.Context
 	cdc    *codec.Codec
@@ -43,8 +45,8 @@ type testParams struct {
 
 func (tp *testParams) ParamSetPairs() subspace.ParamSetPairs {
 	return subspace.ParamSetPairs{
-		{Key: []byte(keyMaxValidators), Value: &tp.MaxValidators},
-		{Key: []byte(keySlashingRate), Value: &tp.SlashingRate},
+		params.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
+		params.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
 	}
 }
 

@@ -76,6 +76,8 @@ if the provided arguments are invalid.
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior. 
+  * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created. 
 
 ### Client Breaking Changes
 
@@ -84,6 +86,7 @@ if the provided arguments are invalid.
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 * (rest) [\#5336](https://github.com/cosmos/cosmos-sdk/issues/5336) `MsgEditValidator` uses `description` instead of `Description` as a JSON key.
+* (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) Due to the keybase -> keyring transition, keys need to be migrated. See `keys migrate` command for more info.
 
 ### Features
 
@@ -104,6 +107,11 @@ the following [issue](https://github.com/keybase/go-keychain/issues/47) with the
 you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
 upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
+* [\#5355](https://github.com/cosmos/cosmos-sdk/pull/5355) Client commands accept a new `--keyring-backend` option through which users can specify which backend should be used
+by the new key store:
+  - `os`: use OS default credentials storage (default).
+  - `file`: use encrypted file-based store.
+  - `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
 * (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
@@ -139,6 +147,8 @@ that allows for arbitrary vesting periods.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
+* (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
 
 ### Improvements
 
@@ -197,9 +207,17 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+* (docs/) [\#5379](https://github.com/cosmos/cosmos-sdk/pull/5379) Major documentation refactor, including:
+  * (docs/intro/) Add and improve introduction material for newcomers.
+  * (docs/basics/) Add documentation about basic concepts of the cosmos sdk such as the anatomy of an SDK application, the transaction lifecycle or accounts. 
+  * (docs/core/) Add documentation about core conepts of the cosmos sdk such as `baseapp`, `server`, `store`s, `context` and more. 
+  * (docs/building-modules/) Add reference documentation on concepts relevant for module developers (`keeper`, `handler`, `messages`, `queries`,...).
+  * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
+  * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 
 ### Bug Fixes
 
+* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
 * (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`

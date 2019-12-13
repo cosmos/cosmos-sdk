@@ -113,10 +113,6 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
 
-	// set other type to store to see if the keys collide
-	// FIXME: this panics
-	// suite.app.IBCKeeper.ConnectionKeeper.SetClientConnectionPaths(suite.ctx, testClientID1, types.GetCompatibleVersions())
-
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConnections[0])
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID2, expConnections[1])
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID3, expConnections[2])

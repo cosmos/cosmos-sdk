@@ -56,13 +56,13 @@ func NewKeyring(
 }
 
 // NewKeyringFile creates a new instance of an encrypted file-backed keyring.
-func NewKeyringFile(name string, dir string, userInput io.Reader) (Keybase, error) {
+func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
 	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
 // NewTestKeyring creates a new instance of an on-disk keyring for

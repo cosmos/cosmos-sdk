@@ -36,8 +36,6 @@ func NewConnectionEnd(state State, clientID string, counterparty Counterparty, v
 	}
 }
 
-// TODO: create a custom JSON marshaler
-
 // Counterparty defines the counterparty chain associated with a connection end.
 type Counterparty struct {
 	ClientID     string             `json:"client_id" yaml:"client_id"`

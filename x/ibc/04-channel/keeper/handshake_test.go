@@ -163,7 +163,6 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
-	fmt.Println(proofInit)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 

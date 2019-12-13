@@ -82,10 +82,10 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
 }
 
-func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 
 	packetDataBz := []byte("invaliddata")
 	packet := channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort2, testChannel1, packetDataBz)
-	packetCommitmentPath := channel.PacketCommitmentPath(testPort2, testChannel2, packetSeq)
+	packetCommitmentPath := channel.KeyPacketCommitment(testPort2, testChannel2, packetSeq)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
 	suite.updateClient()

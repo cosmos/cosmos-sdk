@@ -160,7 +160,8 @@ func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capabi
 }
 ```
 
-`GetCapability` allows a module to fetch a capability which it has previously claimed by name. The module is not allowed to retrieve capabilities which it does not own.
+`GetCapability` allows a module to fetch a capability which it has previously claimed by name. The module is not allowed to retrieve capabilities which it does not own. If another module
+claims a capability, the previously owning module will no longer be able to claim it.
 
 ```golang
 func (sck ScopedCapabilityKeeper) GetCapability(ctx Context, name string) (Capability, error) {

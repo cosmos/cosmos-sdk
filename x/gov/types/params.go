@@ -31,9 +31,9 @@ var (
 // ParamKeyTable - Key declaration for parameters
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(
-		ParamStoreKeyDepositParams, DepositParams{},
-		ParamStoreKeyVotingParams, VotingParams{},
-		ParamStoreKeyTallyParams, TallyParams{},
+		params.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
+		params.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
+		params.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
 	)
 }
 
@@ -71,6 +71,22 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
+func validateDepositParams(i interface{}) error {
+	v, ok := i.(DepositParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if !v.MinDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
+	}
+	if v.MaxDepositPeriod <= 0 {
+		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
+	}
+
+	return nil
+}
+
 // TallyParams defines the params around Tallying votes in governance
 type TallyParams struct {
 	Quorum    sdk.Dec `json:"quorum,omitempty" yaml:"quorum,omitempty"`       //  Minimum percentage of total stake needed to vote for a result to be considered valid
@@ -101,6 +117,34 @@ func (tp TallyParams) String() string {
 		tp.Quorum, tp.Threshold, tp.Veto)
 }
 
+func validateTallyParams(i interface{}) error {
+	v, ok := i.(TallyParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.Quorum.IsNegative() {
+		return fmt.Errorf("quorom cannot be negative: %s", v.Quorum)
+	}
+	if v.Quorum.GT(sdk.OneDec()) {
+		return fmt.Errorf("quorom too large: %s", v)
+	}
+	if !v.Threshold.IsPositive() {
+		return fmt.Errorf("vote threshold must be positive: %s", v.Threshold)
+	}
+	if v.Threshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("vote threshold too large: %s", v)
+	}
+	if !v.Veto.IsPositive() {
+		return fmt.Errorf("veto threshold must be positive: %s", v.Threshold)
+	}
+	if v.Veto.GT(sdk.OneDec()) {
+		return fmt.Errorf("veto threshold too large: %s", v)
+	}
+
+	return nil
+}
+
 // VotingParams defines the params around Voting in governance
 type VotingParams struct {
 	VotingPeriod time.Duration `json:"voting_period,omitempty" yaml:"voting_period,omitempty"` //  Length of the voting period.
@@ -122,6 +166,19 @@ func DefaultVotingParams() VotingParams {
 func (vp VotingParams) String() string {
 	return fmt.Sprintf(`Voting Params:
   Voting Period:      %s`, vp.VotingPeriod)
+}
+
+func validateVotingParams(i interface{}) error {
+	v, ok := i.(VotingParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.VotingPeriod <= 0 {
+		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
+	}
+
+	return nil
 }
 
 // Params returns all of the governance params

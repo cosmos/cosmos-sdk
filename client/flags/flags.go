@@ -21,6 +21,14 @@ const (
 	GasFlagAuto          = "auto"
 )
 
+// Keyring constants
+const (
+	DefaultKeyringBackend = KeyringBackendOS
+	KeyringBackendFile    = "file"
+	KeyringBackendOS      = "os"
+	KeyringBackendTest    = "test"
+)
+
 const (
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
@@ -62,6 +70,7 @@ const (
 	FlagProve              = "prove"
 	FlagPage               = "page"
 	FlagLimit              = "limit"
+	FlagKeyringBackend     = "keyring-backend"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -107,16 +116,17 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible and the node operates offline)")
 		c.Flags().BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
+		c.Flags().String(FlagKeyringBackend, DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)",
 			GasFlagAuto, DefaultGasLimit,
 		))
-
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
+		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
 
 		c.MarkFlagRequired(FlagChainID)
 	}

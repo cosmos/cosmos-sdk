@@ -113,6 +113,31 @@ func QueryCommitmentRoot(
 	return rootRes, nil
 }
 
+// QueryCommitter queries the store to get the committer and a merkle proof
+func QueryCommitter(
+	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+) (types.CommitterResponse, error) {
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  types.KeyCommitter(clientID, height),
+		Prove: prove,
+	}
+
+	res, err := cliCtx.QueryABCI(req)
+	if err != nil {
+		return types.CommitterResponse{}, err
+	}
+
+	var committer tendermint.Committer
+	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &committer); err != nil {
+		return types.CommitterResponse{}, err
+	}
+
+	committerRes := types.NewCommitterResponse(clientID, height, committer, res.Proof, res.Height)
+
+	return committerRes, nil
+}
+
 // QueryTendermintHeader takes a client context and returns the appropriate
 // tendermint header
 func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64, error) {

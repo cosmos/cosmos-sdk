@@ -1,3 +1,10 @@
+---
+order: 0
+title: Staking Overview
+parent:
+  title: "staking"
+---
+
 # `staking`
 
 ## Abstract

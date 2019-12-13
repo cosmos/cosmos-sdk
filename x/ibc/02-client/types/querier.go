@@ -45,6 +45,21 @@ func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootP
 	}
 }
 
+// QueryCommitterParams defines the params for the following queries:
+// - 'custom/ibc/clients/<clientID>/committers/<height>'
+type QueryCommitterParams struct {
+	ClientID string
+	Height   uint64
+}
+
+// NewQueryCommitmentRootParams creates a new QueryCommitmentRootParams instance
+func NewQueryCommitterParams(id string, height uint64) QueryCommitterParams {
+	return QueryCommitterParams{
+		ClientID: id,
+		Height:   height,
+	}
+}
+
 // StateResponse defines the client response for a client state query.
 // It includes the commitment proof and the height of the proof.
 type StateResponse struct {
@@ -102,6 +117,27 @@ func NewRootResponse(
 ) RootResponse {
 	return RootResponse{
 		Root:        root,
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofHeight: uint64(proofHeight),
+	}
+}
+
+// CommitterResponse defines the client response for a committer query
+// It includes the commitment proof and the height of the proof
+type CommitterResponse struct {
+	Committer   tmtypes.Committer `json:"committer" yaml:"committer"`
+	Proof       commitment.Proof  `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path   `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64            `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+}
+
+// NewCommitterResponse creates a new CommitterResponse instance.
+func NewCommitterResponse(
+	clientID string, height uint64, committer tmtypes.Committer, proof *merkle.Proof, proofHeight int64,
+) CommitterResponse {
+	return CommitterResponse{
+		Committer:   committer,
 		Proof:       commitment.Proof{Proof: proof},
 		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
 		ProofHeight: uint64(proofHeight),

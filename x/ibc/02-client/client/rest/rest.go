@@ -36,6 +36,6 @@ type UpdateClientReq struct {
 
 // SubmitMisbehaviourReq defines the properties of a submit misbehaviour request's body.
 type SubmitMisbehaviourReq struct {
-	BaseReq  rest.BaseReq      `json:"base_req" yaml:"base_req"`
+	BaseReq  rest.BaseReq              `json:"base_req" yaml:"base_req"`
 	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
 }

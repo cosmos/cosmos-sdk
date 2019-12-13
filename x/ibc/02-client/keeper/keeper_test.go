@@ -158,7 +158,7 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 		types.NewClientState(testClientID),
 	}
 
-	for i, _ := range expClients {
+	for i := range expClients {
 		suite.keeper.SetClientState(suite.ctx, expClients[i])
 	}
 

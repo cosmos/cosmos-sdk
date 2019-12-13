@@ -1,4 +1,4 @@
-package types
+package simapp
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -21,13 +22,13 @@ type App interface {
 	Codec() *codec.Codec
 
 	// Application updates every begin block.
-	BeginBlocker(ctx Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
+	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
 
 	// Application updates every end block.
-	EndBlocker(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBlock
+	EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock
 
 	// Application update at chain (i.e app) initialization.
-	InitChainer(ctx Context, req abci.RequestInitChain) abci.ResponseInitChain
+	InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain
 
 	// Loads the app at a given height.
 	LoadHeight(height int64) error

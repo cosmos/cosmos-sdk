@@ -90,7 +90,7 @@ func MakeCodec() *codec.Codec {
 }
 
 // Verify app interface at compile time
-var _ sdk.App = (*SimApp)(nil)
+var _ App = (*SimApp)(nil)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object

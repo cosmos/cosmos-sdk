@@ -99,7 +99,7 @@ func (ck CapabilityKeeper) InitialiseAndSeal(ctx Context) {
   persistentStore := ctx.KVStore(ck.persistentKey)
   memoryStore := ctx.KVStore(ck.memoryKey)
   // initialise memory store for all names in persistent store
-  for key, value := range persistentStore.Iter() {
+  for _, key := range persistentStore.Iter() {
     capability = &CapabilityKey{name: key}
     memoryStore.Set("fwd/" + capability, name)
     memoryStore.Set("rev/" + name, capability)

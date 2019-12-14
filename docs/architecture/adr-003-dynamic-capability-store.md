@@ -78,7 +78,7 @@ func (ck CapabilityKeeper) ScopeToModule(moduleName string) ScopedCapabilityKeep
   if _, present := ck.moduleNames[moduleName]; present {
     panic("cannot create multiple scoped capability keepers for the same module name")
   }
-  ck.moduleNames[moduleName] = interface{}
+  ck.moduleNames[moduleName] = struct{}{}
   return ScopedCapabilityKeeper{
     persistentKey: ck.persistentKey,
     memoryKey: ck.memoryKey,

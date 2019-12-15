@@ -318,6 +318,56 @@ func (d Dec) QuoInt64(i int64) Dec {
 	return Dec{mul}
 }
 
+// ApproxRoot returns an approximate sqrt estimation using Newton's method to
+// compute square roots x=√d for d > 0. The algorithm starts with some guess and
+// computes the sequence of improved guesses until an answer converges to an
+// approximate answer. It returns -(sqrt(abs(d)) if input is negative.
+func (d Dec) ApproxRoot(root Uint) Dec {
+	if d.IsNegative() {
+		return d.MulInt64(-1).ApproxRoot(root).MulInt64(-1)
+	}
+
+	if d.IsZero() {
+		return ZeroDec()
+	}
+
+	if root == 1 {
+		return d
+	}
+
+	if root == 0 {
+		return OneDec()
+	}
+
+	z := OneDec()
+	// first guess
+	z = z.Sub((z.Mul(z).Sub(d)).Quo(z.MulInt64(2)))
+
+	// iterate until change is very small
+	for zNew, delta := z, z; delta.GT(SmallestDec()); z = zNew {
+		zNew = zNew.MulInt64(root - 1).Add(A.Quo(zNew.Power(root - 1))).Quo(root)
+		zNew = zNew.Sub((zNew.Mul(zNew).Sub(d)).Quo(zNew.MulInt64(2)))
+		delta = z.Sub(zNew)
+	}
+
+	return z
+}
+
+func (d Dec) Power(power Int) Dec {
+	if power == 0 {
+		return OneDec()
+	}
+
+	tmp := d.Power(power.Quo(NewInt(2)))
+	if power.Quo(NewInt(2)).IsZero() {
+		return tmp.Mul(tmp)
+	}
+	if power.GT(ZeroInt()) {
+		return d.Mul(tmp.Mul(tmp))
+	}
+	return tmp.Mul(tmp).Quo(d)
+}
+
 // ApproxSqrt returns an approximate sqrt estimation using Newton's method to
 // compute square roots x=√d for d > 0. The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an

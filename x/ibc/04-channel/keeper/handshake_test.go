@@ -5,7 +5,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -84,7 +83,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 }
 
 func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
-	store := prefix.NewStore(suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey)), types.KeyPrefixChannel)
+	store := suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey))
 	store.Delete(types.KeyChannel(portID, chanID))
 }
 
@@ -92,10 +91,10 @@ func (suite *KeeperTestSuite) bindPort(portID string) sdk.CapabilityKey {
 	return suite.app.IBCKeeper.PortKeeper.BindPort(portID)
 }
 
-func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 
@@ -134,7 +133,7 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := types.KeyChannel(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
 	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.INIT)
@@ -164,7 +163,6 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
-	fmt.Println(proofInit)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.NoError(err) // successfully executed
 
@@ -175,7 +173,7 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.bindPort(testPort1)
-	channelKey := types.ChannelPath(testPort2, testChannel2)
+	channelKey := types.KeyChannel(testPort2, testChannel2)
 
 	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.OPENTRY)
 	suite.updateClient()
@@ -219,7 +217,7 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := types.KeyChannel(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
 	suite.updateClient()
@@ -293,7 +291,7 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.ChannelPath(testPort1, testChannel1)
+	channelKey := types.KeyChannel(testPort1, testChannel1)
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
 	suite.updateClient()

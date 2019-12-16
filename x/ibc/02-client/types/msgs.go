@@ -127,9 +127,9 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 
 // MsgSubmitMisbehaviour defines a message to update an IBC client
 type MsgSubmitMisbehaviour struct {
-	ClientID string            `json:"id" yaml:"id"`
+	ClientID string                    `json:"id" yaml:"id"`
 	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
-	Signer   sdk.AccAddress    `json:"address" yaml:"address"`
+	Signer   sdk.AccAddress            `json:"address" yaml:"address"`
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance

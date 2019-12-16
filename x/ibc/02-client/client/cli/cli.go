@@ -17,6 +17,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ics02ClientQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryClientStates(queryRoute, cdc),
 		GetCmdQueryClientState(queryRoute, cdc),
 		GetCmdQueryConsensusState(queryRoute, cdc),
 		GetCmdQueryRoot(queryRoute, cdc),

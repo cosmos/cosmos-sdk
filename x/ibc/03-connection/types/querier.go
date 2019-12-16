@@ -10,6 +10,7 @@ import (
 
 // query routes supported by the IBC connection Querier
 const (
+	QueryAllConnections    = "connections"
 	QueryConnection        = "connection"
 	QueryClientConnections = "client_connections"
 )
@@ -45,6 +46,21 @@ type QueryConnectionParams struct {
 func NewQueryConnectionParams(clientID string) QueryConnectionParams {
 	return QueryConnectionParams{
 		ConnectionID: clientID,
+	}
+}
+
+// QueryAllConnectionsParams defines the parameters necessary for querying for all
+// connections.
+type QueryAllConnectionsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllConnectionsParams creates a new QueryAllConnectionsParams instance.
+func NewQueryAllConnectionsParams(page, limit int) QueryAllConnectionsParams {
+	return QueryAllConnectionsParams{
+		Page:  page,
+		Limit: limit,
 	}
 }
 

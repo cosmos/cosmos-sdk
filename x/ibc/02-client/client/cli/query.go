@@ -17,6 +17,38 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// GetCmdQueryClientStates defines the command to query all the light clients
+// that this chain mantains.
+func GetCmdQueryClientStates(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "states",
+		Short: "Query all available light clients",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all available light clients
+
+Example:
+$ %s query ibc client states
+		`, version.ClientName),
+		),
+		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
+
+			clientStates, _, err := utils.QueryAllClientStates(cliCtx, page, limit)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(clientStates)
+		},
+	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	return cmd
+}
+
 // GetCmdQueryClientState defines the command to query the state of a client with
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryClientState(queryRoute string, cdc *codec.Codec) *cobra.Command {

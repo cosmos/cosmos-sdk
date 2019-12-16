@@ -19,13 +19,17 @@ const (
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
+)
 
-	// DefaultKeyringBackend
+// Keyring constants
+const (
 	DefaultKeyringBackend = KeyringBackendOS
 	KeyringBackendFile    = "file"
 	KeyringBackendOS      = "os"
 	KeyringBackendTest    = "test"
+)
 
+const (
 	// BroadcastBlock defines a tx broadcasting mode where the client waits for
 	// the tx to be committed in a block.
 	BroadcastBlock = "block"
@@ -35,7 +39,10 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+)
 
+// List of CLI flags
+const (
 	FlagHome               = tmcli.HomeFlag
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"

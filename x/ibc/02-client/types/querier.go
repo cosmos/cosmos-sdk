@@ -11,6 +11,7 @@ import (
 
 // query routes supported by the IBC client Querier
 const (
+	QueryAllClients     = "client_states"
 	QueryClientState    = "client_state"
 	QueryConsensusState = "consensus_state"
 	QueryVerifiedRoot   = "roots"
@@ -27,6 +28,21 @@ type QueryClientStateParams struct {
 func NewQueryClientStateParams(id string) QueryClientStateParams {
 	return QueryClientStateParams{
 		ClientID: id,
+	}
+}
+
+// QueryAllClientsParams defines the parameters necessary for querying for all
+// light client states.
+type QueryAllClientsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllClientsParams creates a new QueryAllClientsParams instance.
+func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
+	return QueryAllClientsParams{
+		Page:  page,
+		Limit: limit,
 	}
 }
 
@@ -52,7 +68,7 @@ type QueryCommitterParams struct {
 	Height   uint64
 }
 
-// NewQueryCommitmentRootParams creates a new QueryCommitmentRootParams instance
+// NewQueryCommitterParams creates a new QueryCommitmentRootParams instance
 func NewQueryCommitterParams(id string, height uint64) QueryCommitterParams {
 	return QueryCommitterParams{
 		ClientID: id,
@@ -76,7 +92,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(ClientStatePath(clientID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -139,7 +155,7 @@ func NewCommitterResponse(
 	return CommitterResponse{
 		Committer:   committer,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(CommitterPath(clientID, height), "/")),
 		ProofHeight: uint64(proofHeight),
 	}
 }

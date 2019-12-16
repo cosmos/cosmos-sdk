@@ -7,6 +7,7 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// nolint
 type (
 	QueryConsensusState struct {
 		Height int64                        `json:"height"`

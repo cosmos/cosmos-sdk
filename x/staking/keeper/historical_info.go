@@ -11,7 +11,6 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 	key := types.GetHistoricalInfoKey(height)
 
 	value := store.Get(key)
-
 	if value == nil {
 		return types.HistoricalInfo{}, false
 	}

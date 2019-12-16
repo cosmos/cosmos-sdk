@@ -96,6 +96,13 @@ func TestAddDecCoins(t *testing.T) {
 	}
 }
 
+func TestSubDecCoins(t *testing.T) {
+	decCoins1 := NewDecCoins(Coins{NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))})
+	decCoins2 := NewDecCoins(Coins{NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5))})
+	diff := decCoins1.Sub(decCoins2)
+	require.Equal(t, decCoins2, diff)
+}
+
 func TestSortDecCoins(t *testing.T) {
 	good := DecCoins{
 		NewInt64DecCoin("gas", 1),

@@ -11,7 +11,7 @@ import (
 )
 
 func Test_updateKeyCommand(t *testing.T) {
-	cmd := updateKeyCommand()
+	cmd := UpdateKeyCommand()
 	assert.NotNil(t, cmd)
 	// No flags  or defaults to validate
 }
@@ -20,7 +20,7 @@ func Test_runUpdateCmd(t *testing.T) {
 	fakeKeyName1 := "runUpdateCmd_Key1"
 	fakeKeyName2 := "runUpdateCmd_Key2"
 
-	cmd := updateKeyCommand()
+	cmd := UpdateKeyCommand()
 
 	// fails because it requests a password
 	assert.EqualError(t, runUpdateCmd(cmd, []string{fakeKeyName1}), "EOF")

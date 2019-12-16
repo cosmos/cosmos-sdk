@@ -76,6 +76,8 @@ if the provided arguments are invalid.
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior. 
+  * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created. 
 
 ### Client Breaking Changes
 
@@ -146,6 +148,7 @@ that allows for arbitrary vesting periods.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
 * (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
 
 ### Improvements
 
@@ -209,9 +212,9 @@ to detail this new feature and how state transitions occur.
   * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
   * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 
-
 ### Bug Fixes
 
+* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
 * (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
@@ -220,8 +223,6 @@ to detail this new feature and how state transitions occur.
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 * (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
   has been triggered.
-
-
 
 ## [v0.37.4] - 2019-11-04
 

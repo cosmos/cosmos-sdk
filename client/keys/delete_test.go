@@ -14,7 +14,7 @@ import (
 
 func Test_runDeleteCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	deleteKeyCommand := deleteKeyCommand()
+	deleteKeyCommand := DeleteKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
 
 	yesF, _ := deleteKeyCommand.Flags().GetBool(flagYes)

@@ -42,35 +42,38 @@ type keyringKeybase struct {
 
 var maxPassphraseEntryAttempts = 3
 
-// NewKeyring creates a new instance of a keyring.
-func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
+// NewKeyring creates a new instance of a keyring. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyring(
+	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
+) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
 // NewKeyringFile creates a new instance of an encrypted file-backed keyring.
-func NewKeyringFile(name string, dir string, userInput io.Reader) (Keybase, error) {
+func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
 	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
 // NewTestKeyring creates a new instance of an on-disk keyring for
 // testing purposes that does not prompt users for password.
-func NewTestKeyring(name string, dir string) (Keybase, error) {
+func NewTestKeyring(name string, dir string, opts ...KeybaseOption) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -572,9 +575,9 @@ func fakePrompt(prompt string) (string, error) {
 	return "test", nil
 }
 
-func newKeyringKeybase(db keyring.Keyring) Keybase {
+func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 	return keyringKeybase{
 		db:   db,
-		base: baseKeybase{},
+		base: newBaseKeybase(opts...),
 	}
 }

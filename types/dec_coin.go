@@ -108,7 +108,11 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
-	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	res := DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	if res.IsNegative() {
+		panic("negative decimal coin amount")
+	}
+	return res
 }
 
 // TruncateDecimal returns a Coin with a truncated decimal and a DecCoin for the
@@ -116,7 +120,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
 	change := coin.Amount.Sub(truncated.ToDec())
-	return NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
+	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
 }
 
 // IsPositive returns true if coin amount is positive.
@@ -187,7 +191,7 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		if !truncated.IsZero() {
-			truncatedCoins = truncatedCoins.Add(Coins{truncated})
+			truncatedCoins = truncatedCoins.Add(NewCoins(truncated))
 		}
 		if !change.IsZero() {
 			changeCoins = changeCoins.Add(DecCoins{change})

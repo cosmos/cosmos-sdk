@@ -86,13 +86,13 @@ func (k Keeper) CleanupPacket(
 	case types.ORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			string(types.KeyNextSequenceRecv(packet.GetDestPort(), packet.GetDestChannel())),
+			types.NextSequenceRecvPath(packet.GetDestPort(), packet.GetDestChannel()),
 			sdk.Uint64ToBigEndian(nextSequenceRecv),
 		)
 	case types.UNORDERED:
 		ok = k.connectionKeeper.VerifyMembership(
 			ctx, connectionEnd, proofHeight, proof,
-			string(types.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())),
+			types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
 			acknowledgement,
 		)
 	default:
@@ -249,7 +249,7 @@ func (k Keeper) RecvPacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		string(types.KeyPacketCommitment(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())),
+		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
 		packet.GetData(), // TODO: hash data
 	) {
 		return nil, errors.New("couldn't verify counterparty packet commitment")
@@ -346,7 +346,7 @@ func (k Keeper) AcknowledgePacket(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
-		string(types.KeyPacketAcknowledgement(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence())),
+		types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
 		acknowledgement, // TODO: hash ACK
 	) {
 		return nil, errors.New("invalid acknowledgement on counterparty chain")

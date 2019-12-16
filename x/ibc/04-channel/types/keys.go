@@ -22,40 +22,40 @@ const (
 
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
-	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+	return string(KeyChannel(portID, channelID))
 }
 
 // ChannelCapabilityPath defines the path under which capability keys associated
 // with a channel are stored
 func ChannelCapabilityPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/key"
+	return string(KeyChannelCapabilityPath(portID, channelID))
 }
 
 // NextSequenceSendPath defines the next send sequence counter store path
 func NextSequenceSendPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/nextSequenceSend"
+	return string(KeyNextSequenceSend(portID, channelID))
 }
 
 // NextSequenceRecvPath defines the next receive sequence counter store path
 func NextSequenceRecvPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/nextSequenceRecv"
+	return string(KeyNextSequenceRecv(portID, channelID))
 }
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
-	return ChannelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
+	return string(KeyPacketCommitment(portID, channelID, sequence))
 }
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
-	return ChannelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
+	return string(KeyPacketAcknowledgement(portID, channelID, sequence))
 }
 
 // KeyChannel returns the store key for a particular channel
 func KeyChannel(portID, channelID string) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyChannelPrefix),
-		[]byte(ChannelPath(portID, channelID))...,
+		[]byte(channelPath(portID, channelID))...,
 	)
 }
 
@@ -64,7 +64,7 @@ func KeyChannel(portID, channelID string) []byte {
 func KeyChannelCapabilityPath(portID, channelID string) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyChannelCapabilityPrefix),
-		[]byte(ChannelCapabilityPath(portID, channelID))...,
+		[]byte(channelCapabilityPath(portID, channelID))...,
 	)
 }
 
@@ -73,7 +73,7 @@ func KeyChannelCapabilityPath(portID, channelID string) []byte {
 func KeyNextSequenceSend(portID, channelID string) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyNextSeqSendPrefix),
-		[]byte(NextSequenceSendPath(portID, channelID))...,
+		[]byte(nextSequenceSendPath(portID, channelID))...,
 	)
 }
 
@@ -82,7 +82,7 @@ func KeyNextSequenceSend(portID, channelID string) []byte {
 func KeyNextSequenceRecv(portID, channelID string) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyNextSeqRecvPrefix),
-		[]byte(NextSequenceRecvPath(portID, channelID))...,
+		[]byte(nextSequenceRecvPath(portID, channelID))...,
 	)
 }
 
@@ -91,7 +91,7 @@ func KeyNextSequenceRecv(portID, channelID string) []byte {
 func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyPacketCommitmentPrefix),
-		[]byte(PacketCommitmentPath(portID, channelID, sequence))...,
+		[]byte(packetCommitmentPath(portID, channelID, sequence))...,
 	)
 }
 
@@ -100,11 +100,35 @@ func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
 func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyPacketAckPrefix),
-		[]byte(PacketAcknowledgementPath(portID, channelID, sequence))...,
+		[]byte(packetAcknowledgementPath(portID, channelID, sequence))...,
 	)
 }
 
-// GetChannelKeysPrefix return the client prefixes
+// GetChannelKeysPrefix returns the prefix bytes for ICS04 iterators
 func GetChannelKeysPrefix(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/ports/", prefix))
+}
+
+func channelPath(portID, channelID string) string {
+	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+}
+
+func channelCapabilityPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/key"
+}
+
+func nextSequenceSendPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/nextSequenceSend"
+}
+
+func nextSequenceRecvPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/nextSequenceRecv"
+}
+
+func packetCommitmentPath(portID, channelID string, sequence uint64) string {
+	return channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
+}
+
+func packetAcknowledgementPath(portID, channelID string, sequence uint64) string {
+	return channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }

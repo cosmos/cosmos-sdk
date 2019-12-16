@@ -31,7 +31,7 @@ func NewConnectionResponse(
 	return ConnectionResponse{
 		Connection:  connection,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(string(KeyConnection(connectionID)), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(ConnectionPath(connectionID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -81,7 +81,7 @@ func NewClientConnectionsResponse(
 	return ClientConnectionsResponse{
 		ConnectionPaths: connectionPaths,
 		Proof:           commitment.Proof{Proof: proof},
-		ProofPath:       commitment.NewPath(strings.Split(string(KeyClientConnections(clientID)), "/")),
+		ProofPath:       commitment.NewPath(strings.Split(ClientConnectionsPath(clientID), "/")),
 		ProofHeight:     uint64(height),
 	}
 }

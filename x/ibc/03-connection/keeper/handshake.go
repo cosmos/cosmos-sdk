@@ -86,7 +86,7 @@ func (k Keeper) ConnOpenTry(
 
 	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofInit,
-		types.ConnectionPath(counterparty.ConnectionID), expConnBz,
+		string(types.KeyConnection(counterparty.ConnectionID)), expConnBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
@@ -182,7 +182,7 @@ func (k Keeper) ConnOpenAck(
 
 	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofTry,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
+		string(types.KeyConnection(connection.Counterparty.ConnectionID)), expConnBz,
 	)
 	if !ok {
 		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
@@ -244,7 +244,7 @@ func (k Keeper) ConnOpenConfirm(
 
 	ok := k.VerifyMembership(
 		ctx, connection, proofHeight, proofAck,
-		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
+		string(types.KeyConnection(connection.Counterparty.ConnectionID)), expConnBz,
 	)
 	if !ok {
 		return types.ErrInvalidCounterpartyConnection(k.codespace)

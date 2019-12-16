@@ -135,7 +135,7 @@ func (k Keeper) ChanOpenTry(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
+		string(types.KeyChannel(counterparty.PortID, counterparty.ChannelID)),
 		bz,
 	) {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
@@ -211,7 +211,7 @@ func (k Keeper) ChanOpenAck(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proofTry,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		string(types.KeyChannel(channel.Counterparty.PortID, channel.Counterparty.ChannelID)),
 		bz,
 	) {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
@@ -283,7 +283,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proofAck,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		string(types.KeyChannel(channel.Counterparty.PortID, channel.Counterparty.ChannelID)),
 		bz,
 	) {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
@@ -397,7 +397,7 @@ func (k Keeper) ChanCloseConfirm(
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proofInit,
-		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
+		string(types.KeyChannel(channel.Counterparty.PortID, channel.Counterparty.ChannelID)),
 		bz,
 	) {
 		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")

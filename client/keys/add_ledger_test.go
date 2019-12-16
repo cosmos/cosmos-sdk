@@ -33,7 +33,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
-	cmd := addKeyCommand()
+	cmd := AddKeyCommand()
 	require.NotNil(t, cmd)
 
 	// Prepare a keybase
@@ -80,7 +80,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	cmd := addKeyCommand()
+	cmd := AddKeyCommand()
 	require.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 

@@ -28,7 +28,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 }
 
 func Test_showKeysCmd(t *testing.T) {
-	cmd := showKeysCmd()
+	cmd := ShowKeysCmd()
 	require.NotNil(t, cmd)
 	require.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
 	require.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
@@ -36,7 +36,7 @@ func Test_showKeysCmd(t *testing.T) {
 
 func Test_runShowCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	cmd := showKeysCmd()
+	cmd := ShowKeysCmd()
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	require.EqualError(t, runShowCmd(cmd, []string{"invalid"}), "The specified item could not be found in the keyring")
 	require.EqualError(t, runShowCmd(cmd, []string{"invalid1", "invalid2"}), "The specified item could not be found in the keyring")

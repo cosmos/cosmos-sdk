@@ -12,15 +12,17 @@ v    Please also ensure that this is not a duplicate issue :)
 
 <!--
 IMPORTANT: Prior to opening a bug report, check if it affects one of the core modules
-and if its elegible for a bug bounty on `SECURITY.md`.
+and if its elegible for a bug bounty on `SECURITY.md`. Bugs that are not submitted
+through the appropriate channels won't receive any bounty.
  -->
+
 ## Summary of Bug
 
 <!-- Concisely describe the issue -->
 
 ## Version
 
-<!-- git commit hash or release version-->
+<!-- git commit hash or release version -->
 
 ## Steps to Reproduce
 
@@ -28,7 +30,7 @@ and if its elegible for a bug bounty on `SECURITY.md`.
 
 ____
 
-#### For Admin Use
+## For Admin Use
 
 - [ ] Not duplicate issue
 - [ ] Appropriate labels applied

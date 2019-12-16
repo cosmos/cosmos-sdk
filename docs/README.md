@@ -48,7 +48,7 @@ stack:
     color: "#BA3FD9"
     label: hub
     url: http://hub.cosmos.network
-  - title: Tendermint
+  - title: Tendermint Core
     desc: The leading BFT engine for building blockchains, powering Cosmos SDK.
     color: "#00BB00"
     label: core

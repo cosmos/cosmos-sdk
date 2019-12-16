@@ -11,7 +11,7 @@ Validator consensus key rotation feature has been discussed and requested for a 
 
 We don't need to make any update on consensus logic in Tendermint because Tendermint does not have any mapping information of consensus key and validator operator key, meaning that from Tendermint point of view, a consensus key rotation of a validator is simply a replacement of a consensus key to another.
 
-Also, it should be noted that this ADR includes only the simplest form of consensus key rotation without considering multiple consensus keys concept. Such multple consensus keys concept shall be remained as a long term goal of Tendermint and Cosmos-SDK.
+Also, it should be noted that this ADR includes only the simplest form of consensus key rotation without considering multiple consensus keys concept. Such multiple consensus keys concept shall remain a long term goal of Tendermint and Cosmos-SDK.
 
 ## Decision
 

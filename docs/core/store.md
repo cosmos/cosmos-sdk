@@ -1,7 +1,7 @@
----
+<!--
 order: 5
 synopsis: A store is a data structure that holds the state of the application. 
----
+-->
 
 # Store
 

@@ -1,6 +1,6 @@
----
+<!--
 order: 3
----
+-->
 
 # Blockchain Architecture
 

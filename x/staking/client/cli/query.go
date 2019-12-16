@@ -549,7 +549,7 @@ $ %s query staking historical-info 5
 
 			height, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil || height < 0 {
-				return fmt.Errorf("Height argument provided must be a non-negative-integer: %v", err)
+				return fmt.Errorf("height argument provided must be a non-negative-integer: %v", err)
 			}
 
 			bz, err := cdc.MarshalJSON(types.QueryHistoricalInfoParams{Height: height})

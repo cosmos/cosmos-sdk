@@ -19,12 +19,12 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMaxValidators, "",
+		simulation.NewSimParamChange(types.ModuleName, keyMaxValidators,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%d", GenMaxValidators(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyUnbondingTime, "",
+		simulation.NewSimParamChange(types.ModuleName, keyUnbondingTime,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenUnbondingTime(r))
 			},

@@ -34,7 +34,6 @@ var (
 	ParamKeyTable        = types.ParamKeyTable
 	NewParams            = types.NewParams
 	DefaultParams        = types.DefaultParams
-	ValidateParams       = types.ValidateParams
 
 	// variable aliases
 	ModuleCdc              = types.ModuleCdc

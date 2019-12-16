@@ -1,3 +1,10 @@
+---
+order: 0
+title: Slashing Overview
+parent:
+  title: "slashing"
+---
+
 # `slashing`
 
 ## Abstract

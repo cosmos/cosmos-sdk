@@ -67,7 +67,8 @@ func (bo bech32Output) String() string {
 	return fmt.Sprintf("Bech32 Formats:\n%s", strings.Join(out, "\n"))
 }
 
-func parseKeyStringCommand() *cobra.Command {
+// ParseKeyStringCommand parses an address from hex to bech32 and vice versa.
+func ParseKeyStringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse <hex-or-bech32-address>",
 		Short: "Parse address from hex to bech32 and vice versa",
@@ -124,9 +125,9 @@ func displayParseKeyInfo(stringer fmt.Stringer) {
 	case OutputFormatJSON:
 
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(stringer, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(stringer, "", "  ")
 		} else {
-			out = cdc.MustMarshalJSON(stringer)
+			out = KeysCdc.MustMarshalJSON(stringer)
 		}
 
 	}

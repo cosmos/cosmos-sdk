@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func importKeyCommand() *cobra.Command {
+// ImportKeyCommand imports private keys from a keyfile.
+func ImportKeyCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "import <name> <keyfile>",
 		Short: "Import private keys into the local keybase",

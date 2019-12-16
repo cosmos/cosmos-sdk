@@ -12,6 +12,7 @@ var SubModuleCdc *codec.Codec
 // IBC channel.
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.PacketI)(nil), nil)
+	cdc.RegisterConcrete(Channel{}, "ibc/channel/Channel", nil)
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 	cdc.RegisterConcrete(OpaquePacket{}, "ibc/channel/OpaquePacket", nil)
 
@@ -21,6 +22,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgChannelOpenConfirm{}, "ibc/channel/MsgChannelOpenConfirm", nil)
 	cdc.RegisterConcrete(MsgChannelCloseInit{}, "ibc/channel/MsgChannelCloseInit", nil)
 	cdc.RegisterConcrete(MsgChannelCloseConfirm{}, "ibc/channel/MsgChannelCloseConfirm", nil)
+
+	SetSubModuleCodec(cdc)
 }
 
 func SetSubModuleCodec(cdc *codec.Codec) {

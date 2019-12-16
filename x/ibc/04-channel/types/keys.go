@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 const (
@@ -18,73 +20,115 @@ const (
 	QuerierRoute = SubModuleName
 )
 
-// KVStore key prefixes
-var (
-	KeyPrefixChannel = []byte{}
-)
-
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
-	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+	return string(KeyChannel(portID, channelID))
 }
 
 // ChannelCapabilityPath defines the path under which capability keys associated
 // with a channel are stored
 func ChannelCapabilityPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/key", ChannelPath(portID, channelID))
+	return string(KeyChannelCapabilityPath(portID, channelID))
 }
 
 // NextSequenceSendPath defines the next send sequence counter store path
 func NextSequenceSendPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/nextSequenceSend", ChannelPath(portID, channelID))
+	return string(KeyNextSequenceSend(portID, channelID))
 }
 
 // NextSequenceRecvPath defines the next receive sequence counter store path
 func NextSequenceRecvPath(portID, channelID string) string {
-	return fmt.Sprintf("%s/nextSequenceRecv", ChannelPath(portID, channelID))
+	return string(KeyNextSequenceRecv(portID, channelID))
 }
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/packets/%d", ChannelPath(portID, channelID), sequence)
+	return string(KeyPacketCommitment(portID, channelID, sequence))
 }
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
-	return fmt.Sprintf("%s/acknowledgements/%d", ChannelPath(portID, channelID), sequence)
+	return string(KeyPacketAcknowledgement(portID, channelID, sequence))
 }
 
 // KeyChannel returns the store key for a particular channel
 func KeyChannel(portID, channelID string) []byte {
-	return []byte(ChannelPath(portID, channelID))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyChannelPrefix),
+		[]byte(channelPath(portID, channelID))...,
+	)
 }
 
 // KeyChannelCapabilityPath returns the store key for the capability key of a
 // particular channel binded to a specific port
 func KeyChannelCapabilityPath(portID, channelID string) []byte {
-	return []byte(ChannelCapabilityPath(portID, channelID))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyChannelCapabilityPrefix),
+		[]byte(channelCapabilityPath(portID, channelID))...,
+	)
 }
 
 // KeyNextSequenceSend returns the store key for the send sequence of a particular
 // channel binded to a specific port
 func KeyNextSequenceSend(portID, channelID string) []byte {
-	return []byte(NextSequenceSendPath(portID, channelID))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyNextSeqSendPrefix),
+		[]byte(nextSequenceSendPath(portID, channelID))...,
+	)
 }
 
 // KeyNextSequenceRecv returns the store key for the receive sequence of a particular
 // channel binded to a specific port
 func KeyNextSequenceRecv(portID, channelID string) []byte {
-	return []byte(NextSequenceRecvPath(portID, channelID))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyNextSeqRecvPrefix),
+		[]byte(nextSequenceRecvPath(portID, channelID))...,
+	)
 }
 
 // KeyPacketCommitment returns the store key of under which a packet commitment
 // is stored
 func KeyPacketCommitment(portID, channelID string, sequence uint64) []byte {
-	return []byte(PacketCommitmentPath(portID, channelID, sequence))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyPacketCommitmentPrefix),
+		[]byte(packetCommitmentPath(portID, channelID, sequence))...,
+	)
 }
 
 // KeyPacketAcknowledgement returns the store key of under which a packet
 // acknowledgement is stored
 func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte {
-	return []byte(PacketAcknowledgementPath(portID, channelID, sequence))
+	return append(
+		ibctypes.KeyPrefixBytes(ibctypes.KeyPacketAckPrefix),
+		[]byte(packetAcknowledgementPath(portID, channelID, sequence))...,
+	)
+}
+
+// GetChannelKeysPrefix returns the prefix bytes for ICS04 iterators
+func GetChannelKeysPrefix(prefix int) []byte {
+	return []byte(fmt.Sprintf("%d/ports/", prefix))
+}
+
+func channelPath(portID, channelID string) string {
+	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+}
+
+func channelCapabilityPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/key"
+}
+
+func nextSequenceSendPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/nextSequenceSend"
+}
+
+func nextSequenceRecvPath(portID, channelID string) string {
+	return channelPath(portID, channelID) + "/nextSequenceRecv"
+}
+
+func packetCommitmentPath(portID, channelID string, sequence uint64) string {
+	return channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
+}
+
+func packetAcknowledgementPath(portID, channelID string, sequence uint64) string {
+	return channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }

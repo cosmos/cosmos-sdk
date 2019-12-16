@@ -17,6 +17,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	ics03ConnectionQueryCmd.AddCommand(client.GetCommands(
+		GetCmdQueryConnections(queryRoute, cdc),
 		GetCmdQueryConnection(queryRoute, cdc),
 	)...)
 	return ics03ConnectionQueryCmd

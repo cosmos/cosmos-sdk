@@ -30,6 +30,10 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     - store history of each key mapping changes in the kvstore.
     - the state machine can search corresponding consensus key paired with given validator operator for any arbitrary height in a recent unbonding period.
     - the state machine does not need any historical mapping information which is past more than unbonding period.
+- key rotation costs related to LCD and IBC
+    - LCD and IBC will have traffic/computation burden when there exists frequent power changes
+    - In current Tendermint design, consensus key rotations are seen as power changes from LCD or IBC perspective
+    - Therefore, to minimize unnecessary frequent key rotation behavior, we limited maximum number of rotation in recent unbonding period and also applied exponentially increasing rotation fee 
 - limits
     - a validator cannot rotate its consensus key more than `MaxConsPubKeyRotations` time for any unbonding period, to prevent spam.
     - parameters can be decided by governance and stored in genesis file.

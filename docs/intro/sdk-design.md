@@ -1,6 +1,6 @@
----
+<!--
 order: 4
----
+-->
 
 # Main Components of the Cosmos SDK
 

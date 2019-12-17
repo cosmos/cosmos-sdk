@@ -21,7 +21,7 @@ const (
 func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	fee := auth.StdFee{
 		Amount: feeAmt,
-		Gas:    DefaultGenTxGas, // TODO: this should be a param
+		Gas:    gas,
 	}
 
 	sigs := make([]auth.StdSignature, len(priv))

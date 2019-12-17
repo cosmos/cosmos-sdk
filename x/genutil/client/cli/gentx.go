@@ -140,12 +140,7 @@ func GenTxCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager, sm
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
 
-			info, err := txBldr.Keybase().Get(name)
-			if err != nil {
-				return errors.Wrap(err, "failed to read from tx builder keybase")
-			}
-
-			if info.GetType() == kbkeys.TypeOffline || info.GetType() == kbkeys.TypeMulti {
+			if key.GetType() == kbkeys.TypeOffline || key.GetType() == kbkeys.TypeMulti {
 				fmt.Println("Offline key passed in. Use `tx sign` command to sign:")
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}

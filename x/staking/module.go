@@ -166,13 +166,13 @@ func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+	am.keeper.BeginBlocker(ctx)
 }
 
 // EndBlock returns the end blocker for the staking module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, am.keeper)
+	return am.keeper.EndBlocker(ctx)
 }
 
 //____________________________________________________________________________

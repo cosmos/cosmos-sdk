@@ -1,15 +1,14 @@
-package staking
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // BeginBlocker will persist the current header and validator set as a historical entry
 // and prune the oldest entry based on the HistoricalEntries parameter
-func BeginBlocker(ctx sdk.Context, k Keeper) {
+func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	entryNum := k.HistoricalEntries(ctx)
 
 	// Prune store to ensure we only have parameter-defined historical entries.
@@ -42,7 +41,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+func (k Keeper) EndBlocker(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before

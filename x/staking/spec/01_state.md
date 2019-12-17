@@ -282,3 +282,21 @@ The stored object as each key is an array of validator operator addresses from
 which the validator object can be accessed.  Typically it is expected that only
 a single validator record will be associated with a given timestamp however it is possible
 that multiple validators exist in the queue at the same location.
+
+## HistoricalInfo
+
+HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
+the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
+
+```go
+type HistoricalInfo struct {
+    Header abci.Header
+    ValSet []types.Validator
+}
+```
+
+At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
+the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that 
+they are in a determisnistic order.
+The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of 
+historical entries.

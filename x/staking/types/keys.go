@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -286,5 +286,5 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 
 // GetHistoricalInfoKey gets the key for the historical info
 func GetHistoricalInfoKey(height int64) []byte {
-	return append(HistoricalInfoKey, []byte(fmt.Sprintf("%d", height))...)
+	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
 }

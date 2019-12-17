@@ -19,6 +19,7 @@ const (
 	CodeInvalidDelegation              = types.CodeInvalidDelegation
 	CodeInvalidInput                   = types.CodeInvalidInput
 	CodeValidatorJailed                = types.CodeValidatorJailed
+	CodeInvalidHistoricalInfo          = types.CodeInvalidHistoricalInfo
 	CodeInvalidAddress                 = types.CodeInvalidAddress
 	CodeUnauthorized                   = types.CodeUnauthorized
 	CodeInternal                       = types.CodeInternal
@@ -47,6 +48,7 @@ const (
 	QueryDelegatorValidator            = types.QueryDelegatorValidator
 	QueryPool                          = types.QueryPool
 	QueryParameters                    = types.QueryParameters
+	QueryHistoricalInfo                = types.QueryHistoricalInfo
 	MaxMonikerLength                   = types.MaxMonikerLength
 	MaxIdentityLength                  = types.MaxIdentityLength
 	MaxWebsiteLength                   = types.MaxWebsiteLength
@@ -86,6 +88,10 @@ var (
 	NewDelegationResp                  = types.NewDelegationResp
 	NewRedelegationResponse            = types.NewRedelegationResponse
 	NewRedelegationEntryResponse       = types.NewRedelegationEntryResponse
+	NewHistoricalInfo                  = types.NewHistoricalInfo
+	MustMarshalHistoricalInfo          = types.MustMarshalHistoricalInfo
+	MustUnmarshalHistoricalInfo        = types.MustUnmarshalHistoricalInfo
+	UnmarshalHistoricalInfo            = types.UnmarshalHistoricalInfo
 	ErrNilValidatorAddr                = types.ErrNilValidatorAddr
 	ErrBadValidatorAddr                = types.ErrBadValidatorAddr
 	ErrNoValidatorFound                = types.ErrNoValidatorFound
@@ -131,6 +137,8 @@ var (
 	ErrBothShareMsgsGiven              = types.ErrBothShareMsgsGiven
 	ErrNeitherShareMsgsGiven           = types.ErrNeitherShareMsgsGiven
 	ErrMissingSignature                = types.ErrMissingSignature
+	ErrInvalidHistoricalInfo           = types.ErrInvalidHistoricalInfo
+	ErrNoHistoricalInfo                = types.ErrNoHistoricalInfo
 	NewGenesisState                    = types.NewGenesisState
 	DefaultGenesisState                = types.DefaultGenesisState
 	NewMultiStakingHooks               = types.NewMultiStakingHooks
@@ -159,6 +167,7 @@ var (
 	GetREDsFromValSrcIndexKey          = types.GetREDsFromValSrcIndexKey
 	GetREDsToValDstIndexKey            = types.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey       = types.GetREDsByDelToValDstIndexKey
+	GetHistoricalInfoKey               = types.GetHistoricalInfoKey
 	NewMsgCreateValidator              = types.NewMsgCreateValidator
 	NewMsgEditValidator                = types.NewMsgEditValidator
 	NewMsgDelegate                     = types.NewMsgDelegate
@@ -174,6 +183,7 @@ var (
 	NewQueryBondsParams                = types.NewQueryBondsParams
 	NewQueryRedelegationParams         = types.NewQueryRedelegationParams
 	NewQueryValidatorsParams           = types.NewQueryValidatorsParams
+	NewQueryHistoricalInfoParams       = types.NewQueryHistoricalInfoParams
 	NewValidator                       = types.NewValidator
 	MustMarshalValidator               = types.MustMarshalValidator
 	MustUnmarshalValidator             = types.MustUnmarshalValidator
@@ -196,6 +206,7 @@ var (
 	UnbondingQueueKey                = types.UnbondingQueueKey
 	RedelegationQueueKey             = types.RedelegationQueueKey
 	ValidatorQueueKey                = types.ValidatorQueueKey
+	HistoricalInfoKey                = types.HistoricalInfoKey
 	KeyUnbondingTime                 = types.KeyUnbondingTime
 	KeyMaxValidators                 = types.KeyMaxValidators
 	KeyMaxEntries                    = types.KeyMaxEntries
@@ -216,6 +227,7 @@ type (
 	Redelegation              = types.Redelegation
 	RedelegationEntry         = types.RedelegationEntry
 	Redelegations             = types.Redelegations
+	HistoricalInfo            = types.HistoricalInfo
 	DelegationResponse        = types.DelegationResponse
 	DelegationResponses       = types.DelegationResponses
 	RedelegationResponse      = types.RedelegationResponse
@@ -237,6 +249,7 @@ type (
 	QueryBondsParams          = types.QueryBondsParams
 	QueryRedelegationParams   = types.QueryRedelegationParams
 	QueryValidatorsParams     = types.QueryValidatorsParams
+	QueryHistoricalInfoParams = types.QueryHistoricalInfoParams
 	Validator                 = types.Validator
 	Validators                = types.Validators
 	Description               = types.Description

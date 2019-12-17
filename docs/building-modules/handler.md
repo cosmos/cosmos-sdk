@@ -1,7 +1,7 @@
----
+<!--
 order: 4
 synopsis: "A `Handler` designates a function that processes [`message`s](./messages-and-queries.md#messages). `Handler`s are specific to the module in which they are defined, and only process `message`s defined within the said module. They are called from `baseapp` during [`DeliverTx`](../core/baseapp.md#delivertx)."
----
+-->
 
 # Handlers
 

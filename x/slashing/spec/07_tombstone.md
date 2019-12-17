@@ -1,6 +1,6 @@
----
+<!--
 order: 7
----
+-->
 
 # Staking Tombstone
 

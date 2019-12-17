@@ -25,3 +25,5 @@ make
 ## Create a Basic Cosmos SDK Blockchain
 
 ## Run your Blockchain
+
+test

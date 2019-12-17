@@ -123,7 +123,7 @@ module.exports = {
         }
       ],
       smallprint:
-        "The development of the Cosmos project is led primarily by Tendermint Inc., the for-profit entity which also maintains this website. Funding for this development comes primarily from the Interchain Foundation, a Swiss non-profit.",
+        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
       links: [
         {
           title: "Documentation",
@@ -135,6 +135,10 @@ module.exports = {
             {
               title: "Cosmos Hub",
               url: "https://hub.cosmos.network/"
+            },
+            {
+              title: "Tendermint Core",
+              url: "https://docs.tendermint.com/"
             }
           ]
         },

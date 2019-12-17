@@ -1,8 +1,7 @@
----
-order: 0
+<!--
 parent:
   order: false
----
+-->
 
 # List of Modules
 

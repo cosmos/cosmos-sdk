@@ -1,7 +1,7 @@
----
+<!--
 order: 2
 synopsis: "This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`."
----
+-->
 
 # Transaction Lifecycle
 

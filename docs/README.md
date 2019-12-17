@@ -1,5 +1,5 @@
----
-layout: index
+<!--
+layout: homepage
 title: Cosmos SDK Documentation
 description: Cosmos SDK is the world’s most popular framework for building application-specific blockchains.
 features:
@@ -48,14 +48,15 @@ stack:
     color: "#BA3FD9"
     label: hub
     url: http://hub.cosmos.network
-  - title: Tendermint
+  - title: Tendermint Core
     desc: The leading BFT engine for building blockchains, powering Cosmos SDK.
     color: "#00BB00"
     label: core
     url: http://docs.tendermint.com
 footer:
   newsletter: false
----
+aside: false
+-->
 
 # Cosmos SDK Documentation
 

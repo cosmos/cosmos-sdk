@@ -1,7 +1,7 @@
----
+<!--
 order: 5
 synopsis: "A `Querier` designates a function that processes [`queries`](./messages-and-queries.md#queries). `querier`s are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `baseapp`'s [`Query` method](../core/baseapp.md#query)."
----
+-->
 
 # Queriers
 

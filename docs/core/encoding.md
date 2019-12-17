@@ -1,7 +1,7 @@
----
+<!--
 order: 6
 synopsis: The `codec` is used everywhere in the Cosmos SDK to encode and decode structs and interfaces. The specific codec used in the Cosmos SDK is called `go-amino`
----
+-->
 
 # Encoding
 

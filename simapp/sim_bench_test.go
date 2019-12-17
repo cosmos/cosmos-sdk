@@ -36,7 +36,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	// export state and simParams before the simulation error is checked
 	if err = CheckExportSimulation(app, config, simParams); err != nil {
-		fmt.Println(err)
 		b.Fatal(err)
 	}
 

@@ -7,17 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResult(t *testing.T) {
-	var res Result
-	require.True(t, res.IsOK())
-
-	res.Data = []byte("data")
-	require.True(t, res.IsOK())
-
-	res.Code = CodeType(1)
-	require.False(t, res.IsOK())
-}
-
 func TestParseABCILog(t *testing.T) {
 	logs := `[{"log":"","msg_index":1,"success":true}]`
 

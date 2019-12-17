@@ -89,6 +89,9 @@ func MakeCodec() *codec.Codec {
 	return cdc
 }
 
+// Verify app interface at compile time
+var _ App = (*SimApp)(nil)
+
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
@@ -295,6 +298,9 @@ func NewSimApp(
 	return app
 }
 
+// Name returns the name of the App
+func (app *SimApp) Name() string { return app.BaseApp.Name() }
+
 // BeginBlocker application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -364,6 +370,11 @@ func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
 	return app.subspaces[moduleName]
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *SimApp) SimulationManager() *module.SimulationManager {
+	return app.sm
 }
 
 // GetMaccPerms returns a copy of the module account permissions

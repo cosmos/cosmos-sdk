@@ -96,6 +96,111 @@ func TestAddDecCoins(t *testing.T) {
 	}
 }
 
+func TestIsValid(t *testing.T) {
+	tests := []struct {
+		coin       DecCoin
+		expectPass bool
+		msg        string
+	}{
+		{
+			NewDecCoin("mytoken", NewInt(10)),
+			true,
+			"valid coins should have passed",
+		},
+		{
+			DecCoin{Denom: "BTC", Amount: NewDec(10)},
+			false,
+			"invalid denoms",
+		},
+		{
+			DecCoin{Denom: "BTC", Amount: NewDec(-10)},
+			false,
+			"negative amount",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		if tc.expectPass {
+			require.True(t, tc.coin.IsValid(), tc.msg)
+		} else {
+			require.False(t, tc.coin.IsValid(), tc.msg)
+		}
+	}
+}
+
+func TestSubDecCoin(t *testing.T) {
+	tests := []struct {
+		coin       DecCoin
+		expectPass bool
+		msg        string
+	}{
+		{
+			NewDecCoin("mytoken", NewInt(20)),
+			true,
+			"valid coins should have passed",
+		},
+		{
+			NewDecCoin("othertoken", NewInt(20)),
+			false,
+			"denom mismatch",
+		},
+		{
+			NewDecCoin("mytoken", NewInt(9)),
+			false,
+			"negative amount",
+		},
+	}
+
+	decCoin := NewDecCoin("mytoken", NewInt(10))
+
+	for _, tc := range tests {
+		tc := tc
+		if tc.expectPass {
+			equal := tc.coin.Sub(decCoin)
+			require.Equal(t, equal, decCoin, tc.msg)
+		} else {
+			require.Panics(t, func() { tc.coin.Sub(decCoin) }, tc.msg)
+		}
+	}
+}
+
+func TestSubDecCoins(t *testing.T) {
+	tests := []struct {
+		coins      DecCoins
+		expectPass bool
+		msg        string
+	}{
+		{
+			NewDecCoins(Coins{NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))}),
+			true,
+			"sorted coins should have passed",
+		},
+		{
+			DecCoins{NewDecCoin("mytoken", NewInt(10)), NewDecCoin("btc", NewInt(20)), NewDecCoin("eth", NewInt(30))},
+			false,
+			"unorted coins should panic",
+		},
+		{
+			DecCoins{DecCoin{Denom: "BTC", Amount: NewDec(10)}, NewDecCoin("eth", NewInt(15)), NewDecCoin("mytoken", NewInt(5))},
+			false,
+			"invalid denoms",
+		},
+	}
+
+	decCoins := NewDecCoins(Coins{NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5))})
+
+	for _, tc := range tests {
+		tc := tc
+		if tc.expectPass {
+			equal := tc.coins.Sub(decCoins)
+			require.Equal(t, equal, decCoins, tc.msg)
+		} else {
+			require.Panics(t, func() { tc.coins.Sub(decCoins) }, tc.msg)
+		}
+	}
+}
+
 func TestSortDecCoins(t *testing.T) {
 	good := DecCoins{
 		NewInt64DecCoin("gas", 1),

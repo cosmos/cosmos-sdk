@@ -13,6 +13,11 @@ type Uint struct {
 	i *big.Int
 }
 
+// BigInt converts Uint to big.Int
+func (u Uint) BigInt() *big.Int {
+	return new(big.Int).Set(u.i)
+}
+
 // NewUintFromBigUint constructs Uint from big.Uint
 func NewUintFromBigInt(i *big.Int) Uint {
 	u, err := checkNewUint(i)
@@ -69,7 +74,7 @@ func (u Uint) GTE(u2 Uint) bool { return u.GT(u2) || u.Equal(u2) }
 func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 
 // LTE returns true if first Uint is lesser than or equal to the second
-func (u Uint) LTE(u2 Uint) bool { return !u.GTE(u2) }
+func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 
 // Add adds Uint from another
 func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }

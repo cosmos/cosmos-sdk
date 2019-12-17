@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
@@ -13,37 +12,50 @@ import (
 
 // NewQuerier creates a querier for the IBC module
 func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
+		var (
+			res []byte
+			err error
+		)
+
 		switch path[0] {
 		case client.SubModuleName:
 			switch path[1] {
 			case client.QueryClientState:
-				return client.QuerierClientState(ctx, req, k.ClientKeeper)
+				res, err = client.QuerierClientState(ctx, req, k.ClientKeeper)
+			case client.QueryAllClients:
+				res, err = client.QuerierClients(ctx, req, k.ClientKeeper)
 			case client.QueryConsensusState:
-				return client.QuerierConsensusState(ctx, req, k.ClientKeeper)
+				res, err = client.QuerierConsensusState(ctx, req, k.ClientKeeper)
 			case client.QueryVerifiedRoot:
-				return client.QuerierVerifiedRoot(ctx, req, k.ClientKeeper)
+				res, err = client.QuerierVerifiedRoot(ctx, req, k.ClientKeeper)
 			default:
-				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName))
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", client.SubModuleName)
 			}
 		case connection.SubModuleName:
 			switch path[1] {
 			case connection.QueryConnection:
-				return connection.QuerierConnection(ctx, req, k.ConnectionKeeper)
+				res, err = connection.QuerierConnection(ctx, req, k.ConnectionKeeper)
+			case connection.QueryAllConnections:
+				res, err = connection.QuerierConnections(ctx, req, k.ConnectionKeeper)
 			case connection.QueryClientConnections:
-				return connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
+				res, err = connection.QuerierClientConnections(ctx, req, k.ConnectionKeeper)
 			default:
-				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", connection.SubModuleName))
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", connection.SubModuleName)
 			}
 		case channel.SubModuleName:
 			switch path[1] {
 			case channel.QueryChannel:
-				return channel.QuerierChannel(ctx, req, k.ChannelKeeper)
+				res, err = channel.QuerierChannel(ctx, req, k.ChannelKeeper)
+			case channel.QueryAllChannels:
+				res, err = channel.QuerierChannels(ctx, req, k.ChannelKeeper)
 			default:
-				return nil, sdk.ErrUnknownRequest(fmt.Sprintf("unknown IBC %s query endpoint", channel.SubModuleName))
+				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", channel.SubModuleName)
 			}
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown IBC query endpoint")
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")
 		}
+
+		return res, sdk.ConvertError(err)
 	}
 }

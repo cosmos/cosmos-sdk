@@ -1,3 +1,7 @@
+<!--
+order: 7
+-->
+
 # Parameters
 
 The staking module contains the following parameters:

@@ -11,6 +11,7 @@ import (
 
 // query routes supported by the IBC client Querier
 const (
+	QueryAllClients     = "client_states"
 	QueryClientState    = "client_state"
 	QueryConsensusState = "consensus_state"
 	QueryVerifiedRoot   = "roots"
@@ -30,6 +31,21 @@ func NewQueryClientStateParams(id string) QueryClientStateParams {
 	}
 }
 
+// QueryAllClientsParams defines the parameters necessary for querying for all
+// light client states.
+type QueryAllClientsParams struct {
+	Page  int `json:"page" yaml:"page"`
+	Limit int `json:"limit" yaml:"limit"`
+}
+
+// NewQueryAllClientsParams creates a new QueryAllClientsParams instance.
+func NewQueryAllClientsParams(page, limit int) QueryAllClientsParams {
+	return QueryAllClientsParams{
+		Page:  page,
+		Limit: limit,
+	}
+}
+
 // QueryCommitmentRootParams defines the params for the following queries:
 // - 'custom/ibc/clients/<clientID>/roots/<height>'
 type QueryCommitmentRootParams struct {
@@ -40,6 +56,21 @@ type QueryCommitmentRootParams struct {
 // NewQueryCommitmentRootParams creates a new QueryCommitmentRootParams instance
 func NewQueryCommitmentRootParams(id string, height uint64) QueryCommitmentRootParams {
 	return QueryCommitmentRootParams{
+		ClientID: id,
+		Height:   height,
+	}
+}
+
+// QueryCommitterParams defines the params for the following queries:
+// - 'custom/ibc/clients/<clientID>/committers/<height>'
+type QueryCommitterParams struct {
+	ClientID string
+	Height   uint64
+}
+
+// NewQueryCommitterParams creates a new QueryCommitmentRootParams instance
+func NewQueryCommitterParams(id string, height uint64) QueryCommitterParams {
+	return QueryCommitterParams{
 		ClientID: id,
 		Height:   height,
 	}
@@ -61,7 +92,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ConsensusStatePath(clientID), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(ClientStatePath(clientID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -104,6 +135,27 @@ func NewRootResponse(
 		Root:        root,
 		Proof:       commitment.Proof{Proof: proof},
 		ProofPath:   commitment.NewPath(strings.Split(RootPath(clientID, height), "/")),
+		ProofHeight: uint64(proofHeight),
+	}
+}
+
+// CommitterResponse defines the client response for a committer query
+// It includes the commitment proof and the height of the proof
+type CommitterResponse struct {
+	Committer   tmtypes.Committer `json:"committer" yaml:"committer"`
+	Proof       commitment.Proof  `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path   `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64            `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+}
+
+// NewCommitterResponse creates a new CommitterResponse instance.
+func NewCommitterResponse(
+	clientID string, height uint64, committer tmtypes.Committer, proof *merkle.Proof, proofHeight int64,
+) CommitterResponse {
+	return CommitterResponse{
+		Committer:   committer,
+		Proof:       commitment.Proof{Proof: proof},
+		ProofPath:   commitment.NewPath(strings.Split(CommitterPath(clientID, height), "/")),
 		ProofHeight: uint64(proofHeight),
 	}
 }

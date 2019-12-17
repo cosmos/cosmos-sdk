@@ -1,22 +1,18 @@
 package cli
 
 import (
+	"bufio"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	clientutils "github.com/cosmos/cosmos-sdk/x/ibc/02-client/client/utils"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	channelutils "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // IBC transfer flags
@@ -31,20 +27,6 @@ var (
 	FlagTimeout  = "timeout"
 )
 
-// GetTxCmd returns the transaction commands for IBC fungible token transfer
-func GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:   "transfer",
-		Short: "IBC fungible token transfer transaction subcommands",
-	}
-	txCmd.AddCommand(
-		GetTransferTxCmd(cdc),
-		GetMsgRecvPacketCmd(cdc),
-	)
-
-	return txCmd
-}
-
 // GetTransferTxCmd returns the command to create a NewMsgTransfer transaction
 func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -52,8 +34,9 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Transfer fungible token through IBC",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			ctx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			ctx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
 			sender := ctx.GetFromAddress()
 			srcPort := args[0]
@@ -80,71 +63,75 @@ func GetTransferTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
-	cmd.Flags().String(flags.FlagFrom, "", "key in local keystore to send from")
 	return cmd
 }
 
-// GetMsgRecvPacketCmd returns the command to create a MsgRecvTransferPacket transaction
-func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "recv-packet [sending-port-id] [sending-channel-id] [client-id]",
-		Short: "Creates and sends a SendPacket message",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
+// // GetMsgRecvPacketCmd returns the command to create a MsgRecvTransferPacket transaction
+// func GetMsgRecvPacketCmd(cdc *codec.Codec) *cobra.Command {
+// 	cmd := &cobra.Command{
+// 		Use:   "recv-packet [sending-port-id] [sending-channel-id] [client-id]",
+// 		Short: "Creates and sends a SendPacket message",
+// 		Args:  cobra.ExactArgs(3),
+// 		RunE: func(cmd *cobra.Command, args []string) error {
+// 			inBuf := bufio.NewReader(cmd.InOrStdin())
+// 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+// 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc).WithBroadcastMode(flags.BroadcastBlock)
 
-			node2 := viper.GetString(FlagNode2)
-			cid1 := viper.GetString(flags.FlagChainID)
-			cid2 := viper.GetString(FlagChainID2)
-			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).
-				WithCodec(cdc).
-				WithBroadcastMode(flags.BroadcastBlock)
+// 			prove := viper.GetBool(flags.FlagProve)
+// 			node2 := viper.GetString(FlagNode2)
+// 			cid1 := viper.GetString(flags.FlagChainID)
+// 			cid2 := viper.GetString(FlagChainID2)
+// 			cliCtx2 := context.NewCLIContextIBC(cliCtx.GetFromAddress().String(), cid2, node2).
+// 				WithCodec(cdc).
+// 				WithBroadcastMode(flags.BroadcastBlock)
 
-			header, err := clientutils.GetTendermintHeader(cliCtx2)
-			if err != nil {
-				return err
-			}
+// 			header, _, err := clientutils.QueryTendermintHeader(cliCtx2)
+// 			if err != nil {
+// 				return err
+// 			}
 
-			sourcePort, sourceChannel, clientid := args[0], args[1], args[2]
+// 			sourcePort, sourceChannel, clientid := args[0], args[1], args[2]
 
-			passphrase, err := keys.GetPassphrase(viper.GetString(flags.FlagFrom))
-			if err != nil {
-				return nil
-			}
+// 			passphrase, err := keys.GetPassphrase(viper.GetString(flags.FlagFrom))
+// 			if err != nil {
+// 				return nil
+// 			}
 
-			viper.Set(flags.FlagChainID, cid1)
-			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientid, header, cliCtx.GetFromAddress())
-			if err := msgUpdateClient.ValidateBasic(); err != nil {
-				return err
-			}
+// 			viper.Set(flags.FlagChainID, cid1)
+// 			msgUpdateClient := clienttypes.NewMsgUpdateClient(clientid, header, cliCtx.GetFromAddress())
+// 			if err := msgUpdateClient.ValidateBasic(); err != nil {
+// 				return err
+// 			}
 
-			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
-			if err != nil || !res.IsOK() {
-				return err
-			}
+// 			res, err := utils.CompleteAndBroadcastTx(txBldr, cliCtx, []sdk.Msg{msgUpdateClient}, passphrase)
+// 			if err != nil || !res.IsOK() {
+// 				return err
+// 			}
 
-			viper.Set(flags.FlagChainID, cid2)
-			sequence := uint64(viper.GetInt(FlagSequence))
-			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), "ibc")
-			if err != nil {
-				return err
-			}
-			viper.Set(flags.FlagChainID, cid1)
+// 			viper.Set(flags.FlagChainID, cid2)
+// 			sequence := uint64(viper.GetInt(FlagSequence))
+// 			packetRes, err := channelutils.QueryPacket(cliCtx2.WithHeight(header.Height-1), sourcePort, sourceChannel, sequence, uint64(viper.GetInt(FlagTimeout)), prove)
+// 			if err != nil {
+// 				return err
+// 			}
 
-			msg := types.NewMsgRecvPacket(packetRes.Packet, []commitment.Proof{packetRes.Proof}, packetRes.ProofHeight, cliCtx.GetFromAddress())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
-		},
-	}
+// 			viper.Set(flags.FlagChainID, cid1)
 
-	cmd = client.PostCommands(cmd)[0]
-	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
-	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
-	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
-	cmd.Flags().String(FlagSequence, "", "sequence for the packet")
-	cmd.Flags().String(FlagTimeout, "", "timeout for the packet")
-	return cmd
-}
+// 			msg := types.NewMsgRecvPacket(packetRes.Packet, []commitment.Proof{packetRes.Proof}, packetRes.ProofHeight, cliCtx.GetFromAddress())
+// 			if err := msg.ValidateBasic(); err != nil {
+// 				return err
+// 			}
+
+// 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+// 		},
+// 	}
+
+// 	cmd = client.PostCommands(cmd)[0]
+// 	cmd.Flags().Bool(FlagSource, false, "Pass flag for sending token from the source chain")
+// 	cmd.Flags().String(FlagNode2, "tcp://localhost:26657", "RPC port for the second chain")
+// 	cmd.Flags().String(FlagChainID2, "", "chain-id for the second chain")
+// 	cmd.Flags().String(FlagSequence, "", "sequence for the packet")
+// 	cmd.Flags().String(FlagTimeout, "", "timeout for the packet")
+// 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+// 	return cmd
+// }

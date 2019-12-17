@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 
 	bip39 "github.com/bartekn/go-bip39"
@@ -36,42 +37,8 @@ const (
 	DefaultKeyPass = "12345678"
 )
 
-func addKeyScriptingCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "test [name] [mnemonic] [password]",
-		Short: "Add a recovered mnemonic to the keystore encrypt it, and save to disk, for testing",
-		Long: `Derive a new private key from an existing mnemonic file and encrypt to disk.
-
-NOTE: This is insecure and only meant to be used during testing!!!! HERE BE DRAGONS!		
-`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			kb, err := NewKeyBaseFromHomeFlag()
-			if err != nil {
-				return err
-			}
-
-			_, err = kb.Get(args[0])
-			if err == nil {
-				return errors.New("key already exists, exiting")
-			}
-
-			if !bip39.IsMnemonicValid(args[1]) {
-				return errors.New("invalid mnemonic")
-			}
-
-			info, err := kb.CreateAccount(args[0], args[1], "", args[2], 0, 0)
-			if err != nil {
-				return err
-			}
-
-			return printCreate(cmd, info, false, "")
-		},
-	}
-	return cmd
-}
-
-func addKeyCommand() *cobra.Command {
+// AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
+func AddKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
@@ -110,6 +77,24 @@ the flag --nosort is set.
 	return cmd
 }
 
+func getKeybase(transient bool, buf io.Reader) (keys.Keybase, error) {
+	if transient {
+		return keys.NewInMemory(), nil
+	}
+
+	return NewKeyringFromHomeFlag(buf)
+}
+
+func runAddCmd(cmd *cobra.Command, args []string) error {
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
+	if err != nil {
+		return err
+	}
+
+	return RunAddCmd(cmd, args, kb, inBuf)
+}
+
 /*
 input
 	- bip39 mnemonic
@@ -119,28 +104,15 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(cmd *cobra.Command, args []string) error {
-	var kb keys.Keybase
+func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.Reader) error {
 	var err error
-	var encryptPassword string
 
-	inBuf := bufio.NewReader(cmd.InOrStdin())
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
-	if viper.GetBool(flagDryRun) {
-		// we throw this away, so don't enforce args,
-		// we want to get a new random seed phrase quickly
-		kb = keys.NewInMemory()
-		encryptPassword = DefaultKeyPass
-	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
-		if err != nil {
-			return err
-		}
-
+	if !viper.GetBool(flagDryRun) {
 		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation
@@ -184,16 +156,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 			cmd.PrintErrf("Key %q saved to disk.\n", name)
 			return nil
-		}
-
-		// ask for a password when generating a local key
-		if viper.GetString(FlagPublicKey) == "" && !viper.GetBool(flags.FlagUseLedger) {
-			encryptPassword, err = input.GetCheckPassword(
-				"Enter a passphrase to encrypt your key to disk:",
-				"Repeat the passphrase:", inBuf)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -278,7 +240,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, encryptPassword, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index)
 	if err != nil {
 		return err
 	}
@@ -320,9 +282,9 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 
 		var jsonString []byte
 		if viper.GetBool(flags.FlagIndentResponse) {
-			jsonString, err = cdc.MarshalJSONIndent(out, "", "  ")
+			jsonString, err = KeysCdc.MarshalJSONIndent(out, "", "  ")
 		} else {
-			jsonString, err = cdc.MarshalJSON(out)
+			jsonString, err = KeysCdc.MarshalJSON(out)
 		}
 
 		if err != nil {

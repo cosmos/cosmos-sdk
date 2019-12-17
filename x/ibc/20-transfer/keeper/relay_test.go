@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
@@ -11,7 +13,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) createClient() {
@@ -22,9 +23,11 @@ func (suite *KeeperTestSuite) createClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		ChainID:          testChainID,
+		Height:           uint64(commitID.Version),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSet:     suite.valSet,
+		NextValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
@@ -79,10 +82,10 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
 }
 
-func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 
@@ -194,7 +197,7 @@ func (suite *KeeperTestSuite) TestReceivePacket() {
 
 	packetDataBz := []byte("invaliddata")
 	packet := channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort2, testChannel1, packetDataBz)
-	packetCommitmentPath := channel.PacketCommitmentPath(testPort2, testChannel2, packetSeq)
+	packetCommitmentPath := channel.KeyPacketCommitment(testPort2, testChannel2, packetSeq)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
 	suite.updateClient()

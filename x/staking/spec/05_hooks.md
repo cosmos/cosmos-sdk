@@ -1,3 +1,7 @@
+<!--
+order: 5
+-->
+
 # Hooks
 
 Other modules may register operations to execute when a certain event has

@@ -2,10 +2,18 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+)
+
+// Message types for the IBC client
+const (
+	TypeMsgCreateClient    string = "create_client"
+	TypeMsgUpdateClient    string = "update_client"
+	TypeClientMisbehaviour string = "client_misbehaviour"
 )
 
 var _ sdk.Msg = MsgCreateClient{}
@@ -35,7 +43,7 @@ func (msg MsgCreateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgCreateClient) Type() string {
-	return "create_client"
+	return TypeMsgCreateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -90,7 +98,7 @@ func (msg MsgUpdateClient) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgUpdateClient) Type() string {
-	return "update_client"
+	return TypeMsgUpdateClient
 }
 
 // ValidateBasic implements sdk.Msg
@@ -119,13 +127,13 @@ func (msg MsgUpdateClient) GetSigners() []sdk.AccAddress {
 
 // MsgSubmitMisbehaviour defines a message to update an IBC client
 type MsgSubmitMisbehaviour struct {
-	ClientID string            `json:"id" yaml:"id"`
-	Evidence exported.Evidence `json:"evidence" yaml:"evidence"`
-	Signer   sdk.AccAddress    `json:"address" yaml:"address"`
+	ClientID string                    `json:"id" yaml:"id"`
+	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
+	Signer   sdk.AccAddress            `json:"address" yaml:"address"`
 }
 
 // NewMsgSubmitMisbehaviour creates a new MsgSubmitMisbehaviour instance
-func NewMsgSubmitMisbehaviour(id string, evidence exported.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
+func NewMsgSubmitMisbehaviour(id string, evidence evidenceexported.Evidence, signer sdk.AccAddress) MsgSubmitMisbehaviour {
 	return MsgSubmitMisbehaviour{
 		ClientID: id,
 		Evidence: evidence,

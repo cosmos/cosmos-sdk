@@ -5,9 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -370,4 +373,78 @@ func TestLazySeedPhrase(t *testing.T) {
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
 	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+}
+
+var _ crypto.PrivKey = testPriv{}
+var _ crypto.PubKey = testPub{}
+var testCdc *amino.Codec
+
+type testPriv []byte
+
+func (privkey testPriv) PubKey() crypto.PubKey { return testPub{} }
+func (privkey testPriv) Bytes() []byte {
+	return testCdc.MustMarshalBinaryBare(privkey)
+}
+func (privkey testPriv) Sign(msg []byte) ([]byte, error)  { return []byte{}, nil }
+func (privkey testPriv) Equals(other crypto.PrivKey) bool { return true }
+
+type testPub []byte
+
+func (key testPub) Address() crypto.Address { return crypto.Address{} }
+func (key testPub) Bytes() []byte {
+	return testCdc.MustMarshalBinaryBare(key)
+}
+func (key testPub) VerifyBytes(msg []byte, sig []byte) bool { return true }
+func (key testPub) Equals(other crypto.PubKey) bool         { return true }
+
+func TestKeygenOverride(t *testing.T) {
+	dir, cleanup := tests.NewTestCaseDir(t)
+	defer cleanup()
+
+	// Save existing codec and reset after test
+	cryptoCdc := CryptoCdc
+	defer func() {
+		CryptoCdc = cryptoCdc
+	}()
+
+	// Setup testCdc encoding and decoding new key type
+	testCdc = codec.New()
+	RegisterCodec(testCdc)
+	tmamino.RegisterAmino(testCdc)
+
+	// Set up codecs for using new key types
+	privName, pubName := "test/priv_name", "test/pub_name"
+	tmamino.RegisterKeyType(testPriv{}, privName)
+	tmamino.RegisterKeyType(testPub{}, pubName)
+	testCdc.RegisterConcrete(testPriv{}, privName, nil)
+	testCdc.RegisterConcrete(testPub{}, pubName, nil)
+	CryptoCdc = testCdc
+
+	overrideCalled := false
+	dummyFunc := func(bz [32]byte) crypto.PrivKey {
+		overrideCalled = true
+		return testPriv(bz[:])
+	}
+
+	kb := New("keybasename", dir, WithKeygenFunc(dummyFunc))
+
+	testName, pw := "name", "testPassword"
+
+	// create new key which will generate with
+	info, _, err := kb.CreateMnemonic(testName, English, pw, Secp256k1)
+	require.NoError(t, err)
+	require.Equal(t, info.GetName(), testName)
+
+	// Assert overridden function was called
+	require.True(t, overrideCalled)
+
+	// export private key object
+	exported, err := kb.ExportPrivateKeyObject(testName, pw)
+	require.Nil(t, err, "%+v", err)
+
+	// require that the key type is the new key
+	_, ok := exported.(testPriv)
+	require.True(t, ok)
+
+	require.True(t, exported.PubKey().Equals(info.GetPubKey()))
 }

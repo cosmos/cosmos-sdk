@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +20,6 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // define constants used for testing
@@ -49,9 +51,10 @@ var (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	app    *simapp.SimApp
+	valSet *tmtypes.ValidatorSet
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -61,6 +64,11 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
+
+	privVal := tmtypes.NewMockPV()
+
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
 	suite.createConnection(connection.OPEN)
@@ -74,9 +82,11 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		ChainID:          testChainID,
+		Height:           uint64(commitID.Version),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSet:     suite.valSet,
+		NextValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
@@ -131,10 +141,10 @@ func (suite *HandlerTestSuite) createChannel(portID string, chanID string, connI
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
 }
 
-func (suite *HandlerTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 
@@ -187,7 +197,7 @@ func (suite *HandlerTestSuite) TestHandleRecvPacket() {
 
 	packetDataBz := []byte("invaliddata")
 	packet := channel.NewPacket(packetSeq, packetTimeout, testPort2, testChannel2, testPort1, testChannel1, packetDataBz)
-	packetCommitmentPath := channel.PacketCommitmentPath(testPort2, testChannel2, packetSeq)
+	packetCommitmentPath := channel.KeyPacketCommitment(testPort2, testChannel2, packetSeq)
 
 	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, testPort2, testChannel2, packetSeq, []byte("invalidcommitment"))
 	suite.updateClient()

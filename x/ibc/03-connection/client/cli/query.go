@@ -7,29 +7,44 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 )
 
-// GetQueryCmd returns the query commands for IBC connections
-func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	ics03ConnectionQueryCmd := &cobra.Command{
-		Use:                        "connection",
-		Short:                      "IBC connection query subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-	}
+// GetCmdQueryConnections defines the command to query all the connection ends
+// that this chain mantains.
+func GetCmdQueryConnections(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "connections",
+		Short: "Query all available light clients",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all available connections
 
-	ics03ConnectionQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryConnection(queryRoute, cdc),
-	)...)
-	return ics03ConnectionQueryCmd
+Example:
+$ %s query ibc connection connections
+		`, version.ClientName),
+		),
+		Example: fmt.Sprintf("%s query ibc connection connections", version.ClientName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
+
+			connections, _, err := utils.QueryAllConnections(cliCtx, page, limit)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(connections)
+		},
+	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	return cmd
 }
 
 // GetCmdQueryConnection defines the command to query a connection end
@@ -43,33 +58,18 @@ Example:
 $ %s query ibc connection end [connection-id]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query ibc connection end [connection-id]", version.ClientName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			connectionID := args[0]
+			prove := viper.GetBool(flags.FlagProve)
 
-			bz, err := cdc.MarshalJSON(types.NewQueryConnectionParams(connectionID))
+			connRes, err := utils.QueryConnection(cliCtx, connectionID, prove)
 			if err != nil {
 				return err
 			}
 
-			req := abci.RequestQuery{
-				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryConnection),
-				Data:  bz,
-				Prove: viper.GetBool(flags.FlagProve),
-			}
-
-			res, err := cliCtx.QueryABCI(req)
-			if err != nil {
-				return err
-			}
-
-			var connection types.ConnectionEnd
-			if err := cdc.UnmarshalJSON(res.Value, &connection); err != nil {
-				return err
-			}
-
-			connRes := types.NewConnectionResponse(connectionID, connection, res.Proof, res.Height)
 			return cliCtx.PrintOutput(connRes)
 		},
 	}
@@ -89,33 +89,18 @@ Example:
 $ %s query ibc connection client [client-id]
 		`, version.ClientName),
 		),
-		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s query ibc connection client [client-id]", version.ClientName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			clientID := args[0]
+			prove := viper.GetBool(flags.FlagProve)
 
-			bz, err := cdc.MarshalJSON(types.NewQueryClientConnectionsParams(clientID))
+			connPathsRes, err := utils.QueryClientConnections(cliCtx, clientID, prove)
 			if err != nil {
 				return err
 			}
 
-			req := abci.RequestQuery{
-				Path:  fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryClientConnections),
-				Data:  bz,
-				Prove: viper.GetBool(flags.FlagProve),
-			}
-
-			res, err := cliCtx.QueryABCI(req)
-			if err != nil {
-				return err
-			}
-
-			var connectionPaths []string
-			if err := cdc.UnmarshalJSON(res.Value, &connectionPaths); err != nil {
-				return err
-			}
-
-			connPathsRes := types.NewClientConnectionsResponse(clientID, connectionPaths, res.Proof, res.Height)
 			return cliCtx.PrintOutput(connPathsRes)
 		},
 	}

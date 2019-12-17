@@ -1,3 +1,7 @@
+<!--
+order: 4
+-->
+
 # Events
 
 The bank module emits the following events:

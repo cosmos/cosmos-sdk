@@ -122,7 +122,7 @@ func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 		}
 		subset = append(subset, sdk.NewCoin(c.Denom, amt))
 	}
-	return subset
+	return subset.Sort()
 }
 
 // DeriveRand derives a new Rand deterministically from another random source.

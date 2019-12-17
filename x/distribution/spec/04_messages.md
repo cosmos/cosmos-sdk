@@ -1,3 +1,7 @@
+<!--
+order: 4
+-->
+
 # Messages
 
 ## MsgWithdrawDelegationRewardsAll

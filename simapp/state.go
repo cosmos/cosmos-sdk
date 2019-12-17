@@ -30,6 +30,7 @@ func AppStateFn(cdc *codec.Codec, simManager *module.SimulationManager) simulati
 			genesisTimestamp = time.Unix(FlagGenesisTimeValue, 0)
 		}
 
+		chainID = config.ChainID
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")
@@ -80,7 +81,7 @@ func AppStateRandomizedFn(
 	var initialStake, numInitiallyBonded int64
 	appParams.GetOrGenerate(
 		cdc, StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = int64(r.Intn(1e12)) },
+		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
 	)
 	appParams.GetOrGenerate(
 		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,

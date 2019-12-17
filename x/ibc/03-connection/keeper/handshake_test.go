@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.INIT)
 
-	connectionKey := connection.ConnectionPath(testConnectionID2)
-	consensusKey := string(client.KeyConsensusState(testClientID2))
+	connectionKey := connection.KeyConnection(testConnectionID2)
+	consensusKey := client.KeyConsensusState(testClientID2)
 
 	invalidProof := func() error {
 		proofInit, proofHeight := suite.queryProof(connectionKey)
@@ -119,8 +119,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	suite.createClient(testClientID1)
 
 	suite.createConnection(testConnectionID1, testConnectionID2, testClientID1, testClientID2, connection.TRYOPEN)
-	connectionKey := connection.ConnectionPath(testConnectionID1)
-	consensusKey := string(client.KeyConsensusState(testClientID1))
+	connectionKey := connection.KeyConnection(testConnectionID1)
+	consensusKey := client.KeyConsensusState(testClientID1)
 
 	connectionNotFound := func() error {
 		//suite.updateClient(testClientID2)
@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	suite.createClient(testClientID1)
 	suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.OPEN)
 
-	connKey := connection.ConnectionPath(testConnectionID2)
+	connKey := connection.KeyConnection(testConnectionID2)
 	proof, h := suite.queryProof(connKey)
 
 	connectionNotFound := func() error {
@@ -244,10 +244,10 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 	}
 }
 
-func (suite *KeeperTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", storeKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 
@@ -267,9 +267,11 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID: chainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		ChainID:          chainID,
+		Height:           uint64(commitID.Version),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSet:     suite.valSet,
+		NextValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)

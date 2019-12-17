@@ -26,6 +26,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	keyringDirName     = "keyring"
+	testKeyringDirName = "keyring-test"
+)
+
 var _ Keybase = keyringKeybase{}
 
 // keyringKeybase implements the Keybase interface by using the Keyring library
@@ -37,25 +42,38 @@ type keyringKeybase struct {
 
 var maxPassphraseEntryAttempts = 3
 
-// NewKeyring creates a new instance of a keyring.
-func NewKeyring(name string, dir string, userInput io.Reader) (Keybase, error) {
+// NewKeyring creates a new instance of a keyring. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyring(
+	name string, dir string, userInput io.Reader, opts ...KeybaseOption,
+) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, userInput, false))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
-// NewTestKeyring creates a new instance of a keyring for
-// testing purposes that  does not prompt users for password.
-func NewTestKeyring(name string, dir string) (Keybase, error) {
+// NewKeyringFile creates a new instance of an encrypted file-backed keyring.
+func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...KeybaseOption) (Keybase, error) {
+	db, err := keyring.Open(newFileBackendKeyringConfig(name, dir, userInput))
+	if err != nil {
+		return nil, err
+	}
+
+	return newKeyringKeybase(db, opts...), nil
+}
+
+// NewTestKeyring creates a new instance of an on-disk keyring for
+// testing purposes that does not prompt users for password.
+func NewTestKeyring(name string, dir string, opts ...KeybaseOption) (Keybase, error) {
 	db, err := keyring.Open(lkbToKeyringConfig(name, dir, nil, true))
 	if err != nil {
 		return nil, err
 	}
 
-	return newKeyringKeybase(db), nil
+	return newKeyringKeybase(db, opts...), nil
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -370,7 +388,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 // deleting it (for security). It returns an error if the key doesn't exist or
 // passphrases don't match. The passphrase is ignored when deleting references to
 // offline and Ledger / HW wallet keys.
-func (kb keyringKeybase) Delete(name, passphrase string, skipPass bool) error {
+func (kb keyringKeybase) Delete(name, _ string, _ bool) error {
 	// verify we have the proper password before deleting
 	info, err := kb.Get(name)
 	if err != nil {
@@ -458,12 +476,30 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 		return keyring.Config{
 			AllowedBackends:  []keyring.BackendType{"file"},
 			ServiceName:      name,
-			FileDir:          dir,
+			FileDir:          filepath.Join(dir, testKeyringDirName),
 			FilePasswordFunc: fakePrompt,
 		}
 	}
 
-	realPrompt := func(prompt string) (string, error) {
+	return keyring.Config{
+		ServiceName:      name,
+		FileDir:          dir,
+		FilePasswordFunc: newRealPrompt(dir, buf),
+	}
+}
+
+func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config {
+	fileDir := filepath.Join(dir, keyringDirName)
+	return keyring.Config{
+		AllowedBackends:  []keyring.BackendType{"file"},
+		ServiceName:      name,
+		FileDir:          fileDir,
+		FilePasswordFunc: newRealPrompt(fileDir, buf),
+	}
+}
+
+func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
+	return func(prompt string) (string, error) {
 		keyhashStored := false
 		keyhashFilePath := filepath.Join(dir, "keyhash")
 
@@ -532,12 +568,6 @@ func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Conf
 			return pass, nil
 		}
 	}
-
-	return keyring.Config{
-		ServiceName:      name,
-		FileDir:          dir,
-		FilePasswordFunc: realPrompt,
-	}
 }
 
 func fakePrompt(prompt string) (string, error) {
@@ -545,9 +575,9 @@ func fakePrompt(prompt string) (string, error) {
 	return "test", nil
 }
 
-func newKeyringKeybase(db keyring.Keyring) Keybase {
+func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 	return keyringKeybase{
 		db:   db,
-		base: baseKeybase{},
+		base: newBaseKeybase(opts...),
 	}
 }

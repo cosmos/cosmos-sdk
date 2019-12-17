@@ -8,24 +8,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
-func exportKeyCommand() *cobra.Command {
-	cmd := &cobra.Command{
+// ExportKeyCommand exports private keys from the key store.
+func ExportKeyCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
 		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
 		Args:  cobra.ExactArgs(1),
 		RunE:  runExportCmd,
 	}
-	return cmd
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := NewKeyBaseFromHomeFlag()
+	buf := bufio.NewReader(cmd.InOrStdin())
+	kb, err := NewKeyringFromHomeFlag(buf)
 	if err != nil {
 		return err
 	}
 
-	buf := bufio.NewReader(cmd.InOrStdin())
 	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
 	if err != nil {
 		return err

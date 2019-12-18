@@ -113,7 +113,7 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		csRes, err := utils.QueryConsensusStateProof(cliCtx, clientID, prove)
+		csRes, err := utils.QueryConsensusState(cliCtx, clientID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

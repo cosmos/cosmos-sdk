@@ -1,3 +1,7 @@
+<!--
+order: 7
+-->
+
 # Events
 
 The staking module emits the following events:

@@ -1,3 +1,7 @@
+<!--
+order: 5
+-->
+
 # End-Block
 
 Each abci end block call, the operations to update queues and validator set

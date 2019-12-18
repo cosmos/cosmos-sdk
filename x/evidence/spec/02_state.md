@@ -1,3 +1,7 @@
+<!--
+order: 2
+-->
+
 # State
 
 Currently the `x/evidence` module only stores valid submitted `Evidence` in state.

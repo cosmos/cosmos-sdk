@@ -1,4 +1,11 @@
-# Slashing module specification
+<!--
+order: 20
+title: Slashing Overview
+parent:
+  title: "slashing"
+-->
+
+# `slashing`
 
 ## Abstract
 

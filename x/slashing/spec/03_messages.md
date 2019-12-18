@@ -1,3 +1,7 @@
+<!--
+order: 3
+-->
+
 # Messages
 
 In this section we describe the processing of messages for the `slashing` module.

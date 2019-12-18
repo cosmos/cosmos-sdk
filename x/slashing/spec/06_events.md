@@ -1,3 +1,7 @@
+<!--
+order: 6
+-->
+
 # Tags
 
 The slashing module emits the following events/tags:

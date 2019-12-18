@@ -20,17 +20,17 @@ const (
 // on the simulation
 func ParamChanges(r *rand.Rand) []simulation.ParamChange {
 	return []simulation.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keySignedBlocksWindow, "",
+		simulation.NewSimParamChange(types.ModuleName, keySignedBlocksWindow,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%d\"", GenSignedBlocksWindow(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyMinSignedPerWindow, "",
+		simulation.NewSimParamChange(types.ModuleName, keyMinSignedPerWindow,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenMinSignedPerWindow(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keySlashFractionDowntime, "",
+		simulation.NewSimParamChange(types.ModuleName, keySlashFractionDowntime,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenSlashFractionDowntime(r))
 			},

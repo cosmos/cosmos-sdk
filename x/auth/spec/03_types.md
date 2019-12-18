@@ -1,3 +1,7 @@
+<!--
+order: 4
+-->
+
 # Types
 
 Besides accounts (specified in [State](state.md)), the types exposed by the auth module

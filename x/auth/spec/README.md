@@ -1,4 +1,11 @@
-# Auth module specification
+<!--
+order: 0
+title: "Auth Overview"
+parent:
+  title: "auth"
+-->
+
+# `auth`
 
 ## Abstract
 

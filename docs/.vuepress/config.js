@@ -1,95 +1,179 @@
-const glob = require("glob");
-const markdownIt = require("markdown-it");
-const meta = require("markdown-it-meta");
-const fs = require("fs");
-const _ = require("lodash");
-
-const sidebar = (directory, array) => {
-  return array.map(i => {
-    const children = _.sortBy(
-      glob
-        .sync(`./${directory}/${i[1]}/*.md`)
-        .map(path => {
-          const md = new markdownIt();
-          const file = fs.readFileSync(path, "utf8");
-          md.use(meta);
-          md.render(file);
-          const order = md.meta.order;
-          return { path, order };
-        })
-        .filter(f => f.order !== false),
-      ["order", "path"]
-    )
-      .map(f => f.path)
-      .filter(f => !f.match("readme"));
-    return {
-      title: i[0],
-      children
-    };
-  });
-};
-
 module.exports = {
+  theme: "cosmos",
   title: "Cosmos SDK",
-  base: process.env.VUEPRESS_BASE || "/",
+  markdown: {
+    anchor: {
+      permalinkSymbol: ""
+    }
+  },
+  head: [
+    [
+      "link",
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href: "https://cloud.typography.com/6138116/7255612/css/fonts.css"
+      }
+    ],
+  ],
   locales: {
     "/": {
       lang: "en-US"
     },
-    "/ru/": {
-      lang: "ru"
+    kr: {
+      lang: "kr"
     },
+    kr: {
+      lang: "kr"
+    },
+    cn: {
+      lang: "cn"
+    },
+    ru: {
+      lang: "ru"
+    }
   },
+  base: process.env.VUEPRESS_BASE || "/",
   themeConfig: {
     repo: "cosmos/cosmos-sdk",
+    docsRepo: "cosmos/cosmos-sdk",
     docsDir: "docs",
     editLinks: true,
-    docsBranch: "master",
-    locales: {
-      "/": {
-        label: "English",
-        sidebar: sidebar("", [
-          ["Intro", "intro"],
-          ["Basics", "basics"],
-          ["SDK Core", "core"],
-          ["About Modules", "modules"],
-          ["Using the SDK", "sdk"],
-          ["Interfaces", "interfaces"]
-        ])
+    label: "sdk",
+    sidebar: [
+      {
+        title: "Using the SDK",
+        children: [
+          {
+            title: "Modules",
+            directory: true,
+            path: "/modules"
+          }
+        ]
       },
-      "/ru/": {
-        label: "Русский",
-        sidebar: sidebar("ru", [
-          ["Введение", "intro"],
-          ["Основы", "basics"],
-          ["SDK Core", "core"],
-          ["Модули", "modules"],
-          ["Используем SDK", "sdk"],
-          ["Интерфейсы", "interfaces"]
-        ])
+      {
+        title: "Resources",
+        children: [
+          {
+            title: "Tutorials",
+            path: "https://github.com/cosmos/sdk-application-tutorial"
+          },
+          {
+            title: "SDK API Reference",
+            path: "https://godoc.org/github.com/cosmos/cosmos-sdk"
+          },
+          {
+            title: "REST API Spec",
+            path: "https://cosmos.network/rpc/"
+          }
+        ]
+      }
+    ],
+    gutter: {
+      title: "Help & Support",
+      editLink: true,
+      chat: {
+        title: "Riot Chat",
+        text: "Chat with Cosmos developers on Riot Chat.",
+        url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org",
+        bg: "linear-gradient(225.11deg, #2E3148 0%, #161931 95.68%)"
       },
-      '/kr/': {
-        label: '한국어',
-        sidebar: sidebar('kr', [
-          ['소개', 'intro'],
-          ['기초', 'basics'],
-          ['SDK Core', 'core'],
-          ['모듈들', 'modules'],
-          ['프로그램 사용', 'sdk'],
-          ['인터페이스', 'interfaces'],
-        ]),
+      forum: {
+        title: "Cosmos SDK Forum",
+        text: "Join the SDK Developer Forum to learn more.",
+        url: "https://forum.cosmos.network/",
+        bg: "linear-gradient(225deg, #46509F -1.08%, #2F3564 95.88%)",
+        logo: "cosmos"
       },
-      '/cn/': {
-        label: '中文',
-        sidebar: sidebar('cn', [
-          ['介绍', 'intro'],
-          ['基本', 'basics'],
-          ['SDK Core', 'core'],
-          ['模块', 'modules'],
-          ['使用该程序', 'sdk'],
-          ['接口', 'interfaces'],
-        ]),
+      github: {
+        title: "Found an Issue?",
+        text: "Help us improve this page by suggesting edits on GitHub."
+      }
+    },
+    footer: {
+      logo: "/logo-bw.svg",
+      textLink: {
+        text: "cosmos.network",
+        url: "/"
       },
+      services: [
+        {
+          service: "medium",
+          url: "https://blog.cosmos.network/"
+        },
+        {
+          service: "twitter",
+          url: "https://twitter.com/cosmos"
+        },
+        {
+          service: "linkedin",
+          url: "https://www.linkedin.com/company/tendermint/"
+        },
+        {
+          service: "reddit",
+          url: "https://reddit.com/r/cosmosnetwork"
+        },
+        {
+          service: "telegram",
+          url: "https://t.me/cosmosproject"
+        },
+        {
+          service: "youtube",
+          url: "https://www.youtube.com/c/CosmosProject"
+        }
+      ],
+      smallprint:
+        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
+      links: [
+        {
+          title: "Documentation",
+          children: [
+            {
+              title: "Cosmos SDK",
+              url: "https://cosmos.network/docs"
+            },
+            {
+              title: "Cosmos Hub",
+              url: "https://hub.cosmos.network/"
+            },
+            {
+              title: "Tendermint Core",
+              url: "https://docs.tendermint.com/"
+            }
+          ]
+        },
+        {
+          title: "Community",
+          children: [
+            {
+              title: "Cosmos blog",
+              url: "https://blog.cosmos.network/"
+            },
+            {
+              title: "Forum",
+              url: "https://forum.cosmos.network/"
+            },
+            {
+              title: "Chat",
+              url: "https://riot.im/app/#/room/#cosmos-sdk:matrix.org"
+            }
+          ]
+        },
+        {
+          title: "Contributing",
+          children: [
+            {
+              title: "Contributing to the docs",
+              url:
+                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md"
+            },
+            {
+              title: "Source code on GitHub",
+              url: "https://github.com/cosmos/cosmos-sdk/"
+            }
+          ]
+        }
+      ]
     }
   },
   plugins: [
@@ -98,6 +182,12 @@ module.exports = {
       {
         ga: "UA-51029217-12"
       }
+    ],
+    [
+      "sitemap",
+      {
+        hostname: "https://docs.cosmos.network"
+      }
     ]
-  ],
+  ]
 };

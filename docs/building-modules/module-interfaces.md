@@ -1,9 +1,10 @@
 <!--
 order: 11
-synopsis: This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included.
 -->
 
 # Module Interfaces
+
+This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included. {synopsis}
 
 ## Pre-requisite Readings {hide}
 

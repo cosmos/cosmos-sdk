@@ -1,9 +1,10 @@
 <!--
 order: 7
-synopsis: "`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions."
 -->
 
 # Events
+
+`Event`s are objects that contain information about the execution of the application. They are mainly used by service providers like block explorers and wallet to track the execution of various messages and index transactions. {synopsis}
 
 ## Pre-Requisite Readings {hide}
 

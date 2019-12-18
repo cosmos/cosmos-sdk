@@ -1,9 +1,10 @@
 <!--
 order: 2
-synopsis: "`Transactions` are objects created by end-users to trigger state changes in the application."
 -->
 
 # Transactions
+
+`Transactions` are objects created by end-users to trigger state changes in the application. {synopsis}
 
 ## Pre-requisite Readings {hide}
 

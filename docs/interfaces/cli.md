@@ -1,9 +1,10 @@
 <!--
 order: 3
-synopsis: "This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli)."
 -->
 
 # Command-Line Interface 
+
+This document describes how to create a commmand-line interface (CLI) for an [**application**](../basics/app-anatomy.md). A separate document for implementing a CLI for an SDK [**module**](../building-modules/intro.md) can be found [here](#../building-modules/module-interfaces.md#cli). {synopsis}
 
 ## Pre-requisite Readings {hide}
 

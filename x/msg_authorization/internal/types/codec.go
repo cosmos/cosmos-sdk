@@ -12,6 +12,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgExecDelegated{}, "cosmos-sdk/ExecDelegated", nil)
 	cdc.RegisterConcrete(SendCapability{}, "cosmos-sdk/SendCapability", nil)
 	cdc.RegisterConcrete(CapabilityGrant{}, "cosmos-sdk/CapabilityGrant", nil)
+	cdc.RegisterConcrete(GenericCapability{}, "cosmos-sdk/GenericCapability", nil)
 
 	cdc.RegisterInterface((*Capability)(nil), nil)
 }

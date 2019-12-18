@@ -18,10 +18,3 @@ type CapabilityGrant struct {
 
 	Expiration time.Time
 }
-
-// GenericCapability grants the permission to execute any transaction of the provided
-// sdk.Msg type without restrictions
-type GenericCapability struct {
-	// MsgType is the type of Msg this capability grant allows
-	MsgType sdk.Msg
-}

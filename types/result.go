@@ -12,6 +12,15 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
+// GasInfo defines tx execution gas context.
+type GasInfo struct {
+	// GasWanted is the maximum units of work we allow this tx to perform.
+	GasWanted uint64
+
+	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
+	GasUsed uint64
+}
+
 // Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
 	// Data is any data returned from message or handler execution. It MUST be length

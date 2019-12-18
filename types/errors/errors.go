@@ -71,6 +71,10 @@ var (
 	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error
 	ErrJSONUnmarshal = Register(RootCodespace, 18, "failed to unmarshal JSON bytes")
 
+	// ErrInvalidRequest defines an ABCI typed error where the request contains
+	// invalid data.
+	ErrInvalidRequest = Register(RootCodespace, 19, "invalid request")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

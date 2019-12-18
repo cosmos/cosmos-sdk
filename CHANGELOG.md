@@ -147,6 +147,9 @@ that allows for arbitrary vesting periods.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
+* (x/staking) [\#5380](https://github.com/cosmos/cosmos-sdk/pull/5380) Introduced ability to store historical info entries in staking keeper, allows applications to introspect specified number of past headers and validator sets
+    * Introduces new parameter `HistoricalEntries` which allows applications to determine how many recent historical info entries they want to persist in store. Default value is 0.
+    * Introduces cli commands and rest routes to query historical information at a given height
 * (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
 

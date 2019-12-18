@@ -14,14 +14,15 @@ type CodeType = sdk.CodeType
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeInvalidValidator  CodeType = 101
-	CodeInvalidDelegation CodeType = 102
-	CodeInvalidInput      CodeType = 103
-	CodeValidatorJailed   CodeType = 104
-	CodeInvalidAddress    CodeType = sdk.CodeInvalidAddress
-	CodeUnauthorized      CodeType = sdk.CodeUnauthorized
-	CodeInternal          CodeType = sdk.CodeInternal
-	CodeUnknownRequest    CodeType = sdk.CodeUnknownRequest
+	CodeInvalidValidator      CodeType = 101
+	CodeInvalidDelegation     CodeType = 102
+	CodeInvalidInput          CodeType = 103
+	CodeValidatorJailed       CodeType = 104
+	CodeInvalidHistoricalInfo CodeType = 105
+	CodeInvalidAddress        CodeType = sdk.CodeInvalidAddress
+	CodeUnauthorized          CodeType = sdk.CodeUnauthorized
+	CodeInternal              CodeType = sdk.CodeInternal
+	CodeUnknownRequest        CodeType = sdk.CodeUnknownRequest
 )
 
 //validator
@@ -211,4 +212,12 @@ func ErrNeitherShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrMissingSignature(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "missing signature")
+}
+
+func ErrInvalidHistoricalInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidHistoricalInfo, "invalid historical info")
+}
+
+func ErrNoHistoricalInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidHistoricalInfo, "no historical info found")
 }

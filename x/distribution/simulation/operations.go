@@ -102,6 +102,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -147,6 +148,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -195,6 +197,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -244,6 +247,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk st
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

@@ -141,6 +141,7 @@ func SimulateSubmitProposal(
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -223,6 +224,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, k keeper.Keeper) simulation.Oper
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -280,6 +282,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, k keeper.Keeper,
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},

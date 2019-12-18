@@ -108,6 +108,7 @@ func sendMsgSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -251,6 +252,7 @@ func sendMsgMultiSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,

@@ -271,6 +271,8 @@ func WithType(err error, obj interface{}) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
 }
 
+// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error.
 func QueryResult(err error) abci.ResponseQuery {
 	space, code, log := ABCIInfo(err, false)
 	return abci.ResponseQuery{

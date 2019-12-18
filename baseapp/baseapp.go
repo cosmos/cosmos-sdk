@@ -647,7 +647,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		// skip actual execution for (Re)CheckTx mode
-		if mode != runTxModeCheck && mode != runTxModeReCheck {
+		if mode == runTxModeCheck || mode == runTxModeReCheck {
 			break
 		}
 

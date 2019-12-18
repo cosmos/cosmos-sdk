@@ -630,7 +630,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (sdk.GasInf
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
-	if err == nil && mode != runTxModeDeliver {
+	if err == nil && mode == runTxModeDeliver {
 		msCache.Write()
 	}
 

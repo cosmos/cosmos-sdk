@@ -513,17 +513,11 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // a result if execution succeeded and an error if execution failed. All state
 // transitions occur through a cached context depending on the mode provided.
 // Only during DeliverTx, does the state get persisted.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	var (
-		// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
-		// determined by the GasMeter. We need access to the context to get the gas
-		// meter so we initialize upfront.
-		gasWanted uint64
-
-		gInfo  sdk.GasInfo
-		result *sdk.Result
-		err    error
-	)
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, err error) {
+	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
+	// determined by the GasMeter. We need access to the context to get the gas
+	// meter so we initialize upfront.
+	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()

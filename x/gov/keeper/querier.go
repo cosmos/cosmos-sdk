@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -184,9 +185,16 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	votes := keeper.GetVotesPaginated(ctx, params.ProposalID, params.Page, params.Limit)
+	votes := keeper.GetVotes(ctx, params.ProposalID)
 	if votes == nil {
 		votes = types.Votes{}
+	} else {
+		start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
+		if start < 0 || end < 0 {
+			votes = types.Votes{}
+		} else {
+			votes = votes[start:end]
+		}
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)

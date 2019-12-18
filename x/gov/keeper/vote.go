@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -52,15 +51,6 @@ func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes types.V
 		return false
 	})
 	return
-}
-
-func (keeper Keeper) GetVotesPaginated(ctx sdk.Context, proposalID uint64, page, limit int) (votes types.Votes) {
-	votes = keeper.GetVotes(ctx, proposalID)
-	start, end := client.Paginate(len(votes), page, limit, 100)
-	if start < 0 || end < 0 {
-		return types.Votes{}
-	}
-	return votes[start:end]
 }
 
 // GetVote gets the vote from an address on a specific proposal

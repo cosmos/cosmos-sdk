@@ -26,7 +26,6 @@ const (
 // - 'custom/gov/proposal'
 // - 'custom/gov/deposits'
 // - 'custom/gov/tally'
-// - 'custom/gov/votes'
 type QueryProposalParams struct {
 	ProposalID uint64
 }
@@ -35,6 +34,22 @@ type QueryProposalParams struct {
 func NewQueryProposalParams(proposalID uint64) QueryProposalParams {
 	return QueryProposalParams{
 		ProposalID: proposalID,
+	}
+}
+
+// QueryProposalVotesParams used for queries to 'custom/gov/votes'.
+type QueryProposalVotesParams struct {
+	ProposalID uint64
+	Page       int
+	Limit      int
+}
+
+// NewQueryProposalVotesParams creates new instance of the QueryProposalVotesParams.
+func NewQueryProposalVotesParams(proposalID uint64, page, limit int) QueryProposalVotesParams {
+	return QueryProposalVotesParams{
+		ProposalID: proposalID,
+		Page:       page,
+		Limit:      limit,
 	}
 }
 

@@ -53,7 +53,7 @@ func QueryClientState(
 	}
 
 	var clientState types.State
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &clientState); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
@@ -64,7 +64,7 @@ func QueryClientState(
 
 // QueryConsensusStateProof queries the store to get the consensus state and a
 // merkle proof.
-func QueryConsensusStateProof(
+func QueryConsensusState(
 	cliCtx client.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
@@ -80,7 +80,7 @@ func QueryConsensusStateProof(
 	}
 
 	var cs tendermint.ConsensusState
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &cs); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
@@ -104,7 +104,7 @@ func QueryCommitmentRoot(
 	}
 
 	var root commitment.Root
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &root); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &root); err != nil {
 		return types.RootResponse{}, err
 	}
 
@@ -129,7 +129,7 @@ func QueryCommitter(
 	}
 
 	var committer tendermint.Committer
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &committer); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
 		return types.CommitterResponse{}, err
 	}
 

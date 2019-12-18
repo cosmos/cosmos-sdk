@@ -102,7 +102,7 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 
 			prove := viper.GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusStateProof(cliCtx, clientID, prove)
+			csRes, err := utils.QueryConsensusState(cliCtx, clientID, prove)
 			if err != nil {
 				return err
 			}

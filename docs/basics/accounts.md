@@ -1,7 +1,8 @@
 <!--
 order: 3
-synopsis: This document describes the in-built accounts system of the Cosmos SDK.
 -->
+
+This document describes the in-built accounts system of the Cosmos SDK. {synopsis}
 
 # Accounts 
 

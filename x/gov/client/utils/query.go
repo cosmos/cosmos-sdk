@@ -117,9 +117,10 @@ func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVo
 	}
 	start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		return nil, fmt.Errorf("invalid page (%d) or range is out of bounds (limit %d)", params.Page, params.Limit)
+		votes = []types.Vote{}
+	} else {
+		votes = votes[start:end]
 	}
-	votes = votes[start:end]
 	if cliCtx.Indent {
 		return cliCtx.Codec.MarshalJSONIndent(votes, "", "  ")
 	}

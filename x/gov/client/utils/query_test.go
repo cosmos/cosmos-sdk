@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +31,7 @@ func makeQuerier(txs []sdk.Tx) TxQuerier {
 	return func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error) {
 		start, end := client.Paginate(len(txs), page, limit, 100)
 		if start < 0 || end < 0 {
-			return nil, errors.New("unexpected error in test")
+			return nil, nil
 		}
 		rst := &sdk.SearchTxsResult{
 			TotalCount: len(txs),
@@ -55,7 +53,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 		page, limit int
 		txs         []sdk.Tx
 		votes       []types.Vote
-		err         error
 	}
 	acc1 := make(sdk.AccAddress, 20)
 	acc1[0] = 1
@@ -107,14 +104,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 			description: "InvalidPage",
 			page:        -1,
 			txs:         []sdk.Tx{txMock{acc1, 1}},
-			err:         fmt.Errorf("invalid page (%d) or range is out of bounds (limit %d)", -1, 0),
 		},
 		{
 			description: "OutOfBounds",
 			page:        2,
 			limit:       10,
 			txs:         []sdk.Tx{txMock{acc1, 1}},
-			err:         fmt.Errorf("invalid page (%d) or range is out of bounds (limit %d)", 2, 10),
 		},
 	} {
 		tc := tc
@@ -122,11 +117,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 			ctx := context.CLIContext{}.WithCodec(codec.New())
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
 			votesData, err := QueryVotesByTxQuery(ctx, params, makeQuerier(tc.txs))
-			if tc.err != nil {
-				require.NotNil(t, err)
-				require.EqualError(t, tc.err, err.Error())
-				return
-			}
 			require.NoError(t, err)
 			votes := []types.Vote{}
 			require.NoError(t, ctx.Codec.UnmarshalJSON(votesData, &votes))

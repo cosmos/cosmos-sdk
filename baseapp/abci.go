@@ -338,7 +338,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return handleQueryStore(app, path, req)
 
 	case "p2p":
-		return handleQueryP2P(app, path, req)
+		return handleQueryP2P(app, path)
 
 	case "custom":
 		return handleQueryCustom(app, path, req)

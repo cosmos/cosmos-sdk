@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -284,7 +285,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 
 			propStatus := proposal.Status
 			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-				res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
+				res, err = gcutils.QueryVotesByTxQuery(cliCtx, params, utils.QueryTxsByEvents)
 			} else {
 				res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
 			}

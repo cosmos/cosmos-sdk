@@ -73,9 +73,15 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 	return cliCtx.Codec.MarshalJSON(deposits)
 }
 
-type txQuerier func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error)
+// TxQuerier is a type that accepts query parameters (target events and pagination options) and returns sdk.SearchTxsResult.
+// Mainly used for easier mocking of utils.QueryTxsByEvents in tests.
+type TxQuerier func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error)
 
-func getPaginatedVotes(cliCtx context.CLIContext, params types.QueryProposalVotesParams, querier txQuerier) ([]types.Vote, error) {
+// QueryVotesByTxQuery will query for votes using provided TxQuerier implementation.
+// In general utils.QueryTxsByEvents should be used that will do a direct tx query to a tendermint node.
+// It will fetch and build votes directly from the returned txs and return a JSON
+// marshalled result or any error that occurred.
+func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVotesParams, querier TxQuerier) ([]byte, error) {
 	var (
 		events = []string{
 			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
@@ -113,21 +119,10 @@ func getPaginatedVotes(cliCtx context.CLIContext, params types.QueryProposalVote
 	if start < 0 || end < 0 {
 		return nil, fmt.Errorf("invalid page (%d) or range is out of bounds (limit %d)", params.Page, params.Limit)
 	}
-	return votes[start:end], nil
-}
-
-// QueryVotesByTxQuery will query for votes via a direct txs tags query. It
-// will fetch and build votes directly from the returned txs and return a JSON
-// marshalled result or any error that occurred.
-func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVotesParams) ([]byte, error) {
-	votes, err := getPaginatedVotes(cliCtx, params, utils.QueryTxsByEvents)
-	if err != nil {
-		return nil, err
-	}
+	votes = votes[start:end]
 	if cliCtx.Indent {
 		return cliCtx.Codec.MarshalJSONIndent(votes, "", "  ")
 	}
-
 	return cliCtx.Codec.MarshalJSON(votes)
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
@@ -23,14 +24,12 @@ func (tx txMock) ValidateBasic() sdk.Error {
 
 func (tx txMock) GetMsgs() (msgs []sdk.Msg) {
 	for i := 0; i < tx.msgNum; i++ {
-		msgs = append(msgs, types.MsgVote{
-			Voter: tx.address,
-		})
+		msgs = append(msgs, types.NewMsgVote(tx.address, 0, types.OptionYes))
 	}
 	return
 }
 
-func makeQuerier(txs []sdk.Tx) txQuerier {
+func makeQuerier(txs []sdk.Tx) TxQuerier {
 	return func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error) {
 		start, end := client.Paginate(len(txs), page, limit, 100)
 		if start < 0 || end < 0 {
@@ -58,43 +57,51 @@ func TestGetPaginatedVotes(t *testing.T) {
 		votes       []types.Vote
 		err         error
 	}
-	acc1 := sdk.AccAddress{1}
-	acc2 := sdk.AccAddress{2}
+	acc1 := make(sdk.AccAddress, 20)
+	acc1[0] = 1
+	acc2 := make(sdk.AccAddress, 20)
+	acc2[0] = 2
 	for _, tc := range []testCase{
 		{
 			description: "1MsgPerTxAll",
 			page:        1,
 			limit:       2,
 			txs:         []sdk.Tx{txMock{acc1, 1}, txMock{acc2, 1}},
-			votes:       []types.Vote{{Voter: acc1}, {Voter: acc2}},
+			votes: []types.Vote{
+				types.NewVote(0, acc1, types.OptionYes),
+				types.NewVote(0, acc2, types.OptionYes)},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
 			page:        1,
 			limit:       2,
 			txs:         []sdk.Tx{txMock{acc1, 2}, txMock{acc2, 2}},
-			votes:       []types.Vote{{Voter: acc1}, {Voter: acc1}},
+			votes: []types.Vote{
+				types.NewVote(0, acc1, types.OptionYes),
+				types.NewVote(0, acc1, types.OptionYes)},
 		},
 		{
 			description: "2MsgPerTx2Chunk",
 			page:        2,
 			limit:       2,
 			txs:         []sdk.Tx{txMock{acc1, 2}, txMock{acc2, 2}},
-			votes:       []types.Vote{{Voter: acc2}, {Voter: acc2}},
+			votes: []types.Vote{
+				types.NewVote(0, acc2, types.OptionYes),
+				types.NewVote(0, acc2, types.OptionYes)},
 		},
 		{
 			description: "IncompleteSearchTx",
 			page:        1,
 			limit:       2,
 			txs:         []sdk.Tx{txMock{acc1, 1}},
-			votes:       []types.Vote{{Voter: acc1}},
+			votes:       []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
 		},
 		{
 			description: "IncompleteSearchTx",
 			page:        1,
 			limit:       2,
 			txs:         []sdk.Tx{txMock{acc1, 1}},
-			votes:       []types.Vote{{Voter: acc1}},
+			votes:       []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
 		},
 		{
 			description: "InvalidPage",
@@ -112,14 +119,17 @@ func TestGetPaginatedVotes(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
+			ctx := context.CLIContext{}.WithCodec(codec.New())
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
-			votes, err := getPaginatedVotes(context.CLIContext{}, params, makeQuerier(tc.txs))
+			votesData, err := QueryVotesByTxQuery(ctx, params, makeQuerier(tc.txs))
 			if tc.err != nil {
 				require.NotNil(t, err)
 				require.EqualError(t, tc.err, err.Error())
-			} else {
-				require.NoError(t, err)
+				return
 			}
+			require.NoError(t, err)
+			votes := []types.Vote{}
+			require.NoError(t, ctx.Codec.UnmarshalJSON(votesData, &votes))
 			require.Equal(t, len(tc.votes), len(votes))
 			for i := range votes {
 				require.Equal(t, tc.votes[i], votes[i])

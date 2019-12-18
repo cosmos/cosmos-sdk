@@ -27,7 +27,7 @@ func Setup(isCheckTx bool) *SimApp {
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
-		stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+		stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 		if err != nil {
 			panic(err)
 		}
@@ -54,10 +54,10 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	genesisState := NewDefaultGenesisState()
 
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
-	genesisStateBz := app.cdc.MustMarshalJSON(authGenesis)
+	genesisStateBz := app.Codec().MustMarshalJSON(authGenesis)
 	genesisState[auth.ModuleName] = genesisStateBz
 
-	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
 		panic(err)
 	}

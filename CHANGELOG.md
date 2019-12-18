@@ -147,6 +147,9 @@ that allows for arbitrary vesting periods.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
+* (x/staking) [\#5380](https://github.com/cosmos/cosmos-sdk/pull/5380) Introduced ability to store historical info entries in staking keeper, allows applications to introspect specified number of past headers and validator sets
+    * Introduces new parameter `HistoricalEntries` which allows applications to determine how many recent historical info entries they want to persist in store. Default value is 0.
+    * Introduces cli commands and rest routes to query historical information at a given height
 * (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
 
@@ -182,7 +185,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (sdk) [\#4640](https://github.com/cosmos/cosmos-sdk/issues/4640) improve import/export simulation errors by extending `DiffKVStores` to return an array of `KVPairs` that are then compared to check for inconsistencies.
 * (sdk) [\#4717](https://github.com/cosmos/cosmos-sdk/issues/4717) refactor `x/slashing` to match the new module spec
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
-* (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
+* (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) `PrintAllInvariants` flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
 * (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
@@ -194,9 +197,12 @@ generalized genesis accounts through the `GenesisAccount` interface.
   * Add `WeightedOperations` to the `SimulationManager` that define simulation operations (modules' `Msg`s) with their
   respective weights (i.e chance of being simulated).
   * Add `ProposalContents` to the `SimulationManager` to register each module's governance proposal `Content`s.
-* (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
+* (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change `SimApp` keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (simulation) [\#4935](https://github.com/cosmos/cosmos-sdk/issues/4935) Update simulation to reflect a proper `ABCI` application without bypassing `BaseApp` semantics
+* (simulation) [\#5378](https://github.com/cosmos/cosmos-sdk/pull/5378) Simulation tests refactor:
+  * Add `App` interface for general SDK-based app's methods.
+  * Refactor and cleanup simulation tests into util functions to simplify their implementation for other SDK apps.
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
 * (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
 * (store) [\#1947](https://github.com/cosmos/cosmos-sdk/issues/1947) Implement inter-block (persistent)

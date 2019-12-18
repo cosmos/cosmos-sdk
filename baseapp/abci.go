@@ -415,7 +415,7 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	return resp
 }
 
-func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) abci.ResponseQuery {
+func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
 		cmd, typ, arg := path[1], path[2], path[3]

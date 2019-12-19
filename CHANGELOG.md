@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [\#5360](https://github.com/cosmos/cosmos-sdk/pull/5360) Implement `SortableDecBytes` which
   allows the `Dec` type be sortable.
 
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.8](https://github.com/tendermint/tendermint/releases/tag/v0.32.8)
+
 ### Bug Fixes
 
 * (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully

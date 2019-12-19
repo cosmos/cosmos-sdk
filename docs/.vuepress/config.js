@@ -23,9 +23,6 @@ module.exports = {
     kr: {
       lang: "kr"
     },
-    kr: {
-      lang: "kr"
-    },
     cn: {
       lang: "cn"
     },
@@ -56,7 +53,7 @@ module.exports = {
         children: [
           {
             title: "Tutorials",
-            path: "https://github.com/cosmos/sdk-application-tutorial"
+            path: "https://tutorials.cosmos.network"
           },
           {
             title: "SDK API Reference",

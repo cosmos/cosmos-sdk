@@ -27,9 +27,10 @@ type TestSuite struct {
 	FlagUnsafeSkipUpgrades string
 }
 
+var s TestSuite
+
 // this should be called by all functions that do not belong to the suite
 func setupTest(height int64, skip []int64) TestSuite {
-	var s TestSuite
 
 	// create the app with the proper skip flags set
 	checkTx := false
@@ -84,7 +85,7 @@ func TestDoTimeUpgrade(t *testing.T) {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.Nil(t, err)
 
-	s.VerifyDoUpgrade(t)
+	VerifyDoUpgrade(t)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
@@ -93,7 +94,7 @@ func TestDoHeightUpgrade(t *testing.T) {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
 
-	s.VerifyDoUpgrade(t)
+	VerifyDoUpgrade(t)
 }
 
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
@@ -104,10 +105,10 @@ func TestCanOverwriteScheduleUpgrade(t *testing.T) {
 	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
 
-	s.VerifyDoUpgrade(t)
+	VerifyDoUpgrade(t)
 }
 
-func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
+func VerifyDoUpgrade(t *testing.T) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
@@ -122,10 +123,10 @@ func (s *TestSuite) VerifyDoUpgrade(t *testing.T) {
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	s.VerifyCleared(t, newCtx)
+	VerifyCleared(t, newCtx)
 }
 
-func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
+func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName string) {
 	t.Log("Verify that a panic happens at the upgrade time/height")
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	require.Panics(t, func() {
@@ -138,7 +139,7 @@ func (s *TestSuite) VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, pro
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	s.VerifyCleared(t, newCtx)
+	VerifyCleared(t, newCtx)
 }
 
 func TestHaltIfTooNew(t *testing.T) {
@@ -171,10 +172,10 @@ func TestHaltIfTooNew(t *testing.T) {
 	})
 	require.Equal(t, 1, called)
 
-	s.VerifyCleared(t, futCtx)
+	VerifyCleared(t, futCtx)
 }
 
-func (s *TestSuite) VerifyCleared(t *testing.T, newCtx sdk.Context) {
+func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 	t.Log("Verify that the upgrade plan has been cleared")
 	bz, err := s.querier(newCtx, []string{upgrade.QueryCurrent}, abci.RequestQuery{})
 	require.NoError(t, err)
@@ -190,7 +191,7 @@ func TestCanClear(t *testing.T) {
 	err = s.handler(s.ctx, upgrade.CancelSoftwareUpgradeProposal{Title: "cancel"})
 	require.Nil(t, err)
 
-	s.VerifyCleared(t, s.ctx)
+	VerifyCleared(t, s.ctx)
 }
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
@@ -224,24 +225,24 @@ func TestPlanStringer(t *testing.T) {
   Info: `, upgrade.Plan{Name: "test", Height: 100}.String())
 }
 
-func (s *TestSuite) VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
+func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
 	t.Log("Verify that upgrade was not done")
 	height := s.keeper.GetDoneHeight(newCtx, name)
 	require.Zero(t, height)
 }
 
-func (s *TestSuite) VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
+func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
 	t.Log("Verify that the upgrade plan has been executed")
 	height := s.keeper.GetDoneHeight(newCtx, name)
 	require.NotZero(t, height)
 }
 
-func (s *TestSuite) VerifySet(t *testing.T, skipUpgradeHeights []int64) {
+func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
 	t.Log("Verify if the skip upgrade has been set")
 	require.Equal(t, s.keeper.GetSkipUpgradeHeights(), skipUpgradeHeights)
 }
 
-func (s *TestSuite) VerifyConversion(t *testing.T, skipUpgrade []int) {
+func VerifyConversion(t *testing.T, skipUpgrade []int) {
 	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(skipUpgrade)
 	require.Equal(t, reflect.TypeOf(skipUpgradeHeights).Elem().Kind(), reflect.Int64)
 }
@@ -253,7 +254,7 @@ func TestContains(t *testing.T) {
 	s := setupTest(10, []int64{skipOne})
 
 	//s.SetT(t)
-	s.VerifySet(t, []int64{skipOne})
+	VerifySet(t, []int64{skipOne})
 	t.Log("case where array contains the element")
 	present := upgrade.Contains(s.keeper.GetSkipUpgradeHeights(), 11)
 	require.True(t, present)
@@ -277,7 +278,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	s.VerifySet(t, []int64{skipOne, skipTwo})
+	VerifySet(t, []int64{skipOne, skipTwo})
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
@@ -295,9 +296,9 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 
 	//To ensure verification is being done only after both upgrades are cleared
 	t.Log("Verify if both proposals are cleared")
-	s.VerifyCleared(t, s.ctx)
-	s.VerifyNotDone(t, s.ctx, "test")
-	s.VerifyNotDone(t, s.ctx, "test2")
+	VerifyCleared(t, s.ctx)
+	VerifyNotDone(t, s.ctx, "test")
+	VerifyNotDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOne(t *testing.T) {
@@ -314,7 +315,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	s.VerifySet(t, []int64{skipOne})
+	VerifySet(t, []int64{skipOne})
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
@@ -327,11 +328,11 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	require.Nil(t, err)
 	//Setting block height of proposal test2
 	newCtx = newCtx.WithBlockHeight(skipTwo)
-	s.VerifyDoUpgradeWithCtx(t, newCtx, "test2")
+	VerifyDoUpgradeWithCtx(t, newCtx, "test2")
 
 	t.Log("Verify first proposal is cleared and second is done")
-	s.VerifyNotDone(t, s.ctx, "test")
-	s.VerifyDone(t, s.ctx, "test2")
+	VerifyNotDone(t, s.ctx, "test")
+	VerifyDone(t, s.ctx, "test2")
 }
 
 func TestUpgradeSkippingOnlyTwo(t *testing.T) {
@@ -349,9 +350,9 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	s.VerifySet(t, []int64{skipOne, skipTwo})
+	VerifySet(t, []int64{skipOne, skipTwo})
 
-	s.VerifyConversion(t, viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
+	VerifyConversion(t, viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
@@ -372,12 +373,12 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop3", Plan: upgrade.Plan{Name: "test3", Height: skipThree}})
 	require.Nil(t, err)
 	newCtx = newCtx.WithBlockHeight(skipThree)
-	s.VerifyDoUpgradeWithCtx(t, newCtx, "test3")
+	VerifyDoUpgradeWithCtx(t, newCtx, "test3")
 
 	t.Log("Verify two proposals are cleared and third is done")
-	s.VerifyNotDone(t, s.ctx, "test")
-	s.VerifyNotDone(t, s.ctx, "test2")
-	s.VerifyDone(t, s.ctx, "test3")
+	VerifyNotDone(t, s.ctx, "test")
+	VerifyNotDone(t, s.ctx, "test2")
+	VerifyDone(t, s.ctx, "test3")
 }
 
 func TestUpgradeWithoutSkip(t *testing.T) {
@@ -391,8 +392,8 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 		s.module.BeginBlock(newCtx, req)
 	})
 
-	s.VerifyDoUpgrade(t)
-	s.VerifyDone(t, s.ctx, "test")
+	VerifyDoUpgrade(t)
+	VerifyDone(t, s.ctx, "test")
 }
 
 func TestTestSuite(t *testing.T) {

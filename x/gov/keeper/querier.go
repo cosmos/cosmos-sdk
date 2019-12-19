@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -177,7 +178,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 // nolint: unparam
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-	var params types.QueryProposalParams
+	var params types.QueryProposalVotesParams
 	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
 
 	if err != nil {
@@ -187,6 +188,13 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	votes := keeper.GetVotes(ctx, params.ProposalID)
 	if votes == nil {
 		votes = types.Votes{}
+	} else {
+		start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
+		if start < 0 || end < 0 {
+			votes = types.Votes{}
+		} else {
+			votes = votes[start:end]
+		}
 	}
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)

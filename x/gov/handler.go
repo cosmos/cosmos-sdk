@@ -8,6 +8,20 @@ import (
 )
 
 // NewHandler creates an sdk.Handler for all the gov type messages
+func NewHandlerCapnProto(keeper Keeper) sdk.Handler {
+	return func(ctx sdk.Context, tx types.Tx) sdk.Result {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		if tx.HasMsgDeposit() {
+			msg, err := tx.MsgDeposit()
+			if err != nil {
+				return sdk.ResultFromError(err)
+			}
+			handleMsgDeposit(ctx, keeper, msg)
+		}
+	}
+}
+
+// NewHandler creates an sdk.Handler for all the gov type messages
 func NewHandler(keeper Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

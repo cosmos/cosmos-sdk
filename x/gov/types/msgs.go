@@ -15,18 +15,18 @@ const (
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
-// MsgSubmitProposal defines a message to create a governance proposal with a
-// given content and initial deposit
-type MsgSubmitProposal struct {
-	Content        Content        `json:"content" yaml:"content"`
-	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
-	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
-}
-
-// NewMsgSubmitProposal creates a new MsgSubmitProposal instance
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
-	return MsgSubmitProposal{content, initialDeposit, proposer}
-}
+//// MsgSubmitProposal defines a message to create a governance proposal with a
+//// given content and initial deposit
+//type MsgSubmitProposal struct {
+//	Content        Content        `json:"content" yaml:"content"`
+//	InitialDeposit sdk.Coins      `json:"initial_deposit" yaml:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive
+//	Proposer       sdk.AccAddress `json:"proposer" yaml:"proposer"`               //  Address of the proposer
+//}
+//
+//// NewMsgSubmitProposal creates a new MsgSubmitProposal instance
+//func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) MsgSubmitProposal {
+//	return MsgSubmitProposal{content, initialDeposit, proposer}
+//}
 
 // Route implements Msg
 func (msg MsgSubmitProposal) Route() string { return RouterKey }
@@ -39,6 +39,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if msg.Content == nil {
 		return ErrInvalidProposalContent(DefaultCodespace, "missing content")
 	}
+	proposer, err := msg.
 	if msg.Proposer.Empty() {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
 	}
@@ -74,17 +75,17 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Proposer}
 }
 
-// MsgDeposit defines a message to submit a deposit to an existing proposal
-type MsgDeposit struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
-	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     // Address of the depositor
-	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
-}
-
-// NewMsgDeposit creates a new MsgDeposit instance
-func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
-	return MsgDeposit{proposalID, depositor, amount}
-}
+//// MsgDeposit defines a message to submit a deposit to an existing proposal
+//type MsgDeposit struct {
+//	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
+//	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     // Address of the depositor
+//	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
+//}
+//
+//// NewMsgDeposit creates a new MsgDeposit instance
+//func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
+//	return MsgDeposit{proposalID, depositor, amount}
+//}
 
 // Route implements Msg
 func (msg MsgDeposit) Route() string { return RouterKey }
@@ -127,17 +128,17 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Depositor}
 }
 
-// MsgVote defines a message to cast a vote
-type MsgVote struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
-	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
-	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
-}
-
-// NewMsgVote creates a message to cast a vote on an active proposal
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgVote {
-	return MsgVote{proposalID, voter, option}
-}
+//// MsgVote defines a message to cast a vote
+//type MsgVote struct {
+//	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
+//	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
+//	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
+//}
+//
+//// NewMsgVote creates a message to cast a vote on an active proposal
+//func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgVote {
+//	return MsgVote{proposalID, voter, option}
+//}
 
 // Route implements Msg
 func (msg MsgVote) Route() string { return RouterKey }

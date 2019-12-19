@@ -3,11 +3,7 @@ package cli
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,9 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	authutils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // Connection Handshake flags
@@ -50,7 +46,7 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
@@ -58,13 +54,8 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			bz, err := ioutil.ReadFile(args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(cliCtx.Codec, args[4])
 			if err != nil {
-				return err
-			}
-
-			var counterpartyPrefix commitment.Prefix
-			if err := cdc.UnmarshalJSON(bz, &counterpartyPrefix); err != nil {
 				return err
 			}
 
@@ -77,7 +68,7 @@ $ %s tx ibc connection open-init [connection-id] [client-id] \
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd
@@ -103,7 +94,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 		Args: cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
@@ -113,26 +104,16 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 			counterpartyConnectionID := args[2]
 			counterpartyClientID := args[3]
 
-			prefixBz, err := ioutil.ReadFile(args[4])
+			counterpartyPrefix, err := utils.ParsePrefix(cliCtx.Codec, args[4])
 			if err != nil {
-				return err
-			}
-
-			var counterpartyPrefix commitment.Prefix
-			if err := cdc.UnmarshalJSON(prefixBz, &counterpartyPrefix); err != nil {
 				return err
 			}
 
 			// TODO: parse strings?
 			counterpartyVersions := args[5]
 
-			proofBz, err := ioutil.ReadFile(args[6])
+			proofInit, err := utils.ParseProof(cliCtx.Codec, args[1])
 			if err != nil {
-				return err
-			}
-
-			var proofInit commitment.Proof
-			if err := cdc.UnmarshalJSON(proofBz, &proofInit); err != nil {
 				return err
 			}
 
@@ -152,7 +133,7 @@ $ %s tx ibc connection open-try connection-id] [client-id] \
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd
@@ -174,17 +155,13 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
 
 			connectionID := args[0]
-			proofBz, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
 
-			var proofTry commitment.Proof
-			if err := cdc.UnmarshalJSON(proofBz, &proofTry); err != nil {
+			proofTry, err := utils.ParseProof(cliCtx.Codec, args[1])
+			if err != nil {
 				return err
 			}
 
@@ -205,7 +182,7 @@ $ %s tx ibc connection open-ack [connection-id] [path/to/proof_try.json] [versio
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd
@@ -227,20 +204,15 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authutils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContextWithInput(inBuf).
 				WithCodec(cdc).
 				WithHeight(viper.GetInt64(flags.FlagHeight))
 
 			connectionID := args[0]
 
-			proofBz, err := ioutil.ReadFile(args[1])
+			proofAck, err := utils.ParseProof(cliCtx.Codec, args[1])
 			if err != nil {
-				return err
-			}
-
-			var proofAck commitment.Proof
-			if err := cdc.UnmarshalJSON(proofBz, &proofAck); err != nil {
 				return err
 			}
 
@@ -254,7 +226,7 @@ $ %s tx ibc connection open-confirm [connection-id] [path/to/proof_ack.json]
 				return err
 			}
 
-			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+			return authutils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd
@@ -273,19 +245,4 @@ func lastHeight(cliCtx context.CLIContext) (uint64, error) {
 	}
 
 	return uint64(info.Response.LastBlockHeight), nil
-}
-
-func parsePath(cdc *codec.Codec, arg string) (commitment.Prefix, error) {
-	var path commitment.Prefix
-	if err := cdc.UnmarshalJSON([]byte(arg), &path); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
-		contents, err := ioutil.ReadFile(arg)
-		if err != nil {
-			return path, errors.Wrap(err, "error opening path file")
-		}
-		if err := cdc.UnmarshalJSON(contents, &path); err != nil {
-			return path, errors.Wrap(err, "error unmarshalling path file")
-		}
-	}
-	return path, nil
 }

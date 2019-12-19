@@ -2,11 +2,16 @@ package utils
 
 import (
 	"fmt"
+	"io/ioutil"
+
+	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
+	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // QueryAllConnections returns all the connections. It _does not_ return
@@ -81,4 +86,38 @@ func QueryClientConnections(
 
 	connPathsRes := types.NewClientConnectionsResponse(clientID, paths, res.Proof, res.Height)
 	return connPathsRes, nil
+}
+
+// ParsePrefix unmarshals an cmd input argument from a JSON string to a commitment
+// Prefix. If the input is not a JSON, it looks for a path to the JSON file.
+func ParsePrefix(cdc *codec.Codec, arg string) (commitment.Prefix, error) {
+	var prefix commitment.Prefix
+	if err := cdc.UnmarshalJSON([]byte(arg), &prefix); err != nil {
+		// check for file path if JSON input is not provided
+		contents, err := ioutil.ReadFile(arg)
+		if err != nil {
+			return commitment.Prefix{}, errors.New("neither JSON input nor path to .json file were provided")
+		}
+		if err := cdc.UnmarshalJSON(contents, &prefix); err != nil {
+			return commitment.Prefix{}, errors.Wrap(err, "error unmarshalling commitment prefix")
+		}
+	}
+	return prefix, nil
+}
+
+// ParseProof unmarshals an cmd input argument from a JSON string to a commitment
+// Proof. If the input is not a JSON, it looks for a path to the JSON file.
+func ParseProof(cdc *codec.Codec, arg string) (commitment.Proof, error) {
+	var proof commitment.Proof
+	if err := cdc.UnmarshalJSON([]byte(arg), &proof); err != nil {
+		// check for file path if JSON input is not provided
+		contents, err := ioutil.ReadFile(arg)
+		if err != nil {
+			return commitment.Proof{}, errors.New("neither JSON input nor path to .json file were provided")
+		}
+		if err := cdc.UnmarshalJSON(contents, &proof); err != nil {
+			return commitment.Proof{}, errors.Wrap(err, "error unmarshalling commitment proof")
+		}
+	}
+	return proof, nil
 }

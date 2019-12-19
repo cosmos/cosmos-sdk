@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -43,14 +45,13 @@ $ %s tx ibc client create [client-id] [path/to/consensus_state.json] --from node
 
 			var state exported.ConsensusState
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &state); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
-
+				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
-					return fmt.Errorf("error opening proof file: %v", err)
+					return errors.New("neither JSON input nor path to .json file were provided")
 				}
 				if err := cdc.UnmarshalJSON(contents, &state); err != nil {
-					return fmt.Errorf("error unmarshalling consensus state file: %v", err)
+					return errors.Wrap(err, "error unmarshalling consensus state file")
 				}
 			}
 
@@ -91,14 +92,13 @@ $ %s tx ibc client update [client-id] [path/to/header.json] --from node0 --home 
 
 			var header exported.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &header); err != nil {
-				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
-
+				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
-					return fmt.Errorf("error opening proof file: %v", err)
+					return errors.New("neither JSON input nor path to .json file were provided")
 				}
 				if err := cdc.UnmarshalJSON(contents, &header); err != nil {
-					return fmt.Errorf("error unmarshalling header file: %v", err)
+					return errors.Wrap(err, "error unmarshalling header file")
 				}
 			}
 
@@ -137,13 +137,13 @@ $ %s tx ibc client misbehaviour [client-id] [path/to/evidence.json] --from node0
 			var evidence evidenceexported.Evidence
 			if err := cdc.UnmarshalJSON([]byte(args[1]), &evidence); err != nil {
 				fmt.Fprintf(os.Stderr, "failed to unmarshall input into struct, checking for file...")
-
+				// check for file path if JSON input is not provided
 				contents, err := ioutil.ReadFile(args[1])
 				if err != nil {
-					return fmt.Errorf("error opening proof file: %v", err)
+					return errors.New("neither JSON input nor path to .json file were provided")
 				}
 				if err := cdc.UnmarshalJSON(contents, &evidence); err != nil {
-					return fmt.Errorf("error unmarshalling evidence file: %v", err)
+					return errors.Wrap(err, "error unmarshalling evidence file")
 				}
 			}
 

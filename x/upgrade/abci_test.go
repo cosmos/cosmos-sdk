@@ -247,8 +247,8 @@ func VerifyDone(t *testing.T,newCtx sdk.Context, name string) {
 	require.NotZero(t,height)
 }
 
-func VerifySet(t *testing.T,skipUpgradeHeights []int64) {
-	s := setupTest(10, []int64{})
+func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
+	s := setupTest(10, skipUpgradeHeights)
 	t.Log("Verify if the skip upgrade has been set")
 	require.Equal(t,s.keeper.GetSkipUpgradeHeights(), skipUpgradeHeights)
 }

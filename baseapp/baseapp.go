@@ -610,7 +610,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		gasWanted = ctx.GasMeter().Limit()
 
 		if err != nil {
-			gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 			return gInfo, nil, err
 		}
 
@@ -629,7 +628,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		msCache.Write()
 	}
 
-	gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: runMsgCtx.GasMeter().GasConsumed()}
 	return gInfo, result, err
 }
 

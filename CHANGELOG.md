@@ -35,6 +35,25 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.37.5] - TBD
+
+### Features
+
+* (types) [\#5360](https://github.com/cosmos/cosmos-sdk/pull/5360) Implement `SortableDecBytes` which
+  allows the `Dec` type be sortable.
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.8](https://github.com/tendermint/tendermint/releases/tag/v0.32.8)
+
+### Bug Fixes
+
+* (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully
+  after a `halt-height` or `halt-time` has been triggered.
+* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`.
+* (types) [\#5408](https://github.com/cosmos/cosmos-sdk/issues/5408) `NewDecCoins` constructor now sorts the coins.
+
 ## [v0.37.4] - 2019-11-04
 
 ### Improvements
@@ -2578,7 +2597,8 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.4...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.5...HEAD
+[v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5
 [v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4
 [v0.37.3]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.3
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1

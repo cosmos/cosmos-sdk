@@ -422,3 +422,28 @@ func TestDecCeil(t *testing.T) {
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
+
+func TestDecSortableBytes(t *testing.T) {
+	tests := []struct {
+		d    Dec
+		want []byte
+	}{
+		{NewDec(0), []byte("000000000000000000.000000000000000000")},
+		{NewDec(1), []byte("000000000000000001.000000000000000000")},
+		{NewDec(10), []byte("000000000000000010.000000000000000000")},
+		{NewDec(12340), []byte("000000000000012340.000000000000000000")},
+		{NewDecWithPrec(12340, 4), []byte("000000000000000001.234000000000000000")},
+		{NewDecWithPrec(12340, 5), []byte("000000000000000000.123400000000000000")},
+		{NewDecWithPrec(12340, 8), []byte("000000000000000000.000123400000000000")},
+		{NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000010.090090090090090090")},
+		{NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000010.090090090090090090")},
+		{NewDec(1000000000000000000), []byte("max")},
+		{NewDec(-1000000000000000000), []byte("--")},
+	}
+	for tcIndex, tc := range tests {
+		assert.Equal(t, tc.want, SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
+	}
+
+	assert.Panics(t, func() { SortableDecBytes(NewDec(1000000000000000001)) })
+	assert.Panics(t, func() { SortableDecBytes(NewDec(-1000000000000000001)) })
+}

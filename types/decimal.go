@@ -527,6 +527,42 @@ func (d Dec) Ceil() Dec {
 
 //___________________________________________________________________________________
 
+// MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
+// Its negative form is the least Dec that can be passed in.
+var MaxSortableDec = OneDec().Quo(SmallestDec())
+
+// ValidSortableDec ensures that a Dec is within the sortable bounds,
+// a Dec can't have a precision of less than 10^-18.
+// Max sortable decimal was set to the reciprocal of SmallestDec.
+func ValidSortableDec(dec Dec) bool {
+	return dec.Abs().LTE(MaxSortableDec)
+}
+
+// SortableDecBytes returns a byte slice representation of a Dec that can be sorted.
+// Left and right pads with 0s so there are 18 digits to left and right of the decimal point.
+// For this reason, there is a maximum and minimum value for this, enforced by ValidSortableDec.
+func SortableDecBytes(dec Dec) []byte {
+	if !ValidSortableDec(dec) {
+		panic("dec must be within bounds")
+	}
+	// Instead of adding an extra byte to all sortable decs in order to handle max sortable, we just
+	// makes its bytes be "max" which comes after all numbers in ASCIIbetical order
+	if dec.Equal(MaxSortableDec) {
+		return []byte("max")
+	}
+	// For the same reason, we make the bytes of minimum sortable dec be --, which comes before all numbers.
+	if dec.Equal(MaxSortableDec.Neg()) {
+		return []byte("--")
+	}
+	// We move the negative sign to the front of all the left padded 0s, to make negative numbers come before positive numbers
+	if dec.IsNegative() {
+		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.Abs().String()))...)
+	}
+	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.String()))
+}
+
+//___________________________________________________________________________________
+
 // reuse nil values
 var (
 	nilAmino string

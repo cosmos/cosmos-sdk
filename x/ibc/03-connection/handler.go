@@ -17,6 +17,7 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenInit,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
 		),
 		sdk.NewEvent(
@@ -42,6 +43,7 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 		sdk.NewEvent(
 			types.EventTypeConnectionOpenTry,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
+			sdk.NewAttribute(types.AttributeKeyClientID, msg.ClientID),
 			sdk.NewAttribute(types.AttributeKeyCounterpartyClientID, msg.Counterparty.ClientID),
 		),
 		sdk.NewEvent(

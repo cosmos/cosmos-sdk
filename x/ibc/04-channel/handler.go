@@ -19,8 +19,11 @@ func HandleMsgChannelOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCha
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenInit,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -44,9 +47,11 @@ func HandleMsgChannelOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenTry,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID), // TODO: double check sender and receiver
-			sdk.NewAttribute(types.AttributeKeyReceiverPort, msg.Channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyPortID, msg.Channel.Counterparty.PortID),
+			sdk.NewAttribute(types.AttributeCounterpartyChannelID, msg.Channel.Counterparty.ChannelID),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.Channel.ConnectionHops[0]), // TODO: iterate
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -70,7 +75,7 @@ func HandleMsgChannelOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgChan
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenAck,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 		),
 		sdk.NewEvent(
@@ -93,7 +98,7 @@ func HandleMsgChannelOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelOpenConfirm,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 		),
 		sdk.NewEvent(
@@ -116,7 +121,7 @@ func HandleMsgChannelCloseInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgCh
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelCloseInit,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 		),
 		sdk.NewEvent(
@@ -139,7 +144,7 @@ func HandleMsgChannelCloseConfirm(ctx sdk.Context, k keeper.Keeper, msg types.Ms
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeChannelCloseConfirm,
-			sdk.NewAttribute(types.AttributeKeySenderPort, msg.PortID),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortID),
 			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelID),
 		),
 		sdk.NewEvent(

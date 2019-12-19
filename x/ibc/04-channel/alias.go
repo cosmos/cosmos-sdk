@@ -36,10 +36,9 @@ const (
 	CodePacketTimeout              = types.CodePacketTimeout
 	CodeInvalidChannel             = types.CodeInvalidChannel
 	CodeInvalidChannelState        = types.CodeInvalidChannelState
-	AttributeKeySenderPort         = types.AttributeKeySenderPort
-	AttributeKeyReceiverPort       = types.AttributeKeyReceiverPort
+	AttributeKeyPortID             = types.AttributeKeyPortID
+	AttributeCounterpartyPortID    = types.AttributeCounterpartyPortID
 	AttributeKeyChannelID          = types.AttributeKeyChannelID
-	AttributeKeySequence           = types.AttributeKeySequence
 	SubModuleName                  = types.SubModuleName
 	StoreKey                       = types.StoreKey
 	RouterKey                      = types.RouterKey

@@ -181,7 +181,6 @@ func checkNewUint(i *big.Int) (Uint, error) {
 	return Uint{i}, nil
 }
 
-
 // RelativePow raises x to the power of n, where x (and the result, z) are scaled by factor b
 // for example, RelativePow(210, 2, 100) = 441 (2.1^2 = 4.41)
 func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
@@ -194,15 +193,12 @@ func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
 		return
 	}
 
+	z = x
 	if n.Mod(NewUint(2)).Equal(ZeroUint()) {
 		z = b
-	} else {
-		z = x
-
 	}
 
 	halfOfB := b.Quo(NewUint(2))
-
 	n = n.Quo(NewUint(2))
 
 	for n.GT(ZeroUint()) {

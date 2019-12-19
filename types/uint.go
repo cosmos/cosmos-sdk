@@ -214,5 +214,5 @@ func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
 		}
 		n = n.Quo(NewUint(2))
 	}
-	return
+	return z
 }

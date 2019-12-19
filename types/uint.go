@@ -100,11 +100,11 @@ func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
 
 // Mod returns remainder after dividing with Uint
-func (i Uint) Mod(i2 Uint) Uint {
-	if i2.IsZero() {
+func (u Uint) Mod(u2 Uint) Uint {
+	if u2.IsZero() {
 		panic("division-by-zero")
 	}
-	return Uint{mod(i.i, i2.i)}
+	return Uint{mod(u.i, u2.i)}
 }
 
 // Quo divides Uint with uint64

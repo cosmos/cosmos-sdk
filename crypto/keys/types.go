@@ -33,13 +33,13 @@ type Keybase interface {
 
 	// CreateAccount converts a mnemonic to a private key using a BIP44 path 44'/118'/{account}'/0/{index}
 	// and persists it, encrypted with the given password.
-	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)
+	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32, algo SigningAlgo) (Info, error)
 
 	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 	// Derive private key from the seed using the BIP44 params.
 	// Encrypt the key to disk using encryptPasswd.
 	// See https://github.com/cosmos/cosmos-sdk/issues/2095
-	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
+	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
 	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)

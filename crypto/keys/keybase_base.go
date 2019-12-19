@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -112,7 +112,7 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 
 // CreateAccount creates an account Info object.
 func (kb baseKeybase) CreateAccount(
-	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo
+	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo,
 ) (Info, error) {
 
 	hdPath := CreateHDPath(account, index)
@@ -120,7 +120,7 @@ func (kb baseKeybase) CreateAccount(
 }
 
 func (kb baseKeybase) persistDerivedKey(
-	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string, algo SigningAlgo
+	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string, algo SigningAlgo,
 ) (Info, error) {
 
 	// create master key and derive first key for keyring
@@ -128,14 +128,14 @@ func (kb baseKeybase) persistDerivedKey(
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var key tmcrypto.PubKey
 
 	switch algo {
 	case Secp256k1:
 		key = secp256k1.PrivKeySecp256k1(derivedPriv)
 	case Ed25519:
-		key = Ed25519
+		key = ed25519.PrivKeyEd25519(derivedPriv)
 	}
 
 	var info Info
@@ -207,7 +207,7 @@ func (kb baseKeybase) CreateMnemonic(
 // Derive computes a BIP39 seed from the mnemonic and bip39Passphrase. It creates
 // a private key from the seed using the BIP44 params.
 func (kb baseKeybase) Derive(
-	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, // nolint:interfacer
+	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo, // nolint:interfacer
 ) (Info, error) {
 
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
@@ -215,7 +215,7 @@ func (kb baseKeybase) Derive(
 		return nil, err
 	}
 
-	return kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String())
+	return kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String(), algo)
 }
 
 func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
@@ -237,8 +237,8 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 }
 
 // ComputeDerivedKey derives and returns the private key for the given seed and HD path.
-func ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
-	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+func ComputeDerivedKey(seed []byte, fullHdPath string, algo SigningAlgo) ([32]byte, error) {
+	masterPriv, ch := hd.ComputeMastersFromSeed(seed, algo)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
 }
 
@@ -252,5 +252,5 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 // TODO: Refactor this to be configurable to support interchangeable key signing
 // and addressing.
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/4941
-func IsAlgoSupported(algo SigningAlgo) bool { return algo == Secp256k1 }
+func IsAlgoSupported(algo SigningAlgo) bool       { return algo == Secp256k1 }
 func IsAlgoSupportedLedger(algo SigningAlgo) bool { return algo == Secp256k1 }

@@ -11,6 +11,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	schnorrkel "github.com/ChainSafe/go-schnorrkel"
+
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -60,9 +62,22 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
+func basePrivKeyGen(bz [32]byte, algo SigningAlgo) tmcrypto.PrivKey {
+	if algo == Secp256k1 {
+		return baseSecpPrivKeyGen(bz)
+	} else if algo == Ed25519 {
+		return base
+	}
+}
+
 // baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
 func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
 	return secp256k1.PrivKeySecp256k1(bz)
+}
+
+// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
+func baseEd25519PrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
+	return ed25519.PrivKeyEd25519(bz)
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
@@ -237,9 +252,24 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 }
 
 // ComputeDerivedKey derives and returns the private key for the given seed and HD path.
-func ComputeDerivedKey(seed []byte, fullHdPath string, algo SigningAlgo) ([32]byte, error) {
-	masterPriv, ch := hd.ComputeMastersFromSeed(seed, algo)
-	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+func ComputeDerivedKey(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error) {
+	if algo == Secp256k1 {
+		masterPriv, ch := hd.ComputeMastersFromSeed(seed, algo)
+		return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+	} else if algo == Sr25519 {
+		var miniSecretKey *schnorrkel.MiniSecretKey
+		if len(seed) == 64 {
+			var seedArr [64]byte
+			copy(seedArr[:], seed)
+			miniSecretKey = schnorrkel.NewMiniSecretKey(seedArr)
+		} else if len(seed) == 32 {
+			var seedArr [32]byte
+			copy(seedArr[:], seed)
+			miniSecretKey, _ = schnorrkel.NewMiniSecretKeyFromRaw(seedArr)
+		}
+		secretKey := miniSecretKey.ExpandEd25519()
+
+	}
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

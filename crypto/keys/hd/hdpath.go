@@ -161,7 +161,7 @@ func (p BIP44Params) String() string {
 }
 
 // ComputeMastersFromSeed returns the master public key, master secret, and chain code in hex.
-func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte, algo SigningAlgo) {
+func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 	masterSecret := []byte("Bitcoin seed")
 	secret, chainCode = i64(masterSecret, seed)
 

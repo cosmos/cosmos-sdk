@@ -1,3 +1,7 @@
+<!--
+order: 4
+-->
+
 # Events
 
 The governance module emits the following events:

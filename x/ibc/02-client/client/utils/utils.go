@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -10,6 +12,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
+
+// QueryAllClientStates returns all the light client states. It _does not_ return
+// any merkle proof.
+func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.State, int64, error) {
+	params := types.NewQueryAllClientsParams(page, limit)
+	bz, err := cliCtx.Codec.MarshalJSON(params)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to marshal query params: %w", err)
+	}
+
+	route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryAllClients)
+	res, height, err := cliCtx.QueryWithData(route, bz)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var clients []types.State
+	err = cliCtx.Codec.UnmarshalJSON(res, &clients)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
+	}
+	return clients, height, nil
+}
 
 // QueryClientState queries the store to get the light client state and a merkle
 // proof.
@@ -28,7 +53,7 @@ func QueryClientState(
 	}
 
 	var clientState types.State
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &clientState); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
@@ -39,7 +64,7 @@ func QueryClientState(
 
 // QueryConsensusStateProof queries the store to get the consensus state and a
 // merkle proof.
-func QueryConsensusStateProof(
+func QueryConsensusState(
 	cliCtx client.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
@@ -55,7 +80,7 @@ func QueryConsensusStateProof(
 	}
 
 	var cs tendermint.ConsensusState
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &cs); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
@@ -79,13 +104,38 @@ func QueryCommitmentRoot(
 	}
 
 	var root commitment.Root
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &root); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &root); err != nil {
 		return types.RootResponse{}, err
 	}
 
 	rootRes := types.NewRootResponse(clientID, height, root, res.Proof, res.Height)
 
 	return rootRes, nil
+}
+
+// QueryCommitter queries the store to get the committer and a merkle proof
+func QueryCommitter(
+	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+) (types.CommitterResponse, error) {
+	req := abci.RequestQuery{
+		Path:  "store/ibc/key",
+		Data:  types.KeyCommitter(clientID, height),
+		Prove: prove,
+	}
+
+	res, err := cliCtx.QueryABCI(req)
+	if err != nil {
+		return types.CommitterResponse{}, err
+	}
+
+	var committer tendermint.Committer
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
+		return types.CommitterResponse{}, err
+	}
+
+	committerRes := types.NewCommitterResponse(clientID, height, committer, res.Proof, res.Height)
+
+	return committerRes, nil
 }
 
 // QueryTendermintHeader takes a client context and returns the appropriate

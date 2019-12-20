@@ -29,6 +29,7 @@ const (
 	StoreKey                   = types.StoreKey
 	RouterKey                  = types.RouterKey
 	QuerierRoute               = types.QuerierRoute
+	QueryAllClients            = types.QueryAllClients
 	QueryClientState           = types.QueryClientState
 	QueryConsensusState        = types.QueryConsensusState
 	QueryVerifiedRoot          = types.QueryVerifiedRoot
@@ -37,6 +38,7 @@ const (
 var (
 	// functions aliases
 	NewKeeper                    = keeper.NewKeeper
+	QuerierClients               = keeper.QuerierClients
 	QuerierClientState           = keeper.QuerierClientState
 	QuerierConsensusState        = keeper.QuerierConsensusState
 	QuerierVerifiedRoot          = keeper.QuerierVerifiedRoot

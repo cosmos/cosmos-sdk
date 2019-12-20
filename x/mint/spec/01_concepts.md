@@ -1,3 +1,7 @@
+<!--
+order: 0
+-->
+
 # Concepts
 
 ## The Minting Mechanism

@@ -3,7 +3,6 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -33,6 +32,12 @@ func init() {
 	GetSimulatorFlags()
 }
 
+type StoreKeysPrefixes struct {
+	A        sdk.StoreKey
+	B        sdk.StoreKey
+	Prefixes [][]byte
+}
+
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 // an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
@@ -46,148 +51,95 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	if !FlagEnabledValue {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
 		t.Skip("skipping application simulation")
 	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ = sdk.NewLevelDB("Simulation", dir)
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		os.RemoveAll(dir)
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	// Run randomized simulation
+	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
-		SimulationOperations(app, app.Codec(), config),
-		app.ModuleAccountAddrs(), config,
-	)
-
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
-	}
-}
-
-func TestAppImportExport(t *testing.T) {
-	if !FlagEnabledValue {
-		t.Skip("skipping application import/export simulation")
-	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	var db dbm.DB
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ = sdk.NewLevelDB("Simulation", dir)
-
-	defer func() {
-		db.Close()
-		os.RemoveAll(dir)
-	}()
-
-	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
-	require.Equal(t, "SimApp", app.Name())
-
-	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
 	// export state and simParams before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
+	err = CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
 	require.NoError(t, simErr)
 
 	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+		PrintStats(db)
+	}
+}
+
+func TestAppImportExport(t *testing.T) {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping application import/export simulation")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		db.Close()
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
+	require.Equal(t, "SimApp", app.Name())
+
+	// Run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
+		SimulationOperations(app, app.Codec(), config),
+		app.ModuleAccountAddrs(), config,
+	)
+
+	// export state and simParams before the simulation error is checked
+	err = CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		PrintStats(db)
 	}
 
 	fmt.Printf("exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err)
+
 	fmt.Printf("importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
-	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
+	_, newDB, newDir, _, _, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		newDB.Close()
-		_ = os.RemoveAll(newDir)
+		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
 	var genesisState GenesisState
-	err = app.cdc.UnmarshalJSON(appState, &genesisState)
+	err = app.Codec().UnmarshalJSON(appState, &genesisState)
 	require.NoError(t, err)
 
+	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	ctxB := newApp.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, genesisState)
 
 	fmt.Printf("comparing stores...\n")
-	ctxA := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
-
-	type StoreKeysPrefixes struct {
-		A        sdk.StoreKey
-		B        sdk.StoreKey
-		Prefixes [][]byte
-	}
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keys[baseapp.MainStoreKey], newApp.keys[baseapp.MainStoreKey], [][]byte{}},
@@ -204,43 +156,28 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[gov.StoreKey], newApp.keys[gov.StoreKey], [][]byte{}},
 	}
 
-	for _, storeKeysPrefix := range storeKeysPrefixes {
-		storeKeyA := storeKeysPrefix.A
-		storeKeyB := storeKeysPrefix.B
-		prefixes := storeKeysPrefix.Prefixes
+	for _, skp := range storeKeysPrefixes {
+		storeA := ctxA.KVStore(skp.A)
+		storeB := ctxB.KVStore(skp.B)
 
-		storeA := ctxA.KVStore(storeKeyA)
-		storeB := ctxB.KVStore(storeKeyB)
-
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, prefixes)
+		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
-		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), storeKeyA, storeKeyB)
-		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(storeKeyA.Name(), app.sm.StoreDecoders, app.cdc, failedKVAs, failedKVBs))
+		fmt.Printf("compared %d key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+		require.Equal(t, len(failedKVAs), 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, app.Codec(), failedKVAs, failedKVBs))
 	}
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	if !FlagEnabledValue {
+	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
 		t.Skip("skipping application simulation after import")
 	}
-
-	var logger log.Logger
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	dir, _ := ioutil.TempDir("", "goleveldb-app-sim")
-	db, _ := sdk.NewLevelDB("Simulation", dir)
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		db.Close()
-		os.RemoveAll(dir)
+		require.NoError(t, os.RemoveAll(dir))
 	}()
 
 	app := NewSimApp(logger, db, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
@@ -248,35 +185,22 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// Run randomized simulation
 	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(app, app.Codec(), config),
 		app.ModuleAccountAddrs(), config,
 	)
 
-	// export state and params before the simulation error is checked
-	if config.ExportStatePath != "" {
-		err := ExportStateToJSON(app, config.ExportStatePath)
-		require.NoError(t, err)
-	}
-
-	if config.ExportParamsPath != "" {
-		err := ExportParamsToJSON(simParams, config.ExportParamsPath)
-		require.NoError(t, err)
-	}
-
+	// export state and simParams before the simulation error is checked
+	err = CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
 	require.NoError(t, simErr)
 
 	if config.Commit {
-		// for memdb:
-		// fmt.Println("Database Size", db.Stats()["database.size"])
-		fmt.Println("\nGoLevelDB Stats")
-		fmt.Println(db.Stats()["leveldb.stats"])
-		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+		PrintStats(db)
 	}
 
 	if stopEarly {
-		// we can't export or import a zero-validator genesis
-		fmt.Printf("we can't export or import a zero-validator genesis, exiting test...\n")
+		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
 		return
 	}
 
@@ -287,12 +211,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("importing genesis...\n")
 
-	newDir, _ := ioutil.TempDir("", "goleveldb-app-sim-2")
-	newDB, _ := sdk.NewLevelDB("Simulation-2", dir)
+	_, newDB, newDir, _, _, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
 		newDB.Close()
-		_ = os.RemoveAll(newDir)
+		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, FlagPeriodValue, fauxMerkleModeOpt)
@@ -302,13 +226,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateBytes: appState,
 	})
 
-	// Run randomized simulation on imported app
 	_, _, err = simulation.SimulateFromSeed(
-		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.sm),
+		t, os.Stdout, newApp.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 		SimulationOperations(newApp, newApp.Codec(), config),
 		newApp.ModuleAccountAddrs(), config,
 	)
-
 	require.NoError(t, err)
 }
 
@@ -351,11 +273,15 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			_, _, err := simulation.SimulateFromSeed(
-				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.sm),
+				t, os.Stdout, app.BaseApp, AppStateFn(app.Codec(), app.SimulationManager()),
 				SimulationOperations(app, app.Codec(), config),
 				app.ModuleAccountAddrs(), config,
 			)
 			require.NoError(t, err)
+
+			if config.Commit {
+				PrintStats(db)
+			}
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

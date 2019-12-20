@@ -17,25 +17,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-//______________________________________________________________________
-
-// retrieve params which are instant
-func setInstantUnbondPeriod(keeper keep.Keeper, ctx sdk.Context) types.Params {
-	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 0
-	keeper.SetParams(ctx, params)
-	return params
-}
-
-//______________________________________________________________________
-
 func TestValidatorByPowerIndex(t *testing.T) {
 	validatorAddr, validatorAddr3 := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1])
 
 	initPower := int64(1000000)
 	initBond := sdk.TokensFromConsensusPower(initPower)
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
-	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
@@ -186,7 +173,6 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 func TestLegacyValidatorDelegations(t *testing.T) {
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, int64(1000))
-	setInstantUnbondPeriod(keeper, ctx)
 
 	bondAmount := sdk.TokensFromConsensusPower(10)
 	valAddr := sdk.ValAddress(keep.Addrs[0])
@@ -350,7 +336,6 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	initPower := int64(100)
 	initBond := sdk.TokensFromConsensusPower(100)
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
-	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
@@ -382,7 +367,6 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	initPower := int64(100)
 	initBond := sdk.TokensFromConsensusPower(100)
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, initPower)
-	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
@@ -412,7 +396,8 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	initPower := int64(1000)
 	initBond := sdk.TokensFromConsensusPower(initPower)
 	ctx, accMapper, keeper, _ := keep.CreateTestInput(t, false, initPower)
-	params := setInstantUnbondPeriod(keeper, ctx)
+
+	params := keeper.GetParams(ctx)
 	denom := params.BondDenom
 
 	// create validator, delegate
@@ -510,7 +495,10 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 	initPower := int64(1000)
 	initTokens := sdk.TokensFromConsensusPower(initPower)
 	ctx, accMapper, keeper, _ := keep.CreateTestInput(t, false, initPower)
-	params := setInstantUnbondPeriod(keeper, ctx)
+
+	params := keeper.GetParams(ctx)
+	blockTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(blockTime)
 
 	validatorAddrs := []sdk.ValAddress{
 		sdk.ValAddress(keep.Addrs[0]),
@@ -544,6 +532,8 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		require.Equal(t, balanceExpd, balanceGot, "expected account to have %d, got %d", balanceExpd, balanceGot)
 	}
 
+	EndBlocker(ctx, keeper)
+
 	// unbond them all by removing delegation
 	for i, validatorAddr := range validatorAddrs {
 		_, found := keeper.GetValidator(ctx, validatorAddr)
@@ -552,15 +542,16 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		unbondAmt := sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))
 		msgUndelegate := NewMsgUndelegate(delegatorAddrs[i], validatorAddr, unbondAmt) // remove delegation
 		got := handleMsgUndelegate(ctx, msgUndelegate, keeper)
-
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
+
 		var finishTime time.Time
-
-		// Jump to finishTime for unbonding period and remove from unbonding queue
 		types.ModuleCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
-		ctx = ctx.WithBlockTime(finishTime)
 
+		// adds validator into unbonding queue
 		EndBlocker(ctx, keeper)
+
+		// removes validator from queue and set
+		EndBlocker(ctx.WithBlockTime(blockTime.Add(params.UnbondingTime)), keeper)
 
 		// Check that the validator is deleted from state
 		validators := keeper.GetValidators(ctx, 100)
@@ -578,7 +569,6 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 func TestMultipleMsgDelegate(t *testing.T) {
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddrs := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1:]
-	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// first make a validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], sdk.NewInt(10))
@@ -620,7 +610,6 @@ func TestMultipleMsgDelegate(t *testing.T) {
 func TestJailValidator(t *testing.T) {
 	ctx, _, keeper, _ := keep.CreateTestInput(t, false, 1000)
 	validatorAddr, delegatorAddr := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1]
-	_ = setInstantUnbondPeriod(keeper, ctx)
 
 	// create the validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], sdk.NewInt(10))
@@ -873,10 +862,8 @@ func TestTransitiveRedelegation(t *testing.T) {
 	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
 	validatorAddr3 := sdk.ValAddress(keep.Addrs[2])
 
-	// set the unbonding time
-	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 0
-	keeper.SetParams(ctx, params)
+	blockTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(blockTime)
 
 	// create the validators
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], sdk.NewInt(10))
@@ -902,12 +889,15 @@ func TestTransitiveRedelegation(t *testing.T) {
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, !got.IsOK(), "expected an error, msg: %v", msgBeginRedelegate)
 
+	params := keeper.GetParams(ctx)
+	ctx = ctx.WithBlockTime(blockTime.Add(params.UnbondingTime))
+
 	// complete first redelegation
 	EndBlocker(ctx, keeper)
 
 	// now should be able to redelegate from the second validator to the third
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
-	require.True(t, got.IsOK(), "expected no error")
+	require.True(t, got.IsOK(), "expected no error", got.Log)
 }
 
 func TestMultipleRedelegationAtSameTime(t *testing.T) {
@@ -1125,7 +1115,6 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 0
 	params.MaxValidators = 2
 	keeper.SetParams(ctx, params)
 

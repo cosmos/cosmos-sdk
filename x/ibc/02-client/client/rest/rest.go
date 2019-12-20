@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
+// REST client flags
 const (
 	RestClientID   = "client-id"
 	RestRootHeight = "height"
@@ -16,7 +17,7 @@ const (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, queryRoute string) {
-	registerQueryRoutes(cliCtx, r, queryRoute)
+	registerQueryRoutes(cliCtx, r)
 	registerTxRoutes(cliCtx, r)
 }
 
@@ -35,6 +36,6 @@ type UpdateClientReq struct {
 
 // SubmitMisbehaviourReq defines the properties of a submit misbehaviour request's body.
 type SubmitMisbehaviourReq struct {
-	BaseReq  rest.BaseReq      `json:"base_req" yaml:"base_req"`
+	BaseReq  rest.BaseReq              `json:"base_req" yaml:"base_req"`
 	Evidence evidenceexported.Evidence `json:"evidence" yaml:"evidence"`
 }

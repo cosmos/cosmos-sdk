@@ -44,12 +44,14 @@ const (
 	StoreKey                       = types.StoreKey
 	RouterKey                      = types.RouterKey
 	QuerierRoute                   = types.QuerierRoute
+	QueryAllChannels               = types.QueryAllChannels
 	QueryChannel                   = types.QueryChannel
 )
 
 var (
 	// functions aliases
 	NewKeeper                     = keeper.NewKeeper
+	QuerierChannels               = keeper.QuerierChannels
 	QuerierChannel                = keeper.QuerierChannel
 	NewChannel                    = types.NewChannel
 	NewCounterparty               = types.NewCounterparty

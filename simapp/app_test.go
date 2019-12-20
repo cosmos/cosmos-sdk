@@ -18,7 +18,7 @@ func TestSimAppExport(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	genesisState := NewDefaultGenesisState()
-	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	require.NoError(t, err)
 
 	// Initialize the chain
@@ -42,7 +42,7 @@ func TestBlackListedAddrs(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
 
 	for acc := range maccPerms {
-		require.True(t, app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+		require.Equal(t, !allowedReceivingModAcc[acc], app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
 	}
 }
 

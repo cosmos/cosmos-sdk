@@ -27,19 +27,24 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 		expectsDefaultErr bool
 		errMsg            string
 	}{
-		{"client - QueryClientState",
+		{"client - QuerierClientState",
 			[]string{client.SubModuleName, client.QueryClientState},
 			false,
 			"",
 		},
+		{"client - QuerierClients",
+			[]string{client.SubModuleName, client.QueryAllClients},
+			false,
+			"",
+		},
 		{
-			"client - QueryConsensusState",
+			"client - QuerierConsensusState",
 			[]string{client.SubModuleName, client.QueryConsensusState},
 			false,
 			"",
 		},
 		{
-			"client - QueryVerifiedRoot",
+			"client - QuerierVerifiedRoot",
 			[]string{client.SubModuleName, client.QueryVerifiedRoot},
 			false,
 			"",
@@ -51,13 +56,19 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			fmt.Sprintf("unknown IBC %s query endpoint", client.SubModuleName),
 		},
 		{
-			"connection - QueryConnection",
+			"connection - QuerierConnection",
 			[]string{connection.SubModuleName, connection.QueryConnection},
 			false,
 			"",
 		},
 		{
-			"connection - QueryClientConnections",
+			"connection - QuerierConnections",
+			[]string{connection.SubModuleName, connection.QueryAllConnections},
+			false,
+			"",
+		},
+		{
+			"connection - QuerierClientConnections",
 			[]string{connection.SubModuleName, connection.QueryClientConnections},
 			false,
 			"",
@@ -69,8 +80,14 @@ func (suite *KeeperTestSuite) TestNewQuerier() {
 			fmt.Sprintf("unknown IBC %s query endpoint", connection.SubModuleName),
 		},
 		{
-			"channel - QueryChannel",
+			"channel - QuerierChannel",
 			[]string{channel.SubModuleName, channel.QueryChannel},
+			false,
+			"",
+		},
+		{
+			"channel - QuerierChannels",
+			[]string{channel.SubModuleName, channel.QueryAllChannels},
 			false,
 			"",
 		},

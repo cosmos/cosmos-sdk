@@ -131,10 +131,10 @@ func (suite *HandlerTestSuite) createChannel(portID string, chanID string, connI
 	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, portID, chanID, ch)
 }
 
-func (suite *HandlerTestSuite) queryProof(key string) (proof commitment.Proof, height int64) {
+func (suite *HandlerTestSuite) queryProof(key []byte) (proof commitment.Proof, height int64) {
 	res := suite.app.Query(abci.RequestQuery{
 		Path:  fmt.Sprintf("store/%s/key", ibctypes.StoreKey),
-		Data:  []byte(key),
+		Data:  key,
 		Prove: true,
 	})
 

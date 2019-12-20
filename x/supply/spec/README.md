@@ -1,4 +1,11 @@
-# Supply Specification
+<!--
+order: 0
+title: Supply Overview
+parent:
+  title: "supply"
+-->
+
+# `supply`
 
 ## Contents
 

@@ -1,3 +1,7 @@
+<!--
+order: 3
+-->
+
 # Future improvements
 
 The current supply module only keeps track of the total supply of coins held in the network.

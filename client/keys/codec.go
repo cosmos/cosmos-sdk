@@ -4,20 +4,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc *codec.Codec
+// KeysCdc defines codec to be used with key operations
+var KeysCdc *codec.Codec
 
 func init() {
-	cdc = codec.New()
-	codec.RegisterCrypto(cdc)
-	cdc.Seal()
+	KeysCdc = codec.New()
+	codec.RegisterCrypto(KeysCdc)
+	KeysCdc.Seal()
 }
 
 // marshal keys
 func MarshalJSON(o interface{}) ([]byte, error) {
-	return cdc.MarshalJSON(o)
+	return KeysCdc.MarshalJSON(o)
 }
 
 // unmarshal json
 func UnmarshalJSON(bz []byte, ptr interface{}) error {
-	return cdc.UnmarshalJSON(bz, ptr)
+	return KeysCdc.UnmarshalJSON(bz, ptr)
 }

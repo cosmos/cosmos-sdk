@@ -21,10 +21,14 @@ const (
 	testClientType = clientexported.Tendermint
 
 	testConnection = "testconnection"
-	testPort1      = "firstport"
-	testPort2      = "secondport"
-	testChannel1   = "firstchannel"
-	testChannel2   = "secondchannel"
+
+	testPort1 = "firstport"
+	testPort2 = "secondport"
+	testPort3 = "thirdport"
+
+	testChannel1 = "firstchannel"
+	testChannel2 = "secondchannel"
+	testChannel3 = "thirdchannel"
 
 	testChannelOrder   = types.ORDERED
 	testChannelVersion = "1.0"
@@ -63,8 +67,8 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 		State:    types.OPEN,
 		Ordering: testChannelOrder,
 		Counterparty: types.Counterparty{
-			PortID:    testPort1,
-			ChannelID: testChannel1,
+			PortID:    testPort2,
+			ChannelID: testChannel2,
 		},
 		ConnectionHops: []string{testConnection},
 		Version:        testChannelVersion,
@@ -74,6 +78,47 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	storedChannel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
 	suite.Equal(channel, storedChannel)
+}
+
+func (suite KeeperTestSuite) TestGetAllChannels() {
+	// Channel (Counterparty): A(C) -> C(B) -> B(A)
+	counterparty1 := types.NewCounterparty(testPort1, testChannel1)
+	counterparty2 := types.NewCounterparty(testPort2, testChannel2)
+	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
+
+	channel1 := types.Channel{
+		State:          types.INIT,
+		Ordering:       testChannelOrder,
+		Counterparty:   counterparty3,
+		ConnectionHops: []string{testConnection},
+		Version:        testChannelVersion,
+	}
+
+	channel2 := types.Channel{
+		State:          types.INIT,
+		Ordering:       testChannelOrder,
+		Counterparty:   counterparty1,
+		ConnectionHops: []string{testConnection},
+		Version:        testChannelVersion,
+	}
+
+	channel3 := types.Channel{
+		State:          types.CLOSED,
+		Ordering:       testChannelOrder,
+		Counterparty:   counterparty2,
+		ConnectionHops: []string{testConnection},
+		Version:        testChannelVersion,
+	}
+
+	expChannels := []types.Channel{channel1, channel2, channel3}
+
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort1, testChannel1, expChannels[0])
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort2, testChannel2, expChannels[1])
+	suite.app.IBCKeeper.ChannelKeeper.SetChannel(suite.ctx, testPort3, testChannel3, expChannels[2])
+
+	channels := suite.app.IBCKeeper.ChannelKeeper.GetAllChannels(suite.ctx)
+	suite.Require().Len(channels, len(expChannels))
+	suite.Require().Equal(expChannels, channels)
 }
 
 func (suite *KeeperTestSuite) TestSetChannelCapability() {

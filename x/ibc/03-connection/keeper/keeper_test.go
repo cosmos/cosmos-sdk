@@ -25,6 +25,9 @@ const (
 
 	testClientID2     = "testclientid2"
 	testConnectionID2 = "connectionid2"
+
+	testClientID3     = "testclientid3"
+	testConnectionID3 = "connectionid3"
 )
 
 type KeeperTestSuite struct {
@@ -72,7 +75,6 @@ func (suite *KeeperTestSuite) TestSetAndGetConnection() {
 }
 
 func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
-
 	_, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, testClientID1)
 	suite.False(existed)
 
@@ -80,4 +82,42 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 	paths, existed := suite.app.IBCKeeper.ConnectionKeeper.GetClientConnectionPaths(suite.ctx, testClientID1)
 	suite.True(existed)
 	suite.EqualValues(types.GetCompatibleVersions(), paths)
+}
+
+func (suite KeeperTestSuite) TestGetAllConnections() {
+	// Connection (Counterparty): A(C) -> C(B) -> B(A)
+	counterparty1 := types.NewCounterparty(testClientID1, testConnectionID1, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty2 := types.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+	counterparty3 := types.NewCounterparty(testClientID3, testConnectionID3, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+
+	conn1 := types.ConnectionEnd{
+		State:        types.INIT,
+		ClientID:     testClientID1,
+		Counterparty: counterparty3,
+		Versions:     types.GetCompatibleVersions(),
+	}
+
+	conn2 := types.ConnectionEnd{
+		State:        types.INIT,
+		ClientID:     testClientID2,
+		Counterparty: counterparty1,
+		Versions:     types.GetCompatibleVersions(),
+	}
+
+	conn3 := types.ConnectionEnd{
+		State:        types.NONE,
+		ClientID:     testClientID3,
+		Counterparty: counterparty2,
+		Versions:     types.GetCompatibleVersions(),
+	}
+
+	expConnections := []types.ConnectionEnd{conn1, conn2, conn3}
+
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID1, expConnections[0])
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID2, expConnections[1])
+	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnectionID3, expConnections[2])
+
+	connections := suite.app.IBCKeeper.ConnectionKeeper.GetAllConnections(suite.ctx)
+	suite.Require().Len(connections, len(expConnections))
+	suite.Require().Equal(expConnections, connections)
 }

@@ -36,6 +36,7 @@ const (
 	StoreKey                          = types.StoreKey
 	RouterKey                         = types.RouterKey
 	QuerierRoute                      = types.QuerierRoute
+	QueryAllConnections               = types.QueryAllConnections
 	QueryConnection                   = types.QueryConnection
 	QueryClientConnections            = types.QueryClientConnections
 )
@@ -43,6 +44,7 @@ const (
 var (
 	// functions aliases
 	NewKeeper                        = keeper.NewKeeper
+	QuerierConnections               = keeper.QuerierConnections
 	QuerierConnection                = keeper.QuerierConnection
 	QuerierClientConnections         = keeper.QuerierClientConnections
 	RegisterCodec                    = types.RegisterCodec

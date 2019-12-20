@@ -6,7 +6,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -45,7 +44,7 @@ func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
 
 // GetConnection returns a connection with a particular identifier
 func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyConnection(connectionID))
 	if bz == nil {
 		return types.ConnectionEnd{}, false
@@ -58,7 +57,7 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 
 // SetConnection sets a connection to the store
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
 	store.Set(types.KeyConnection(connectionID), bz)
 }
@@ -66,7 +65,7 @@ func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection t
 // GetClientConnectionPaths returns all the connection paths stored under a
 // particular client
 func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]string, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyClientConnections(clientID))
 	if bz == nil {
 		return nil, false
@@ -79,9 +78,36 @@ func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]st
 
 // SetClientConnectionPaths sets the connections paths for client
 func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths []string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixConnection)
+	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(paths)
 	store.Set(types.KeyClientConnections(clientID), bz)
+}
+
+// IterateConnections provides an iterator over all ConnectionEnd objects.
+// For each ConnectionEnd, cb will be called. If the cb returns true, the
+// iterator will close and stop.
+func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd) bool) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetConnectionsKeysPrefix(ibctypes.KeyConnectionPrefix))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var connection types.ConnectionEnd
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &connection)
+
+		if cb(connection) {
+			break
+		}
+	}
+}
+
+// GetAllConnections returns all stored ConnectionEnd objects.
+func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.ConnectionEnd) {
+	k.IterateConnections(ctx, func(connection types.ConnectionEnd) bool {
+		connections = append(connections, connection)
+		return false
+	})
+	return connections
 }
 
 // addConnectionToClient is used to add a connection identifier to the set of

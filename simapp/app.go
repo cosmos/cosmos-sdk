@@ -78,6 +78,11 @@ var (
 		gov.ModuleName:                  {supply.Burner},
 		transfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
 	}
+
+	// module accounts that are allowed to receive tokens
+	allowedReceivingModAcc = map[string]bool{
+		distr.ModuleName: true,
+	}
 )
 
 // MakeCodec custom tx codec
@@ -89,6 +94,9 @@ func MakeCodec() *codec.Codec {
 	codec.RegisterCrypto(cdc)
 	return cdc
 }
+
+// Verify app interface at compile time
+var _ App = (*SimApp)(nil)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -176,7 +184,7 @@ func NewSimApp(
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
 		app.AccountKeeper, app.subspaces[bank.ModuleName], bank.DefaultCodespace,
-		app.ModuleAccountAddrs(),
+		app.BlacklistedAccAddrs(),
 	)
 	app.SupplyKeeper = supply.NewKeeper(
 		app.cdc, keys[supply.StoreKey], app.AccountKeeper, app.BankKeeper, maccPerms,
@@ -308,6 +316,9 @@ func NewSimApp(
 	return app
 }
 
+// Name returns the name of the App
+func (app *SimApp) Name() string { return app.BaseApp.Name() }
+
 // BeginBlocker application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -340,6 +351,16 @@ func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
+// BlacklistedAccAddrs returns all the app's module account addresses black listed for receiving tokens.
+func (app *SimApp) BlacklistedAccAddrs() map[string]bool {
+	blacklistedAddrs := make(map[string]bool)
+	for acc := range maccPerms {
+		blacklistedAddrs[supply.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
+	}
+
+	return blacklistedAddrs
+}
+
 // Codec returns SimApp's codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -367,6 +388,11 @@ func (app *SimApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetSubspace(moduleName string) params.Subspace {
 	return app.subspaces[moduleName]
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *SimApp) SimulationManager() *module.SimulationManager {
+	return app.sm
 }
 
 // GetMaccPerms returns a copy of the module account permissions

@@ -32,7 +32,8 @@ const (
 	defaultMultiSigKeyName = "multi"
 )
 
-func showKeysCmd() *cobra.Command {
+// ShowKeysCmd shows key information for a given key name.
+func ShowKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",

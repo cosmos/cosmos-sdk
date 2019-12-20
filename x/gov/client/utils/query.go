@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
@@ -72,45 +73,57 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 	return cliCtx.Codec.MarshalJSON(deposits)
 }
 
-// QueryVotesByTxQuery will query for votes via a direct txs tags query. It
-// will fetch and build votes directly from the returned txs and return a JSON
+// TxQuerier is a type that accepts query parameters (target events and pagination options) and returns sdk.SearchTxsResult.
+// Mainly used for easier mocking of utils.QueryTxsByEvents in tests.
+type TxQuerier func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error)
+
+// QueryVotesByTxQuery will query for votes using provided TxQuerier implementation.
+// In general utils.QueryTxsByEvents should be used that will do a direct tx query to a tendermint node.
+// It will fetch and build votes directly from the returned txs and return a JSON
 // marshalled result or any error that occurred.
-//
-// NOTE: SearchTxs is used to facilitate the txs query which does not currently
-// support configurable pagination.
-func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalParams) ([]byte, error) {
-	events := []string{
-		fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
-		fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
-	}
+func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVotesParams, querier TxQuerier) ([]byte, error) {
+	var (
+		events = []string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalVote, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		}
+		votes      []types.Vote
+		nextTxPage = defaultPage
+		totalLimit = params.Limit * params.Page
+	)
+	// query interrupted either if we collected enough votes or tx indexer run out of relevant txs
+	for len(votes) < totalLimit {
+		searchResult, err := querier(cliCtx, events, nextTxPage, defaultLimit)
+		if err != nil {
+			return nil, err
+		}
+		nextTxPage++
+		for _, info := range searchResult.Txs {
+			for _, msg := range info.Tx.GetMsgs() {
+				if msg.Type() == types.TypeMsgVote {
+					voteMsg := msg.(types.MsgVote)
 
-	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
-	// support configurable pagination.
-	searchResult, err := utils.QueryTxsByEvents(cliCtx, events, defaultPage, defaultLimit)
-	if err != nil {
-		return nil, err
-	}
-
-	var votes []types.Vote
-
-	for _, info := range searchResult.Txs {
-		for _, msg := range info.Tx.GetMsgs() {
-			if msg.Type() == types.TypeMsgVote {
-				voteMsg := msg.(types.MsgVote)
-
-				votes = append(votes, types.Vote{
-					Voter:      voteMsg.Voter,
-					ProposalID: params.ProposalID,
-					Option:     voteMsg.Option,
-				})
+					votes = append(votes, types.Vote{
+						Voter:      voteMsg.Voter,
+						ProposalID: params.ProposalID,
+						Option:     voteMsg.Option,
+					})
+				}
 			}
 		}
+		if len(searchResult.Txs) != defaultLimit {
+			break
+		}
 	}
-
+	start, end := client.Paginate(len(votes), params.Page, params.Limit, 100)
+	if start < 0 || end < 0 {
+		votes = []types.Vote{}
+	} else {
+		votes = votes[start:end]
+	}
 	if cliCtx.Indent {
 		return cliCtx.Codec.MarshalJSONIndent(votes, "", "  ")
 	}
-
 	return cliCtx.Codec.MarshalJSON(votes)
 }
 
@@ -128,7 +141,6 @@ func QueryVoteByTxQuery(cliCtx context.CLIContext, params types.QueryVoteParams)
 	if err != nil {
 		return nil, err
 	}
-
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.Tx.GetMsgs() {
 			// there should only be a single vote under the given conditions

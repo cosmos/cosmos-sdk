@@ -17,6 +17,38 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// GetCmdQueryClientStates defines the command to query all the light clients
+// that this chain mantains.
+func GetCmdQueryClientStates(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "states",
+		Short: "Query all available light clients",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all available light clients
+
+Example:
+$ %s query ibc client states
+		`, version.ClientName),
+		),
+		Example: fmt.Sprintf("%s query ibc client states", version.ClientName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
+
+			clientStates, _, err := utils.QueryAllClientStates(cliCtx, page, limit)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(clientStates)
+		},
+	}
+	cmd.Flags().Int(flags.FlagPage, 1, "pagination page of light clients to to query for")
+	cmd.Flags().Int(flags.FlagLimit, 100, "pagination limit of light clients to query for")
+	return cmd
+}
+
 // GetCmdQueryClientState defines the command to query the state of a client with
 // a given id as defined in https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#query
 func GetCmdQueryClientState(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -70,7 +102,7 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 
 			prove := viper.GetBool(flags.FlagProve)
 
-			csRes, err := utils.QueryConsensusStateProof(cliCtx, clientID, prove)
+			csRes, err := utils.QueryConsensusState(cliCtx, clientID, prove)
 			if err != nil {
 				return err
 			}
@@ -115,6 +147,46 @@ $ %s query ibc client root [client-id] [height]
 			}
 
 			return cliCtx.PrintOutput(rootRes)
+		},
+	}
+	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
+	return cmd
+}
+
+// GetCmdQueryCommitter defines the command to query the committer of the chain
+// at a given height
+func GetCmdQueryCommitter(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "committer [client-id] [height]",
+		Short: "Query a committer",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query a committer at a specific height for a particular client
+
+Example:
+$ %s query ibc client committer [client-id] [height]
+`, version.ClientName),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			clientID := args[0]
+			if strings.TrimSpace(clientID) == "" {
+				return errors.New("client ID can't be blank")
+			}
+
+			height, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return fmt.Errorf("expected integer height, got: %v", args[1])
+			}
+
+			prove := viper.GetBool(flags.FlagProve)
+
+			committerRes, err := utils.QueryCommitter(cliCtx, clientID, height, prove)
+			if err != nil {
+				return err
+			}
+
+			return cliCtx.PrintOutput(committerRes)
 		},
 	}
 	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")

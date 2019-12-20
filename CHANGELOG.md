@@ -76,6 +76,9 @@ if the provided arguments are invalid.
   `StdTx.Signatures` to get back the array of StdSignatures `[]StdSignature`.
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) `HandleDoubleSign` along with params `MaxEvidenceAge`
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior. 
+  * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created.
+* (simapp) [\#5419](https://github.com/cosmos/cosmos-sdk/pull/5419) simapp/helpers.GenTx() now accepts a gas argument.
 
 ### Client Breaking Changes
 
@@ -84,6 +87,7 @@ if the provided arguments are invalid.
 * (x/auth) [\#5006](https://github.com/cosmos/cosmos-sdk/pull/5006) The gas required to pass the `AnteHandler` has
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 * (rest) [\#5336](https://github.com/cosmos/cosmos-sdk/issues/5336) `MsgEditValidator` uses `description` instead of `Description` as a JSON key.
+* (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) Due to the keybase -> keyring transition, keys need to be migrated. See `keys migrate` command for more info.
 
 ### Features
 
@@ -104,8 +108,16 @@ the following [issue](https://github.com/keybase/go-keychain/issues/47) with the
 you encounter this issue, you must upgrade your xcode command line tools to version >= `10.2`. You can
 upgrade via: `sudo rm -rf /Library/Developer/CommandLineTools; xcode-select --install`. Verify the
 correct version via: `pkgutil --pkg-info=com.apple.pkg.CLTools_Executables`.
+* [\#5355](https://github.com/cosmos/cosmos-sdk/pull/5355) Client commands accept a new `--keyring-backend` option through which users can specify which backend should be used
+by the new key store:
+  - `os`: use OS default credentials storage (default).
+  - `file`: use encrypted file-based store.
+  - `test`: use password-less key store. *For testing purposes only. Use it at your own risk.*
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) New `keys migrate` command to assist users migrate their keys
 to the new keyring.
+* (keys) [\#5366](https://github.com/cosmos/cosmos-sdk/pull/5366) `keys list` now accepts a `--list-names` option to list key names only, whilst the `keys delete`
+command can delete multiple keys by passing their names as arguments. The aforementioned commands can then be piped together, e.g.
+`appcli keys list -n | xargs appcli keys delete`
 * (modules) [\#4233](https://github.com/cosmos/cosmos-sdk/pull/4233) Add upgrade module that coordinates software upgrades of live chains.
 * [\#4486](https://github.com/cosmos/cosmos-sdk/issues/4486) Introduce new `PeriodicVestingAccount` vesting account type
 that allows for arbitrary vesting periods.
@@ -136,6 +148,11 @@ that allows for arbitrary vesting periods.
     * `ValidateSigCountDecorator`: Validate the number of signatures in tx based on app-parameters.
     * `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 * (cli) [\#5223](https://github.com/cosmos/cosmos-sdk/issues/5223) Cosmos Ledger App v2.0.0 is now supported. The changes are backwards compatible and App v1.5.x is still supported.
+* (x/staking) [\#5380](https://github.com/cosmos/cosmos-sdk/pull/5380) Introduced ability to store historical info entries in staking keeper, allows applications to introspect specified number of past headers and validator sets
+    * Introduces new parameter `HistoricalEntries` which allows applications to determine how many recent historical info entries they want to persist in store. Default value is 0.
+    * Introduces cli commands and rest routes to query historical information at a given height
+* (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
+* (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
 
 ### Improvements
 
@@ -169,7 +186,7 @@ generalized genesis accounts through the `GenesisAccount` interface.
 * (sdk) [\#4640](https://github.com/cosmos/cosmos-sdk/issues/4640) improve import/export simulation errors by extending `DiffKVStores` to return an array of `KVPairs` that are then compared to check for inconsistencies.
 * (sdk) [\#4717](https://github.com/cosmos/cosmos-sdk/issues/4717) refactor `x/slashing` to match the new module spec
 * (sdk) [\#4758](https://github.com/cosmos/cosmos-sdk/issues/4758) update `x/genaccounts` to match module spec
-* (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) PrintAllInvariants flag will print all failed invariants
+* (simulation) [\#4824](https://github.com/cosmos/cosmos-sdk/issues/4824) `PrintAllInvariants` flag will print all failed invariants
 * (simulation) [\#4490](https://github.com/cosmos/cosmos-sdk/issues/4490) add `InitialBlockHeight` flag to resume a simulation from a given block
   * Support exporting the simulation stats to a given JSON file
 * (simulation) [\#4847](https://github.com/cosmos/cosmos-sdk/issues/4847), [\#4838](https://github.com/cosmos/cosmos-sdk/pull/4838) and [\#4869](https://github.com/cosmos/cosmos-sdk/pull/4869) `SimApp` and simulation refactors:
@@ -181,9 +198,12 @@ generalized genesis accounts through the `GenesisAccount` interface.
   * Add `WeightedOperations` to the `SimulationManager` that define simulation operations (modules' `Msg`s) with their
   respective weights (i.e chance of being simulated).
   * Add `ProposalContents` to the `SimulationManager` to register each module's governance proposal `Content`s.
-* (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change SimApp keepers to be public and add getter functions for keys and codec
+* (simulation) [\#4893](https://github.com/cosmos/cosmos-sdk/issues/4893) Change `SimApp` keepers to be public and add getter functions for keys and codec
 * (simulation) [\#4906](https://github.com/cosmos/cosmos-sdk/issues/4906) Add simulation `Config` struct that wraps simulation flags
 * (simulation) [\#4935](https://github.com/cosmos/cosmos-sdk/issues/4935) Update simulation to reflect a proper `ABCI` application without bypassing `BaseApp` semantics
+* (simulation) [\#5378](https://github.com/cosmos/cosmos-sdk/pull/5378) Simulation tests refactor:
+  * Add `App` interface for general SDK-based app's methods.
+  * Refactor and cleanup simulation tests into util functions to simplify their implementation for other SDK apps.
 * (store) [\#4792](https://github.com/cosmos/cosmos-sdk/issues/4792) panic on non-registered store
 * (types) [\#4821](https://github.com/cosmos/cosmos-sdk/issues/4821) types/errors package added with support for stacktraces. It is meant as a more feature-rich replacement for sdk.Errors in the mid-term.
 * (store) [\#1947](https://github.com/cosmos/cosmos-sdk/issues/1947) Implement inter-block (persistent)
@@ -191,9 +211,17 @@ caching through `CommitKVStoreCacheManager`. Any application wishing to utilize 
 must set it in their app via a `BaseApp` option. The `BaseApp` docs have been drastically improved
 to detail this new feature and how state transitions occur.
 * (docs/spec) All module specs moved into their respective module dir in x/ (i.e. docs/spec/staking -->> x/staking/spec)
+* (docs/) [\#5379](https://github.com/cosmos/cosmos-sdk/pull/5379) Major documentation refactor, including:
+  * (docs/intro/) Add and improve introduction material for newcomers.
+  * (docs/basics/) Add documentation about basic concepts of the cosmos sdk such as the anatomy of an SDK application, the transaction lifecycle or accounts. 
+  * (docs/core/) Add documentation about core conepts of the cosmos sdk such as `baseapp`, `server`, `store`s, `context` and more. 
+  * (docs/building-modules/) Add reference documentation on concepts relevant for module developers (`keeper`, `handler`, `messages`, `queries`,...).
+  * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
+  * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 
 ### Bug Fixes
 
+* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`
 * (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
 * (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
 * (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
@@ -202,6 +230,7 @@ to detail this new feature and how state transitions occur.
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
 * (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
   has been triggered.
+* (types) [\#5408](https://github.com/cosmos/cosmos-sdk/issues/5408) `NewDecCoins` constructor now sorts the coins.
 
 ## [v0.37.4] - 2019-11-04
 

@@ -14,7 +14,7 @@ import (
 
 func Test_runImportCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	importKeyCommand := importKeyCommand()
+	importKeyCommand := ImportKeyCommand()
 	mockIn, _, _ := tests.ApplyMockIO(importKeyCommand)
 
 	// Now add a temporary keybase

@@ -10,8 +10,3 @@ message Coin {
     string denom = 1;
     bytes amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
 }
-
-//message Coins {
-//    option (gogoproto.stringer) = false;
-//    repeated Coin coins = 1 [(gogoproto.nullable) = false];
-//}

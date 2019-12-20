@@ -206,10 +206,10 @@ const (
 
 // TextProposal defines a standard text proposal whose changes need to be
 // manually updated in case of approval
-type TextProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-}
+//type TextProposal struct {
+//	Title       string `json:"title" yaml:"title"`
+//	Description string `json:"description" yaml:"description"`
+//}
 
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {

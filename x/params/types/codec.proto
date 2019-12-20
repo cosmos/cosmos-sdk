@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package cosmos_sdk.x.params;
+option go_package = "types";
+
+//import "types/codec.proto";
+//import "gogoproto/gogo.proto";
+

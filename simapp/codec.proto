@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package cosmos_sdk.simapp;
+option go_package = "simapp";
+import "gogoproto/gogo.proto";
+import "types/codec.proto";
+import "x/gov/types/codec.proto";
+
+message Msg {
+    oneof sum {
+        MsgGovSubmitProposal gov_submit_proposal = 1;
+        cosmos_sdk.x.gov.MsgDeposit gov_deposit = 2;
+        cosmos_sdk.x.gov.MsgVote gov_vote = 3;
+    }
+}
+
+message MsgGovSubmitProposal {
+    cosmos_sdk.x.gov.MsgSubmitProposalBase base = 1 [(gogoproto.embed) = true];
+    oneof content {
+        cosmos_sdk.x.gov.TextProposal text_proposal = 2;
+        SomeOtherProposal some_other_proposal = 3;
+    }
+}
+
+message SomeOtherProposal {
+    string title = 1;
+    string description = 2;
+    string something_else = 3;
+}
+
+message Tx {
+    repeated Msg msg = 1;
+    Fee fee = 2;
+    repeated Signature signatures = 3;
+    string memo = 4;
+}
+
+message Fee {
+    repeated cosmos_sdk.Coin intial_deposit = 1 [(gogoproto.nullable) = false];
+    uint64 gas = 2;
+}
+
+message Signature {
+    PubKey pubkey = 1;
+    bytes signature = 2;
+}
+
+message PubKey {
+    oneof sum {
+        bytes secp256k1 = 1;
+        bytes ed25519 = 2;
+        bytes multisig = 3;
+    }
+}

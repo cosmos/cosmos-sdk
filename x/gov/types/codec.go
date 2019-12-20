@@ -12,7 +12,7 @@ var ModuleCdc = codec.New()
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Content)(nil), nil)
 
-	cdc.RegisterConcrete(MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
+	//cdc.RegisterConcrete(MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
 	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
 	cdc.RegisterConcrete(MsgVote{}, "cosmos-sdk/MsgVote", nil)
 

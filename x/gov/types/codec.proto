@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 
 message MsgSubmitProposalBase {
     repeated cosmos_sdk.Coin intial_deposit = 1 [(gogoproto.nullable) = false];
+    option (gogoproto.goproto_getters) = false;
     bytes proposer = 2
         [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
@@ -36,3 +37,9 @@ message MsgVote {
     VoteOption option = 3;
 }
 
+message TextProposal {
+    option (gogoproto.stringer) = false;
+    option (gogoproto.goproto_getters) = false;
+    string title = 1;
+    string description = 2;
+}

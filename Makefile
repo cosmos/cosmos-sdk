@@ -212,4 +212,8 @@ devdoc-clean:
 devdoc-update:
 	docker pull tendermint/devdoc
 
+proto-gen:
+	go mod vendor
+	prototool generate
+
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update

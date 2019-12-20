@@ -154,7 +154,7 @@ func (k Keeper) SendPacket(
 		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
 	}
 
-	if connectionEnd.State == connection.NONE {
+	if connectionEnd.State == connection.UNINITIALIZED {
 		return connection.ErrInvalidConnectionState(
 			k.codespace,
 			fmt.Sprintf("connection is closed (i.e NONE)"),

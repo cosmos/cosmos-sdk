@@ -50,6 +50,27 @@ func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 	}
 }
 
+// WithDeriveFunc applies an overridden key derivation function to generate the private key.
+func WithDeriveFunc(f DeriveKeyFunc) KeybaseOption {
+	return func(o *kbOptions) {
+		o.deriveFunc = f
+	}
+}
+
+// WithSupportedAlgos defines the list of accepted SigningAlgos.
+func WithSupportedAlgos(algos []SigningAlgo) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgos = algos
+	}
+}
+
+// WithSupportedAlgosLedger defines the list of accepted SigningAlgos compatible with Ledger.
+func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
+	return func(o *kbOptions) {
+		o.supportedAlgosLedger = algos
+	}
+}
+
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase

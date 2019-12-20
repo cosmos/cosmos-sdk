@@ -36,24 +36,39 @@ func (msg MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
 
 // ValidateBasic implements Msg
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	if msg.Content == nil {
+	content, err := msg.Content()
+	if err != nil {
+		return sdk.ConvertError(err)
+	}
+	if content == nil {
 		return ErrInvalidProposalContent(DefaultCodespace, "missing content")
 	}
-	proposer, err := msg.
-	if msg.Proposer.Empty() {
-		return sdk.ErrInvalidAddress(msg.Proposer.String())
+	var proposer sdk.AccAddress
+	proposer, err = msg.Proposer()
+	if err != nil {
+		return sdk.ConvertError(err)
 	}
-	if !msg.InitialDeposit.IsValid() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+	if proposer.Empty() {
+		return sdk.ErrInvalidAddress(proposer.String())
 	}
-	if msg.InitialDeposit.IsAnyNegative() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+	coins, err := msg.InitialDeposit()
+	if err != nil {
+		return sdk.ConvertError(err)
 	}
-	if !IsValidProposalType(msg.Content.ProposalType()) {
-		return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
+	initDeposit, err := sdk.CoinsFromCoinEList(coins)
+	if !initDeposit.IsValid() {
+		return sdk.ErrInvalidCoins(initDeposit.String())
+	}
+	if initDeposit.IsAnyNegative() {
+		return sdk.ErrInvalidCoins(initDeposit.String())
 	}
 
-	return msg.Content.ValidateBasic()
+	//if !IsValidProposalType(msg.Content.ProposalType()) {
+	//	return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
+	//}
+	//
+	//return msg.Content.ValidateBasic()
+	panic("TODO")
 }
 
 // String implements the Stringer interface

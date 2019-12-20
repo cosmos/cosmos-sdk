@@ -1,4 +1,4 @@
- @0xf6e87acf2c3fc2e7;
+@0xb02b1ca217480de7;
 
  using Go = import "/go.capnp";
  $Go.package("types");
@@ -11,6 +11,6 @@ using Coins = List(CoinE);
 
 struct CoinE {
   denom @0 :Text;
-  amount @1 :Int;
+  amount @1 :Text;
 }
 

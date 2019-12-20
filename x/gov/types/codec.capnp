@@ -4,19 +4,19 @@
  $Go.package("types");
  $Go.import("github.com/cosmos/cosmos-sdk/x/gov/types");
 
- using SDK = import "types/codec.capnp";
+ using SDK = import "/types/codec.capnp";
 
 
 struct MsgSubmitProposal(Content) {
   content @0 :Content;
   initialDeposit @1 :SDK.Coins;
-  proposer @2 :AccAddress;
+  proposer @2 :SDK.AccAddress;
 }
 
 struct MsgDeposit {
   proposalId @0 :UInt64;
-  depositor @1 :AccAddress;
-  amount @2 :Coins;
+  depositor @1 :SDK.AccAddress;
+  amount @2 :SDK.Coins;
 }
 
 enum VoteOption {
@@ -29,7 +29,7 @@ enum VoteOption {
 
 struct MsgVote {
   proposalId @0 :UInt64;
-  voter @1 :AccAddress;
+  voter @1 :SDK.AccAddress;
   option @2 :VoteOption;
 }
 

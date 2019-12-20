@@ -212,7 +212,10 @@ devdoc-clean:
 devdoc-update:
 	docker pull tendermint/devdoc
 
+CAPNP_COMPILE = capnp compile -I$(HOME)/go/pkg/mod/github.com/capnproto/go-capnproto2@v2.18.0+incompatible/std  -I. -ogo
+
 capnp-gen:
-	capnp compile -Ivendor/zombiezen.com/go/capnproto2  -ogo x/gov/types/codec.capnp
+	 $(CAPNP_COMPILE) types/codec.capnp
+	 $(CAPNP_COMPILE) x/gov/types/codec.capnp
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update

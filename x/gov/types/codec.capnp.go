@@ -3,94 +3,11 @@
 package types
 
 import (
+	types "github.com/cosmos/cosmos-sdk/types"
 	capnp "zombiezen.com/go/capnproto2"
 	text "zombiezen.com/go/capnproto2/encoding/text"
 	schemas "zombiezen.com/go/capnproto2/schemas"
 )
-
-type Coin struct{ capnp.Struct }
-
-// Coin_TypeID is the unique identifier for the type Coin.
-const Coin_TypeID = 0xd115aae11eb5cda4
-
-func NewCoin(s *capnp.Segment) (Coin, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2})
-	return Coin{st}, err
-}
-
-func NewRootCoin(s *capnp.Segment) (Coin, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2})
-	return Coin{st}, err
-}
-
-func ReadRootCoin(msg *capnp.Message) (Coin, error) {
-	root, err := msg.RootPtr()
-	return Coin{root.Struct()}, err
-}
-
-func (s Coin) String() string {
-	str, _ := text.Marshal(0xd115aae11eb5cda4, s.Struct)
-	return str
-}
-
-func (s Coin) Denom() (string, error) {
-	p, err := s.Struct.Ptr(0)
-	return p.Text(), err
-}
-
-func (s Coin) HasDenom() bool {
-	p, err := s.Struct.Ptr(0)
-	return p.IsValid() || err != nil
-}
-
-func (s Coin) DenomBytes() ([]byte, error) {
-	p, err := s.Struct.Ptr(0)
-	return p.TextBytes(), err
-}
-
-func (s Coin) SetDenom(v string) error {
-	return s.Struct.SetText(0, v)
-}
-
-func (s Coin) Amount() ([]byte, error) {
-	p, err := s.Struct.Ptr(1)
-	return []byte(p.Data()), err
-}
-
-func (s Coin) HasAmount() bool {
-	p, err := s.Struct.Ptr(1)
-	return p.IsValid() || err != nil
-}
-
-func (s Coin) SetAmount(v []byte) error {
-	return s.Struct.SetData(1, v)
-}
-
-// Coin_List is a list of Coin.
-type Coin_List struct{ capnp.List }
-
-// NewCoin creates a new list of Coin.
-func NewCoin_List(s *capnp.Segment, sz int32) (Coin_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2}, sz)
-	return Coin_List{l}, err
-}
-
-func (s Coin_List) At(i int) Coin { return Coin{s.List.Struct(i)} }
-
-func (s Coin_List) Set(i int, v Coin) error { return s.List.SetStruct(i, v.Struct) }
-
-func (s Coin_List) String() string {
-	str, _ := text.MarshalList(0xd115aae11eb5cda4, s.List)
-	return str
-}
-
-// Coin_Promise is a wrapper for a Coin promised by a client call.
-type Coin_Promise struct{ *capnp.Pipeline }
-
-func (p Coin_Promise) Struct() (Coin, error) {
-	s, err := p.Pipeline.Struct()
-	return Coin{s}, err
-}
 
 type MsgSubmitProposal struct{ capnp.Struct }
 
@@ -138,9 +55,9 @@ func (s MsgSubmitProposal) SetContentPtr(v capnp.Ptr) error {
 	return s.Struct.SetPtr(0, v)
 }
 
-func (s MsgSubmitProposal) InitialDeposit() (Coin_List, error) {
+func (s MsgSubmitProposal) InitialDeposit() (types.CoinE_List, error) {
 	p, err := s.Struct.Ptr(1)
-	return Coin_List{List: p.List()}, err
+	return types.CoinE_List{List: p.List()}, err
 }
 
 func (s MsgSubmitProposal) HasInitialDeposit() bool {
@@ -148,16 +65,16 @@ func (s MsgSubmitProposal) HasInitialDeposit() bool {
 	return p.IsValid() || err != nil
 }
 
-func (s MsgSubmitProposal) SetInitialDeposit(v Coin_List) error {
+func (s MsgSubmitProposal) SetInitialDeposit(v types.CoinE_List) error {
 	return s.Struct.SetPtr(1, v.List.ToPtr())
 }
 
 // NewInitialDeposit sets the initialDeposit field to a newly
-// allocated Coin_List, preferring placement in s's segment.
-func (s MsgSubmitProposal) NewInitialDeposit(n int32) (Coin_List, error) {
-	l, err := NewCoin_List(s.Struct.Segment(), n)
+// allocated types.CoinE_List, preferring placement in s's segment.
+func (s MsgSubmitProposal) NewInitialDeposit(n int32) (types.CoinE_List, error) {
+	l, err := types.NewCoinE_List(s.Struct.Segment(), n)
 	if err != nil {
-		return Coin_List{}, err
+		return types.CoinE_List{}, err
 	}
 	err = s.Struct.SetPtr(1, l.List.ToPtr())
 	return l, err
@@ -258,9 +175,9 @@ func (s MsgDeposit) SetDepositor(v []byte) error {
 	return s.Struct.SetData(0, v)
 }
 
-func (s MsgDeposit) Amount() (Coin_List, error) {
+func (s MsgDeposit) Amount() (types.CoinE_List, error) {
 	p, err := s.Struct.Ptr(1)
-	return Coin_List{List: p.List()}, err
+	return types.CoinE_List{List: p.List()}, err
 }
 
 func (s MsgDeposit) HasAmount() bool {
@@ -268,16 +185,16 @@ func (s MsgDeposit) HasAmount() bool {
 	return p.IsValid() || err != nil
 }
 
-func (s MsgDeposit) SetAmount(v Coin_List) error {
+func (s MsgDeposit) SetAmount(v types.CoinE_List) error {
 	return s.Struct.SetPtr(1, v.List.ToPtr())
 }
 
 // NewAmount sets the amount field to a newly
-// allocated Coin_List, preferring placement in s's segment.
-func (s MsgDeposit) NewAmount(n int32) (Coin_List, error) {
-	l, err := NewCoin_List(s.Struct.Segment(), n)
+// allocated types.CoinE_List, preferring placement in s's segment.
+func (s MsgDeposit) NewAmount(n int32) (types.CoinE_List, error) {
+	l, err := types.NewCoinE_List(s.Struct.Segment(), n)
 	if err != nil {
-		return Coin_List{}, err
+		return types.CoinE_List{}, err
 	}
 	err = s.Struct.SetPtr(1, l.List.ToPtr())
 	return l, err
@@ -687,62 +604,58 @@ func (p Tx_Promise) MsgVote() MsgVote_Promise {
 	return MsgVote_Promise{Pipeline: p.Pipeline.GetPipeline(2)}
 }
 
-const schema_f6e87acf2c3fc2e7 = "x\xda\x8c\x94Ah\x1cU\x18\xc7\xff\xff\xf7&n\x0b" +
-	"\xa9\xbb\xd3i!\x0d\xc6\x80(XmLM,H\x10" +
-	"\xd2\xa6)Xip_\xdcV[<t\xb2;\xc4\x81" +
-	"\xddy\xe3\xceK\xcd\x06\xda\xb5\xa0\xa2\x07/\x8a\x14\xab" +
-	"7=y\xc9E\xa1V\x10\x14\x14=\x88U<y\xeb" +
-	"\xa9\xe2\xb1\x87\xe2m\xe4\xcdlv\x96t\x17z\x1b\xde" +
-	"|\xef\xfb\xfe\xbf\xef\xff}\xef\xe8\xe7<.\x9e\x1d\xd3" +
-	"\x02P\x8f\x8c=\x94\x1e\xf2?<\xf1\xfd/_\xbc\x07" +
-	"w\x82\xe9\x9d\x1f\x17\x8f\xfc\xbe\xf5\xcf=\x8c\x89\x120" +
-	"?\xc5\xa7\xe8\xcd\xb0\x04x\x87\xf9\x16\x98^\xdf~\xe7" +
-	"\xbf\xbb\xb7o\xbc\x0f5\xc1\xfb\xa2?\xe0$\xbdO\xb3" +
-	"\xe8O\xb8\x0d\xa6\xd7\xae^+\xdf\xd8\xb3zkWj" +
-	"Y\xaap\xfe\x94X\xa5w\xde\xde\xf3\xce\x8am\xc0\x9b" +
-	"\x92\xe5\xf4\xcb\xdf\xbey\xf4\xf6W\x07\xff\x18\xa2\xc5s" +
-	"\xe5\xbf\xde\x94\xb4_\x87\xa4\x95\xf2\xeb\x9f7_\xf8\xeb" +
-	"\xd8\xad\xbbp'D\x11\x0b\xceo\xc8Iz\xeff\x91" +
-	"We\x17Lo~\xfd\xf6w\xe3\x1f\xdf\xb97D\x86" +
-	"\xf7\xad\xfc\xdb\xfb)\x8b\xfdAZ\x15\x97\x9dr\xba\xf5" +
-	"\xd9\xcf\xd7\x9f\xber%\xb5\x90\x03\xa9\xc7,\xd9\xfc\x9b" +
-	"\x8e\xa0w\xd9\xb17:\x8e\x85\xdc\x9c]\xd7\x97fM" +
-	"G\xc6A2[\xd7\x8d\xa0\xfeL\xdd\x8f\xa3x\xa1\x16" +
-	"l\x9aj[\xc7e\x9d\xf8\xcd*\xa9\xf6H\x07p\x08" +
-	"\xb8\x87\xe7\x00\xf5\xb8\xa4:*\xe8\x92\x07h\x0fg\xd6" +
-	"\x00uDR=/8mB\xd3\x0c8\x0e\xc1q0" +
-	"m\x04I\xbd\x1d\xc6\x06\xa5PG\xfd\xd3\x91\x95W\x92" +
-	"\xf5\xe5 \xd6\x89\x0c\x8d\xad;\xde\xaf{\xea\x02\xa0\x96" +
-	"%UUp\xa7\xec\xca*\xa0\xceH\xaa\xd7\x04]\xc1" +
-	"\x03\x14\x80{v\x01PUI\xd5\x14L\xe3\xb6\x8e-" +
-	"\x03\xe4\xe9\x06\xf7Bpo&)\xd6Ih4\xd8\xe6" +
-	">\x08\xee\x03\x17\xfd\x96\xde\x88\x0c\x1f\x06\xab\x92\xac\x14" +
-	"v\x82\xf6\xb0/\xd8\x19\"\xf8\x95\x8d\xb5V\x98\xf5K" +
-	"'>\x9b\xbbt/\x01\xea\xb8\xa4:3\xd0\xaf\xd3[" +
-	"\x80zQR5\xacp\x91\x0b\xf7_\x02\xd4\xc5\\x" +
-	"\xb7\xae#\x13D\x86\xfb90\x8b\x00\xf7\x83i\x18\x85" +
-	"&\xf4\x9b\xcbX\xccAF\xab\xce\xf1\x83\xb6\xbd\xd9#" +
-	"=\xe1\xd0\xe5R\xf7d\x9e\xbf\xcf%vs\x95O\xea" +
-	"0z\x10\xebm\xbb\x9f\x94T\xcf\x09N7\x82H\xb7" +
-	"vL\xde\xe9i\xaf\xf0h\xcf\xcfi\x13\xbc\x1c\x9bP" +
-	"\xea\xac`\xde\x8dcs\x16\xc2\x9dy\x0c\xa0p\x9fX" +
-	"\x02(\xdd\xa9I\x80\x8e{\xf0\x020\x1d\xb4b\xd3)" +
-	"u\x82\xa4\xeb\xaf%\xc6\x0f#\x19\xe94\xd2\xaf\x86\xe6" +
-	"\x8ds\x01\xa4\xd1\xa3\xd9dms\xf4p\xf5\xc9V>" +
-	"\xea\x0d\xd2\xeb\x03&\x9d\xb7v\xd6$\xd5E\xc1\xb4\xd5" +
-	"\x1bV\xc8\xd0\xb0R\xbc0 +\xc8~g\xa3\xc1b" +
-	"6X\x19p3\x8b\xea\xb6\x92u\xdb\x00V\x8a\xe5\xcd" +
-	"\xff\x8cpj\xd8\xca\xd8\x04x\x80}\x99\xeb\x8d]\xcd" +
-	"\x1299\x91Z(\x96h\xe8\xbeL_\xd2&(6" +
-	"E\xc7\xc6nr\xb9x\xc5@\x96\xc1\xff\x03\x00\x00\xff" +
-	"\xff\xddzsf"
+const schema_f6e87acf2c3fc2e7 = "x\xda\x8cTAh#U\x18\xfe\xbe\xf7\x12\xb3+Y" +
+	"\x93\xd9Y1\x1b\x90\x82\xe8\xa1\xba\xb5\xdb\xc6\x82\x14\xa1" +
+	"\xbb\xb5\x82+\x1b\xcc\xabq\xd5Ea\xa7\xc9P\x07\x92" +
+	"yC\xe6\xed\xda\xf6\xb0Q\x90\xc5\x8b\x17=,\xacG" +
+	"/\xde\x0a\xe2a\xad\xe0\xc1\x83\xe8\xc9\"\x9e\xbc\xf5 " +
+	"\xd5C\x0f-X\xbc\xc8\xc8\xcb\xc4$\x84\x06z}\xf3" +
+	"\xff\xdf\xff}\xdf\xff\xfds\xb9\xcd+b.\xfb\x84\x00" +
+	"T)\xfbHr\xd1\xfb\xf4\xea\xf7?}y\x0fN\x89" +
+	"\xc9\xfe\x0fK\x97~\xd9\xfa\xf3\x18Y\x91\x03\xe6\x0e\x9f" +
+	"\xa5K\xe6\x00\xe7\xdf\x0f\xc0\xe4\xc1\xf6\xc7\xff\x1c\xed=" +
+	"\xfc\x04\xaa\xc4\xf1\xda\xca{,\xd3m\xdbb7\xe06" +
+	"\x98\xdc\xff\xe8~\xe1\xe1\x99\xd5\xdd1`\x99+\xb2r" +
+	"Q\xac\xd2\x9d\xb1}\xee\xb4\xd8\x06\xdcCQH~\xfe" +
+	"u\xe7\xa5\xdf\x16v\x8f\xe0\x94\xc4\xb0\x01\xac\xfc!\xca" +
+	"t\xff\xeeU\x1f\x8a.\x98\xec|\xf3\xe1w\xf9\xcf\xf7" +
+	"\x8fO\x80v\xa7\xe5\xef\xee\x82\xb4\xb5s\xd2\"\x1f\xc8" +
+	"B\xb2\xf5\xc5\x8f\x0f\x9e\xbb{7\xb1\xc4G\xa0\xb3\x96" +
+	"meO\x0a\xba\x07\xbd\x8e\xbf\xa4%\xbe1\xbb\xae\xef" +
+	"\xcc\x9aM\x19\xf9\xf1lC7\xfd\xc6\xf3\x0d/\x0a\xa3" +
+	"\xc5\xba\xbfaj\x1d\x1d\x15t\xec\xb5j\xa4:#3" +
+	"@\x86\x803=\x0f\xa8\xa7%\xd5eA\x87\xbc@\xfb" +
+	"8\xb3\x06\xa8K\x92\xeaE\xc1)\x13\x98\x96\xcf<\x04" +
+	"\xf3`\xd2\xf4\xe3F'\x88\x0cr\x81\x0e\x07\xaf\x13'" +
+	"W\xe3\xf5\x15?\xd2\xb1\x0c\x8c\x9d\x9b\x1f\xcc}\xe5&" +
+	"\xa0V$UM\xf0\xff\xb1\xd5U@]\x97To\x0b" +
+	":\x82\x17(\x00\xe7\xcdE@\xd5$UK0\x89:" +
+	":\xb2\x1a \xaf5y\x16\x82g{\x94\"\x1d\x07F" +
+	"\x83\x1d\x9e\x83\xe09p\xc9k\xeb\xdb\xa1\xe1c`M" +
+	"\x92\xc5\xe4\xa0|\xef\x85\xaf\xbe}\xf4k\x80\xf6q@" +
+	"8s\x02\xe17n\xaf\xb5\x83\x9e_:\xf6\xd8\x1a\xe3" +
+	"\xbd\x0c\xa8+\x92\xea\xfa\x88_\xd7\xb6\x00\xf5\xaa\xa4j" +
+	"Z\xe2\"%\xee\xbd\x06\xa8[)\xf1nC\x87\xc6\x0f" +
+	"\x0d\xcfs$_\x00\xcf\x83I\x10\x06&\xf0Z+X" +
+	"J\x85Lf\x9d\xca\xf7;\xb6\xb3\xaf\xf4j\x86\x0e\x97" +
+	"\xbb/\xa7\xf8\x93\x17qC\x1b\xff\xf5\xc8\x04R\x87V" +
+	"PJqa\xde\";3O\x01\x14\xce3\xcb\x00\xa5" +
+	"\xf3d\x19`\xc6y\xfc&0\xe5\xb7#\xb3\x99\xdb\xf4" +
+	"\xe3\xae\xb7\x16\x1b/\x08e\xa8\x93P\xbf\x15\x98\xf7o" +
+	"\xf8\x90F\x0f\x06\x8a\xf1\x81\xb2\xbe1y\xe3\x03\xe7\xaa" +
+	"\x9f\xf5\xb7\xfb\xee\x88s\xefX\x8f\xeb\x92\xea\x96`\xd2" +
+	"\xee'\x0820,\x0eO\x19d\x11\xbd\xcf\xbd}q" +
+	"\xb80\x16G,\xeeUu\xdb\xf1\xba5\x80\xc5\xe1E" +
+	"\xa5_Nk_5\x05\xc0)B<\xdf\xcfB\xdd*" +
+	"\xca\xa4\x8a\xd4\xe20\xd9'\x86x\xea\x8e6\xfe0\xbe" +
+	":2\xf6\xbcF~- \x0b\xe0\x7f\x01\x00\x00\xff\xff" +
+	"[\xecQ\x11"
 
 func init() {
 	schemas.Register(schema_f6e87acf2c3fc2e7,
 		0x86a3c8be418d6119,
 		0x88b8e1f2f884af9a,
 		0xd05208b80f978197,
-		0xd115aae11eb5cda4,
 		0xf2d035d43cbad2c9,
 		0xf6e7930cbb80b4ba,
 		0xff7e7e2b9ac69b7a)

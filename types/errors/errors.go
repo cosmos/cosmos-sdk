@@ -73,6 +73,16 @@ var (
 	// invalid data.
 	ErrInvalidRequest = Register(RootCodespace, 18, "invalid request")
 
+	// ErrTxInMempoolCache defines an ABCI typed error where a tx already exists
+	// in the mempool.
+	ErrTxInMempoolCache = Register(RootCodespace, 19, "tx already in mempool")
+
+	// ErrMempoolIsFull defines an ABCI typed error where the mempool is full.
+	ErrMempoolIsFull = Register(RootCodespace, 20, "mempool is full")
+
+	// ErrTxTooLarge defines an ABCI typed error where tx is too large.
+	ErrTxTooLarge = Register(RootCodespace, 21, "tx too large")
+
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")

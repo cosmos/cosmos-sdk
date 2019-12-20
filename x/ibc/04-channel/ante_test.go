@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // define constants used for testing
@@ -35,9 +36,10 @@ const (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	cdc *codec.Codec
-	ctx sdk.Context
-	app *simapp.SimApp
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	app    *simapp.SimApp
+	valSet *tmtypes.ValidatorSet
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -47,6 +49,11 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.cdc = app.Codec()
 	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
 	suite.app = app
+
+	privVal := tmtypes.NewMockPV()
+
+	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
+	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	suite.createClient()
 	suite.createConnection(connection.OPEN)
@@ -60,9 +67,11 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := clienttypestm.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		ChainID:          testChainID,
+		Height:           uint64(commitID.Version),
+		Root:             commitment.NewRoot(commitID.Hash),
+		ValidatorSet:     suite.valSet,
+		NextValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)

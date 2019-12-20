@@ -29,21 +29,16 @@ type TestSuite struct {
 
 var s TestSuite
 
-// this should be called by all functions that do not belong to the suite
 func setupTest(height int64, skip []int64) TestSuite {
-
-	// create the app with the proper skip flags set
 	checkTx := false
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
 	simapp.SetupDeliverTx(app)
 
-	// get info from the generic simapp
 	s.keeper = app.UpgradeKeeper
 	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: height, Time: time.Now()})
 	s.FlagUnsafeSkipUpgrades = upgrade.FlagUnsafeSkipUpgrades
 
-	// and construct a few upgrade-specific structs
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.querier = s.module.NewQuerierHandler()
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
@@ -196,9 +191,10 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(10, []int64{})
-	TestDoTimeUpgrade(t)
-	t.Log("Verify an upgrade named \"test\" can't be scheduled twice")
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
+	require.Nil(t, err)
+	t.Log("Verify an upgrade named \"test\" can't be scheduled twice")
+	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.NotNil(t, err)
 	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
 }
@@ -394,8 +390,4 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
-}
-
-func TestTestSuite(t *testing.T) {
-	// TODO
 }

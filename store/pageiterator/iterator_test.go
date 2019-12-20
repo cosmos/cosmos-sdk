@@ -4,24 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func newMemTestKVStore(t *testing.T) types.KVStore {
-	db := dbm.NewMemDB()
-	cms := rootmulti.NewStore(db)
-	key := sdk.NewKVStoreKey("test")
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	require.NoError(t, cms.LoadLatestVersion())
-	return cms.GetKVStore(key)
+func newMemTestKVStore() types.KVStore {
+	// rootmulti.NewStore/iavl.LoadStore introduces circular dependency if alias for KVStorePrefixIteratorPaginated is added to types/ module.
+	// both modules import store/errors and store/errors is an alias for some of the errors in types/errors.go
+	return transient.NewStore()
 }
 
 func TestPaginatedIterator(t *testing.T) {
-	kvs := newMemTestKVStore(t)
+	kvs := newMemTestKVStore()
 	total := 10
 	lth := total - 1
 	asc := make([][]byte, total)
@@ -88,9 +83,9 @@ func TestPaginatedIterator(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			var iter types.Iterator
 			if tc.reverse {
-				iter = KVStorePaginatedIterator(types.KVStoreReversePrefixIterator(kvs, nil), tc.page, tc.limit)
+				iter = KVStoreReversePrefixIteratorPaginated(kvs, nil, tc.page, tc.limit)
 			} else {
-				iter = KVStorePaginatedIterator(types.KVStorePrefixIterator(kvs, nil), tc.page, tc.limit)
+				iter = KVStorePrefixIteratorPaginated(kvs, nil, tc.page, tc.limit)
 			}
 			defer iter.Close()
 			result := [][]byte{}
@@ -104,14 +99,14 @@ func TestPaginatedIterator(t *testing.T) {
 }
 
 func TestPaginatedIteratorPanicIfInvalid(t *testing.T) {
-	kvs := newMemTestKVStore(t)
-	iter := KVStorePaginatedIterator(types.KVStorePrefixIterator(kvs, nil), 1, 1)
+	kvs := newMemTestKVStore()
+	iter := KVStorePrefixIteratorPaginated(kvs, nil, 1, 1)
 	defer iter.Close()
 	require.False(t, iter.Valid())
-	require.Panics(t, func() { iter.Next() }, "iterator is empty")
+	require.Panics(t, func() { iter.Next() }) // "iterator is empty"
 	kvs.Set([]byte{1}, []byte{})
-	iter = KVStorePaginatedIterator(types.KVStorePrefixIterator(kvs, nil), 1, 0)
+	iter = KVStorePrefixIteratorPaginated(kvs, nil, 1, 0)
 	defer iter.Close()
 	require.False(t, iter.Valid())
-	require.Panics(t, func() { iter.Next() }, "not empty but limit is zero")
+	require.Panics(t, func() { iter.Next() }) // "not empty but limit is zero"
 }

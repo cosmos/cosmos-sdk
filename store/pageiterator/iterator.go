@@ -9,20 +9,20 @@ import (
 // KVStorePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in ascending order.
 func KVStorePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, page, limit uint) types.Iterator {
-	return KVStorePaginatedIterator(types.KVStorePrefixIterator(kvs, prefix), page, limit)
+	pi := &PaginatedIterator{
+		Iterator: types.KVStorePrefixIterator(kvs, prefix),
+		page:     page,
+		limit:    limit,
+	}
+	pi.skip()
+	return pi
 }
 
 // KVStoreReversePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in descending order.
 func KVStoreReversePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, page, limit uint) types.Iterator {
-	return KVStorePaginatedIterator(types.KVStoreReversePrefixIterator(kvs, prefix), page, limit)
-}
-
-// KVStorePaginatedIterator returns wrapper for provided iterator.
-// Wrapper will enforce iteration
-func KVStorePaginatedIterator(iterator types.Iterator, page, limit uint) types.Iterator {
 	pi := &PaginatedIterator{
-		Iterator: iterator,
+		Iterator: types.KVStoreReversePrefixIterator(kvs, prefix),
 		page:     page,
 		limit:    limit,
 	}

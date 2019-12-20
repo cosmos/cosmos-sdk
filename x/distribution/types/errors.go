@@ -1,47 +1,21 @@
-// nolint
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type CodeType = sdk.CodeType
-
-const (
-	DefaultCodespace            sdk.CodespaceType = "distr"
-	CodeInvalidInput            CodeType          = 103
-	CodeNoDistributionInfo      CodeType          = 104
-	CodeNoValidatorCommission   CodeType          = 105
-	CodeSetWithdrawAddrDisabled CodeType          = 106
+// x/distribution module errors that reserve codes 300-399
+var (
+	ErrNoDelegatorAddr         = sdkerrors.Register(ModuleName, 300, "delegator address is empty")
+	ErrNoWithdrawAddr          = sdkerrors.Register(ModuleName, 301, "withdraw address is empty")
+	ErrNoValidatorAddr         = sdkerrors.Register(ModuleName, 302, "validator address is empty")
+	ErrNoDelegationDistInfo    = sdkerrors.Register(ModuleName, 303, "no delegation distribution info")
+	ErrNoValidatorDistInfo     = sdkerrors.Register(ModuleName, 304, "no validator distribution info")
+	ErrNoValidatorCommission   = sdkerrors.Register(ModuleName, 305, "no validator commission to withdraw")
+	ErrSetWithdrawAddrDisabled = sdkerrors.Register(ModuleName, 306, "set withdraw address disabled")
+	ErrBadDistribution         = sdkerrors.Register(ModuleName, 307, "community pool does not have sufficient coins to distribute")
+	ErrInvalidProposalAmount   = sdkerrors.Register(ModuleName, 308, "invalid community pool spend proposal amount")
+	ErrEmptyProposalRecipient  = sdkerrors.Register(ModuleName, 309, "invalid community pool spend proposal recipient")
+	ErrNoValidatorExists       = sdkerrors.Register(ModuleName, 310, "validator does not exist")
+	ErrNoDelegationExists      = sdkerrors.Register(ModuleName, 311, "delegation does not exist")
 )
-
-func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "delegator address is nil")
-}
-func ErrNilWithdrawAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "withdraw address is nil")
-}
-func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "validator address is nil")
-}
-func ErrNoDelegationDistInfo(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeNoDistributionInfo, "no delegation distribution info")
-}
-func ErrNoValidatorDistInfo(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeNoDistributionInfo, "no validator distribution info")
-}
-func ErrNoValidatorCommission(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeNoValidatorCommission, "no validator commission to withdraw")
-}
-func ErrSetWithdrawAddrDisabled(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeSetWithdrawAddrDisabled, "set withdraw address disabled")
-}
-func ErrBadDistribution(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "community pool does not have sufficient coins to distribute")
-}
-func ErrInvalidProposalAmount(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "invalid community pool spend proposal amount")
-}
-func ErrEmptyProposalRecipient(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "invalid community pool spend proposal recipient")
-}

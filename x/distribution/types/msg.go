@@ -3,6 +3,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Verify interface at compile time
@@ -36,13 +37,14 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
+func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrNoDelegatorAddr
 	}
 	if msg.WithdrawAddress.Empty() {
-		return ErrNilWithdrawAddr(DefaultCodespace)
+		return ErrNoWithdrawAddr
 	}
+
 	return nil
 }
 
@@ -74,12 +76,12 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrNoDelegatorAddr
 	}
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrNoValidatorAddr
 	}
 	return nil
 }
@@ -110,9 +112,9 @@ func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrNoValidatorAddr
 	}
 	return nil
 }
@@ -155,12 +157,12 @@ func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 }
 
 // ValidateBasic performs basic MsgFundCommunityPool message validation.
-func (msg MsgFundCommunityPool) ValidateBasic() sdk.Error {
+func (msg MsgFundCommunityPool) ValidateBasic() error {
 	if !msg.Amount.IsValid() {
-		return sdk.ErrInvalidCoins(msg.Amount.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if msg.Depositor.Empty() {
-		return sdk.ErrInvalidAddress(msg.Depositor.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
 	}
 
 	return nil

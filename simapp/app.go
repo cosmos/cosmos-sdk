@@ -171,7 +171,7 @@ func NewSimApp(
 
 	// add keepers
 	app.AccountKeeper = auth.NewAccountKeeper(
-		app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
+		SimappAccountCodec{}, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
 	)
 	app.BankKeeper = bank.NewBaseKeeper(
 		app.AccountKeeper, app.subspaces[bank.ModuleName], bank.DefaultCodespace,

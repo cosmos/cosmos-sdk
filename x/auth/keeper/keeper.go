@@ -6,12 +6,17 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
+
+
+type AccountCodec interface {
+	MarshalAccount(account exported.Account) ([]byte, error)
+	UnmarshalAccount(bz []byte, dest *exported.Account) error
+}
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
@@ -23,7 +28,7 @@ type AccountKeeper struct {
 	proto func() exported.Account
 
 	// The codec codec for binary encoding/decoding of accounts.
-	cdc *codec.Codec
+	cdc AccountCodec
 
 	paramSubspace subspace.Subspace
 }
@@ -32,7 +37,7 @@ type AccountKeeper struct {
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
+	cdc AccountCodec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
@@ -92,7 +97,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 // Misc.
 
 func (ak AccountKeeper) decodeAccount(bz []byte) (acc exported.Account) {
-	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)
+	err := ak.cdc.UnmarshalAccount(bz, &acc)
 	if err != nil {
 		panic(err)
 	}

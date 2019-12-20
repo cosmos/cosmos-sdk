@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cosmos_sdk.x.auth;
+option go_package = "types";
+import "gogoproto/gogo.proto";
+import "types/codec.proto";
+
+message BaseAccount {
+    option (gogoproto.goproto_getters) = false;
+    option (gogoproto.stringer) = false;
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    repeated cosmos_sdk.Coin coins = 2 [(gogoproto.nullable) = false];
+    bytes pubkey = 3;
+    uint64 account_number = 4;
+    uint64 sequence = 5;
+}
+
+message ContinuousVestingAccount {
+    // TODO
+}

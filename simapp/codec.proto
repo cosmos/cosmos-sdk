@@ -5,6 +5,7 @@ option go_package = "simapp";
 import "gogoproto/gogo.proto";
 import "types/codec.proto";
 import "x/gov/types/codec.proto";
+import "x/auth/types/codec.proto";
 
 message Msg {
     oneof sum {
@@ -27,6 +28,13 @@ message SomeOtherProposal {
     string title = 1;
     string description = 2;
     string something_else = 3;
+}
+
+message Account {
+    oneof acc {
+        cosmos_sdk.x.auth.BaseAccount base_account = 1;
+        cosmos_sdk.x.auth.ContinuousVestingAccount continuous_vesting_account = 2;
+    }
 }
 
 message Tx {

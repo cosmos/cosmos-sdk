@@ -29,7 +29,7 @@ require (
 	github.com/tendermint/tendermint v0.32.8
 	github.com/tendermint/tm-db v0.2.0
 	gopkg.in/yaml.v2 v2.2.7
-	zombiezen.com/go/capnproto2 v2.18.0+incompatible // indirect
+	zombiezen.com/go/capnproto2 v2.18.0+incompatible
 )
 
 go 1.13

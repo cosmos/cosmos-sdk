@@ -2,21 +2,14 @@
 
  using Go = import "/go.capnp";
  $Go.package("types");
- $Go.import("github.com/cosmos/cosmos-sdk/x/gov");
+ $Go.import("github.com/cosmos/cosmos-sdk/x/gov/types");
 
+ using SDK = import "types/codec.capnp";
 
-using Int = Data;
-using AccAddress = Data;
-using Coins = List(Coin);
-
-struct Coin {
-  denom @0 :Text;
-  amount @1 :Int;
-}
 
 struct MsgSubmitProposal(Content) {
   content @0 :Content;
-  initialDeposit @1 :Coins;
+  initialDeposit @1 :SDK.Coins;
   proposer @2 :AccAddress;
 }
 

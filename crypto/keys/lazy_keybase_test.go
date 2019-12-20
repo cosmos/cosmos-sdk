@@ -233,7 +233,7 @@ func TestLazyExportImportPrivKey(t *testing.T) {
 	require.Error(t, err)
 
 	// import armored key
-	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw"))
+	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw", Secp256k1))
 
 	// ensure old and new keys match
 	priv2, err := kb.Get("john")
@@ -368,7 +368,7 @@ func TestLazySeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params, algo)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
@@ -421,7 +421,7 @@ func TestKeygenOverride(t *testing.T) {
 	CryptoCdc = testCdc
 
 	overrideCalled := false
-	dummyFunc := func(bz [32]byte) crypto.PrivKey {
+	dummyFunc := func(bz []byte, algo SigningAlgo) crypto.PrivKey {
 		overrideCalled = true
 		return testPriv(bz[:])
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
 
@@ -36,7 +37,7 @@ func Test_runListCmd(t *testing.T) {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
 
-	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
+	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0, keys.Secp256k1)
 	require.NoError(t, err)
 
 	defer func() {

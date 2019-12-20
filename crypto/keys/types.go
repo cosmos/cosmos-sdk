@@ -59,7 +59,7 @@ type Keybase interface {
 	// ImportPrivKey imports a private key in ASCII armor format.
 	// It returns an error if a key with the same name exists or a wrong encryption passphrase is
 	// supplied.
-	ImportPrivKey(name, armor, passphrase string) error
+	ImportPrivKey(name, armor, passphrase string, algo SigningAlgo) error
 
 	// ImportPubKey imports ASCII-armored public keys.
 	// Store a new Info object holding a public key only, i.e. it will
@@ -80,6 +80,12 @@ type Keybase interface {
 
 	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
+
+	// SupportedAlgos returns a list of signing algorithms supported by the keybase
+	SupportedAlgos() []SigningAlgo
+
+	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
+	SupportedAlgosLedger() []SigningAlgo
 
 	// CloseDB closes the database.
 	CloseDB()
@@ -132,15 +138,17 @@ var (
 // localInfo is the public information about a locally stored key
 type localInfo struct {
 	Name         string        `json:"name"`
+	Algo         SigningAlgo   `json:"algo"`
 	PubKey       crypto.PubKey `json:"pubkey"`
 	PrivKeyArmor string        `json:"privkey.armor"`
 }
 
-func newLocalInfo(name string, pub crypto.PubKey, privArmor string) Info {
+func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo SigningAlgo) Info {
 	return &localInfo{
 		Name:         name,
 		PubKey:       pub,
 		PrivKeyArmor: privArmor,
+		Algo:         algo,
 	}
 }
 
@@ -162,6 +170,11 @@ func (i localInfo) GetPubKey() crypto.PubKey {
 // GetType implements Info interface
 func (i localInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
+}
+
+// GetType implements Info interface
+func (i localInfo) GetAlgo() SigningAlgo {
+	return i.Algo
 }
 
 // GetType implements Info interface
@@ -213,6 +226,7 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`
+	Algo   SigningAlgo   `json:"algo"`
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
@@ -236,6 +250,11 @@ func (i offlineInfo) GetName() string {
 // GetPubKey implements Info interface
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
+}
+
+// GetAlgo returns the signing algorithm for the key
+func (i offlineInfo) GetAlgo() SigningAlgo {
+	return i.Algo
 }
 
 // GetAddress implements Info interface
@@ -317,7 +336,9 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 
 type (
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz [32]byte) crypto.PrivKey
+	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) crypto.PrivKey
+	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
+	DeriveKeyFunc func(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error)
 
 	// KeybaseOption overrides options for the db
 	KeybaseOption func(*kbOptions)

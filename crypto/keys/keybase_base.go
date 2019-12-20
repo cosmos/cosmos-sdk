@@ -8,10 +8,7 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
-
-	schnorrkel "github.com/ChainSafe/go-schnorrkel"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -20,7 +17,10 @@ import (
 
 type (
 	kbOptions struct {
-		keygenFunc PrivKeyGenFunc
+		keygenFunc           PrivKeyGenFunc
+		deriveFunc           DeriveKeyFunc
+		supportedAlgos       []SigningAlgo
+		supportedAlgosLedger []SigningAlgo
 	}
 
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
@@ -35,7 +35,7 @@ type (
 	}
 
 	writeLocalKeyer interface {
-		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info
+		writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info
 	}
 
 	infoWriter interface {
@@ -53,7 +53,12 @@ func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
-	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
+	options := kbOptions{
+		keygenFunc:           basePrivKeyGen,
+		deriveFunc:           baseDeriveKey,
+		supportedAlgos:       []SigningAlgo{Secp256k1},
+		supportedAlgosLedger: []SigningAlgo{Secp256k1},
+	}
 
 	for _, optionFn := range optionsFns {
 		optionFn(&options)
@@ -62,22 +67,14 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
-func basePrivKeyGen(bz [32]byte, algo SigningAlgo) tmcrypto.PrivKey {
+// basePrivKeyGen generates a secp256k1 private key from the given bytes
+func basePrivKeyGen(bz []byte, algo SigningAlgo) tmcrypto.PrivKey {
 	if algo == Secp256k1 {
-		return baseSecpPrivKeyGen(bz)
-	} else if algo == Ed25519 {
-		return base
+		var bzArr [32]byte
+		copy(bzArr[:], bz)
+		return secp256k1.PrivKeySecp256k1(bzArr)
 	}
-}
-
-// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
-func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
-	return secp256k1.PrivKeySecp256k1(bz)
-}
-
-// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
-func baseEd25519PrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
-	return ed25519.PrivKeyEd25519(bz)
+	return nil
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
@@ -139,26 +136,17 @@ func (kb baseKeybase) persistDerivedKey(
 ) (Info, error) {
 
 	// create master key and derive first key for keyring
-	derivedPriv, err := ComputeDerivedKey(seed, fullHdPath)
+	derivedPriv, err := kb.options.deriveFunc(seed, fullHdPath, algo)
 	if err != nil {
 		return nil, err
-	}
-
-	var key tmcrypto.PubKey
-
-	switch algo {
-	case Secp256k1:
-		key = secp256k1.PrivKeySecp256k1(derivedPriv)
-	case Ed25519:
-		key = ed25519.PrivKeyEd25519(derivedPriv)
 	}
 
 	var info Info
 
 	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv), passwd)
+		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv, algo), passwd, algo)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv, algo).PubKey())
 	}
 
 	return info, nil
@@ -170,7 +158,7 @@ func (kb baseKeybase) CreateLedger(
 	w infoWriter, name string, algo SigningAlgo, hrp string, account, index uint32,
 ) (Info, error) {
 
-	if !IsAlgoSupported(algo) {
+	if !IsAlgoSupported(algo, kb.SupportedAlgosLedger()) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -194,7 +182,7 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !IsAlgoSupported(algo) {
+	if !IsAlgoSupported(algo, kb.SupportedAlgos()) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -251,25 +239,14 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 	return info
 }
 
-// ComputeDerivedKey derives and returns the private key for the given seed and HD path.
-func ComputeDerivedKey(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error) {
+// baseDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+func baseDeriveKey(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error) {
 	if algo == Secp256k1 {
-		masterPriv, ch := hd.ComputeMastersFromSeed(seed, algo)
-		return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
-	} else if algo == Sr25519 {
-		var miniSecretKey *schnorrkel.MiniSecretKey
-		if len(seed) == 64 {
-			var seedArr [64]byte
-			copy(seedArr[:], seed)
-			miniSecretKey = schnorrkel.NewMiniSecretKey(seedArr)
-		} else if len(seed) == 32 {
-			var seedArr [32]byte
-			copy(seedArr[:], seed)
-			miniSecretKey, _ = schnorrkel.NewMiniSecretKeyFromRaw(seedArr)
-		}
-		secretKey := miniSecretKey.ExpandEd25519()
-
+		masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+		derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+		return derivedKey[:], err
 	}
+	return nil, ErrUnsupportedSigningAlgo
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.
@@ -277,10 +254,22 @@ func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
 	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
-// IsAlgoSupported returns whether the signing algorithm is supported.
-//
-// TODO: Refactor this to be configurable to support interchangeable key signing
-// and addressing.
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/4941
-func IsAlgoSupported(algo SigningAlgo) bool       { return algo == Secp256k1 }
-func IsAlgoSupportedLedger(algo SigningAlgo) bool { return algo == Secp256k1 }
+// SupportedAlgos returns a list of supported signing algorithms.
+func (kb baseKeybase) SupportedAlgos() []SigningAlgo {
+	return kb.options.supportedAlgos
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
+	return kb.options.supportedAlgosLedger
+}
+
+// IsAlgoSupported returns whether the signing algorithm is in the passed in list of supported algos.
+func IsAlgoSupported(algo SigningAlgo, supported []SigningAlgo) bool {
+	for _, supportedAlgo := range supported {
+		if algo == supportedAlgo {
+			return true
+		}
+	}
+	return false
+}

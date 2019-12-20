@@ -88,7 +88,7 @@ func (lkb lazyKeybase) CreateMnemonic(name string, language Language, passwd str
 	return newDBKeybase(db, lkb.options...).CreateMnemonic(name, language, passwd, algo)
 }
 
-func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
+func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32, algo SigningAlgo) (Info, error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
@@ -96,17 +96,17 @@ func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd 
 	defer db.Close()
 
 	return newDBKeybase(db,
-		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index)
+		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index, algo)
 }
 
-func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error) {
+func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo) (Info, error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	return newDBKeybase(db, lkb.options...).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
+	return newDBKeybase(db, lkb.options...).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params, algo)
 }
 
 func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error) {
@@ -159,14 +159,14 @@ func (lkb lazyKeybase) Import(name string, armor string) (err error) {
 	return newDBKeybase(db, lkb.options...).Import(name, armor)
 }
 
-func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string, algo SigningAlgo) error {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	return newDBKeybase(db, lkb.options...).ImportPrivKey(name, armor, passphrase)
+	return newDBKeybase(db, lkb.options...).ImportPrivKey(name, armor, passphrase, algo)
 }
 
 func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {
@@ -219,6 +219,28 @@ func (lkb lazyKeybase) ExportPrivKey(name string, decryptPassphrase string,
 	defer db.Close()
 
 	return newDBKeybase(db, lkb.options...).ExportPrivKey(name, decryptPassphrase, encryptPassphrase)
+}
+
+// SupportedAlgos returns a list of supported signing algorithms.
+func (lkb lazyKeybase) SupportedAlgos() []SigningAlgo {
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return []SigningAlgo{}
+	}
+	defer db.Close()
+
+	return newDBKeybase(db, lkb.options...).SupportedAlgos()
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (lkb lazyKeybase) SupportedAlgosLedger() []SigningAlgo {
+	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
+	if err != nil {
+		return []SigningAlgo{}
+	}
+	defer db.Close()
+
+	return newDBKeybase(db, lkb.options...).SupportedAlgosLedger()
 }
 
 func (lkb lazyKeybase) CloseDB() {}

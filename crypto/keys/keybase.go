@@ -57,7 +57,7 @@ const (
 var (
 	// ErrUnsupportedSigningAlgo is raised when the caller tries to use a
 	// different signing scheme than secp256k1.
-	ErrUnsupportedSigningAlgo = errors.New("unsupported signing algo: only secp256k1 is supported")
+	ErrUnsupportedSigningAlgo = errors.New("unsupported signing algo")
 
 	// ErrUnsupportedLanguage is raised when the caller tries to use a
 	// different language than english for creating a mnemonic sentence.
@@ -101,18 +101,18 @@ func (kb dbKeybase) CreateMnemonic(
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted
 // with the given password.
 func (kb dbKeybase) CreateAccount(
-	name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32,
+	name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32, algo SigningAlgo,
 ) (Info, error) {
 
-	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index)
+	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index, algo)
 }
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 func (kb dbKeybase) Derive(
-	name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params,
+	name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo,
 ) (Info, error) {
 
-	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params)
+	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params, algo)
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair.
@@ -291,7 +291,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 // ImportPrivKey imports a private key in ASCII armor format. It returns an
 // error if a key with the same name exists or a wrong encryption passphrase is
 // supplied.
-func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
+func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string, algo SigningAlgo) error {
 	if _, err := kb.Get(name); err == nil {
 		return errors.New("Cannot overwrite key " + name)
 	}
@@ -301,7 +301,7 @@ func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) 
 		return errors.Wrap(err, "couldn't import private key")
 	}
 
-	kb.writeLocalKey(name, privKey, passphrase)
+	kb.writeLocalKey(name, privKey, passphrase, algo)
 	return nil
 }
 
@@ -392,7 +392,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 			return err
 		}
 
-		kb.writeLocalKey(name, key, newpass)
+		kb.writeLocalKey(name, key, newpass, i.GetAlgo())
 		return nil
 
 	default:
@@ -405,13 +405,23 @@ func (kb dbKeybase) CloseDB() {
 	kb.db.Close()
 }
 
-func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info {
+// SupportedAlgos returns a list of supported signing algorithms.
+func (kb dbKeybase) SupportedAlgos() []SigningAlgo {
+	return kb.base.SupportedAlgos()
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (kb dbKeybase) SupportedAlgosLedger() []SigningAlgo {
+	return kb.base.SupportedAlgosLedger()
+}
+
+func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info {
 	// encrypt private key using passphrase
 	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase)
 
 	// make Info
 	pub := priv.PubKey()
-	info := newLocalInfo(name, pub, privArmor)
+	info := newLocalInfo(name, pub, privArmor, algo)
 
 	kb.writeInfo(name, info)
 	return info

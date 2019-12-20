@@ -90,19 +90,19 @@ func (kb keyringKeybase) CreateMnemonic(
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted
 // with the given password.
 func (kb keyringKeybase) CreateAccount(
-	name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
+	name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo,
 ) (Info, error) {
 
-	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index)
+	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index, algo)
 }
 
 // Derive computes a BIP39 seed from th mnemonic and bip39Passphrase. It creates
 // a private key from the seed using the BIP44 params.
 func (kb keyringKeybase) Derive(
-	name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params,
+	name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo,
 ) (info Info, err error) {
 
-	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params)
+	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params, algo)
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair.
@@ -336,7 +336,7 @@ func (kb keyringKeybase) ExportPrivKey(name, decryptPassphrase, encryptPassphras
 // ImportPrivKey imports a private key in ASCII armor format. An error is returned
 // if a key with the same name exists or a wrong encryption passphrase is
 // supplied.
-func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
+func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string, algo SigningAlgo) error {
 	if kb.HasKey(name) {
 		return fmt.Errorf("cannot overwrite key: %s", name)
 	}
@@ -347,7 +347,7 @@ func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 	}
 
 	// NOTE: The keyring keystore has no need for a passphrase.
-	kb.writeLocalKey(name, privKey, "")
+	kb.writeLocalKey(name, privKey, "", algo)
 	return nil
 }
 
@@ -429,7 +429,7 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 			return err
 		}
 
-		kb.writeLocalKey(name, key, newpass)
+		kb.writeLocalKey(name, key, newpass, linfo.GetAlgo())
 		return nil
 
 	default:
@@ -437,13 +437,23 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 	}
 }
 
+// SupportedAlgos returns a list of supported signing algorithms.
+func (kb keyringKeybase) SupportedAlgos() []SigningAlgo {
+	return kb.base.SupportedAlgos()
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (kb keyringKeybase) SupportedAlgosLedger() []SigningAlgo {
+	return kb.base.SupportedAlgosLedger()
+}
+
 // CloseDB releases the lock and closes the storage backend.
 func (kb keyringKeybase) CloseDB() {}
 
-func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string) Info {
+func (kb keyringKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, _ string, algo SigningAlgo) Info {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-	info := newLocalInfo(name, pub, string(priv.Bytes()))
+	info := newLocalInfo(name, pub, string(priv.Bytes()), algo)
 
 	kb.writeInfo(name, info)
 	return info

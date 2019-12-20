@@ -114,6 +114,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	interactive := viper.GetBool(flagInteractive)
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
+	algo := keys.SigningAlgo(viper.GetString(flagKeyAlgo))
+	if !keys.IsAlgoSupported(algo, kb.SupportedAlgos()) {
+		return keys.ErrUnsupportedSigningAlgo
+	}
+
 	if !viper.GetBool(flagDryRun) {
 		_, err = kb.Get(name)
 		if err == nil {
@@ -178,6 +183,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
+
+		if !keys.IsAlgoSupported(algo, kb.SupportedAlgosLedger()) {
+			return keys.ErrUnsupportedSigningAlgo
+		}
+
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
@@ -242,7 +252,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index, algo)
 	if err != nil {
 		return err
 	}

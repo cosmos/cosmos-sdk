@@ -91,7 +91,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if err := keyring.ImportPrivKey(keyName, armoredPriv, migratePassphrase); err != nil {
+		if err := keyring.ImportPrivKey(keyName, armoredPriv, migratePassphrase, keys.Secp256k1); err != nil {
 			return err
 		}
 	}

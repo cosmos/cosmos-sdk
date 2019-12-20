@@ -38,7 +38,7 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-		"", "", 0, 1)
+		"", "", 0, 1, Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "Invalid mnemonic", err.Error())
 }
@@ -47,7 +47,7 @@ func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	kb := NewInMemory()
 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
-	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
+	assert.Equal(t, "unsupported signing algo", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
@@ -393,7 +393,7 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
+	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
@@ -402,7 +402,11 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	customKeyGenFunc := func(bz [32]byte) crypto.PrivKey { return secp256k1.PrivKeySecp256k1(bz) }
+	customKeyGenFunc := func(bz []byte, algo SigningAlgo) crypto.PrivKey {
+		var bzArr [32]byte
+		copy(bzArr[:], bz)
+		return secp256k1.PrivKeySecp256k1(bzArr)
+	}
 	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
 
 	sec := Secp256k1

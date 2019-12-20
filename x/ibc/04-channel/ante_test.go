@@ -261,13 +261,9 @@ func newPacket(data uint64) packetT {
 
 // define variables used for testing
 var (
-	proof      = commitment.Proof{Proof: &merkle.Proof{}}
-	emptyProof = commitment.Proof{Proof: nil}
-	proofs     = proof
+	proof = commitment.Proof{Proof: &merkle.Proof{}}
 
-	addr1     = sdk.AccAddress("testaddr1")
-	addr2     = sdk.AccAddress("testaddr2")
-	emptyAddr sdk.AccAddress
+	addr1 = sdk.AccAddress("testaddr1")
 
 	portid   = "testportid"
 	chanid   = "testchannel"

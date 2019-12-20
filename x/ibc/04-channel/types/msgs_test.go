@@ -357,17 +357,12 @@ var (
 	invalidProofs2 = emptyProof
 
 	addr1     = sdk.AccAddress("testaddr1")
-	addr2     = sdk.AccAddress("testaddr2")
 	emptyAddr sdk.AccAddress
 
 	portid   = "testportid"
 	chanid   = "testchannel"
 	cpportid = "testcpport"
 	cpchanid = "testcpchannel"
-
-	coins, _          = sdk.ParseCoins("100atom")
-	invalidDenomCoins = sdk.Coins{sdk.Coin{Denom: "ato-m", Amount: sdk.NewInt(100)}}
-	negativeCoins     = sdk.Coins{sdk.Coin{Denom: "atom", Amount: sdk.NewInt(100)}, sdk.Coin{Denom: "atoms", Amount: sdk.NewInt(-100)}}
 )
 
 // TestMsgPacketRoute tests Route for MsgPacket

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package cosmos_sdk.x.gov;
+option go_package = "types";
+
+import "types/codec.proto";
+import "gogoproto/gogo.proto";
+
+message MsgSubmitProposalBase {
+    repeated cosmos_sdk.Coin intial_deposit = 1 [(gogoproto.nullable) = false];
+    bytes proposer = 2
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
+message MsgDeposit {
+    option (gogoproto.stringer) = false;
+    uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+    bytes depositor = 2
+        [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    repeated cosmos_sdk.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+
+enum VoteOption {
+    option (gogoproto.enum_stringer) = false;
+    EMPTY = 0 [(gogoproto.enumvalue_customname) = "OptionEmpty"];
+    YES = 1 [(gogoproto.enumvalue_customname) = "OptionYes"];
+    ABSTAIN = 2 [(gogoproto.enumvalue_customname) = "OptionAbstain"];
+    NO = 3 [(gogoproto.enumvalue_customname) = "OptionNo"];
+    NO_WITH_VETO = 4 [(gogoproto.enumvalue_customname) = "OptionNoWithVeto"];
+}
+
+message MsgVote {
+    option (gogoproto.stringer) = false;
+    uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+    bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    VoteOption option = 3;
+}
+

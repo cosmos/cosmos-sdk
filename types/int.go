@@ -359,3 +359,16 @@ func (i Int) MarshalYAML() (interface{}, error) { return i.String(), nil }
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
+
+func (i Int) Size() int {
+	panic("TODO")
+}
+
+func (i Int) MarshalTo(dest []byte) (int, error) {
+	panic("TODO")
+}
+
+func (i *Int) Unmarshal(src []byte) error {
+	panic("TODO")
+}
+

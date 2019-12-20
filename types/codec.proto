@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cosmos_sdk;
+option go_package = "types";
+
+import "gogoproto/gogo.proto";
+
+message Coin {
+    option (gogoproto.stringer) = false;
+    string denom = 1;
+    bytes amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+}
+
+//message Coins {
+//    option (gogoproto.stringer) = false;
+//    repeated Coin coins = 1 [(gogoproto.nullable) = false];
+//}

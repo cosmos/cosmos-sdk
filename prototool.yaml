@@ -1,0 +1,24 @@
+protoc:
+  version: 3.8.0
+  allow_unused_imports: false
+  includes:
+    - .
+    - vendor/github.com/gogo/protobuf
+lint:
+  group: uber2
+excludes:
+  - .git
+  - vendor
+generate:
+    go_options:
+      import_path: github.com/cosmos/cosmos-sdk
+      extra_modifiers:
+        google/api/annotations.proto: google.golang.org/genproto/googleapis/api/annotations
+        google/api/http.proto: google.golang.org/genproto/googleapis/api/annotations
+#        gogoproto/gogo.proto: github.com/gogo/protobuf
+
+    plugins:
+      - name: gogoslick
+        type: gogo
+        flags: plugins=grpc
+        output: .

@@ -15,8 +15,9 @@ message Msg {
 }
 
 message MsgGovSubmitProposal {
+    option (gogoproto.goproto_getters) = false;
     cosmos_sdk.x.gov.MsgSubmitProposalBase base = 1 [(gogoproto.embed) = true];
-    oneof content {
+    oneof proposal {
         cosmos_sdk.x.gov.TextProposal text_proposal = 2;
         SomeOtherProposal some_other_proposal = 3;
     }

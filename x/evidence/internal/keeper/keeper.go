@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -24,11 +25,10 @@ type Keeper struct {
 	router         types.Router
 	stakingKeeper  types.StakingKeeper
 	slashingKeeper types.SlashingKeeper
-	codespace      sdk.CodespaceType
 }
 
 func NewKeeper(
-	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace, codespace sdk.CodespaceType,
+	cdc *codec.Codec, storeKey sdk.StoreKey, paramSpace params.Subspace,
 	stakingKeeper types.StakingKeeper, slashingKeeper types.SlashingKeeper,
 ) *Keeper {
 
@@ -43,7 +43,6 @@ func NewKeeper(
 		paramSpace:     paramSpace,
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
-		codespace:      codespace,
 	}
 }
 
@@ -74,7 +73,7 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 // no handler exists, an error is returned.
 func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
 	if !k.router.HasRoute(evidenceRoute) {
-		return nil, types.ErrNoEvidenceHandlerExists(k.codespace, evidenceRoute)
+		return nil, sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
 	}
 
 	return k.router.GetRoute(evidenceRoute), nil
@@ -86,15 +85,15 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // persisted.
 func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
-		return types.ErrEvidenceExists(k.codespace, evidence.Hash().String())
+		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
 	}
 	if !k.router.HasRoute(evidence.Route()) {
-		return types.ErrNoEvidenceHandlerExists(k.codespace, evidence.Route())
+		return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
 	}
 
 	handler := k.router.GetRoute(evidence.Route())
 	if err := handler(ctx, evidence); err != nil {
-		return types.ErrInvalidEvidence(k.codespace, err.Error())
+		return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
 	}
 
 	ctx.EventManager().EmitEvent(

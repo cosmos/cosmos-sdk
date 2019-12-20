@@ -8,23 +8,19 @@ import (
 // nolint
 
 const (
-	ModuleName                  = types.ModuleName
-	StoreKey                    = types.StoreKey
-	RouterKey                   = types.RouterKey
-	QuerierRoute                = types.QuerierRoute
-	DefaultParamspace           = types.DefaultParamspace
-	QueryEvidence               = types.QueryEvidence
-	QueryAllEvidence            = types.QueryAllEvidence
-	QueryParameters             = types.QueryParameters
-	CodeNoEvidenceHandlerExists = types.CodeNoEvidenceHandlerExists
-	CodeInvalidEvidence         = types.CodeInvalidEvidence
-	CodeNoEvidenceExists        = types.CodeNoEvidenceExists
-	TypeMsgSubmitEvidence       = types.TypeMsgSubmitEvidence
-	DefaultCodespace            = types.DefaultCodespace
-	EventTypeSubmitEvidence     = types.EventTypeSubmitEvidence
-	AttributeValueCategory      = types.AttributeValueCategory
-	AttributeKeyEvidenceHash    = types.AttributeKeyEvidenceHash
-	DefaultMaxEvidenceAge       = types.DefaultMaxEvidenceAge
+	ModuleName               = types.ModuleName
+	StoreKey                 = types.StoreKey
+	RouterKey                = types.RouterKey
+	QuerierRoute             = types.QuerierRoute
+	DefaultParamspace        = types.DefaultParamspace
+	QueryEvidence            = types.QueryEvidence
+	QueryAllEvidence         = types.QueryAllEvidence
+	QueryParameters          = types.QueryParameters
+	TypeMsgSubmitEvidence    = types.TypeMsgSubmitEvidence
+	EventTypeSubmitEvidence  = types.EventTypeSubmitEvidence
+	AttributeValueCategory   = types.AttributeValueCategory
+	AttributeKeyEvidenceHash = types.AttributeKeyEvidenceHash
+	DefaultMaxEvidenceAge    = types.DefaultMaxEvidenceAge
 )
 
 var (

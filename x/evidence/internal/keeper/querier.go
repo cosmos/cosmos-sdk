@@ -14,7 +14,7 @@ import (
 )
 
 func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
 			err error
@@ -34,7 +34,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint", types.ModuleName)
 		}
 
-		return res, sdk.ConvertError(err)
+		return res, err
 	}
 }
 
@@ -64,7 +64,7 @@ func queryEvidence(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, er
 
 	evidence, ok := k.GetEvidence(ctx, hash)
 	if !ok {
-		return nil, types.ErrNoEvidenceExists(k.codespace, params.EvidenceHash)
+		return nil, sdkerrors.Wrap(types.ErrNoEvidenceExists, params.EvidenceHash)
 	}
 
 	res, err := codec.MarshalJSONIndent(k.cdc, evidence)

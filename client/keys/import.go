@@ -32,6 +32,9 @@ func runImportCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	algo := keys.SigningAlgo(viper.GetString(flagKeyAlgo))
+	if algo == keys.SigningAlgo("") {
+		algo = keys.SigningAlgo(keys.Secp256k1)
+	}
 	if !keys.IsAlgoSupported(algo, kb.SupportedAlgos()) {
 		return keys.ErrUnsupportedSigningAlgo
 	}

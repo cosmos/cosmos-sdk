@@ -115,6 +115,9 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	showMnemonic := !viper.GetBool(flagNoBackup)
 
 	algo := keys.SigningAlgo(viper.GetString(flagKeyAlgo))
+	if algo == keys.SigningAlgo("") {
+		algo = keys.SigningAlgo(keys.Secp256k1)
+	}
 	if !keys.IsAlgoSupported(algo, kb.SupportedAlgos()) {
 		return keys.ErrUnsupportedSigningAlgo
 	}

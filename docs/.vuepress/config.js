@@ -91,7 +91,7 @@ module.exports = {
       logo: "/logo-bw.svg",
       textLink: {
         text: "cosmos.network",
-        url: "/"
+        url: "https://cosmos.network"
       },
       services: [
         {

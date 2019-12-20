@@ -6,6 +6,11 @@
 
  using SDK = import "/types/codec.capnp";
 
+struct Msg(Content) {
+  msgDeposit @0 :MsgDeposit;
+  msgSubmitProposal @1 :MsgSubmitProposal;
+  msgVote @2 :MsgVote;
+}
 
 struct MsgSubmitProposal(Content) {
   content @0 :Content;
@@ -38,8 +43,3 @@ struct TextProposal {
   description @1 :Text;
 }
 
-struct Tx(Content) {
-  msgDeposit @0 :MsgDeposit;
-  msgSubmitProposal @1 :MsgSubmitProposal;
-  msgVote @2 :MsgVote;
-}

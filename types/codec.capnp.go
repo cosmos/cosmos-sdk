@@ -97,18 +97,366 @@ func (p CoinE_Promise) Struct() (CoinE, error) {
 	return CoinE{s}, err
 }
 
-const schema_b02b1ca217480de7 = "x\xda\x120r`\x12d\x8dg`\x08dae\xfb" +
-	"\xffV\xaa\xcdd\xc5N\xaeM\x0c\x82B\x8c\xff\x9f\xf3" +
-	"z\x88/\x92\xd1\xde\xc0\xc0\xca\xc4\xce\xc0 (zH" +
-	"P\x16DK\x9630\xfe/\xa9,H-\xd6O\xce" +
-	"gJIM\xd6KN,\xc8+\xb0r\xce\xcf\xccs" +
-	"e\x08`d\x0c\xe4`fa``ad`\x10\xd4" +
-	"4b`\x08Taf\x0c4`b\x14dd\x14a" +
-	"\x04\x09\xeaZ10\x04j03\x06\x9a01\xca\xa7" +
-	"\xa4\xe6\xe5\xe72\xf2001\xf200\xda'\xe6\xe6" +
-	"\x97\xe6\x95\xc0\xb8\x80\x00\x00\x00\xff\xff\xcd\xf4\x1e\xc3"
+type StdTx struct{ capnp.Struct }
+
+// StdTx_TypeID is the unique identifier for the type StdTx.
+const StdTx_TypeID = 0xcfe15f4afb4a07bb
+
+func NewStdTx(s *capnp.Segment) (StdTx, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 4})
+	return StdTx{st}, err
+}
+
+func NewRootStdTx(s *capnp.Segment) (StdTx, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 4})
+	return StdTx{st}, err
+}
+
+func ReadRootStdTx(msg *capnp.Message) (StdTx, error) {
+	root, err := msg.RootPtr()
+	return StdTx{root.Struct()}, err
+}
+
+func (s StdTx) String() string {
+	str, _ := text.Marshal(0xcfe15f4afb4a07bb, s.Struct)
+	return str
+}
+
+func (s StdTx) Msg() (capnp.Pointer, error) {
+	return s.Struct.Pointer(0)
+}
+
+func (s StdTx) HasMsg() bool {
+	p, err := s.Struct.Ptr(0)
+	return p.IsValid() || err != nil
+}
+
+func (s StdTx) MsgPtr() (capnp.Ptr, error) {
+	return s.Struct.Ptr(0)
+}
+
+func (s StdTx) SetMsg(v capnp.Pointer) error {
+	return s.Struct.SetPointer(0, v)
+}
+
+func (s StdTx) SetMsgPtr(v capnp.Ptr) error {
+	return s.Struct.SetPtr(0, v)
+}
+
+func (s StdTx) Fee() (StdFee, error) {
+	p, err := s.Struct.Ptr(1)
+	return StdFee{Struct: p.Struct()}, err
+}
+
+func (s StdTx) HasFee() bool {
+	p, err := s.Struct.Ptr(1)
+	return p.IsValid() || err != nil
+}
+
+func (s StdTx) SetFee(v StdFee) error {
+	return s.Struct.SetPtr(1, v.Struct.ToPtr())
+}
+
+// NewFee sets the fee field to a newly
+// allocated StdFee struct, preferring placement in s's segment.
+func (s StdTx) NewFee() (StdFee, error) {
+	ss, err := NewStdFee(s.Struct.Segment())
+	if err != nil {
+		return StdFee{}, err
+	}
+	err = s.Struct.SetPtr(1, ss.Struct.ToPtr())
+	return ss, err
+}
+
+func (s StdTx) Signatures() (StdSignature_List, error) {
+	p, err := s.Struct.Ptr(2)
+	return StdSignature_List{List: p.List()}, err
+}
+
+func (s StdTx) HasSignatures() bool {
+	p, err := s.Struct.Ptr(2)
+	return p.IsValid() || err != nil
+}
+
+func (s StdTx) SetSignatures(v StdSignature_List) error {
+	return s.Struct.SetPtr(2, v.List.ToPtr())
+}
+
+// NewSignatures sets the signatures field to a newly
+// allocated StdSignature_List, preferring placement in s's segment.
+func (s StdTx) NewSignatures(n int32) (StdSignature_List, error) {
+	l, err := NewStdSignature_List(s.Struct.Segment(), n)
+	if err != nil {
+		return StdSignature_List{}, err
+	}
+	err = s.Struct.SetPtr(2, l.List.ToPtr())
+	return l, err
+}
+
+func (s StdTx) Memo() (string, error) {
+	p, err := s.Struct.Ptr(3)
+	return p.Text(), err
+}
+
+func (s StdTx) HasMemo() bool {
+	p, err := s.Struct.Ptr(3)
+	return p.IsValid() || err != nil
+}
+
+func (s StdTx) MemoBytes() ([]byte, error) {
+	p, err := s.Struct.Ptr(3)
+	return p.TextBytes(), err
+}
+
+func (s StdTx) SetMemo(v string) error {
+	return s.Struct.SetText(3, v)
+}
+
+// StdTx_List is a list of StdTx.
+type StdTx_List struct{ capnp.List }
+
+// NewStdTx creates a new list of StdTx.
+func NewStdTx_List(s *capnp.Segment, sz int32) (StdTx_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 4}, sz)
+	return StdTx_List{l}, err
+}
+
+func (s StdTx_List) At(i int) StdTx { return StdTx{s.List.Struct(i)} }
+
+func (s StdTx_List) Set(i int, v StdTx) error { return s.List.SetStruct(i, v.Struct) }
+
+func (s StdTx_List) String() string {
+	str, _ := text.MarshalList(0xcfe15f4afb4a07bb, s.List)
+	return str
+}
+
+// StdTx_Promise is a wrapper for a StdTx promised by a client call.
+type StdTx_Promise struct{ *capnp.Pipeline }
+
+func (p StdTx_Promise) Struct() (StdTx, error) {
+	s, err := p.Pipeline.Struct()
+	return StdTx{s}, err
+}
+
+func (p StdTx_Promise) Msg() *capnp.Pipeline {
+	return p.Pipeline.GetPipeline(0)
+}
+
+func (p StdTx_Promise) Fee() StdFee_Promise {
+	return StdFee_Promise{Pipeline: p.Pipeline.GetPipeline(1)}
+}
+
+type StdFee struct{ capnp.Struct }
+
+// StdFee_TypeID is the unique identifier for the type StdFee.
+const StdFee_TypeID = 0xcd7b52b2fab615ee
+
+func NewStdFee(s *capnp.Segment) (StdFee, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
+	return StdFee{st}, err
+}
+
+func NewRootStdFee(s *capnp.Segment) (StdFee, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
+	return StdFee{st}, err
+}
+
+func ReadRootStdFee(msg *capnp.Message) (StdFee, error) {
+	root, err := msg.RootPtr()
+	return StdFee{root.Struct()}, err
+}
+
+func (s StdFee) String() string {
+	str, _ := text.Marshal(0xcd7b52b2fab615ee, s.Struct)
+	return str
+}
+
+func (s StdFee) Coins() (CoinE_List, error) {
+	p, err := s.Struct.Ptr(0)
+	return CoinE_List{List: p.List()}, err
+}
+
+func (s StdFee) HasCoins() bool {
+	p, err := s.Struct.Ptr(0)
+	return p.IsValid() || err != nil
+}
+
+func (s StdFee) SetCoins(v CoinE_List) error {
+	return s.Struct.SetPtr(0, v.List.ToPtr())
+}
+
+// NewCoins sets the coins field to a newly
+// allocated CoinE_List, preferring placement in s's segment.
+func (s StdFee) NewCoins(n int32) (CoinE_List, error) {
+	l, err := NewCoinE_List(s.Struct.Segment(), n)
+	if err != nil {
+		return CoinE_List{}, err
+	}
+	err = s.Struct.SetPtr(0, l.List.ToPtr())
+	return l, err
+}
+
+func (s StdFee) Gas() uint64 {
+	return s.Struct.Uint64(0)
+}
+
+func (s StdFee) SetGas(v uint64) {
+	s.Struct.SetUint64(0, v)
+}
+
+// StdFee_List is a list of StdFee.
+type StdFee_List struct{ capnp.List }
+
+// NewStdFee creates a new list of StdFee.
+func NewStdFee_List(s *capnp.Segment, sz int32) (StdFee_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1}, sz)
+	return StdFee_List{l}, err
+}
+
+func (s StdFee_List) At(i int) StdFee { return StdFee{s.List.Struct(i)} }
+
+func (s StdFee_List) Set(i int, v StdFee) error { return s.List.SetStruct(i, v.Struct) }
+
+func (s StdFee_List) String() string {
+	str, _ := text.MarshalList(0xcd7b52b2fab615ee, s.List)
+	return str
+}
+
+// StdFee_Promise is a wrapper for a StdFee promised by a client call.
+type StdFee_Promise struct{ *capnp.Pipeline }
+
+func (p StdFee_Promise) Struct() (StdFee, error) {
+	s, err := p.Pipeline.Struct()
+	return StdFee{s}, err
+}
+
+type StdSignature struct{ capnp.Struct }
+
+// StdSignature_TypeID is the unique identifier for the type StdSignature.
+const StdSignature_TypeID = 0x98fab8d337ffb7fe
+
+func NewStdSignature(s *capnp.Segment) (StdSignature, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2})
+	return StdSignature{st}, err
+}
+
+func NewRootStdSignature(s *capnp.Segment) (StdSignature, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2})
+	return StdSignature{st}, err
+}
+
+func ReadRootStdSignature(msg *capnp.Message) (StdSignature, error) {
+	root, err := msg.RootPtr()
+	return StdSignature{root.Struct()}, err
+}
+
+func (s StdSignature) String() string {
+	str, _ := text.Marshal(0x98fab8d337ffb7fe, s.Struct)
+	return str
+}
+
+func (s StdSignature) Pubkey() (capnp.Pointer, error) {
+	return s.Struct.Pointer(0)
+}
+
+func (s StdSignature) HasPubkey() bool {
+	p, err := s.Struct.Ptr(0)
+	return p.IsValid() || err != nil
+}
+
+func (s StdSignature) PubkeyPtr() (capnp.Ptr, error) {
+	return s.Struct.Ptr(0)
+}
+
+func (s StdSignature) SetPubkey(v capnp.Pointer) error {
+	return s.Struct.SetPointer(0, v)
+}
+
+func (s StdSignature) SetPubkeyPtr(v capnp.Ptr) error {
+	return s.Struct.SetPtr(0, v)
+}
+
+func (s StdSignature) Signature() ([]byte, error) {
+	p, err := s.Struct.Ptr(1)
+	return []byte(p.Data()), err
+}
+
+func (s StdSignature) HasSignature() bool {
+	p, err := s.Struct.Ptr(1)
+	return p.IsValid() || err != nil
+}
+
+func (s StdSignature) SetSignature(v []byte) error {
+	return s.Struct.SetData(1, v)
+}
+
+// StdSignature_List is a list of StdSignature.
+type StdSignature_List struct{ capnp.List }
+
+// NewStdSignature creates a new list of StdSignature.
+func NewStdSignature_List(s *capnp.Segment, sz int32) (StdSignature_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 2}, sz)
+	return StdSignature_List{l}, err
+}
+
+func (s StdSignature_List) At(i int) StdSignature { return StdSignature{s.List.Struct(i)} }
+
+func (s StdSignature_List) Set(i int, v StdSignature) error { return s.List.SetStruct(i, v.Struct) }
+
+func (s StdSignature_List) String() string {
+	str, _ := text.MarshalList(0x98fab8d337ffb7fe, s.List)
+	return str
+}
+
+// StdSignature_Promise is a wrapper for a StdSignature promised by a client call.
+type StdSignature_Promise struct{ *capnp.Pipeline }
+
+func (p StdSignature_Promise) Struct() (StdSignature, error) {
+	s, err := p.Pipeline.Struct()
+	return StdSignature{s}, err
+}
+
+func (p StdSignature_Promise) Pubkey() *capnp.Pipeline {
+	return p.Pipeline.GetPipeline(0)
+}
+
+const schema_b02b1ca217480de7 = "x\xdat\x92Mk\x13_\x14\xc6\x9f\xe7\xde\x99\xff\xb4" +
+	"\x7f\x9avn\xa6\xa5(B\xa0\xb8\xf0\xfd\x8d\x82% " +
+	"I\xf1\x05\xa9\x08\xb9\xad+\x114M\xae\xd3\xa03\x13" +
+	"\x9c\x84\x1a\xdc\xfb\x19t\xa9 \xb8p\xa1E\xb4\xe2\xae" +
+	"KA\\\xf8\x09\xba\x90\xe2B?@\x04Gf4i" +
+	"\x8c\xcd\xee\xde\xc3\xc3y\x9es~\xc7\xed\x96\xc5i\xdb" +
+	"'\xa0]\xfb\xbf\xe4\xe7\xdb\xe4\xec\xe7\xcd\xee#\xa8<" +
+	"\x93\x9d\xdc\xe5\xd9\xa7\x07\x8e\xbe\x84-\x1c\x97\xeaqW" +
+	"=s\x00\xf5d\x1d\xf0\xf6q*\xf9\xb6\xff\xe1\xfc\xf3" +
+	"w\xffo\xfc#\x06\xbc\x1c\xb7\xbc\x19\xa6/\xc5u0" +
+	"\xf9>\xf3\xa6\xbb\xb1\xfc\xe0#t\x9e\x83\xe2L\x12\xf0" +
+	"\x83\xd7\xc9^\xedL\xfc\xdeY\xfa\xb1ts\xfb\xd3P" +
+	"c\xcbq\xe9ms\xcb\xfb\x9ai\xbfp\x07\xf0f\xe4" +
+	"l\xd2\xea4M|\xb2\x16\x89\xba\xa9\x9d\xa8U\x9ba" +
+	"\xb3\xb8\xd2\xaa\xaf4\xfcRXm\xb5\xef\x99\x0a\xa9\xc7" +
+	"\xa4\x05X\x04\xd4\xe1\"\xa0\x0fJ\xeaS\x82\x8a\x9cf" +
+	"Z<\xbe\x0c\xe8c\x92zA\xb0\xd4l\xaf\xde1\x1d" +
+	"\xa6I\xfb\x0b\x01\x98\x07\x93\xb8\xe1g=A\xc3\x1c\x04" +
+	"s\xe0\xa2E\xc5b\xa9\xd2^\xbdb:{e9\x1f" +
+	"5\xc2\x8b\x18\x0aqf\xaf\x10i\xb2C\x92z^\xb0" +
+	"P7a\x14p\x02\x82\x13`\xa9\x1aD\xed\xb0\xd5\xfb" +
+	"\x8e\x98\xf8\x921\x18\xe5S\x16\xec\xd9\x9c\x9b\x03\xf4\x82" +
+	"\xa4\xbe X\xa8E\x8d0\xe6$X\x91\xa4\xbb\xcb\x14" +
+	"L\x8b\x8e_\x8d9\x0e\xc1\xf1\x91\xa6\xd7\xeeg\x96n" +
+	"\xdf\xb2\x9a\xb6\xbf!\xa9\xd7\x06F3i\xf1\x96\xa4\xbe" +
+	"+\xa8\x84\x98\xa6\x00T\xe3:\xa0\xd7$\xf5kA%" +
+	"\xe54%\xa0^\x1d\x01\xf4\x0bI\xbd)\xe8\x04\xb1\x9f" +
+	"a\xe8_\xc4o\x0c\xcemc\xe8\xee\x1e\x15Hw\x10" +
+	"\x8e4\x03#\x0d ,S\xb1\xa0-\xf1\x17W\xc5Y" +
+	"m\x91\xcc\xe4y{\xc8m\x12\x9c\x0aL\x10\xf5V\xbf" +
+	"8Fe\xcf)\xbb\xe8\\\x8d\xfd?\xd0\x7f\x05\x00\x00" +
+	"\xff\xff\x8a\xda\xc8y"
 
 func init() {
 	schemas.Register(schema_b02b1ca217480de7,
-		0xb20ab9a834861aed)
+		0x98fab8d337ffb7fe,
+		0xb20ab9a834861aed,
+		0xcd7b52b2fab615ee,
+		0xcfe15f4afb4a07bb)
 }

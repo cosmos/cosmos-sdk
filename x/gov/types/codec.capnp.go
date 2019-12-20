@@ -9,6 +9,144 @@ import (
 	schemas "zombiezen.com/go/capnproto2/schemas"
 )
 
+type Msg struct{ capnp.Struct }
+
+// Msg_TypeID is the unique identifier for the type Msg.
+const Msg_TypeID = 0x975222365e4da36c
+
+func NewMsg(s *capnp.Segment) (Msg, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3})
+	return Msg{st}, err
+}
+
+func NewRootMsg(s *capnp.Segment) (Msg, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3})
+	return Msg{st}, err
+}
+
+func ReadRootMsg(msg *capnp.Message) (Msg, error) {
+	root, err := msg.RootPtr()
+	return Msg{root.Struct()}, err
+}
+
+func (s Msg) String() string {
+	str, _ := text.Marshal(0x975222365e4da36c, s.Struct)
+	return str
+}
+
+func (s Msg) MsgDeposit() (MsgDeposit, error) {
+	p, err := s.Struct.Ptr(0)
+	return MsgDeposit{Struct: p.Struct()}, err
+}
+
+func (s Msg) HasMsgDeposit() bool {
+	p, err := s.Struct.Ptr(0)
+	return p.IsValid() || err != nil
+}
+
+func (s Msg) SetMsgDeposit(v MsgDeposit) error {
+	return s.Struct.SetPtr(0, v.Struct.ToPtr())
+}
+
+// NewMsgDeposit sets the msgDeposit field to a newly
+// allocated MsgDeposit struct, preferring placement in s's segment.
+func (s Msg) NewMsgDeposit() (MsgDeposit, error) {
+	ss, err := NewMsgDeposit(s.Struct.Segment())
+	if err != nil {
+		return MsgDeposit{}, err
+	}
+	err = s.Struct.SetPtr(0, ss.Struct.ToPtr())
+	return ss, err
+}
+
+func (s Msg) MsgSubmitProposal() (MsgSubmitProposal, error) {
+	p, err := s.Struct.Ptr(1)
+	return MsgSubmitProposal{Struct: p.Struct()}, err
+}
+
+func (s Msg) HasMsgSubmitProposal() bool {
+	p, err := s.Struct.Ptr(1)
+	return p.IsValid() || err != nil
+}
+
+func (s Msg) SetMsgSubmitProposal(v MsgSubmitProposal) error {
+	return s.Struct.SetPtr(1, v.Struct.ToPtr())
+}
+
+// NewMsgSubmitProposal sets the msgSubmitProposal field to a newly
+// allocated MsgSubmitProposal struct, preferring placement in s's segment.
+func (s Msg) NewMsgSubmitProposal() (MsgSubmitProposal, error) {
+	ss, err := NewMsgSubmitProposal(s.Struct.Segment())
+	if err != nil {
+		return MsgSubmitProposal{}, err
+	}
+	err = s.Struct.SetPtr(1, ss.Struct.ToPtr())
+	return ss, err
+}
+
+func (s Msg) MsgVote() (MsgVote, error) {
+	p, err := s.Struct.Ptr(2)
+	return MsgVote{Struct: p.Struct()}, err
+}
+
+func (s Msg) HasMsgVote() bool {
+	p, err := s.Struct.Ptr(2)
+	return p.IsValid() || err != nil
+}
+
+func (s Msg) SetMsgVote(v MsgVote) error {
+	return s.Struct.SetPtr(2, v.Struct.ToPtr())
+}
+
+// NewMsgVote sets the msgVote field to a newly
+// allocated MsgVote struct, preferring placement in s's segment.
+func (s Msg) NewMsgVote() (MsgVote, error) {
+	ss, err := NewMsgVote(s.Struct.Segment())
+	if err != nil {
+		return MsgVote{}, err
+	}
+	err = s.Struct.SetPtr(2, ss.Struct.ToPtr())
+	return ss, err
+}
+
+// Msg_List is a list of Msg.
+type Msg_List struct{ capnp.List }
+
+// NewMsg creates a new list of Msg.
+func NewMsg_List(s *capnp.Segment, sz int32) (Msg_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3}, sz)
+	return Msg_List{l}, err
+}
+
+func (s Msg_List) At(i int) Msg { return Msg{s.List.Struct(i)} }
+
+func (s Msg_List) Set(i int, v Msg) error { return s.List.SetStruct(i, v.Struct) }
+
+func (s Msg_List) String() string {
+	str, _ := text.MarshalList(0x975222365e4da36c, s.List)
+	return str
+}
+
+// Msg_Promise is a wrapper for a Msg promised by a client call.
+type Msg_Promise struct{ *capnp.Pipeline }
+
+func (p Msg_Promise) Struct() (Msg, error) {
+	s, err := p.Pipeline.Struct()
+	return Msg{s}, err
+}
+
+func (p Msg_Promise) MsgDeposit() MsgDeposit_Promise {
+	return MsgDeposit_Promise{Pipeline: p.Pipeline.GetPipeline(0)}
+}
+
+func (p Msg_Promise) MsgSubmitProposal() MsgSubmitProposal_Promise {
+	return MsgSubmitProposal_Promise{Pipeline: p.Pipeline.GetPipeline(1)}
+}
+
+func (p Msg_Promise) MsgVote() MsgVote_Promise {
+	return MsgVote_Promise{Pipeline: p.Pipeline.GetPipeline(2)}
+}
+
 type MsgSubmitProposal struct{ capnp.Struct }
 
 // MsgSubmitProposal_TypeID is the unique identifier for the type MsgSubmitProposal.
@@ -466,197 +604,59 @@ func (p TextProposal_Promise) Struct() (TextProposal, error) {
 	return TextProposal{s}, err
 }
 
-type Tx struct{ capnp.Struct }
-
-// Tx_TypeID is the unique identifier for the type Tx.
-const Tx_TypeID = 0xf6e7930cbb80b4ba
-
-func NewTx(s *capnp.Segment) (Tx, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3})
-	return Tx{st}, err
-}
-
-func NewRootTx(s *capnp.Segment) (Tx, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3})
-	return Tx{st}, err
-}
-
-func ReadRootTx(msg *capnp.Message) (Tx, error) {
-	root, err := msg.RootPtr()
-	return Tx{root.Struct()}, err
-}
-
-func (s Tx) String() string {
-	str, _ := text.Marshal(0xf6e7930cbb80b4ba, s.Struct)
-	return str
-}
-
-func (s Tx) MsgDeposit() (MsgDeposit, error) {
-	p, err := s.Struct.Ptr(0)
-	return MsgDeposit{Struct: p.Struct()}, err
-}
-
-func (s Tx) HasMsgDeposit() bool {
-	p, err := s.Struct.Ptr(0)
-	return p.IsValid() || err != nil
-}
-
-func (s Tx) SetMsgDeposit(v MsgDeposit) error {
-	return s.Struct.SetPtr(0, v.Struct.ToPtr())
-}
-
-// NewMsgDeposit sets the msgDeposit field to a newly
-// allocated MsgDeposit struct, preferring placement in s's segment.
-func (s Tx) NewMsgDeposit() (MsgDeposit, error) {
-	ss, err := NewMsgDeposit(s.Struct.Segment())
-	if err != nil {
-		return MsgDeposit{}, err
-	}
-	err = s.Struct.SetPtr(0, ss.Struct.ToPtr())
-	return ss, err
-}
-
-func (s Tx) MsgSubmitProposal() (MsgSubmitProposal, error) {
-	p, err := s.Struct.Ptr(1)
-	return MsgSubmitProposal{Struct: p.Struct()}, err
-}
-
-func (s Tx) HasMsgSubmitProposal() bool {
-	p, err := s.Struct.Ptr(1)
-	return p.IsValid() || err != nil
-}
-
-func (s Tx) SetMsgSubmitProposal(v MsgSubmitProposal) error {
-	return s.Struct.SetPtr(1, v.Struct.ToPtr())
-}
-
-// NewMsgSubmitProposal sets the msgSubmitProposal field to a newly
-// allocated MsgSubmitProposal struct, preferring placement in s's segment.
-func (s Tx) NewMsgSubmitProposal() (MsgSubmitProposal, error) {
-	ss, err := NewMsgSubmitProposal(s.Struct.Segment())
-	if err != nil {
-		return MsgSubmitProposal{}, err
-	}
-	err = s.Struct.SetPtr(1, ss.Struct.ToPtr())
-	return ss, err
-}
-
-func (s Tx) MsgVote() (MsgVote, error) {
-	p, err := s.Struct.Ptr(2)
-	return MsgVote{Struct: p.Struct()}, err
-}
-
-func (s Tx) HasMsgVote() bool {
-	p, err := s.Struct.Ptr(2)
-	return p.IsValid() || err != nil
-}
-
-func (s Tx) SetMsgVote(v MsgVote) error {
-	return s.Struct.SetPtr(2, v.Struct.ToPtr())
-}
-
-// NewMsgVote sets the msgVote field to a newly
-// allocated MsgVote struct, preferring placement in s's segment.
-func (s Tx) NewMsgVote() (MsgVote, error) {
-	ss, err := NewMsgVote(s.Struct.Segment())
-	if err != nil {
-		return MsgVote{}, err
-	}
-	err = s.Struct.SetPtr(2, ss.Struct.ToPtr())
-	return ss, err
-}
-
-// Tx_List is a list of Tx.
-type Tx_List struct{ capnp.List }
-
-// NewTx creates a new list of Tx.
-func NewTx_List(s *capnp.Segment, sz int32) (Tx_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 3}, sz)
-	return Tx_List{l}, err
-}
-
-func (s Tx_List) At(i int) Tx { return Tx{s.List.Struct(i)} }
-
-func (s Tx_List) Set(i int, v Tx) error { return s.List.SetStruct(i, v.Struct) }
-
-func (s Tx_List) String() string {
-	str, _ := text.MarshalList(0xf6e7930cbb80b4ba, s.List)
-	return str
-}
-
-// Tx_Promise is a wrapper for a Tx promised by a client call.
-type Tx_Promise struct{ *capnp.Pipeline }
-
-func (p Tx_Promise) Struct() (Tx, error) {
-	s, err := p.Pipeline.Struct()
-	return Tx{s}, err
-}
-
-func (p Tx_Promise) MsgDeposit() MsgDeposit_Promise {
-	return MsgDeposit_Promise{Pipeline: p.Pipeline.GetPipeline(0)}
-}
-
-func (p Tx_Promise) MsgSubmitProposal() MsgSubmitProposal_Promise {
-	return MsgSubmitProposal_Promise{Pipeline: p.Pipeline.GetPipeline(1)}
-}
-
-func (p Tx_Promise) MsgVote() MsgVote_Promise {
-	return MsgVote_Promise{Pipeline: p.Pipeline.GetPipeline(2)}
-}
-
-const schema_f6e87acf2c3fc2e7 = "x\xda\x8cTAh#U\x18\xfe\xbe\xf7\x12\xb3+Y" +
-	"\x93\xd9Y1\x1b\x90\x82\xe8\xa1\xba\xb5\xdb\xc6\x82\x14\xa1" +
-	"\xbb\xb5\x82+\x1b\xcc\xabq\xd5Ea\xa7\xc9P\x07\x92" +
-	"yC\xe6\xed\xda\xf6\xb0Q\x90\xc5\x8b\x17=,\xacG" +
-	"/\xde\x0a\xe2a\xad\xe0\xc1\x83\xe8\xc9\"\x9e\xbc\xf5 " +
-	"\xd5C\x0f-X\xbc\xc8\xc8\xcb\xc4$\x84\x06z}\xf3" +
-	"\xff\xdf\xff}\xdf\xff\xfds\xb9\xcd+b.\xfb\x84\x00" +
-	"T)\xfbHr\xd1\xfb\xf4\xea\xf7?}y\x0fN\x89" +
-	"\xc9\xfe\x0fK\x97~\xd9\xfa\xf3\x18Y\x91\x03\xe6\x0e\x9f" +
-	"\xa5K\xe6\x00\xe7\xdf\x0f\xc0\xe4\xc1\xf6\xc7\xff\x1c\xed=" +
-	"\xfc\x04\xaa\xc4\xf1\xda\xca{,\xd3m\xdbb7\xe06" +
-	"\x98\xdc\xff\xe8~\xe1\xe1\x99\xd5\xdd1`\x99+\xb2r" +
-	"Q\xac\xd2\x9d\xb1}\xee\xb4\xd8\x06\xdcCQH~\xfe" +
-	"u\xe7\xa5\xdf\x16v\x8f\xe0\x94\xc4\xb0\x01\xac\xfc!\xca" +
-	"t\xff\xeeU\x1f\x8a.\x98\xec|\xf3\xe1w\xf9\xcf\xf7" +
-	"\x8fO\x80v\xa7\xe5\xef\xee\x82\xb4\xb5s\xd2\"\x1f\xc8" +
-	"B\xb2\xf5\xc5\x8f\x0f\x9e\xbb{7\xb1\xc4G\xa0\xb3\x96" +
-	"meO\x0a\xba\x07\xbd\x8e\xbf\xa4%\xbe1\xbb\xae\xef" +
-	"\xcc\x9aM\x19\xf9\xf1lC7\xfd\xc6\xf3\x0d/\x0a\xa3" +
-	"\xc5\xba\xbfaj\x1d\x1d\x15t\xec\xb5j\xa4:#3" +
-	"@\x86\x803=\x0f\xa8\xa7%\xd5eA\x87\xbc@\xfb" +
-	"8\xb3\x06\xa8K\x92\xeaE\xc1)\x13\x98\x96\xcf<\x04" +
-	"\xf3`\xd2\xf4\xe3F'\x88\x0cr\x81\x0e\x07\xaf\x13'" +
-	"W\xe3\xf5\x15?\xd2\xb1\x0c\x8c\x9d\x9b\x1f\xcc}\xe5&" +
-	"\xa0V$UM\xf0\xff\xb1\xd5U@]\x97To\x0b" +
-	":\x82\x17(\x00\xe7\xcdE@\xd5$UK0\x89:" +
-	":\xb2\x1a \xaf5y\x16\x82g{\x94\"\x1d\x07F" +
-	"\x83\x1d\x9e\x83\xe09p\xc9k\xeb\xdb\xa1\xe1c`M" +
-	"\x92\xc5\xe4\xa0|\xef\x85\xaf\xbe}\xf4k\x80\xf6q@" +
-	"8s\x02\xe17n\xaf\xb5\x83\x9e_:\xf6\xd8\x1a\xe3" +
-	"\xbd\x0c\xa8+\x92\xea\xfa\x88_\xd7\xb6\x00\xf5\xaa\xa4j" +
-	"Z\xe2\"%\xee\xbd\x06\xa8[)\xf1nC\x87\xc6\x0f" +
-	"\x0d\xcfs$_\x00\xcf\x83I\x10\x06&\xf0Z+X" +
-	"J\x85Lf\x9d\xca\xf7;\xb6\xb3\xaf\xf4j\x86\x0e\x97" +
-	"\xbb/\xa7\xf8\x93\x17qC\x1b\xff\xf5\xc8\x04R\x87V" +
-	"PJqa\xde\";3O\x01\x14\xce3\xcb\x00\xa5" +
-	"\xf3d\x19`\xc6y\xfc&0\xe5\xb7#\xb3\x99\xdb\xf4" +
-	"\xe3\xae\xb7\x16\x1b/\x08e\xa8\x93P\xbf\x15\x98\xf7o" +
-	"\xf8\x90F\x0f\x06\x8a\xf1\x81\xb2\xbe1y\xe3\x03\xe7\xaa" +
-	"\x9f\xf5\xb7\xfb\xee\x88s\xefX\x8f\xeb\x92\xea\x96`\xd2" +
-	"\xee'\x0820,\x0eO\x19d\x11\xbd\xcf\xbd}q" +
-	"\xb80\x16G,\xeeUu\xdb\xf1\xba5\x80\xc5\xe1E" +
-	"\xa5_Nk_5\x05\xc0)B<\xdf\xcfB\xdd*" +
-	"\xca\xa4\x8a\xd4\xe20\xd9'\x86x\xea\x8e6\xfe0\xbe" +
-	":2\xf6\xbcF~- \x0b\xe0\x7f\x01\x00\x00\xff\xff" +
-	"[\xecQ\x11"
+const schema_f6e87acf2c3fc2e7 = "x\xda\x8c\x94A\x88\x1bU\x1c\xc6\xbf\xef\xbd\xc4\xb4\xb2" +
+	"5\x99N\xc54 \x8b\xc5\x1e\xd4\xd6m7Vd\x11" +
+	"\xb6]W\xb0\xd2`^\\\xab\x16\x95\xce&C\x1cH" +
+	"\xe6\x0d\x99\xd7\xda\xddC\x83 \x8b\x17/^\x16V<" +
+	"\xedE\x0f\xb2\xe0i\xf5\xe0\xc1\x83\xe8\xc9U\xbczX" +
+	"A\xd4\xc3\x1e\xdc\x83x\x91\x917\x13\x93\x107\xe2\xf5" +
+	"\xbd\xff\xff}\xbf\xef\xff\xfff.tyY\\\xcc?" +
+	" \x00U\xce\xdf\x93\x9c\xf6\xde\xbb\xf2\xc5\xd7\xdb\x1bp" +
+	"\xcaL~\xf9r\xf1\xdc\xb7\xeb\xbf\xfe\x81\xbc(\x00\x17" +
+	"\x7f\x7f\x94.Y\x00\x9c\xbf\xde\x02\x93\xad\x9dw\xfe<" +
+	"\xdc\xdf}\x17\xaa\xcc\xc9\xda\xea\xeb\xac\xd0\xed\xdab7" +
+	"\xe0\x0e\x98t\xb6ko<y\xa6\xb19\xf1\xb0,\x94" +
+	"\xe8\x9e\x16?\xb9gm\x9b\xfb\x90\xd8\x01\xdc\x1fE1" +
+	"\xd9|{\xb3\xb8{\xac\xb1wD}\xf5;\xd1\xa0\xfb" +
+	"s\xda\xb0\x9f6|,\x8b\xc97\xdf\x7f\xfe\xf4\x0f\x97" +
+	"\xf6\x0e\xe1\x94\xc5\xa8\x01\xac~(+t?\x91\x85\xb4" +
+	"\xae\x0f&\xeb\x1f|\xb5\xf5\xd8\xdd\xbb\x89\x05\x1f+\xcd" +
+	"[\xda\xea\xbe\x14t\x0f\xd2\xea\xdf\xa4\x05\xbf3\xd7\xd6" +
+	"\xb7\xe7\xcc\x9a\x8c\xfcx\xae\xa9[~\xf3\xf1\xa6\x17\x85" +
+	"\xd1\xc2\x8a\x7f\xc7\xd4{:*\xea\xd8\xeb\xd4IuL" +
+	"\xe6\x80\x1c\x01\xe7\x91y@=,\xa9.\x08:\xe4)" +
+	"\xda\xc3\xf3\xab\x80:'\xa9\x9e\x12\x9c5\x81\xe9\xf8\x9c" +
+	"\x81\xe0\x0c\x98\xb4\xfc\xb8\xd9\x0b\"\x83B\xa0\xc3\xe1\xe9" +
+	"T\xe5Z\xdc^\xf6#\x1d\xcb\xc0X\xdd\x99\xa1\xee\xb3" +
+	"7\x00\xb5,\xa9\xea\x82\xff\xc8\xd6\x1a\x80\xba&\xa9^" +
+	"\x11t\x04OQ\x00\xceK\x0b\x80\xaaK\xaa\x8e`\x12" +
+	"\xf5td=@^m\xf18\x04\x8f\xa7H\x91\x8e\x03" +
+	"\xa3\xc1\x1eO@\xf0\x04\xb8\xe8u\xf5\xad\xd0\xf0>\xb0" +
+	".\xc9RrP\xd9x\xe2\xa3\xcf\xee\xfd\x14\xa0=\x1c" +
+	"\x02\x8bI\xe0B-nO'\x1dN\xa8\xf6\xfe\x80\xea" +
+	"5\x8b*2\xd4W\x97\x00\xb5\"\xa9n\x0a&\xdd\x81" +
+	"s\xc8\xc0\xb04\x8a \xc8\x12\xd2\xeb\x17o\xadv\x03" +
+	"\xa6\x8b\xd1\xb1\xc7\x0eK\xa3(eU\xfdn\xdc\xbe\xae" +
+	"\x8d\xcf\xd2(\x09\xd9\xcd\x95\x1c\x1d.\xf5\x9f\xd1\xa1\xf1" +
+	"C3\xb4\x93;b\xfe\xa9\xccHe\xc2\x9cE\xbe," +
+	"\xa9\xae\x8d\x99\xbb\xba\x0e\xa8\xe7$Uk\xcc\x9c\xf7<" +
+	"\xa0nf{\xe873]\x9e$\xc7\x98\xc1\x93`\x12" +
+	"\x84\x81\x09\xbc\xce2\x16\xb3\xbdL_B\xb6M\xbfg" +
+	";\x07\x8b\x9b\xe2\xeb_\xb9\xb2Sy!2\x81\xd4\xa1" +
+	"5\x94!^\x9a\xb7/;\xe7\xcf\x00\x14\xce\xd9%\x80" +
+	"\xd2y\xb0\x020\xe7\xdc\x7f\x03\x98\xf5\xbb\x91Y+\xac" +
+	"\xf9q\xdf[\x8d\x8d\x17\x842\xd4I\xa8_\x0e\xcc\x9b" +
+	"\xd7}H\xa3\xff3\xc8V\x13\xff#\xc5\xf3\x83\xe9\xad" +
+	"\xd8\xe9\xe524\xb50\x8a\xf6\x91)\x9e\xbd\xad\x8d?" +
+	"\xca\xaf\x8e\x8c\xfd\xbe\xc6\xfe\x15 \x8b\xe0\xdf\x01\x00\x00" +
+	"\xff\xff\xb7,P\x16"
 
 func init() {
 	schemas.Register(schema_f6e87acf2c3fc2e7,
 		0x86a3c8be418d6119,
 		0x88b8e1f2f884af9a,
+		0x975222365e4da36c,
 		0xd05208b80f978197,
 		0xf2d035d43cbad2c9,
-		0xf6e7930cbb80b4ba,
 		0xff7e7e2b9ac69b7a)
 }

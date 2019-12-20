@@ -14,3 +14,19 @@ struct CoinE {
   amount @1 :Text;
 }
 
+struct StdTx(Msg, PubKey) {
+  msg @0 :Msg;
+  fee @1 :StdFee;
+  signatures @2 :List(StdSignature(PubKey));
+  memo @3 :Text;
+}
+
+struct StdFee {
+  coins @0 :Coins;
+  gas @1 :UInt64;
+}
+
+struct StdSignature(PubKey) {
+  pubkey @0 :PubKey;
+  signature @1 :Data;
+}

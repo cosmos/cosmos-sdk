@@ -217,5 +217,6 @@ CAPNP_COMPILE = capnp compile -I$(HOME)/go/pkg/mod/github.com/capnproto/go-capnp
 capnp-gen:
 	 $(CAPNP_COMPILE) types/codec.capnp
 	 $(CAPNP_COMPILE) x/gov/types/codec.capnp
+	 $(CAPNP_COMPILE) simapp/codec.capnp
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update

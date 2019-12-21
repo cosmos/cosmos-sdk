@@ -75,8 +75,8 @@ func WithSupportedAlgosLedger(algos []SigningAlgo) KeybaseOption {
 func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
 	options := kbOptions{
-		keygenFunc:           basePrivKeyGen,
-		deriveFunc:           baseDeriveKey,
+		keygenFunc:           StdPrivKeyGen,
+		deriveFunc:           StdDeriveKey,
 		supportedAlgos:       []SigningAlgo{Secp256k1},
 		supportedAlgosLedger: []SigningAlgo{Secp256k1},
 	}
@@ -88,8 +88,8 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
-// basePrivKeyGen generates a secp256k1 private key from the given bytes
-func basePrivKeyGen(bz []byte, algo SigningAlgo) tmcrypto.PrivKey {
+// StdPrivKeyGen generates a secp256k1 private key from the given bytes
+func StdPrivKeyGen(bz []byte, algo SigningAlgo) tmcrypto.PrivKey {
 	if algo == Secp256k1 {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
@@ -234,8 +234,8 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 	return info
 }
 
-// baseDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
-func baseDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+// StdDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+func StdDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
 		return nil, err

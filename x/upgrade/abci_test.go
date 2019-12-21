@@ -19,11 +19,11 @@ import (
 )
 
 type TestSuite struct {
-	module                 module.AppModule
-	keeper                 upgrade.Keeper
-	querier                sdk.Querier
-	handler                gov.Handler
-	ctx                    sdk.Context
+	module  module.AppModule
+	keeper  upgrade.Keeper
+	querier sdk.Querier
+	handler gov.Handler
+	ctx     sdk.Context
 }
 
 var s TestSuite

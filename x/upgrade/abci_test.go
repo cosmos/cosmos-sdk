@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -250,8 +249,8 @@ func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
 	require.Equal(t, s.keeper.GetSkipUpgradeHeights(), skipUpgradeHeights)
 }
 
-func VerifyConversion(t *testing.T, skipUpgrade []int) {
-	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(skipUpgrade)
+func VerifyConversion(t *testing.T, skipUpgrades []int) {
+	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(skipUpgrades)
 	require.Equal(t, reflect.TypeOf(skipUpgradeHeights).Elem().Kind(), reflect.Int64)
 }
 
@@ -360,7 +359,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
 	VerifySet(t, []int64{skipOne, skipTwo})
 
-	VerifyConversion(t, viper.GetIntSlice(s.FlagUnsafeSkipUpgrades))
+	VerifyConversion(t, []int{1, 2})
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)

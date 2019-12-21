@@ -243,6 +243,9 @@ func StdDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningA
 
 	if algo == Secp256k1 {
 		masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+		if len(hdPath) == 0 {
+			return masterPriv[:], nil
+		}
 		derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 		return derivedKey[:], err
 	}

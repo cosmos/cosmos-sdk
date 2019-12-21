@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -194,9 +193,6 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		hdPath = keys.CreateHDPath(account, index).String()
 	} else {
 		hdPath = viper.GetString(flagHDPath)
-		if !hd.ValidHDPath(hdPath) {
-			return fmt.Errorf("invalid BIP 32 path: %s", hdPath)
-		}
 	}
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.

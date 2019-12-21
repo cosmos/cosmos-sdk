@@ -38,7 +38,7 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-		"", "", "", Secp256k1)
+		"", "", CreateHDPath(0, 0).String(), Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "Invalid mnemonic", err.Error())
 }

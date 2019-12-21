@@ -172,14 +172,8 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 // using the given chainCode.
 func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path string) ([32]byte, error) {
 	data := privKeyBytes
-	if len(path) == 0 {
-		return data, nil
-	}
 	parts := strings.Split(path, "/")
 	for _, part := range parts {
-		if len(part) == 0 {
-			return [32]byte{}, errors.New("invalid BIP 32 path: part was empty")
-		}
 		// do we have an apostrophe?
 		harden := part[len(part)-1:] == "'"
 		// harden == private derivation, else public derivation:
@@ -202,34 +196,6 @@ func DerivePrivateKeyForPath(privKeyBytes [32]byte, chainCode [32]byte, path str
 	}
 
 	return derivedKey, nil
-}
-
-// ValidHDPath returns whether or not a string path is valid BIP32 HD path.
-// It does NOT check for validity of BIP44.
-func ValidHDPath(path string) bool {
-	if len(path) == 0 {
-		return true
-	}
-	parts := strings.Split(path, "/")
-	for _, part := range parts {
-		if len(part) == 0 {
-			return false
-		}
-		// do we have an apostrophe?
-		harden := part[len(part)-1:] == "'"
-		// harden == private derivation, else public derivation:
-		if harden {
-			part = part[:len(part)-1]
-		}
-		idx, err := strconv.Atoi(part)
-		if err != nil {
-			return false
-		}
-		if idx < 0 {
-			return false
-		}
-	}
-	return true
 }
 
 // derivePrivateKey derives the private key with index and chainCode.

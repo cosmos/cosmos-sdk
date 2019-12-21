@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -43,7 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distTxCmd.AddCommand(client.PostCommands(
+	distTxCmd.AddCommand(flags.PostCommands(
 		GetCmdWithdrawRewards(cdc),
 		GetCmdSetWithdrawAddr(cdc),
 		GetCmdWithdrawAllRewards(cdc, storeKey),
@@ -150,7 +151,7 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			// The transaction cannot be generated offline since it requires a query
 			// to get all the validators.
 			if cliCtx.GenerateOnly {
-				return fmt.Errorf("command disabled with the provided flag: %s", client.FlagGenerateOnly)
+				return fmt.Errorf("command disabled with the provided flag: %s", flags.FlagGenerateOnly)
 			}
 
 			msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, queryRoute, delAddr)

@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -33,7 +34,17 @@ func setupTest(height int64, skip []int64) TestSuite {
 	checkTx := false
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
-	simapp.SetupDeliverTx(app)
+	genesisState := simapp.NewDefaultGenesisState()
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
+	if err != nil {
+		panic(err)
+	}
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:    []abci.ValidatorUpdate{},
+			AppStateBytes: stateBytes,
+		},
+	)
 
 	s.keeper = app.UpgradeKeeper
 	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: height, Time: time.Now()})

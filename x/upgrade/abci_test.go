@@ -24,7 +24,6 @@ type TestSuite struct {
 	querier                sdk.Querier
 	handler                gov.Handler
 	ctx                    sdk.Context
-	FlagUnsafeSkipUpgrades string
 }
 
 var s TestSuite
@@ -47,7 +46,6 @@ func setupTest(height int64, skip []int64) TestSuite {
 
 	s.keeper = app.UpgradeKeeper
 	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: height, Time: time.Now()})
-	s.FlagUnsafeSkipUpgrades = upgrade.FlagUnsafeSkipUpgrades
 
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.querier = s.module.NewQuerierHandler()

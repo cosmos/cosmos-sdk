@@ -31,15 +31,9 @@ type Keybase interface {
 	// same name.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
 
-	// CreateAccount converts a mnemonic to a private key using a BIP44 path 44'/118'/{account}'/0/{index}
+	// CreateAccount converts a mnemonic to a private key and BIP 32 HD Path
 	// and persists it, encrypted with the given password.
-	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32, algo SigningAlgo) (Info, error)
-
-	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
-	// Derive private key from the seed using the BIP44 params.
-	// Encrypt the key to disk using encryptPasswd.
-	// See https://github.com/cosmos/cosmos-sdk/issues/2095
-	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo) (Info, error)
+	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
 	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
@@ -335,10 +329,10 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 }
 
 type (
+	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
+	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error)
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
 	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) crypto.PrivKey
-	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
-	DeriveKeyFunc func(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error)
 
 	// KeybaseOption overrides options for the db
 	KeybaseOption func(*kbOptions)

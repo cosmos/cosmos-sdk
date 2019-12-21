@@ -20,7 +20,6 @@ import (
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -90,19 +89,10 @@ func (kb keyringKeybase) CreateMnemonic(
 // CreateAccount converts a mnemonic to a private key and persists it, encrypted
 // with the given password.
 func (kb keyringKeybase) CreateAccount(
-	name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo,
+	name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo,
 ) (Info, error) {
 
-	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, account, index, algo)
-}
-
-// Derive computes a BIP39 seed from th mnemonic and bip39Passphrase. It creates
-// a private key from the seed using the BIP44 params.
-func (kb keyringKeybase) Derive(
-	name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo,
-) (info Info, err error) {
-
-	return kb.base.Derive(kb, name, mnemonic, bip39Passphrase, encryptPasswd, params, algo)
+	return kb.base.CreateAccount(kb, name, mnemonic, bip39Passwd, encryptPasswd, hdPath, algo)
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair.

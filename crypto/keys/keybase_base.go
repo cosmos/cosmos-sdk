@@ -145,27 +145,19 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 
 // CreateAccount creates an account Info object.
 func (kb baseKeybase) CreateAccount(
-	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32, algo SigningAlgo,
-) (Info, error) {
-
-	hdPath := CreateHDPath(account, index)
-	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath, algo)
-}
-
-func (kb baseKeybase) persistDerivedKey(
-	keyWriter keyWriter, seed []byte, passwd, name, fullHdPath string, algo SigningAlgo,
+	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd, hdPath string, algo SigningAlgo,
 ) (Info, error) {
 
 	// create master key and derive first key for keyring
-	derivedPriv, err := kb.options.deriveFunc(seed, fullHdPath, algo)
+	derivedPriv, err := kb.options.deriveFunc(mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, err
 	}
 
 	var info Info
 
-	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv, algo), passwd, algo)
+	if encryptPasswd != "" {
+		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv, algo), encryptPasswd, algo)
 	} else {
 		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv, algo).PubKey())
 	}
@@ -219,27 +211,9 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", err
 	}
 
-	info, err = kb.persistDerivedKey(
-		keyWriter,
-		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
-		name, types.GetConfig().GetFullFundraiserPath(), algo,
-	)
+	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
 
 	return info, mnemonic, err
-}
-
-// Derive computes a BIP39 seed from the mnemonic and bip39Passphrase. It creates
-// a private key from the seed using the BIP44 params.
-func (kb baseKeybase) Derive(
-	keyWriter keyWriter, name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo, // nolint:interfacer
-) (Info, error) {
-
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	return kb.persistDerivedKey(keyWriter, seed, encryptPasswd, name, params.String(), algo)
 }
 
 func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
@@ -261,13 +235,18 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 }
 
 // baseDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
-func baseDeriveKey(seed []byte, fullHdPath string, algo SigningAlgo) ([]byte, error) {
+func baseDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
+	if err != nil {
+		return nil, err
+	}
+
 	if algo == Secp256k1 {
 		masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-		derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+		derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
 		return derivedKey[:], err
 	}
-	return nil, ErrUnsupportedSigningAlgo
+	return nil, nil
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

@@ -6,7 +6,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -88,7 +87,7 @@ func (lkb lazyKeybase) CreateMnemonic(name string, language Language, passwd str
 	return newDBKeybase(db, lkb.options...).CreateMnemonic(name, language, passwd, algo)
 }
 
-func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32, algo SigningAlgo) (Info, error) {
+func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo) (Info, error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
@@ -96,17 +95,7 @@ func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd 
 	defer db.Close()
 
 	return newDBKeybase(db,
-		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index, algo)
-}
-
-func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params, algo SigningAlgo) (Info, error) {
-	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	return newDBKeybase(db, lkb.options...).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params, algo)
+		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath, algo)
 }
 
 func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error) {

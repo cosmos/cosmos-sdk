@@ -318,7 +318,8 @@ func TestLazySeedPhraseKeyRing(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := kb.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params, Secp256k1)
+	hdPath := params.String()
+	newInfo, err := kb.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

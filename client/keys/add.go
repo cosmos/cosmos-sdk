@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
@@ -32,6 +33,7 @@ const (
 	flagIndex       = "index"
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
+	flagHDPath      = "hd-path"
 	flagKeyAlgo     = "algo"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
@@ -72,6 +74,7 @@ the flag --nosort is set.
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
+	cmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Add indent to JSON response")
@@ -184,8 +187,24 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
 
+	useBIP44 := !viper.IsSet(flagHDPath)
+	var hdPath string
+
+	if useBIP44 {
+		hdPath = keys.CreateHDPath(account, index).String()
+	} else {
+		hdPath = viper.GetString(flagHDPath)
+		if !hd.ValidHDPath(hdPath) {
+			return fmt.Errorf("invalid BIP 32 path: %s", hdPath)
+		}
+	}
+
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
+
+		if !useBIP44 {
+			return errors.New("cannot set custom bip32 path with ledger")
+		}
 
 		if !keys.IsAlgoSupported(algo, kb.SupportedAlgosLedger()) {
 			return keys.ErrUnsupportedSigningAlgo
@@ -255,7 +274,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, account, index, algo)
+	info, err := kb.CreateAccount(name, mnemonic, bip39Passphrase, DefaultKeyPass, hdPath, algo)
 	if err != nil {
 		return err
 	}

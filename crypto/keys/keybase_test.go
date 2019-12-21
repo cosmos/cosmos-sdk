@@ -38,7 +38,7 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
-		"", "", 0, 1, Secp256k1)
+		"", "", "", Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "Invalid mnemonic", err.Error())
 }
@@ -393,7 +393,8 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params, Secp256k1)
+	hdPath := params.String()
+	newInfo, err := cstore.CreateAccount(n2, mnemonic, DefaultBIP39Passphrase, p2, hdPath, Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

@@ -31,7 +31,7 @@ func NewQuerier(k Keeper) sdk.Querier {
 			res, err = queryAllEvidence(ctx, req, k)
 
 		default:
-			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint", types.ModuleName)
+			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 
 		return res, err

@@ -647,30 +647,26 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s, message index: %d", msgRoute, i)
 		}
 
-		result, err := handler(ctx, msg)
-
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, result.Data...)
-
-		// append events from the message's execution and a message action event
-		msgEvents := result.Events
-		msgEvents = msgEvents.AppendEvent(
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
-		)
-
-		events = events.AppendEvents(msgEvents)
-
-		// short-circuit if the message fails (i.e. disregard remaining messages)
+		msgResult, err := handler(ctx, msg)
 		if err != nil {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, result.Log, msgEvents))
-			break
+			return nil, sdkerrors.Wrapf(err, "failed to execute message, message index: %d", i)
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, result.Log, msgEvents))
+		msgEvents := sdk.Events{
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+		}
+		msgEvents = msgEvents.AppendEvents(msgResult.Events)
+
+		// append message events, data and logs
+		//
+		// Note: Each message result's data must be length-prefixed in order to
+		// separate each result.
+		events = events.AppendEvents(msgEvents)
+		data = append(data, msgResult.Data...)
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
 	}
 
 	return &sdk.Result{

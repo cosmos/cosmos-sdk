@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // RootCodespace is the codespace for all errors defined in this package
@@ -269,17 +268,6 @@ func Recover(err *error) {
 // WithType is a helper to augment an error with a corresponding type message
 func WithType(err error, obj interface{}) error {
 	return Wrap(err, fmt.Sprintf("%T", obj))
-}
-
-// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func QueryResult(err error) abci.ResponseQuery {
-	space, code, log := ABCIInfo(err, false)
-	return abci.ResponseQuery{
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-	}
 }
 
 // causer is an interface implemented by an error that supports wrapping. Use

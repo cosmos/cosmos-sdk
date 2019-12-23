@@ -162,22 +162,10 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseCheckTx{
-			Codespace: space,
-			Code:      code,
-			Log:       log,
-		}
+		return sdkerrors.ResponseCheckTx(err, 0, 0)
 	}
 
-	var (
-		space  string
-		code   uint32
-		log    string
-		data   []byte
-		events []abci.Event
-		mode   runTxMode
-	)
+	var mode runTxMode
 
 	switch {
 	case req.Type == abci.CheckTxType_New:
@@ -192,21 +180,15 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 
 	gInfo, result, err := app.runTx(mode, req.Tx, tx)
 	if err != nil {
-		space, code, log = sdkerrors.ABCIInfo(err, false)
-	} else if result != nil {
-		data = result.Data
-		log = result.Log
-		events = result.Events.ToABCIEvents()
+		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed)
 	}
 
 	return abci.ResponseCheckTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-		Data:      data,
-		Events:    events,
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
@@ -214,39 +196,20 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseDeliverTx{
-			Codespace: space,
-			Code:      code,
-			Log:       log,
-		}
+		return sdkerrors.ResponseDeliverTx(err, 0, 0)
 	}
-
-	var (
-		space  string
-		code   uint32
-		log    string
-		data   []byte
-		events []abci.Event
-	)
 
 	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
 	if err != nil {
-		space, code, log = sdkerrors.ABCIInfo(err, false)
-	} else if result != nil {
-		data = result.Data
-		log = result.Log
-		events = result.Events.ToABCIEvents()
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed)
 	}
 
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-		Data:      data,
-		Events:    events,
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 

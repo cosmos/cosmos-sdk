@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -43,7 +43,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 		},
 	}
 
-	return client.PostCommands(cmd)[0]
+	return flags.PostCommands(cmd)[0]
 }
 
 // GetDecodeTxCmd - returns the command to decode a tx from hex or base64

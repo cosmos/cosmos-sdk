@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -29,7 +30,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	govQueryCmd.AddCommand(client.GetCommands(
+	govQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryProposal(queryRoute, cdc),
 		GetCmdQueryProposals(queryRoute, cdc),
 		GetCmdQueryVote(queryRoute, cdc),

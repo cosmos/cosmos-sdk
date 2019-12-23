@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -26,7 +27,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	distQueryCmd.AddCommand(client.GetCommands(
+	distQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryParams(queryRoute, cdc),
 		GetCmdQueryValidatorOutstandingRewards(queryRoute, cdc),
 		GetCmdQueryValidatorCommission(queryRoute, cdc),
@@ -66,7 +67,7 @@ func GetCmdQueryValidatorOutstandingRewards(queryRoute string, cdc *codec.Codec)
 for a validator and all their delegations.
 
 Example:
-$ %s query distr validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
+$ %s query distribution validator-outstanding-rewards cosmosvaloper1lwjmdnks33xwnmfayc64ycprww49n33mtm92ne
 `,
 				version.ClientName,
 			),
@@ -113,7 +114,7 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 			fmt.Sprintf(`Query validator commission rewards from delegators to that validator.
 
 Example:
-$ %s query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query distribution commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
 				version.ClientName,
 			),
@@ -148,7 +149,7 @@ func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Com
 			fmt.Sprintf(`Query all slashes of a validator for a given block range.
 
 Example:
-$ %s query distr slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100
+$ %s query distribution slashes cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 0 100
 `,
 				version.ClientName,
 			),
@@ -199,8 +200,8 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 			fmt.Sprintf(`Query all rewards earned by a delegator, optionally restrict to rewards from a single validator.
 
 Example:
-$ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
-$ %s query distr rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p
+$ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
 				version.ClientName, version.ClientName,
 			),
@@ -243,7 +244,7 @@ func GetCmdQueryCommunityPool(queryRoute string, cdc *codec.Codec) *cobra.Comman
 			fmt.Sprintf(`Query all coins in the community pool which is under Governance control.
 
 Example:
-$ %s query distr community-pool
+$ %s query distribution community-pool
 `,
 				version.ClientName,
 			),

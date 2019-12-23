@@ -50,6 +50,8 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 
 ### API Breaking Changes
 
+* (client) [\#5442](https://github.com/cosmos/cosmos-sdk/pull/5442) Remove client/alias.go as it's not necessary and 
+components can be imported directly from the packages.
 * (store) [\#4748](https://github.com/cosmos/cosmos-sdk/pull/4748) The `CommitMultiStore` interface
 now requires a `SetInterBlockCache` method. Applications that do not wish to support this can simply
 have this method perform a no-op.

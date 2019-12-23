@@ -41,7 +41,6 @@ type ABCIMessageLogs []ABCIMessageLog
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
 	MsgIndex uint16 `json:"msg_index"`
-	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 
 	// Events contains a slice of Event objects that were emitted during some
@@ -49,10 +48,9 @@ type ABCIMessageLog struct {
 	Events StringEvents `json:"events"`
 }
 
-func NewABCIMessageLog(i uint16, success bool, log string, events Events) ABCIMessageLog {
+func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 	return ABCIMessageLog{
 		MsgIndex: i,
-		Success:  success,
 		Log:      log,
 		Events:   StringifyEvents(events.ToABCIEvents()),
 	}

@@ -312,7 +312,7 @@ func DefaultSigVerificationGasConsumer(
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
 
-		consumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
+		ConsumeMultisignatureVerificationGas(meter, multisignature, pubkey, params)
 		return nil
 
 	default:
@@ -320,7 +320,7 @@ func DefaultSigVerificationGasConsumer(
 	}
 }
 
-func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
+func ConsumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
 	params types.Params) {
 	size := sig.BitArray.Size()

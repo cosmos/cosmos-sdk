@@ -94,7 +94,7 @@ const (
 
 // channel order types
 const (
-	OrderNone      string = "NONE"
+	OrderNone      string = ""
 	OrderUnordered string = "UNORDERED"
 	OrderOrdered   string = "ORDERED"
 )
@@ -102,14 +102,12 @@ const (
 // String implements the Stringer interface
 func (o Order) String() string {
 	switch o {
-	case NONE:
-		return OrderNone
 	case UNORDERED:
 		return OrderUnordered
 	case ORDERED:
 		return OrderOrdered
 	default:
-		return ""
+		return OrderNone
 	}
 }
 
@@ -138,14 +136,12 @@ func (o *Order) UnmarshalJSON(data []byte) error {
 // OrderFromString parses a string into a channel order byte
 func OrderFromString(order string) Order {
 	switch order {
-	case OrderNone:
-		return NONE
 	case OrderUnordered:
 		return UNORDERED
 	case OrderOrdered:
 		return ORDERED
 	default:
-		return 0
+		return NONE
 	}
 }
 

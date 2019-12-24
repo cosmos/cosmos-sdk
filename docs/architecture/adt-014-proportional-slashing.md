@@ -15,7 +15,7 @@ In Proof of Stake-based chains, centralization of consensus power amongst a smal
 To solve this problem, we will implement a procedure called Proportional Slashing.  The desire is that the larger a validator is, the more they should be slashed.  The first naive attempt is to make a validator's slash percent proportional to their share of consensus voting power.
 
 ```
-slash_amount = power // power is the faulting validator's voting power.
+slash_amount = k * power // power is the faulting validator's voting power and k is some on-chain constant
 ```
 
 However, this will incentivize validators with large amounts of stake to split up their voting power amongst accounts, so that if they fault, they all get slashed at a lower percent.  The solution to this is to take into account not just a validator's own voting percentage, but also the voting percentage of all the other validators who get slashed in a specified time frame.
@@ -31,23 +31,26 @@ However, an operator might still choose to split up their stake across multiple 
 We can achieve this by not only taking into account the sum of the percentages of the validators that faulted, but also the *number* of validators that faulted in the window.  One general form for an equation that fits this desired property looks like this:
 
 ```
-slash_amount = (sqrt(power_1) + sqrt(power_2) + ... + sqrt(power_n))^2
+slash_amount = k * ((power_1)^(1/r) + (power_2)^(1/r) + ... + (power_n)^(1/r))^r // where k and r are both on-chain constants
 ```
 
-So now, for example, if one validator of 10% faults, it gets a 10% slash, while if two validators of 5% each fault together, they both get a 20% slash ((sqrt(0.05)+sqrt(0.05))^2).
+So now, for example, assuming k=1 and r=2, if one validator of 10% faults, it gets a 10% slash, while if two validators of 5% each fault together, they both get a 20% slash ((sqrt(0.05)+sqrt(0.05))^2).
+
+#### Correlation across non-sybil validators
 
 One will note, that this model doesn't differentiate between multiple validators run by the same operators vs validators run by different operators.  This can be seen as an additional benefit in fact.  It incentivizes validators to differentiate their setups from other validators, to avoid having correlated faults with them or else they risk a higher slash.  So for example, operators should avoid using the same popular cloud hosting platforms or using the same Staking as a Service providers.  This will lead to a more resilient and decentralized network.
 
+#### Parameterization
 
-We can allow some parameterization by multiplying the slash by an on-chain governable parameter.
-
-```
-slash_amount = k * (sqrt(power_1) + sqrt(power_2) + ... + sqrt(power_n))^2  // where k is an on-chain parameter for this specific slash type
-```
-
-This can be used to weight different types of slashes.  For example, we may want to punish liveness faults 10% as severely as double signs.  The k factor can also be something other than a constant, there is some research on using things like inverse gini coefficients to mitigate some griefing attacks, but this an area for future research.
+The value of k and r can be different for different types of slashable faults.  For example, we may want to punish liveness faults 10% as severely as double signs.
 
 There can also be minimum and maximums put in place in order to bound the size of the slash percent.
+
+#### Griefing
+
+Griefing, the act of intentionally being slashed to make another's slash worse, could be a concern here.  However, using the protocol described here, the attacker could not substantially grief without getting slashed a substantial amount themselves.  The larger the validator is, the more heavily it can impact the slash, it needs to be non-trivial to have a significant impact on the slash percent.  Furthermore, the larger the grief, the griefer loses quadratically more.
+
+It may also be possible to, rather than the k and r factors being constants, perhaps using an inverse gini coefficient may mitigate some griefing attacks, but this an area for future research.
 
 ### Implementation
 
@@ -84,4 +87,4 @@ Proposed
 
 ### Negative
 
-- May require computationally expensive sqrt function in state machine
+- May require computationally expensive root function in state machine

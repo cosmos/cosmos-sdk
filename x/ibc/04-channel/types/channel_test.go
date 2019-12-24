@@ -8,35 +8,33 @@ import (
 
 func TestChannelStateString(t *testing.T) {
 	cases := []struct {
-		state State
 		name  string
-		msg   string
+		state State
 	}{
-		{UNINITIALIZED, StateUninitialized, "uninitialized"},
-		{INIT, StateInit, "init"},
-		{TRYOPEN, StateTryOpen, "tryopen"},
-		{OPEN, StateOpen, "open"},
-		{CLOSED, StateClosed, "closed"},
+		{StateUninitialized, UNINITIALIZED},
+		{StateInit, INIT},
+		{StateTryOpen, TRYOPEN},
+		{StateOpen, OPEN},
+		{StateOpen, CLOSED},
 	}
 
 	for _, tt := range cases {
 		tt := tt
-		require.Equal(t, tt.state, StateFromString(tt.name), tt.msg)
-		require.Equal(t, tt.name, tt.state.String(), tt.msg)
+		require.Equal(t, tt.state, StateFromString(tt.name))
+		require.Equal(t, tt.name, tt.state.String())
 	}
 }
 
 func TestChannelStateMarshalJSON(t *testing.T) {
 	cases := []struct {
-		state State
 		name  string
-		msg   string
+		state State
 	}{
-		{UNINITIALIZED, StateUninitialized, "uninitialized"},
-		{INIT, StateInit, "init"},
-		{TRYOPEN, StateTryOpen, "tryopen"},
-		{OPEN, StateOpen, "open"},
-		{CLOSED, StateClosed, "closed"},
+		{StateUninitialized, UNINITIALIZED},
+		{StateInit, INIT},
+		{StateTryOpen, TRYOPEN},
+		{StateOpen, OPEN},
+		{StateOpen, CLOSED},
 	}
 
 	for _, tt := range cases {
@@ -44,39 +42,38 @@ func TestChannelStateMarshalJSON(t *testing.T) {
 		bz, err := tt.state.MarshalJSON()
 		require.NoError(t, err)
 		var state State
-		require.NoError(t, state.UnmarshalJSON(bz), tt.msg)
-		require.Equal(t, tt.name, state.String(), tt.msg)
+		require.NoError(t, state.UnmarshalJSON(bz))
+		require.Equal(t, tt.name, state.String())
 	}
 }
 
 func TestOrderString(t *testing.T) {
 	cases := []struct {
-		order Order
 		name  string
-		msg   string
+		order Order
 	}{
-		{NONE, OrderNone, "none ordering"},
-		{UNORDERED, OrderUnordered, "unordered"},
-		{ORDERED, OrderOrdered, "ordered"},
+		{OrderNone, NONE},
+		{OrderUnordered, UNORDERED},
+		{OrderOrdered, ORDERED},
 	}
 
 	for _, tt := range cases {
 		tt := tt
-		require.Equal(t, tt.order, OrderFromString(tt.name), tt.msg)
-		require.Equal(t, tt.name, tt.order.String(), tt.msg)
+		require.Equal(t, tt.order, OrderFromString(tt.name))
+		require.Equal(t, tt.name, tt.order.String())
 	}
 }
 
 func TestOrderMarshalJSON(t *testing.T) {
 	cases := []struct {
-		order      Order
-		name       string
 		msg        string
+		name       string
+		order      Order
 		expectPass bool
 	}{
-		{NONE, OrderNone, "none ordering should have failed", false},
-		{UNORDERED, OrderUnordered, "unordered should have passed", true},
-		{ORDERED, OrderOrdered, "ordered should have passed", true},
+		{"none ordering should have failed", OrderNone, NONE, false},
+		{"unordered should have passed", OrderUnordered, UNORDERED, true},
+		{"ordered should have passed", OrderOrdered, ORDERED, true},
 	}
 
 	for _, tt := range cases {

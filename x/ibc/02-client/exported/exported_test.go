@@ -8,12 +8,12 @@ import (
 
 func TestClientTypeString(t *testing.T) {
 	cases := []struct {
-		clientType ClientType
-		name       string
 		msg        string
+		name       string
+		clientType ClientType
 	}{
-		{Tendermint, ClientTypeTendermint, "tendermint client"},
-		{0, "", "empty type"},
+		{"tendermint client", ClientTypeTendermint, Tendermint},
+		{"empty type", "", 0},
 	}
 
 	for _, tt := range cases {
@@ -25,13 +25,13 @@ func TestClientTypeString(t *testing.T) {
 
 func TestClientTypeMarshalJSON(t *testing.T) {
 	cases := []struct {
-		clientType ClientType
-		name       string
 		msg        string
+		name       string
+		clientType ClientType
 		expectPass bool
 	}{
-		{Tendermint, ClientTypeTendermint, "tendermint client should have passed", true},
-		{0, "", "empty type should have failed", false},
+		{"tendermint client should have passed", ClientTypeTendermint, Tendermint, true},
+		{"empty type should have failed", "", 0, false},
 	}
 
 	for _, tt := range cases {

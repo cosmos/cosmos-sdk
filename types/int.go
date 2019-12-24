@@ -114,6 +114,13 @@ func NewInt(n int64) Int {
 	return Int{big.NewInt(n)}
 }
 
+// NewInt constructs Int from int64
+func NewIntFromUint64(n uint64) Int {
+	b := big.NewInt(0)
+	b.SetUint64(n)
+	return Int{b}
+}
+
 // NewIntFromBigInt constructs Int from big.Int
 func NewIntFromBigInt(i *big.Int) Int {
 	if i.BitLen() > maxBitLen {

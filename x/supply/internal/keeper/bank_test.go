@@ -94,7 +94,7 @@ func TestMintCoins(t *testing.T) {
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")
 	require.Panics(t, func() { keeper.MintCoins(ctx, types.Burner, initCoins) }, "invalid permission")
-	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.Coin{"denom", sdk.NewInt(-10)}})
+	err := keeper.MintCoins(ctx, types.Minter, sdk.Coins{sdk.NewCoin("denom", sdk.NewInt(-10))})
 	require.Error(t, err, "insufficient coins")
 
 	require.Panics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) })

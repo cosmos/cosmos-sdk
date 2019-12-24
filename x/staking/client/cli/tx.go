@@ -119,8 +119,9 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			if minSelfDelegationString != "" {
 				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
 				if !ok {
-					return fmt.Errorf(types.ErrMinSelfDelegationInvalid(types.DefaultCodespace).Error())
+					return types.ErrMinSelfDelegationInvalid
 				}
+
 				newMinSelfDelegation = &msb
 			}
 
@@ -378,7 +379,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr auth.TxBuilder) (
 	msbStr := viper.GetString(FlagMinSelfDelegation)
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 	if !ok {
-		return txBldr, nil, fmt.Errorf(types.ErrMinSelfDelegationInvalid(types.DefaultCodespace).Error())
+		return txBldr, nil, types.ErrMinSelfDelegationInvalid
 	}
 
 	msg := types.NewMsgCreateValidator(

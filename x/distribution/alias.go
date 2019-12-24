@@ -65,10 +65,10 @@ var (
 	CreateTestInputAdvanced                    = keeper.CreateTestInputAdvanced
 	RegisterCodec                              = types.RegisterCodec
 	NewDelegatorStartingInfo                   = types.NewDelegatorStartingInfo
-	ErrNoDelegatorAddr                         = types.ErrNoDelegatorAddr
-	ErrNoWithdrawAddr                          = types.ErrNoWithdrawAddr
-	ErrNoValidatorAddr                         = types.ErrNoValidatorAddr
-	ErrNoDelegationDistInfo                    = types.ErrNoDelegationDistInfo
+	ErrEmptyDelegatorAddr                      = types.ErrEmptyDelegatorAddr
+	ErrEmptyWithdrawAddr                       = types.ErrEmptyWithdrawAddr
+	ErrEmptyValidatorAddr                      = types.ErrEmptyValidatorAddr
+	ErrEmptyDelegationDistInfo                 = types.ErrEmptyDelegationDistInfo
 	ErrNoValidatorDistInfo                     = types.ErrNoValidatorDistInfo
 	ErrNoValidatorExists                       = types.ErrNoValidatorExists
 	ErrNoDelegationExists                      = types.ErrNoDelegationExists

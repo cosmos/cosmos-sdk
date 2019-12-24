@@ -12,7 +12,7 @@ import (
 // SubmitProposal create new proposal given a content
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.String())
+		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
 	// Execute the proposal content in a cache-wrapped context to validate the

@@ -83,7 +83,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 
 	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if del == nil {
-		return nil, types.ErrNoDelegationDistInfo
+		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// withdraw rewards

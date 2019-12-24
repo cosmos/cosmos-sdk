@@ -97,6 +97,7 @@ func SignCheckDeliver(
 
 	// Simulate a sending a transaction and committing a block
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
 	gInfo, res, err := app.Deliver(tx)
 
 	if expPass {

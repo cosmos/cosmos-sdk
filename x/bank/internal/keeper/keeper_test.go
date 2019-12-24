@@ -108,7 +108,7 @@ func TestSendKeeper(t *testing.T) {
 	blacklistedAddrs := make(map[string]bool)
 
 	paramSpace := app.ParamsKeeper.Subspace("newspace")
-	sendKeeper := keep.NewBaseSendKeeper(app.AccountKeeper, paramSpace, types.DefaultCodespace, blacklistedAddrs)
+	sendKeeper := keep.NewBaseSendKeeper(app.AccountKeeper, paramSpace, blacklistedAddrs)
 	app.BankKeeper.SetSendEnabled(ctx, true)
 
 	addr := sdk.AccAddress([]byte("addr1"))
@@ -200,7 +200,7 @@ func TestViewKeeper(t *testing.T) {
 	app, ctx := createTestApp(false)
 
 	//paramSpace := app.ParamsKeeper.Subspace(types.DefaultParamspace)
-	viewKeeper := keep.NewBaseViewKeeper(app.AccountKeeper, types.DefaultCodespace)
+	viewKeeper := keep.NewBaseViewKeeper(app.AccountKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)

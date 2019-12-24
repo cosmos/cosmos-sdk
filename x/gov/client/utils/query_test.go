@@ -16,9 +16,7 @@ type txMock struct {
 	msgNum  int
 }
 
-func (tx txMock) ValidateBasic() sdk.Error {
-	return nil
-}
+func (tx txMock) ValidateBasic() error { return nil }
 
 func (tx txMock) GetMsgs() (msgs []sdk.Msg) {
 	for i := 0; i < tx.msgNum; i++ {

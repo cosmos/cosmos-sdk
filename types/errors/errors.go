@@ -256,7 +256,7 @@ type wrappedError struct {
 }
 
 func (e *wrappedError) Error() string {
-	return fmt.Sprintf("%s: %s", e.msg, e.parent.Error())
+	return fmt.Sprintf("%s: %s", e.parent.Error(), e.msg)
 }
 
 func (e *wrappedError) Cause() error {

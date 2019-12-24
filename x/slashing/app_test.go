@@ -3,7 +3,7 @@
 package slashing
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -153,8 +153,8 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	header = abci.Header{Height: mapp.LastBlockHeight() + 1}
-	_, res, err := mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, true, true, priv1)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.True(t, strings.Contains(res.Log, ErrValidatorNotJailed.Error()))
+	_, res, err := mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, header, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, errors.Is(ErrValidatorNotJailed, err))
 }

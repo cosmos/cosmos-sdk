@@ -145,7 +145,7 @@ func SignCheckDeliver(
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	gInfo, res, err := app.Deliver(tx)
 
-	if expSimPass {
+	if expPass {
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	} else {

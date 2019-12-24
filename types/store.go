@@ -4,7 +4,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/pageiterator"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -44,13 +43,13 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 // KVStorePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in ascending order.
 func KVStorePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
-	return pageiterator.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
+	return types.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
 }
 
 // KVStoreReversePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in descending order.
 func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
-	return pageiterator.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
+	return types.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
 }
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs

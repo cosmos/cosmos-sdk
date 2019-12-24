@@ -1,16 +1,14 @@
-package pageiterator
+package types
 
 import (
 	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // KVStorePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in ascending order.
-func KVStorePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, page, limit uint) types.Iterator {
+func KVStorePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
 	pi := &PaginatedIterator{
-		Iterator: types.KVStorePrefixIterator(kvs, prefix),
+		Iterator: KVStorePrefixIterator(kvs, prefix),
 		page:     page,
 		limit:    limit,
 	}
@@ -20,9 +18,9 @@ func KVStorePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, page, limi
 
 // KVStoreReversePrefixIteratorPaginated returns iterator over items in the selected page.
 // Items iterated and skipped in descending order.
-func KVStoreReversePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, page, limit uint) types.Iterator {
+func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
 	pi := &PaginatedIterator{
-		Iterator: types.KVStoreReversePrefixIterator(kvs, prefix),
+		Iterator: KVStoreReversePrefixIterator(kvs, prefix),
 		page:     page,
 		limit:    limit,
 	}
@@ -32,7 +30,7 @@ func KVStoreReversePrefixIteratorPaginated(kvs types.KVStore, prefix []byte, pag
 
 // PaginatedIterator is a wrapper around Iterator that iterates over values starting for given page and limit.
 type PaginatedIterator struct {
-	types.Iterator
+	Iterator
 
 	page, limit uint // provided during initialization
 	iterated    uint // incremented in a call to Next
@@ -47,7 +45,7 @@ func (pi *PaginatedIterator) skip() {
 
 // Next will panic after limit is reached.
 func (pi *PaginatedIterator) Next() {
-	if pi.iterated == pi.limit {
+	if !pi.Valid() {
 		panic(fmt.Sprintf("PaginatedIterator reached limit %d", pi.limit))
 	}
 	pi.Iterator.Next()

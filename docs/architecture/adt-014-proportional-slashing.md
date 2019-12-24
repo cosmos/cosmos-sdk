@@ -21,7 +21,7 @@ slash_amount = power // power is the faulting validator's voting power.
 However, this will incentivize validators with large amounts of stake to split up their voting power amongst accounts, so that if they fault, they all get slashed at a lower percent.  The solution to this is to take into account not just a validator's own voting percentage, but also the voting percentage of all the other validators who get slashed in a specified time frame.
 
 ```
-slash_amount = (power_1 + power_2 + ... + power_n) // where power_i is the voting power of the ith validator faulting in the period
+slash_amount = k * (power_1 + power_2 + ... + power_n) // where power_i is the voting power of the ith validator faulting in the specified time frame and k is some on-chain constant
 ```
 
 Now, if someone splits a validator of 10% into two validators of 5% each which both fault, then they both fault in the same time frame, they both will still get slashed at the sum 10% amount.

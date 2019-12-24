@@ -42,8 +42,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 			return handleMsgType2(ctx, keeper, msg)
 
 		default:
-			errMsg := fmt.Sprintf("Unrecognized nameservice Msg type: %v", msg.Type())
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }

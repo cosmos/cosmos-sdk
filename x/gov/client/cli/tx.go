@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -66,10 +67,10 @@ func GetTxCmd(storeKey string, cdc *codec.Codec, pcmds []*cobra.Command) *cobra.
 
 	cmdSubmitProp := GetCmdSubmitProposal(cdc)
 	for _, pcmd := range pcmds {
-		cmdSubmitProp.AddCommand(client.PostCommands(pcmd)[0])
+		cmdSubmitProp.AddCommand(flags.PostCommands(pcmd)[0])
 	}
 
-	govTxCmd.AddCommand(client.PostCommands(
+	govTxCmd.AddCommand(flags.PostCommands(
 		GetCmdDeposit(cdc),
 		GetCmdVote(cdc),
 		cmdSubmitProp,

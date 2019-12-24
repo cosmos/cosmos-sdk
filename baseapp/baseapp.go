@@ -508,11 +508,13 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-// runTx processes a transaction with a given "mode", encoded transaction bytes,
-// and the transaction itself. It returns the gas execution info, a reference to
-// a result if execution succeeded and an error if execution failed. All state
-// transitions occur through a cached context depending on the mode provided.
-// Only during DeliverTx, does the state get persisted.
+// runTx processes a transaction within a given execution mode, encoded transaction
+// bytes, and the decoded transaction itself. All state transitions occur through
+// a cached Context depending on the mode provided. State only gets persisted
+// if all messages get executed successfully and the execution mode is DeliverTx.
+// Note, gas execution info is always returned. A reference to a Result is
+// returned if the tx does not run out of gas and if all the messages are valid
+// and execute successfully. An error is returned otherwise.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
@@ -536,6 +538,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
+			// TODO: Use ErrOutOfGas instead of ErrorOutOfGas which would allow us
+			// to keep the stracktrace.
 			case sdk.ErrorOutOfGas:
 				err = sdkerrors.Wrap(
 					sdkerrors.ErrOutOfGas, fmt.Sprintf(
@@ -622,7 +626,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
 	// Attempt to execute all messages and only update state if all messages pass
-	// and we're in DeliverTx.
+	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
+	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		msCache.Write()
@@ -631,7 +636,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	return gInfo, result, err
 }
 
-// runMsgs iterates through all the messages and executes them.
+// runMsgs iterates through a list of messages and executes them with the provided
+// Context and execution mode. Messages will only be executed during simulation
+// and DeliverTx. An error is returned if any single message fails or if a
+// Handler does not exist for a given message route. Otherwise, a reference to a
+// Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	data := make([]byte, 0, len(msgs))
@@ -647,30 +656,26 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		msgRoute := msg.Route()
 		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s, message index: %d", msgRoute, i)
 		}
 
-		result, err := handler(ctx, msg)
-
-		// Each message result's Data must be length prefixed in order to separate
-		// each result.
-		data = append(data, result.Data...)
-
-		// append events from the message's execution and a message action event
-		msgEvents := result.Events
-		msgEvents = msgEvents.AppendEvent(
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
-		)
-
-		events = events.AppendEvents(msgEvents)
-
-		// short-circuit if the message fails (i.e. disregard remaining messages)
+		msgResult, err := handler(ctx, msg)
 		if err != nil {
-			msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), false, result.Log, msgEvents))
-			break
+			return nil, sdkerrors.Wrapf(err, "failed to execute message, message index: %d", i)
 		}
 
-		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), true, result.Log, msgEvents))
+		msgEvents := sdk.Events{
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msg.Type())),
+		}
+		msgEvents = msgEvents.AppendEvents(msgResult.Events)
+
+		// append message events, data and logs
+		//
+		// Note: Each message result's data must be length-prefixed in order to
+		// separate each result.
+		events = events.AppendEvents(msgEvents)
+		data = append(data, msgResult.Data...)
+		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint16(i), msgResult.Log, msgEvents))
 	}
 
 	return &sdk.Result{

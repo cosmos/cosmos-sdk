@@ -154,30 +154,19 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	return
 }
 
-// CheckTx implements the ABCI interface. It runs the "basic checks" to see
-// whether or not a transaction can possibly be executed, first decoding and then
-// the ante handler (which checks signatures/fees/ValidateBasic).
-//
-// NOTE:CheckTx does not run the actual Msg handler function(s).
+// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
+// CheckTx mode, messages are not executed. This means messages are only validated
+// and only the AnteHandler is executed. State is persisted to the BaseApp's
+// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
+// will contain releveant error information. Regardless of tx execution outcome,
+// the ResponseCheckTx will contain relevant gas execution context.
 func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseCheckTx{
-			Codespace: space,
-			Code:      code,
-			Log:       log,
-		}
+		return sdkerrors.ResponseCheckTx(err, 0, 0)
 	}
 
-	var (
-		space  string
-		code   uint32
-		log    string
-		data   []byte
-		events []abci.Event
-		mode   runTxMode
-	)
+	var mode runTxMode
 
 	switch {
 	case req.Type == abci.CheckTxType_New:
@@ -192,61 +181,40 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 
 	gInfo, result, err := app.runTx(mode, req.Tx, tx)
 	if err != nil {
-		space, code, log = sdkerrors.ABCIInfo(err, false)
-	} else if result != nil {
-		data = result.Data
-		log = result.Log
-		events = result.Events.ToABCIEvents()
+		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed)
 	}
 
 	return abci.ResponseCheckTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-		Data:      data,
-		Events:    events,
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 
-// DeliverTx implements the ABCI interface.
+// DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
+// State only gets persisted if all messages are valid and get executed successfully.
+// Otherwise, the ResponseDeliverTx will contain releveant error information.
+// Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
+// gas execution context.
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		space, code, log := sdkerrors.ABCIInfo(err, false)
-		return abci.ResponseDeliverTx{
-			Codespace: space,
-			Code:      code,
-			Log:       log,
-		}
+		return sdkerrors.ResponseDeliverTx(err, 0, 0)
 	}
-
-	var (
-		space  string
-		code   uint32
-		log    string
-		data   []byte
-		events []abci.Event
-	)
 
 	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx, tx)
 	if err != nil {
-		space, code, log = sdkerrors.ABCIInfo(err, false)
-	} else if result != nil {
-		data = result.Data
-		log = result.Log
-		events = result.Events.ToABCIEvents()
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed)
 	}
 
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-		Data:      data,
-		Events:    events,
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    result.Events.ToABCIEvents(),
 	}
 }
 

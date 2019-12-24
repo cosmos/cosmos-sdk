@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -26,7 +27,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	slashingQueryCmd.AddCommand(
-		client.GetCommands(
+		flags.GetCommands(
 			GetCmdQuerySigningInfo(queryRoute, cdc),
 			GetCmdQueryParams(cdc),
 		)...,

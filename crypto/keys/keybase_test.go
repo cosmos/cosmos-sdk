@@ -45,18 +45,40 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 	kb := NewInMemory()
+
+	supportedLedgerAlgos := kb.SupportedAlgosLedger()
+	for _, supportedAlgo := range supportedLedgerAlgos {
+		if Ed25519 == supportedAlgo {
+			assert.FailNow(t, "Was not an unsupported algorithm")
+		}
+	}
+
 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(WithSupportedAlgosLedger([]SigningAlgo{Secp256k1, Ed25519}))
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
+	supportedLedgerAlgos := kb.SupportedAlgosLedger()
+	secpSupported := false
+	edSupported := false
+	for _, supportedAlgo := range supportedLedgerAlgos {
+		if Secp256k1 == supportedAlgo {
+			secpSupported = true
+		}
+		if Ed25519 == supportedAlgo {
+			edSupported = true
+		}
+	}
+	assert.True(t, secpSupported)
+	assert.True(t, edSupported)
+
 	ledger, err := kb.CreateLedger("some_account", Secp256k1, "cosmos", 3, 1)
 
 	if err != nil {
@@ -93,6 +115,24 @@ func TestCreateLedger(t *testing.T) {
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	cstore := NewInMemory()
+
+	// Test modified supported algos
+	supportedAlgos := cstore.SupportedAlgos()
+	secpSupported := false
+	edSupported := false
+	srSupported := false
+	for _, supportedAlgo := range supportedAlgos {
+		if Secp256k1 == supportedAlgo {
+			secpSupported = true
+		} else if Ed25519 == supportedAlgo {
+			edSupported = true
+		} else if Sr25519 == supportedAlgo {
+			srSupported = true
+		}
+	}
+	assert.True(t, secpSupported)
+	assert.False(t, edSupported)
+	assert.True(t, srSupported)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -156,6 +196,8 @@ func TestKeyManagement(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
+	iOffline := i.(offlineInfo)
+	require.Equal(t, algo, iOffline.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))

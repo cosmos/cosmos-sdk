@@ -28,7 +28,6 @@ type TestSuite struct {
 var s TestSuite
 
 func setupTest(height int64, skip map[int64]bool) TestSuite {
-	checkTx := false
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, 0)
 	genesisState := simapp.NewDefaultGenesisState()
@@ -44,7 +43,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 	)
 
 	s.keeper = app.UpgradeKeeper
-	s.ctx = app.BaseApp.NewContext(checkTx, abci.Header{Height: height, Time: time.Now()})
+	s.ctx = app.BaseApp.NewContext(false, abci.Header{Height: height, Time: time.Now()})
 
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.querier = s.module.NewQuerierHandler()
@@ -241,14 +240,14 @@ func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
 	require.NotZero(t, height)
 }
 
-func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
+func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 	t.Log("Verify if the skip upgrade has been set")
 	skipUpgradeHeightsMap := s.keeper.GetSkipUpgradeHeights()
 
 	require.Equal(t, len(skipUpgradeHeightsMap), len(skipUpgradeHeights))
 
-	for _, s := range skipUpgradeHeights {
-		require.True(t, skipUpgradeHeightsMap[s])
+	for k := range skipUpgradeHeights {
+		require.True(t, skipUpgradeHeightsMap[k])
 	}
 }
 
@@ -259,7 +258,7 @@ func TestContains(t *testing.T) {
 	s := setupTest(10, map[int64]bool{skipOne: true})
 
 	//s.SetT(t)
-	VerifySet(t, []int64{skipOne})
+	VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")
 	require.True(t, s.keeper.GetSkipUpgradeHeights()[11])
 
@@ -281,7 +280,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases")
-	VerifySet(t, []int64{skipOne, skipTwo})
+	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx = newCtx.WithBlockHeight(skipOne)
 	require.NotPanics(t, func() {
@@ -318,7 +317,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in one case and does upgrade on another")
-	VerifySet(t, []int64{skipOne})
+	VerifySet(t, map[int64]bool{skipOne: true})
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)
@@ -353,7 +352,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 	require.Nil(t, err)
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
-	VerifySet(t, []int64{skipOne, skipTwo})
+	VerifySet(t, map[int64]bool{skipOne: true, skipTwo: true})
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)

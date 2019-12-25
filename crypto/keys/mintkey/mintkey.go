@@ -20,6 +20,8 @@ const (
 	blockTypePrivKey = "TENDERMINT PRIVATE KEY"
 	blockTypeKeyInfo = "TENDERMINT KEY INFO"
 	blockTypePubKey  = "TENDERMINT PUBLIC KEY"
+
+	defaultAlgo = "secp256k1"
 )
 
 // Make bcrypt security parameter var, so it can be changed within the lcd test
@@ -78,10 +80,10 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	switch header["version"] {
 	case "0.0.0":
-		return bz, "secp256k1", err
+		return bz, defaultAlgo, err
 	case "0.0.1":
 		if header["type"] == "" {
-			header["type"] = "secp256k1"
+			header["type"] = defaultAlgo
 		}
 		return bz, header["type"], err
 	default:
@@ -155,7 +157,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey crypto.P
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
 
 	if header["type"] == "" {
-		header["type"] = "secp256k1"
+		header["type"] = defaultAlgo
 		fmt.Println("mice")
 	}
 	return privKey, header["type"], err

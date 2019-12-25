@@ -28,6 +28,8 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			// If skip upgrade has been set, we clear the upgrade plan
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			ctx.Logger().Info(skipUpgradeMsg)
+
+			// Clear the upgrade plan at current height
 			k.ClearUpgradePlan(ctx)
 			return
 		}

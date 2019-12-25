@@ -33,7 +33,6 @@ var (
 	NewQueryAppliedParams            = types.NewQueryAppliedParams
 	NewKeeper                        = keeper.NewKeeper
 	NewQuerier                       = keeper.NewQuerier
-	ConvertArrayToMap                = types.ConvertArrayToMap
 )
 
 type (

@@ -20,13 +20,9 @@ type Keeper struct {
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights []int64, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
-
-	// Convert skipUpgradeHeights array into a map for simpler and quicker lookup
-	skipUpgradeHeightsMap := types.ConvertArrayToMap(skipUpgradeHeights)
-
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{
-		skipUpgradeHeights: skipUpgradeHeightsMap,
+		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},

@@ -39,7 +39,7 @@ type Keybase interface {
 	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
-	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
+	CreateOffline(name string, pubkey crypto.PubKey, algo SigningAlgo) (info Info, err error)
 
 	// CreateMulti creates, stores, and returns a new multsig (offline) key reference
 	CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -53,7 +53,7 @@ type Keybase interface {
 	// ImportPrivKey imports a private key in ASCII armor format.
 	// It returns an error if a key with the same name exists or a wrong encryption passphrase is
 	// supplied.
-	ImportPrivKey(name, armor, passphrase string, algo SigningAlgo) error
+	ImportPrivKey(name, armor, passphrase string) error
 
 	// ImportPubKey imports ASCII-armored public keys.
 	// Store a new Info object holding a public key only, i.e. it will
@@ -118,6 +118,8 @@ type Info interface {
 	GetPubKey() crypto.PubKey
 	// Address
 	GetAddress() types.AccAddress
+	// Algo
+	GetAlgo() SigningAlgo
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 }
@@ -181,13 +183,15 @@ type ledgerInfo struct {
 	Name   string         `json:"name"`
 	PubKey crypto.PubKey  `json:"pubkey"`
 	Path   hd.BIP44Params `json:"path"`
+	Algo   SigningAlgo    `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo SigningAlgo) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,
 		Path:   path,
+		Algo:   algo,
 	}
 }
 
@@ -212,6 +216,11 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
+func (i ledgerInfo) GetAlgo() SigningAlgo {
+	return i.Algo
+}
+
+// GetPath implements Info interface
 func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
@@ -224,10 +233,11 @@ type offlineInfo struct {
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
-func newOfflineInfo(name string, pub crypto.PubKey) Info {
+func newOfflineInfo(name string, pub crypto.PubKey, algo SigningAlgo) Info {
 	return &offlineInfo{
 		Name:   name,
 		PubKey: pub,
+		Algo:   algo,
 	}
 }
 
@@ -310,6 +320,11 @@ func (i multiInfo) GetPubKey() crypto.PubKey {
 // GetAddress implements Info interface
 func (i multiInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
+}
+
+// GetPath implements Info interface
+func (i multiInfo) GetAlgo() SigningAlgo {
+	return MultiAlgo
 }
 
 // GetPath implements Info interface

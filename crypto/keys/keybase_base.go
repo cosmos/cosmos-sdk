@@ -159,7 +159,7 @@ func (kb baseKeybase) CreateAccount(
 	if encryptPasswd != "" {
 		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv, algo), encryptPasswd, algo)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv, algo).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv, algo).PubKey(), algo)
 	}
 
 	return info, nil
@@ -183,7 +183,7 @@ func (kb baseKeybase) CreateLedger(
 		return nil, err
 	}
 
-	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath), nil
+	return kb.writeLedgerKey(w, name, priv.PubKey(), *hdPath, algo), nil
 }
 
 // CreateMnemonic generates a new key with the given algorithm and language pair.
@@ -216,14 +216,14 @@ func (kb baseKeybase) CreateMnemonic(
 	return info, mnemonic, err
 }
 
-func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
-	info := newLedgerInfo(name, pub, path)
+func (kb baseKeybase) writeLedgerKey(w infoWriter, name string, pub tmcrypto.PubKey, path hd.BIP44Params, algo SigningAlgo) Info {
+	info := newLedgerInfo(name, pub, path, algo)
 	w.writeInfo(name, info)
 	return info
 }
 
-func (kb baseKeybase) writeOfflineKey(w infoWriter, name string, pub tmcrypto.PubKey) Info {
-	info := newOfflineInfo(name, pub)
+func (kb baseKeybase) writeOfflineKey(w infoWriter, name string, pub tmcrypto.PubKey, algo SigningAlgo) Info {
+	info := newOfflineInfo(name, pub, algo)
 	w.writeInfo(name, info)
 	return info
 }

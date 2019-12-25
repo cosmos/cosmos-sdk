@@ -114,7 +114,7 @@ func TestCreateLedger(t *testing.T) {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(WithSupportedAlgos([]SigningAlgo{Secp256k1, Sr25519}))
 
 	// Test modified supported algos
 	supportedAlgos := cstore.SupportedAlgos()
@@ -192,11 +192,11 @@ func TestKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = cstore.CreateOffline(o1, pub1)
+	i, err = cstore.CreateOffline(o1, pub1, algo)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
-	iOffline := i.(offlineInfo)
+	iOffline := i.(*offlineInfo)
 	require.Equal(t, algo, iOffline.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)

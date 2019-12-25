@@ -108,14 +108,14 @@ func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, a
 	return newDBKeybase(db, lkb.options...).CreateLedger(name, algo, hrp, account, index)
 }
 
-func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
+func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey, algo SigningAlgo) (info Info, err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	return newDBKeybase(db, lkb.options...).CreateOffline(name, pubkey)
+	return newDBKeybase(db, lkb.options...).CreateOffline(name, pubkey, algo)
 }
 
 func (lkb lazyKeybase) CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error) {
@@ -148,14 +148,14 @@ func (lkb lazyKeybase) Import(name string, armor string) (err error) {
 	return newDBKeybase(db, lkb.options...).Import(name, armor)
 }
 
-func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string, algo SigningAlgo) error {
+func (lkb lazyKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	return newDBKeybase(db, lkb.options...).ImportPrivKey(name, armor, passphrase, algo)
+	return newDBKeybase(db, lkb.options...).ImportPrivKey(name, armor, passphrase)
 }
 
 func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {

@@ -106,8 +106,8 @@ func (kb keyringKeybase) CreateLedger(
 
 // CreateOffline creates a new reference to an offline keypair. It returns the
 // created key info.
-func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.base.writeOfflineKey(kb, name, pub), nil
+func (kb keyringKeybase) CreateOffline(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
+	return kb.base.writeOfflineKey(kb, name, pub, algo), nil
 }
 
 // CreateMulti creates a new reference to a multisig (offline) keypair. It
@@ -274,7 +274,7 @@ func (kb keyringKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name: %s", name)
 	}
 
-	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes()), nil
+	return mintkey.ArmorPubKeyBytes(bz.GetPubKey().Bytes(), string(bz.GetAlgo())), nil
 }
 
 // Import imports armored private key.
@@ -320,24 +320,29 @@ func (kb keyringKeybase) ExportPrivKey(name, decryptPassphrase, encryptPassphras
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase), nil
+	info, err := kb.Get(name)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ImportPrivKey imports a private key in ASCII armor format. An error is returned
 // if a key with the same name exists or a wrong encryption passphrase is
 // supplied.
-func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string, algo SigningAlgo) error {
+func (kb keyringKeybase) ImportPrivKey(name, armor, passphrase string) error {
 	if kb.HasKey(name) {
 		return fmt.Errorf("cannot overwrite key: %s", name)
 	}
 
-	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
 	// NOTE: The keyring keystore has no need for a passphrase.
-	kb.writeLocalKey(name, privKey, "", algo)
+	kb.writeLocalKey(name, privKey, "", SigningAlgo(algo))
 	return nil
 }
 
@@ -360,7 +365,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 		}
 	}
 
-	pubBytes, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return err
 	}
@@ -370,7 +375,7 @@ func (kb keyringKeybase) ImportPubKey(name string, armor string) error {
 		return err
 	}
 
-	kb.base.writeOfflineKey(kb, name, pubKey)
+	kb.base.writeOfflineKey(kb, name, pubKey, SigningAlgo(algo))
 	return nil
 }
 
@@ -409,7 +414,7 @@ func (kb keyringKeybase) Update(name, oldpass string, getNewpass func() (string,
 
 	switch linfo := info.(type) {
 	case localInfo:
-		key, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
+		key, _, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
 		if err != nil {
 			return err
 		}

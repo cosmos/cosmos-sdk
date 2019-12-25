@@ -176,7 +176,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		if err != nil {
 			return err
 		}
-		_, err = kb.CreateOffline(name, pk)
+		_, err = kb.CreateOffline(name, pk, algo)
 		if err != nil {
 			return err
 		}

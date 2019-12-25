@@ -117,8 +117,8 @@ func (kb dbKeybase) CreateLedger(
 
 // CreateOffline creates a new reference to an offline keypair. It returns the
 // created key info.
-func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.base.writeOfflineKey(kb, name, pub), nil
+func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey, algo SigningAlgo) (Info, error) {
+	return kb.base.writeOfflineKey(kb, name, pub, algo), nil
 }
 
 // CreateMulti creates a new reference to a multisig (offline) keypair. It
@@ -190,7 +190,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 			return
 		}
 
-		priv, err = mintkey.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
+		priv, _, err = mintkey.UnarmorDecryptPrivKey(i.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -229,7 +229,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			return nil, err
 		}
 
-		priv, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+		priv, _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
 		if err != nil {
 			return nil, err
 		}
@@ -263,7 +263,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return
 	}
 
-	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes()), nil
+	return mintkey.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
 }
 
 // ExportPrivKey returns a private key in ASCII armored format.
@@ -276,23 +276,28 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 		return "", err
 	}
 
-	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase), nil
+	info, err := kb.Get(name)
+	if err != nil {
+		return "", err
+	}
+
+	return mintkey.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
 }
 
 // ImportPrivKey imports a private key in ASCII armor format. It returns an
 // error if a key with the same name exists or a wrong encryption passphrase is
 // supplied.
-func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string, algo SigningAlgo) error {
+func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) error {
 	if _, err := kb.Get(name); err == nil {
 		return errors.New("Cannot overwrite key " + name)
 	}
 
-	privKey, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, algo, err := mintkey.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "couldn't import private key")
 	}
 
-	kb.writeLocalKey(name, privKey, passphrase, algo)
+	kb.writeLocalKey(name, privKey, passphrase, SigningAlgo(algo))
 	return nil
 }
 
@@ -320,7 +325,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 		return errors.New("Cannot overwrite data for name " + name)
 	}
 
-	pubBytes, err := mintkey.UnarmorPubKeyBytes(armor)
+	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)
 	if err != nil {
 		return
 	}
@@ -330,7 +335,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 		return
 	}
 
-	kb.base.writeOfflineKey(kb, name, pubKey)
+	kb.base.writeOfflineKey(kb, name, pubKey, SigningAlgo(algo))
 	return
 }
 
@@ -346,7 +351,7 @@ func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 	}
 
 	if linfo, ok := info.(localInfo); ok && !skipPass {
-		if _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
+		if _, _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
 			return err
 		}
 	}
@@ -373,7 +378,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	case localInfo:
 		linfo := i
 
-		key, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
+		key, _, err := mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, oldpass)
 		if err != nil {
 			return err
 		}
@@ -408,7 +413,7 @@ func (kb dbKeybase) SupportedAlgosLedger() []SigningAlgo {
 
 func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string, algo SigningAlgo) Info {
 	// encrypt private key using passphrase
-	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase)
+	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase, string(algo))
 
 	// make Info
 	pub := priv.PubKey()

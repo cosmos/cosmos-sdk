@@ -79,7 +79,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = kb.CreateOffline(o1, pub1)
+	i, err = kb.CreateOffline(o1, pub1, Ed25519)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
@@ -209,10 +209,11 @@ func TestLazyExportImportPubKeyKeyRing(t *testing.T) {
 	defer cleanup()
 	kb, err := NewTestKeyring("keybasename", dir)
 	require.NoError(t, err)
+	algo := Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
-	info, _, err := kb.CreateMnemonic("john", English, notPasswd, Secp256k1)
+	info, _, err := kb.CreateMnemonic("john", English, notPasswd, algo)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")

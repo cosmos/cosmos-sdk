@@ -42,20 +42,22 @@ var BcryptSecurityParameter = 12
 
 // Armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
-	return armorBytes(bz, blockTypeKeyInfo)
-}
-
-// Armor the PubKeyBytes
-func ArmorPubKeyBytes(bz []byte) string {
-	return armorBytes(bz, blockTypePubKey)
-}
-
-func armorBytes(bz []byte, blockType string) string {
 	header := map[string]string{
 		"type":    "Info",
 		"version": "0.0.0",
 	}
-	return armor.EncodeArmor(blockType, header, bz)
+	return armor.EncodeArmor(blockTypeKeyInfo, header, bz)
+}
+
+// Armor the PubKeyBytes
+func ArmorPubKeyBytes(bz []byte, algo string) string {
+	header := map[string]string{
+		"version": "0.0.1",
+	}
+	if algo != "" {
+		header["type"] = algo
+	}
+	return armor.EncodeArmor(blockTypePubKey, header, bz)
 }
 
 //-----------------------------------------------------------------
@@ -63,25 +65,38 @@ func armorBytes(bz []byte, blockType string) string {
 
 // Unarmor the InfoBytes
 func UnarmorInfoBytes(armorStr string) (bz []byte, err error) {
-	return unarmorBytes(armorStr, blockTypeKeyInfo)
+	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
+	if header["version"] != "0.0.0" {
+		err = fmt.Errorf("unrecognized version: %v", header["version"])
+		return
+	}
+	return
 }
 
 // Unarmor the PubKeyBytes
-func UnarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
-	return unarmorBytes(armorStr, blockTypePubKey)
+func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
+	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
+	switch header["version"] {
+	case "0.0.0":
+		return bz, "secp256k1", err
+	case "0.0.1":
+		if header["type"] == "" {
+			header["type"] = "secp256k1"
+		}
+		return bz, header["type"], err
+	default:
+		err = fmt.Errorf("unrecognized version: %v", header["version"])
+		return
+	}
 }
 
-func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
+func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := armor.DecodeArmor(armorStr)
 	if err != nil {
 		return
 	}
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
-	}
-	if header["version"] != "0.0.0" {
-		err = fmt.Errorf("unrecognized version: %v", header["version"])
 		return
 	}
 	return
@@ -91,11 +106,14 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 // encrypt/decrypt with armor
 
 // Encrypt and armor the private key.
-func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
+func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
 		"kdf":  "bcrypt",
 		"salt": fmt.Sprintf("%X", saltBytes),
+	}
+	if algo != "" {
+		header["type"] = algo
 	}
 	armorStr := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
 	return armorStr
@@ -116,27 +134,31 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 }
 
 // Unarmor and decrypt the private key.
-func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
-	var privKey crypto.PrivKey
+func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey crypto.PrivKey, algo string, err error) {
 	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
 	if err != nil {
-		return privKey, err
+		return privKey, "", err
 	}
 	if blockType != blockTypePrivKey {
-		return privKey, fmt.Errorf("unrecognized armor type: %v", blockType)
+		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 	if header["kdf"] != "bcrypt" {
-		return privKey, fmt.Errorf("unrecognized KDF type: %v", header["KDF"])
+		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header["KDF"])
 	}
 	if header["salt"] == "" {
-		return privKey, fmt.Errorf("missing salt bytes")
+		return privKey, "", fmt.Errorf("missing salt bytes")
 	}
 	saltBytes, err := hex.DecodeString(header["salt"])
 	if err != nil {
-		return privKey, fmt.Errorf("error decoding salt: %v", err.Error())
+		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
-	return privKey, err
+
+	if header["type"] == "" {
+		header["type"] = "secp256k1"
+		fmt.Println("mice")
+	}
+	return privKey, header["type"], err
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {

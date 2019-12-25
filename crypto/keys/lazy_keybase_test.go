@@ -89,7 +89,7 @@ func TestLazyKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = kb.CreateOffline(o1, pub1)
+	i, err = kb.CreateOffline(o1, pub1, algo)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
@@ -233,7 +233,7 @@ func TestLazyExportImportPrivKey(t *testing.T) {
 	require.Error(t, err)
 
 	// import armored key
-	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw", Secp256k1))
+	require.NoError(t, kb.ImportPrivKey("john", armored, "new_secretcpw"))
 
 	// ensure old and new keys match
 	priv2, err := kb.Get("john")
@@ -245,10 +245,11 @@ func TestLazyExportImportPubKey(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
 	kb := New("keybasename", dir)
+	algo := Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
-	info, _, err := kb.CreateMnemonic("john", English, notPasswd, Secp256k1)
+	info, _, err := kb.CreateMnemonic("john", English, notPasswd, algo)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")

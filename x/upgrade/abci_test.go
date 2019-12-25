@@ -1,7 +1,6 @@
 package upgrade_test
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
@@ -242,14 +241,29 @@ func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
 	require.NotZero(t, height)
 }
 
-func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
-	t.Log("Verify if the skip upgrade has been set")
-	require.Equal(t, s.keeper.GetSkipUpgradeHeights(), skipUpgradeHeights)
+func TestConvertArrayToMap(t *testing.T) {
+	var (
+		skipOne int64 = 1
+		skipTwo int64 = 2
+	)
+
+	skipUpgradeHeightsMap := upgrade.ConvertArrayToMap([]int64{skipOne, skipTwo})
+
+	require.NotEmpty(t, skipUpgradeHeightsMap)
+	require.NotNil(t, skipUpgradeHeightsMap[1])
+	require.Equal(t, len(skipUpgradeHeightsMap), 2)
+	require.False(t, skipUpgradeHeightsMap[100])
 }
 
-func VerifyConversion(t *testing.T, skipUpgrades []int) {
-	skipUpgradeHeights := upgrade.ConvertIntArrayToInt64(skipUpgrades)
-	require.Equal(t, reflect.TypeOf(skipUpgradeHeights).Elem().Kind(), reflect.Int64)
+func VerifySet(t *testing.T, skipUpgradeHeights []int64) {
+	t.Log("Verify if the skip upgrade has been set")
+	skipUpgradeHeightsMap := s.keeper.GetSkipUpgradeHeights()
+
+	require.Equal(t, len(skipUpgradeHeightsMap), len(skipUpgradeHeights))
+
+	for _, s := range skipUpgradeHeights {
+		require.True(t, skipUpgradeHeightsMap[s])
+	}
 }
 
 func TestContains(t *testing.T) {
@@ -261,12 +275,10 @@ func TestContains(t *testing.T) {
 	//s.SetT(t)
 	VerifySet(t, []int64{skipOne})
 	t.Log("case where array contains the element")
-	present := upgrade.Contains(s.keeper.GetSkipUpgradeHeights(), 11)
-	require.True(t, present)
+	require.True(t, s.keeper.GetSkipUpgradeHeights()[11])
 
 	t.Log("case where array doesn't contain the element")
-	present = upgrade.Contains(s.keeper.GetSkipUpgradeHeights(), 4)
-	require.False(t, present)
+	require.False(t, s.keeper.GetSkipUpgradeHeights()[4])
 }
 
 func TestSkipUpgradeSkippingAll(t *testing.T) {
@@ -356,8 +368,6 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 
 	t.Log("Verify if skip upgrade flag clears upgrade plan in both cases and does third upgrade")
 	VerifySet(t, []int64{skipOne, skipTwo})
-
-	VerifyConversion(t, []int{1, 2})
 
 	//Setting block height of proposal test
 	newCtx = newCtx.WithBlockHeight(skipOne)

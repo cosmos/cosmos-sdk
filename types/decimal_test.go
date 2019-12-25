@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -457,9 +458,11 @@ func TestApproxRoot(t *testing.T) {
 		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},               // 27 ^ (1/3) => 3
 		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},             // -81 ^ (0.25) => -3
 		{NewDecFromInt(NewInt(2)), 2, NewDecWithPrec(1414213562373095049, 18)}, // 2 ^ (0.5) => 1.414213562373095049
+		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153904")},
 	}
 
 	for i, tc := range testCases {
+		fmt.Println(i)
 		res := tc.input.ApproxRoot(tc.root)
 		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}

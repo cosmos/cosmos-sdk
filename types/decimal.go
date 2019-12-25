@@ -341,16 +341,22 @@ func (d Dec) ApproxRoot(root uint64) Dec {
 	}
 
 	rootInt := NewIntFromUint64(root)
-	guess := d.QuoInt(rootInt)
+	guess := OneDec()
 	delta := OneDec()
+
+	fmt.Println(guess, delta)
 
 	for delta.Abs().GT(SmallestDec()) {
 		prev := guess.Power(root - 1)
+		if prev.IsZero() {
+			prev = SmallestDec()
+		}
 		delta = d.Quo(prev)
 		delta = delta.Sub(guess)
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
+		fmt.Println(guess, delta)
 	}
 
 	return guess

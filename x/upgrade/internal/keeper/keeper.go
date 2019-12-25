@@ -13,14 +13,14 @@ import (
 )
 
 type Keeper struct {
-	skipUpgradeHeights []int64
+	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
 	cdc                *codec.Codec
 	upgradeHandlers    map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights []int64, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
 	return Keeper{
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
@@ -124,12 +124,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	k.setDone(ctx, plan.Name)
 }
 
-// SetSkipUpgradeHeights assigns the given array to keeper's skipUpgradeHeights
-func (k *Keeper) SetSkipUpgradeHeights(skipUpgradeHeightArray []int64) {
-	k.skipUpgradeHeights = skipUpgradeHeightArray
-}
-
 // GetSkipUpgradeHeights returns the value of keeper's skipUpgradeHeights
-func (k Keeper) GetSkipUpgradeHeights() []int64 {
+func (k Keeper) GetSkipUpgradeHeights() map[int64]bool {
 	return k.skipUpgradeHeights
 }

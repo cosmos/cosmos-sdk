@@ -33,8 +33,6 @@ var (
 	NewQueryAppliedParams            = types.NewQueryAppliedParams
 	NewKeeper                        = keeper.NewKeeper
 	NewQuerier                       = keeper.NewQuerier
-	ConvertIntArrayToInt64           = types.ConvertIntArrayToInt64
-	Contains                         = types.Contains
 )
 
 type (

@@ -463,7 +463,8 @@ func TestApproxRoot(t *testing.T) {
 
 	for i, tc := range testCases {
 		fmt.Println(i)
-		res := tc.input.ApproxRoot(tc.root)
+		res, err := tc.input.ApproxRoot(tc.root)
+		require.Nil(t, err)
 		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
@@ -482,7 +483,8 @@ func TestApproxSqrt(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		res := tc.input.ApproxSqrt()
+		res, err := tc.input.ApproxSqrt()
+		require.Nil(t, err)
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }

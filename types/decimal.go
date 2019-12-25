@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -261,7 +262,6 @@ func (d Dec) MulInt64(i int64) Dec {
 
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
-
 	// multiply precision twice
 	mul := new(big.Int).Mul(d.Int, precisionReuse)
 	mul.Mul(mul, precisionReuse)
@@ -322,29 +322,32 @@ func (d Dec) QuoInt64(i int64) Dec {
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
 // approximate answer.  It returns -(sqrt(abs(d)) if input is negative.
-func (d Dec) ApproxRoot(root uint64) Dec {
+func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = errors.New("out of bounds")
+			}
+		}
+	}()
 
 	if d.IsNegative() {
-		return d.MulInt64(-1).ApproxRoot(root).MulInt64(-1)
+		absRoot, err := d.MulInt64(-1).ApproxRoot(root)
+		return absRoot.MulInt64(-1), err
 	}
 
-	if d.IsZero() || d.Equal(OneDec()) {
-		return d
-	}
-
-	if root == 1 {
-		return d
+	if root == 1 || d.IsZero() || d.Equal(OneDec()) {
+		return d, nil
 	}
 
 	if root == 0 {
-		return OneDec()
+		return OneDec(), nil
 	}
 
 	rootInt := NewIntFromUint64(root)
-	guess := OneDec()
-	delta := OneDec()
-
-	fmt.Println(guess, delta)
+	guess, delta := OneDec(), OneDec()
 
 	for delta.Abs().GT(SmallestDec()) {
 		prev := guess.Power(root - 1)
@@ -356,10 +359,9 @@ func (d Dec) ApproxRoot(root uint64) Dec {
 		delta = delta.QuoInt(rootInt)
 
 		guess = guess.Add(delta)
-		fmt.Println(guess, delta)
 	}
 
-	return guess
+	return guess, nil
 }
 
 // Power returns a the result of raising to a positive integer power
@@ -382,7 +384,7 @@ func (d Dec) Power(power uint64) Dec {
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
 // of finding square root of a number.
-func (d Dec) ApproxSqrt() Dec {
+func (d Dec) ApproxSqrt() (Dec, error) {
 	return d.ApproxRoot(2)
 }
 

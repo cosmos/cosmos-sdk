@@ -118,7 +118,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 
 	// update outstanding
 	outstanding := k.GetValidatorOutstandingRewards(ctx, valAddr)
-	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoins(commission)))
+	k.SetValidatorOutstandingRewards(ctx, valAddr, outstanding.Sub(sdk.NewDecCoinsFromCoin(commission)))
 
 	if !commission.IsZero() {
 		accAddr := sdk.AccAddress(valAddr)
@@ -160,7 +160,7 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	}
 
 	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoins(amount))
+	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoin(amount))
 	k.SetFeePool(ctx, feePool)
 
 	return nil

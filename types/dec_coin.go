@@ -157,9 +157,20 @@ func (coin DecCoin) IsValid() bool {
 // DecCoins defines a slice of coins with decimal values
 type DecCoins []DecCoin
 
-// NewDecCoins constructs a new coin set with decimal values
+// NewDecCoins constructs a new coin set with with decimal values
+// from DecCoins.
+func NewDecCoins(decCoinArray ...DecCoin) DecCoins {
+	decCoins := make(DecCoins, len(decCoinArray))
+	for i, decCoin := range decCoinArray {
+		decCoins[i] = decCoin
+	}
+
+	return decCoins
+}
+
+// NewDecCoinsFromCoin constructs a new coin set with decimal values
 // from regular Coins.
-func NewDecCoins(coins Coins) DecCoins {
+func NewDecCoinsFromCoin(coins Coins) DecCoins {
 	decCoins := make(DecCoins, len(coins))
 	newCoins := NewCoins(coins...)
 	for i, coin := range newCoins {
@@ -167,6 +178,11 @@ func NewDecCoins(coins Coins) DecCoins {
 	}
 
 	return decCoins
+}
+
+// AddDecCoin adds a new decimal coin to the existed set of decimal coins.
+func (coins DecCoins) AddDecCoin(decCoin DecCoin) DecCoins {
+	return append(coins, decCoin)
 }
 
 // String implements the Stringer interface for DecCoins. It returns a

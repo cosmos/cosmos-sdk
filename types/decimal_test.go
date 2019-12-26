@@ -462,7 +462,6 @@ func TestApproxRoot(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		fmt.Println(i)
 		res, err := tc.input.ApproxRoot(tc.root)
 		require.Nil(t, err)
 		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)

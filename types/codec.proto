@@ -8,5 +8,40 @@ import "gogoproto/gogo.proto";
 message Coin {
     option (gogoproto.stringer) = false;
     string denom = 1;
-    bytes amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+    string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
+}
+
+message StdTx {
+    repeated bytes msg = 1;
+    StdFee fee = 2;
+    repeated StdSignature signatures = 3;
+    string memo = 4;
+}
+
+message StdFee {
+    repeated cosmos_sdk.Coin intial_deposit = 1;
+    uint64 gas = 2;
+    bytes payer = 3;
+}
+
+message StdSignature {
+    StdPubKey pubkey = 1;
+    bytes signature = 2;
+}
+
+message StdPubKey {
+    oneof sum {
+        bytes secp256k1 = 1;
+        bytes ed25519 = 2;
+        bytes multisig = 3;
+    }
+}
+
+message StdSignDoc {
+    uint64 account_number = 1;
+    string chain_id = 2;
+    StdFee fee = 3;
+    string memo = 4;
+    repeated bytes msgs = 5;
+    uint64 sequence = 6;
 }

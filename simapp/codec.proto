@@ -18,9 +18,13 @@ message Msg {
 message MsgGovSubmitProposal {
     option (gogoproto.goproto_getters) = false;
     cosmos_sdk.x.gov.MsgSubmitProposalBase base = 1 [(gogoproto.embed) = true];
+    ProposalContent content = 2;
+}
+
+message ProposalContent {
     oneof proposal {
-        cosmos_sdk.x.gov.TextProposal text_proposal = 2;
-        SomeOtherProposal some_other_proposal = 3;
+        cosmos_sdk.x.gov.TextProposal text_proposal = 1;
+        SomeOtherProposal some_other_proposal = 2;
     }
 }
 
@@ -30,34 +34,3 @@ message SomeOtherProposal {
     string something_else = 3;
 }
 
-message Account {
-    oneof acc {
-        cosmos_sdk.x.auth.BaseAccount base_account = 1;
-        cosmos_sdk.x.auth.ContinuousVestingAccount continuous_vesting_account = 2;
-    }
-}
-
-message Tx {
-    repeated Msg msg = 1;
-    Fee fee = 2;
-    repeated Signature signatures = 3;
-    string memo = 4;
-}
-
-message Fee {
-    repeated cosmos_sdk.Coin intial_deposit = 1 [(gogoproto.nullable) = false];
-    uint64 gas = 2;
-}
-
-message Signature {
-    PubKey pubkey = 1;
-    bytes signature = 2;
-}
-
-message PubKey {
-    oneof sum {
-        bytes secp256k1 = 1;
-        bytes ed25519 = 2;
-        bytes multisig = 3;
-    }
-}

@@ -18,3 +18,11 @@ message BaseAccount {
 message ContinuousVestingAccount {
     // TODO
 }
+
+message StdAccount {
+    oneof acc {
+        cosmos_sdk.x.auth.BaseAccount base_account = 1;
+        cosmos_sdk.x.auth.ContinuousVestingAccount continuous_vesting_account = 2;
+    }
+}
+

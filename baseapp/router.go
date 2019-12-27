@@ -36,6 +36,6 @@ func (rtr *Router) AddRoute(path string, h sdk.Handler) sdk.Router {
 // Route returns a handler for a given route path.
 //
 // TODO: Handle expressive matches.
-func (rtr *Router) Route(path string) sdk.Handler {
+func (rtr *Router) Route(ctx sdk.Context, path string) sdk.Handler {
 	return rtr.routes[path]
 }

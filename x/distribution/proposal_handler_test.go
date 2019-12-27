@@ -43,7 +43,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	accountKeeper.SetAccount(ctx, account)
 
 	feePool := keeper.GetFeePool(ctx)
-	feePool.CommunityPool = sdk.NewDecCoinsFromCoin(amount)
+	feePool.CommunityPool = sdk.NewDecCoinsFromCoin(amount...)
 	keeper.SetFeePool(ctx, feePool)
 
 	tp := testProposal(recipient, amount)

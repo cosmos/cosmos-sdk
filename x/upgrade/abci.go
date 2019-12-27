@@ -25,6 +25,12 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			upgradeMsg := fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
 			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
 			ctx.Logger().Error(upgradeMsg)
+
+			// Write upgrade height info to filesystem
+			// So multistore upgrades can make use of this height to determine
+			// to continue or skip the multistore upgrades on launching new binary
+			k.DumpUpgradeInfoToFile(ctx.BlockHeight())
+
 			panic(upgradeMsg)
 		}
 

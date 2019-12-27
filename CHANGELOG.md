@@ -47,6 +47,11 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 * (modules) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) Handling of `ABCIEvidenceTypeDuplicateVote`
   during `BeginBlock` along with the corresponding parameters (`MaxEvidenceAge`) have moved from the
   `x/slashing` module to the `x/evidence` module.
+* (baseapp) [\#5299](https://github.com/cosmos/cosmos-sdk/pull/5299) Handling of `ABCIEvidenceTypeDuplicateVote`
+during `BeginBlock` along with the corresponding parameters (`MaxEvidenceAge`) have moved from the
+`x/slashing` module to the `x/evidence` module.
+* (baseapp) [\#5452](https://github.com/cosmos/cosmos-sdk/pull/5452) An `sdk.Context` is passed into the `router.Route()`
+function.
 
 ### API Breaking Changes
 

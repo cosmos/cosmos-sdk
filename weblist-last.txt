@@ -1,0 +1,121 @@
+File: bench.0
+Type: cpu
+Time: Dec 27, 2019 at 4:53pm (EET)
+Duration: 1.50s, Total samples = 1.59s (105.75%)
+Total: 1.59s
+github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper.Keeper.HandleValidatorSignatureReuse
+/home/dd/cosmos/src/github.com/cosmos/cosmos-sdk/x/slashing/internal/keeper/infractions.go
+
+  Total:           0      460ms (flat, cum) 28.93%
+    218            .          .
+    219            .          .                 // Set the updated signing info
+    220            .          .                 k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+    221            .          .           }
+    222            .          .
+    223            .          .           func (k Keeper) HandleValidatorSignatureReuse(ctx sdk.Context, addr crypto.Address, power int64, signed bool, swin, minswin int64) {
+    224            .          .                 logger := k.Logger(ctx)
+    225            .          .                 height := ctx.BlockHeight()
+    226            .          .
+    227            .          .                 // fetch the validator public key
+    228            .          .                 consAddr := sdk.ConsAddress(addr)
+    229            .      140ms                 if _, err := k.GetPubkey(ctx, addr); err != nil {
+    230            .          .                         panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
+    231            .          .                 }
+    232            .          .
+    233            .          .                 // fetch signing info
+    234            .       90ms                 signInfo, found := k.GetValidatorSigningInfo(ctx, consAddr)
+    235            .          .                 if !found {
+    236            .          .                         panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+    237            .          .                 }
+    238            .          .
+    239            .          .                 // this is a relative index, so it counts blocks the validator *should* have signed
+    240            .          .                 // will use the 0-value default signing info if not present, except for start height
+    241            .          .                 index := signInfo.IndexOffset % swin
+    242            .          .                 signInfo.IndexOffset++
+    243            .          .
+    244            .      100ms                 votearray := k.GetVoteArray(ctx, consAddr)
+    245            .          .                 if votearray == nil {
+    246            .          .                         votearray = types.NewVoteArray(int(swin))
+    247            .          .                 }
+    248            .          .
+    249            .          .                 // Update signed block bit array & counter
+    250            .          .                 // This counter just tracks the sum of the bit array
+    251            .          .                 vote := votearray.Get(int(index))
+    252            .          .                 previous := vote.Missed()
+    253            .          .                 missed := !signed
+    254            .          .                 switch {
+    255            .          .                 case !previous && missed:
+    256            .          .                         // Array value has changed from not missed to missed, increment counter
+    257            .          .                         vote.Miss()
+    258            .          .                         signInfo.MissedBlocksCounter++
+    259            .          .                 case previous && !missed:
+    260            .          .                         // Array value has changed from missed to not missed, decrement counter
+    261            .          .                         vote.Vote()
+    262            .          .                         signInfo.MissedBlocksCounter--
+    263            .          .                 default:
+    264            .          .                         // Array value at this index has not changed, no need to update counter
+    265            .          .                 }
+    266            .       40ms                 k.StoreVoteArray(ctx, consAddr, votearray)
+    267            .          .
+    268            .          .                 if missed {
+    269            .          .                         ctx.EventManager().EmitEvent(
+    270            .          .                                 sdk.NewEvent(
+    271            .          .                                         types.EventTypeLiveness,
+    272            .       10ms                                         sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+    273            .          .                                         sdk.NewAttribute(types.AttributeKeyMissedBlocks, fmt.Sprintf("%d", signInfo.MissedBlocksCounter)),
+    274            .          .                                         sdk.NewAttribute(types.AttributeKeyHeight, fmt.Sprintf("%d", height)),
+    275            .          .                                 ),
+    276            .          .                         )
+    277            .          .
+    278            .          .                         logger.Info(
+    279            .       30ms                                 fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", consAddr, height, signInfo.MissedBlocksCounter, minswin))
+    280            .          .                 }
+    281            .          .
+    282            .          .                 minHeight := signInfo.StartHeight + swin
+    283            .          .                 maxMissed := swin - minswin
+    284            .          .
+    285            .          .                 // if we are past the minimum height and the validator has missed too many blocks, punish them
+    286            .          .                 if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+    287            .          .                         validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
+    288            .          .                         if validator != nil && !validator.IsJailed() {
+    289            .          .
+    290            .          .                                 // Downtime confirmed: slash and jail the validator
+    291            .          .                                 logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
+    292            .          .                                         consAddr, minHeight, minswin))
+    293            .          .
+    294            .          .                                 // We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+    295            .          .                                 // and subtract an additional 1 since this is the LastCommit.
+    296            .          .                                 // Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
+    297            .          .                                 // i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+    298            .          .                                 // That's fine since this is just used to filter unbonding delegations & redelegations.
+    299            .          .                                 distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+    300            .          .
+    301            .          .                                 ctx.EventManager().EmitEvent(
+    302            .          .                                         sdk.NewEvent(
+    303            .          .                                                 types.EventTypeSlash,
+    304            .          .                                                 sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
+    305            .          .                                                 sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+    306            .          .                                                 sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
+    307            .          .                                                 sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
+    308            .          .                                         ),
+    309            .          .                                 )
+    310            .          .                                 k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+    311            .          .                                 k.sk.Jail(ctx, consAddr)
+    312            .          .
+    313            .          .                                 signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
+    314            .          .
+    315            .          .                                 // We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
+    316            .          .                                 signInfo.MissedBlocksCounter = 0
+    317            .          .                                 signInfo.IndexOffset = 0
+    318            .          .                                 k.ClearVoteArray(ctx, consAddr)
+    319            .          .                         } else {
+    320            .          .                                 // Validator was (a) not found or (b) already jailed, don't slash
+    321            .          .                                 logger.Info(
+    322            .          .                                         fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed", consAddr),
+    323            .          .                                 )
+    324            .          .                         }
+    325            .          .                 }
+    326            .          .
+    327            .          .                 // Set the updated signing info
+    328            .       50ms                 k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
+    329            .          .           }

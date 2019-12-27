@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -26,7 +26,7 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().BoolP(flagHex, "x", false, "Treat input as hexadecimal instead of base64")
-	return client.PostCommands(cmd)[0]
+	return flags.PostCommands(cmd)[0]
 }
 
 func runDecodeTxString(codec *amino.Codec) func(cmd *cobra.Command, args []string) (err error) {

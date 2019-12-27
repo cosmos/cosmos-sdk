@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -46,9 +47,9 @@ $ %s query %s --page=2 --limit=50
 	cmd.Flags().Int(flagPage, 1, "pagination page of evidence to to query for")
 	cmd.Flags().Int(flagLimit, 100, "pagination limit of evidence to query for")
 
-	cmd.AddCommand(client.GetCommands(QueryParamsCmd(cdc))...)
+	cmd.AddCommand(flags.GetCommands(QueryParamsCmd(cdc))...)
 
-	return client.GetCommands(cmd)[0]
+	return flags.GetCommands(cmd)[0]
 }
 
 // QueryParamsCmd returns the command handler for evidence parameter querying.

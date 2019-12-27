@@ -1,0 +1,6 @@
+goos: linux
+goarch: amd64
+pkg: github.com/cosmos/cosmos-sdk/x/slashing
+BenchmarkBeginBlocker100-8   	     100	  30795066 ns/op	 7486165 B/op	   90541 allocs/op
+PASS
+ok  	github.com/cosmos/cosmos-sdk/x/slashing	5.915s

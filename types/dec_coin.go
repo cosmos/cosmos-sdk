@@ -170,7 +170,7 @@ func NewDecCoins(decCoins ...DecCoin) DecCoins {
 
 // NewDecCoinsFromCoin constructs a new coin set with decimal values
 // from regular Coins.
-func NewDecCoinsFromCoin(coins Coins) DecCoins {
+func NewDecCoinsFromCoin(coins ...Coin) DecCoins {
 	decCoins := make(DecCoins, len(coins))
 	newCoins := NewCoins(coins...)
 	for i, coin := range newCoins {

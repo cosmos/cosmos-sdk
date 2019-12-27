@@ -73,15 +73,10 @@ func QueryDepositsByTxQuery(cliCtx context.CLIContext, params types.QueryProposa
 	return cliCtx.Codec.MarshalJSON(deposits)
 }
 
-// TxQuerier is a type that accepts query parameters (target events and pagination options) and returns sdk.SearchTxsResult.
-// Mainly used for easier mocking of utils.QueryTxsByEvents in tests.
-type TxQuerier func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error)
-
-// QueryVotesByTxQuery will query for votes using provided TxQuerier implementation.
-// In general utils.QueryTxsByEvents should be used that will do a direct tx query to a tendermint node.
-// It will fetch and build votes directly from the returned txs and return a JSON
+// QueryVotesByTxQuery will query for votes via a direct txs tags query. It
+// will fetch and build votes directly from the returned txs and return a JSON
 // marshalled result or any error that occurred.
-func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVotesParams, querier TxQuerier) ([]byte, error) {
+func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		events = []string{
 			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgVote),
@@ -93,7 +88,7 @@ func QueryVotesByTxQuery(cliCtx context.CLIContext, params types.QueryProposalVo
 	)
 	// query interrupted either if we collected enough votes or tx indexer run out of relevant txs
 	for len(votes) < totalLimit {
-		searchResult, err := querier(cliCtx, events, nextTxPage, defaultLimit)
+		searchResult, err := utils.QueryTxsByEvents(cliCtx, events, nextTxPage, defaultLimit)
 		if err != nil {
 			return nil, err
 		}

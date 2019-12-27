@@ -7,72 +7,87 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/rpc/client/mock"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-type txMock struct {
-	address sdk.AccAddress
-	msgNum  int
+type TxSearchMock struct {
+	mock.Client
+	txs []tmtypes.Tx
 }
 
-func (tx txMock) ValidateBasic() sdk.Error {
-	return nil
-}
-
-func (tx txMock) GetMsgs() (msgs []sdk.Msg) {
-	for i := 0; i < tx.msgNum; i++ {
-		msgs = append(msgs, types.NewMsgVote(tx.address, 0, types.OptionYes))
+func (mock TxSearchMock) TxSearch(query string, prove bool, page, perPage int) (*ctypes.ResultTxSearch, error) {
+	start, end := client.Paginate(len(mock.txs), page, perPage, 100)
+	if start < 0 || end < 0 {
+		// nil result with nil error crashes utils.QueryTxsByEvents
+		return &ctypes.ResultTxSearch{}, nil
 	}
-	return
+	txs := mock.txs[start:end]
+	rst := &ctypes.ResultTxSearch{Txs: make([]*ctypes.ResultTx, len(txs)), TotalCount: len(txs)}
+	for i := range txs {
+		rst.Txs[i] = &ctypes.ResultTx{Tx: txs[i]}
+	}
+	return rst, nil
 }
 
-func makeQuerier(txs []sdk.Tx) TxQuerier {
-	return func(cliCtx context.CLIContext, events []string, page, limit int) (*sdk.SearchTxsResult, error) {
-		start, end := client.Paginate(len(txs), page, limit, 100)
-		if start < 0 || end < 0 {
-			return nil, nil
-		}
-		rst := &sdk.SearchTxsResult{
-			TotalCount: len(txs),
-			PageNumber: page,
-			PageTotal:  len(txs) / limit,
-			Limit:      limit,
-			Count:      end - start,
-		}
-		for _, tx := range txs[start:end] {
-			rst.Txs = append(rst.Txs, sdk.TxResponse{Tx: tx})
-		}
-		return rst, nil
-	}
+func (mock TxSearchMock) Block(height *int64) (*ctypes.ResultBlock, error) {
+	// any non nil Block needs to be returned. used to get time value
+	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
+}
+
+func newTestCodec() *codec.Codec {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	types.RegisterCodec(cdc)
+	authtypes.RegisterCodec(cdc)
+	return cdc
 }
 
 func TestGetPaginatedVotes(t *testing.T) {
 	type testCase struct {
 		description string
 		page, limit int
-		txs         []sdk.Tx
+		txs         []authtypes.StdTx
 		votes       []types.Vote
 	}
 	acc1 := make(sdk.AccAddress, 20)
 	acc1[0] = 1
 	acc2 := make(sdk.AccAddress, 20)
 	acc2[0] = 2
+	acc1Msgs := []sdk.Msg{
+		types.NewMsgVote(acc1, 0, types.OptionYes),
+		types.NewMsgVote(acc1, 0, types.OptionYes),
+	}
+	acc2Msgs := []sdk.Msg{
+		types.NewMsgVote(acc2, 0, types.OptionYes),
+		types.NewMsgVote(acc2, 0, types.OptionYes),
+	}
 	for _, tc := range []testCase{
 		{
 			description: "1MsgPerTxAll",
 			page:        1,
 			limit:       2,
-			txs:         []sdk.Tx{txMock{acc1, 1}, txMock{acc2, 1}},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs[:1]},
+				{Msgs: acc2Msgs[:1]},
+			},
 			votes: []types.Vote{
 				types.NewVote(0, acc1, types.OptionYes),
 				types.NewVote(0, acc2, types.OptionYes)},
 		},
+
 		{
 			description: "2MsgPerTx1Chunk",
 			page:        1,
 			limit:       2,
-			txs:         []sdk.Tx{txMock{acc1, 2}, txMock{acc2, 2}},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs},
+				{Msgs: acc2Msgs},
+			},
 			votes: []types.Vote{
 				types.NewVote(0, acc1, types.OptionYes),
 				types.NewVote(0, acc1, types.OptionYes)},
@@ -81,7 +96,10 @@ func TestGetPaginatedVotes(t *testing.T) {
 			description: "2MsgPerTx2Chunk",
 			page:        2,
 			limit:       2,
-			txs:         []sdk.Tx{txMock{acc1, 2}, txMock{acc2, 2}},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs},
+				{Msgs: acc2Msgs},
+			},
 			votes: []types.Vote{
 				types.NewVote(0, acc2, types.OptionYes),
 				types.NewVote(0, acc2, types.OptionYes)},
@@ -90,33 +108,43 @@ func TestGetPaginatedVotes(t *testing.T) {
 			description: "IncompleteSearchTx",
 			page:        1,
 			limit:       2,
-			txs:         []sdk.Tx{txMock{acc1, 1}},
-			votes:       []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
-		},
-		{
-			description: "IncompleteSearchTx",
-			page:        1,
-			limit:       2,
-			txs:         []sdk.Tx{txMock{acc1, 1}},
-			votes:       []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs[:1]},
+			},
+			votes: []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
 		},
 		{
 			description: "InvalidPage",
 			page:        -1,
-			txs:         []sdk.Tx{txMock{acc1, 1}},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs[:1]},
+			},
 		},
 		{
 			description: "OutOfBounds",
 			page:        2,
 			limit:       10,
-			txs:         []sdk.Tx{txMock{acc1, 1}},
+			txs: []authtypes.StdTx{
+				{Msgs: acc1Msgs[:1]},
+			},
 		},
 	} {
 		tc := tc
 		t.Run(tc.description, func(t *testing.T) {
-			ctx := context.CLIContext{}.WithCodec(codec.New())
+			var (
+				marshalled = make([]tmtypes.Tx, len(tc.txs))
+				cdc        = newTestCodec()
+			)
+			for i := range tc.txs {
+				tx, err := cdc.MarshalBinaryLengthPrefixed(&tc.txs[i])
+				require.NoError(t, err)
+				marshalled[i] = tmtypes.Tx(tx)
+			}
+			client := TxSearchMock{txs: marshalled}
+			ctx := context.CLIContext{}.WithCodec(cdc).WithTrustNode(true).WithClient(client)
+
 			params := types.NewQueryProposalVotesParams(0, tc.page, tc.limit)
-			votesData, err := QueryVotesByTxQuery(ctx, params, makeQuerier(tc.txs))
+			votesData, err := QueryVotesByTxQuery(ctx, params)
 			require.NoError(t, err)
 			votes := []types.Vote{}
 			require.NoError(t, ctx.Codec.UnmarshalJSON(votesData, &votes))

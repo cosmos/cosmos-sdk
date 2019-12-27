@@ -33,15 +33,15 @@ func (m MsgSubmitEvidence) Route() string { return RouterKey }
 func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
-func (m MsgSubmitEvidence) ValidateBasic() sdk.Error {
+func (m MsgSubmitEvidence) ValidateBasic() error {
 	if m.Evidence == nil {
-		return sdk.ConvertError(ErrInvalidEvidence(DefaultCodespace, "missing evidence"))
+		return sdkerrors.Wrap(ErrInvalidEvidence, "missing evidence")
 	}
 	if err := m.Evidence.ValidateBasic(); err != nil {
-		return sdk.ConvertError(err)
+		return err
 	}
 	if m.Submitter.Empty() {
-		return sdk.ConvertError(sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String()))
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Submitter.String())
 	}
 
 	return nil

@@ -74,7 +74,7 @@ func newTestInput(t *testing.T) testInput {
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	keeper := params.NewKeeper(cdc, keyParams, tKeyParams, params.DefaultCodespace)
+	keeper := params.NewKeeper(cdc, keyParams, tKeyParams)
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 
 	return testInput{ctx, cdc, keeper}

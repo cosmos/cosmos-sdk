@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Plan specifies information about a planned upgrade and when it should occur
@@ -40,19 +41,20 @@ func (p Plan) String() string {
 }
 
 // ValidateBasic does basic validation of a Plan
-func (p Plan) ValidateBasic() sdk.Error {
+func (p Plan) ValidateBasic() error {
 	if len(p.Name) == 0 {
-		return sdk.ErrUnknownRequest("name cannot be empty")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
 	if p.Height < 0 {
-		return sdk.ErrUnknownRequest("height cannot be negative")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "height cannot be negative")
 	}
 	if p.Time.IsZero() && p.Height == 0 {
-		return sdk.ErrUnknownRequest("must set either time or height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must set either time or height")
 	}
 	if !p.Time.IsZero() && p.Height != 0 {
-		return sdk.ErrUnknownRequest("cannot set both time and height")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot set both time and height")
 	}
+
 	return nil
 }
 

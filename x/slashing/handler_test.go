@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -20,9 +21,12 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	slh := NewHandler(keeper)
 	amt := sdk.TokensFromConsensusPower(100)
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
+
 	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
-	got := staking.NewHandler(sk)(ctx, msg)
-	require.True(t, got.IsOK(), "%v", got)
+	res, err := staking.NewHandler(sk)(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
@@ -32,10 +36,10 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
 	// assert non-jailed validator can't be unjailed
-	got = slh(ctx, NewMsgUnjail(addr))
-	require.False(t, got.IsOK(), "allowed unjail of non-jailed validator")
-	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
-	require.EqualValues(t, DefaultCodespace, got.Codespace)
+	res, err = slh(ctx, NewMsgUnjail(addr))
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, errors.Is(ErrValidatorNotJailed, err))
 }
 
 func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
@@ -46,8 +50,11 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	addr, val, amt := slashingkeeper.Addrs[0], slashingkeeper.Pks[0], sdk.TokensFromConsensusPower(amtInt)
 	msg := slashingkeeper.NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
-	got := staking.NewHandler(sk)(ctx, msg)
-	require.True(t, got.IsOK())
+
+	res, err := staking.NewHandler(sk)(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
@@ -57,15 +64,17 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 
 	unbondAmt := sdk.NewCoin(sk.GetParams(ctx).BondDenom, sdk.OneInt())
 	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, unbondAmt)
-	got = staking.NewHandler(sk)(ctx, undelegateMsg)
+	res, err = staking.NewHandler(sk)(ctx, undelegateMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	require.True(t, sk.Validator(ctx, addr).IsJailed())
 
 	// assert non-jailed validator can't be unjailed
-	got = slh(ctx, NewMsgUnjail(addr))
-	require.False(t, got.IsOK(), "allowed unjail of validator with less than MinSelfDelegation")
-	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
-	require.EqualValues(t, DefaultCodespace, got.Codespace)
+	res, err = slh(ctx, NewMsgUnjail(addr))
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, errors.Is(ErrSelfDelegationTooLowToUnjail, err))
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
@@ -80,8 +89,9 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	valAddr, consAddr := slashingkeeper.Addrs[1], sdk.ConsAddress(slashingkeeper.Addrs[0])
 
 	msgCreateVal := slashingkeeper.NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
-	got := staking.NewHandler(stakingKeeper)(ctx, msgCreateVal)
-	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
+	res, err := staking.NewHandler(stakingKeeper)(ctx, msgCreateVal)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block
 	staking.EndBlocker(ctx, stakingKeeper)
@@ -93,17 +103,19 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(slashingkeeper.Addrs[2])
 	msgDelegate := slashingkeeper.NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
-	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
+	res, err = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	unbondAmt := sdk.NewCoin(stakingKeeper.GetParams(ctx).BondDenom, bondAmount)
 
 	// unbond validator total self-delegations (which should jail the validator)
 	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondAmt)
-	got = staking.NewHandler(stakingKeeper)(ctx, msgUndelegate)
-	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
+	res, err = staking.NewHandler(stakingKeeper)(ctx, msgUndelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
-	err := stakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
+	err = stakingKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
 	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
 
 	// verify validator still exists and is jailed
@@ -112,26 +124,30 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	require.True(t, validator.IsJailed())
 
 	// verify the validator cannot unjail itself
-	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
-	require.False(t, got.IsOK(), "expected jailed validator to not be able to unjail, got: %v", got)
+	res, err = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
+	require.Error(t, err)
+	require.Nil(t, res)
 
 	// self-delegate to validator
 	msgSelfDelegate := slashingkeeper.NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
-	got = staking.NewHandler(stakingKeeper)(ctx, msgSelfDelegate)
-	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+	res, err = staking.NewHandler(stakingKeeper)(ctx, msgSelfDelegate)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// verify the validator can now unjail itself
-	got = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
-	require.True(t, got.IsOK(), "expected jailed validator to be able to unjail, got: %v", got)
+	res, err = NewHandler(slashingKeeper)(ctx, NewMsgUnjail(valAddr))
+	require.NoError(t, err)
+	require.NotNil(t, res)
 }
 
 func TestInvalidMsg(t *testing.T) {
 	k := Keeper{}
 	h := NewHandler(k)
 
-	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
-	require.False(t, res.IsOK())
-	require.True(t, strings.Contains(res.Log, "unrecognized slashing message type"))
+	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, strings.Contains(err.Error(), "unrecognized slashing message type"))
 }
 
 // Test a validator through uptime, downtime, revocation,
@@ -145,8 +161,11 @@ func TestHandleAbsentValidator(t *testing.T) {
 	addr, val := slashingkeeper.Addrs[0], slashingkeeper.Pks[0]
 	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
-	got := sh(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, val, amt))
-	require.True(t, got.IsOK())
+
+	res, err := sh(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, val, amt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
@@ -228,13 +247,15 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, amt.Int64()-slashAmt, validator.GetTokens().Int64())
 
 	// unrevocation should fail prior to jail expiration
-	got = slh(ctx, types.NewMsgUnjail(addr))
-	require.False(t, got.IsOK())
+	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	require.Error(t, err)
+	require.Nil(t, res)
 
 	// unrevocation should succeed after jail expiration
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeJailDuration(ctx))})
-	got = slh(ctx, types.NewMsgUnjail(addr))
-	require.True(t, got.IsOK())
+	res, err = slh(ctx, types.NewMsgUnjail(addr))
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block
 	staking.EndBlocker(ctx, sk)

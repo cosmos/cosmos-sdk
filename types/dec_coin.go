@@ -159,7 +159,7 @@ type DecCoins []DecCoin
 
 // NewDecCoins constructs a new coin set with with decimal values
 // from DecCoins.
-func NewDecCoins(decCoinArray ...DecCoin) DecCoins {
+func NewDecCoins(decCoins ...DecCoin) DecCoins {
 	decCoins := make(DecCoins, len(decCoinArray))
 	for i, decCoin := range decCoinArray {
 		decCoins[i] = decCoin

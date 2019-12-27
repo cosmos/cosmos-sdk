@@ -110,13 +110,12 @@ func benchmarkBeginBlocker(b *testing.B, num int) {
 		keeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addr), signInfo)
 		keeper.AddPubkey(ctx, edkey)
 		// uncomment if MissedBlockBitArray is used
-		/*
-			for i := 0; i < 500; i++ {
-				keeper.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addr), int64(i), true)
-			}
-		*/
 
-		keeper.StoreVoteArray(ctx, sdk.ConsAddress(addr), types.NewVoteArray(int(params.SignedBlocksWindow)))
+		for i := 0; i < 500; i++ {
+			keeper.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addr), int64(i), true)
+		}
+
+		//keeper.StoreVoteArray(ctx, sdk.ConsAddress(addr), types.NewVoteArray(int(params.SignedBlocksWindow)))
 
 	}
 	store.Commit()

@@ -4,10 +4,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// x/bank module errors that reserve codes 100-199
+// x/bank module sentinel errors
 var (
-	ErrNoInputs            = sdkerrors.Register(ModuleName, 100, "no inputs to send transaction")
-	ErrNoOutputs           = sdkerrors.Register(ModuleName, 101, "no outputs to send transaction")
-	ErrInputOutputMismatch = sdkerrors.Register(ModuleName, 102, "sum inputs != sum outputs")
-	ErrSendDisabled        = sdkerrors.Register(ModuleName, 103, "send transactions are disabled")
+	ErrNoInputs            = sdkerrors.Register(ModuleName, 1, "no inputs to send transaction")
+	ErrNoOutputs           = sdkerrors.Register(ModuleName, 2, "no outputs to send transaction")
+	ErrInputOutputMismatch = sdkerrors.Register(ModuleName, 3, "sum inputs != sum outputs")
+	ErrSendDisabled        = sdkerrors.Register(ModuleName, 4, "send transactions are disabled")
 )

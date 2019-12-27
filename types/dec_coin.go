@@ -160,12 +160,24 @@ type DecCoins []DecCoin
 // NewDecCoins constructs a new coin set with with decimal values
 // from DecCoins.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {
-	decCoins := make(DecCoins, len(decCoinArray))
-	for i, decCoin := range decCoinArray {
-		decCoins[i] = decCoin
+	// remove zeroes
+	newDecCoins := removeZeroDecCoins(DecCoins(decCoins))
+	if len(newDecCoins) == 0 {
+		return DecCoins{}
 	}
 
-	return decCoins
+	newDecCoins.Sort()
+
+	// detect duplicate Denoms
+	if dupIndex := findDup(newDecCoins); dupIndex != -1 {
+		panic(fmt.Errorf("find duplicate denom: %s", newDecCoins[dupIndex]))
+	}
+
+	if !newDecCoins.IsValid() {
+		panic(fmt.Errorf("invalid coin set: %s", newDecCoins))
+	}
+
+	return newDecCoins
 }
 
 // NewDecCoinsFromCoin constructs a new coin set with decimal values
@@ -325,6 +337,11 @@ func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 		res[i] = minCoin
 	}
 	return removeZeroDecCoins(res)
+}
+
+// GetDenomByIndex returns the Denom to make the findDup generic
+func (coins DecCoins) GetDenomByIndex(i int) string {
+	return coins[i].Denom
 }
 
 // IsAnyNegative returns true if there is at least one coin whose amount

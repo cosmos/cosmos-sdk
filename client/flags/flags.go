@@ -84,6 +84,8 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 
 		c.MarkFlagRequired(FlagChainID)
+
+		c.SetErr(c.ErrOrStderr())
 	}
 	return cmds
 }
@@ -119,6 +121,8 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		viper.BindPFlag(FlagKeyringBackend, c.Flags().Lookup(FlagKeyringBackend))
 
 		c.MarkFlagRequired(FlagChainID)
+
+		c.SetErr(c.ErrOrStderr())
 	}
 	return cmds
 }

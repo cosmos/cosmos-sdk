@@ -5,6 +5,7 @@ package keeper
 
 import (
 	"encoding/hex"
+	"io/ioutil"
 	"testing"
 	"time"
 
@@ -55,15 +56,16 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
+func CreateTestInput(t testing.TB, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
 	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
-
-	db := dbm.NewMemDB()
+	tmpdir, err := ioutil.TempDir("", "bench-slashing")
+	require.NoError(t, err)
+	db := dbm.NewDB("test", dbm.GoLevelDBBackend, tmpdir)
 
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
@@ -73,7 +75,7 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
-	err := ms.LoadLatestVersion()
+	err = ms.LoadLatestVersion()
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewNopLogger())
@@ -123,6 +125,78 @@ func CreateTestInput(t *testing.T, defaults types.Params) (sdk.Context, bank.Kee
 	sk.SetHooks(keeper.Hooks())
 
 	return ctx, bk, sk, paramstore, keeper
+}
+
+func CreateTestInputStore(t testing.TB, defaults types.Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper, sdk.CommitMultiStore, string) {
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	keySlashing := sdk.NewKVStoreKey(types.StoreKey)
+	keySupply := sdk.NewKVStoreKey(supply.StoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewKVStoreKey(params.TStoreKey)
+
+	tmpdir, err := ioutil.TempDir("", "bench-slashing")
+	require.NoError(t, err)
+	db := dbm.NewDB("test", dbm.GoLevelDBBackend, tmpdir)
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(keySupply, sdk.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeIAVL, nil)
+
+	err = ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewNopLogger())
+	cdc := createTestCodec()
+
+	feeCollectorAcc := supply.NewEmptyModuleAccount(auth.FeeCollectorName)
+	notBondedPool := supply.NewEmptyModuleAccount(staking.NotBondedPoolName, supply.Burner, supply.Staking)
+	bondPool := supply.NewEmptyModuleAccount(staking.BondedPoolName, supply.Burner, supply.Staking)
+
+	blacklistedAddrs := make(map[string]bool)
+	blacklistedAddrs[feeCollectorAcc.GetAddress().String()] = true
+	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
+	blacklistedAddrs[bondPool.GetAddress().String()] = true
+
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+
+	bk := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
+	maccPerms := map[string][]string{
+		auth.FeeCollectorName:     nil,
+		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+		staking.BondedPoolName:    {supply.Burner, supply.Staking},
+	}
+	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bk, maccPerms)
+
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, InitTokens.MulRaw(int64(len(Addrs)))))
+	supplyKeeper.SetSupply(ctx, supply.NewSupply(totalSupply))
+
+	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	genesis := staking.DefaultGenesisState()
+
+	// set module accounts
+	supplyKeeper.SetModuleAccount(ctx, feeCollectorAcc)
+	supplyKeeper.SetModuleAccount(ctx, bondPool)
+	supplyKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	_ = staking.InitGenesis(ctx, sk, accountKeeper, supplyKeeper, genesis)
+
+	for _, addr := range Addrs {
+		_, err = bk.AddCoins(ctx, sdk.AccAddress(addr), initCoins)
+	}
+	require.Nil(t, err)
+	paramstore := paramsKeeper.Subspace(types.DefaultParamspace)
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, types.DefaultCodespace)
+
+	keeper.SetParams(ctx, defaults)
+	sk.SetHooks(keeper.Hooks())
+
+	return ctx, bk, sk, paramstore, keeper, ms, tmpdir
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {

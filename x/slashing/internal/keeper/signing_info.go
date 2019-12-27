@@ -141,3 +141,31 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 		store.Delete(iter.Key())
 	}
 }
+
+func (k Keeper) GetVoteArray(ctx sdk.Context, address sdk.ConsAddress) *types.VoteArray {
+	store := ctx.KVStore(k.storeKey)
+	key := make([]byte, len(address)+1)
+	key[0] = 10
+	copy(key[1:], address)
+	value := store.Get(key)
+	if len(value) == 0 {
+		return nil
+	}
+	return types.NewVoteArrayFromBytes(value)
+}
+
+func (k Keeper) StoreVoteArray(ctx sdk.Context, address sdk.ConsAddress, votes *types.VoteArray) {
+	store := ctx.KVStore(k.storeKey)
+	key := make([]byte, len(address)+1)
+	key[0] = 10
+	copy(key[1:], address)
+	store.Set(key, votes.Bytes())
+}
+
+func (k Keeper) ClearVoteArray(ctx sdk.Context, address sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := make([]byte, len(address)+1)
+	key[0] = 10
+	copy(key[1:], address)
+	store.Delete(key)
+}

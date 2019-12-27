@@ -423,6 +423,9 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 }
 
 func TestNewDecCoinsWithIsValid(t *testing.T) {
+	fake1 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(10)})
+	fake2 := append(NewDecCoins(NewDecCoin("mytoken", NewInt(10))), DecCoin{Denom: "BTC", Amount: NewDec(-10)})
+
 	tests := []struct {
 		coin       DecCoins
 		expectPass bool
@@ -434,12 +437,12 @@ func TestNewDecCoinsWithIsValid(t *testing.T) {
 			"valid coins should have passed",
 		},
 		{
-			NewDecCoins(NewDecCoin("mytoken", NewInt(10)), DecCoin{Denom: "BTC", Amount: NewDec(10)}),
+			fake1,
 			false,
 			"invalid denoms",
 		},
 		{
-			NewDecCoins(NewDecCoin("mytoken", NewInt(10)), DecCoin{Denom: "BTC", Amount: NewDec(-10)}),
+			fake2,
 			false,
 			"negative amount",
 		},

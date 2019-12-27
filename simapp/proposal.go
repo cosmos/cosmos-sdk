@@ -22,6 +22,13 @@ func (m SomeOtherProposal) ValidateBasic() sdk.Error {
 }
 
 func (m MsgGovSubmitProposal) GetContent() types.Content {
-	return m.Proposal.(gov.Content)
+	if content := m.GetTextProposal(); content != nil {
+		return content
+	} else if content := m.GetSomeOtherProposal(); content != nil {
+		return content
+	}
+	return nil
 }
+
+
 

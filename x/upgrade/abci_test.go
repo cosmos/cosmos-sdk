@@ -182,6 +182,20 @@ func (s *TestSuite) TestPlanStringer() {
   Info: `, upgrade.Plan{Name: "test", Height: 100}.String())
 }
 
+func (s *TestSuite) TestDumpUpgradeInfoToFile() {
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	s.Require().Nil(err)
+	s.T().Log("Verify if upgrade happens without skip upgrade")
+	s.Require().Panics(func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	s.VerifyDoUpgrade()
+	//s.VerifyDone(s.ctx, "test")
+}
+
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

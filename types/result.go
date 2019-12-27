@@ -73,6 +73,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 type TxResponse struct {
 	Height    int64           `json:"height"`
 	TxHash    string          `json:"txhash"`
+	Codespace string          `json:"codespace,omitempty"`
 	Code      uint32          `json:"code,omitempty"`
 	Data      string          `json:"data,omitempty"`
 	RawLog    string          `json:"raw_log,omitempty"`
@@ -80,7 +81,6 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
 
@@ -100,6 +100,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 	return TxResponse{
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
+		Codespace: res.TxResult.Codespace,
 		Code:      res.TxResult.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
 		RawLog:    res.TxResult.Log,
@@ -142,6 +143,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	return TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
+		Codespace: res.CheckTx.Codespace,
 		Code:      res.CheckTx.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
 		RawLog:    res.CheckTx.Log,
@@ -150,7 +152,6 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
 		Events:    StringifyEvents(res.CheckTx.Events),
-		Codespace: res.CheckTx.Codespace,
 	}
 }
 
@@ -169,6 +170,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	return TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
+		Codespace: res.DeliverTx.Codespace,
 		Code:      res.DeliverTx.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
 		RawLog:    res.DeliverTx.Log,
@@ -177,7 +179,6 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
 		Events:    StringifyEvents(res.DeliverTx.Events),
-		Codespace: res.DeliverTx.Codespace,
 	}
 }
 

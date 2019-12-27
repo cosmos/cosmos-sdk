@@ -39,9 +39,9 @@ func (msg MsgVerifyInvariant) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgVerifyInvariant) ValidateBasic() sdk.Error {
+func (msg MsgVerifyInvariant) ValidateBasic() error {
 	if msg.Sender.Empty() {
-		return ErrNilSender(DefaultCodespace)
+		return ErrNoSender
 	}
 	return nil
 }

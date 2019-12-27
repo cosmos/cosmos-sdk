@@ -31,8 +31,6 @@ func GetDecodeCommand(codec *amino.Codec) *cobra.Command {
 
 func runDecodeTxString(codec *amino.Codec) func(cmd *cobra.Command, args []string) (err error) {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
 		cliCtx := context.NewCLIContext().WithCodec(codec).WithOutput(cmd.OutOrStdout())
 		var txBytes []byte
 

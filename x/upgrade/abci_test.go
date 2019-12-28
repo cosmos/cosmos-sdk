@@ -1,6 +1,7 @@
 package upgrade_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
@@ -56,28 +58,28 @@ func TestRequireName(t *testing.T) {
 
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{}})
 	require.NotNil(t, err)
-	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
+	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestRequireFutureTime(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
 	require.NotNil(t, err)
-	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
+	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	require.NotNil(t, err)
-	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
+	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestCantSetBothTimeAndHeight(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
 	require.NotNil(t, err)
-	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
+	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestDoTimeUpgrade(t *testing.T) {
@@ -203,7 +205,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
 	err = s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	require.NotNil(t, err)
-	require.Equal(t, sdk.CodeUnknownRequest, err.Code())
+	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestNoSpuriousUpgrades(t *testing.T) {

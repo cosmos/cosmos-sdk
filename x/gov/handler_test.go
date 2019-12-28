@@ -15,7 +15,8 @@ func TestInvalidMsg(t *testing.T) {
 	k := Keeper{}
 	h := NewHandler(k)
 
-	res := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
-	require.False(t, res.IsOK())
-	require.True(t, strings.Contains(res.Log, "unrecognized gov message type"))
+	res, err := h(sdk.NewContext(nil, abci.Header{}, false, nil), sdk.NewTestMsg())
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.True(t, strings.Contains(err.Error(), "unrecognized gov message type"))
 }

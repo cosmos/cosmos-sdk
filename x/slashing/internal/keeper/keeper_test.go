@@ -25,8 +25,10 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
-	require.True(t, got.IsOK())
+	res, err := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
@@ -65,8 +67,10 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	amt := sdk.TokensFromConsensusPower(power)
 	addr, val := Addrs[0], Pks[0]
 	sh := staking.NewHandler(sk)
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
-	require.True(t, got.IsOK())
+	res, err := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	// 1000 first blocks OK
@@ -119,8 +123,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	addr, val := Addrs[0], Pks[0]
 	consAddr := sdk.ConsAddress(addr)
 	sh := staking.NewHandler(sk)
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
-	require.True(t, got.IsOK())
+	res, err := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 
 	// 100 first blocks OK
@@ -132,8 +138,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// kick first validator out of validator set
 	newAmt := sdk.TokensFromConsensusPower(101)
-	got = sh(ctx, NewTestMsgCreateValidator(Addrs[1], Pks[1], newAmt))
-	require.True(t, got.IsOK())
+	res, err = sh(ctx, NewTestMsgCreateValidator(Addrs[1], Pks[1], newAmt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	validatorUpdates := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
@@ -145,8 +153,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator added back in
 	delTokens := sdk.TokensFromConsensusPower(50)
-	got = sh(ctx, NewTestMsgDelegate(sdk.AccAddress(Addrs[2]), Addrs[0], delTokens))
-	require.True(t, got.IsOK())
+	res, err = sh(ctx, NewTestMsgDelegate(sdk.AccAddress(Addrs[2]), Addrs[0], delTokens))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	validatorUpdates = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)

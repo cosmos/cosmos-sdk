@@ -69,12 +69,8 @@ func TestCreateLedger(t *testing.T) {
 	secpSupported := false
 	edSupported := false
 	for _, supportedAlgo := range supportedLedgerAlgos {
-		if Secp256k1 == supportedAlgo {
-			secpSupported = true
-		}
-		if Ed25519 == supportedAlgo {
-			edSupported = true
-		}
+		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
+		edSupported = edSupported || (supportedAlgo == Ed25519)
 	}
 	assert.True(t, secpSupported)
 	assert.True(t, edSupported)
@@ -122,13 +118,9 @@ func TestKeyManagement(t *testing.T) {
 	edSupported := false
 	srSupported := false
 	for _, supportedAlgo := range supportedAlgos {
-		if Secp256k1 == supportedAlgo {
-			secpSupported = true
-		} else if Ed25519 == supportedAlgo {
-			edSupported = true
-		} else if Sr25519 == supportedAlgo {
-			srSupported = true
-		}
+		secpSupported = secpSupported || (supportedAlgo == Secp256k1)
+		edSupported = edSupported || (supportedAlgo == Ed25519)
+		srSupported = srSupported || (supportedAlgo == Sr25519)
 	}
 	assert.True(t, secpSupported)
 	assert.False(t, edSupported)

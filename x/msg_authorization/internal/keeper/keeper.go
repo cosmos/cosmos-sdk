@@ -58,7 +58,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			capability := k.GetCapability(ctx, grantee, granter, msg)
+			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
 			if capability == nil {
 				return sdk.ErrUnauthorized("authorization not found").Result()
 			}
@@ -97,32 +97,16 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	store.Delete(k.getActorCapabilityKey(grantee, granter, msgType))
 }
 
-// GetCapability Returns any `Capability` (or `nil`)
+// GetCapability Returns any `Capability` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability) {
+func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability, expiration time.Time) {
 	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
 	if !found {
-		return nil
+		return nil, time.Time{}
 	}
 	if !grant.Expiration.IsZero() && grant.Expiration.Before(ctx.BlockHeader().Time) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil
+		return nil, time.Time{}
 	}
-	return grant.Capability
-}
-
-// GetCapabilityExpiration Returns a Capability's the expiration time,
-// granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetCapabilityExpiration(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (expiration time.Time) {
-	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
-	if !found {
-		return time.Time{}
-	}
-
-	if !grant.Expiration.IsZero() && grant.Expiration.Before(ctx.BlockHeader().Time) {
-		k.Revoke(ctx, grantee, granter, msgType)
-		return time.Time{}
-	}
-
-	return grant.Expiration
+	return grant.Capability, grant.Expiration
 }

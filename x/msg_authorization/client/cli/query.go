@@ -54,7 +54,7 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			res, _, err := cliCtx.QueryStore(types.GetActorCapabilityKey(granteeAddr, granterAddr, msgAuthorized), storeName)
+			res, _, err := cliCtx.QueryStore(types.GetActorAuthorizationKey(granteeAddr, granterAddr, msgAuthorized), storeName)
 			if err != nil {
 				return err
 			}
@@ -63,7 +63,7 @@ func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command
 				return fmt.Errorf("no authorization found for given address pair ")
 			}
 
-			var grant types.CapabilityGrant
+			var grant types.AuthorizationGrant
 			cdc.MustUnmarshalJSON(res, grant)
 
 			return cliCtx.PrintOutput(grant)

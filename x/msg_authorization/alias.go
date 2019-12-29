@@ -37,10 +37,10 @@ var (
 )
 
 type (
-	Capability             = types.Capability
-	SendCapability         = types.SendCapability
-	CapabilityGrant        = types.CapabilityGrant
-	GenericCapability      = types.GenericCapability
+	Authorization          = types.Authorization
+	SendAuthorization      = types.SendAuthorization
+	AuthorizationGrant     = types.AuthorizationGrant
+	GenericAuthorization   = types.GenericAuthorization
 	CodeType               = types.CodeType
 	MsgGrantAuthorization  = types.MsgGrantAuthorization
 	MsgRevokeAuthorization = types.MsgRevokeAuthorization

@@ -19,6 +19,6 @@ const (
 	QuerierRoute = ModuleName
 )
 
-func GetActorCapabilityKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
+func GetActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
 	return []byte(fmt.Sprintf("c/%x/%x/%s/%s", grantee, granter, msg.Route(), msg.Type()))
 }

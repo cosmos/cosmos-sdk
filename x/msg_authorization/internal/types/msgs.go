@@ -6,22 +6,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgGrantAuthorization grants the provided capability to the grantee on the granter's
+// MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
 type MsgGrantAuthorization struct {
-	Granter    sdk.AccAddress `json:"granter"`
-	Grantee    sdk.AccAddress `json:"grantee"`
-	Capability Capability     `json:"capability"`
+	Granter       sdk.AccAddress `json:"granter"`
+	Grantee       sdk.AccAddress `json:"grantee"`
+	Authorization Authorization  `json:"authorization"`
 	// Expiration specifies the expiration time of the grant
 	Expiration time.Time `json:"expiration"`
 }
 
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, capability Capability, expiration time.Time) MsgGrantAuthorization {
+func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) MsgGrantAuthorization {
 	return MsgGrantAuthorization{
-		Granter:    granter,
-		Grantee:    grantee,
-		Capability: capability,
-		Expiration: expiration,
+		Granter:       granter,
+		Grantee:       grantee,
+		Authorization: authorization,
+		Expiration:    expiration,
 	}
 }
 
@@ -51,21 +51,21 @@ func (msg MsgGrantAuthorization) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// MsgRevokeAuthorization revokes any capability with the provided sdk.Msg type on the
+// MsgRevokeAuthorization revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 type MsgRevokeAuthorization struct {
 	Granter sdk.AccAddress `json:"granter"`
 	Grantee sdk.AccAddress `json:"grantee"`
-	// CapabilityMsgType is the type of sdk.Msg that the revoked Capability refers to.
-	// i.e. this is what `Capability.MsgType()` returns
-	CapabilityMsgType sdk.Msg `json:"capability_msg_type"`
+	// AuthorizationMsgType is the type of sdk.Msg that the revoked Authorization refers to.
+	// i.e. this is what `Authorization.MsgType()` returns
+	AuthorizationMsgType sdk.Msg `json:"authorization_msg_type"`
 }
 
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, capabilityMsgType sdk.Msg) MsgRevokeAuthorization {
+func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType sdk.Msg) MsgRevokeAuthorization {
 	return MsgRevokeAuthorization{
-		Granter:           granter,
-		Grantee:           grantee,
-		CapabilityMsgType: capabilityMsgType,
+		Granter:              granter,
+		Grantee:              grantee,
+		AuthorizationMsgType: authorizationMsgType,
 	}
 }
 
@@ -92,8 +92,8 @@ func (msg MsgRevokeAuthorization) ValidateBasic() sdk.Error {
 }
 
 // MsgExecDelegated attempts to execute the provided messages using
-// capabilities granted to the grantee. Each message should have only
-// one signer corresponding to the granter of the capability.
+// authorizations granted to the grantee. Each message should have only
+// one signer corresponding to the granter of the authorization.
 type MsgExecDelegated struct {
 	Grantee sdk.AccAddress `json:"grantee"`
 	Msgs    []sdk.Msg      `json:"msg"`

@@ -25,7 +25,7 @@ func NewHandler(k Keeper) sdk.Handler {
 }
 
 func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k Keeper) sdk.Result {
-	k.Grant(ctx, msg.Grantee, msg.Granter, msg.Capability, msg.Expiration)
+	k.Grant(ctx, msg.Grantee, msg.Granter, msg.Authorization, msg.Expiration)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -39,7 +39,7 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k K
 }
 
 func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) sdk.Result {
-	k.Revoke(ctx, msg.Grantee, msg.Granter, msg.CapabilityMsgType)
+	k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

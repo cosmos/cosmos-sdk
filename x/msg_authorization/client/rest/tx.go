@@ -17,18 +17,18 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router) {
 }
 
 type GrantRequest struct {
-	BaseReq    rest.BaseReq     `json:"base_req" yaml:"base_req"`
-	Granter    sdk.AccAddress   `json:"granter"`
-	Grantee    sdk.AccAddress   `json:"grantee"`
-	Capability types.Capability `json:"capability"`
-	Expiration time.Time        `json:"expiration"`
+	BaseReq       rest.BaseReq        `json:"base_req" yaml:"base_req"`
+	Granter       sdk.AccAddress      `json:"granter"`
+	Grantee       sdk.AccAddress      `json:"grantee"`
+	Authorization types.Authorization `json:"authorization"`
+	Expiration    time.Time           `json:"expiration"`
 }
 
 type RevokeRequest struct {
-	BaseReq           rest.BaseReq   `json:"base_req" yaml:"base_req"`
-	Granter           sdk.AccAddress `json:"granter"`
-	Grantee           sdk.AccAddress `json:"grantee"`
-	CapabilityMsgType sdk.Msg        `json:"capability_msg_type"`
+	BaseReq              rest.BaseReq   `json:"base_req" yaml:"base_req"`
+	Granter              sdk.AccAddress `json:"granter"`
+	Grantee              sdk.AccAddress `json:"grantee"`
+	AuthorizationMsgType sdk.Msg        `json:"authorization_msg_type"`
 }
 
 func grantHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -44,7 +44,7 @@ func grantHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgGrantAuthorization(req.Granter, req.Grantee, req.Capability, req.Expiration)
+		msg := types.NewMsgGrantAuthorization(req.Granter, req.Grantee, req.Authorization, req.Expiration)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -67,7 +67,7 @@ func revokeHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgRevokeAuthorization(req.Granter, req.Grantee, req.CapabilityMsgType)
+		msg := types.NewMsgRevokeAuthorization(req.Granter, req.Grantee, req.AuthorizationMsgType)
 		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

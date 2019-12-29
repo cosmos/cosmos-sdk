@@ -25,11 +25,11 @@ func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec, router sdk.Router) Keepe
 	}
 }
 
-func (k Keeper) getActorCapabilityKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
+func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
 	return []byte(fmt.Sprintf("c/%x/%x/%s/%s", grantee, granter, msg.Route(), msg.Type()))
 }
 
-func (k Keeper) getCapabilityGrant(ctx sdk.Context, actor []byte) (grant types.CapabilityGrant, found bool) {
+func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(actor)
 	if bz == nil {
@@ -39,15 +39,15 @@ func (k Keeper) getCapabilityGrant(ctx sdk.Context, actor []byte) (grant types.C
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Capability) {
-	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, updated.MsgType()))
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.Authorization) {
+	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, updated.MsgType()))
 	if !found {
 		return
 	}
-	grant.Capability = updated
+	grant.Authorization = updated
 }
 
-// DispatchActions attempts to execute the provided messages via capability
+// DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result {
 	var res sdk.Result
@@ -58,11 +58,11 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
-			if capability == nil {
+			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg)
+			if authorization == nil {
 				return sdk.ErrUnauthorized("authorization not found").Result()
 			}
-			allow, updated, del := capability.Accept(msg, ctx.BlockHeader())
+			allow, updated, del := authorization.Accept(msg, ctx.BlockHeader())
 			if !allow {
 				return sdk.ErrUnauthorized(" ").Result()
 			}
@@ -81,26 +81,26 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	return sdk.Result{}
 }
 
-// Grant method grants the provided capability to the grantee on the granter's account with the provided expiration
-// time. If there is an existing capability grant for the same `sdk.Msg` type, this grant
+// Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
+// time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability types.Capability, expiration time.Time) {
+func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization types.Authorization, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(types.CapabilityGrant{Capability: capability, Expiration: expiration})
-	actor := k.getActorCapabilityKey(grantee, granter, capability.MsgType())
+	bz := k.cdc.MustMarshalBinaryBare(types.AuthorizationGrant{Authorization: authorization, Expiration: expiration})
+	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
 	store.Set(actor, bz)
 }
 
-// Revoke method revokes any capability for the provided message type granted to the grantee by the granter.
+// Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(k.getActorCapabilityKey(grantee, granter, msgType))
+	store.Delete(k.getActorAuthorizationKey(grantee, granter, msgType))
 }
 
-// GetCapability Returns any `Capability` (or `nil`), with the expiration time,
+// GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability, expiration time.Time) {
-	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Authorization, expiration time.Time) {
+	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}
 	}
@@ -108,5 +108,5 @@ func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter s
 		k.Revoke(ctx, grantee, granter, msgType)
 		return nil, time.Time{}
 	}
-	return grant.Capability, grant.Expiration
+	return grant.Authorization, grant.Expiration
 }

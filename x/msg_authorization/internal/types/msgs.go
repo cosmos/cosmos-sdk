@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// MsgGrant grants the provided capability to the grantee on the granter's
+// MsgGrantAuthorization grants the provided capability to the grantee on the granter's
 // account with the provided expiration time.
 type MsgGrantAuthorization struct {
 	Granter    sdk.AccAddress `json:"granter"`
@@ -105,6 +105,7 @@ func NewMsgExecDelegated(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecDelegate
 		Msgs:    msgs,
 	}
 }
+
 func (msg MsgExecDelegated) Route() string { return RouterKey }
 func (msg MsgExecDelegated) Type() string  { return "exec_delegated" }
 

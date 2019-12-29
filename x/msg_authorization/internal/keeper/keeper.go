@@ -47,6 +47,8 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grant.Capability = updated
 }
 
+// DispatchActions attempts to execute the provided messages via capability
+// grants from the message signer to the grantee.
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result {
 	var res sdk.Result
 	for _, msg := range msgs {
@@ -56,7 +58,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
+			capability := k.GetCapability(ctx, grantee, granter, msg)
 			if capability == nil {
 				return sdk.ErrUnauthorized("authorization not found").Result()
 			}
@@ -79,6 +81,9 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 	return sdk.Result{}
 }
 
+// Grant method grants the provided capability to the grantee on the granter's account with the provided expiration
+// time. If there is an existing capability grant for the same `sdk.Msg` type, this grant
+// overwrites that.
 func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability types.Capability, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(types.CapabilityGrant{Capability: capability, Expiration: expiration})
@@ -86,19 +91,38 @@ func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAd
 	store.Set(actor, bz)
 }
 
+// Revoke method revokes any capability for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(k.getActorCapabilityKey(grantee, granter, msgType))
 }
 
-func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability, expiration time.Time) {
+// GetCapability Returns any `Capability` (or `nil`)
+// granted to the grantee by the granter for the provided msg type.
+func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.Capability) {
 	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
 	if !found {
-		return nil, time.Time{}
+		return nil
 	}
 	if !grant.Expiration.IsZero() && grant.Expiration.Before(ctx.BlockHeader().Time) {
 		k.Revoke(ctx, grantee, granter, msgType)
-		return nil, time.Time{}
+		return nil
 	}
-	return grant.Capability, grant.Expiration
+	return grant.Capability
+}
+
+// GetCapabilityExpiration Returns a Capability's the expiration time,
+// granted to the grantee by the granter for the provided msg type.
+func (k Keeper) GetCapabilityExpiration(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (expiration time.Time) {
+	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
+	if !found {
+		return time.Time{}
+	}
+
+	if !grant.Expiration.IsZero() && grant.Expiration.Before(ctx.BlockHeader().Time) {
+		k.Revoke(ctx, grantee, granter, msgType)
+		return time.Time{}
+	}
+
+	return grant.Expiration
 }

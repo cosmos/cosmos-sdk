@@ -36,7 +36,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdGrantCapability(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant",
+		Use:   "grant [grantee_address] [capability] --from [granter_address_or_key]",
 		Short: "Grant authorization to an address",
 		Long:  "Grant authorization to an address to execute a transaction on your behalf",
 		Args:  cobra.ExactArgs(2),

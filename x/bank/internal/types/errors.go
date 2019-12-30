@@ -1,33 +1,13 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Bank errors reserve 100 ~ 199.
-const (
-	DefaultCodespace sdk.CodespaceType = ModuleName
-
-	CodeSendDisabled         sdk.CodeType = 101
-	CodeInvalidInputsOutputs sdk.CodeType = 102
+// x/bank module sentinel errors
+var (
+	ErrNoInputs            = sdkerrors.Register(ModuleName, 1, "no inputs to send transaction")
+	ErrNoOutputs           = sdkerrors.Register(ModuleName, 2, "no outputs to send transaction")
+	ErrInputOutputMismatch = sdkerrors.Register(ModuleName, 3, "sum inputs != sum outputs")
+	ErrSendDisabled        = sdkerrors.Register(ModuleName, 4, "send transactions are disabled")
 )
-
-// ErrNoInputs is an error
-func ErrNoInputs(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInputsOutputs, "no inputs to send transaction")
-}
-
-// ErrNoOutputs is an error
-func ErrNoOutputs(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInputsOutputs, "no outputs to send transaction")
-}
-
-// ErrInputOutputMismatch is an error
-func ErrInputOutputMismatch(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInputsOutputs, "sum inputs != sum outputs")
-}
-
-// ErrSendDisabled is an error
-func ErrSendDisabled(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeSendDisabled, "send transactions are currently disabled")
-}

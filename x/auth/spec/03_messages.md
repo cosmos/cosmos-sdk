@@ -1,3 +1,7 @@
+<!--
+order: 3
+-->
+
 # Messages
 
 TODO make this file conform to typical messages spec

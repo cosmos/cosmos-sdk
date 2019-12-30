@@ -11,13 +11,13 @@ import (
 )
 
 func Test_RunMnemonicCmdNormal(t *testing.T) {
-	cmdBasic := mnemonicKeyCommand()
+	cmdBasic := MnemonicKeyCommand()
 	err := runMnemonicCmd(cmdBasic, []string{})
 	require.NoError(t, err)
 }
 
 func Test_RunMnemonicCmdUser(t *testing.T) {
-	cmdUser := mnemonicKeyCommand()
+	cmdUser := MnemonicKeyCommand()
 	err := cmdUser.Flags().Set(flagUserEntropy, "1")
 	assert.NoError(t, err)
 

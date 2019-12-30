@@ -2,10 +2,14 @@ package types
 
 import (
 	"fmt"
+	"math/rand"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmtypes "github.com/tendermint/tendermint/types"
 	yaml "gopkg.in/yaml.v2"
 
@@ -302,4 +306,32 @@ func TestValidatorMarshalYAML(t *testing.T) {
   minselfdelegation: "1"
 `, validator.OperatorAddress.String(), bechifiedPub)
 	require.Equal(t, want, string(bs))
+}
+
+// Check that sort will create deterministic ordering of validators
+func TestValidatorsSortDeterminism(t *testing.T) {
+	vals := make([]Validator, 10)
+	sortedVals := make([]Validator, 10)
+
+	// Create random validator slice
+	for i := range vals {
+		pk := ed25519.GenPrivKey().PubKey()
+		vals[i] = NewValidator(sdk.ValAddress(pk.Address()), pk, Description{})
+	}
+
+	// Save sorted copy
+	sort.Sort(Validators(vals))
+	copy(sortedVals, vals)
+
+	// Randomly shuffle validators, sort, and check it is equal to original sort
+	for i := 0; i < 10; i++ {
+		rand.Shuffle(10, func(i, j int) {
+			it := vals[i]
+			vals[i] = vals[j]
+			vals[j] = it
+		})
+
+		Validators(vals).Sort()
+		require.True(t, reflect.DeepEqual(sortedVals, vals), "Validator sort returned different slices")
+	}
 }

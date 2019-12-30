@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Governance message types and routes
@@ -35,21 +36,21 @@ func (msg MsgSubmitProposal) Route() string { return RouterKey }
 func (msg MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
 
 // ValidateBasic implements Msg
-func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
+func (msg MsgSubmitProposal) ValidateBasic() error {
 	if msg.Content == nil {
-		return ErrInvalidProposalContent(DefaultCodespace, "missing content")
+		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
 	}
 	if msg.Proposer.Empty() {
-		return sdk.ErrInvalidAddress(msg.Proposer.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Proposer.String())
 	}
 	if !msg.InitialDeposit.IsValid() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 	if msg.InitialDeposit.IsAnyNegative() {
-		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.InitialDeposit.String())
 	}
 	if !IsValidProposalType(msg.Content.ProposalType()) {
-		return ErrInvalidProposalType(DefaultCodespace, msg.Content.ProposalType())
+		return sdkerrors.Wrap(ErrInvalidProposalType, msg.Content.ProposalType())
 	}
 
 	return msg.Content.ValidateBasic()
@@ -93,15 +94,15 @@ func (msg MsgDeposit) Route() string { return RouterKey }
 func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
 
 // ValidateBasic implements Msg
-func (msg MsgDeposit) ValidateBasic() sdk.Error {
+func (msg MsgDeposit) ValidateBasic() error {
 	if msg.Depositor.Empty() {
-		return sdk.ErrInvalidAddress(msg.Depositor.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
 	}
 	if !msg.Amount.IsValid() {
-		return sdk.ErrInvalidCoins(msg.Amount.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if msg.Amount.IsAnyNegative() {
-		return sdk.ErrInvalidCoins(msg.Amount.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	return nil
@@ -146,12 +147,12 @@ func (msg MsgVote) Route() string { return RouterKey }
 func (msg MsgVote) Type() string { return TypeMsgVote }
 
 // ValidateBasic implements Msg
-func (msg MsgVote) ValidateBasic() sdk.Error {
+func (msg MsgVote) ValidateBasic() error {
 	if msg.Voter.Empty() {
-		return sdk.ErrInvalidAddress(msg.Voter.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Voter.String())
 	}
 	if !ValidVoteOption(msg.Option) {
-		return ErrInvalidVote(DefaultCodespace, msg.Option.String())
+		return sdkerrors.Wrap(ErrInvalidVote, msg.Option.String())
 	}
 
 	return nil

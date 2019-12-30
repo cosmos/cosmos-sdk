@@ -27,7 +27,7 @@ func Setup(isCheckTx bool) *SimApp {
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
-		stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+		stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 		if err != nil {
 			panic(err)
 		}
@@ -54,10 +54,10 @@ func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	genesisState := NewDefaultGenesisState()
 
 	authGenesis := auth.NewGenesisState(auth.DefaultParams(), genAccs)
-	genesisStateBz := app.cdc.MustMarshalJSON(authGenesis)
+	genesisStateBz := app.Codec().MustMarshalJSON(authGenesis)
 	genesisState[auth.ModuleName] = genesisStateBz
 
-	stateBytes, err := codec.MarshalJSONIndent(app.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(app.Codec(), genesisState)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +105,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 	ctxCheck := app.BaseApp.NewContext(true, abci.Header{})
 	res := app.AccountKeeper.GetAccount(ctxCheck, addr)
 
-	require.Equal(t, exp, res.GetCoins())
+	require.True(t, exp.IsEqual(res.GetCoins()))
 }
 
 // SignCheckDeliver checks a generated signed transaction and simulates a
@@ -115,11 +115,12 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 func SignCheckDeliver(
 	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
-) sdk.Result {
+) (sdk.GasInfo, *sdk.Result, error) {
 
 	tx := helpers.GenTx(
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		helpers.DefaultGenTxGas,
 		"",
 		accNums,
 		seq,
@@ -130,28 +131,32 @@ func SignCheckDeliver(
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
-	res := app.Simulate(txBytes, tx)
+	_, res, err := app.Simulate(txBytes, tx)
 
 	if expSimPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 
 	// Simulate a sending a transaction and committing a block
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Deliver(tx)
+	gInfo, res, err := app.Deliver(tx)
 
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
-	return res
+	return gInfo, res, err
 }
 
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
@@ -163,6 +168,7 @@ func GenSequenceOfTxs(msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, nu
 		txs[i] = helpers.GenTx(
 			msgs,
 			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+			helpers.DefaultGenTxGas,
 			"",
 			accNums,
 			initSeqNums,

@@ -4,19 +4,19 @@
   "description": "## Get Started",
   "main": "index.js",
   "scripts": {
-    "serve": "vuepress dev",
-    "build": "vuepress build"
+    "preserve": "./pre.sh",
+    "serve": "trap 'exit 0' SIGINT; vuepress dev --no-cache",
+    "postserve": "./post.sh",
+    "prebuild": "./pre.sh",
+    "build": "trap 'exit 0' SIGINT; vuepress build --no-cache",
+    "postbuild": "./post.sh"
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@vuepress/plugin-google-analytics": "^1.2.0",
-    "lodash": "^4.17.13",
-    "markdown-it": "^8.4.2",
-    "markdown-it-meta": "0.0.1",
-    "vuepress": "^1.0.2"
-  },
   "dependencies": {
-    "axios": "^0.19.0"
+    "@vuepress/plugin-google-analytics": "^1.2.0",
+    "tiny-cookie": "^2.3.1",
+    "vuepress-plugin-smooth-scroll": "0.0.9",
+    "vuepress-theme-cosmos": "^1.0.113"
   }
 }

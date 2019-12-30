@@ -3,6 +3,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Verify interface at compile time
@@ -36,13 +37,14 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
+func (msg MsgSetWithdrawAddress) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.WithdrawAddress.Empty() {
-		return ErrNilWithdrawAddr(DefaultCodespace)
+		return ErrEmptyWithdrawAddr
 	}
+
 	return nil
 }
 
@@ -74,12 +76,12 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	return nil
 }
@@ -110,9 +112,58 @@ func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawValidatorCommission) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
+	return nil
+}
+
+const TypeMsgFundCommunityPool = "fund_community_pool"
+
+// MsgFundCommunityPool defines a Msg type that allows an account to directly
+// fund the community pool.
+type MsgFundCommunityPool struct {
+	Amount    sdk.Coins      `json:"amount" yaml:"amount"`
+	Depositor sdk.AccAddress `json:"depositor" yaml:"depositor"`
+}
+
+// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
+// a funding amount.
+func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) MsgFundCommunityPool {
+	return MsgFundCommunityPool{
+		Amount:    amount,
+		Depositor: depositor,
+	}
+}
+
+// Route returns the MsgFundCommunityPool message route.
+func (msg MsgFundCommunityPool) Route() string { return ModuleName }
+
+// Type returns the MsgFundCommunityPool message type.
+func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Depositor}
+}
+
+// GetSignBytes returns the raw bytes for a MsgFundCommunityPool message that
+// the expected signer needs to sign.
+func (msg MsgFundCommunityPool) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgFundCommunityPool message validation.
+func (msg MsgFundCommunityPool) ValidateBasic() error {
+	if !msg.Amount.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+	if msg.Depositor.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Depositor.String())
+	}
+
 	return nil
 }

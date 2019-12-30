@@ -16,9 +16,15 @@ import (
 )
 
 type (
+	kbOptions struct {
+		keygenFunc PrivKeyGenFunc
+	}
+
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
-	baseKeybase struct{}
+	baseKeybase struct {
+		options kbOptions
+	}
 
 	keyWriter interface {
 		writeLocalKeyer
@@ -33,6 +39,30 @@ type (
 		writeInfo(name string, info Info)
 	}
 )
+
+// WithKeygenFunc applies an overridden key generation function to generate the private key.
+func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
+	return func(o *kbOptions) {
+		o.keygenFunc = f
+	}
+}
+
+// newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
+func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
+	// Default options for keybase
+	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
+
+	for _, optionFn := range optionsFns {
+		optionFn(&options)
+	}
+
+	return baseKeybase{options: options}
+}
+
+// baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
+func baseSecpPrivKeyGen(bz [32]byte) tmcrypto.PrivKey {
+	return secp256k1.PrivKeySecp256k1(bz)
+}
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
@@ -72,7 +102,7 @@ func (kb baseKeybase) DecodeSignature(info Info, msg []byte) (sig []byte, pub tm
 		return nil, nil, err
 	}
 
-	if err := cdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
+	if err := CryptoCdc.UnmarshalBinaryLengthPrefixed([]byte(signed), sig); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to decode signature")
 	}
 
@@ -101,9 +131,9 @@ func (kb baseKeybase) persistDerivedKey(
 	var info Info
 
 	if passwd != "" {
-		info = keyWriter.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
+		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv), passwd)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, secp256k1.PrivKeySecp256k1(derivedPriv).PubKey())
+		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv).PubKey())
 	}
 
 	return info, nil

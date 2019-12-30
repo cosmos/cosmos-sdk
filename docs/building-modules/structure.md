@@ -1,8 +1,9 @@
-# Module Specification
+<!--
+order: 12
+synopsis: This document outlines the recommended structure of Cosmos SDK modules. These ideas are meant to be applied as suggestions. Application developers are encouraged to improve upon and contribute to module structure and development design.
+-->
 
-This document outlines the recommended structure of Cosmos SDK modules. These
-ideas are meant to be applied as suggestions. Application developers are encouraged
-to improve upon and contribute to module structure and development design.
+# Recommended Folder Structure
 
 ## Structure
 
@@ -79,3 +80,7 @@ allows for greater freedom of development while maintaining API stability.
 - `module.go`: The module's implementation of the `AppModule` and `AppModuleBasic`
 interfaces.
 - `simulation.go`: The module's simulation messages and related types (if any).
+
+## Next {hide}
+
+Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}

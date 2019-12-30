@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 )
 
@@ -100,6 +102,28 @@ func (v Validators) ToSDKValidators() (validators []exported.ValidatorI) {
 		validators = append(validators, val)
 	}
 	return validators
+}
+
+// Sort Validators sorts validator array in ascending operator address order
+func (v Validators) Sort() {
+	sort.Sort(v)
+}
+
+// Implements sort interface
+func (v Validators) Len() int {
+	return len(v)
+}
+
+// Implements sort interface
+func (v Validators) Less(i, j int) bool {
+	return bytes.Compare(v[i].OperatorAddress, v[j].OperatorAddress) == -1
+}
+
+// Implements sort interface
+func (v Validators) Swap(i, j int) {
+	it := v[i]
+	v[i] = v[j]
+	v[j] = it
 }
 
 // NewValidator - initialize a new validator
@@ -281,7 +305,7 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
-func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) {
+func (d Description) UpdateDescription(d2 Description) (Description, error) {
 	if d2.Moniker == DoNotModifyDesc {
 		d2.Moniker = d.Moniker
 	}
@@ -308,21 +332,21 @@ func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) 
 }
 
 // EnsureLength ensures the length of a validator's description.
-func (d Description) EnsureLength() (Description, sdk.Error) {
+func (d Description) EnsureLength() (Description, error) {
 	if len(d.Moniker) > MaxMonikerLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "moniker", len(d.Moniker), MaxMonikerLength)
+		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid moniker length; got: %d, max: %d", len(d.Moniker), MaxMonikerLength)
 	}
 	if len(d.Identity) > MaxIdentityLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "identity", len(d.Identity), MaxIdentityLength)
+		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid identity length; got: %d, max: %d", len(d.Identity), MaxIdentityLength)
 	}
 	if len(d.Website) > MaxWebsiteLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), MaxWebsiteLength)
+		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid website length; got: %d, max: %d", len(d.Website), MaxWebsiteLength)
 	}
 	if len(d.SecurityContact) > MaxSecurityContactLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "security contact", len(d.SecurityContact), MaxSecurityContactLength)
+		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid security contact length; got: %d, max: %d", len(d.SecurityContact), MaxSecurityContactLength)
 	}
 	if len(d.Details) > MaxDetailsLength {
-		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), MaxDetailsLength)
+		return d, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid details length; got: %d, max: %d", len(d.Details), MaxDetailsLength)
 	}
 
 	return d, nil
@@ -348,7 +372,7 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 
 // SetInitialCommission attempts to set a validator's initial commission. An
 // error is returned if the commission is invalid.
-func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.Error) {
+func (v Validator) SetInitialCommission(commission Commission) (Validator, error) {
 	if err := commission.Validate(); err != nil {
 		return v, err
 	}
@@ -382,9 +406,9 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
+func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -392,9 +416,9 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, sdk.Error) {
 
 // SharesFromTokensTruncated returns the truncated shares of a delegation given
 // a bond amount. It returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, sdk.Error) {
+func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares(DefaultCodespace)
+		return sdk.ZeroDec(), ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil

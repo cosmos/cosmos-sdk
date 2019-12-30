@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -46,8 +45,8 @@ func (pcp ParameterChangeProposal) ProposalRoute() string { return RouterKey }
 func (pcp ParameterChangeProposal) ProposalType() string { return ProposalTypeChange }
 
 // ValidateBasic validates the parameter change proposal
-func (pcp ParameterChangeProposal) ValidateBasic() sdk.Error {
-	err := govtypes.ValidateAbstract(DefaultCodespace, pcp)
+func (pcp ParameterChangeProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(pcp)
 	if err != nil {
 		return err
 	}
@@ -69,9 +68,8 @@ func (pcp ParameterChangeProposal) String() string {
 		b.WriteString(fmt.Sprintf(`    Param Change:
       Subspace: %s
       Key:      %s
-      Subkey:   %X
       Value:    %X
-`, pc.Subspace, pc.Key, pc.Subkey, pc.Value))
+`, pc.Subspace, pc.Key, pc.Value))
 	}
 
 	return b.String()
@@ -81,16 +79,11 @@ func (pcp ParameterChangeProposal) String() string {
 type ParamChange struct {
 	Subspace string `json:"subspace" yaml:"subspace"`
 	Key      string `json:"key" yaml:"key"`
-	Subkey   string `json:"subkey,omitempty" yaml:"subkey,omitempty"`
 	Value    string `json:"value" yaml:"value"`
 }
 
 func NewParamChange(subspace, key, value string) ParamChange {
-	return ParamChange{subspace, key, "", value}
-}
-
-func NewParamChangeWithSubkey(subspace, key, subkey, value string) ParamChange {
-	return ParamChange{subspace, key, subkey, value}
+	return ParamChange{subspace, key, value}
 }
 
 // String implements the Stringer interface.
@@ -98,27 +91,26 @@ func (pc ParamChange) String() string {
 	return fmt.Sprintf(`Param Change:
   Subspace: %s
   Key:      %s
-  Subkey:   %X
   Value:    %X
-`, pc.Subspace, pc.Key, pc.Subkey, pc.Value)
+`, pc.Subspace, pc.Key, pc.Value)
 }
 
 // ValidateChanges performs basic validation checks over a set of ParamChange. It
 // returns an error if any ParamChange is invalid.
-func ValidateChanges(changes []ParamChange) sdk.Error {
+func ValidateChanges(changes []ParamChange) error {
 	if len(changes) == 0 {
-		return ErrEmptyChanges(DefaultCodespace)
+		return ErrEmptyChanges
 	}
 
 	for _, pc := range changes {
 		if len(pc.Subspace) == 0 {
-			return ErrEmptySubspace(DefaultCodespace)
+			return ErrEmptySubspace
 		}
 		if len(pc.Key) == 0 {
-			return ErrEmptyKey(DefaultCodespace)
+			return ErrEmptyKey
 		}
 		if len(pc.Value) == 0 {
-			return ErrEmptyValue(DefaultCodespace)
+			return ErrEmptyValue
 		}
 	}
 

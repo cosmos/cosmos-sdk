@@ -86,13 +86,14 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		tx := helpers.GenTx(
 			[]sdk.Msg{msg},
 			fees,
+			helpers.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
 			simAccount.PrivKey,
 		)
 
-		res := app.Deliver(tx)
+		_, res, err := app.Deliver(tx)
 
 		// result should fail if:
 		// - validator cannot be unjailed due to tombstone
@@ -101,7 +102,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 		if info.Tombstoned ||
 			ctx.BlockHeader().Time.Before(info.JailedUntil) ||
 			validator.TokensFromShares(selfDel.GetShares()).TruncateInt().LT(validator.GetMinSelfDelegation()) {
-			if res.IsOK() {
+			if res != nil && err == nil {
 				if info.Tombstoned {
 					return simulation.NewOperationMsg(msg, true, ""), nil, errors.New("validator should not have been unjailed if validator tombstoned")
 				}
@@ -116,7 +117,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, k keeper.Keeper, sk stakingkeeper
 			return simulation.NewOperationMsg(msg, false, ""), nil, nil
 		}
 
-		if !res.IsOK() {
+		if err != nil {
 			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
 		}
 

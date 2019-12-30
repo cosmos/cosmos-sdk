@@ -3,7 +3,6 @@ package keys
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 
 	"github.com/99designs/keyring"
@@ -27,37 +26,47 @@ const (
 
 type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
 
-// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
-func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
+// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir)
+	return NewKeyBaseFromDir(rootDir, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keybase at a particular dir.
-func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir)
+// NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return getLazyKeyBaseFromDir(rootDir, opts...)
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
-// NewKeyBaseFromHomeFlag initializes a keyring based on configuration.
-func NewKeyringFromHomeFlag(input io.Reader) (keys.Keybase, error) {
-	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input)
+// NewKeyBaseFromHomeFlag initializes a keyring based on configuration. Keybase
+// options can be applied when generating this new Keybase.
+func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
 }
 
-// NewKeyBaseFromDir initializes a keyring at a particular dir.
-// If the COSMOS_SDK_TEST_KEYRING environment variable is set and not empty it will
-// return an on-disk, password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(rootDir string, input io.Reader) (keys.Keybase, error) {
-	if os.Getenv("COSMOS_SDK_TEST_KEYRING") != "" {
-		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir)
+// NewKeyBaseFromDir initializes a keyring at the given directory.
+// If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
+// CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
+// password-less keyring that could be used for testing purposes.
+func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
+	switch keyringBackend {
+	case flags.KeyringBackendTest:
+		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)
+	case flags.KeyringBackendFile:
+		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
+	case flags.KeyringBackendOS:
+		return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
 	}
-	return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input)
+	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
 }
 
-func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
+func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
 }
 
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
@@ -74,9 +83,9 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 		var out []byte
 		var err error
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(ko, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(ko, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(ko)
+			out, err = KeysCdc.MarshalJSON(ko)
 		}
 		if err != nil {
 			panic(err)
@@ -101,9 +110,9 @@ func printInfos(infos []keys.Info) {
 		var err error
 
 		if viper.GetBool(flags.FlagIndentResponse) {
-			out, err = cdc.MarshalJSONIndent(kos, "", "  ")
+			out, err = KeysCdc.MarshalJSONIndent(kos, "", "  ")
 		} else {
-			out, err = cdc.MarshalJSON(kos)
+			out, err = KeysCdc.MarshalJSON(kos)
 		}
 
 		if err != nil {

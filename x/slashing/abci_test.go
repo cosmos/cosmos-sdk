@@ -20,8 +20,10 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk := slashingkeeper.Addrs[2], slashingkeeper.Pks[2]
 
 	// bond the validator
-	got := staking.NewHandler(sk)(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, pk, amt))
-	require.True(t, got.IsOK())
+	res, err := staking.NewHandler(sk)(ctx, slashingkeeper.NewTestMsgCreateValidator(addr, pk, amt))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),

@@ -12,13 +12,16 @@ import (
 )
 
 // SimAppChainID hardcoded chainID for simulation
-const SimAppChainID = "simulation-app"
+const (
+	DefaultGenTxGas = 1000000
+	SimAppChainID   = "simulation-app"
+)
 
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
+func GenTx(msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	fee := auth.StdFee{
 		Amount: feeAmt,
-		Gas:    1000000, // TODO: this should be a param
+		Gas:    gas,
 	}
 
 	sigs := make([]auth.StdSignature, len(priv))

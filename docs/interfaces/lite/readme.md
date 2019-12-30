@@ -1,3 +1,8 @@
+---
+parent:
+  order: false
+---
+
 # Light Client Overview
 
 **See the Cosmos SDK Light Client RPC documentation [here](https://cosmos.network/rpc/)**

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -31,6 +32,13 @@ var (
 	zeroInt              = big.NewInt(0)
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
+)
+
+// Decimal errors
+var (
+	ErrEmptyDecimalStr      = errors.New("decimal string cannot be empty")
+	ErrInvalidDecimalLength = errors.New("invalid decimal length")
+	ErrInvalidDecimalStr    = errors.New("invalid decimal string")
 )
 
 // Set precision multipliers
@@ -123,9 +131,9 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 // are provided in the string than the constant Precision.
 //
 // CONTRACT - This function does not mutate the input str.
-func NewDecFromStr(str string) (d Dec, err Error) {
+func NewDecFromStr(str string) (Dec, error) {
 	if len(str) == 0 {
-		return d, ErrUnknownRequest("decimal string is empty")
+		return Dec{}, ErrEmptyDecimalStr
 	}
 
 	// first extract any negative symbol
@@ -136,7 +144,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	}
 
 	if len(str) == 0 {
-		return d, ErrUnknownRequest("decimal string is empty")
+		return Dec{}, ErrEmptyDecimalStr
 	}
 
 	strs := strings.Split(str, ".")
@@ -146,17 +154,16 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	if len(strs) == 2 { // has a decimal place
 		lenDecs = len(strs[1])
 		if lenDecs == 0 || len(combinedStr) == 0 {
-			return d, ErrUnknownRequest("bad decimal length")
+			return Dec{}, ErrInvalidDecimalLength
 		}
 		combinedStr += strs[1]
 
 	} else if len(strs) > 2 {
-		return d, ErrUnknownRequest("too many periods to be a decimal string")
+		return Dec{}, ErrInvalidDecimalStr
 	}
 
 	if lenDecs > Precision {
-		return d, ErrUnknownRequest(
-			fmt.Sprintf("too much precision, maximum %v, len decimal %v", Precision, lenDecs))
+		return Dec{}, fmt.Errorf("invalid precision; max: %d, got: %d", Precision, lenDecs)
 	}
 
 	// add some extra zero's to correct to the Precision factor
@@ -166,11 +173,12 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
-		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
+		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
 	}
+
 	return Dec{combined}, nil
 }
 
@@ -547,6 +555,42 @@ func (d Dec) Ceil() Dec {
 	}
 
 	return NewDecFromBigInt(quo.Add(quo, oneInt))
+}
+
+//___________________________________________________________________________________
+
+// MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
+// Its negative form is the least Dec that can be passed in.
+var MaxSortableDec = OneDec().Quo(SmallestDec())
+
+// ValidSortableDec ensures that a Dec is within the sortable bounds,
+// a Dec can't have a precision of less than 10^-18.
+// Max sortable decimal was set to the reciprocal of SmallestDec.
+func ValidSortableDec(dec Dec) bool {
+	return dec.Abs().LTE(MaxSortableDec)
+}
+
+// SortableDecBytes returns a byte slice representation of a Dec that can be sorted.
+// Left and right pads with 0s so there are 18 digits to left and right of the decimal point.
+// For this reason, there is a maximum and minimum value for this, enforced by ValidSortableDec.
+func SortableDecBytes(dec Dec) []byte {
+	if !ValidSortableDec(dec) {
+		panic("dec must be within bounds")
+	}
+	// Instead of adding an extra byte to all sortable decs in order to handle max sortable, we just
+	// makes its bytes be "max" which comes after all numbers in ASCIIbetical order
+	if dec.Equal(MaxSortableDec) {
+		return []byte("max")
+	}
+	// For the same reason, we make the bytes of minimum sortable dec be --, which comes before all numbers.
+	if dec.Equal(MaxSortableDec.Neg()) {
+		return []byte("--")
+	}
+	// We move the negative sign to the front of all the left padded 0s, to make negative numbers come before positive numbers
+	if dec.IsNegative() {
+		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.Abs().String()))...)
+	}
+	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.String()))
 }
 
 //___________________________________________________________________________________

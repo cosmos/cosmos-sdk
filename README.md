@@ -1,3 +1,8 @@
+<!--
+parent:
+  order: false
+-->
+
 # Cosmos SDK
 
 ![banner](docs/cosmos-sdk-image.jpg)
@@ -12,7 +17,7 @@
 [![riot.im](https://img.shields.io/badge/riot.im-JOIN%20CHAT-green.svg)](https://riot.im/app/#/room/#cosmos-sdk:matrix.org)
 
 The Cosmos-SDK is a framework for building blockchain applications in Golang.
-It is being used to build `Gaia`, the first implementation of the Cosmos Hub.
+It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first implementation of the Cosmos Hub.
 
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
@@ -21,15 +26,19 @@ breaking changes.
 
 ## Quick Start
 
-To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/intro.md).
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/overview.md).
 
-If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://tutorials.cosmos.network/nameservice/tutorial/00-intro.html). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
-For more, please go to the [Cosmos SDK Docs](./docs/README.md)
+For more, please go to the [Cosmos SDK Docs](./docs/).
 
 ## Cosmos Hub Mainnet
 
 The Cosmos Hub application, `gaia`, has moved to its [own repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
+
+## Scaffolding
+
+If you are starting a new app or a new module we provide a [scaffolding tool](https://github.com/cosmos/scaffold) to help you get started and speed up development. If you have any questions or find a bug, feel free to open an issue in the repo.
 
 ## Disambiguation
 

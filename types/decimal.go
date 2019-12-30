@@ -321,7 +321,7 @@ func (d Dec) QuoInt64(i int64) Dec {
 // ApproxRoot returns an approximate estimation of a Dec's positive real nth root
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
-// approximate answer.  It returns -(sqrt(abs(d)) if input is negative.
+// approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
 func (d Dec) ApproxRoot(root uint64) (guess Dec, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -383,7 +383,7 @@ func (d Dec) Power(power uint64) Dec {
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
-// of finding square root of a number.
+// of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
 func (d Dec) ApproxSqrt() (Dec, error) {
 	return d.ApproxRoot(2)
 }

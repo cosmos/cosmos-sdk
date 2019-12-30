@@ -140,7 +140,7 @@ func GetCmdTxSendAs(cdc *codec.Codec) *cobra.Command {
 
 			err = cdc.UnmarshalJSON([]byte(generatedTx), &stdTx)
 
-			msg := types.NewMsgExecDelegated(grantee, stdTx.Msgs)
+			msg := types.NewMsgExecDelegated(granter, stdTx.Msgs)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

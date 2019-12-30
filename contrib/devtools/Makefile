@@ -1,4 +1,5 @@
-.PHONY: all tools tools-clean
+.PHONY: all tools tools-clean statik runsim golangci-lint \
+buf protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
 
 ###
 # Find OS and Go environment
@@ -40,9 +41,15 @@ mkfile_dir := $(shell cd $(shell dirname $(mkfile_path)); pwd)
 ###                                 Tools                                   ###
 ###############################################################################
 
+BIN ?= /usr/local/bin
+OS ?= $(shell uname -s)
+HD ?= $(shell uname -m)
+
 GOPATH ?= $(shell $(GO) env GOPATH)
 GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
 GOLANGCI_LINT_HASHSUM := 8d21cc95da8d3daf8321ac40091456fc26123c964d7c2281d339d431f2f4c840
+
+BUF_VERSION = 0.4.0
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 GOLANGCI_LINT  = $(TOOLS_DESTDIR)/golangci-lint
@@ -66,10 +73,6 @@ $(STATIK):
 	@echo "Installing statik..."
 	@(cd /tmp && go get github.com/rakyll/statik@v0.1.6)
 
-tools-clean:
-	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
-	rm -f tools-stamp
-
 # Install the runsim binary with a temporary workaround of entering an outside
 # directory as the "go get" command ignores the -mod option and will polute the
 # go.{mod, sum} files.
@@ -79,3 +82,28 @@ runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Installing runsim..."
 	@(cd /tmp && go get github.com/cosmos/tools/cmd/runsim@v1.0.0)
+
+buf: protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
+	@echo "Installing buf..."
+	@curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/buf-${OS}-${HD}" \
+    -o "${BIN}/buf" && \
+	chmod +x "${BIN}/buf"
+
+protoc-gen-buf-check-breaking:
+	@echo "Installing protoc-gen-buf-check-breaking..."
+	@curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-breaking-${OS}-${HD}" \
+    -o "${BIN}/protoc-gen-buf-check-breaking" && \
+	chmod +x "${BIN}/protoc-gen-buf-check-breaking"
+
+protoc-gen-buf-check-lint:
+	@echo "Installing protoc-gen-buf-check-lint..."
+	@curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${BUF_VERSION}/protoc-gen-buf-check-lint-${OS}-${HD}" \
+    -o "${BIN}/protoc-gen-buf-check-lint" && \
+	chmod +x "${BIN}/protoc-gen-buf-check-lint"
+
+tools-clean:
+	rm -f $(STATIK) $(GOLANGCI_LINT) $(RUNSIM)
+	rm -f tools-stamp

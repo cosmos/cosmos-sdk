@@ -53,6 +53,5 @@ func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k
 }
 
 func handleMsgExecDelegated(ctx sdk.Context, msg MsgExecDelegated, k Keeper) sdk.Result {
-	//TODO
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return k.DispatchActions(ctx, msg.Grantee, msg.Msgs)
 }

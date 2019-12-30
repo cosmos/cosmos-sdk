@@ -2,6 +2,8 @@ package cli
 
 import (
 	"bufio"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -111,37 +113,40 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-//
-//func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
-//	cmd := &cobra.Command{
-//		Use:   "send-as [grantee] [generated_tx] --from [granter]",
-//		Short: "send-as authorization",
-//		Long:  "send-as authorization",
-//		Args:  cobra.ExactArgs(2),
-//		RunE: func(cmd *cobra.Command, args []string) error {
-//			inBuf := bufio.NewReader(cmd.InOrStdin())
-//			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
-//			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
-//
-//			granter := cliCtx.FromAddress
-//			grantee, err := sdk.AccAddressFromBech32(args[0])
-//			if err != nil {
-//				return err
-//			}
-//
-//			var msgAuthorized sdk.Msg
-//			err = cdc.UnmarshalJSON([]byte(args[1]), &msgAuthorized)
-//			if err != nil {
-//				return err
-//			}
-//
-//			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
-//			if err := msg.ValidateBasic(); err != nil {
-//				return err
-//			}
-//
-//			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
-//		},
-//	}
-//	return cmd
-//}
+func GetCmdTxSendAs(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send-as [grantee] [generated_tx] --from [granter]",
+		Short: "execute tx on behalf of granter account",
+		Long:  "execute tx on behalf of granter account",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+
+			granter := cliCtx.FromAddress
+			grantee, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			generatedTx, err := input.GetString("Enter generated tx json string:", inBuf)
+
+			if err != nil {
+				return err
+			}
+
+			var stdTx auth.StdTx
+
+			err = cdc.UnmarshalJSON([]byte(generatedTx), &stdTx)
+
+			msg := types.NewMsgExecDelegated(grantee, stdTx.Msgs)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+		},
+	}
+	return cmd
+}

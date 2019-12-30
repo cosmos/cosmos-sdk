@@ -185,6 +185,20 @@ func (i Int) IsInt64() bool {
 	return i.i.IsInt64()
 }
 
+// Uint64 converts Int to uint64
+// Panics if the value is out of range
+func (i Int) Uint64() uint64 {
+	if !i.i.IsUint64() {
+		panic("Int64() out of bound")
+	}
+	return i.i.Uint64()
+}
+
+// IsUint64 returns true if Uint64() not panics
+func (i Int) IsUint64() bool {
+	return i.i.IsUint64()
+}
+
 // IsZero returns true if Int is zero
 func (i Int) IsZero() bool {
 	return i.i.Sign() == 0

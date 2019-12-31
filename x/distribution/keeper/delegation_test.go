@@ -15,9 +15,13 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	// create validator with 50% commission
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	msg := staking.NewMsgCreateValidator(
+		valOpAddr1, valConsPk1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt(),
+	)
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -72,8 +76,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	valTokens := sdk.TokensFromConsensusPower(valPower)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
-	got := sh(ctx, msg)
-	require.True(t, got.IsOK(), "%v", got)
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -135,7 +141,10 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -207,7 +216,10 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -226,7 +238,11 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	require.True(t, sh(ctx, msg2).IsOK())
+
+	res, err = sh(ctx, msg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
 
 	// fetch updated validator
@@ -280,7 +296,10 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 		staking.Description{}, commission, sdk.OneInt(),
 	)
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// assert correct initial balance
 	expTokens := balanceTokens.Sub(valTokens)
@@ -308,7 +327,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
-	_, err := k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+	_, err = k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 	require.Nil(t, err)
 
 	// historical count should still be 2 (added one record, cleared one)
@@ -343,7 +362,10 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -410,7 +432,10 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	valTokens := sdk.TokensFromConsensusPower(power)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -436,7 +461,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(100)
 	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1,
 		sdk.NewCoin(sdk.DefaultBondDenom, delTokens))
-	require.True(t, sh(ctx, msg2).IsOK())
+
+	res, err = sh(ctx, msg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
 
 	// end block
@@ -491,7 +520,10 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
@@ -511,7 +543,9 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// second delegation
 	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
-	require.True(t, sh(ctx, msg2).IsOK())
+	res, err = sh(ctx, msg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// historical count should be 3 (second delegation init)
 	require.Equal(t, uint64(3), k.GetValidatorHistoricalReferenceCount(ctx))

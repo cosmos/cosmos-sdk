@@ -69,14 +69,18 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 
 			switch tc.expectedResult {
 			case "fail":
-				res := h(ctx, tc.msg)
-				require.False(t, res.IsOK())
+				res, err := h(ctx, tc.msg)
+				require.Error(t, err)
+				require.Nil(t, res)
+
 			case "pass":
-				res := h(ctx, tc.msg)
-				require.True(t, res.IsOK())
+				res, err := h(ctx, tc.msg)
+				require.NoError(t, err)
+				require.NotNil(t, res)
+
 			case "panic":
 				require.Panics(t, func() {
-					_ = h(ctx, tc.msg)
+					h(ctx, tc.msg)
 				})
 			}
 		})
@@ -92,7 +96,10 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 
 	h := crisis.NewHandler(app.CrisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichPasses.Route)
-	require.False(t, h(ctx, msg).IsOK())
+
+	res, err := h(ctx, msg)
+	require.Error(t, err)
+	require.Nil(t, res)
 }
 
 func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *testing.T) {
@@ -106,8 +113,9 @@ func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *tes
 
 	h := crisis.NewHandler(app.CrisisKeeper)
 	msg := crisis.NewMsgVerifyInvariant(sender, testModuleName, dummyRouteWhichFails.Route)
-	var res sdk.Result
+
+	var res *sdk.Result
 	require.Panics(t, func() {
-		res = h(ctx, msg)
+		res, _ = h(ctx, msg)
 	}, fmt.Sprintf("%v", res))
 }

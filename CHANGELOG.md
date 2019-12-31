@@ -51,7 +51,20 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 ### API Breaking Changes
 
 * (types) [\#5430](https://github.com/cosmos/cosmos-sdk/pull/5430) `DecCoins.Add` parameter changes from `DecCoins` to `...DecCoin`
-* (client) [\#5442](https://github.com/cosmos/cosmos-sdk/pull/5442) Remove client/alias.go as it's not necessary and 
+* (baseapp/types) [\#5421](https://github.com/cosmos/cosmos-sdk/pull/5421) The `Error` interface (`types/errors.go`)
+  has been removed in favor of the concrete type defined in `types/errors/` which implements the standard `error`
+  interface. As a result, the `Handler` and `Querier` implementations now return a standard `error`.
+  Within `BaseApp`, `runTx` now returns a `(GasInfo, *Result, error)` tuple and `runMsgs` returns a
+  `(*Result, error)` tuple. A reference to a `Result` is now used to indicate success whereas an error
+  signals an invalid message or failed message execution. As a result, the fields `Code`, `Codespace`,
+  `GasWanted`, and `GasUsed` have been removed the `Result` type. The latter two fields are now found
+  in the `GasInfo` type which is always returned regardless of execution outcome.
+
+  Note to developers: Since all handlers and queriers must now return a standard `error`, the `types/errors/`
+  package contains all the relevant and pre-registered errors that you typically work with. A typical
+  error returned will look like `sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "...")`. You can retrieve
+  relevant ABCI information from the error via `ABCIInfo`.
+* (client) [\#5442](https://github.com/cosmos/cosmos-sdk/pull/5442) Remove client/alias.go as it's not necessary and
 components can be imported directly from the packages.
 * (store) [\#4748](https://github.com/cosmos/cosmos-sdk/pull/4748) The `CommitMultiStore` interface
 now requires a `SetInterBlockCache` method. Applications that do not wish to support this can simply
@@ -91,9 +104,11 @@ if the provided arguments are invalid.
 increased significantly due to modular `AnteHandler` support. Increase GasLimit accordingly.
 * (rest) [\#5336](https://github.com/cosmos/cosmos-sdk/issues/5336) `MsgEditValidator` uses `description` instead of `Description` as a JSON key.
 * (keys) [\#5097](https://github.com/cosmos/cosmos-sdk/pull/5097) Due to the keybase -> keyring transition, keys need to be migrated. See `keys migrate` command for more info.
+* (x/auth) [\#5424](https://github.com/cosmos/cosmos-sdk/issues/5424) Drop `decode-tx` command from x/auth/client/cli, duplicate of the `decode` command.
 
 ### Features
 
+* (store) [\#5435](https://github.com/cosmos/cosmos-sdk/pull/5435) New iterator for paginated requests. Iterator limits DB reads to the range of the requested page.
 * (x/evidence) [\#5240](https://github.com/cosmos/cosmos-sdk/pull/5240) Initial implementation of the `x/evidence` module.
 * (cli) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) The `q gov proposals` command now supports pagination.
 * (store) [\#4724](https://github.com/cosmos/cosmos-sdk/issues/4724) Multistore supports substore migrations upon load. New `rootmulti.Store.LoadLatestVersionAndUpgrade` method in
@@ -2805,3 +2820,5 @@ BUG FIXES:
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0
+
+

@@ -149,7 +149,8 @@ func (u *Uint) MarshalTo(data []byte) (n int, err error) {
 		u.i = new(big.Int)
 	}
 	if len(u.i.Bytes()) == 0 {
-		return 0, nil
+		copy(data, []byte{0x30})
+		return 1, nil
 	}
 
 	bz, err := u.Marshal()

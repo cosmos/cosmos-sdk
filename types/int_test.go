@@ -371,6 +371,7 @@ func TestEncodingTableUint(t *testing.T) {
 		bz, err := tc.i.MarshalJSON()
 		require.Nil(t, err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+
 		err = (&i).UnmarshalJSON(bz)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
@@ -390,15 +391,15 @@ func TestSerializationOverflow(t *testing.T) {
 	x := Int{bx}
 	y := new(Int)
 
-	xStr, err := x.Marshal()
+	bz, err := x.Marshal()
 	require.NoError(t, err)
 
 	// require deserialization to fail due to overflow
-	err = y.Unmarshal(xStr)
+	err = y.Unmarshal(bz)
 	require.Error(t, err)
 
 	// require JSON deserialization to fail due to overflow
-	bz, err := x.MarshalJSON()
+	bz, err = x.MarshalJSON()
 	require.NoError(t, err)
 
 	err = y.UnmarshalJSON(bz)

@@ -325,7 +325,7 @@ func (i *Int) UnmarshalJSON(bz []byte) error {
 	return unmarshalJSON(i.i, bz)
 }
 
-// MarshalYAML returns Ythe AML representation.
+// MarshalYAML returns the YAML representation.
 func (i Int) MarshalYAML() (interface{}, error) { return i.String(), nil }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
@@ -347,7 +347,8 @@ func (i *Int) MarshalTo(data []byte) (n int, err error) {
 		i.i = new(big.Int)
 	}
 	if len(i.i.Bytes()) == 0 {
-		return 0, nil
+		copy(data, []byte{0x30})
+		return 1, nil
 	}
 
 	bz, err := i.Marshal()

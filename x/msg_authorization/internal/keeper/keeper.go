@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 )
 
@@ -49,22 +50,22 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result {
-	var res sdk.Result
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
+	var res *sdk.Result
 	for _, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
-			return sdk.ErrUnknownRequest("authorization can be given to msg with only one signer").Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
 			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg)
 			if authorization == nil {
-				return sdk.ErrUnauthorized("authorization not found").Result()
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
 			allow, updated, del := authorization.Accept(msg, ctx.BlockHeader())
 			if !allow {
-				return sdk.ErrUnauthorized(" ").Result()
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
 			if del {
 				k.Revoke(ctx, grantee, granter, msg)
@@ -72,8 +73,8 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				k.update(ctx, grantee, granter, updated)
 			}
 		}
-		res = k.router.Route(msg.Route())(ctx, msg)
-		if !res.IsOK() {
+		res, _ = k.router.Route(msg.Route())(ctx, msg)
+		if !res.Data {
 			return res
 		}
 	}

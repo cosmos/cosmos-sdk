@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if
@@ -125,6 +127,17 @@ func (coin Coin) IsPositive() bool {
 // TODO: Remove once unsigned integers are used.
 func (coin Coin) IsNegative() bool {
 	return coin.Amount.Sign() == -1
+}
+
+// MarshalYAML implements custom YAML marshaling for the Coin type. It omits all
+// proto fields.
+func (coin Coin) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(struct {
+		Denom  string `json:"denom,omitempty" yaml:"denom,omitempty"`
+		Amount Int    `json:"amount" yaml:"amount"`
+	}{coin.Denom, coin.Amount})
+
+	return string(bz), err
 }
 
 //-----------------------------------------------------------------------------

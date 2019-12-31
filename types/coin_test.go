@@ -1,11 +1,15 @@
 package types
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -683,5 +687,36 @@ func TestMarshalJSONCoins(t *testing.T) {
 				require.Equal(t, tc.input, newCoins)
 			}
 		})
+	}
+}
+
+func TestCoinEncoding(t *testing.T) {
+	testCases := []struct {
+		input   Coin
+		rawBz   string
+		jsonStr string
+		yamlStr string
+	}{
+		{Coin{}, "120130", "{\"amount\":\"0\"}", "|\n  amount: \"0\"\n"},
+		{Coin{Denom: "test", Amount: NewInt(0)}, "0A0474657374120130", "{\"denom\":\"test\",\"amount\":\"0\"}", "|\n  denom: test\n  amount: \"0\"\n"},
+		{NewCoin("test", NewInt(777)), "0A04746573741203373737", "{\"denom\":\"test\",\"amount\":\"777\"}", "|\n  denom: test\n  amount: \"777\"\n"},
+	}
+
+	for _, tc := range testCases {
+		bz, err := proto.Marshal(&tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.rawBz, fmt.Sprintf("%X", bz))
+
+		var other Coin
+		require.NoError(t, proto.Unmarshal(bz, &other))
+		require.True(t, tc.input.IsEqual(other))
+
+		bz, err = json.Marshal(tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.jsonStr, string(bz))
+
+		bz, err = yaml.Marshal(tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.yamlStr, string(bz))
 	}
 }

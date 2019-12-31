@@ -10,28 +10,11 @@ option (gogoproto.sizer_all) = true;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-// ProtoInt defines a big integer that is represented as a string and decorated
-// by a custom type Int.
-message ProtoInt {
-  option (gogoproto.stringer) = true;
-
-  string i = 1;
-}
-
-// ProtoUint defines a big unsigned integer that is represented as a string and
-// decorated by a custom type Uint.
-message ProtoUint {
-  option (gogoproto.stringer) = true;
-
-  string i = 1;
-}
-
 // Coin defines a token with a denomination and an amount.
 //
 // NOTE: The amount field is an Int which implements the custom method
 // signatures required by gogoproto.
 message Coin {
   string denom = 1;
-  ProtoInt amount = 2
-      [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
+  bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }

@@ -8,23 +8,6 @@ import (
 	"strings"
 )
 
-//-----------------------------------------------------------------------------
-// Coin
-
-// Coin hold some amount of one currency.
-//
-// CONTRACT: A coin will never hold a negative amount of any denomination.
-//
-// TODO: Make field members private for further safety.
-type Coin struct {
-	Denom string `json:"denom"`
-
-	// To allow the use of unsigned integers (see: #1273) a larger refactor will
-	// need to be made. So we use signed integers for now with safety measures in
-	// place preventing negative values being used.
-	Amount Int `json:"amount"`
-}
-
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
@@ -112,7 +95,7 @@ func (coin Coin) Add(coinB Coin) Coin {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
 
-	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
+	return Coin{Denom: coin.Denom, Amount: coin.Amount.Add(coinB.Amount)}
 }
 
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
@@ -122,7 +105,7 @@ func (coin Coin) Sub(coinB Coin) Coin {
 		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
 
-	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	res := Coin{Denom: coin.Denom, Amount: coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
 		panic("negative coin amount")
 	}

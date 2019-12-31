@@ -119,22 +119,6 @@ func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 // Human readable string
 func (u Uint) String() string { return u.i.String() }
 
-// MarshalAmino defines custom encoding scheme
-func (u Uint) MarshalAmino() (string, error) {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return marshalAmino(u.i)
-}
-
-// UnmarshalAmino defines custom decoding scheme
-func (u *Uint) UnmarshalAmino(text string) error {
-	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
-		u.i = new(big.Int)
-	}
-	return unmarshalAmino(u.i, text)
-}
-
 // MarshalJSON defines custom encoding scheme
 func (u Uint) MarshalJSON() ([]byte, error) {
 	if u.i == nil { // Necessary since default Uint initialization has i.i as nil
@@ -149,6 +133,65 @@ func (u *Uint) UnmarshalJSON(bz []byte) error {
 		u.i = new(big.Int)
 	}
 	return unmarshalJSON(u.i, bz)
+}
+
+// Marshal implements the gogo proto custom type interface.
+func (u Uint) Marshal() ([]byte, error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	return u.i.MarshalText()
+}
+
+// MarshalTo implements the gogo proto custom type interface.
+func (u *Uint) MarshalTo(data []byte) (n int, err error) {
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+	if len(u.i.Bytes()) == 0 {
+		return 0, nil
+	}
+
+	bz, err := u.Marshal()
+	if err != nil {
+		return 0, err
+	}
+
+	copy(data, bz)
+	return len(bz), nil
+}
+
+// Unmarshal implements the gogo proto custom type interface.
+func (u *Uint) Unmarshal(data []byte) error {
+	if len(data) == 0 {
+		u = nil
+		return nil
+	}
+
+	if u.i == nil {
+		u.i = new(big.Int)
+	}
+
+	if err := u.i.UnmarshalText(data); err != nil {
+		return err
+	}
+
+	if u.i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range; got: %d, max: %d", u.i.BitLen(), maxBitLen)
+	}
+
+	return nil
+}
+
+// Size implements the gogo proto custom type interface.
+func (u *Uint) Size() int {
+	bz, _ := u.Marshal()
+	return len(bz)
+}
+
+// Compare implements the gogo proto custom type interface.
+func (u Uint) Compare(other Int) int {
+	return u.i.Cmp(other.i)
 }
 
 //__________________________________________________________________________

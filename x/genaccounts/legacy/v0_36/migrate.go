@@ -113,10 +113,10 @@ func Migrate(
 	// get distr module account coins
 	var distrDecCoins sdk.DecCoins
 	for _, reward := range valOutRewards {
-		distrDecCoins = distrDecCoins.Add(reward.OutstandingRewards)
+		distrDecCoins = distrDecCoins.Add(reward.OutstandingRewards...)
 	}
 
-	distrCoins, _ := distrDecCoins.Add(communityPool).TruncateDecimal()
+	distrCoins, _ := distrDecCoins.Add(communityPool...).TruncateDecimal()
 
 	// get module account addresses
 	feeCollectorAddr := sdk.AccAddress(crypto.AddressHash([]byte(feeCollectorName)))

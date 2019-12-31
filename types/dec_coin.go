@@ -192,11 +192,6 @@ func NewDecCoinsFromCoin(coins ...Coin) DecCoins {
 	return decCoins
 }
 
-// AddDecCoin adds a new decimal coin to the existed set of decimal coins.
-func (coins DecCoins) AddDecCoin(decCoin DecCoin) DecCoins {
-	return append(coins, decCoin)
-}
-
 // String implements the Stringer interface for DecCoins. It returns a
 // human-readable representation of decimal coins.
 func (coins DecCoins) String() string {
@@ -222,7 +217,7 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 			truncatedCoins = truncatedCoins.Add(NewCoins(truncated))
 		}
 		if !change.IsZero() {
-			changeCoins = changeCoins.Add(DecCoins{change})
+			changeCoins = changeCoins.Add(change)
 		}
 	}
 
@@ -236,7 +231,7 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins DecCoins) Add(coinsB DecCoins) DecCoins {
+func (coins DecCoins) Add(coinsB ...DecCoin) DecCoins {
 	return coins.safeAdd(coinsB)
 }
 
@@ -371,7 +366,7 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 		}
 
 		if !product.IsZero() {
-			res = res.Add(DecCoins{product})
+			res = res.Add(product)
 		}
 	}
 
@@ -392,7 +387,7 @@ func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 		}
 
 		if !product.IsZero() {
-			res = res.Add(DecCoins{product})
+			res = res.Add(product)
 		}
 	}
 
@@ -415,7 +410,7 @@ func (coins DecCoins) QuoDec(d Dec) DecCoins {
 		}
 
 		if !quotient.IsZero() {
-			res = res.Add(DecCoins{quotient})
+			res = res.Add(quotient)
 		}
 	}
 
@@ -439,7 +434,7 @@ func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
 		}
 
 		if !quotient.IsZero() {
-			res = res.Add(DecCoins{quotient})
+			res = res.Add(quotient)
 		}
 	}
 

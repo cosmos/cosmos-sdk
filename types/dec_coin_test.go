@@ -91,7 +91,7 @@ func TestAddDecCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo...)
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }
@@ -459,7 +459,7 @@ func TestNewDecCoinsWithIsValid(t *testing.T) {
 }
 
 func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
-	lengthTestDecCoins := NewDecCoins().AddDecCoin(NewDecCoin("mytoken", NewInt(10))).AddDecCoin(DecCoin{Denom: "BTC", Amount: NewDec(10)})
+	lengthTestDecCoins := NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)})
 	require.Equal(t, 2, len(lengthTestDecCoins), "should be 2")
 
 	tests := []struct {
@@ -468,17 +468,17 @@ func TestDecCoins_AddDecCoinWithIsValid(t *testing.T) {
 		msg        string
 	}{
 		{
-			NewDecCoins().AddDecCoin(NewDecCoin("mytoken", NewInt(10))),
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))),
 			true,
 			"valid coins should have passed",
 		},
 		{
-			NewDecCoins().AddDecCoin(NewDecCoin("mytoken", NewInt(10))).AddDecCoin(DecCoin{Denom: "BTC", Amount: NewDec(10)}),
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(10)}),
 			false,
 			"invalid denoms",
 		},
 		{
-			NewDecCoins().AddDecCoin(NewDecCoin("mytoken", NewInt(10))).AddDecCoin(DecCoin{Denom: "BTC", Amount: NewDec(-10)}),
+			NewDecCoins().Add(NewDecCoin("mytoken", NewInt(10))).Add(DecCoin{Denom: "BTC", Amount: NewDec(-10)}),
 			false,
 			"negative amount",
 		},

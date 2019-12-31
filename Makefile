@@ -222,3 +222,21 @@ devdoc-update:
 	docker pull tendermint/devdoc
 
 .PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
+
+###############################################################################
+###                                Protobuf                                 ###
+###############################################################################
+
+proto-all: proto-lint proto-check-breaking proto-gen
+
+proto-gen:
+	@go mod vendor
+	@./scripts/protocgen.sh
+
+proto-lint:
+	@buf check lint --error-format=json
+
+proto-check-breaking:
+	@buf check breaking --against-input '.git#branch=master'
+
+.PHONY: proto-all proto-gen proto-lint proto-check-breaking

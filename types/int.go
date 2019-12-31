@@ -86,6 +86,8 @@ func unmarshalJSON(i *big.Int, bz []byte) error {
 	return unmarshalText(i, text)
 }
 
+var _ CustomProtoType = (*Int)(nil)
+
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from -(2^maxBitLen-1) to 2^maxBitLen-1

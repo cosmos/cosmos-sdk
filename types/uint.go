@@ -49,6 +49,8 @@ func ZeroUint() Uint { return Uint{big.NewInt(0)} }
 // OneUint returns Uint value with one.
 func OneUint() Uint { return Uint{big.NewInt(1)} }
 
+var _ CustomProtoType = (*Uint)(nil)
+
 // Uint64 converts Uint to uint64
 // Panics if the value is out of range
 func (u Uint) Uint64() uint64 {

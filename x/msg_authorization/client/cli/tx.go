@@ -147,7 +147,7 @@ func GetCmdTxSendAs(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
 		},
 	}
 	return cmd

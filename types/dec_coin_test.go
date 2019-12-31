@@ -172,7 +172,7 @@ func TestSubDecCoins(t *testing.T) {
 		msg        string
 	}{
 		{
-			NewDecCoinsFromCoin(Coins{NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))}...),
+			NewDecCoinsFromCoin(NewCoin("mytoken", NewInt(10)), NewCoin("btc", NewInt(20)), NewCoin("eth", NewInt(30))),
 			true,
 			"sorted coins should have passed",
 		},
@@ -188,7 +188,7 @@ func TestSubDecCoins(t *testing.T) {
 		},
 	}
 
-	decCoins := NewDecCoinsFromCoin(Coins{NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5))}...)
+	decCoins := NewDecCoinsFromCoin(NewCoin("btc", NewInt(10)), NewCoin("eth", NewInt(15)), NewCoin("mytoken", NewInt(5)))
 
 	for _, tc := range tests {
 		tc := tc

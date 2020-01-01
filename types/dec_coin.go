@@ -6,16 +6,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
 )
-
-// ----------------------------------------------------------------------------
-// Decimal Coin
-
-// DecCoin defines a coin which can have additional decimal points
-type DecCoin struct {
-	Denom  string `json:"denom"`
-	Amount Dec    `json:"amount"`
-}
 
 // NewDecCoin creates a new DecCoin instance from an Int.
 func NewDecCoin(denom string, amount Int) DecCoin {
@@ -100,7 +92,7 @@ func (coin DecCoin) Add(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
-	return DecCoin{coin.Denom, coin.Amount.Add(coinB.Amount)}
+	return DecCoin{Denom: coin.Denom, Amount: coin.Amount.Add(coinB.Amount)}
 }
 
 // Sub subtracts amounts of two decimal coins with same denom.
@@ -108,7 +100,7 @@ func (coin DecCoin) Sub(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
-	res := DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	res := DecCoin{Denom: coin.Denom, Amount: coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
 		panic("negative decimal coin amount")
 	}
@@ -134,7 +126,7 @@ func (coin DecCoin) IsPositive() bool {
 //
 // TODO: Remove once unsigned integers are used.
 func (coin DecCoin) IsNegative() bool {
-	return coin.Amount.Sign() == -1
+	return coin.Amount.i.Sign() == -1
 }
 
 // String implements the Stringer interface for DecCoin. It returns a
@@ -149,6 +141,17 @@ func (coin DecCoin) IsValid() bool {
 		return false
 	}
 	return !coin.IsNegative()
+}
+
+// MarshalYAML implements custom YAML marshaling for the DecCoin type. It omits
+// all proto fields.
+func (coin DecCoin) MarshalYAML() (interface{}, error) {
+	bz, err := yaml.Marshal(struct {
+		Denom  string `json:"denom,omitempty" yaml:"denom,omitempty"`
+		Amount Dec    `json:"amount" yaml:"amount"`
+	}{coin.Denom, coin.Amount})
+
+	return string(bz), err
 }
 
 // ----------------------------------------------------------------------------

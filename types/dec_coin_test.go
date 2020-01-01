@@ -1,10 +1,14 @@
 package types
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
+	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestNewDecCoin(t *testing.T) {
@@ -85,9 +89,9 @@ func TestAddDecCoins(t *testing.T) {
 		inputTwo DecCoins
 		expected DecCoins
 	}{
-		{DecCoins{{testDenom1, one}, {testDenom2, one}}, DecCoins{{testDenom1, one}, {testDenom2, one}}, DecCoins{{testDenom1, two}, {testDenom2, two}}},
-		{DecCoins{{testDenom1, zero}, {testDenom2, one}}, DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins{{testDenom2, one}}},
-		{DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins{{testDenom1, zero}, {testDenom2, zero}}, DecCoins(nil)},
+		{DecCoins{{Denom: testDenom1, Amount: one}, {Denom: testDenom2, Amount: one}}, DecCoins{{Denom: testDenom1, Amount: one}, {Denom: testDenom2, Amount: one}}, DecCoins{{Denom: testDenom1, Amount: two}, {Denom: testDenom2, Amount: two}}},
+		{DecCoins{{Denom: testDenom1, Amount: zero}, {Denom: testDenom2, Amount: one}}, DecCoins{{Denom: testDenom1, Amount: zero}, {Denom: testDenom2, Amount: zero}}, DecCoins{{Denom: testDenom2, Amount: one}}},
+		{DecCoins{{Denom: testDenom1, Amount: zero}, {Denom: testDenom2, Amount: zero}}, DecCoins{{Denom: testDenom1, Amount: zero}, {Denom: testDenom2, Amount: zero}}, DecCoins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -256,14 +260,14 @@ func TestDecCoinsIsValid(t *testing.T) {
 		expected bool
 	}{
 		{DecCoins{}, true},
-		{DecCoins{DecCoin{testDenom1, NewDec(5)}}, true},
-		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, true},
-		{DecCoins{DecCoin{testDenom1, NewDec(-5)}}, false},
-		{DecCoins{DecCoin{"AAA", NewDec(5)}}, false},
-		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{testDenom1, NewDec(5)}, DecCoin{testDenom2, NewDec(-100000)}}, false},
-		{DecCoins{DecCoin{testDenom1, NewDec(-5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"AAA", NewDec(5)}, DecCoin{testDenom2, NewDec(100000)}}, false},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(5)}}, true},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(5)}, DecCoin{Denom: testDenom2, Amount: NewDec(100000)}}, true},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(-5)}}, false},
+		{DecCoins{DecCoin{Denom: "AAA", Amount: NewDec(5)}}, false},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(5)}, DecCoin{Denom: "B", Amount: NewDec(100000)}}, false},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(5)}, DecCoin{Denom: testDenom2, Amount: NewDec(-100000)}}, false},
+		{DecCoins{DecCoin{Denom: testDenom1, Amount: NewDec(-5)}, DecCoin{Denom: testDenom2, Amount: NewDec(100000)}}, false},
+		{DecCoins{DecCoin{Denom: "AAA", Amount: NewDec(5)}, DecCoin{Denom: testDenom2, Amount: NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {
@@ -419,5 +423,53 @@ func TestDecCoinsQuoDecTruncate(t *testing.T) {
 			res := tc.coins.QuoDecTruncate(tc.input)
 			require.Equal(t, tc.result, res, "unexpected result; tc #%d, coins: %s, input: %s", i, tc.coins, tc.input)
 		}
+	}
+}
+
+func TestDecCoinEncoding(t *testing.T) {
+	testCases := []struct {
+		input   DecCoin
+		rawBz   string
+		jsonStr string
+		yamlStr string
+	}{
+		{
+			DecCoin{},
+			"120130",
+			"{\"amount\":\"0.000000000000000000\"}",
+			"|\n  amount: \"0.000000000000000000\"\n",
+		},
+		{
+			DecCoin{Denom: "test", Amount: NewDec(0)},
+			"0A0474657374120130",
+			"{\"denom\":\"test\",\"amount\":\"0.000000000000000000\"}",
+			"|\n  denom: test\n  amount: \"0.000000000000000000\"\n",
+		},
+		{
+			NewDecCoinFromDec("test", NewDecWithPrec(4, 2)),
+			"0A047465737412113430303030303030303030303030303030",
+			"{\"denom\":\"test\",\"amount\":\"0.040000000000000000\"}",
+			"|\n  denom: test\n  amount: \"0.040000000000000000\"\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		bz, err := proto.Marshal(&tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.rawBz, fmt.Sprintf("%X", bz))
+
+		var other DecCoin
+		require.NoError(t, proto.Unmarshal(bz, &other))
+		require.True(t, tc.input.IsEqual(other))
+
+		bz, err = json.Marshal(tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.jsonStr, string(bz))
+		require.NoError(t, json.Unmarshal(bz, &other))
+		require.True(t, tc.input.IsEqual(other))
+
+		bz, err = yaml.Marshal(tc.input)
+		require.NoError(t, err)
+		require.Equal(t, tc.yamlStr, string(bz))
 	}
 }

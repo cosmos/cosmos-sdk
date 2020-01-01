@@ -64,28 +64,6 @@ func unmarshalText(i *big.Int, text string) error {
 	return nil
 }
 
-// MarshalJSON for custom encoding scheme
-// Must be encoded as a string for JSON precision
-func marshalJSON(i *big.Int) ([]byte, error) {
-	text, err := i.MarshalText()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(string(text))
-}
-
-// UnmarshalJSON for custom decoding scheme
-// Must be encoded as a string for JSON precision
-func unmarshalJSON(i *big.Int, bz []byte) error {
-	var text string
-	err := json.Unmarshal(bz, &text)
-	if err != nil {
-		return err
-	}
-
-	return unmarshalText(i, text)
-}
-
 var _ CustomProtoType = (*Int)(nil)
 
 // Int wraps integer with 256 bit range bound
@@ -327,12 +305,31 @@ func (i *Int) UnmarshalJSON(bz []byte) error {
 	return unmarshalJSON(i.i, bz)
 }
 
-// MarshalYAML returns the YAML representation.
-func (i Int) MarshalYAML() (interface{}, error) { return i.String(), nil }
+// MarshalJSON for custom encoding scheme
+// Must be encoded as a string for JSON precision
+func marshalJSON(i *big.Int) ([]byte, error) {
+	text, err := i.MarshalText()
+	if err != nil {
+		return nil, err
+	}
 
-// intended to be used with require/assert:  require.True(IntEq(...))
-func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+	return json.Marshal(string(text))
+}
+
+// UnmarshalJSON for custom decoding scheme
+// Must be encoded as a string for JSON precision
+func unmarshalJSON(i *big.Int, bz []byte) error {
+	var text string
+	if err := json.Unmarshal(bz, &text); err != nil {
+		return err
+	}
+
+	return unmarshalText(i, text)
+}
+
+// MarshalYAML returns the YAML representation.
+func (i Int) MarshalYAML() (interface{}, error) {
+	return i.String(), nil
 }
 
 // Marshal implements the gogo proto custom type interface.
@@ -393,4 +390,9 @@ func (i *Int) Size() int {
 // Compare implements the gogo proto custom type interface.
 func (i Int) Compare(other Int) int {
 	return i.i.Cmp(other.i)
+}
+
+// intended to be used with require/assert:  require.True(IntEq(...))
+func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

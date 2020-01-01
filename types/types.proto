@@ -18,3 +18,8 @@ message Coin {
   string denom = 1;
   bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
+
+message DecCoin {
+  string denom = 1;
+  bytes amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
+}

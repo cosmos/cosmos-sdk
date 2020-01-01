@@ -10,6 +10,11 @@ option (gogoproto.sizer_all) = true;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// TODO:
+// 
+// 2. Msg
+// 3. Tx
+
 // Coin defines a token with a denomination and an amount.
 //
 // NOTE: The amount field is an Int which implements the custom method
@@ -19,6 +24,10 @@ message Coin {
   bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
 
+// DecCoin defines a token with a denomination and a decimal amount.
+//
+// NOTE: The amount field is an Dec which implements the custom method
+// signatures required by gogoproto.
 message DecCoin {
   string denom = 1;
   bytes amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];

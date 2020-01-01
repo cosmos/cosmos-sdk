@@ -387,11 +387,6 @@ func (i *Int) Size() int {
 	return len(bz)
 }
 
-// Compare implements the gogo proto custom type interface.
-func (i Int) Compare(other Int) int {
-	return i.i.Cmp(other.i)
-}
-
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()

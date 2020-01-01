@@ -15,7 +15,7 @@ var _ CustomProtoType = (*Dec)(nil)
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int
 type Dec struct {
-	i *big.Int `json:"int"`
+	i *big.Int
 }
 
 // number of decimal places

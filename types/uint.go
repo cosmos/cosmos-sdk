@@ -192,11 +192,6 @@ func (u *Uint) Size() int {
 	return len(bz)
 }
 
-// Compare implements the gogo proto custom type interface.
-func (u Uint) Compare(other Int) int {
-	return u.i.Cmp(other.i)
-}
-
 //__________________________________________________________________________
 
 // UintOverflow returns true if a given unsigned integer overflows and false

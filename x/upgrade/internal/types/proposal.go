@@ -3,14 +3,12 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 )
 
 const (
-	ProposalTypeSoftwareUpgrade       string            = "SoftwareUpgrade"
-	ProposalTypeCancelSoftwareUpgrade string            = "CancelSoftwareUpgrade"
-	DefaultCodespace                  sdk.CodespaceType = "upgrade"
+	ProposalTypeSoftwareUpgrade       string = "SoftwareUpgrade"
+	ProposalTypeCancelSoftwareUpgrade string = "CancelSoftwareUpgrade"
 )
 
 // Software Upgrade Proposals
@@ -39,11 +37,11 @@ func (sup SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
 func (sup SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
 func (sup SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
 func (sup SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
-func (sup SoftwareUpgradeProposal) ValidateBasic() sdk.Error {
+func (sup SoftwareUpgradeProposal) ValidateBasic() error {
 	if err := sup.Plan.ValidateBasic(); err != nil {
 		return err
 	}
-	return gov.ValidateAbstract(DefaultCodespace, sup)
+	return gov.ValidateAbstract(sup)
 }
 
 func (sup SoftwareUpgradeProposal) String() string {
@@ -73,8 +71,8 @@ func (sup CancelSoftwareUpgradeProposal) ProposalRoute() string  { return Router
 func (sup CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
-func (sup CancelSoftwareUpgradeProposal) ValidateBasic() sdk.Error {
-	return gov.ValidateAbstract(DefaultCodespace, sup)
+func (sup CancelSoftwareUpgradeProposal) ValidateBasic() error {
+	return gov.ValidateAbstract(sup)
 }
 
 func (sup CancelSoftwareUpgradeProposal) String() string {

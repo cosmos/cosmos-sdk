@@ -1,19 +1,19 @@
 package staking
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
@@ -33,8 +33,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgUndelegate(ctx, msg, k)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized staking message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
@@ -42,30 +41,31 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
-func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
+func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, msg.ValidatorAddress); found {
-		return ErrValidatorOwnerExists(k.Codespace()).Result()
+		return nil, ErrValidatorOwnerExists
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
-		return ErrValidatorPubKeyExists(k.Codespace()).Result()
+		return nil, ErrValidatorPubKeyExists
 	}
 
 	if msg.Value.Denom != k.BondDenom(ctx) {
-		return ErrBadDenom(k.Codespace()).Result()
+		return nil, ErrBadDenom
 	}
 
 	if _, err := msg.Description.EnsureLength(); err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	if ctx.ConsensusParams() != nil {
 		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
 		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
-			return ErrValidatorPubKeyTypeNotSupported(k.Codespace(),
-				tmPubKey.Type,
-				ctx.ConsensusParams().Validator.PubKeyTypes).Result()
+			return nil, sdkerrors.Wrapf(
+				ErrValidatorPubKeyTypeNotSupported,
+				"got: %s, valid: %s", tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes,
+			)
 		}
 	}
 
@@ -76,7 +76,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	)
 	validator, err := validator.SetInitialCommission(commission)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	validator.MinSelfDelegation = msg.MinSelfDelegation
@@ -93,7 +93,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	// NOTE source will always be from a wallet which are unbonded
 	_, err = k.Delegate(ctx, msg.DelegatorAddress, msg.Value.Amount, sdk.Unbonded, validator, true)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -109,20 +109,20 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) sdk.Result {
+func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keeper.Keeper) (*sdk.Result, error) {
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
-		return ErrNoValidatorFound(k.Codespace()).Result()
+		return nil, ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
 	description, err := validator.Description.UpdateDescription(msg.Description)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	validator.Description = description
@@ -130,7 +130,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	if msg.CommissionRate != nil {
 		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
 		if err != nil {
-			return err.Result()
+			return nil, err
 		}
 
 		// call the before-modification hook since we're about to update the commission
@@ -141,11 +141,12 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return ErrMinSelfDelegationDecreased(k.Codespace()).Result()
+			return nil, ErrMinSelfDelegationDecreased
 		}
 		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return ErrSelfDelegationBelowMinimum(k.Codespace()).Result()
+			return nil, ErrSelfDelegationBelowMinimum
 		}
+
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
 	}
 
@@ -164,23 +165,23 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) sdk.Result {
+func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) (*sdk.Result, error) {
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddress)
 	if !found {
-		return ErrNoValidatorFound(k.Codespace()).Result()
+		return nil, ErrNoValidatorFound
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return ErrBadDenom(k.Codespace()).Result()
+		return nil, ErrBadDenom
 	}
 
 	// NOTE: source funds are always unbonded
 	_, err := k.Delegate(ctx, msg.DelegatorAddress, msg.Amount.Amount, sdk.Unbonded, validator, true)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -196,24 +197,24 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) sdk.Result {
+func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorAddress, msg.Amount.Amount,
 	)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return ErrBadDenom(k.Codespace()).Result()
+		return nil, ErrBadDenom
 	}
 
 	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddress, msg.ValidatorAddress, shares)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
@@ -231,26 +232,26 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 		),
 	})
 
-	return sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().Events()}
+	return &sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
+func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) (*sdk.Result, error) {
 	shares, err := k.ValidateUnbondAmount(
 		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.Amount.Amount,
 	)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
-		return ErrBadDenom(k.Codespace()).Result()
+		return nil, ErrBadDenom
 	}
 
 	completionTime, err := k.BeginRedelegation(
 		ctx, msg.DelegatorAddress, msg.ValidatorSrcAddress, msg.ValidatorDstAddress, shares,
 	)
 	if err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	completionTimeBz := types.ModuleCdc.MustMarshalBinaryLengthPrefixed(completionTime)
@@ -269,5 +270,5 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		),
 	})
 
-	return sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().Events()}
+	return &sdk.Result{Data: completionTimeBz, Events: ctx.EventManager().Events()}, nil
 }

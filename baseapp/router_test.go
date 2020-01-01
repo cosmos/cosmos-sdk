@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var testHandler = func(_ sdk.Context, _ sdk.Msg) sdk.Result {
-	return sdk.Result{}
+var testHandler = func(_ sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
+	return &sdk.Result{}, nil
 }
 
 func TestRouter(t *testing.T) {

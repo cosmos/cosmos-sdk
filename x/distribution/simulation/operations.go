@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 
@@ -109,9 +108,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, k keeper.Keeper) simu
 			simAccount.PrivKey,
 		)
 
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		_, _, err = app.Deliver(tx)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -155,9 +154,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, k keeper.Keeper,
 			simAccount.PrivKey,
 		)
 
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		_, _, err = app.Deliver(tx)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -204,9 +203,9 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, k keeper.Kee
 			simAccount.PrivKey,
 		)
 
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		_, _, err = app.Deliver(tx)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil
@@ -254,9 +253,9 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, k keeper.Keeper, sk st
 			funder.PrivKey,
 		)
 
-		res := app.Deliver(tx)
-		if !res.IsOK() {
-			return simulation.NoOpMsg(types.ModuleName), nil, errors.New(res.Log)
+		_, _, err = app.Deliver(tx)
+		if err != nil {
+			return simulation.NoOpMsg(types.ModuleName), nil, err
 		}
 
 		return simulation.NewOperationMsg(msg, true, ""), nil, nil

@@ -221,6 +221,11 @@ func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
 	return app.initFromMainStore(baseKey)
 }
 
+// WithRouter adds a new custom Router definition to the BaseApp
+func (app *BaseApp) WithRouter(rtr sdk.Router) {
+	app.router = rtr
+}
+
 // DefaultStoreLoader will be used by default and loads the latest version
 func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
@@ -654,7 +659,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		msgRoute := msg.Route()
-		handler := app.router.Route(msgRoute)
+		handler := app.router.Route(ctx, msgRoute)
 		if handler == nil {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 		}

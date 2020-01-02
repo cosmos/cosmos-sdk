@@ -43,7 +43,7 @@ func testComponents() (*codec.Codec, sdk.Context, sdk.StoreKey, sdk.StoreKey, Ke
 	mkey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(mkey, tkey)
-	keeper := NewKeeper(cdc, mkey, tkey, DefaultCodespace)
+	keeper := NewKeeper(cdc, mkey, tkey)
 
 	return cdc, ctx, mkey, tkey, keeper
 }

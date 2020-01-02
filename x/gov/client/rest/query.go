@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -382,7 +381,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		// as they're no longer in state.
 		propStatus := proposal.Status
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params, utils.QueryTxsByEvents)
+			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 		} else {
 			res, _, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		}

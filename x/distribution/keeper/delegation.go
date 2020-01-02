@@ -136,10 +136,10 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val exported.Validat
 	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI) (sdk.Coins, sdk.Error) {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return nil, types.ErrNoDelegationDistInfo(k.codespace)
+		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// end current period and calculate rewards

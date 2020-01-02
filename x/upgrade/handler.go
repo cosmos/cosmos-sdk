@@ -1,9 +1,8 @@
 package upgrade
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -11,7 +10,7 @@ import (
 // It enables SoftwareUpgradeProposal to propose an Upgrade, and CancelSoftwareUpgradeProposal
 // to abort a previously voted upgrade.
 func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
+	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case SoftwareUpgradeProposal:
 			return handleSoftwareUpgradeProposal(ctx, k, c)
@@ -20,17 +19,16 @@ func NewSoftwareUpgradeProposalHandler(k Keeper) govtypes.Handler {
 			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized software upgrade proposal content type: %T", c)
-			return sdk.ErrUnknownRequest(errMsg)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized software upgrade proposal content type: %T", c)
 		}
 	}
 }
 
-func handleSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p SoftwareUpgradeProposal) sdk.Error {
+func handleSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p SoftwareUpgradeProposal) error {
 	return k.ScheduleUpgrade(ctx, p.Plan)
 }
 
-func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p CancelSoftwareUpgradeProposal) sdk.Error {
+func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k Keeper, p CancelSoftwareUpgradeProposal) error {
 	k.ClearUpgradePlan(ctx)
 	return nil
 }

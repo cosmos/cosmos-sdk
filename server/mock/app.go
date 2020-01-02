@@ -2,6 +2,7 @@ package mock
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -49,10 +50,10 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
 // them to the db
 func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(kvstoreTx)
 		if !ok {
-			panic("KVStoreHandler should only receive kvstoreTx")
+			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
 		}
 
 		// tx is already unmarshalled
@@ -62,10 +63,9 @@ func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
 		store := ctx.KVStore(storeKey)
 		store.Set(key, value)
 
-		return sdk.Result{
-			Code: 0,
-			Log:  fmt.Sprintf("set %s=%s", key, value),
-		}
+		return &sdk.Result{
+			Log: fmt.Sprintf("set %s=%s", key, value),
+		}, nil
 	}
 }
 

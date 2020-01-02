@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -50,8 +50,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Querying commands for the msg_authorization module",
 	}
 	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetPlanCmd(StoreKey, cdc),
-		cli.GetAppliedHeightCmd(StoreKey, cdc),
+		cli.GetCmdQueryAuthorization(StoreKey, cdc),
 	)...)
 
 	return queryCmd
@@ -63,7 +62,11 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "msg_auth",
 		Short: "msg_auth transaction subcommands",
 	}
-	txCmd.AddCommand(flags.PostCommands()...)
+	txCmd.AddCommand(flags.PostCommands(
+		cli.GetCmdGrantAuthorization(cdc),
+		cli.GetCmdRevokeAuthorization(cdc),
+		cli.GetCmdSendAs(cdc),
+	)...)
 	return txCmd
 }
 

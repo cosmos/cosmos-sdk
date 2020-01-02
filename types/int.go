@@ -189,7 +189,7 @@ func (i Int) IsInt64() bool {
 // Panics if the value is out of range
 func (i Int) Uint64() uint64 {
 	if !i.i.IsUint64() {
-		panic("Int64() out of bound")
+		panic("Uint64() out of bounds")
 	}
 	return i.i.Uint64()
 }

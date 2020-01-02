@@ -25,7 +25,7 @@ func QueryPacket(
 		return types.PacketResponse{}, err
 	}
 
-	channel, err := QueryChannel(ctx, portID, channelID, "ibc", true)
+	channel, err := QueryChannel(ctx, portID, channelID, true)
 	if err != nil {
 		return packetRes, err
 	}
@@ -57,7 +57,7 @@ func QueryPacket(
 }
 
 // QueryChannel returns a channel from the store
-func QueryChannel(ctx client.CLIContext, portID string, channelID string, queryRoute string, prove bool) (types.ChannelResponse, error) {
+func QueryChannel(ctx client.CLIContext, portID string, channelID string, prove bool) (types.ChannelResponse, error) {
 	var connRes types.ChannelResponse
 
 	req := abci.RequestQuery{

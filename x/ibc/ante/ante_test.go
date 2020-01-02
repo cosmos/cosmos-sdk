@@ -1,4 +1,4 @@
-package channel_test
+package ante_test
 
 import (
 	"fmt"

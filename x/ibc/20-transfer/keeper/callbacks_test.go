@@ -1,6 +1,6 @@
 package keeper_test
 
-// XXX: move to 04-channel after CheckOpen
+// TODO: move to 04-channel after CheckOpen implementation in the following PR
 /*
 func (suite *KeeperTestSuite) TestOnChanOpenInit() {
 	invalidOrder := channel.ORDERED

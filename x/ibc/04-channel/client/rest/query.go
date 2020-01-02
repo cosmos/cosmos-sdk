@@ -39,7 +39,7 @@ func queryChannelHandlerFn(cliCtx context.CLIContext, queryRoute string) http.Ha
 			return
 		}
 
-		channelRes, err := utils.QueryChannel(cliCtx, portID, channelID, queryRoute, prove)
+		channelRes, err := utils.QueryChannel(cliCtx, portID, channelID, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

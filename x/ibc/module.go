@@ -118,8 +118,6 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	// check if the IBC transfer module account is set
-	// XXX: move to transfer
-	// transfer.InitGenesis(ctx, am.keeper.TransferKeeper)
 	return []abci.ValidatorUpdate{}
 }
 

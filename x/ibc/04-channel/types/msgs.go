@@ -46,7 +46,7 @@ func (msg MsgChannelOpenInit) Type() string {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
-	if err := host.DefaultConnectionIdentifierValidator(msg.PortID); err != nil {
+	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
 		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
 	}
 	if err := host.DefaultClientIdentifierValidator(msg.ChannelID); err != nil {

@@ -84,7 +84,6 @@ func (AppModule) QuerierRoute() string {
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	//	return NewQuerier(am.keeper)
 	return nil
 }
 

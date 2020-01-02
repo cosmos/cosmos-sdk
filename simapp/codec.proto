@@ -9,7 +9,7 @@ import "x/auth/types/codec.proto";
 
 message Tx {
     cosmos_sdk.StdTxBase base = 1;
-    Msg msg = 2;
+    repeated Msg msg = 2;
 }
 
 message Msg {

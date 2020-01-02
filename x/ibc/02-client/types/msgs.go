@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -51,8 +53,10 @@ func (msg MsgCreateClient) ValidateBasic() sdk.Error {
 	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
 		return sdk.ConvertError(err)
 	}
-	if _, err := exported.ClientTypeFromString(msg.ClientType); err != nil {
-		return sdk.ConvertError(errors.ErrInvalidClientType(errors.DefaultCodespace, err.Error()))
+	if clientType := exported.ClientTypeFromString(msg.ClientType); clientType == 0 {
+		return sdk.ConvertError(
+			errors.ErrInvalidClientType(errors.DefaultCodespace, fmt.Sprintf("invalid client type '%s'", msg.ClientType)),
+		)
 	}
 	if msg.ConsensusState == nil {
 		return sdk.ConvertError(errors.ErrInvalidConsensus(errors.DefaultCodespace))

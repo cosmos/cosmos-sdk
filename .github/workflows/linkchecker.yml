@@ -1,0 +1,11 @@
+name: Check links
+on: [pull_request]
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Link Checker
+      uses: peter-evans/link-checker@v1
+      with:
+        args: -v -r *

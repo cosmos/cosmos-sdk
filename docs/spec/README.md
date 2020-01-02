@@ -23,4 +23,4 @@ Go the [module directory](../../x/README.md)
 ## Tendermint
 
 For details on the underlying blockchain and p2p protocols, see
-the [Tendermint specification](https://github.com/tendermint/tendermint/tree/master/docs/spec).
+the [Tendermint specification](https://github.com/tendermint/spec/tree/master/spec).

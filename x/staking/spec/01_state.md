@@ -33,7 +33,7 @@ Validators can have one of three statuses
 - `Unbonded`: The validator is not in the active set. They cannot sign blocks and do not earn
   rewards. They can receive delegations.
 - `Bonded`": Once the validator receives sufficient bonded tokens they automtically join the
-  active set during [`EndBlock`](./04_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
+  active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
   must wait the duration of the UnbondingTime, a chain-specific param. during which time
@@ -73,7 +73,7 @@ ConsensusPower is validator.Tokens/10^6.  Note that all validators where
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
-is updated during the validator set update process which takes place in [`EndBlock`](./04_end_block.md).
+is updated during the validator set update process which takes place in [`EndBlock`](./05_end_block.md).
 
 Each validator's state is stored in a `Validator` struct:
 

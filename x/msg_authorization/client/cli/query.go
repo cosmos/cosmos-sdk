@@ -31,11 +31,12 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 // GetCmdQueryAuthorization implements the query authorizations command.
 func GetCmdQueryAuthorization(storeName string, cdc *codec.Codec) *cobra.Command {
+	//TODO update description
 	return &cobra.Command{
-		Use:   "",
+		Use:   "authorization",
 		Args:  cobra.ExactArgs(3),
-		Short: "",
-		Long:  "",
+		Short: "query authorzation for a granter-grantee pair",
+		Long:  "query authorzation for a granter-grantee pair",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
@@ -37,15 +38,15 @@ func (msg MsgGrantAuthorization) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgGrantAuthorization) ValidateBasic() sdk.Error {
+func (msg MsgGrantAuthorization) ValidateBasic() error {
 	if msg.Granter.Empty() {
-		return ErrInvalidGranter(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee.Empty() {
-		return ErrInvalidGrantee(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	if msg.Expiration.Unix() < time.Now().Unix() {
-		return ErrInvalidExpirationTime(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidGranter, "Time can't be in the past")
 	}
 
 	return nil
@@ -81,12 +82,12 @@ func (msg MsgRevokeAuthorization) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgRevokeAuthorization) ValidateBasic() sdk.Error {
+func (msg MsgRevokeAuthorization) ValidateBasic() error {
 	if msg.Granter.Empty() {
-		return sdk.ErrInvalidAddress(msg.Granter.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing granter address")
 	}
 	if msg.Grantee.Empty() {
-		return sdk.ErrInvalidAddress(msg.Grantee.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	return nil
 }
@@ -118,9 +119,9 @@ func (msg MsgExecDelegated) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgExecDelegated) ValidateBasic() sdk.Error {
+func (msg MsgExecDelegated) ValidateBasic() error {
 	if msg.Grantee.Empty() {
-		return sdk.ErrInvalidAddress(msg.Grantee.String())
+		return sdkerrors.Wrap(ErrInvalidGranter, "missing grantee address")
 	}
 	return nil
 }

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package types;
+package cosmos_sdk.v1;
 
 option go_package = "types";
 option (gogoproto.goproto_stringer_all) = false;

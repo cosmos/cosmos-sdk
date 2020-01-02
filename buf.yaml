@@ -10,8 +10,8 @@ lint:
     - FILE_LOWER_SNAKE_CASE
   except:
     - UNARY_RPC
-    - PACKAGE_VERSION_SUFFIX
     - COMMENT_FIELD
+    - PACKAGE_DIRECTORY_MATCH
   ignore:
     - vendor
 breaking:

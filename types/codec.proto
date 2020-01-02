@@ -16,6 +16,8 @@ import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 // signatures required by gogoproto.
 message Coin {
   string denom = 1;
+  // TODO: Consider using a string instead of bytes. This would require gogo proto
+  // to support types other than bytes for the customtype extension.  
   bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
 
@@ -25,5 +27,7 @@ message Coin {
 // signatures required by gogoproto.
 message DecCoin {
   string denom = 1;
+  // TODO: Consider using a string instead of bytes. This would require gogo proto
+  // to support types other than bytes for the customtype extension.
   bytes amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
 }

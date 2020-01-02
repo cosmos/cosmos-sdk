@@ -82,23 +82,23 @@ func (ct *ClientType) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	bz2, err := ClientTypeFromString(s)
-	if err != nil {
-		return err
+	clientType := ClientTypeFromString(s)
+	if clientType == 0 {
+		return fmt.Errorf("invalid client type '%s'", s)
 	}
 
-	*ct = bz2
+	*ct = clientType
 	return nil
 }
 
 // ClientTypeFromString returns a byte that corresponds to the registered client
 // type. It returns 0 if the type is not found/registered.
-func ClientTypeFromString(clientType string) (ClientType, error) {
+func ClientTypeFromString(clientType string) ClientType {
 	switch clientType {
 	case ClientTypeTendermint:
-		return Tendermint, nil
+		return Tendermint
 
 	default:
-		return 0, fmt.Errorf("'%s' is not a valid client type", clientType)
+		return 0
 	}
 }

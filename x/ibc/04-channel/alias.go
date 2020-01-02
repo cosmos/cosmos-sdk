@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	NONE                           = types.NONE
+	UNINITIALIZED                  = types.UNINITIALIZED
 	UNORDERED                      = types.UNORDERED
 	ORDERED                        = types.ORDERED
 	OrderNone                      = types.OrderNone
@@ -20,12 +20,13 @@ const (
 	OrderOrdered                   = types.OrderOrdered
 	CLOSED                         = types.CLOSED
 	INIT                           = types.INIT
-	OPENTRY                        = types.OPENTRY
+	TRYOPEN                        = types.TRYOPEN
 	OPEN                           = types.OPEN
-	StateClosed                    = types.StateClosed
+	StateUninitialized             = types.StateUninitialized
 	StateInit                      = types.StateInit
-	StateOpenTry                   = types.StateOpenTry
+	StateTryOpen                   = types.StateTryOpen
 	StateOpen                      = types.StateOpen
+	StateClosed                    = types.StateClosed
 	DefaultCodespace               = types.DefaultCodespace
 	CodeChannelExists              = types.CodeChannelExists
 	CodeChannelNotFound            = types.CodeChannelNotFound

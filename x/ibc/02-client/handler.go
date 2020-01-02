@@ -12,12 +12,14 @@ import (
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
-	clientType, err := exported.ClientTypeFromString(msg.ClientType)
-	if err != nil {
-		return sdk.ResultFromError(ErrInvalidClientType(DefaultCodespace, err.Error()))
+	clientType := exported.ClientTypeFromString(msg.ClientType)
+	if clientType == 0 {
+		return sdk.ResultFromError(
+			ErrInvalidClientType(DefaultCodespace, fmt.Sprintf("invalid client type '%s'", msg.ClientType)),
+		)
 	}
 
-	_, err = k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
+	_, err := k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
 	if err != nil {
 		return sdk.ResultFromError(err)
 	}

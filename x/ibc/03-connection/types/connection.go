@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -72,7 +71,7 @@ type State byte
 
 // available connection states
 const (
-	NONE State = iota // default State
+	UNINITIALIZED State = iota // default State
 	INIT
 	TRYOPEN
 	OPEN
@@ -80,17 +79,15 @@ const (
 
 // string representation of the connection states
 const (
-	StateNone    string = "NONE"
-	StateInit    string = "INIT"
-	StateTryOpen string = "TRYOPEN"
-	StateOpen    string = "OPEN"
+	StateUninitialized string = "UNINITIALIZED"
+	StateInit          string = "INIT"
+	StateTryOpen       string = "TRYOPEN"
+	StateOpen          string = "OPEN"
 )
 
 // String implements the Stringer interface
 func (cs State) String() string {
 	switch cs {
-	case NONE:
-		return StateNone
 	case INIT:
 		return StateInit
 	case TRYOPEN:
@@ -98,23 +95,21 @@ func (cs State) String() string {
 	case OPEN:
 		return StateOpen
 	default:
-		return ""
+		return StateUninitialized
 	}
 }
 
 // StateFromString parses a string into a connection state
-func StateFromString(state string) (State, error) {
+func StateFromString(state string) State {
 	switch state {
-	case StateNone:
-		return NONE, nil
 	case StateInit:
-		return INIT, nil
+		return INIT
 	case StateTryOpen:
-		return TRYOPEN, nil
+		return TRYOPEN
 	case StateOpen:
-		return OPEN, nil
+		return OPEN
 	default:
-		return NONE, fmt.Errorf("'%s' is not a valid connection state", state)
+		return UNINITIALIZED
 	}
 }
 
@@ -131,11 +126,6 @@ func (cs *State) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	bz2, err := StateFromString(s)
-	if err != nil {
-		return err
-	}
-
-	*cs = bz2
+	*cs = StateFromString(s)
 	return nil
 }

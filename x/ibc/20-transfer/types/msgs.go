@@ -107,21 +107,17 @@ func (msg MsgRecvPacket) ValidateBasic() error {
 	if msg.Height == 0 {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "height must be > 0")
 	}
-
 	if msg.Proofs == nil || len(msg.Proofs) == 0 {
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "missing proof")
 	}
-
 	for _, proof := range msg.Proofs {
 		if err := proof.ValidateBasic(); err != nil {
 			return err
 		}
 	}
-
 	if msg.Signer.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-
 	return msg.Packet.ValidateBasic()
 }
 

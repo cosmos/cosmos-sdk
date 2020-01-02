@@ -133,7 +133,7 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	if msg.ProofInit == nil {
+	if msg.ProofInit == nil || msg.ProofConsensus == nil {
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
@@ -213,6 +213,9 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if strings.TrimSpace(msg.Version) == "" {
 		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 	}
+	if msg.ProofTry == nil || msg.ProofConsensus == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
 	if err := msg.ProofTry.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
@@ -278,6 +281,9 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
+	}
+	if msg.ProofAck == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
 	}
 	if err := msg.ProofAck.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof ack cannot be nil")

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -14,7 +15,7 @@ import (
 func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk.Result, error) {
 	clientType := exported.ClientTypeFromString(msg.ClientType)
 	if clientType == 0 {
-		return nil, ErrInvalidClientType(DefaultCodespace, fmt.Sprintf("invalid client type %s", msg.ClientType))
+		return nil, sdkerrors.Wrap(ErrInvalidClientType, msg.ClientType)
 	}
 
 	_, err := k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)

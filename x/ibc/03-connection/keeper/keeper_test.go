@@ -105,7 +105,7 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 	}
 
 	conn3 := types.ConnectionEnd{
-		State:        types.NONE,
+		State:        types.UNINITIALIZED,
 		ClientID:     testClientID3,
 		Counterparty: counterparty2,
 		Versions:     types.GetCompatibleVersions(),

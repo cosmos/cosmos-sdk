@@ -46,7 +46,7 @@ func (k Keeper) ChanOpenInit(
 		return connection.ErrConnectionNotFound(k.codespace, connectionHops[0])
 	}
 
-	if connectionEnd.State == connection.NONE {
+	if connectionEnd.State == connection.UNINITIALIZED {
 		return connection.ErrInvalidConnectionState(
 			k.codespace,
 			fmt.Sprintf("connection state cannot be NONE"),
@@ -112,7 +112,7 @@ func (k Keeper) ChanOpenTry(
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(types.OPENTRY, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -200,7 +200,7 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.OPENTRY, channel.Ordering, counterparty,
+		types.TRYOPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
@@ -238,7 +238,7 @@ func (k Keeper) ChanOpenConfirm(
 		return types.ErrChannelNotFound(k.codespace, portID, channelID)
 	}
 
-	if channel.State != types.OPENTRY {
+	if channel.State != types.TRYOPEN {
 		return types.ErrInvalidChannelState(
 			k.codespace,
 			fmt.Sprintf("channel state is not OPENTRY (got %s)", channel.State.String()),

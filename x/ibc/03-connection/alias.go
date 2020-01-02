@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	NONE                              = types.NONE
+	UNINITIALIZED                     = types.UNINITIALIZED
 	INIT                              = types.INIT
 	TRYOPEN                           = types.TRYOPEN
 	OPEN                              = types.OPEN
-	StateNone                         = types.StateNone
+	StateUninitialized                = types.StateUninitialized
 	StateInit                         = types.StateInit
 	StateTryOpen                      = types.StateTryOpen
 	StateOpen                         = types.StateOpen

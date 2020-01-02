@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
@@ -21,7 +22,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	authorizationQueryCmd.AddCommand(client.GetCommands(
+	authorizationQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryAuthorization(queryRoute, cdc),
 	)...)
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -26,10 +27,10 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	AuthorizationTxCmd.AddCommand(client.PostCommands(
+	AuthorizationTxCmd.AddCommand(flags.PostCommands(
 		GetCmdGrantAuthorization(cdc),
 		GetCmdRevokeAuthorization(cdc),
-		//GetCmdSendAs(cdc),
+		GetCmdSendAs(cdc),
 	)...)
 
 	return AuthorizationTxCmd
@@ -111,7 +112,7 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func GetCmdTxSendAs(cdc *codec.Codec) *cobra.Command {
+func GetCmdSendAs(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send-as [granter] [msg_tx_json] --from [grantee]",
 		Short: "execute tx on behalf of granter account",

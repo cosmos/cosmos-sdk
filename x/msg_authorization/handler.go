@@ -1,14 +1,13 @@
 package msg_authorization
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
 		case MsgGrantAuthorization:
@@ -18,13 +17,12 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgExecDelegated:
 			return handleMsgExecDelegated(ctx, msg, k)
 		default:
-			errMsg := fmt.Sprintf("unrecognized authorization message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized authorization message type: %T", msg)
 		}
 	}
 }
 
-func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k Keeper) sdk.Result {
+func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k Keeper) (*sdk.Result, error) {
 	k.Grant(ctx, msg.Grantee, msg.Granter, msg.Authorization, msg.Expiration)
 
 	ctx.EventManager().EmitEvent(
@@ -35,10 +33,10 @@ func handleMsgGrantAuthorization(ctx sdk.Context, msg MsgGrantAuthorization, k K
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) sdk.Result {
+func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k Keeper) (*sdk.Result, error) {
 	k.Revoke(ctx, msg.Grantee, msg.Granter, msg.AuthorizationMsgType)
 
 	ctx.EventManager().EmitEvent(
@@ -49,9 +47,9 @@ func handleMsgRevokeAuthorization(ctx sdk.Context, msg MsgRevokeAuthorization, k
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
-func handleMsgExecDelegated(ctx sdk.Context, msg MsgExecDelegated, k Keeper) sdk.Result {
+func handleMsgExecDelegated(ctx sdk.Context, msg MsgExecDelegated, k Keeper) (*sdk.Result, error) {
 	return k.DispatchActions(ctx, msg.Grantee, msg.Msgs)
 }

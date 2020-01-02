@@ -11,14 +11,10 @@ import (
 )
 
 const (
-	DefaultCodespace          = types.DefaultCodespace
-	CodeInvalidGranter        = types.CodeInvalidGranter
-	CodeInvalidGrantee        = types.CodeInvalidGrantee
-	CodeInvalidExpirationTime = types.CodeInvalidExpirationTime
-	ModuleName                = types.ModuleName
-	StoreKey                  = types.StoreKey
-	RouterKey                 = types.RouterKey
-	QuerierRoute              = types.QuerierRoute
+	ModuleName   = types.ModuleName
+	StoreKey     = types.StoreKey
+	RouterKey    = types.RouterKey
+	QuerierRoute = types.QuerierRoute
 )
 
 var (
@@ -41,7 +37,6 @@ type (
 	SendAuthorization      = types.SendAuthorization
 	AuthorizationGrant     = types.AuthorizationGrant
 	GenericAuthorization   = types.GenericAuthorization
-	CodeType               = types.CodeType
 	MsgGrantAuthorization  = types.MsgGrantAuthorization
 	MsgRevokeAuthorization = types.MsgRevokeAuthorization
 	MsgExecDelegated       = types.MsgExecDelegated

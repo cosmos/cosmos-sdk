@@ -2,8 +2,8 @@ package msg_authorization
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -49,7 +49,7 @@ func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "msg_authorization",
 		Short: "Querying commands for the msg_authorization module",
 	}
-	queryCmd.AddCommand(client.GetCommands(
+	queryCmd.AddCommand(flags.GetCommands(
 		cli.GetPlanCmd(StoreKey, cdc),
 		cli.GetAppliedHeightCmd(StoreKey, cdc),
 	)...)
@@ -63,7 +63,7 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "msg_auth",
 		Short: "msg_auth transaction subcommands",
 	}
-	txCmd.AddCommand(client.PostCommands()...)
+	txCmd.AddCommand(flags.PostCommands()...)
 	return txCmd
 }
 

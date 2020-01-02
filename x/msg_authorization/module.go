@@ -2,16 +2,17 @@ package msg_authorization
 
 import (
 	"encoding/json"
+
+	"github.com/gorilla/mux"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/client/rest"
-	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // module codec
@@ -45,29 +46,12 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, r *mux.Router) 
 
 //GetQueryCmd returns the cli query commands for this module
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	queryCmd := &cobra.Command{
-		Use:   "msg_authorization",
-		Short: "Querying commands for the msg_authorization module",
-	}
-	queryCmd.AddCommand(flags.GetCommands(
-		cli.GetCmdQueryAuthorization(StoreKey, cdc),
-	)...)
-
-	return queryCmd
+	return cli.GetQueryCmd(StoreKey, cdc)
 }
 
 // GetTxCmd returns the transaction commands for this module
 func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:   "msg_auth",
-		Short: "msg_auth transaction subcommands",
-	}
-	txCmd.AddCommand(flags.PostCommands(
-		cli.GetCmdGrantAuthorization(cdc),
-		cli.GetCmdRevokeAuthorization(cdc),
-		cli.GetCmdSendAs(cdc),
-	)...)
-	return txCmd
+	return cli.GetTxCmd(cdc)
 }
 
 // AppModule implements the sdk.AppModule interface

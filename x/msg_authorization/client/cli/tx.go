@@ -59,7 +59,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var authorization types.SendAuthorization
+			var authorization types.Authorization
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err

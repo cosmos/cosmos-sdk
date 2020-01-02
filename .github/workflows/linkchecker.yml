@@ -5,6 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    # - uses: gaurav-nelson/github-action-markdown-link-check@0.4.0
+    - name: Link Checker
+      uses: peter-evans/link-checker@v1
       with:
-        fetch-depth: 1
-    - uses: gaurav-nelson/github-action-markdown-link-check@0.4.0
+        args: -v -r *

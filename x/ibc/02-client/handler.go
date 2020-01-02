@@ -11,15 +11,15 @@ import (
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
-func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.Result {
-	clientType, err := exported.ClientTypeFromString(msg.ClientType)
-	if err != nil {
-		return sdk.ResultFromError(ErrInvalidClientType(DefaultCodespace, err.Error()))
+func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) (*sdk.Result, error) {
+	clientType := exported.ClientTypeFromString(msg.ClientType)
+	if clientType == 0 {
+		return nil, ErrInvalidClientType(DefaultCodespace, fmt.Sprintf("invalid client type %s", msg.ClientType))
 	}
 
-	_, err = k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
+	_, err := k.CreateClient(ctx, msg.ClientID, clientType, msg.ConsensusState)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -34,14 +34,16 @@ func HandleMsgCreateClient(ctx sdk.Context, k Keeper, msg MsgCreateClient) sdk.R
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandleMsgUpdateClient defines the sdk.Handler for MsgUpdateClient
-func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.Result {
+func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) (*sdk.Result, error) {
 	err := k.UpdateClient(ctx, msg.ClientID, msg.Header)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -56,7 +58,9 @@ func HandleMsgUpdateClient(ctx sdk.Context, k Keeper, msg MsgUpdateClient) sdk.R
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandlerClientMisbehaviour defines the Evidence module handler for submitting a

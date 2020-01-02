@@ -47,17 +47,17 @@ func (msg MsgConnectionOpenInit) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgConnectionOpenInit) ValidateBasic() sdk.Error {
+func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid client ID"))
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("missing signer address")
+		return sdkerrors.ErrInvalidAddress
 	}
-	return sdk.ConvertError(msg.Counterparty.ValidateBasic())
+	return msg.Counterparty.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -118,37 +118,37 @@ func (msg MsgConnectionOpenTry) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgConnectionOpenTry) ValidateBasic() sdk.Error {
+func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid client ID"))
+		return sdkerrors.Wrap(err, "invalid client ID")
 	}
 	if len(msg.CounterpartyVersions) == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "missing counterparty versions"))
+		return ibctypes.ErrInvalidVersion(DefaultCodespace, "missing counterparty versions")
 	}
 	for _, version := range msg.CounterpartyVersions {
 		if strings.TrimSpace(version) == "" {
-			return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
+			return ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank")
 		}
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof init cannot be nil"))
+		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof init cannot be nil")
 	}
 	if msg.ProofConsensus == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil"))
+		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0"))
+		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("missing signer address")
+		return sdkerrors.ErrInvalidAddress
 	}
-	return sdk.ConvertError(msg.Counterparty.ValidateBasic())
+	return msg.Counterparty.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -203,27 +203,27 @@ func (msg MsgConnectionOpenAck) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgConnectionOpenAck) ValidateBasic() sdk.Error {
+func (msg MsgConnectionOpenAck) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if strings.TrimSpace(msg.Version) == "" {
-		return sdk.ConvertError(ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank"))
+		return ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank")
 	}
 	if msg.ProofTry == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof try cannot be nil"))
+		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof try cannot be nil")
 	}
 	if msg.ProofConsensus == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil"))
+		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0"))
+		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("missing signer address")
+		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
 }
@@ -272,18 +272,18 @@ func (msg MsgConnectionOpenConfirm) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgConnectionOpenConfirm) ValidateBasic() sdk.Error {
+func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid connection ID"))
+		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if msg.ProofAck == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof ack cannot be nil"))
+		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ErrInvalidHeight(DefaultCodespace, "proof height must be > 0"))
+		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("missing signer address")
+		return sdkerrors.ErrInvalidAddress
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"io/ioutil"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -53,8 +54,13 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			bz, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
 			var authorization types.Authorization
-			err = cdc.UnmarshalJSON([]byte(args[1]), &authorization)
+			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err
 			}
@@ -95,8 +101,13 @@ func GetCmdRevokeAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
+			bz, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
 			var msgAuthorized sdk.Msg
-			err = cdc.UnmarshalJSON([]byte(args[1]), &msgAuthorized)
+			err = cdc.UnmarshalJSON(bz, &msgAuthorized)
 			if err != nil {
 				return err
 			}

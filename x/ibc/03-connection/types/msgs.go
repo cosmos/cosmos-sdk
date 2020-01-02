@@ -49,10 +49,10 @@ func (msg MsgConnectionOpenInit) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenInit) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
 	}
 	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdkerrors.Wrap(err, "invalid client ID")
+		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -120,30 +120,30 @@ func (msg MsgConnectionOpenTry) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgConnectionOpenTry) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection ID")
+		return sdkerrors.Wrapf(err, "invalid connection ID: %s", msg.ConnectionID)
 	}
 	if err := host.DefaultClientIdentifierValidator(msg.ClientID); err != nil {
-		return sdkerrors.Wrap(err, "invalid client ID")
+		return sdkerrors.Wrapf(err, "invalid client ID: %s", msg.ClientID)
 	}
 	if len(msg.CounterpartyVersions) == 0 {
-		return ibctypes.ErrInvalidVersion(DefaultCodespace, "missing counterparty versions")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "missing counterparty versions")
 	}
 	for _, version := range msg.CounterpartyVersions {
 		if strings.TrimSpace(version) == "" {
-			return ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank")
+			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 		}
 	}
-	if msg.ProofInit == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof init cannot be nil")
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
-	if msg.ProofConsensus == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil")
+	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -208,19 +208,19 @@ func (msg MsgConnectionOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
 	if strings.TrimSpace(msg.Version) == "" {
-		return ibctypes.ErrInvalidVersion(DefaultCodespace, "version can't be blank")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 	}
-	if msg.ProofTry == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof try cannot be nil")
+	if err := msg.ProofTry.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
-	if msg.ProofConsensus == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof consensus cannot be nil")
+	if err := msg.ProofConsensus.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof consensus cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.ConsensusHeight == 0 {
-		return ErrInvalidHeight(DefaultCodespace, "consensus height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "consensus height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -276,11 +276,11 @@ func (msg MsgConnectionOpenConfirm) ValidateBasic() error {
 	if err := host.DefaultConnectionIdentifierValidator(msg.ConnectionID); err != nil {
 		return sdkerrors.Wrap(err, "invalid connection ID")
 	}
-	if msg.ProofAck == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof ack cannot be nil")
+	if err := msg.ProofAck.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ErrInvalidHeight(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

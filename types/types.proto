@@ -10,11 +10,6 @@ option (gogoproto.sizer_all) = true;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-// TODO:
-// 
-// 2. Msg
-// 3. Tx
-
 // Coin defines a token with a denomination and an amount.
 //
 // NOTE: The amount field is an Int which implements the custom method

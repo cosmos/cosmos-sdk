@@ -11,11 +11,10 @@ message Coin {
     string amount = 2 [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
 }
 
-message StdTx {
-    repeated bytes msg = 1;
-    StdFee fee = 2;
-    repeated StdSignature signatures = 3;
-    string memo = 4;
+message StdTxBase {
+    StdFee fee = 1;
+    repeated StdSignature signatures = 2;
+    string memo = 3;
 }
 
 message StdFee {

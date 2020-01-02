@@ -7,6 +7,11 @@ import "types/codec.proto";
 import "x/gov/types/codec.proto";
 import "x/auth/types/codec.proto";
 
+message Tx {
+    cosmos_sdk.StdTxBase base = 1;
+    Msg msg = 2;
+}
+
 message Msg {
     oneof sum {
         MsgGovSubmitProposal gov_submit_proposal = 1;

@@ -52,40 +52,6 @@ func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
 	}
 }
 
-// GetValidatorMissedBlockBitArray gets the bit for the missed blocks array
-func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
-	if bz == nil {
-		// lazy: treat empty key as not missed
-		missed = false
-		return
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
-	return
-}
-
-// IterateValidatorMissedBlockBitArray iterates over the signed blocks window
-// and performs a callback function
-func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
-	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
-
-	store := ctx.KVStore(k.storeKey)
-	index := int64(0)
-	// Array may be sparse
-	for ; index < k.SignedBlocksWindow(ctx); index++ {
-		var missed bool
-		bz := store.Get(types.GetValidatorMissedBlockBitArrayKey(address, index))
-		if bz == nil {
-			continue
-		}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
-		if handler(index, missed) {
-			break
-		}
-	}
-}
-
 // JailUntil attempts to set a validator's JailedUntil attribute in its signing
 // info. It will panic if the signing info does not exist for the validator.
 func (k Keeper) JailUntil(ctx sdk.Context, consAddr sdk.ConsAddress, jailTime time.Time) {
@@ -124,20 +90,25 @@ func (k Keeper) IsTombstoned(ctx sdk.Context, consAddr sdk.ConsAddress) bool {
 	return signInfo.Tombstoned
 }
 
-// SetValidatorMissedBlockBitArray sets the bit that checks if the validator has
-// missed a block in the current window
-func (k Keeper) SetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
+// GetVoteArray returns array of missed votes for a particular validator.
+// For new validator or slashed validator nil is returned.
+func (k Keeper) GetVoteArray(ctx sdk.Context, address sdk.ConsAddress) *types.VoteArray {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
-	store.Set(types.GetValidatorMissedBlockBitArrayKey(address, index), bz)
+	value := store.Get(types.GetValidatorMissedBlockBitArrayKey(address))
+	if len(value) == 0 {
+		return nil
+	}
+	return types.NewVoteArrayFromBytes(value)
 }
 
-// clearValidatorMissedBlockBitArray deletes every instance of ValidatorMissedBlockBitArray in the store
-func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
+// SetVoteArray updates vote array for a particular validator.
+func (k Keeper) SetVoteArray(ctx sdk.Context, address sdk.ConsAddress, votes *types.VoteArray) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GetValidatorMissedBlockBitArrayPrefixKey(address))
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
-	}
+	store.Set(types.GetValidatorMissedBlockBitArrayKey(address), votes.Bytes())
+}
+
+// ClearVoteArray delete vote array for a particular validator.
+func (k Keeper) ClearVoteArray(ctx sdk.Context, address sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetValidatorMissedBlockBitArrayKey(address))
 }

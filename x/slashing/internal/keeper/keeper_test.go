@@ -179,10 +179,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.Equal(t, int64(0), signInfo.MissedBlocksCounter)
 	require.Equal(t, int64(0), signInfo.IndexOffset)
 	// array should be cleared
-	for offset := int64(0); offset < keeper.SignedBlocksWindow(ctx); offset++ {
-		missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, offset)
-		require.False(t, missed)
-	}
+	require.Nil(t, keeper.GetVoteArray(ctx, consAddr))
 
 	// some blocks pass
 	height = int64(5000)

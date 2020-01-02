@@ -29,9 +29,23 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, stakingKeeper types.StakingKeep
 		if err != nil {
 			panic(err)
 		}
-		for _, missed := range array {
-			keeper.SetValidatorMissedBlockBitArray(ctx, address, missed.Index, missed.Missed)
+
+		voteArray := keeper.GetVoteArray(ctx, address)
+		if voteArray == nil {
+			voteArray = types.NewVoteArray(data.Params.SignedBlocksWindow)
 		}
+
+		for _, missed := range array {
+			if missed.Index >= data.Params.SignedBlocksWindow {
+				// this could happen only if params got changed and SignedBlocksWindow is now lower
+				// then it was during ExportGenesis
+				continue
+			}
+			if missed.Missed {
+				voteArray.Get(missed.Index).Miss()
+			}
+		}
+		keeper.SetVoteArray(ctx, address, voteArray)
 	}
 
 	keeper.SetParams(ctx, data.Params)
@@ -49,10 +63,18 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data types.GenesisState) {
 		signingInfos[bechAddr] = info
 		localMissedBlocks := []types.MissedBlock{}
 
-		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			localMissedBlocks = append(localMissedBlocks, types.NewMissedBlock(index, missed))
+		voteArray := keeper.GetVoteArray(ctx, address)
+		// no missed block - terminate early
+		if voteArray == nil {
 			return false
-		})
+		}
+		for i := int64(0); i < params.SignedBlocksWindow; i++ {
+			vote := voteArray.Get(i)
+			// not missed blocks are skipped in ImportGenesis
+			if vote.Missed() {
+				localMissedBlocks = append(localMissedBlocks, types.MissedBlock{Index: i, Missed: true})
+			}
+		}
 		missedBlocks[bechAddr] = localMissedBlocks
 
 		return false

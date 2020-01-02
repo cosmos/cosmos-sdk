@@ -1,8 +1,6 @@
 package types
 
 import (
-	"encoding/binary"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,16 +46,9 @@ func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	return sdk.ConsAddress(addr)
 }
 
-// GetValidatorMissedBlockBitArrayPrefixKey - stored by *Consensus* address (not operator address)
-func GetValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
-	return append(ValidatorMissedBlockBitArrayKey, v.Bytes()...)
-}
-
 // GetValidatorMissedBlockBitArrayKey - stored by *Consensus* address (not operator address)
-func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(i))
-	return append(GetValidatorMissedBlockBitArrayPrefixKey(v), b...)
+func GetValidatorMissedBlockBitArrayKey(v sdk.ConsAddress) []byte {
+	return append(ValidatorMissedBlockBitArrayKey, v.Bytes()...)
 }
 
 // GetAddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address

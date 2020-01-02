@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/internal/types"
 )
 
-// HandleValidatorSignature handles a validator signature, must be called once per validator per block.
 func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
@@ -31,20 +30,27 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
 
+	votearray := k.GetVoteArray(ctx, consAddr)
+	if votearray == nil {
+		votearray = types.NewVoteArray(k.SignedBlocksWindow(ctx))
+	}
+
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
-	// That way we avoid needing to read/write the whole array each time
-	previous := k.GetValidatorMissedBlockBitArray(ctx, consAddr, index)
+	vote := votearray.Get(index)
+	previous := vote.Missed()
 	missed := !signed
 	switch {
 	case !previous && missed:
 		// Array value has changed from not missed to missed, increment counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		vote.Miss()
 		signInfo.MissedBlocksCounter++
+		k.SetVoteArray(ctx, consAddr, votearray)
 	case previous && !missed:
 		// Array value has changed from missed to not missed, decrement counter
-		k.SetValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		vote.Vote()
 		signInfo.MissedBlocksCounter--
+		k.SetVoteArray(ctx, consAddr, votearray)
 	default:
 		// Array value at this index has not changed, no need to update counter
 	}
@@ -99,7 +105,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
+			k.ClearVoteArray(ctx, consAddr)
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
 			logger.Info(

@@ -44,32 +44,31 @@ const (
 
 var (
 	// functions aliases
-	NewKeeper                                = keeper.NewKeeper
-	NewQuerier                               = keeper.NewQuerier
-	RegisterCodec                            = types.RegisterCodec
-	ErrNoValidatorForAddress                 = types.ErrNoValidatorForAddress
-	ErrBadValidatorAddr                      = types.ErrBadValidatorAddr
-	ErrValidatorJailed                       = types.ErrValidatorJailed
-	ErrValidatorNotJailed                    = types.ErrValidatorNotJailed
-	ErrMissingSelfDelegation                 = types.ErrMissingSelfDelegation
-	ErrSelfDelegationTooLowToUnjail          = types.ErrSelfDelegationTooLowToUnjail
-	ErrNoSigningInfoFound                    = types.ErrNoSigningInfoFound
-	NewGenesisState                          = types.NewGenesisState
-	NewMissedBlock                           = types.NewMissedBlock
-	DefaultGenesisState                      = types.DefaultGenesisState
-	ValidateGenesis                          = types.ValidateGenesis
-	GetValidatorSigningInfoKey               = types.GetValidatorSigningInfoKey
-	GetValidatorSigningInfoAddress           = types.GetValidatorSigningInfoAddress
-	GetValidatorMissedBlockBitArrayPrefixKey = types.GetValidatorMissedBlockBitArrayPrefixKey
-	GetValidatorMissedBlockBitArrayKey       = types.GetValidatorMissedBlockBitArrayKey
-	GetAddrPubkeyRelationKey                 = types.GetAddrPubkeyRelationKey
-	NewMsgUnjail                             = types.NewMsgUnjail
-	ParamKeyTable                            = types.ParamKeyTable
-	NewParams                                = types.NewParams
-	DefaultParams                            = types.DefaultParams
-	NewQuerySigningInfoParams                = types.NewQuerySigningInfoParams
-	NewQuerySigningInfosParams               = types.NewQuerySigningInfosParams
-	NewValidatorSigningInfo                  = types.NewValidatorSigningInfo
+	NewKeeper                          = keeper.NewKeeper
+	NewQuerier                         = keeper.NewQuerier
+	RegisterCodec                      = types.RegisterCodec
+	ErrNoValidatorForAddress           = types.ErrNoValidatorForAddress
+	ErrBadValidatorAddr                = types.ErrBadValidatorAddr
+	ErrValidatorJailed                 = types.ErrValidatorJailed
+	ErrValidatorNotJailed              = types.ErrValidatorNotJailed
+	ErrMissingSelfDelegation           = types.ErrMissingSelfDelegation
+	ErrSelfDelegationTooLowToUnjail    = types.ErrSelfDelegationTooLowToUnjail
+	ErrNoSigningInfoFound              = types.ErrNoSigningInfoFound
+	NewGenesisState                    = types.NewGenesisState
+	NewMissedBlock                     = types.NewMissedBlock
+	DefaultGenesisState                = types.DefaultGenesisState
+	ValidateGenesis                    = types.ValidateGenesis
+	GetValidatorSigningInfoKey         = types.GetValidatorSigningInfoKey
+	GetValidatorSigningInfoAddress     = types.GetValidatorSigningInfoAddress
+	GetValidatorMissedBlockBitArrayKey = types.GetValidatorMissedBlockBitArrayKey
+	GetAddrPubkeyRelationKey           = types.GetAddrPubkeyRelationKey
+	NewMsgUnjail                       = types.NewMsgUnjail
+	ParamKeyTable                      = types.ParamKeyTable
+	NewParams                          = types.NewParams
+	DefaultParams                      = types.DefaultParams
+	NewQuerySigningInfoParams          = types.NewQuerySigningInfoParams
+	NewQuerySigningInfosParams         = types.NewQuerySigningInfosParams
+	NewValidatorSigningInfo            = types.NewValidatorSigningInfo
 
 	// variable aliases
 	ModuleCdc                       = types.ModuleCdc

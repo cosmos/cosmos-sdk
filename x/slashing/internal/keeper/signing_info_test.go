@@ -31,13 +31,31 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	require.Equal(t, info.MissedBlocksCounter, int64(10))
 }
 
-func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
+func TestValidatorMissedBlockBitArrayEmpty(t *testing.T) {
 	ctx, _, _, _, keeper := CreateTestInput(t, types.DefaultParams())
-	missed := keeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(Addrs[0]), 0)
-	require.False(t, missed) // treat empty key as not missed
-	keeper.SetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(Addrs[0]), 0, true)
-	missed = keeper.GetValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(Addrs[0]), 0)
-	require.True(t, missed) // now should be missed
+	require.Nil(t, keeper.GetVoteArray(ctx, sdk.ConsAddress(Addrs[0])))
+}
+
+func TestValidatorMissedBlockBitArrrayPersisted(t *testing.T) {
+	ctx, _, _, _, keeper := CreateTestInput(t, types.DefaultParams())
+	size := int64(100)
+	array := types.NewVoteArray(size)
+	addr := sdk.ConsAddress(Addrs[0])
+
+	misses := map[int64]struct{}{1: struct{}{}, 10: struct{}{}, 29: struct{}{}}
+	for v := range misses {
+		array.Get(v).Miss()
+	}
+	keeper.SetVoteArray(ctx, addr, array)
+
+	array = keeper.GetVoteArray(ctx, addr)
+	for i := int64(0); i < size; i++ {
+		if _, exist := misses[i]; exist {
+			require.True(t, array.Get(i).Missed())
+		} else {
+			require.True(t, array.Get(i).Voted())
+		}
+	}
 }
 
 func TestTombstoned(t *testing.T) {

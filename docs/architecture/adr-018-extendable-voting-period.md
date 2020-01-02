@@ -45,8 +45,6 @@ Proposed
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Positive
 
 - More complex/contentious governance proposals will have more time to properly digest and deliberate

@@ -2,9 +2,10 @@ syntax = "proto3";
 
 package cosmos_sdk.simapp;
 option go_package = "simapp";
-import "gogoproto/gogo.proto";
+import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "types/codec.proto";
 import "x/gov/types/codec.proto";
+import "x/bank/internal/types/codec.proto";
 import "x/auth/types/codec.proto";
 
 message Tx {
@@ -12,11 +13,24 @@ message Tx {
     repeated Msg msg = 2;
 }
 
+// approach 1 (more or less what weave does):
+
 message Msg {
     oneof sum {
         MsgGovSubmitProposal gov_submit_proposal = 1;
         cosmos_sdk.x.gov.MsgDeposit gov_deposit = 2;
         cosmos_sdk.x.gov.MsgVote gov_vote = 3;
+        cosmos_sdk.x.bank.MsgSend bank_send = 4;
+        cosmos_sdk.x.bank.MsgMultiSend bank_multi_send = 5;
+    }
+}
+
+// approach 2:
+message Msg2 {
+    oneof sum {
+        cosmos_sdk.x.bank.Msg bank = 1;
+        cosmos_sdk.x.gov.MsgBase gov = 2;
+        MsgGovSubmitProposal gov_submit_proposal = 3;
     }
 }
 

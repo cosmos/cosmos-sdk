@@ -6,6 +6,13 @@ option go_package = "types";
 import "types/codec.proto";
 import "gogoproto/gogo.proto";
 
+message MsgBase {
+    oneof sum {
+        MsgDeposit gov_deposit = 1;
+        MsgVote gov_vote = 2;
+    }
+}
+
 message MsgSubmitProposalBase {
     repeated cosmos_sdk.Coin intial_deposit = 1 [(gogoproto.nullable) = false];
     option (gogoproto.goproto_getters) = false;

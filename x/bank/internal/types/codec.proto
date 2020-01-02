@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cosmos_sdk.x.bank;
+option go_package = "types";
+
+message Msg {
+    oneof sum {
+        MsgSend send = 1;
+        MsgMultiSend multi_send = 2;
+    }
+}
+
+message MsgSend {
+
+}
+
+message MsgMultiSend {
+
+}
+

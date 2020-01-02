@@ -1,6 +1,7 @@
 package bank
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/internal/keeper"
@@ -27,6 +28,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) (*sdk.Result, error) {
+	fmt.Println("inside msg send", msg.ToAddress.String(), msg.FromAddress.String(), msg.Amount)
 	if !k.GetSendEnabled(ctx) {
 		return nil, types.ErrSendDisabled
 	}
@@ -39,6 +41,8 @@ func handleMsgSend(ctx sdk.Context, k keeper.Keeper, msg types.MsgSend) (*sdk.Re
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("no error")
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

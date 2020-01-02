@@ -74,12 +74,12 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			}
 		}
 		res, _ = k.router.Route(msg.Route())(ctx, msg)
-		if !res.Data {
-			return res
+		if res != nil {
+			return res, nil
 		}
 	}
 
-	return sdk.Result{}
+	return nil, nil
 }
 
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration

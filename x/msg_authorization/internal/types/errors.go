@@ -1,27 +1,12 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type CodeType = sdk.CodeType
-
-const (
-	// Default slashing codespace
-	DefaultCodespace sdk.CodespaceType = ModuleName
-
-	CodeInvalidGranter        CodeType = 101
-	CodeInvalidGrantee        CodeType = 102
-	CodeInvalidExpirationTime CodeType = 103
+// x/gov module sentinel errors
+var (
+	ErrInvalidGranter        = sdkerrors.Register(ModuleName, 1, "invalid granter address")
+	ErrInvalidGrantee        = sdkerrors.Register(ModuleName, 2, "invalid grantee address")
+	ErrInvalidExpirationTime = sdkerrors.Register(ModuleName, 3, "expiration time of authorization should be more than current time")
 )
-
-func ErrInvalidGranter(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidGranter, "invalid granter address")
-}
-
-func ErrInvalidGrantee(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidGrantee, "invalid grantee address")
-}
-func ErrInvalidExpirationTime(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidExpirationTime, "expiration time of authorization should be more than current time")
-}

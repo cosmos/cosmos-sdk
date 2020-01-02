@@ -23,7 +23,7 @@ func (k Keeper) AllocateTokens(
 	// (and distributed to the previous proposer)
 	feeCollector := k.supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	feesCollectedInt := feeCollector.GetCoins()
-	feesCollected := sdk.NewDecCoinsFromCoin(feesCollectedInt...)
+	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
 
 	// transfer collected fees to the distribution module account
 	err := k.supplyKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt)

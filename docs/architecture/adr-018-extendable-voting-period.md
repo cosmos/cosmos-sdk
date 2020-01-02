@@ -17,10 +17,12 @@ However, we would like to avoid the creation of an entire second voting process 
 Thus, we propose the following mechanism:
 
 ### Params:
+
 - The current gov param `VotingPeriod` is to be replaced by a `MinVotingPeriod` param.  This is the the default voting period that all governance proposal voting periods start with.
 - There is a new gov param called `MaxVotingPeriodExtension`.
 
 ### Mechanism
+
 There is a new `Msg` type called `MsgExtendVotingPeriod`, which can be sent by any staked account during a proposal's voting period.  It allows the sender to unilaterally extend the length of the voting period by `MaxVotingPeriodExtension * sender's share of voting power`.
 
 So for example, if the `MaxVotingPeriodExtension` is set to 100 Days, then anyone with 1% of voting power can extend the voting power by 1 day.  If 33% of voting power has sent the message, the voting period will be extended by 33 days.  Thus, if absolutely everyone chooses to extend the voting period, the absolute maximum voting period will be `MinVotingPeriod + MaxVotingPeriodExtension`.
@@ -28,6 +30,7 @@ So for example, if the `MaxVotingPeriodExtension` is set to 100 Days, then anyon
 This system acts as a sort of distributed coordination, where individual stakers choosing to extend or not, allows the system the guage the conentiousness/complexity of the proposal.  It is extremely unlikely that many stakers will choose to extend at the exact same time, it allows stakers to view how long others have already extended thus far, to decide whether or not to extend further.
 
 ### Dealing with Unbonding/Redelegation
+
 There is one thing that needs to be addressed.  How to deal with redelegation/unbonding during the voting period.  If a staker of 5% calls `MsgExtendVotingPeriod` and then unbonds, does the voting period then decrease by 5 days again?  This is not good as it can give people a false sense of how long they have to make their decision.  For this reason, we want to design it such that the voting period length can only be extended, not shortened.  To do this, the current extension amount is based on the highest percent that voted extension at any time.  This is best explained by example:
 
 1. Let's say 2 stakers of voting power 4% and 3% respectively vote to extend.  The voting period will be extended by 7 days.

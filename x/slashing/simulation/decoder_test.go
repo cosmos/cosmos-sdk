@@ -36,11 +36,12 @@ func TestDecodeStore(t *testing.T) {
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)
 	bechPK := sdk.MustBech32ifyAccPub(delPk1)
-	missed := true
+	array := types.NewVoteArray(2)
+	array.Get(1).Miss()
 
 	kvPairs := cmn.KVPairs{
 		cmn.KVPair{Key: types.GetValidatorSigningInfoKey(consAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},
-		cmn.KVPair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1, 6), Value: cdc.MustMarshalBinaryLengthPrefixed(missed)},
+		cmn.KVPair{Key: types.GetValidatorMissedBlockBitArrayKey(consAddr1), Value: array.Bytes()},
 		cmn.KVPair{Key: types.GetAddrPubkeyRelationKey(delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(delPk1)},
 		cmn.KVPair{Key: []byte{0x99}, Value: []byte{0x99}},
 	}
@@ -50,7 +51,7 @@ func TestDecodeStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"ValidatorSigningInfo", fmt.Sprintf("%v\n%v", info, info)},
-		{"ValidatorMissedBlockBitArray", fmt.Sprintf("missedA: %v\nmissedB: %v", missed, missed)},
+		{"ValidatorMissedBlockBitArray", fmt.Sprintf("%v\n%v", array, array)},
 		{"AddrPubkeyRelation", fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPK, bechPK)},
 		{"other", ""},
 	}

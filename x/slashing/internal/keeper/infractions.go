@@ -33,6 +33,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	votearray := k.GetVoteArray(ctx, consAddr)
 	if votearray == nil {
 		votearray = types.NewVoteArray(k.SignedBlocksWindow(ctx))
+	} else if votearray.Size() != k.SignedBlocksWindow(ctx) {
+		votearray.ChangeSize(k.SignedBlocksWindow(ctx))
 	}
 
 	// Update signed block bit array & counter

@@ -31,6 +31,11 @@ func (b BitArray) Fill(index int64) {
 	b.Set(index, 1)
 }
 
+// Size returns amount of bits that can fit in the bit array instance.
+func (b BitArray) Size() int64 {
+	return int64(len(b) * 8)
+}
+
 // Set sets bit to either one or zero. Panics if bit is out of bounds.
 func (b BitArray) Set(index, val int64) {
 	pos := b.position(index)

@@ -22,10 +22,9 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 		return fmt.Sprintf("%v\n%v", infoA, infoB)
 
 	case bytes.Equal(kvA.Key[:1], types.ValidatorMissedBlockBitArrayKey):
-		var missedA, missedB bool
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &missedA)
-		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &missedB)
-		return fmt.Sprintf("missedA: %v\nmissedB: %v", missedA, missedB)
+		votearrayA := types.NewVoteArrayFromBytes(kvA.Value)
+		votearrayB := types.NewVoteArrayFromBytes(kvB.Value)
+		return fmt.Sprintf("%v\n%v", votearrayA, votearrayB)
 
 	case bytes.Equal(kvA.Key[:1], types.AddrPubkeyRelationKey):
 		var pubKeyA, pubKeyB crypto.PubKey

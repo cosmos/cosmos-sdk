@@ -79,7 +79,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 
 		},
 	}
-	cmd.Flags().String(FlagExpiration, "9999-12-31 23:59:59.52Z", "The time upto which the authorization is active for the user")
+	cmd.Flags().String(FlagExpiration, "9999-12-31T23:59:59.52Z", "The time upto which the authorization is active for the user")
 
 	return cmd
 }

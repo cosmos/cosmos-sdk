@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -106,16 +105,16 @@ func (MsgRecvPacket) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgRecvPacket) ValidateBasic() error {
 	if msg.Height == 0 {
-		return connectiontypes.ErrInvalidHeight(DefaultCodespace, "height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "height must be > 0")
 	}
 
 	if msg.Proofs == nil || len(msg.Proofs) == 0 {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "missing proofs")
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "missing proof")
 	}
 
 	for _, proof := range msg.Proofs {
-		if proof.Proof == nil {
-			return ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof")
+		if err := proof.ValidateBasic(); err != nil {
+			return err
 		}
 	}
 

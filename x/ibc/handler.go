@@ -62,7 +62,7 @@ func NewHandler(k Keeper) sdk.Handler {
 			return transfer.HandleMsgRecvPacket(ctx, k.TransferKeeper, msg)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC message type: %T", msg)
 		}
 	}
 }

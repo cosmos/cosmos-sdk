@@ -1,0 +1,17 @@
+name: Protobuf
+on: [pull_request]
+jobs:
+  lint-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: sudo make buf
+    - name: test
+      run: sh -c "sudo chown -R circlci /home/runner/.cache/go-build"
+    - name: Install Protoc
+      uses: Arduino/actions/setup-protoc@master
+      with:
+        version: '3.11.x'      
+    - name: Generate, lint, and verify
+      run: sudo make proto-all

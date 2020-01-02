@@ -227,7 +227,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-lint proto-check-breaking proto-gen
+proto-all: proto-gen proto-lint proto-check-breaking
 
 proto-gen:
 	@go mod vendor

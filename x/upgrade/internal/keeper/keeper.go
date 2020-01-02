@@ -126,12 +126,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	k.setDone(ctx, plan.Name)
 }
 
-// GetSkipUpgradeHeights returns the value of keeper's skipUpgradeHeights
-func (k Keeper) GetSkipUpgradeHeights() map[int64]bool {
-	skipUpgradeHeights := make(map[int64]bool, len(k.skipUpgradeHeights))
-	for k, v := range k.skipUpgradeHeights {
-		skipUpgradeHeights[k] = v
-	}
-
-	return skipUpgradeHeights
+// IsSkipHeight checks if the given height is part of skipUpgradeHeights
+func (k Keeper) IsSkipHeight(height int64) bool {
+	return k.skipUpgradeHeights[height]
 }

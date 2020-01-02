@@ -244,12 +244,9 @@ func VerifyDone(t *testing.T, newCtx sdk.Context, name string) {
 
 func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 	t.Log("Verify if the skip upgrade has been set")
-	skipUpgradeHeightsMap := s.keeper.GetSkipUpgradeHeights()
-
-	require.Equal(t, len(skipUpgradeHeightsMap), len(skipUpgradeHeights))
 
 	for k := range skipUpgradeHeights {
-		require.True(t, skipUpgradeHeightsMap[k])
+		require.True(t, s.keeper.IsSkipHeight(k))
 	}
 }
 
@@ -261,10 +258,10 @@ func TestContains(t *testing.T) {
 
 	VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")
-	require.True(t, s.keeper.GetSkipUpgradeHeights()[11])
+	require.True(t, s.keeper.IsSkipHeight(11))
 
 	t.Log("case where array doesn't contain the element")
-	require.False(t, s.keeper.GetSkipUpgradeHeights()[4])
+	require.False(t, s.keeper.IsSkipHeight(4))
 }
 
 func TestSkipUpgradeSkippingAll(t *testing.T) {

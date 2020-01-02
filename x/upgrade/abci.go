@@ -16,7 +16,6 @@ import (
 // a migration to be executed if needed upon this switch (migration defined in the new binary)
 // skipUpgradeHeightArray is a set of block heights for which the upgrade must be skipped
 func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
-	skipUpgradeHeights := k.GetSkipUpgradeHeights()
 	plan, found := k.GetUpgradePlan(ctx)
 	if !found {
 		return
@@ -25,7 +24,7 @@ func BeginBlocker(k Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	// To make sure clear upgrade is executed at the same block
 	if plan.ShouldExecute(ctx) {
 		// If skip upgrade has been set for current height, we clear the upgrade plan
-		if skipUpgradeHeights[ctx.BlockHeight()] {
+		if k.IsSkipHeight(ctx.BlockHeight()) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			ctx.Logger().Info(skipUpgradeMsg)
 

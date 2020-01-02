@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -16,7 +16,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ics03ConnectionQueryCmd.AddCommand(client.GetCommands(
+	ics03ConnectionQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryConnections(queryRoute, cdc),
 		GetCmdQueryConnection(queryRoute, cdc),
 	)...)
@@ -30,7 +30,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "IBC connection transaction subcommands",
 	}
 
-	ics03ConnectionTxCmd.AddCommand(client.PostCommands(
+	ics03ConnectionTxCmd.AddCommand(flags.PostCommands(
 		GetCmdConnectionOpenInit(storeKey, cdc),
 		GetCmdConnectionOpenTry(storeKey, cdc),
 		GetCmdConnectionOpenAck(storeKey, cdc),

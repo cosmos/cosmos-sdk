@@ -4,28 +4,28 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
 func NewParamChangeProposalHandler(k Keeper) govtypes.Handler {
-	return func(ctx sdk.Context, content govtypes.Content) sdk.Error {
+	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case ParameterChangeProposal:
 			return handleParameterChangeProposal(ctx, k, c)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized param proposal content type: %T", c)
-			return sdk.ErrUnknownRequest(errMsg)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)
 		}
 	}
 }
 
-func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeProposal) sdk.Error {
+func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeProposal) error {
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {
-			return ErrUnknownSubspace(k.codespace, c.Subspace)
+			return sdkerrors.Wrap(ErrUnknownSubspace, c.Subspace)
 		}
 
 		k.Logger(ctx).Info(
@@ -33,7 +33,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k Keeper, p ParameterChangeP
 		)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
-			return ErrSettingParameter(k.codespace, c.Key, c.Value, err.Error())
+			return sdkerrors.Wrapf(ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
 		}
 	}
 

@@ -4,7 +4,7 @@ package gov
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"log"
 	"sort"
 	"testing"
@@ -16,6 +16,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	keep "github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -43,8 +44,11 @@ type testInput struct {
 	privKeys []crypto.PrivKey
 }
 
-func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []authexported.Account,
-	handler func(ctx sdk.Context, c types.Content) sdk.Error) testInput {
+func getMockApp(
+	t *testing.T, numGenAccs int, genState types.GenesisState, genAccs []authexported.Account,
+	handler func(ctx sdk.Context, c types.Content) error,
+) testInput {
+
 	mApp := mock.NewApp()
 
 	staking.RegisterCodec(mApp.Cdc)
@@ -69,7 +73,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	rtr := types.NewRouter().
 		AddRoute(types.RouterKey, handler)
 
-	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
+	bk := bank.NewBaseKeeper(mApp.AccountKeeper, mApp.ParamsKeeper.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 
 	maccPerms := map[string][]string{
 		types.ModuleName:          {supply.Burner},
@@ -78,11 +82,11 @@ func getMockApp(t *testing.T, numGenAccs int, genState types.GenesisState, genAc
 	}
 	supplyKeeper := supply.NewKeeper(mApp.Cdc, keySupply, mApp.AccountKeeper, bk, maccPerms)
 	sk := staking.NewKeeper(
-		mApp.Cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace,
+		mApp.Cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace),
 	)
 
 	keeper := keep.NewKeeper(
-		mApp.Cdc, keyGov, pk.Subspace(DefaultParamspace).WithKeyTable(ParamKeyTable()), supplyKeeper, sk, types.DefaultCodespace, rtr,
+		mApp.Cdc, keyGov, pk.Subspace(DefaultParamspace).WithKeyTable(ParamKeyTable()), supplyKeeper, sk, rtr,
 	)
 
 	mApp.Router().AddRoute(types.RouterKey, NewHandler(keeper))
@@ -193,20 +197,19 @@ const contextKeyBadProposal = "contextKeyBadProposal"
 // badProposalHandler implements a governance proposal handler that is identical
 // to the actual handler except this fails if the context doesn't contain a value
 // for the key contextKeyBadProposal or if the value is false.
-func badProposalHandler(ctx sdk.Context, c types.Content) sdk.Error {
+func badProposalHandler(ctx sdk.Context, c types.Content) error {
 	switch c.ProposalType() {
 	case types.ProposalTypeText:
 		v := ctx.Value(contextKeyBadProposal)
 
 		if v == nil || !v.(bool) {
-			return sdk.ErrInternal("proposal failed")
+			return errors.New("proposal failed")
 		}
 
 		return nil
 
 	default:
-		msg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
-		return sdk.ErrUnknownRequest(msg)
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
 	}
 }
 
@@ -229,7 +232,8 @@ func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context,
 			keep.TestDescription, keep.TestCommissionRates, sdk.OneInt(),
 		)
 
-		res := stakingHandler(ctx, valCreateMsg)
-		require.True(t, res.IsOK())
+		res, err := stakingHandler(ctx, valCreateMsg)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	}
 }

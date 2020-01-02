@@ -12,7 +12,7 @@ import (
 
 // NewQuerier creates a querier for the IBC module
 func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (
 			res []byte
 			err error
@@ -56,6 +56,6 @@ func NewQuerier(k Keeper) sdk.Querier {
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC query endpoint")
 		}
 
-		return res, sdk.ConvertError(err)
+		return res, err
 	}
 }

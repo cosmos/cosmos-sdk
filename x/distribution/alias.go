@@ -10,11 +10,6 @@ import (
 
 const (
 	DefaultParamspace                = keeper.DefaultParamspace
-	DefaultCodespace                 = types.DefaultCodespace
-	CodeInvalidInput                 = types.CodeInvalidInput
-	CodeNoDistributionInfo           = types.CodeNoDistributionInfo
-	CodeNoValidatorCommission        = types.CodeNoValidatorCommission
-	CodeSetWithdrawAddrDisabled      = types.CodeSetWithdrawAddrDisabled
 	ModuleName                       = types.ModuleName
 	StoreKey                         = types.StoreKey
 	RouterKey                        = types.RouterKey
@@ -70,11 +65,13 @@ var (
 	CreateTestInputAdvanced                    = keeper.CreateTestInputAdvanced
 	RegisterCodec                              = types.RegisterCodec
 	NewDelegatorStartingInfo                   = types.NewDelegatorStartingInfo
-	ErrNilDelegatorAddr                        = types.ErrNilDelegatorAddr
-	ErrNilWithdrawAddr                         = types.ErrNilWithdrawAddr
-	ErrNilValidatorAddr                        = types.ErrNilValidatorAddr
-	ErrNoDelegationDistInfo                    = types.ErrNoDelegationDistInfo
+	ErrEmptyDelegatorAddr                      = types.ErrEmptyDelegatorAddr
+	ErrEmptyWithdrawAddr                       = types.ErrEmptyWithdrawAddr
+	ErrEmptyValidatorAddr                      = types.ErrEmptyValidatorAddr
+	ErrEmptyDelegationDistInfo                 = types.ErrEmptyDelegationDistInfo
 	ErrNoValidatorDistInfo                     = types.ErrNoValidatorDistInfo
+	ErrNoValidatorExists                       = types.ErrNoValidatorExists
+	ErrNoDelegationExists                      = types.ErrNoDelegationExists
 	ErrNoValidatorCommission                   = types.ErrNoValidatorCommission
 	ErrSetWithdrawAddrDisabled                 = types.ErrSetWithdrawAddrDisabled
 	ErrBadDistribution                         = types.ErrBadDistribution
@@ -134,7 +131,6 @@ type (
 	Hooks                                  = keeper.Hooks
 	Keeper                                 = keeper.Keeper
 	DelegatorStartingInfo                  = types.DelegatorStartingInfo
-	CodeType                               = types.CodeType
 	FeePool                                = types.FeePool
 	DelegatorWithdrawInfo                  = types.DelegatorWithdrawInfo
 	ValidatorOutstandingRewardsRecord      = types.ValidatorOutstandingRewardsRecord

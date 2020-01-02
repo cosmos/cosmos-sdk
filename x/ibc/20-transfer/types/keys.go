@@ -21,9 +21,6 @@ const (
 
 	// QuerierRoute is the querier route for IBC transfer
 	QuerierRoute = SubModuleName
-
-	// DefaultCodespace is the default error codespace for the ibc transfers
-	DefaultCodespace sdk.CodespaceType = SubModuleName
 )
 
 // GetEscrowAddress returns the escrow address for the specified channel

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // PacketData defines a struct for the packet payload
@@ -38,18 +39,18 @@ func (pd PacketData) String() string {
 }
 
 // ValidateBasic performs a basic check of the packet fields
-func (pd PacketData) ValidateBasic() sdk.Error {
+func (pd PacketData) ValidateBasic() error {
 	if !pd.Amount.IsAllPositive() {
-		return sdk.ErrInsufficientCoins("transfer amount must be positive")
+		return sdkerrors.ErrInsufficientFunds
 	}
 	if !pd.Amount.IsValid() {
-		return sdk.ErrInvalidCoins("transfer amount is invalid")
+		return sdkerrors.ErrInvalidCoins
 	}
 	if pd.Sender.Empty() {
-		return sdk.ErrInvalidAddress("missing sender address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if pd.Receiver.Empty() {
-		return sdk.ErrInvalidAddress("missing recipient address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing receiver address")
 	}
 	return nil
 }

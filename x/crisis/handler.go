@@ -1,9 +1,8 @@
 package crisis
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/internal/types"
 )
@@ -12,7 +11,7 @@ import (
 const RouterKey = types.ModuleName
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
@@ -20,18 +19,16 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgVerifyInvariant(ctx, msg, k)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized crisis message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized crisis message type: %T", msg)
 		}
 	}
 }
 
-func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) sdk.Result {
-	// remove the constant fee
+func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k keeper.Keeper) (*sdk.Result, error) {
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 
 	if err := k.SendCoinsFromAccountToFeeCollector(ctx, msg.Sender, constantFee); err != nil {
-		return err.Result()
+		return nil, err
 	}
 
 	// use a cached context to avoid gas costs during invariants
@@ -51,7 +48,7 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 	}
 
 	if !found {
-		return types.ErrUnknownInvariant(types.DefaultCodespace).Result()
+		return nil, types.ErrUnknownInvariant
 	}
 
 	if stop {
@@ -86,5 +83,5 @@ func handleMsgVerifyInvariant(ctx sdk.Context, msg types.MsgVerifyInvariant, k k
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }

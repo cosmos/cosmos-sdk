@@ -256,3 +256,22 @@ func TestParseUint(t *testing.T) {
 func randuint() Uint {
 	return NewUint(rand.Uint64())
 }
+
+func TestRelativePow(t *testing.T) {
+	tests := []struct {
+		args []Uint
+		want Uint
+	}{
+		{[]Uint{ZeroUint(), ZeroUint(), OneUint()}, OneUint()},
+		{[]Uint{ZeroUint(), ZeroUint(), NewUint(10)}, NewUint(10)},
+		{[]Uint{ZeroUint(), OneUint(), NewUint(10)}, ZeroUint()},
+		{[]Uint{NewUint(10), NewUint(2), OneUint()}, NewUint(100)},
+		{[]Uint{NewUint(210), NewUint(2), NewUint(100)}, NewUint(441)},
+		{[]Uint{NewUint(2100), NewUint(2), NewUint(1000)}, NewUint(4410)},
+		{[]Uint{NewUint(1000000001547125958), NewUint(600), NewUint(1000000000000000000)}, NewUint(1000000928276004850)},
+	}
+	for i, tc := range tests {
+		res := RelativePow(tc.args[0], tc.args[1], tc.args[2])
+		require.Equal(t, tc.want, res, "unexpected result for test case %d, input: %v, got: %v", i, tc.args, res)
+	}
+}

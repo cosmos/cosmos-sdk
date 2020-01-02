@@ -13,21 +13,19 @@ import (
 
 // Keeper of the global paramstore
 type Keeper struct {
-	cdc       *codec.Codec
-	key       sdk.StoreKey
-	tkey      sdk.StoreKey
-	codespace sdk.CodespaceType
-	spaces    map[string]*Subspace
+	cdc    *codec.Codec
+	key    sdk.StoreKey
+	tkey   sdk.StoreKey
+	spaces map[string]*Subspace
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey) Keeper {
 	return Keeper{
-		cdc:       cdc,
-		key:       key,
-		tkey:      tkey,
-		codespace: codespace,
-		spaces:    make(map[string]*Subspace),
+		cdc:    cdc,
+		key:    key,
+		tkey:   tkey,
+		spaces: make(map[string]*Subspace),
 	}
 }
 

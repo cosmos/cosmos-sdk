@@ -32,8 +32,9 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -81,8 +82,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -102,8 +104,9 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res = govHandler(ctx, newProposalMsg2)
-	require.True(t, res.IsOK())
+	res, err = govHandler(ctx, newProposalMsg2)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
@@ -152,8 +155,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		input.addrs[0],
 	)
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	proposalID := GetProposalIDFromBytes(res.Data)
 
 	inactiveQueue = input.keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -169,8 +174,10 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	inactiveQueue.Close()
 
 	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)})
-	res = govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+
+	res, err = govHandler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	activeQueue = input.keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, activeQueue.Valid())
@@ -197,8 +204,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(5))}
 	newProposalMsg := NewMsgSubmitProposal(keep.TestProposal, proposalCoins, input.addrs[0])
 
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
+	res, err := govHandler(ctx, newProposalMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	proposalID := GetProposalIDFromBytes(res.Data)
 
 	newHeader := ctx.BlockHeader()
@@ -206,8 +215,10 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	newDepositMsg := NewMsgDeposit(input.addrs[1], proposalID, proposalCoins)
-	res = govHandler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+
+	res, err = govHandler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(input.keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(input.keeper.GetVotingParams(ctx).VotingPeriod)
@@ -259,8 +270,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10))}
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+
+	res, err := handler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	macc = input.keeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
@@ -308,8 +321,10 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
 	newDepositMsg := NewMsgDeposit(input.addrs[0], proposal.ProposalID, proposalCoins)
-	res := handler(ctx, newDepositMsg)
-	require.True(t, res.IsOK())
+
+	res, err := handler(ctx, newDepositMsg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)
 	require.NoError(t, err)

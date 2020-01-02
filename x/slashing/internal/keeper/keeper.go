@@ -17,19 +17,16 @@ type Keeper struct {
 	cdc        *codec.Codec
 	sk         types.StakingKeeper
 	paramspace types.ParamSubspace
-	codespace  sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace, codespace sdk.CodespaceType) Keeper {
-	keeper := Keeper{
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, paramspace types.ParamSubspace) Keeper {
+	return Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
 		paramspace: paramspace.WithKeyTable(types.ParamKeyTable()),
-		codespace:  codespace,
 	}
-	return keeper
 }
 
 // Logger returns a module-specific logger.

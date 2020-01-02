@@ -1,10 +1,17 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -36,8 +43,39 @@ var (
 	addr = sdk.AccAddress("testaddr")
 )
 
+type MsgTestSuite struct {
+	suite.Suite
+
+	proof commitment.Proof
+}
+
+func (suite *MsgTestSuite) SetupTest() {
+	db := dbm.NewMemDB()
+	store := rootmulti.NewStore(db)
+	storeKey := storetypes.NewKVStoreKey("iavlStoreKey")
+
+	store.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, nil)
+	store.LoadVersion(0)
+	iavlStore := store.GetCommitStore(storeKey).(*iavl.Store)
+
+	iavlStore.Set([]byte("KEY"), []byte("VALUE"))
+	_ = store.Commit()
+
+	res := store.Query(abci.RequestQuery{
+		Path:  fmt.Sprintf("/%s/key", storeKey.Name()), // required path to get key/value+proof
+		Data:  []byte("KEY"),
+		Prove: true,
+	})
+
+	suite.proof = commitment.Proof{Proof: res.Proof}
+}
+
+func TestMsgTestSuite(t *testing.T) {
+	suite.Run(t, new(MsgTestSuite))
+}
+
 // TestMsgChannelOpenInit tests ValidateBasic for MsgChannelOpenInit
-func TestMsgChannelOpenInit(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelOpenInit() {
 	testMsgs := []MsgChannelOpenInit{
 		NewMsgChannelOpenInit("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                      // valid msg
 		NewMsgChannelOpenInit(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", addr),                  // too short port id
@@ -81,34 +119,34 @@ func TestMsgChannelOpenInit(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
 // TestMsgChannelOpenTry tests ValidateBasic for MsgChannelOpenTry
-func TestMsgChannelOpenTry(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelOpenTry() {
 	testMsgs := []MsgChannelOpenTry{
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                      // valid msg
-		NewMsgChannelOpenTry(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                  // too short port id
-		NewMsgChannelOpenTry(invalidLongPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                   // too long port id
-		NewMsgChannelOpenTry(invalidPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                       // port id contains non-alpha
-		NewMsgChannelOpenTry("testportid", invalidShortChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                // too short channel id
-		NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                 // too long channel id
-		NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                     // channel id contains non-alpha
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "", proof, 1, addr),                         // empty counterparty version
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", nil, 1, addr),                        // empty proof
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 0, addr),                      // proof height is zero
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", Order(4), connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                     // invalid channel order
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),             // connection hops more than 1
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),        // too short connection id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),         // too long connection id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", proof, 1, addr), // connection id contains non-alpha
-		NewMsgChannelOpenTry("testportid", "testchannel", "", UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", proof, 1, addr),                       // empty channel version
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", proof, 1, addr),                     // invalid counterparty port id
-		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, "testcpport", invalidChannel, "1.0", proof, 1, addr),                     // invalid counterparty channel id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                      // valid msg
+		NewMsgChannelOpenTry(invalidShortPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                  // too short port id
+		NewMsgChannelOpenTry(invalidLongPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                   // too long port id
+		NewMsgChannelOpenTry(invalidPort, "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // port id contains non-alpha
+		NewMsgChannelOpenTry("testportid", invalidShortChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                // too short channel id
+		NewMsgChannelOpenTry("testportid", invalidLongChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                 // too long channel id
+		NewMsgChannelOpenTry("testportid", invalidChannel, "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // channel id contains non-alpha
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "", suite.proof, 1, addr),                         // empty counterparty version
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", nil, 1, addr),                              // empty suite.proof
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", ORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 0, addr),                      // suite.proof height is zero
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", Order(4), connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid channel order
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),             // connection hops more than 1
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidShortConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),        // too short connection id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, invalidLongConnHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),         // too long connection id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, []string{invalidConnection}, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr), // connection id contains non-alpha
+		NewMsgChannelOpenTry("testportid", "testchannel", "", UNORDERED, connHops, "testcpport", "testcpchannel", "1.0", suite.proof, 1, addr),                       // empty channel version
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, invalidPort, "testcpchannel", "1.0", suite.proof, 1, addr),                     // invalid counterparty port id
+		NewMsgChannelOpenTry("testportid", "testchannel", "1.0", UNORDERED, connHops, "testcpport", invalidChannel, "1.0", suite.proof, 1, addr),                     // invalid counterparty channel id
 	}
 
 	testCases := []struct {
@@ -139,26 +177,27 @@ func TestMsgChannelOpenTry(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
 // TestMsgChannelOpenAck tests ValidateBasic for MsgChannelOpenAck
-func TestMsgChannelOpenAck(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelOpenAck() {
 	testMsgs := []MsgChannelOpenAck{
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", proof, 1, addr),       // valid msg
-		NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", proof, 1, addr),   // too short port id
-		NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", proof, 1, addr),    // too long port id
-		NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", proof, 1, addr),        // port id contains non-alpha
-		NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", proof, 1, addr), // too short channel id
-		NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", proof, 1, addr),  // too long channel id
-		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", proof, 1, addr),      // channel id contains non-alpha
-		NewMsgChannelOpenAck("testportid", "testchannel", "", proof, 1, addr),          // empty counterparty version
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),         // empty proof
-		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", proof, 0, addr),       // proof height is zero
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 1, addr),                  // valid msg
+		NewMsgChannelOpenAck(invalidShortPort, "testchannel", "1.0", suite.proof, 1, addr),              // too short port id
+		NewMsgChannelOpenAck(invalidLongPort, "testchannel", "1.0", suite.proof, 1, addr),               // too long port id
+		NewMsgChannelOpenAck(invalidPort, "testchannel", "1.0", suite.proof, 1, addr),                   // port id contains non-alpha
+		NewMsgChannelOpenAck("testportid", invalidShortChannel, "1.0", suite.proof, 1, addr),            // too short channel id
+		NewMsgChannelOpenAck("testportid", invalidLongChannel, "1.0", suite.proof, 1, addr),             // too long channel id
+		NewMsgChannelOpenAck("testportid", invalidChannel, "1.0", suite.proof, 1, addr),                 // channel id contains non-alpha
+		NewMsgChannelOpenAck("testportid", "testchannel", "", suite.proof, 1, addr),                     // empty counterparty version
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", nil, 1, addr),                          // empty proof
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelOpenAck("testportid", "testchannel", "1.0", suite.proof, 0, addr),                  // proof height is zero
 	}
 
 	testCases := []struct {
@@ -175,31 +214,33 @@ func TestMsgChannelOpenAck(t *testing.T) {
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty counterparty version"},
 		{testMsgs[8], false, "empty proof"},
-		{testMsgs[9], false, "proof height is zero"},
+		{testMsgs[9], false, "empty proof"},
+		{testMsgs[10], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
 // TestMsgChannelOpenConfirm tests ValidateBasic for MsgChannelOpenConfirm
-func TestMsgChannelOpenConfirm(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelOpenConfirm() {
 	testMsgs := []MsgChannelOpenConfirm{
-		NewMsgChannelOpenConfirm("testportid", "testchannel", proof, 1, addr),       // valid msg
-		NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", proof, 1, addr),   // too short port id
-		NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", proof, 1, addr),    // too long port id
-		NewMsgChannelOpenConfirm(invalidPort, "testchannel", proof, 1, addr),        // port id contains non-alpha
-		NewMsgChannelOpenConfirm("testportid", invalidShortChannel, proof, 1, addr), // too short channel id
-		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, proof, 1, addr),  // too long channel id
-		NewMsgChannelOpenConfirm("testportid", invalidChannel, proof, 1, addr),      // channel id contains non-alpha
-		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),         // empty proof
-		NewMsgChannelOpenConfirm("testportid", "testchannel", proof, 0, addr),       // proof height is zero
+		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 1, addr),                  // valid msg
+		NewMsgChannelOpenConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),              // too short port id
+		NewMsgChannelOpenConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),               // too long port id
+		NewMsgChannelOpenConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                   // port id contains non-alpha
+		NewMsgChannelOpenConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),            // too short channel id
+		NewMsgChannelOpenConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
+		NewMsgChannelOpenConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
+		NewMsgChannelOpenConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
+		NewMsgChannelOpenConfirm("testportid", "testchannel", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelOpenConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
 	}
 
 	testCases := []struct {
@@ -215,21 +256,22 @@ func TestMsgChannelOpenConfirm(t *testing.T) {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty proof"},
-		{testMsgs[8], false, "proof height is zero"},
+		{testMsgs[8], false, "empty proof"},
+		{testMsgs[9], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
 // TestMsgChannelCloseInit tests ValidateBasic for MsgChannelCloseInit
-func TestMsgChannelCloseInit(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelCloseInit() {
 	testMsgs := []MsgChannelCloseInit{
 		NewMsgChannelCloseInit("testportid", "testchannel", addr),       // valid msg
 		NewMsgChannelCloseInit(invalidShortPort, "testchannel", addr),   // too short port id
@@ -257,25 +299,26 @@ func TestMsgChannelCloseInit(t *testing.T) {
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }
 
 // TestMsgChannelCloseConfirm tests ValidateBasic for MsgChannelCloseConfirm
-func TestMsgChannelCloseConfirm(t *testing.T) {
+func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	testMsgs := []MsgChannelCloseConfirm{
-		NewMsgChannelCloseConfirm("testportid", "testchannel", proof, 1, addr),       // valid msg
-		NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", proof, 1, addr),   // too short port id
-		NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", proof, 1, addr),    // too long port id
-		NewMsgChannelCloseConfirm(invalidPort, "testchannel", proof, 1, addr),        // port id contains non-alpha
-		NewMsgChannelCloseConfirm("testportid", invalidShortChannel, proof, 1, addr), // too short channel id
-		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, proof, 1, addr),  // too long channel id
-		NewMsgChannelCloseConfirm("testportid", invalidChannel, proof, 1, addr),      // channel id contains non-alpha
-		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),         // empty proof
-		NewMsgChannelCloseConfirm("testportid", "testchannel", proof, 0, addr),       // proof height is zero
+		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 1, addr),                  // valid msg
+		NewMsgChannelCloseConfirm(invalidShortPort, "testchannel", suite.proof, 1, addr),              // too short port id
+		NewMsgChannelCloseConfirm(invalidLongPort, "testchannel", suite.proof, 1, addr),               // too long port id
+		NewMsgChannelCloseConfirm(invalidPort, "testchannel", suite.proof, 1, addr),                   // port id contains non-alpha
+		NewMsgChannelCloseConfirm("testportid", invalidShortChannel, suite.proof, 1, addr),            // too short channel id
+		NewMsgChannelCloseConfirm("testportid", invalidLongChannel, suite.proof, 1, addr),             // too long channel id
+		NewMsgChannelCloseConfirm("testportid", invalidChannel, suite.proof, 1, addr),                 // channel id contains non-alpha
+		NewMsgChannelCloseConfirm("testportid", "testchannel", nil, 1, addr),                          // empty proof
+		NewMsgChannelCloseConfirm("testportid", "testchannel", commitment.Proof{Proof: nil}, 1, addr), // empty proof
+		NewMsgChannelCloseConfirm("testportid", "testchannel", suite.proof, 0, addr),                  // proof height is zero
 	}
 
 	testCases := []struct {
@@ -291,15 +334,16 @@ func TestMsgChannelCloseConfirm(t *testing.T) {
 		{testMsgs[5], false, "too long channel id"},
 		{testMsgs[6], false, "channel id contains non-alpha"},
 		{testMsgs[7], false, "empty proof"},
-		{testMsgs[8], false, "proof height is zero"},
+		{testMsgs[8], false, "empty proof"},
+		{testMsgs[9], false, "proof height is zero"},
 	}
 
 	for i, tc := range testCases {
 		err := tc.msg.ValidateBasic()
 		if tc.expPass {
-			require.Nil(t, err, "Msg %d failed: %v", i, err)
+			suite.Require().NoError(err, "Msg %d failed: %s", i, tc.errMsg)
 		} else {
-			require.NotNil(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
 }

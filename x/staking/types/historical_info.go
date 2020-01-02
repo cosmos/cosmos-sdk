@@ -48,10 +48,10 @@ func UnmarshalHistoricalInfo(cdc *codec.Codec, value []byte) (hi HistoricalInfo,
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.ValSet) == 0 {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo(DefaultCodespace), "ValidatorSer is nil")
+		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 	if !sort.IsSorted(Validators(hi.ValSet)) {
-		return sdkerrors.Wrap(ErrInvalidHistoricalInfo(DefaultCodespace), "ValidatorSet is not sorted by address")
+		return sdkerrors.Wrap(ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 	return nil
 }

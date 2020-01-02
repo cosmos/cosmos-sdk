@@ -25,6 +25,8 @@ func (suite *MerkleTestSuite) TestVerifyMembership() {
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
+	suite.Require().NoError(proof.ValidateBasic())
+	suite.Require().Error(commitment.Proof{}.ValidateBasic())
 
 	cases := []struct {
 		name       string
@@ -73,6 +75,7 @@ func (suite *MerkleTestSuite) TestVerifyNonMembership() {
 	proof := commitment.Proof{
 		Proof: res.Proof,
 	}
+	suite.Require().NoError(proof.ValidateBasic())
 
 	cases := []struct {
 		name       string

@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -187,10 +188,10 @@ func (k Keeper) SendPacket(
 // sent on the corresponding channel end on the counterparty chain.
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
-	packet types.Packet,
+	packet exported.PacketI,
 	proof commitment.ProofI,
 	proofHeight uint64,
-) (types.Packet, error) {
+) (exported.PacketI, error) {
 
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
 	if !found {
@@ -281,8 +282,8 @@ func (k Keeper) RecvPacket(
 // and acted upon.
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
-	packet types.Packet,
-	acknowledgement types.PacketDataI,
+	packet exported.PacketI,
+	acknowledgement exported.PacketDataI,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (types.Packet, error) {

@@ -1,8 +1,13 @@
 package exported
 
-import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
-)
-
-type Packet = types.Packet
-type PacektDataI = types.PacketDataI
+// PacketI defines the standard interface for IBC packets
+type PacketI interface {
+	GetSequence() uint64
+	GetTimeoutHeight() uint64
+	GetSourcePort() string
+	GetSourceChannel() string
+	GetDestPort() string
+	GetDestChannel() string
+	GetData() []byte
+	ValidateBasic() error
+}

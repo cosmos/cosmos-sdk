@@ -10,22 +10,22 @@ import (
 // QueryPacket returns a packet from the store
 func QueryPacket(
 	ctx client.CLIContext, portID, channelID string,
-	sequence, timeout uint64, queryRoute string,
+	sequence, timeout uint64, prove bool,
 ) (types.PacketResponse, error) {
 	var packetRes types.PacketResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  types.KeyPacketCommitment(portID, channelID, sequence),
-		Prove: true,
+		Prove: prove,
 	}
 
 	res, err := ctx.QueryABCI(req)
 	if err != nil {
-		return packetRes, err
+		return types.PacketResponse{}, err
 	}
 
-	channel, err := QueryChannel(ctx, portID, channelID, queryRoute, true)
+	channel, err := QueryChannel(ctx, portID, channelID, "ibc", true)
 	if err != nil {
 		return packetRes, err
 	}
@@ -68,7 +68,7 @@ func QueryChannel(ctx client.CLIContext, portID string, channelID string, queryR
 
 	res, err := ctx.QueryABCI(req)
 	if res.Value == nil || err != nil {
-		return connRes, err
+		return types.ChannelResponse{}, err
 	}
 
 	var channel types.Channel

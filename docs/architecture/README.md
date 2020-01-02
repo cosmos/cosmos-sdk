@@ -40,3 +40,4 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 012: State Accessors](./adr-012-state-accessors.md)
 - [ADR 015: IBC Packet Receiver](./adr-015-ibc-packet-receiver.md)
 - [ADR 017: Historical Header Module](./adr-017-historical-header-module.md)
+- [ADR 018: Extendable Voting Periods](./adr-018-extendable-voting-period.md)

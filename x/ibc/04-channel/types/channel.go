@@ -2,11 +2,11 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 type Channel struct {
@@ -34,25 +34,25 @@ func NewChannel(
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
-		return ErrInvalidChannelState(
-			DefaultCodespace,
-			"channel order should be either 'ORDERED' or 'UNORDERED'",
-		)
+		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
 	if ch.Ordering.String() == "" {
-		return ErrInvalidChannel(
-			DefaultCodespace,
-			"channel order should be either 'ORDERED' or 'UNORDERED'",
-		)
+		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelOrdering.Error())
 	}
 	if len(ch.ConnectionHops) != 1 {
-		return ErrInvalidChannel(DefaultCodespace, "IBC v1 only supports one connection hop")
+		return sdkerrors.Wrap(ErrInvalidChannel, "IBC v1 only supports one connection hop")
 	}
 	if err := host.DefaultConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection hop ID")
+		return sdkerrors.Wrap(
+			ErrInvalidChannel,
+			sdkerrors.Wrap(err, "invalid connection hop ID").Error(),
+		)
 	}
 	if strings.TrimSpace(ch.Version) == "" {
-		return ErrInvalidChannel(DefaultCodespace, "channel version can't be blank")
+		return sdkerrors.Wrap(
+			ErrInvalidChannel,
+			sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "channel version can't be blank").Error(),
+		)
 	}
 	return ch.Counterparty.ValidateBasic()
 }
@@ -74,10 +74,16 @@ func NewCounterparty(portID, channelID string) Counterparty {
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
+		return sdkerrors.Wrap(
+			ErrInvalidCounterparty,
+			sdkerrors.Wrap(err, "invalid counterparty connection ID").Error(),
+		)
 	}
 	if err := host.DefaultChannelIdentifierValidator(c.ChannelID); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty client ID")
+		return sdkerrors.Wrap(
+			ErrInvalidCounterparty,
+			sdkerrors.Wrap(err, "invalid counterparty client ID").Error(),
+		)
 	}
 	return nil
 }
@@ -126,7 +132,7 @@ func (o *Order) UnmarshalJSON(data []byte) error {
 
 	order := OrderFromString(s)
 	if order == 0 {
-		return fmt.Errorf("invalid channel ordering '%s'", s)
+		return sdkerrors.Wrap(ErrInvalidChannelOrdering, s)
 	}
 
 	*o = order

@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -15,7 +15,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		DisableFlagParsing: true,
 	}
 
-	ics04ChannelQueryCmd.AddCommand(client.GetCommands(
+	ics04ChannelQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryChannel(storeKey, cdc),
 	)...)
 
@@ -29,7 +29,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		Short: "IBC channel transaction subcommands",
 	}
 
-	ics04ChannelTxCmd.AddCommand(client.PostCommands(
+	ics04ChannelTxCmd.AddCommand(flags.PostCommands(
 		GetMsgChannelOpenInitCmd(storeKey, cdc),
 		GetMsgChannelOpenTryCmd(storeKey, cdc),
 		GetMsgChannelOpenAckCmd(storeKey, cdc),

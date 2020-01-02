@@ -116,13 +116,16 @@ func (msg MsgChannelOpenTry) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank")
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofInit == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return msg.Channel.ValidateBasic()
@@ -183,13 +186,16 @@ func (msg MsgChannelOpenAck) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank")
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofTry == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofTry.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -248,10 +254,13 @@ func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofAck == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofAck.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -359,10 +368,13 @@ func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofInit == nil {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof")
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil

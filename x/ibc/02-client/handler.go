@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -73,8 +71,7 @@ func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
 			return k.CheckMisbehaviourAndUpdateState(ctx, evidence)
 
 		default:
-			errMsg := fmt.Sprintf("unrecognized IBC client evidence type: %T", e)
-			return sdk.ErrUnknownRequest(errMsg)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)
 		}
 	}
 }

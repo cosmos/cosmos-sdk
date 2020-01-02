@@ -154,7 +154,7 @@ func (proof Proof) VerifyNonMembership(root RootI, path PathI) bool {
 
 // ValidateBasic checks if the proof is empty.
 func (proof Proof) ValidateBasic() error {
-	if proof.Proof == nil {
+	if (proof == Proof{}) || proof.Proof == nil {
 		return ErrInvalidProof
 	}
 	return nil

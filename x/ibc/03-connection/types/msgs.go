@@ -133,6 +133,9 @@ func (msg MsgConnectionOpenTry) ValidateBasic() error {
 			return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version can't be blank")
 		}
 	}
+	if msg.ProofInit == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
 	if err := msg.ProofInit.ValidateBasic(); err != nil {
 		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}

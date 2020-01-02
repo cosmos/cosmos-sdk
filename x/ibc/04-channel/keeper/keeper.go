@@ -16,7 +16,6 @@ import (
 type Keeper struct {
 	storeKey         sdk.StoreKey
 	cdc              *codec.Codec
-	codespace        sdk.CodespaceType
 	clientKeeper     types.ClientKeeper
 	connectionKeeper types.ConnectionKeeper
 	portKeeper       types.PortKeeper
@@ -24,14 +23,13 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC channel Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	cdc *codec.Codec, key sdk.StoreKey,
 	clientKeeper types.ClientKeeper, connectionKeeper types.ConnectionKeeper,
 	portKeeper types.PortKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		codespace:        sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/channel",
 		clientKeeper:     clientKeeper,
 		connectionKeeper: connectionKeeper,
 		portKeeper:       portKeeper,

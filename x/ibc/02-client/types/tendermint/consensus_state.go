@@ -53,7 +53,9 @@ func (cs ConsensusState) GetCommitter() exported.Committer {
 func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (exported.ConsensusState, error) {
 	tmHeader, ok := header.(Header)
 	if !ok {
-		return nil, clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace)
+		return nil, sdkerrors.Wrap(
+			clienterrors.ErrInvalidHeader, "header is not from Tendermint",
+		)
 	}
 
 	if err := cs.checkValidity(tmHeader); err != nil {
@@ -69,7 +71,7 @@ func (cs ConsensusState) CheckValidityAndUpdateState(header exported.Header) (ex
 func (cs ConsensusState) checkValidity(header Header) error {
 	if header.GetHeight() < cs.Height {
 		return sdkerrors.Wrap(
-			clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace),
+			clienterrors.ErrInvalidHeader,
 			fmt.Sprintf("header height < consensus height (%d < %d)", header.GetHeight(), cs.Height),
 		)
 	}

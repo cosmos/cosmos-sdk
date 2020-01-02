@@ -6,10 +6,10 @@ import (
 )
 
 // HandleMsgTransfer defines the sdk.Handler for MsgTransfer
-func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Result) {
+func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
 	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -21,14 +21,16 @@ func HandleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (res sdk.Resu
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandleMsgRecvPacket defines the sdk.Handler for MsgRecvPacket
-func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (res sdk.Result) {
+func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (*sdk.Result, error) {
 	err := k.ReceivePacket(ctx, msg.Packet, msg.Proofs[0], msg.Height)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -39,5 +41,7 @@ func HandleMsgRecvPacket(ctx sdk.Context, k Keeper, msg MsgRecvPacket) (res sdk.
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }

@@ -13,26 +13,15 @@ import (
 )
 
 const (
-	DefaultCodespace           = errors.DefaultCodespace
-	CodeClientExists           = errors.CodeClientExists
-	CodeClientNotFound         = errors.CodeClientNotFound
-	CodeClientFrozen           = errors.CodeClientFrozen
-	CodeConsensusStateNotFound = errors.CodeConsensusStateNotFound
-	CodeInvalidConsensusState  = errors.CodeInvalidConsensusState
-	CodeClientTypeNotFound     = errors.CodeClientTypeNotFound
-	CodeInvalidClientType      = errors.CodeInvalidClientType
-	CodeRootNotFound           = errors.CodeRootNotFound
-	CodeInvalidHeader          = errors.CodeInvalidHeader
-	CodeInvalidEvidence        = errors.CodeInvalidEvidence
-	AttributeKeyClientID       = types.AttributeKeyClientID
-	SubModuleName              = types.SubModuleName
-	StoreKey                   = types.StoreKey
-	RouterKey                  = types.RouterKey
-	QuerierRoute               = types.QuerierRoute
-	QueryAllClients            = types.QueryAllClients
-	QueryClientState           = types.QueryClientState
-	QueryConsensusState        = types.QueryConsensusState
-	QueryVerifiedRoot          = types.QueryVerifiedRoot
+	AttributeKeyClientID = types.AttributeKeyClientID
+	SubModuleName        = types.SubModuleName
+	StoreKey             = types.StoreKey
+	RouterKey            = types.RouterKey
+	QuerierRoute         = types.QuerierRoute
+	QueryAllClients      = types.QueryAllClients
+	QueryClientState     = types.QueryClientState
+	QueryConsensusState  = types.QueryConsensusState
+	QueryVerifiedRoot    = types.QueryVerifiedRoot
 )
 
 var (

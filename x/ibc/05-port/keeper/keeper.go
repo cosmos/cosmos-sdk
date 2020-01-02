@@ -5,25 +5,22 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/05-port/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
 // Keeper defines the IBC connection keeper
 type Keeper struct {
-	storeKey  sdk.StoreKey
-	cdc       *codec.Codec
-	codespace sdk.CodespaceType
-	ports     map[string]bool
+	storeKey sdk.StoreKey
+	cdc      *codec.Codec
+	ports    map[string]bool
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
 	return Keeper{
-		storeKey:  key,
-		cdc:       cdc,
-		codespace: sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/port",
-		ports:     make(map[string]bool),                                                      // map of capability key names to port ids
+		storeKey: key,
+		cdc:      cdc,
+		ports:    make(map[string]bool), // map of capability key names to port ids
 	}
 }
 

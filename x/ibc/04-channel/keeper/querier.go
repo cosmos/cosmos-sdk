@@ -20,7 +20,7 @@ func QuerierChannel(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 
 	channel, found := k.GetChannel(ctx, params.PortID, params.ChannelID)
 	if !found {
-		return nil, types.ErrChannelNotFound(k.codespace, params.PortID, params.ChannelID)
+		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, params.ChannelID)
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, channel)

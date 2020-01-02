@@ -111,6 +111,7 @@ if the provided arguments are invalid.
     the `client/keys` add command.
   * `SupportedAlgos` and `SupportedAlgosLedger` functions return a slice of `SigningAlgo`s that are
     supported by the keybase and the ledger integration respectively.
+  * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created.
 * (simapp) [\#5419](https://github.com/cosmos/cosmos-sdk/pull/5419) simapp/helpers.GenTx() now accepts a gas argument.
 * (baseapp) [\#5455](https://github.com/cosmos/cosmos-sdk/issues/5455) An `sdk.Context` is passed into the `router.Route()`
 function.
@@ -261,8 +262,11 @@ to detail this new feature and how state transitions occur.
   * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
   * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 * (types) [\#5428](https://github.com/cosmos/cosmos-sdk/pull/5428) Add `Mod` (modulo) method and `RelativePow` (exponentation) function for `Uint`.
+<<<<<<< HEAD
 * (modules) [\#5506](https://github.com/cosmos/cosmos-sdk/pull/5506) Remove redundancy in `x/distribution`s use of parameters. There
   now exists a single `Params` type with a getter and setter along with a getter for each individual parameter.
+=======
+>>>>>>> Update x/ibc error handling (#5462)
 
 ### Bug Fixes
 
@@ -2866,3 +2870,5 @@ BUG FIXES:
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0
+
+

@@ -25,15 +25,15 @@ type ValidateFn func(string) error
 func defaultIdentifierValidator(id string, min, max int) error {
 	// valid id MUST NOT contain "/" separator
 	if strings.Contains(id, "/") {
-		return sdkerrors.Wrap(ErrInvalidID(DefaultCodespace, id), "identifier cannot contain separator: /")
+		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s cannot contain separator '/'", id)
 	}
 	// valid id must be between 10 and 20 characters
 	if len(id) < min || len(id) > max {
-		return sdkerrors.Wrapf(ErrInvalidID(DefaultCodespace, id), "identifier has invalid length: %d, must be between %d-%d characters", len(id), min, max)
+		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s has invalid length: %d, must be between %d-%d characters", id, len(id), min, max)
 	}
 	// valid id must contain only lower alphabetic characters
 	if !isAlphaLower(id) {
-		return sdkerrors.Wrap(ErrInvalidID(DefaultCodespace, id), "identifier must contain only lowercase alphabetic characters")
+		return sdkerrors.Wrapf(ErrInvalidID, "identifier %s must contain only lowercase alphabetic characters", id)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 			// Each path element must either be valid identifier or alphanumeric
 			err := idValidator(p)
 			if err != nil && !isAlphaNumeric(p) {
-				return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "path contains invalid identifier or non-alphanumeric path element: %s", p)
+				return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains invalid identifier or non-alphanumeric path element: %s", path, p)
 			}
 		}
 		return nil
@@ -89,13 +89,13 @@ func NewPathValidator(idValidator ValidateFn) ValidateFn {
 func DefaultPathValidator(path string) error {
 	pathArr := strings.Split(path, "/")
 	if pathArr[0] == path {
-		return sdkerrors.Wrap(ErrInvalidPath(DefaultCodespace, path), "path doesn't contain any separator '/'")
+		return sdkerrors.Wrapf(ErrInvalidPath, "path %s doesn't contain any separator '/'", path)
 	}
 
 	for _, p := range pathArr {
 		// Each path element must be alphanumeric and non-blank
 		if strings.TrimSpace(p) == "" || !isAlphaNumeric(p) {
-			return sdkerrors.Wrapf(ErrInvalidPath(DefaultCodespace, path), "invalid path element containing non-alphanumeric characters: '%s'", p)
+			return sdkerrors.Wrapf(ErrInvalidPath, "path %s contains an invalid non-alphanumeric character: '%s'", path, p)
 		}
 	}
 	return nil

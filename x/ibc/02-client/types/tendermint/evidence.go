@@ -1,14 +1,13 @@
 package tendermint
 
 import (
-	"fmt"
-
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
@@ -56,27 +55,31 @@ func (ev Evidence) GetHeight() int64 {
 func (ev Evidence) ValidateBasic() error {
 	// ValidateBasic on both validators
 	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Header1 failed ValidateBasic: %v", err))
+		return sdkerrors.Wrap(
+			errors.ErrInvalidEvidence,
+			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
+		)
 	}
 	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("Header2 failed ValidateBasic: %v", err))
+		return sdkerrors.Wrap(
+			errors.ErrInvalidEvidence,
+			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
+		)
 	}
 	// Ensure that Heights are the same
 	if ev.Header1.Height != ev.Header2.Height {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "headers in evidence are on different heights")
+		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
 	}
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "Headers commit to same blockID")
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-
-	if err1 := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err1 != nil {
-		return err1
+	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
+		return err
 	}
-	if err2 := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err2 != nil {
-		return err2
+	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -88,7 +91,7 @@ func (ev Evidence) ValidateBasic() error {
 func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.ErrInvalidEvidence(errors.DefaultCodespace, fmt.Sprintf("invalid commit: %v", r))
+			err = sdkerrors.Wrapf(errors.ErrInvalidEvidence, "invalid commit: %v", r)
 		}
 	}()
 
@@ -99,7 +102,7 @@ func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.Validat
 
 	// Check that ValidatorSet did indeed commit to blockID in Commit
 	if !ok || !blockID.Equals(commit.BlockID) {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "ValidatorSet did not commit to Header1")
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "validator set did not commit to header 1")
 	}
 
 	return nil

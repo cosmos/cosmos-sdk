@@ -6,7 +6,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
@@ -62,10 +61,10 @@ func QueryClientState(
 	return clientStateRes, nil
 }
 
-// QueryConsensusStateProof queries the store to get the consensus state and a
-// merkle proof.
+// QueryConsensusState queries the store to get the consensus state and a merkle
+// proof.
 func QueryConsensusState(
-	cliCtx client.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
+	cliCtx context.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
 	req := abci.RequestQuery{

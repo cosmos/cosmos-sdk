@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,18 +23,19 @@ func (k Keeper) OnChanOpenInit(
 	version string,
 ) error {
 	if order != channel.UNORDERED {
-		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+		return sdkerrors.Wrap(channel.ErrInvalidChannel, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return port.ErrInvalidPort(
-			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name()))
+		return sdkerrors.Wrapf(
+			port.ErrInvalidPort,
+			"counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name(),
+		)
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -55,22 +55,23 @@ func (k Keeper) OnChanOpenTry(
 	counterpartyVersion string,
 ) error {
 	if order != channel.UNORDERED {
-		return channel.ErrInvalidChannel(k.codespace, "channel must be UNORDERED")
+		return sdkerrors.Wrap(channel.ErrInvalidChannel, "channel must be UNORDERED")
 	}
 
 	// NOTE: here the capability key name defines the port ID of the counterparty
 	if counterparty.PortID != k.boundedCapability.Name() {
-		return port.ErrInvalidPort(
-			k.codespace,
-			fmt.Sprintf("counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name()))
+		return sdkerrors.Wrapf(
+			port.ErrInvalidPort,
+			"counterparty port ID doesn't match the capability key (%s ≠ %s)", counterparty.PortID, k.boundedCapability.Name(),
+		)
 	}
 
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version must be blank")
 	}
 
 	if strings.TrimSpace(counterpartyVersion) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "counterparty version must be blank")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "counterparty version must be blank")
 	}
 
 	// NOTE: as the escrow address is generated from both the port and channel IDs
@@ -86,7 +87,7 @@ func (k Keeper) OnChanOpenAck(
 	version string,
 ) error {
 	if strings.TrimSpace(version) != "" {
-		return ibctypes.ErrInvalidVersion(k.codespace, "version must be blank")
+		return sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "version must be blank")
 	}
 
 	return nil
@@ -169,7 +170,10 @@ func (k Keeper) OnTimeoutPacket(
 	for i, coin := range data.Amount {
 		coin := coin
 		if !strings.HasPrefix(coin.Denom, prefix) {
-			return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidCoins,
+				"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
+			)
 		}
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}

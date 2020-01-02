@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -48,7 +46,7 @@ func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byt
 
 	clientState, found := k.GetClientState(ctx, params.ClientID)
 	if !found {
-		return nil, errors.ErrClientTypeNotFound(k.codespace)
+		return nil, sdkerrors.Wrap(errors.ErrClientTypeNotFound, params.ClientID)
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, clientState)
@@ -69,7 +67,7 @@ func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]
 
 	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
 	if !found {
-		return nil, errors.ErrConsensusStateNotFound(k.codespace)
+		return nil, errors.ErrConsensusStateNotFound
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, consensusState)
@@ -90,7 +88,7 @@ func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]by
 
 	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
 	if !found {
-		return nil, errors.ErrRootNotFound(k.codespace)
+		return nil, errors.ErrRootNotFound
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, root)
@@ -111,10 +109,7 @@ func QuerierCommitter(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte,
 
 	committer, found := k.GetCommitter(ctx, params.ClientID, params.Height)
 	if !found {
-		return nil, errors.ErrCommitterNotFound(
-			k.codespace,
-			fmt.Sprintf("committer not found on height: %d", params.Height),
-		)
+		return nil, errors.ErrCommitterNotFound
 	}
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, committer)

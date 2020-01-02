@@ -20,12 +20,12 @@ func QuerierConnection(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte
 
 	connection, found := k.GetConnection(ctx, params.ConnectionID)
 	if !found {
-		return nil, types.ErrConnectionNotFound(k.codespace, params.ConnectionID)
+		return nil, sdkerrors.Wrap(types.ErrConnectionNotFound, params.ConnectionID)
 	}
 
-	bz, err := codec.MarshalJSONIndent(k.cdc, connection)
+	bz, err := types.SubModuleCdc.MarshalJSON(connection)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
 
 	return bz, nil
@@ -66,7 +66,7 @@ func QuerierClientConnections(ctx sdk.Context, req abci.RequestQuery, k Keeper) 
 
 	clientConnectionPaths, found := k.GetClientConnectionPaths(ctx, params.ClientID)
 	if !found {
-		return nil, types.ErrClientConnectionPathsNotFound(k.codespace, params.ClientID)
+		return nil, sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, params.ClientID)
 	}
 
 	bz, err := types.SubModuleCdc.MarshalJSON(clientConnectionPaths)

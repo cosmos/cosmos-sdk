@@ -1475,7 +1475,7 @@ func TestWithRouter(t *testing.T) {
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
 	routerOpt := func(bapp *BaseApp) {
-		bapp.WithRouter(&testCustomRouter{routes: sync.Map{}})
+		bapp.SetRouter(&testCustomRouter{routes: sync.Map{}})
 		bapp.Router().AddRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 	}
 

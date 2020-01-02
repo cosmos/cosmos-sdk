@@ -221,11 +221,6 @@ func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
 	return app.initFromMainStore(baseKey)
 }
 
-// WithRouter adds a new custom Router definition to the BaseApp
-func (app *BaseApp) WithRouter(rtr sdk.Router) {
-	app.router = rtr
-}
-
 // DefaultStoreLoader will be used by default and loads the latest version
 func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
 	return ms.LoadLatestVersion()

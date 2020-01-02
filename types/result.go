@@ -89,15 +89,6 @@ type TxResponse struct {
 	Events StringEvents `json:"events,omitempty"`
 }
 
-func (res TxResponse) IsOK() bool {
-	for _, lg := range res.Logs {
-		if !lg.Success {
-			return false
-		}
-	}
-	return true
-}
-
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
 func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxResponse {
 	if res == nil {

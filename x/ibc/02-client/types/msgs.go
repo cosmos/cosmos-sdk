@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
@@ -52,13 +50,10 @@ func (msg MsgCreateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
 	if clientType := exported.ClientTypeFromString(msg.ClientType); clientType == 0 {
-		return errors.ErrInvalidClientType(
-			errors.DefaultCodespace,
-			fmt.Sprintf("invalid client type %s", msg.ClientType),
-		)
+		return sdkerrors.Wrap(errors.ErrInvalidClientType, msg.ClientType)
 	}
 	if msg.ConsensusState == nil {
-		return errors.ErrInvalidConsensus(errors.DefaultCodespace)
+		return errors.ErrInvalidConsensus
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -107,7 +102,7 @@ func (msg MsgUpdateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Header == nil {
-		return errors.ErrInvalidHeader(errors.DefaultCodespace)
+		return errors.ErrInvalidHeader
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
@@ -154,10 +149,10 @@ func (msg MsgSubmitMisbehaviour) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitMisbehaviour) ValidateBasic() error {
 	if msg.Evidence == nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, "evidence is nil")
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "evidence cannot be nil")
 	}
 	if err := msg.Evidence.ValidateBasic(); err != nil {
-		return errors.ErrInvalidEvidence(errors.DefaultCodespace, err.Error())
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

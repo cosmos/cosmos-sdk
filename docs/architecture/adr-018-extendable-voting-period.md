@@ -23,7 +23,7 @@ Thus, we propose the following mechanism:
 
 ### Mechanism
 
-There is a new `Msg` type called `MsgExtendVotingPeriod`, which can be sent by any staked account during a proposal's voting period.  It allows the sender to unilaterally extend the length of the voting period by `MaxVotingPeriodExtension * sender's share of voting power`.
+There is a new `Msg` type called `MsgExtendVotingPeriod`, which can be sent by any staked account during a proposal's voting period.  It allows the sender to unilaterally extend the length of the voting period by `MaxVotingPeriodExtension * sender's share of voting power`.  Every address can only call `MsgExtendVotingPeriod` once per proposal.
 
 So for example, if the `MaxVotingPeriodExtension` is set to 100 Days, then anyone with 1% of voting power can extend the voting power by 1 day.  If 33% of voting power has sent the message, the voting period will be extended by 33 days.  Thus, if absolutely everyone chooses to extend the voting period, the absolute maximum voting period will be `MinVotingPeriod + MaxVotingPeriodExtension`.
 

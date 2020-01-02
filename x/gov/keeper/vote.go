@@ -4,21 +4,22 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // AddVote adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) sdk.Error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, option types.VoteOption) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return types.ErrUnknownProposal(keeper.codespace, proposalID)
+		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 	if proposal.Status != types.StatusVotingPeriod {
-		return types.ErrInactiveProposal(keeper.codespace, proposalID)
+		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	if !types.ValidVoteOption(option) {
-		return types.ErrInvalidVote(keeper.codespace, option.String())
+		return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
 	}
 
 	vote := types.NewVote(proposalID, voterAddr, option)

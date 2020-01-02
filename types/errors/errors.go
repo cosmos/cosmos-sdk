@@ -44,32 +44,43 @@ var (
 	// ErrUnknownAddress to doc
 	ErrUnknownAddress = Register(RootCodespace, 9, "unknown address")
 
-	// ErrInsufficientCoins to doc (what is the difference between ErrInsufficientFunds???)
-	ErrInsufficientCoins = Register(RootCodespace, 10, "insufficient coins")
-
 	// ErrInvalidCoins to doc
-	ErrInvalidCoins = Register(RootCodespace, 11, "invalid coins")
+	ErrInvalidCoins = Register(RootCodespace, 10, "invalid coins")
 
 	// ErrOutOfGas to doc
-	ErrOutOfGas = Register(RootCodespace, 12, "out of gas")
+	ErrOutOfGas = Register(RootCodespace, 11, "out of gas")
 
 	// ErrMemoTooLarge to doc
-	ErrMemoTooLarge = Register(RootCodespace, 13, "memo too large")
+	ErrMemoTooLarge = Register(RootCodespace, 12, "memo too large")
 
 	// ErrInsufficientFee to doc
-	ErrInsufficientFee = Register(RootCodespace, 14, "insufficient fee")
+	ErrInsufficientFee = Register(RootCodespace, 13, "insufficient fee")
 
 	// ErrTooManySignatures to doc
-	ErrTooManySignatures = Register(RootCodespace, 15, "maximum numer of signatures exceeded")
+	ErrTooManySignatures = Register(RootCodespace, 14, "maximum number of signatures exceeded")
 
 	// ErrNoSignatures to doc
-	ErrNoSignatures = Register(RootCodespace, 16, "no signatures supplied")
+	ErrNoSignatures = Register(RootCodespace, 15, "no signatures supplied")
 
 	// ErrJSONMarshal defines an ABCI typed JSON marshalling error
-	ErrJSONMarshal = Register(RootCodespace, 17, "failed to marshal JSON bytes")
+	ErrJSONMarshal = Register(RootCodespace, 16, "failed to marshal JSON bytes")
 
 	// ErrJSONUnmarshal defines an ABCI typed JSON unmarshalling error
-	ErrJSONUnmarshal = Register(RootCodespace, 18, "failed to unmarshal JSON bytes")
+	ErrJSONUnmarshal = Register(RootCodespace, 17, "failed to unmarshal JSON bytes")
+
+	// ErrInvalidRequest defines an ABCI typed error where the request contains
+	// invalid data.
+	ErrInvalidRequest = Register(RootCodespace, 18, "invalid request")
+
+	// ErrTxInMempoolCache defines an ABCI typed error where a tx already exists
+	// in the mempool.
+	ErrTxInMempoolCache = Register(RootCodespace, 19, "tx already in mempool")
+
+	// ErrMempoolIsFull defines an ABCI typed error where the mempool is full.
+	ErrMempoolIsFull = Register(RootCodespace, 20, "mempool is full")
+
+	// ErrTxTooLarge defines an ABCI typed error where tx is too large.
+	ErrTxTooLarge = Register(RootCodespace, 21, "tx too large")
 
 	// ErrPanic is only set when we recover from a panic, so we know to
 	// redact potentially sensitive system info
@@ -89,12 +100,10 @@ func Register(codespace string, code uint32, description string) *Error {
 	if e := getUsed(codespace, code); e != nil {
 		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
 	}
-	err := &Error{
-		code:      code,
-		codespace: codespace,
-		desc:      description,
-	}
+
+	err := New(codespace, code, description)
 	setUsed(err)
+
 	return err
 }
 
@@ -247,7 +256,7 @@ type wrappedError struct {
 }
 
 func (e *wrappedError) Error() string {
-	return fmt.Sprintf("%s: %s", e.msg, e.parent.Error())
+	return fmt.Sprintf("%s: %s", e.parent.Error(), e.msg)
 }
 
 func (e *wrappedError) Cause() error {

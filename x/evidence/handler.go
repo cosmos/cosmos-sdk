@@ -1,13 +1,12 @@
 package evidence
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
@@ -15,14 +14,14 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleMsgSubmitEvidence(ctx, k, msg)
 
 		default:
-			return sdk.ErrUnknownRequest(fmt.Sprintf("unrecognized %s message type: %T", ModuleName, msg)).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", ModuleName, msg)
 		}
 	}
 }
 
-func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg MsgSubmitEvidence) sdk.Result {
+func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg MsgSubmitEvidence) (*sdk.Result, error) {
 	if err := k.SubmitEvidence(ctx, msg.Evidence); err != nil {
-		return sdk.ConvertError(err).Result()
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -33,8 +32,8 @@ func handleMsgSubmitEvidence(ctx sdk.Context, k Keeper, msg MsgSubmitEvidence) s
 		),
 	)
 
-	return sdk.Result{
+	return &sdk.Result{
 		Data:   msg.Evidence.Hash(),
 		Events: ctx.EventManager().Events(),
-	}
+	}, nil
 }

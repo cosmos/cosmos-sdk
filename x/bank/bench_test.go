@@ -34,10 +34,11 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{})
-		x := benchmarkApp.Check(txs[i])
-		if !x.IsOK() {
+		_, _, err := benchmarkApp.Check(txs[i])
+		if err != nil {
 			panic("something is broken in checking transaction")
 		}
+
 		benchmarkApp.Deliver(txs[i])
 		benchmarkApp.EndBlock(abci.RequestEndBlock{})
 		benchmarkApp.Commit()
@@ -63,10 +64,11 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{})
-		x := benchmarkApp.Check(txs[i])
-		if !x.IsOK() {
+		_, _, err := benchmarkApp.Check(txs[i])
+		if err != nil {
 			panic("something is broken in checking transaction")
 		}
+
 		benchmarkApp.Deliver(txs[i])
 		benchmarkApp.EndBlock(abci.RequestEndBlock{})
 		benchmarkApp.Commit()

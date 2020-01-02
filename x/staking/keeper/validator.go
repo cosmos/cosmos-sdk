@@ -156,7 +156,7 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
 func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
-	validator types.Validator, newRate sdk.Dec) (types.Commission, sdk.Error) {
+	validator types.Validator, newRate sdk.Dec) (types.Commission, error) {
 
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time

@@ -278,12 +278,12 @@ func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
 }
 
 func parseQueryResponse(cdc *codec.Codec, rawRes []byte) (uint64, error) {
-	var simulationResult sdk.Result
-	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &simulationResult); err != nil {
+	var gasUsed uint64
+	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &gasUsed); err != nil {
 		return 0, err
 	}
 
-	return simulationResult.GasUsed, nil
+	return gasUsed, nil
 }
 
 // PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.

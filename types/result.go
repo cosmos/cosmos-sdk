@@ -12,36 +12,27 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-// Result is the union of ResponseFormat and ResponseCheckTx.
-type Result struct {
-	// Code is the response code, is stored back on the chain.
-	Code CodeType
-
-	// Codespace is the string referring to the domain of an error
-	Codespace CodespaceType
-
-	// Data is any data returned from the app.
-	// Data has to be length prefixed in order to separate
-	// results from multiple msgs executions
-	Data []byte
-
-	// Log contains the txs log information. NOTE: nondeterministic.
-	Log string
-
+// GasInfo defines tx execution gas context.
+type GasInfo struct {
 	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted uint64
 
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed uint64
-
-	// Events contains a slice of Event objects that were emitted during some
-	// execution.
-	Events Events
 }
 
-// TODO: In the future, more codes may be OK.
-func (res Result) IsOK() bool {
-	return res.Code.IsOK()
+// Result is the union of ResponseFormat and ResponseCheckTx.
+type Result struct {
+	// Data is any data returned from message or handler execution. It MUST be length
+	// prefixed in order to separate data from multiple message executions.
+	Data []byte
+
+	// Log contains the log information from message or handler execution.
+	Log string
+
+	// Events contains a slice of Event objects that were emitted during message or
+	// handler execution.
+	Events Events
 }
 
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
@@ -50,7 +41,6 @@ type ABCIMessageLogs []ABCIMessageLog
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
 type ABCIMessageLog struct {
 	MsgIndex uint16 `json:"msg_index"`
-	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 
 	// Events contains a slice of Event objects that were emitted during some
@@ -58,10 +48,9 @@ type ABCIMessageLog struct {
 	Events StringEvents `json:"events"`
 }
 
-func NewABCIMessageLog(i uint16, success bool, log string, events Events) ABCIMessageLog {
+func NewABCIMessageLog(i uint16, log string, events Events) ABCIMessageLog {
 	return ABCIMessageLog{
 		MsgIndex: i,
-		Success:  success,
 		Log:      log,
 		Events:   StringifyEvents(events.ToABCIEvents()),
 	}
@@ -84,6 +73,7 @@ func (logs ABCIMessageLogs) String() (str string) {
 type TxResponse struct {
 	Height    int64           `json:"height"`
 	TxHash    string          `json:"txhash"`
+	Codespace string          `json:"codespace,omitempty"`
 	Code      uint32          `json:"code,omitempty"`
 	Data      string          `json:"data,omitempty"`
 	RawLog    string          `json:"raw_log,omitempty"`
@@ -91,7 +81,6 @@ type TxResponse struct {
 	Info      string          `json:"info,omitempty"`
 	GasWanted int64           `json:"gas_wanted,omitempty"`
 	GasUsed   int64           `json:"gas_used,omitempty"`
-	Codespace string          `json:"codespace,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
 
@@ -111,6 +100,7 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 	return TxResponse{
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
+		Codespace: res.TxResult.Codespace,
 		Code:      res.TxResult.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
 		RawLog:    res.TxResult.Log,
@@ -153,6 +143,7 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	return TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
+		Codespace: res.CheckTx.Codespace,
 		Code:      res.CheckTx.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
 		RawLog:    res.CheckTx.Log,
@@ -161,7 +152,6 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
 		Events:    StringifyEvents(res.CheckTx.Events),
-		Codespace: res.CheckTx.Codespace,
 	}
 }
 
@@ -180,6 +170,7 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 	return TxResponse{
 		Height:    res.Height,
 		TxHash:    txHash,
+		Codespace: res.DeliverTx.Codespace,
 		Code:      res.DeliverTx.Code,
 		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
 		RawLog:    res.DeliverTx.Log,
@@ -188,7 +179,6 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
 		Events:    StringifyEvents(res.DeliverTx.Events),
-		Codespace: res.DeliverTx.Codespace,
 	}
 }
 

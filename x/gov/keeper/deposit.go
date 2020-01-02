@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -93,22 +94,22 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
 // Activates voting period when appropriate
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return types.ErrUnknownProposal(keeper.codespace, proposalID), false
+		return false, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 
 	// Check if proposal is still depositable
 	if (proposal.Status != types.StatusDepositPeriod) && (proposal.Status != types.StatusVotingPeriod) {
-		return types.ErrInactiveProposal(keeper.codespace, proposalID), false
+		return false, sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
 	// update the governance module's account coins pool
 	err := keeper.supplyKeeper.SendCoinsFromAccountToModule(ctx, depositorAddr, types.ModuleName, depositAmount)
 	if err != nil {
-		return err, false
+		return false, err
 	}
 
 	// Update proposal
@@ -139,7 +140,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	)
 
 	keeper.SetDeposit(ctx, deposit)
-	return nil, activatedVotingPeriod
+	return activatedVotingPeriod, nil
 }
 
 // RefundDeposits refunds and deletes all the deposits on a specific proposal

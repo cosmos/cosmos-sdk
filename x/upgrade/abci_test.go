@@ -1,11 +1,13 @@
 package upgrade_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
@@ -37,25 +39,25 @@ func (s *TestSuite) SetupTest() {
 func (s *TestSuite) TestRequireName() {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{}})
 	s.Require().NotNil(err)
-	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
+	s.Require().True(errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func (s *TestSuite) TestRequireFutureTime() {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
 	s.Require().NotNil(err)
-	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
+	s.Require().True(errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func (s *TestSuite) TestRequireFutureBlock() {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	s.Require().NotNil(err)
-	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
+	s.Require().True(errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func (s *TestSuite) TestCantSetBothTimeAndHeight() {
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
 	s.Require().NotNil(err)
-	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
+	s.Require().True(errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func (s *TestSuite) TestDoTimeUpgrade() {
@@ -156,7 +158,7 @@ func (s *TestSuite) TestCantApplySameUpgradeTwice() {
 	s.T().Log("Verify an upgrade named \"test\" can't be scheduled twice")
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Time: time.Now()}})
 	s.Require().NotNil(err)
-	s.Require().Equal(sdk.CodeUnknownRequest, err.Code())
+	s.Require().True(errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func (s *TestSuite) TestNoSpuriousUpgrades() {

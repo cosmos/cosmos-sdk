@@ -65,7 +65,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) {
 			} else {
 				proposal.Status = StatusFailed
 				tagValue = types.AttributeValueProposalFailed
-				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err.ABCILog())
+				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err)
 			}
 		} else {
 			proposal.Status = StatusRejected

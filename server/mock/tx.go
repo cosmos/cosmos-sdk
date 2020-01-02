@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -47,7 +48,7 @@ func (tx kvstoreTx) GetSignBytes() []byte {
 }
 
 // Should the app be calling this? Or only handlers?
-func (tx kvstoreTx) ValidateBasic() sdk.Error {
+func (tx kvstoreTx) ValidateBasic() error {
 	return nil
 }
 
@@ -57,7 +58,7 @@ func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.
-func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
+func decodeTx(txBytes []byte) (sdk.Tx, error) {
 	var tx sdk.Tx
 
 	split := bytes.Split(txBytes, []byte("="))
@@ -68,7 +69,7 @@ func decodeTx(txBytes []byte) (sdk.Tx, sdk.Error) {
 		k, v := split[0], split[1]
 		tx = kvstoreTx{k, v, txBytes}
 	} else {
-		return nil, sdk.ErrTxDecode("too many =")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "too many '='")
 	}
 
 	return tx, nil

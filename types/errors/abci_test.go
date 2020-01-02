@@ -15,17 +15,17 @@ func TestABCInfo(t *testing.T) {
 		wantSpace string
 		wantLog   string
 	}{
-		"plain weave error": {
+		"plain SDK error": {
 			err:       ErrUnauthorized,
 			debug:     false,
 			wantLog:   "unauthorized",
 			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},
-		"wrapped weave error": {
+		"wrapped SDK error": {
 			err:       Wrap(Wrap(ErrUnauthorized, "foo"), "bar"),
 			debug:     false,
-			wantLog:   "bar: foo: unauthorized",
+			wantLog:   "unauthorized: foo: bar",
 			wantCode:  ErrUnauthorized.code,
 			wantSpace: RootCodespace,
 		},
@@ -36,7 +36,7 @@ func TestABCInfo(t *testing.T) {
 			wantCode:  0,
 			wantSpace: "",
 		},
-		"nil weave error is not an error": {
+		"nil SDK error is not an error": {
 			err:       (*Error)(nil),
 			debug:     false,
 			wantLog:   "",
@@ -112,23 +112,23 @@ func TestABCIInfoStacktrace(t *testing.T) {
 		wantStacktrace bool
 		wantErrMsg     string
 	}{
-		"wrapped weave error in debug mode provides stacktrace": {
+		"wrapped SDK error in debug mode provides stacktrace": {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "wrapped: unauthorized",
+			wantErrMsg:     "unauthorized: wrapped",
 		},
-		"wrapped weave error in non-debug mode does not have stacktrace": {
+		"wrapped SDK error in non-debug mode does not have stacktrace": {
 			err:            Wrap(ErrUnauthorized, "wrapped"),
 			debug:          false,
 			wantStacktrace: false,
-			wantErrMsg:     "wrapped: unauthorized",
+			wantErrMsg:     "unauthorized: wrapped",
 		},
 		"wrapped stdlib error in debug mode provides stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
 			debug:          true,
 			wantStacktrace: true,
-			wantErrMsg:     "wrapped: stdlib",
+			wantErrMsg:     "stdlib: wrapped",
 		},
 		"wrapped stdlib error in non-debug mode does not have stacktrace": {
 			err:            Wrap(fmt.Errorf("stdlib"), "wrapped"),
@@ -163,7 +163,7 @@ func TestABCIInfoHidesStacktrace(t *testing.T) {
 	err := Wrap(ErrUnauthorized, "wrapped")
 	_, _, log := ABCIInfo(err, false)
 
-	if log != "wrapped: unauthorized" {
+	if log != "unauthorized: wrapped" {
 		t.Fatalf("unexpected message in non debug mode: %s", log)
 	}
 }
@@ -173,7 +173,7 @@ func TestRedact(t *testing.T) {
 		t.Error("reduct must not pass through panic error")
 	}
 	if err := Redact(ErrUnauthorized); !ErrUnauthorized.Is(err) {
-		t.Error("reduct should pass through weave error")
+		t.Error("reduct should pass through SDK error")
 	}
 
 	var cerr customErr
@@ -203,12 +203,12 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		"single error": {
 			src:   myErrDecode,
 			debug: false,
-			exp:   "test: tx parse error",
+			exp:   "tx parse error: test",
 		},
 		"second error": {
 			src:   myErrAddr,
 			debug: false,
-			exp:   "tester: invalid address",
+			exp:   "invalid address: tester",
 		},
 		"single error with debug": {
 			src:   myErrDecode,

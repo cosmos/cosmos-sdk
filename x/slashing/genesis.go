@@ -70,7 +70,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data types.GenesisState) {
 		}
 		for i := int64(0); i < params.SignedBlocksWindow; i++ {
 			vote := voteArray.Get(i)
-			// not missed blocks are skipped in ImportGenesis
+			// not missed blocks are skipped in InitGenesis, so we skip them here as well
 			if vote.Missed() {
 				localMissedBlocks = append(localMissedBlocks, types.MissedBlock{Index: i, Missed: true})
 			}

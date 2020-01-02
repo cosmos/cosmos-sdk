@@ -55,10 +55,16 @@ func (ev Evidence) GetHeight() int64 {
 func (ev Evidence) ValidateBasic() error {
 	// ValidateBasic on both validators
 	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
-		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "header 1 failed validation: %w", err)
+		return sdkerrors.Wrap(
+			errors.ErrInvalidEvidence,
+			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
+		)
 	}
 	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
-		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "header 2 failed validation: %w", err)
+		return sdkerrors.Wrap(
+			errors.ErrInvalidEvidence,
+			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
+		)
 	}
 	// Ensure that Heights are the same
 	if ev.Header1.Height != ev.Header2.Height {
@@ -68,14 +74,12 @@ func (ev Evidence) ValidateBasic() error {
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
 		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "headers commit to same blockID")
 	}
-
-	if err1 := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err1 != nil {
-		return err1
+	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
+		return err
 	}
-	if err2 := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err2 != nil {
-		return err2
+	if err := ValidCommit(ev.ChainID, ev.Header2.Commit, ev.Header2.ValidatorSet); err != nil {
+		return err
 	}
-
 	return nil
 }
 

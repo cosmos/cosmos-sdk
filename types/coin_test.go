@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (
@@ -658,9 +656,6 @@ func TestFindDup(t *testing.T) {
 }
 
 func TestMarshalJSONCoins(t *testing.T) {
-	cdc := codec.New()
-	RegisterCodec(cdc)
-
 	testCases := []struct {
 		name      string
 		input     Coins

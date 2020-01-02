@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -307,7 +308,7 @@ func (i *Int) UnmarshalJSON(bz []byte) error {
 
 // MarshalJSON for custom encoding scheme
 // Must be encoded as a string for JSON precision
-func marshalJSON(i *big.Int) ([]byte, error) {
+func marshalJSON(i encoding.TextMarshaler) ([]byte, error) {
 	text, err := i.MarshalText()
 	if err != nil {
 		return nil, err

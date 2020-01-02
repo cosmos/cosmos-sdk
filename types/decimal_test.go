@@ -3,12 +3,13 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	yaml "gopkg.in/yaml.v2"
-	"math/big"
-	"testing"
 )
 
 // create a decimal from a decimal string (ex. "1234.5678")

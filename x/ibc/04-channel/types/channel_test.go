@@ -15,7 +15,7 @@ func TestChannelStateString(t *testing.T) {
 		{StateInit, INIT},
 		{StateTryOpen, TRYOPEN},
 		{StateOpen, OPEN},
-		{StateOpen, CLOSED},
+		{StateClosed, CLOSED},
 	}
 
 	for _, tt := range cases {
@@ -34,7 +34,7 @@ func TestChannelStateMarshalJSON(t *testing.T) {
 		{StateInit, INIT},
 		{StateTryOpen, TRYOPEN},
 		{StateOpen, OPEN},
-		{StateOpen, CLOSED},
+		{StateClosed, CLOSED},
 	}
 
 	for _, tt := range cases {

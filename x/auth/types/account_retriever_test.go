@@ -19,7 +19,7 @@ func TestAccountRetriever(t *testing.T) {
 	mockNodeQuerier := mocks.NewMockNodeQuerier(mockCtrl)
 	accRetr := NewAccountRetriever(mockNodeQuerier)
 	addr := []byte("test")
-	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
+	bs, err := json.MarshalJSON(NewQueryAccountParams(addr))
 	require.NoError(t, err)
 
 	mockNodeQuerier.EXPECT().QueryWithData(gomock.Eq("custom/acc/account"),

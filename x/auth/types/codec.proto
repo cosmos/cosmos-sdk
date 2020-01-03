@@ -20,6 +20,8 @@ option (gogoproto.sizer_all) = true;
 // embedding within another account type that extends functionality. A BaseAccount
 // provides the basic functionality needed to operate an account.
 message BaseAccount {
+  option (gogoproto.goproto_getters) = false;
+
   bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin coins = 2 [(gogoproto.nullable) = false];
   cosmos_sdk.crypto.v1.PublicKey public_key = 3;

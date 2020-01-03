@@ -37,7 +37,7 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, er
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
 func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
-	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
+	bs, err := json.MarshalJSON(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
 	}

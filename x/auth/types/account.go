@@ -6,7 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/crypto"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,7 @@ var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
 // NewBaseAccount creates a new BaseAccount object
 func NewBaseAccount(
-	address sdk.AccAddress, coins sdk.Coins, pubKey crypto.PubKey, accountNumber, sequence uint64,
+	address sdk.AccAddress, coins sdk.Coins, pubKey tmcrypto.PubKey, accountNumber, sequence uint64,
 ) *BaseAccount {
 
 	return &BaseAccount{
@@ -45,6 +46,46 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 	}
 }
 
+// GetAddress returns the account's address.
+func (m *BaseAccount) GetAddress() sdk.AccAddress {
+	if m != nil {
+		return m.Address
+	}
+	return nil
+}
+
+// GetCoins returns the account's coins.
+func (m *BaseAccount) GetCoins() sdk.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+// GetPubKey return's the account's public key.
+func (m *BaseAccount) GetPubKey() *crypto.PublicKey {
+	if m != nil {
+		return m.PublicKey
+	}
+	return nil
+}
+
+// GetAccountNumber returns the account's account number.
+func (m *BaseAccount) GetAccountNumber() uint64 {
+	if m != nil {
+		return m.AccountNumber
+	}
+	return 0
+}
+
+// GetSequence return's the account's sequence (nonce).
+func (m *BaseAccount) GetSequence() uint64 {
+	if m != nil {
+		return m.Sequence
+	}
+	return 0
+}
+
 // SetAddress - Implements sdk.Account.
 func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	if len(acc.Address) != 0 {
@@ -55,7 +96,7 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // SetPubKey - Implements sdk.Account.
-func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (acc *BaseAccount) SetPubKey(pubKey tmcrypto.PubKey) error {
 	acc.PubKey = pubKey
 	return nil
 }

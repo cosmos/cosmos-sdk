@@ -114,7 +114,7 @@ func NewInt(n int64) Int {
 	return Int{big.NewInt(n)}
 }
 
-// NewInt constructs Int from int64
+// NewIntFromUint64 constructs an Int from a uint64.
 func NewIntFromUint64(n uint64) Int {
 	b := big.NewInt(0)
 	b.SetUint64(n)

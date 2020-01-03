@@ -12,4 +12,5 @@ var (
 	ErrConnectionPath                = sdkerrors.Register(SubModuleName, 4, "connection path is not associated to the given light client")
 	ErrInvalidConnectionState        = sdkerrors.Register(SubModuleName, 5, "invalid connection state")
 	ErrInvalidCounterparty           = sdkerrors.Register(SubModuleName, 6, "invalid counterparty connection")
+	ErrInvalidConnection             = sdkerrors.Register(SubModuleName, 7, "connection end doesn't match the previous one")
 )

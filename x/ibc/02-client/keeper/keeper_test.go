@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestSetClientType() {
 	require.Equal(suite.T(), exported.Tendermint, clientType, "ClientTypes not stored correctly")
 }
 
-func (suite *KeeperTestSuite) TestSetConsensusState() {
+func (suite *KeeperTestSuite) TestSetClientConsensusState() {
 	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, suite.consensusState)
 
 	retrievedConsState, ok := suite.keeper.GetClientConsensusState(suite.ctx, testClientID)

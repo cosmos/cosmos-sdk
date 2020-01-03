@@ -107,7 +107,7 @@ func (suite *HandlerTestSuite) updateClient() {
 		Root:    commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
+	suite.app.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.ctx, testClient, state)
 	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
 }
 

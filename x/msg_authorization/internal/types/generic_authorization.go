@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -16,6 +18,6 @@ func (cap GenericAuthorization) MsgType() sdk.Msg {
 	return cap.MsgType()
 }
 
-func (cap GenericAuthorization) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Authorization, delete bool) {
+func (cap GenericAuthorization) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated exported.Authorization, delete bool) {
 	return true, cap, false
 }

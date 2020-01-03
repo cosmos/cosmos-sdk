@@ -5,19 +5,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 )
 
 // MsgGrantAuthorization grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
 type MsgGrantAuthorization struct {
-	Granter       sdk.AccAddress `json:"granter"`
-	Grantee       sdk.AccAddress `json:"grantee"`
-	Authorization Authorization  `json:"authorization"`
+	Granter       sdk.AccAddress         `json:"granter"`
+	Grantee       sdk.AccAddress         `json:"grantee"`
+	Authorization exported.Authorization `json:"authorization"`
 	// Expiration specifies the expiration time of the grant
 	Expiration time.Time `json:"expiration"`
 }
 
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) MsgGrantAuthorization {
+func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization exported.Authorization, expiration time.Time) MsgGrantAuthorization {
 	return MsgGrantAuthorization{
 		Granter:       granter,
 		Grantee:       grantee,

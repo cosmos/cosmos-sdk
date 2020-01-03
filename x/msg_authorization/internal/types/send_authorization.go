@@ -4,6 +4,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -19,7 +20,7 @@ func (authorization SendAuthorization) MsgType() sdk.Msg {
 	return bank.MsgSend{}
 }
 
-func (authorization SendAuthorization) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated Authorization, delete bool) {
+func (authorization SendAuthorization) Accept(msg sdk.Msg, block abci.Header) (allow bool, updated exported.Authorization, delete bool) {
 	switch msg := msg.(type) {
 	case bank.MsgSend:
 		limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)

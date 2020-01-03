@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -180,11 +181,18 @@ func (k Keeper) GetConsensusState(ctx sdk.Context, height int64) (exported.Conse
 		return nil, false
 	}
 
-	// TODO: cast sdk.Validator to tmtypes.Validator
+	// query the following historical info to get the next validator set
+	nextHistInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, height+1)
+	if !found {
+		return nil, false
+	}
+
 	consensusState := tendermint.ConsensusState{
-		ChainID: histInfo.Header.ChainID,
-		Height:  uint64(histInfo.Header.Height),
-		Root:    commitment.NewRoot(histInfo.Header.AppHash),
+		ChainID:          histInfo.Header.ChainID,
+		Height:           uint64(histInfo.Header.Height),
+		Root:             commitment.NewRoot(histInfo.Header.AppHash),
+		ValidatorSet:     tmtypes.NewValidatorSet(histInfo.ValSet.ToTmValidators()),
+		NextValidatorSet: tmtypes.NewValidatorSet(nextHistInfo.ValSet.ToTmValidators()),
 	}
 	return consensusState, true
 }

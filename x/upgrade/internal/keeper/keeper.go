@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,15 +13,13 @@ import (
 
 type Keeper struct {
 	storeKey        sdk.StoreKey
-	cdc             *codec.Codec
 	upgradeHandlers map[string]types.UpgradeHandler
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(storeKey sdk.StoreKey) Keeper {
 	return Keeper{
 		storeKey:        storeKey,
-		cdc:             cdc,
 		upgradeHandlers: map[string]types.UpgradeHandler{},
 	}
 }

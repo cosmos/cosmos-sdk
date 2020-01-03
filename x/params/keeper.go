@@ -3,7 +3,6 @@ package params
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
@@ -13,16 +12,14 @@ import (
 
 // Keeper of the global paramstore
 type Keeper struct {
-	cdc    *codec.Codec
 	key    sdk.StoreKey
 	tkey   sdk.StoreKey
 	spaces map[string]*Subspace
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey) Keeper {
+func NewKeeper(key, tkey sdk.StoreKey) Keeper {
 	return Keeper{
-		cdc:    cdc,
 		key:    key,
 		tkey:   tkey,
 		spaces: make(map[string]*Subspace),

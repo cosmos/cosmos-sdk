@@ -1,12 +1,12 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
@@ -24,23 +24,30 @@ type AccountKeeper struct {
 	proto func() exported.Account
 
 	// The codec codec for binary encoding/decoding of accounts.
-	cdc *codec.Codec
+	accountCodecCtr func() AccountCodec
 
 	paramSubspace subspace.Subspace
+}
+
+type AccountCodec interface {
+	GetAccount() exported.Account
+	SetAccount(exported.Account) error
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
+	accountCodecCtr func() AccountCodec, key sdk.StoreKey, paramstore subspace.Subspace, proto func() exported.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
-		key:           key,
-		proto:         proto,
-		cdc:           cdc,
-		paramSubspace: paramstore.WithKeyTable(types.ParamKeyTable()),
+		key:             key,
+		proto:           proto,
+		accountCodecCtr: accountCodecCtr,
+		paramSubspace:   paramstore.WithKeyTable(types.ParamKeyTable()),
 	}
 }
 
@@ -77,14 +84,16 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 		// initialize the account numbers
 		accNumber = 0
 	} else {
-		err := ak.cdc.UnmarshalBinaryLengthPrefixed(bz, &accNumber)
-		if err != nil {
-			panic(err)
+		var n int
+		accNumber, n = binary.Uvarint(bz)
+		if n <= 0 {
+			panic("can't read Uvarint")
 		}
 	}
 
-	bz = ak.cdc.MustMarshalBinaryLengthPrefixed(accNumber + 1)
-	store.Set(types.GlobalAccountNumberKey, bz)
+	buf := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutUvarint(buf, accNumber + 1)
+	store.Set(types.GlobalAccountNumberKey, bz[:n])
 
 	return accNumber
 }
@@ -93,9 +102,11 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 // Misc.
 
 func (ak AccountKeeper) decodeAccount(bz []byte) (acc exported.Account) {
-	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)
+	cdc := ak.accountCodecCtr()
+	err := cdc.Unmarshal(bz)
 	if err != nil {
 		panic(err)
 	}
+	acc = cdc.GetAccount()
 	return
 }

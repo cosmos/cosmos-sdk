@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cosmos_sdk.x.gov.v1;
+
+import "types/codec.proto";
+import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "vendor/github.com/regen-network/cosmos-proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/params/types";
+
+// ParameterChangeProposal defines a proposal which contains multiple parameter
+// changes.
+message ParameterChangeProposal {
+    string title = 1;
+    string description = 2;
+    repeated ParamChange changes = 3;
+}
+
+// ParamChange defines a parameter change.
+message ParamChange {
+    string subspace = 1;
+    string key = 2;
+    string value = 3;
+}

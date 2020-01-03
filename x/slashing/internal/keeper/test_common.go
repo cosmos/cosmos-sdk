@@ -46,7 +46,6 @@ var (
 
 func createTestCodec() *codec.Codec {
 	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	supply.RegisterCodec(cdc)
 	bank.RegisterCodec(cdc)

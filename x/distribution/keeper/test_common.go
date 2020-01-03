@@ -64,7 +64,6 @@ func MakeTestCodec() *codec.Codec {
 	staking.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	supply.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 
 	types.RegisterCodec(cdc) // distr

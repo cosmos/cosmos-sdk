@@ -310,7 +310,6 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 
 func createCodec() *codec.Codec {
 	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	auth.RegisterCodec(cdc)
 	return cdc

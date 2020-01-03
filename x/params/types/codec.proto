@@ -1,9 +1,8 @@
 syntax = "proto3";
-package cosmos_sdk.x.gov.v1;
+package cosmos_sdk.x.params.v1;
 
 import "types/codec.proto";
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "vendor/github.com/regen-network/cosmos-proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/params/types";
 
@@ -17,6 +16,7 @@ message ParameterChangeProposal {
 
 // ParamChange defines a parameter change.
 message ParamChange {
+    option (gogoproto.goproto_stringer) = false;
     string subspace = 1;
     string key = 2;
     string value = 3;

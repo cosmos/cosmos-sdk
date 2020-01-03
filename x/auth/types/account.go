@@ -19,26 +19,15 @@ import (
 var _ exported.Account = (*BaseAccount)(nil)
 var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
-// BaseAccount - a base account structure.
-// This can be extended by embedding within in your AppAccount.
-// However one doesn't have to use BaseAccount as long as your struct
-// implements Account.
-type BaseAccount struct {
-	Address       sdk.AccAddress `json:"address" yaml:"address"`
-	Coins         sdk.Coins      `json:"coins" yaml:"coins"`
-	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
-	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
-	Sequence      uint64         `json:"sequence" yaml:"sequence"`
-}
-
 // NewBaseAccount creates a new BaseAccount object
-func NewBaseAccount(address sdk.AccAddress, coins sdk.Coins,
-	pubKey crypto.PubKey, accountNumber uint64, sequence uint64) *BaseAccount {
+func NewBaseAccount(
+	address sdk.AccAddress, coins sdk.Coins, pubKey crypto.PubKey, accountNumber, sequence uint64,
+) *BaseAccount {
 
 	return &BaseAccount{
 		Address:       address,
 		Coins:         coins,
-		PubKey:        pubKey,
+		PublicKey:     pubKey.Bytes(),
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
@@ -56,11 +45,6 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 	}
 }
 
-// GetAddress - Implements sdk.Account.
-func (acc BaseAccount) GetAddress() sdk.AccAddress {
-	return acc.Address
-}
-
 // SetAddress - Implements sdk.Account.
 func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	if len(acc.Address) != 0 {
@@ -70,20 +54,10 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	return nil
 }
 
-// GetPubKey - Implements sdk.Account.
-func (acc BaseAccount) GetPubKey() crypto.PubKey {
-	return acc.PubKey
-}
-
 // SetPubKey - Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	acc.PubKey = pubKey
 	return nil
-}
-
-// GetCoins - Implements sdk.Account.
-func (acc *BaseAccount) GetCoins() sdk.Coins {
-	return acc.Coins
 }
 
 // SetCoins - Implements sdk.Account.
@@ -92,20 +66,10 @@ func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	return nil
 }
 
-// GetAccountNumber - Implements Account
-func (acc *BaseAccount) GetAccountNumber() uint64 {
-	return acc.AccountNumber
-}
-
 // SetAccountNumber - Implements Account
 func (acc *BaseAccount) SetAccountNumber(accNumber uint64) error {
 	acc.AccountNumber = accNumber
 	return nil
-}
-
-// GetSequence - Implements sdk.Account.
-func (acc *BaseAccount) GetSequence() uint64 {
-	return acc.Sequence
 }
 
 // SetSequence - Implements sdk.Account.

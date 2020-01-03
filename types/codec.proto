@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos_sdk.v1;
 
-option go_package = "types";
+option go_package = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
 option (gogoproto.marshaler_all) = true;

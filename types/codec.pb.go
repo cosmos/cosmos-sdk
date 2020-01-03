@@ -6,7 +6,7 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/golang/protobuf/proto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -21,7 +21,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Coin defines a token with a denomination and an amount.
 //
@@ -31,10 +31,7 @@ type Coin struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	// TODO: Consider using a string instead of bytes. This would require gogo proto
 	// to support types other than bytes for the customtype extension.
-	Amount               Int      `protobuf:"bytes,2,opt,name=amount,proto3,customtype=Int" json:"amount"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Amount Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=Int" json:"amount"`
 }
 
 func (m *Coin) Reset()      { *m = Coin{} }
@@ -84,10 +81,7 @@ type DecCoin struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	// TODO: Consider using a string instead of bytes. This would require gogo proto
 	// to support types other than bytes for the customtype extension.
-	Amount               Dec      `protobuf:"bytes,2,opt,name=amount,proto3,customtype=Dec" json:"amount"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Amount Dec `protobuf:"bytes,2,opt,name=amount,proto3,customtype=Dec" json:"amount"`
 }
 
 func (m *DecCoin) Reset()      { *m = DecCoin{} }
@@ -137,7 +131,7 @@ func init() {
 func init() { proto.RegisterFile("types/codec.proto", fileDescriptor_97e5f89da6f0daf0) }
 
 var fileDescriptor_97e5f89da6f0daf0 = []byte{
-	// 216 bytes of a gzipped FileDescriptorProto
+	// 225 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2c, 0xa9, 0x2c, 0x48,
 	0x2d, 0xd6, 0x4f, 0xce, 0x4f, 0x49, 0x4d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4d,
 	0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x2f, 0x4e, 0xc9, 0xd6, 0x2b, 0x33, 0x94, 0x32, 0x29, 0x4b,
@@ -147,11 +141,12 @@ var fileDescriptor_97e5f89da6f0daf0 = []byte{
 	0x5e, 0x7e, 0xae, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x84, 0x23, 0xa4, 0xcc, 0xc5, 0x96,
 	0x98, 0x9b, 0x5f, 0x9a, 0x57, 0x22, 0xc1, 0xa4, 0xc0, 0xa8, 0xc1, 0xe3, 0xc4, 0x7d, 0xe2, 0x9e,
 	0x3c, 0xc3, 0xad, 0x7b, 0xf2, 0xcc, 0x9e, 0x79, 0x25, 0x41, 0x50, 0x29, 0x25, 0x17, 0x2e, 0x76,
-	0x97, 0xd4, 0x64, 0x72, 0x4c, 0x71, 0x49, 0x4d, 0x86, 0x99, 0xe2, 0x64, 0x73, 0xe3, 0xa1, 0x1c,
+	0x97, 0xd4, 0x64, 0x72, 0x4c, 0x71, 0x49, 0x4d, 0x86, 0x99, 0xe2, 0xe4, 0x72, 0xe3, 0xa1, 0x1c,
 	0x43, 0xc3, 0x23, 0x39, 0x86, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48,
-	0x8e, 0x71, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x25, 0x24, 0x1f, 0x41, 0xbc, 0x0c, 0xa5, 0x74, 0x8b,
-	0x53, 0xb2, 0xf5, 0xc1, 0xe1, 0x92, 0xc4, 0x06, 0xf6, 0x8d, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
-	0xef, 0x4e, 0x92, 0x34, 0x27, 0x01, 0x00, 0x00,
+	0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x52,
+	0x42, 0xf2, 0x19, 0xc4, 0xeb, 0x50, 0x4a, 0xb7, 0x38, 0x25, 0x5b, 0x1f, 0x1c, 0x3e, 0x49, 0x6c,
+	0x60, 0x5f, 0x19, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6c, 0x9b, 0x51, 0x3b, 0x2f, 0x01, 0x00,
+	0x00,
 }
 
 func (m *Coin) Marshal() (dAtA []byte, err error) {
@@ -174,10 +169,6 @@ func (m *Coin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	{
 		size := m.Amount.Size()
 		i -= size
@@ -218,10 +209,6 @@ func (m *DecCoin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	{
 		size := m.Amount.Size()
 		i -= size
@@ -265,9 +252,6 @@ func (m *Coin) Size() (n int) {
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovCodec(uint64(l))
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -283,9 +267,6 @@ func (m *DecCoin) Size() (n int) {
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovCodec(uint64(l))
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -404,7 +385,6 @@ func (m *Coin) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -523,7 +503,6 @@ func (m *DecCoin) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+package cosmos_sdk.crypto.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto";
+
+// PublicKey defines a proto message with a single oneof field that represents a
+// public key as a byte slice.
+//
+// NOTE: Private keys must still be amino-encoded for backwards compatiblity.
+message PublicKey {
+  // TODO: Make tendermint keys use []byte instead of [32]byte so we can use the
+  // casttype extension.
+  // option (cosmos_proto.interface_type) =
+  // "github.com/tendermint/tendermint/crypto.PubKey";
+
+  // pub defines an single supported public key type as a byte slice.
+  oneof pub {
+    bytes secp256k1 = 1;
+    bytes ed25519 = 2;
+    bytes multisig = 3;
+  }
+}

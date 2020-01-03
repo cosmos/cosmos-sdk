@@ -231,6 +231,7 @@ proto-all: proto-gen proto-lint proto-check-breaking
 
 proto-gen:
 	@go mod vendor
+	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 	@./scripts/protocgen.sh
 
 proto-lint:

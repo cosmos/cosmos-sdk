@@ -4,9 +4,6 @@ package cosmos_sdk.v1;
 option go_package = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
-option (gogoproto.marshaler_all) = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.sizer_all) = true;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 

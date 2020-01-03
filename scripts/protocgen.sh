@@ -8,6 +8,6 @@ for dir in $proto_dirs; do
   -I. \
   -I${GOPATH}/src \
   -Ivendor/github.com/gogo/protobuf/gogoproto \
-  --gofast_out=. \
+  --gofast_out=$GOPATH/src \
   $(find "${dir}" -name '*.proto')
 done

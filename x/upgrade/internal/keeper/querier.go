@@ -48,7 +48,7 @@ func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, err
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	applied := k.getDoneHeight(ctx, params.Name)
+	applied := k.GetDoneHeight(ctx, params.Name)
 	if applied == 0 {
 		return nil, nil
 	}

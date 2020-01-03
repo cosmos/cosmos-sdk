@@ -61,7 +61,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 			}
 
 			var authorization types.Authorization
-			err = cdc.UnmarshalBinaryBare(bz, &authorization)
+			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err
 			}

@@ -19,6 +19,8 @@ var (
 	ErrInvalidPubKeyMultisigThreshold = errors.New("incompatible PubKeyMultisigThreshold")
 )
 
+var _ tmcrypto.PubKey = (*PublicKey)(nil)
+
 // GetPubKeySecp256k1 returns a Tendermint secp256k1 public key from the
 // PublicKey message type. It will return an error if the size of the public key
 // is invalid or the underlying Pub field is invalid.
@@ -121,4 +123,36 @@ func (m *PublicKey) Address() tmcrypto.Address {
 	}
 
 	return nil
+}
+
+// VerifyBytes attempts to construct a Tendermint PubKey and delegates the
+// VerifyBytes call to the constructed type.
+func (m *PublicKey) VerifyBytes(msg []byte, sig []byte) bool {
+	if pk := m.TendermintPubKey(); pk != nil {
+		return pk.VerifyBytes(msg, sig)
+	}
+
+	return false
+}
+
+// Equals attempts to construct a Tendermint PubKey and delegates the Equals call
+// to the constructed type.
+func (m *PublicKey) Equals(other tmcrypto.PubKey) bool {
+	if pk := m.TendermintPubKey(); pk != nil {
+		return pk.Equals(other)
+	}
+
+	return false
+}
+
+// Bytes returns the raw proto encoded bytes of the PublicKey proto message type.
+// Note, this is not wire compatible with calling Bytes on the underlying
+// Tendermint PubKey type.
+func (m *PublicKey) Bytes() []byte {
+	bz, err := m.Marshal()
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
 }

@@ -1,18 +1,27 @@
 package types
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 type PacketDataI interface {
-	GetCommitment() []byte    // GetCommitment returns (possibly non-recoverable) commitment bytes from its Data and Timeout
+	GetData() []byte          // GetCommitment returns (possibly non-recoverable) commitment bytes from its Data and Timeout
 	GetTimeoutHeight() uint64 // GetTimeoutHeight returns the timeout height defined specifically for each packet data type instance
 
 	ValidateBasic() sdk.Error // ValidateBasic validates basic properties of the packet data, implements sdk.Msg
 	Type() string             // Type returns human readable identifier, implements sdk.Msg
+}
+
+func CommitPacket(data PacketDataI) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, data.GetTimeoutHeight())
+	buf = append(buf, data.GetData()...)
+	return tmhash.Sum(buf)
 }
 
 // Packet defines a type that carries data across different chains through IBC
@@ -77,7 +86,7 @@ func (p Packet) ValidateBasic() error {
 	if p.GetTimeoutHeight() == 0 {
 		return ErrPacketTimeout(DefaultCodespace)
 	}
-	if len(p.GetCommitment()) == 0 {
+	if len(p.GetData()) == 0 {
 		return ErrInvalidPacket(DefaultCodespace, "packet data cannot be empty")
 	}
 	return nil

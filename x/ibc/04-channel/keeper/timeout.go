@@ -68,7 +68,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetCommitment()) {
+	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
 		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
@@ -148,7 +148,7 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetCommitment()) {
+	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
 		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 

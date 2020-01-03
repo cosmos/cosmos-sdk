@@ -311,7 +311,7 @@ var _ PacketDataI = validPacketT{}
 
 type validPacketT struct{}
 
-func (validPacketT) GetCommitment() []byte {
+func (validPacketT) GetData() []byte {
 	return []byte("testdata")
 }
 

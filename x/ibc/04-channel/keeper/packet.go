@@ -77,7 +77,7 @@ func (k Keeper) CleanupPacket(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetCommitment()) {
+	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
 		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
 	}
 
@@ -179,7 +179,7 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), packet.GetCommitment()) // TODO: hash packet data
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.PacketDataI))
 
 	return nil
 }

@@ -62,8 +62,7 @@ func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
 }
 
 // Implements ibc.Packet
-// TODO: need to be hashed(non-unmarshalable) format
-func (pd PacketDataTransfer) GetCommitment() []byte {
+func (pd PacketDataTransfer) GetData() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
 }
 

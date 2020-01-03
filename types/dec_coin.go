@@ -214,7 +214,7 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		if !truncated.IsZero() {
-			truncatedCoins = truncatedCoins.Add(NewCoins(truncated))
+			truncatedCoins = truncatedCoins.Add(truncated)
 		}
 		if !change.IsZero() {
 			changeCoins = changeCoins.Add(change)

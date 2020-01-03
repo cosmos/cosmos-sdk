@@ -75,7 +75,7 @@ func Migrate(
 
 	var expDeposits sdk.Coins
 	for _, deposit := range deposits {
-		expDeposits = expDeposits.Add(deposit.Deposit.Amount)
+		expDeposits = expDeposits.Add(deposit.Deposit.Amount...)
 	}
 
 	if !expDeposits.IsEqual(govCoins) {

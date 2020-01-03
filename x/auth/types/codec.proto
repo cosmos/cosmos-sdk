@@ -8,9 +8,6 @@ import "crypto/codec.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
-option (gogoproto.marshaler_all) = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.sizer_all) = true;
 
 // TODO:
 // 

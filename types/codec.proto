@@ -7,15 +7,45 @@ option (gogoproto.stringer_all) = false;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// PublicKey defines a proto message with a single oneof field that represents a
+// public key as a byte slice.
+//
+// NOTE: Private keys must still be amino-encoded for backwards compatiblity.
+message PublicKey {
+  option (gogoproto.goproto_stringer) = true;
+
+  // TODO: Make tendermint keys use []byte instead of [32]byte so we can use the
+  // casttype extension.
+  // option (cosmos_proto.interface_type) =
+  // "github.com/tendermint/tendermint/crypto.PubKey";
+
+  // pub defines an single supported public key type as a byte slice.
+  oneof pub {
+    bytes secp256k1 = 1;
+    bytes ed25519 = 2;
+    MultiSig multisig = 3;
+  }
+}
+
+// MultiSig defines a proto message representing a threshold multi-signature
+// scheme.
+message MultiSig {
+  option (gogoproto.goproto_stringer) = true;
+
+  uint32 k = 1;
+  repeated PublicKey pubkeys = 2;
+}
+
 // Coin defines a token with a denomination and an amount.
 //
 // NOTE: The amount field is an Int which implements the custom method
 // signatures required by gogoproto.
 message Coin {
   string denom = 1;
-  // TODO: Consider using a string instead of bytes. This would require gogo proto
-  // to support types other than bytes for the customtype extension.  
-  bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
+  // TODO: Consider using a string instead of bytes. This would require gogo
+  // proto to support types other than bytes for the customtype extension.
+  bytes amount = 2
+      [(gogoproto.customtype) = "Int", (gogoproto.nullable) = false];
 }
 
 // DecCoin defines a token with a denomination and a decimal amount.
@@ -24,7 +54,8 @@ message Coin {
 // signatures required by gogoproto.
 message DecCoin {
   string denom = 1;
-  // TODO: Consider using a string instead of bytes. This would require gogo proto
-  // to support types other than bytes for the customtype extension.
-  bytes amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
+  // TODO: Consider using a string instead of bytes. This would require gogo
+  // proto to support types other than bytes for the customtype extension.
+  bytes amount = 2
+      [(gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
 }

@@ -8,9 +8,11 @@ import (
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -32,7 +34,9 @@ func TestPublicKeyUnsafe(t *testing.T) {
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
-	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+	pubRaw := priv.PubKey().(secp256k1.PubKeySecp256k1)
+	pk := &sdk.PublicKey{&types.PublicKey_Ed25519{pubRaw[:]}}
+	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
@@ -74,7 +78,9 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+		pubRaw := priv.PubKey().(secp256k1.PubKeySecp256k1)
+		pk := &sdk.PublicKey{&types.PublicKey_Ed25519{pubRaw[:]}}
+		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
@@ -108,7 +114,9 @@ func TestPublicKeySafe(t *testing.T) {
 		fmt.Sprintf("%x", priv.PubKey().Bytes()),
 		"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
-	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+	pubRaw := priv.PubKey().(secp256k1.PubKeySecp256k1)
+	pk := &sdk.PublicKey{&types.PublicKey_Ed25519{pubRaw[:]}}
+	pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
@@ -172,7 +180,9 @@ func TestPublicKeyHDPath(t *testing.T) {
 		tmp := priv.(PrivKeyLedgerSecp256k1)
 		(&tmp).AssertIsPrivKeyInner()
 
-		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+		pubRaw := priv.PubKey().(secp256k1.PubKeySecp256k1)
+		pk := &sdk.PublicKey{&types.PublicKey_Ed25519{pubRaw[:]}}
+		pubKeyAddr, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedPubKeys[i], pubKeyAddr,

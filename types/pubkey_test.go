@@ -1,9 +1,9 @@
-package crypto_test
+package types_test
 
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
+	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
@@ -15,24 +15,24 @@ import (
 func TestGetPubKeySecp256k1(t *testing.T) {
 	tmpk := (secp256k1.GenPrivKey().PubKey()).(secp256k1.PubKeySecp256k1)
 	testCases := []struct {
-		input    *crypto.PublicKey
+		input    *types.PublicKey
 		expected secp256k1.PubKeySecp256k1
 		err      error
 	}{
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Secp256K1{tmpk[:]}},
+			&types.PublicKey{&types.PublicKey_Secp256K1{tmpk[:]}},
 			tmpk,
 			nil,
 		},
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Secp256K1{append(tmpk[:], tmpk[:]...)}},
+			&types.PublicKey{&types.PublicKey_Secp256K1{append(tmpk[:], tmpk[:]...)}},
 			secp256k1.PubKeySecp256k1{},
-			crypto.ErrInvalidPubKeySecp256k1Length,
+			types.ErrInvalidPubKeySecp256k1Length,
 		},
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Ed25519{}},
+			&types.PublicKey{&types.PublicKey_Ed25519{}},
 			secp256k1.PubKeySecp256k1{},
-			crypto.ErrInvalidPubKeySecp256k1,
+			types.ErrInvalidPubKeySecp256k1,
 		},
 	}
 
@@ -46,24 +46,24 @@ func TestGetPubKeySecp256k1(t *testing.T) {
 func TestGetPubKeyEd25519(t *testing.T) {
 	tmpk := (ed25519.GenPrivKey().PubKey()).(ed25519.PubKeyEd25519)
 	testCases := []struct {
-		input    *crypto.PublicKey
+		input    *types.PublicKey
 		expected ed25519.PubKeyEd25519
 		err      error
 	}{
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Ed25519{tmpk[:]}},
+			&types.PublicKey{&types.PublicKey_Ed25519{tmpk[:]}},
 			tmpk,
 			nil,
 		},
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Ed25519{append(tmpk[:], tmpk[:]...)}},
+			&types.PublicKey{&types.PublicKey_Ed25519{append(tmpk[:], tmpk[:]...)}},
 			ed25519.PubKeyEd25519{},
-			crypto.ErrInvalidPubKeyEd25519Length,
+			types.ErrInvalidPubKeyEd25519Length,
 		},
 		{
-			&crypto.PublicKey{&crypto.PublicKey_Secp256K1{}},
+			&types.PublicKey{&types.PublicKey_Secp256K1{}},
 			ed25519.PubKeyEd25519{},
-			crypto.ErrInvalidPubKeyEd25519,
+			types.ErrInvalidPubKeyEd25519,
 		},
 	}
 
@@ -82,23 +82,23 @@ func TestAddress(t *testing.T) {
 
 	testCases := []struct {
 		pubkey tmcrypto.PubKey
-		input  *crypto.PublicKey
+		input  *types.PublicKey
 	}{
 		{
-			ed25519pk, &crypto.PublicKey{&crypto.PublicKey_Ed25519{ed25519pk[:]}},
+			ed25519pk, &types.PublicKey{&types.PublicKey_Ed25519{ed25519pk[:]}},
 		},
 		{
-			secp256k1pk, &crypto.PublicKey{&crypto.PublicKey_Secp256K1{secp256k1pk[:]}},
+			secp256k1pk, &types.PublicKey{&types.PublicKey_Secp256K1{secp256k1pk[:]}},
 		},
 		{
 			multisigpk,
-			&crypto.PublicKey{
-				&crypto.PublicKey_Multisig{
-					Multisig: &crypto.MultiSig{
+			&types.PublicKey{
+				&types.PublicKey_Multisig{
+					Multisig: &types.MultiSig{
 						K: 2,
-						Pubkeys: []*crypto.PublicKey{
-							{&crypto.PublicKey_Secp256K1{secp256k1pk[:]}},
-							{&crypto.PublicKey_Secp256K1{secp256k1pk2[:]}},
+						Pubkeys: []*types.PublicKey{
+							{&types.PublicKey_Secp256K1{secp256k1pk[:]}},
+							{&types.PublicKey_Secp256K1{secp256k1pk2[:]}},
 						},
 					},
 				},

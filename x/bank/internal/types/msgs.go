@@ -168,7 +168,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 			return err
 		}
 
-		totalIn = totalIn.Add(in.Coins)
+		totalIn = totalIn.Add(in.Coins...)
 	}
 
 	for _, out := range outputs {
@@ -176,7 +176,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 			return err
 		}
 
-		totalOut = totalOut.Add(out.Coins)
+		totalOut = totalOut.Add(out.Coins...)
 	}
 
 	// make sure inputs and outputs match

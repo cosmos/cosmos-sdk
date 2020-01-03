@@ -17,6 +17,13 @@ message PublicKey {
   oneof pub {
     bytes secp256k1 = 1;
     bytes ed25519 = 2;
-    bytes multisig = 3;
+    MultiSig multisig = 3;
   }
+}
+
+// MultiSig defines a proto message representing a threshold multi-signature
+// scheme.
+message MultiSig {
+  uint32 k = 1;
+  repeated PublicKey pubkeys = 2;
 }

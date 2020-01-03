@@ -43,7 +43,8 @@ func (s *TestSuite) TestKeeper() {
 
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
-	s.keeper.Grant(s.ctx, granterAddr, granteeAddr, types.SendAuthorization{SpendLimit: newCoins}, now.Add(-1*time.Hour))
+	x := types.SendAuthorization{SpendLimit: newCoins}
+	s.keeper.Grant(s.ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
 	authorization, _ = s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().Nil(authorization)
 
@@ -76,7 +77,7 @@ func (s *TestSuite) TestKeeper() {
 
 }
 
-func  (s *TestSuite)  TestKeeperFees () {
+func (s *TestSuite) TestKeeperFees() {
 	err := s.bankKeeper.SetCoins(s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000)))
 	s.Require().Nil(err)
 	s.Require().True(s.bankKeeper.GetCoins(s.ctx, granterAddr).IsEqual(sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
@@ -88,13 +89,13 @@ func  (s *TestSuite)  TestKeeperFees () {
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 	//lotCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 4567))
 
-	msgs := types.MsgExecDelegated {
+	msgs := types.MsgExecDelegated{
 		Grantee: granteeAddr,
 		Msgs: []sdk.Msg{
-			bank.MsgSend {
-				Amount: sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			bank.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 				FromAddress: granterAddr,
-				ToAddress:recepientAddr,
+				ToAddress:   recepientAddr,
 			},
 		},
 	}
@@ -107,7 +108,7 @@ func  (s *TestSuite)  TestKeeperFees () {
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
-	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{SpendLimit:smallCoin}, now)
+	s.keeper.Grant(s.ctx, granteeAddr, granterAddr, types.SendAuthorization{SpendLimit: smallCoin}, now)
 	authorization, _ := s.keeper.GetAuthorization(s.ctx, granteeAddr, granterAddr, bank.MsgSend{})
 	s.Require().NotNil(authorization)
 	s.Require().Equal(authorization.MsgType(), bank.MsgSend{})
@@ -122,13 +123,13 @@ func  (s *TestSuite)  TestKeeperFees () {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.MsgExecDelegated {
+	msgs = types.MsgExecDelegated{
 		Grantee: granteeAddr,
 		Msgs: []sdk.Msg{
-			bank.MsgSend {
-				Amount: someCoin,
+			bank.MsgSend{
+				Amount:      someCoin,
 				FromAddress: granterAddr,
-				ToAddress:recepientAddr,
+				ToAddress:   recepientAddr,
 			},
 		},
 	}

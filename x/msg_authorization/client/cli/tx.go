@@ -55,11 +55,15 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			bz, err := ioutil.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
+			//bz, err := ioutil.ReadFile(args[1])
+			//if err != nil {
+			//	return err
+			//}
 
+			bz := []byte(`{
+  "type": "cosmos-sdk/SendAuthorization",
+  "value":{"spendlimit": "100stake"}
+}`)
 			var authorization types.Authorization
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {

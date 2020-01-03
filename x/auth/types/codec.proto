@@ -3,25 +3,25 @@ package cosmos_sdk.x.auth.v1;
 
 import "vendor/github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "types/codec.proto";
-import "crypto/codec.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
 
 // TODO:
-// 
+//
 // 1. StdTx
 
 // BaseAccount defines a base account message structure. This can be extended by
-// embedding within another account type that extends functionality. A BaseAccount
-// provides the basic functionality needed to operate an account.
+// embedding within another account type that extends functionality. A
+// BaseAccount provides the basic functionality needed to operate an account.
 message BaseAccount {
   option (gogoproto.goproto_getters) = false;
 
-  bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes address = 1
+      [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   repeated cosmos_sdk.v1.Coin coins = 2 [(gogoproto.nullable) = false];
-  cosmos_sdk.crypto.v1.PublicKey public_key = 3;
+  cosmos_sdk.v1.PublicKey public_key = 3;
   uint64 account_number = 4;
   uint64 sequence = 5;
 }

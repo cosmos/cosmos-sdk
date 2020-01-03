@@ -1,5 +1,5 @@
 .PHONY: all tools tools-clean statik runsim golangci-lint \
-buf protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
+buf protoc-gen-buf-check-breaking protoc-gen-buf-check-lint protoc-gen-gocosmos
 
 ###
 # Find OS and Go environment
@@ -82,6 +82,9 @@ runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Installing runsim..."
 	@(cd /tmp && go get github.com/cosmos/tools/cmd/runsim@v1.0.0)
+
+protoc-gen-gocosmos:
+	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
 buf: protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
 	@echo "Installing buf..."

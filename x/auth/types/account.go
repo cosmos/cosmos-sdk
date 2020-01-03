@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,25 +16,25 @@ import (
 //-----------------------------------------------------------------------------
 // BaseAccount
 
-var _ exported.Account = (*BaseAccount)(nil)
+var _ exported.AccountI = (*BaseAccount)(nil)
 var _ exported.GenesisAccount = (*BaseAccount)(nil)
 
 // NewBaseAccount creates a new BaseAccount object
 func NewBaseAccount(
-	address sdk.AccAddress, coins sdk.Coins, pubKey tmcrypto.PubKey, accountNumber, sequence uint64,
+	address sdk.AccAddress, coins sdk.Coins, pubkey *crypto.PublicKey, accountNumber, sequence uint64,
 ) *BaseAccount {
 
 	return &BaseAccount{
 		Address:       address,
 		Coins:         coins,
-		PublicKey:     pubKey.Bytes(),
+		PublicKey:     pubkey,
 		AccountNumber: accountNumber,
 		Sequence:      sequence,
 	}
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() exported.Account {
+func ProtoBaseAccount() exported.AccountI {
 	return &BaseAccount{}
 }
 
@@ -96,8 +95,8 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // SetPubKey - Implements sdk.Account.
-func (acc *BaseAccount) SetPubKey(pubKey tmcrypto.PubKey) error {
-	acc.PubKey = pubKey
+func (acc *BaseAccount) SetPubKey(pubkey *crypto.PublicKey) error {
+	acc.PublicKey = pubkey
 	return nil
 }
 
@@ -127,9 +126,9 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 
 // Validate checks for errors on the account fields
 func (acc BaseAccount) Validate() error {
-	if acc.PubKey != nil && acc.Address != nil &&
-		!bytes.Equal(acc.PubKey.Address().Bytes(), acc.Address.Bytes()) {
-		return errors.New("pubkey and address pair is invalid")
+	if acc.PublicKey != nil && acc.Address != nil &&
+		!bytes.Equal(acc.PublicKey.Address().Bytes(), acc.Address.Bytes()) {
+		return errors.New("pubkey and address pair are invalid")
 	}
 
 	return nil
@@ -157,8 +156,8 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 		Sequence:      acc.Sequence,
 	}
 
-	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+	if acc.PublicKey != nil {
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PublicKey)
 		if err != nil {
 			return nil, err
 		}
@@ -183,8 +182,8 @@ func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 		Sequence:      acc.Sequence,
 	}
 
-	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+	if acc.PublicKey != nil {
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PublicKey)
 		if err != nil {
 			return nil, err
 		}
@@ -203,12 +202,12 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	if alias.PubKey != "" {
-		pk, err := sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}
 
-		acc.PubKey = pk
+		acc.PublicKey = pk
 	}
 
 	acc.Address = alias.Address

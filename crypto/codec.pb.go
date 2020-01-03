@@ -8,9 +8,6 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
-	github_com_tendermint_tendermint_crypto "github.com/tendermint/tendermint/crypto"
-	github_com_tendermint_tendermint_crypto_ed25519 "github.com/tendermint/tendermint/crypto/ed25519"
-	github_com_tendermint_tendermint_crypto_secp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -32,16 +29,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //
 // NOTE: Private keys must still be amino-encoded for backwards compatiblity.
 type PublicKey struct {
-	// pub defines an single supported public key type as a byte slice.
-	//
-	// Types that are valid to be assigned to Pub:
-	//	*PublicKey_Secp256K1
-	//	*PublicKey_Ed25519
-	//	*PublicKey_Multisig
-	Pub                  isPublicKey_Pub `protobuf_oneof:"pub"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *PublicKey) Reset()         { *m = PublicKey{} }
@@ -77,63 +67,6 @@ func (m *PublicKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PublicKey proto.InternalMessageInfo
 
-type isPublicKey_Pub interface {
-	isPublicKey_Pub()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type PublicKey_Secp256K1 struct {
-	Secp256K1 github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1 `protobuf:"bytes,1,opt,name=secp256k1,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/secp256k1.PubKeySecp256k1" json:"secp256k1,omitempty"`
-}
-type PublicKey_Ed25519 struct {
-	Ed25519 github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519 `protobuf:"bytes,2,opt,name=ed25519,proto3,oneof,casttype=github.com/tendermint/tendermint/crypto/ed25519.PubKeyEd25519" json:"ed25519,omitempty"`
-}
-type PublicKey_Multisig struct {
-	Multisig []byte `protobuf:"bytes,3,opt,name=multisig,proto3,oneof" json:"multisig,omitempty"`
-}
-
-func (*PublicKey_Secp256K1) isPublicKey_Pub() {}
-func (*PublicKey_Ed25519) isPublicKey_Pub()   {}
-func (*PublicKey_Multisig) isPublicKey_Pub()  {}
-
-func (m *PublicKey) GetPub() isPublicKey_Pub {
-	if m != nil {
-		return m.Pub
-	}
-	return nil
-}
-
-func (m *PublicKey) GetSecp256K1() github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1 {
-	if x, ok := m.GetPub().(*PublicKey_Secp256K1); ok {
-		return x.Secp256K1
-	}
-	return nil
-}
-
-func (m *PublicKey) GetEd25519() github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519 {
-	if x, ok := m.GetPub().(*PublicKey_Ed25519); ok {
-		return x.Ed25519
-	}
-	return nil
-}
-
-func (m *PublicKey) GetMultisig() []byte {
-	if x, ok := m.GetPub().(*PublicKey_Multisig); ok {
-		return x.Multisig
-	}
-	return nil
-}
-
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*PublicKey) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
-		(*PublicKey_Secp256K1)(nil),
-		(*PublicKey_Ed25519)(nil),
-		(*PublicKey_Multisig)(nil),
-	}
-}
-
 func init() {
 	proto.RegisterType((*PublicKey)(nil), "cosmos_sdk.crypto.v1.PublicKey")
 }
@@ -141,7 +74,7 @@ func init() {
 func init() { proto.RegisterFile("crypto/codec.proto", fileDescriptor_0402281428f37664) }
 
 var fileDescriptor_0402281428f37664 = []byte{
-	// 307 bytes of a gzipped FileDescriptorProto
+	// 174 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4a, 0x2e, 0xaa, 0x2c,
 	0x28, 0xc9, 0xd7, 0x4f, 0xce, 0x4f, 0x49, 0x4d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12,
 	0x49, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x2f, 0x4e, 0xc9, 0xd6, 0x83, 0x48, 0xeb, 0x95, 0x19,
@@ -149,47 +82,10 @@ var fileDescriptor_0402281428f37664 = []byte{
 	0x25, 0xe7, 0xe7, 0xea, 0xa7, 0xe7, 0xa7, 0xe7, 0xeb, 0x83, 0xf5, 0x24, 0x95, 0xa6, 0x81, 0x79,
 	0x60, 0x0e, 0x98, 0x05, 0x31, 0x4b, 0xca, 0x12, 0x53, 0x57, 0x51, 0x6a, 0x7a, 0x6a, 0x9e, 0x6e,
 	0x5e, 0x6a, 0x49, 0x79, 0x7e, 0x51, 0xb6, 0x3e, 0xc4, 0x2e, 0x5d, 0x88, 0x46, 0x08, 0x07, 0xa2,
-	0x55, 0x69, 0x15, 0x13, 0x17, 0x67, 0x40, 0x69, 0x52, 0x4e, 0x66, 0xb2, 0x77, 0x6a, 0xa5, 0x50,
-	0x2a, 0x17, 0x67, 0x71, 0x6a, 0x72, 0x81, 0x91, 0xa9, 0x59, 0xb6, 0xa1, 0x04, 0xa3, 0x02, 0xa3,
-	0x06, 0x8f, 0x93, 0xeb, 0xaf, 0x7b, 0xf2, 0x8e, 0x48, 0x06, 0x97, 0xa4, 0xe6, 0xa5, 0xa4, 0x16,
-	0xe5, 0x66, 0xe6, 0x95, 0x20, 0x33, 0xa1, 0x1e, 0x84, 0x6b, 0xd6, 0x0b, 0x28, 0x4d, 0xf2, 0x4e,
-	0xad, 0x0c, 0x86, 0xf1, 0x3d, 0x18, 0x82, 0x10, 0x26, 0x0b, 0xc5, 0x72, 0xb1, 0xa7, 0xa6, 0x18,
-	0x99, 0x9a, 0x1a, 0x5a, 0x4a, 0x30, 0x81, 0x2d, 0x71, 0xfc, 0x75, 0x4f, 0xde, 0x96, 0x58, 0x4b,
-	0xa0, 0x5a, 0xa1, 0x56, 0xb8, 0x42, 0x78, 0x1e, 0x0c, 0x41, 0x30, 0x33, 0x85, 0x64, 0xb8, 0x38,
-	0x72, 0x4b, 0x73, 0x4a, 0x32, 0x8b, 0x33, 0xd3, 0x25, 0x98, 0x41, 0xe6, 0x7b, 0x30, 0x04, 0xc1,
-	0x45, 0xac, 0x8c, 0x4e, 0x6d, 0xd1, 0xd5, 0x23, 0xd2, 0x2e, 0xa8, 0x1d, 0x4e, 0xac, 0x5c, 0xcc,
-	0x05, 0xa5, 0x49, 0x4e, 0x86, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91,
-	0x1c, 0x63, 0x94, 0x32, 0x92, 0x21, 0x90, 0x30, 0x85, 0x85, 0x73, 0x71, 0x4a, 0x36, 0xd4, 0x80,
-	0x24, 0x36, 0x70, 0x30, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x94, 0xec, 0x61, 0x0d, 0x03,
-	0x02, 0x00, 0x00,
-}
-
-func (this *PublicKey) GetPubKey() github_com_tendermint_tendermint_crypto.PubKey {
-	if x := this.GetSecp256K1(); x != nil {
-		return x
-	}
-	if x := this.GetEd25519(); x != nil {
-		return x
-	}
-	if x := this.GetMultisig(); x != nil {
-		return x
-	}
-	return nil
-}
-
-func (this *PublicKey) SetPubKey(value github_com_tendermint_tendermint_crypto.PubKey) error {
-	switch vt := value.(type) {
-	case github_com_tendermint_tendermint_crypto_secp256k1.PubKeySecp256k1:
-		this.Pub = &PublicKey_Secp256K1{vt}
-		return nil
-	case github_com_tendermint_tendermint_crypto_ed25519.PubKeyEd25519:
-		this.Pub = &PublicKey_Ed25519{vt}
-		return nil
-	case []byte:
-		this.Pub = &PublicKey_Multisig{vt}
-		return nil
-	}
-	return fmt.Errorf("can't encode value of type %T as message PublicKey", value)
+	0x55, 0x89, 0x9b, 0x8b, 0x33, 0xa0, 0x34, 0x29, 0x27, 0x33, 0xd9, 0x3b, 0xb5, 0xd2, 0xc9, 0xf0,
+	0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x8c, 0x52, 0x46, 0x32,
+	0x0e, 0xa2, 0x07, 0x66, 0x4e, 0x71, 0x4a, 0xb6, 0x3e, 0xc4, 0xcd, 0x49, 0x6c, 0x60, 0x63, 0x8c,
+	0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa9, 0xaf, 0xbc, 0x68, 0xe3, 0x00, 0x00, 0x00,
 }
 
 func (m *PublicKey) Marshal() (dAtA []byte, err error) {
@@ -216,66 +112,9 @@ func (m *PublicKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if m.Pub != nil {
-		{
-			size := m.Pub.Size()
-			i -= size
-			if _, err := m.Pub.MarshalTo(dAtA[i:]); err != nil {
-				return 0, err
-			}
-		}
-	}
 	return len(dAtA) - i, nil
 }
 
-func (m *PublicKey_Secp256K1) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PublicKey_Secp256K1) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Secp256K1 != nil {
-		i -= len(m.Secp256K1)
-		copy(dAtA[i:], m.Secp256K1)
-		i = encodeVarintCodec(dAtA, i, uint64(len(m.Secp256K1)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-func (m *PublicKey_Ed25519) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PublicKey_Ed25519) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Ed25519 != nil {
-		i -= len(m.Ed25519)
-		copy(dAtA[i:], m.Ed25519)
-		i = encodeVarintCodec(dAtA, i, uint64(len(m.Ed25519)))
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
-}
-func (m *PublicKey_Multisig) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *PublicKey_Multisig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	if m.Multisig != nil {
-		i -= len(m.Multisig)
-		copy(dAtA[i:], m.Multisig)
-		i = encodeVarintCodec(dAtA, i, uint64(len(m.Multisig)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	return len(dAtA) - i, nil
-}
 func encodeVarintCodec(dAtA []byte, offset int, v uint64) int {
 	offset -= sovCodec(v)
 	base := offset
@@ -293,48 +132,8 @@ func (m *PublicKey) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Pub != nil {
-		n += m.Pub.Size()
-	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
-func (m *PublicKey_Secp256K1) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Secp256K1 != nil {
-		l = len(m.Secp256K1)
-		n += 1 + l + sovCodec(uint64(l))
-	}
-	return n
-}
-func (m *PublicKey_Ed25519) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Ed25519 != nil {
-		l = len(m.Ed25519)
-		n += 1 + l + sovCodec(uint64(l))
-	}
-	return n
-}
-func (m *PublicKey_Multisig) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Multisig != nil {
-		l = len(m.Multisig)
-		n += 1 + l + sovCodec(uint64(l))
 	}
 	return n
 }
@@ -374,105 +173,6 @@ func (m *PublicKey) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: PublicKey: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Secp256K1", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCodec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthCodec
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCodec
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := make([]byte, postIndex-iNdEx)
-			copy(v, dAtA[iNdEx:postIndex])
-			m.Pub = &PublicKey_Secp256K1{v}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ed25519", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCodec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthCodec
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCodec
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := make([]byte, postIndex-iNdEx)
-			copy(v, dAtA[iNdEx:postIndex])
-			m.Pub = &PublicKey_Ed25519{v}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Multisig", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowCodec
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthCodec
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthCodec
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := make([]byte, postIndex-iNdEx)
-			copy(v, dAtA[iNdEx:postIndex])
-			m.Pub = &PublicKey_Multisig{v}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCodec(dAtA[iNdEx:])

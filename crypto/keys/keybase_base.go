@@ -171,7 +171,7 @@ func (kb baseKeybase) CreateLedger(
 	w infoWriter, name string, algo SigningAlgo, hrp string, account, index uint32,
 ) (Info, error) {
 
-	if !IsAlgoSupported(algo, kb.SupportedAlgosLedger()) {
+	if !IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
@@ -195,7 +195,7 @@ func (kb baseKeybase) CreateMnemonic(
 		return nil, "", ErrUnsupportedLanguage
 	}
 
-	if !IsAlgoSupported(algo, kb.SupportedAlgos()) {
+	if !IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
 		return nil, "", ErrUnsupportedSigningAlgo
 	}
 
@@ -268,7 +268,7 @@ func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
 }
 
 // IsAlgoSupported returns whether the signing algorithm is in the passed in list of supported algos.
-func IsAlgoSupported(algo SigningAlgo, supported []SigningAlgo) bool {
+func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
 	for _, supportedAlgo := range supported {
 		if algo == supportedAlgo {
 			return true

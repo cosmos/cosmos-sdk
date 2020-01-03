@@ -120,7 +120,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	if algo == keys.SigningAlgo("") {
 		algo = keys.Secp256k1
 	}
-	if !keys.IsAlgoSupported(algo, kb.SupportedAlgos()) {
+	if !keys.IsSupportedAlgorithm(kb.SupportedAlgos(), algo) {
 		return keys.ErrUnsupportedSigningAlgo
 	}
 
@@ -202,7 +202,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 			return errors.New("cannot set custom bip32 path with ledger")
 		}
 
-		if !keys.IsAlgoSupported(algo, kb.SupportedAlgosLedger()) {
+		if !keys.IsSupportedAlgorithm(kb.SupportedAlgosLedger(), algo) {
 			return keys.ErrUnsupportedSigningAlgo
 		}
 

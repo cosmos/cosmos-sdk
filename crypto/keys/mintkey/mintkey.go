@@ -66,16 +66,19 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 // remove armor
 
 // Unarmor the InfoBytes
-func UnarmorInfoBytes(armorStr string) (bz []byte, err error) {
+func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
-	if header["version"] != "0.0.0" {
-		err = fmt.Errorf("unrecognized version: %v", header["version"])
-		return
+	if err != nil {
+		return nil, err
 	}
-	return
+
+	if header["version"] != "0.0.0" {
+		return nil, fmt.Errorf("unrecognized version: %v", header["version"])
+	}
+	return bz, nil
 }
 
-// Unarmor the PubKeyBytes
+// Unarmor the PubKeyBytes.  Returns the pubkey byte slice, a string of the algo type, and an error
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	switch header["version"] {
@@ -88,7 +91,7 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 		return bz, header["type"], err
 	default:
 		err = fmt.Errorf("unrecognized version: %v", header["version"])
-		return
+		return nil, "", err
 	}
 }
 

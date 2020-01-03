@@ -80,8 +80,8 @@ if the provided arguments are invalid.
   and `DoubleSignJailEndTime` have moved from the `x/slashing` module to the `x/evidence` module.
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
 * Further modularization was done to the Keybase package to make it more suitable for use with different key formats and algorithms.
-  * [\#4941](https://github.com/cosmos/cosmos-sdk/pull/4941) The `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created.
-  * [\#5439](https://github.com/cosmos/cosmos-sdk/pull/5439) The `WithDeriveFunc` allows custom logic for deriving a key from a mnemonic, bip39 password, and HD Path.
+  * [\#4941](https://github.com/cosmos/cosmos-sdk/pull/4941) The `WithKeygenFunc` function added as a `KeybaseOption` which allows a custom bytes to key implementation to be defined when keys are created.
+  * [\#5439](https://github.com/cosmos/cosmos-sdk/pull/5439) The `WithDeriveFunc`function added as a `KeybaseOption` allows custom logic for deriving a key from a mnemonic, bip39 password, and HD Path.
   * [\#5439](https://github.com/cosmos/cosmos-sdk/pull/5439) BIP44 is no longer build into `keybase.CreateAccount()`.  It is however the default when using the `client/keys` add command.
   * [\#5439](https://github.com/cosmos/cosmos-sdk/pull/5439) `SupportedAlgos` and `SupportedAlgosLedger` functions return a slice of `SigningAlgo`s that are supported by the keybase and the ledger integration respectively.
 * (simapp) [\#5419](https://github.com/cosmos/cosmos-sdk/pull/5419) simapp/helpers.GenTx() now accepts a gas argument.

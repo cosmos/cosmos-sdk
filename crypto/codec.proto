@@ -11,13 +11,12 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto";
 //
 // NOTE: Private keys must still be amino-encoded for backwards compatiblity.
 message PublicKey {
-//  option (cosmos_proto.interface_type) = "github.com/tendermint/tendermint/crypto.PubKey";
-//  // pub defines an single supported public key type as a byte slice.
-//  oneof pub {
-//    // TODO make tendermint keys use []byte instead of [32]byte or generate the interface marshaling manually
-//    bytes secp256k1 = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/secp256k1.PubKeySecp256k1"];
-//    bytes ed25519 = 2 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PubKeyEd25519"];
-//    // TODO define multisig as a proto message in tendermint:
-//    bytes multisig = 3;
-//  }
+  option (cosmos_proto.interface_type) = "github.com/tendermint/tendermint/crypto.PubKey";
+  // pub defines an single supported public key type as a byte slice.
+  oneof pub {
+    bytes secp256k1 = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/secp256k1.PubKeySecp256k1"];
+    bytes ed25519 = 2 [(gogoproto.casttype) = "github.com/tendermint/tendermint/crypto/ed25519.PubKeyEd25519"];
+    // TODO define multisig as a proto message in tendermint:
+    bytes multisig = 3;
+  }
 }

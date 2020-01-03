@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/exported"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/internal/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,7 +63,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 
 			bz := []byte(`{"type": "cosmos-sdk/SendAuthorization","value":{"spendlimit": [{"denom": "stake","amount": "50"}]}}`)
 
-			var authorization types.SendAuthorization
+			var authorization exported.Authorization
 			err = cdc.UnmarshalJSON(bz, &authorization)
 			if err != nil {
 				return err

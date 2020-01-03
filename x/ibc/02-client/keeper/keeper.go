@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -18,15 +19,17 @@ import (
 // Keeper represents a type that grants read and write permissions to any client
 // state information
 type Keeper struct {
-	storeKey sdk.StoreKey
-	cdc      *codec.Codec
+	storeKey      sdk.StoreKey
+	cdc           *codec.Codec
+	stakingKeeper types.StakingKeeper
 }
 
 // NewKeeper creates a new NewKeeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper) Keeper {
 	return Keeper{
-		storeKey: key,
-		cdc:      cdc,
+		storeKey:      key,
+		cdc:           cdc,
+		stakingKeeper: sk,
 	}
 }
 
@@ -72,8 +75,8 @@ func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType expor
 	store.Set(types.KeyClientType(clientID), []byte{byte(clientType)})
 }
 
-// GetConsensusState creates a new client state and populates it with a given consensus state
-func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string) (exported.ConsensusState, bool) {
+// GetClientConsensusState gets the latest stored consensus state from a given client.
+func (k Keeper) GetClientConsensusState(ctx sdk.Context, clientID string) (exported.ConsensusState, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyConsensusState(clientID))
 	if bz == nil {
@@ -85,8 +88,9 @@ func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string) (exported.Co
 	return consensusState, true
 }
 
-// SetConsensusState sets a ConsensusState to a particular client
-func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) {
+// SetClientConsensusState sets a ConsensusState to a particular client at the latest
+// height
+func (k Keeper) SetClientConsensusState(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
 	store.Set(types.KeyConsensusState(clientID), bz)
@@ -168,11 +172,28 @@ func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, co
 	store.Set(types.KeyCommitter(clientID, height), bz)
 }
 
+// GetConsensusState introspects the past historical info at a given height and
+// returns the expected consensus state at that height.
+func (k Keeper) GetConsensusState(ctx sdk.Context, height int64) (exported.ConsensusState, bool) {
+	histInfo, found := k.stakingKeeper.GetHistoricalInfo(ctx, height)
+	if !found {
+		return nil, false
+	}
+
+	// TODO: cast sdk.Validator to tmtypes.Validator
+	consensusState := tendermint.ConsensusState{
+		ChainID: histInfo.Header.ChainID,
+		Height:  uint64(histInfo.Header.Height),
+		Root:    commitment.NewRoot(histInfo.Header.AppHash),
+	}
+	return consensusState, true
+}
+
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {
 	clientState := types.NewClientState(clientID)
-	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetClientConsensusState(ctx, clientID, consensusState)
 	return clientState
 }
 

@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		}, true},
 		{"verify future commit fails", func() {
 			suite.consensusState.NextValidatorSet = altValSet
-			suite.keeper.SetConsensusState(suite.ctx, testClientID, suite.consensusState)
+			suite.keeper.SetClientConsensusState(suite.ctx, testClientID, suite.consensusState)
 		}, true},
 	}
 
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			tc.malleate()
 			err = suite.keeper.UpdateClient(suite.ctx, testClientID, suite.header)
 
-			retrievedConsState, _ := suite.keeper.GetConsensusState(suite.ctx, testClientID)
+			retrievedConsState, _ := suite.keeper.GetClientConsensusState(suite.ctx, testClientID)
 			tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
 			tmConsState.ValidatorSet.TotalVotingPower()
 			tmConsState.NextValidatorSet.TotalVotingPower()

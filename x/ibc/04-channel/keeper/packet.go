@@ -161,7 +161,7 @@ func (k Keeper) SendPacket(
 		)
 	}
 
-	_, found = k.clientKeeper.GetConsensusState(ctx, connectionEnd.ClientID)
+	_, found = k.clientKeeper.GetClientConsensusState(ctx, connectionEnd.ClientID)
 	if !found {
 		return client.ErrConsensusStateNotFound
 	}

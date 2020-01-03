@@ -65,7 +65,7 @@ func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
+	consensusState, found := k.GetClientConsensusState(ctx, params.ClientID)
 	if !found {
 		return nil, errors.ErrConsensusStateNotFound
 	}

@@ -58,7 +58,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(errors.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	consensusState, found := k.GetConsensusState(ctx, clientID)
+	consensusState, found := k.GetClientConsensusState(ctx, clientID)
 	if !found {
 		return sdkerrors.Wrapf(errors.ErrConsensusStateNotFound, "cannot update client with ID %s", clientID)
 	}
@@ -68,7 +68,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
-	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetClientConsensusState(ctx, clientID, consensusState)
 	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))

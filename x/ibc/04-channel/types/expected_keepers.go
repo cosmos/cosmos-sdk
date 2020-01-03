@@ -9,7 +9,7 @@ import (
 
 // ClientKeeper expected account IBC client keeper
 type ClientKeeper interface {
-	GetConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
+	GetClientConsensusState(ctx sdk.Context, clientID string) (clientexported.ConsensusState, bool)
 }
 
 // ConnectionKeeper expected account IBC connection keeper

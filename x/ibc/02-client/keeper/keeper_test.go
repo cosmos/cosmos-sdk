@@ -84,11 +84,11 @@ func (suite *KeeperTestSuite) TestSetClientType() {
 }
 
 func (suite *KeeperTestSuite) TestSetConsensusState() {
-	suite.keeper.SetConsensusState(suite.ctx, testClientID, suite.consensusState)
+	suite.keeper.SetClientConsensusState(suite.ctx, testClientID, suite.consensusState)
 
-	retrievedConsState, ok := suite.keeper.GetConsensusState(suite.ctx, testClientID)
+	retrievedConsState, ok := suite.keeper.GetClientConsensusState(suite.ctx, testClientID)
 
-	require.True(suite.T(), ok, "GetConsensusState failed")
+	require.True(suite.T(), ok, "GetClientConsensusState failed")
 	tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
 	// force recalculation of unexported totalVotingPower so we can compare consensusState
 	tmConsState.ValidatorSet.TotalVotingPower()

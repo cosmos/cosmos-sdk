@@ -66,6 +66,7 @@ var (
 
 type (
 	Keeper                    = keeper.Keeper
+	StakingKeeper             = types.StakingKeeper
 	MsgCreateClient           = types.MsgCreateClient
 	MsgUpdateClient           = types.MsgUpdateClient
 	MsgSubmitMisbehaviour     = types.MsgSubmitMisbehaviour

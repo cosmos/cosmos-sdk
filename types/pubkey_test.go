@@ -110,3 +110,14 @@ func TestAddress(t *testing.T) {
 		require.Equal(t, tc.pubkey.Address(), tc.input.Address())
 	}
 }
+
+func TestPubKeySecp256k1ToPublicKey(t *testing.T) {
+	secp256k1pk := (secp256k1.GenPrivKey().PubKey()).(secp256k1.PubKeySecp256k1)
+	pk := types.PubKeySecp256k1ToPublicKey(secp256k1pk)
+	require.NotNil(t, pk)
+	require.Equal(t, secp256k1pk.Address(), pk.Address())
+
+	ed25519pk := (ed25519.GenPrivKey().PubKey()).(ed25519.PubKeyEd25519)
+	pk = types.PubKeySecp256k1ToPublicKey(ed25519pk)
+	require.Nil(t, pk)
+}

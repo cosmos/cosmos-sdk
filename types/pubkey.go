@@ -156,3 +156,17 @@ func (m *PublicKey) Bytes() []byte {
 
 	return bz
 }
+
+// PubKeySecp256k1ToPublicKey converts a Tendermint PubKeySecp256k1 to a reference
+// of PublicKey. If the provided PubKey is not the correct type, nil will be
+// returned.
+func PubKeySecp256k1ToPublicKey(tmpk tmcrypto.PubKey) *PublicKey {
+	var pk *PublicKey
+	if v, ok := tmpk.(secp256k1.PubKeySecp256k1); ok {
+		pk = &PublicKey{
+			&PublicKey_Secp256K1{Secp256K1: v[:]},
+		}
+	}
+
+	return pk
+}

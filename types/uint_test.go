@@ -50,7 +50,9 @@ func TestUintPanics(t *testing.T) {
 	require.Panics(t, func() { ZeroUint().QuoUint64(0) })
 	require.Panics(t, func() { OneUint().Quo(ZeroUint().Sub(OneUint())) })
 	require.Panics(t, func() { uintmax.Add(OneUint()) })
+	require.Panics(t, func() { uintmax.Incr() })
 	require.Panics(t, func() { uintmin.Sub(OneUint()) })
+	require.Panics(t, func() { uintmin.Decr() })
 
 	require.Equal(t, uint64(0), MinUint(ZeroUint(), OneUint()).Uint64())
 	require.Equal(t, uint64(1), MaxUint(ZeroUint(), OneUint()).Uint64())
@@ -68,6 +70,9 @@ func TestUintPanics(t *testing.T) {
 	require.False(t,
 		OneUint().LTE(ZeroUint()),
 	)
+	require.Equal(t, 1, OneUint().Cmp(ZeroUint()))
+	require.Equal(t, -1, ZeroUint().Cmp(OneUint()))
+	require.Equal(t, 0, OneUint().Cmp(OneUint()))
 
 	require.False(t, ZeroUint().GT(OneUint()))
 	require.True(t, ZeroUint().LT(OneUint()))
@@ -115,6 +120,7 @@ func TestArithUint(t *testing.T) {
 			{u1.QuoUint64(n2), n1 / n2},
 			{MinUint(u1, u2), minuint(n1, n2)},
 			{MaxUint(u1, u2), maxuint(n1, n2)},
+			{u1.Incr(), n1 + 1},
 		}
 
 		for tcnum, tc := range cases {
@@ -132,6 +138,7 @@ func TestArithUint(t *testing.T) {
 		}{
 			{u1.Sub(u2), n1 - n2},
 			{u1.SubUint64(n2), n1 - n2},
+			{u1.Decr(), n1 - 1},
 		}
 
 		for tcnum, tc := range subs {
@@ -163,6 +170,16 @@ func TestCompUint(t *testing.T) {
 		for tcnum, tc := range cases {
 			require.Equal(t, tc.nres, tc.ires, "Uint comparison operation does not match with uint64 operation. tc #%d", tcnum)
 		}
+
+		if n1 > n2 {
+			require.Equal(t, 1, i1.Cmp(i2))
+			require.Equal(t, -1, i2.Cmp(i1))
+		} else if n2 > n1 {
+			require.Equal(t, -1, i1.Cmp(i2))
+			require.Equal(t, 1, i2.Cmp(i1))
+		} else {
+			require.Equal(t, 0, i1.Cmp(i2))
+		}
 	}
 }
 
@@ -183,6 +200,14 @@ func TestImmutabilityAllUint(t *testing.T) {
 		func(i *Uint) { _ = i.LT(randuint()) },
 		func(i *Uint) { _ = i.LTE(randuint()) },
 		func(i *Uint) { _ = i.String() },
+		func(i *Uint) { _ = i.Incr() },
+		func(i *Uint) {
+			if i.IsZero() {
+				return
+			}
+
+			_ = i.Decr()
+		},
 	}
 
 	for i := 0; i < 1000; i++ {

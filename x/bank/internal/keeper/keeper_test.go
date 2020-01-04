@@ -240,7 +240,7 @@ func TestVestingAccountSend(t *testing.T) {
 	require.Error(t, err)
 
 	// receive some coins
-	vacc.SetCoins(origCoins.Add(sendCoins))
+	vacc.SetCoins(origCoins.Add(sendCoins...))
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that all vested coins are spendable plus any received
@@ -275,7 +275,7 @@ func TestPeriodicVestingAccountSend(t *testing.T) {
 	require.Error(t, err)
 
 	// receive some coins
-	vacc.SetCoins(origCoins.Add(sendCoins))
+	vacc.SetCoins(origCoins.Add(sendCoins...))
 	app.AccountKeeper.SetAccount(ctx, vacc)
 
 	// require that all vested coins are spendable plus any received
@@ -311,7 +311,7 @@ func TestVestingAccountReceive(t *testing.T) {
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
-	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
+	require.Equal(t, origCoins.Add(sendCoins...), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
 	// require coins are spendable plus any that have vested
@@ -347,7 +347,7 @@ func TestPeriodicVestingAccountReceive(t *testing.T) {
 
 	// require the coins are spendable
 	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
-	require.Equal(t, origCoins.Add(sendCoins), vacc.GetCoins())
+	require.Equal(t, origCoins.Add(sendCoins...), vacc.GetCoins())
 	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
 
 	// require coins are spendable plus any that have vested

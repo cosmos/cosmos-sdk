@@ -50,6 +50,8 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 
 ### API Breaking Changes
 
+* (types) [\#5430](https://github.com/cosmos/cosmos-sdk/pull/5430) `DecCoins#Add` parameter changed from `DecCoins` 
+  to `...DecCoin`, `Coins#Add` parameter changed from `Coins` to `...Coin`
 * (baseapp/types) [\#5421](https://github.com/cosmos/cosmos-sdk/pull/5421) The `Error` interface (`types/errors.go`)
   has been removed in favor of the concrete type defined in `types/errors/` which implements the standard `error`
   interface. As a result, the `Handler` and `Querier` implementations now return a standard `error`.

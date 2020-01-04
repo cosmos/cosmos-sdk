@@ -50,6 +50,8 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 
 ### API Breaking Changes
 
+* (types) [\#5430](https://github.com/cosmos/cosmos-sdk/pull/5430) `DecCoins#Add` parameter changed from `DecCoins` 
+  to `...DecCoin`, `Coins#Add` parameter changed from `Coins` to `...Coin`
 * (baseapp/types) [\#5421](https://github.com/cosmos/cosmos-sdk/pull/5421) The `Error` interface (`types/errors.go`)
   has been removed in favor of the concrete type defined in `types/errors/` which implements the standard `error`
   interface. As a result, the `Handler` and `Querier` implementations now return a standard `error`.
@@ -94,6 +96,8 @@ if the provided arguments are invalid.
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
   * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created.
 * (simapp) [\#5419](https://github.com/cosmos/cosmos-sdk/pull/5419) simapp/helpers.GenTx() now accepts a gas argument.
+* (baseapp) [\#5455](https://github.com/cosmos/cosmos-sdk/issues/5455) An `sdk.Context` is passed into the `router.Route()`
+function.
 
 ### Client Breaking Changes
 

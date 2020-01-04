@@ -27,7 +27,7 @@ func TotalSupply(k Keeper) sdk.Invariant {
 		supply := k.GetSupply(ctx)
 
 		k.ak.IterateAccounts(ctx, func(acc exported.Account) bool {
-			expectedTotal = expectedTotal.Add(acc.GetCoins())
+			expectedTotal = expectedTotal.Add(acc.GetCoins()...)
 			return false
 		})
 

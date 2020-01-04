@@ -393,3 +393,18 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")
 }
+
+func TestDumpUpgradeInfoToFile(t *testing.T) {
+	s := setupTest(10, map[int64]bool{})
+	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	require.Nil(t, err)
+	t.Log("Verify if upgrade happens without skip upgrade")
+	require.Panics(t, func() {
+		s.module.BeginBlock(newCtx, req)
+	})
+
+	VerifyDoUpgrade(t)
+	VerifyDone(t, s.ctx, "test")
+}

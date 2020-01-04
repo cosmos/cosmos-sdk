@@ -2,7 +2,16 @@ package keeper
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"path/filepath"
+
+	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"io/ioutil"
+	"os"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -129,4 +138,31 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 // IsSkipHeight checks if the given height is part of skipUpgradeHeights
 func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
+}
+
+// WriteToFile adds plan height to upgrade-info.json
+func (k Keeper) DumpUpgradeInfoToFile(height int64) {
+	home := viper.GetString(viper.GetString(flags.FlagHome))
+	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
+	_, err := os.Stat(upgradeInfoFilePath)
+
+	// If the upgrade-info file is not found, create new
+	if os.IsNotExist(err) {
+		_, err := os.Create(upgradeInfoFilePath)
+
+		if err != nil {
+			fmt.Println("error while creating upgrade-info file", err)
+		}
+	}
+
+	var upgradeInfo store.UpgradeInfo
+
+	upgradeInfo.Height = height
+
+	info, err := json.Marshal(upgradeInfo)
+	if err != nil {
+		_ = fmt.Errorf("Unable to marshal ")
+	}
+
+	err = ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
 }

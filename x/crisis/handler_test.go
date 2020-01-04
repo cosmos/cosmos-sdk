@@ -36,7 +36,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 	app.CrisisKeeper.RegisterRoute(testModuleName, dummyRouteWhichFails.Route, dummyRouteWhichFails.Invar)
 
 	feePool := distr.InitialFeePool()
-	feePool.CommunityPool = sdk.NewDecCoins(sdk.NewCoins(constantFee))
+	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(sdk.NewCoins(constantFee)...)
 	app.DistrKeeper.SetFeePool(ctx, feePool)
 	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(sdk.Coins{}))
 

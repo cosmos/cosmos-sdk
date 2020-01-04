@@ -28,7 +28,7 @@ func ModuleAccountInvariant(keeper Keeper) sdk.Invariant {
 		var expectedDeposits sdk.Coins
 
 		keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {
-			expectedDeposits = expectedDeposits.Add(deposit.Amount)
+			expectedDeposits = expectedDeposits.Add(deposit.Amount...)
 			return false
 		})
 

@@ -202,8 +202,7 @@ func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQue
 			delReward := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
 
 			delRewards = append(delRewards, types.NewDelegationDelegatorReward(valAddr, delReward))
-			total = total.Add(delReward)
-
+			total = total.Add(delReward...)
 			return false
 		},
 	)

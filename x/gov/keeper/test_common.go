@@ -79,7 +79,6 @@ func newPubKey(pk string) (res crypto.PubKey) {
 func makeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 	auth.RegisterCodec(cdc)
-	types.RegisterCodec(cdc)
 	supply.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
@@ -138,7 +137,7 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	pk := params.NewKeeper(keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
@@ -149,8 +148,9 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	rtr := types.NewRouter().
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
-	keeper := NewKeeper(
-		cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, rtr,
+	keeper := NewKeeper(func() types.Proposal {
+		return &types.BasicProposal{}
+	}, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, rtr,
 	)
 
 	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)
@@ -177,8 +177,15 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
-	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
-		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
+	bzA, err := proposalA.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	bzB, err := proposalB.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return bytes.Equal(bzA, bzB)
 }
 
 func createValidators(ctx sdk.Context, sk staking.Keeper, powers []int64) {

@@ -20,7 +20,7 @@ type Msg interface {
 	ValidateBasic() error
 
 	// Get the canonical byte representation of the Msg.
-	GetSignBytes() []byte
+	//GetSignBytes() []byte
 
 	// Signers returns the addrs of signers that must sign.
 	// CONTRACT: All signatures must be present to be valid.

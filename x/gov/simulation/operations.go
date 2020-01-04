@@ -352,7 +352,7 @@ func randomProposalID(r *rand.Rand, k keeper.Keeper,
 	}
 
 	proposal, ok := k.GetProposal(ctx, proposalID)
-	if !ok || proposal.Status != status {
+	if !ok || proposal.GetStatus() != status {
 		return proposalID, false
 	}
 

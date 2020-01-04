@@ -18,7 +18,6 @@ var _ govtypes.Content = CommunityPoolSpendProposal{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCommunityPoolSpend)
-	govtypes.RegisterProposalTypeCodec(CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal")
 }
 
 // CommunityPoolSpendProposal spends from the community pool

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/gogo/protobuf/types"
 	"strings"
 	"time"
 
@@ -20,14 +19,7 @@ func (p Plan) String() string {
 }
 
 func (p Plan) GetGoTime() time.Time {
-	if p.Time == nil {
-		return time.Time{}
-	}
-	t, err := types.TimestampFromProto(p.Time)
-	if err != nil {
-		panic(err)
-	}
-	return t;
+	return sdk.ProtoTimestampToTime(p.Time)
 }
 
 // ValidateBasic does basic validation of a Plan

@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,8 +41,10 @@ func DefaultGenesisState() GenesisState {
 
 // Equal checks whether two gov GenesisState structs are equivalent
 func (data GenesisState) Equal(data2 GenesisState) bool {
-	b1 := ModuleCdc.MustMarshalBinaryBare(data)
-	b2 := ModuleCdc.MustMarshalBinaryBare(data2)
+	b1, err := json.Marshal(data)
+	if err != nil { panic(err) }
+	b2, err := json.Marshal(data2)
+	if err != nil { panic(err) }
 	return bytes.Equal(b1, b2)
 }
 

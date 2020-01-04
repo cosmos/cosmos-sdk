@@ -102,7 +102,8 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 
 // NewOperationMsg - create a new operation message from sdk.Msg
 func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
-	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
+	panic("TODO: GetSignBytes")
+	//return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
 }
 
 // NoOpMsg - create a no-operation message

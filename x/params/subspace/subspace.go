@@ -1,6 +1,7 @@
 package subspace
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -99,7 +100,7 @@ func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	if err := json.Unmarshal(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -114,7 +115,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 		return
 	}
 
-	if err := s.cdc.UnmarshalJSON(bz, ptr); err != nil {
+	if err := json.Unmarshal(bz, ptr); err != nil {
 		panic(err)
 	}
 }
@@ -164,7 +165,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, value interface{}) {
 	s.checkType(key, value)
 	store := s.kvStore(ctx)
 
-	bz, err := s.cdc.MarshalJSON(value)
+	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
@@ -191,7 +192,7 @@ func (s Subspace) Update(ctx sdk.Context, key, value []byte) error {
 	dest := reflect.New(ty).Interface()
 	s.GetIfExists(ctx, key, dest)
 
-	if err := s.cdc.UnmarshalJSON(value, dest); err != nil {
+	if err := json.Unmarshal(value, dest); err != nil {
 		return err
 	}
 

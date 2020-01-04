@@ -20,7 +20,6 @@ var (
 	NewParamSetPair            = subspace.NewParamSetPair
 	NewSubspace                = subspace.NewSubspace
 	NewKeyTable                = subspace.NewKeyTable
-	RegisterCodec              = types.RegisterCodec
 	ErrUnknownSubspace         = types.ErrUnknownSubspace
 	ErrSettingParameter        = types.ErrSettingParameter
 	ErrEmptyChanges            = types.ErrEmptyChanges
@@ -30,9 +29,6 @@ var (
 	NewParameterChangeProposal = types.NewParameterChangeProposal
 	NewParamChange             = types.NewParamChange
 	ValidateChanges            = types.ValidateChanges
-
-	// variable aliases
-	ModuleCdc = types.ModuleCdc
 )
 
 type (

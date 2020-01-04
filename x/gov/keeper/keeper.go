@@ -27,6 +27,8 @@ type Keeper struct {
 
 	// Proposal router
 	router types.Router
+
+	proposalCtr func() types.Proposal
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -36,7 +38,7 @@ type Keeper struct {
 // - and tallying the result of the vote.
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
-func NewKeeper(key sdk.StoreKey, paramSpace types.ParamSubspace,
+func NewKeeper(proposalCtr func() types.Proposal, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	supplyKeeper types.SupplyKeeper, sk types.StakingKeeper, rtr types.Router,
 ) Keeper {
 
@@ -51,6 +53,7 @@ func NewKeeper(key sdk.StoreKey, paramSpace types.ParamSubspace,
 	rtr.Seal()
 
 	return Keeper{
+		proposalCtr:  proposalCtr,
 		storeKey:     key,
 		paramSpace:   paramSpace,
 		supplyKeeper: supplyKeeper,

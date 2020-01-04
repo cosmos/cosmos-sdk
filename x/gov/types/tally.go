@@ -28,17 +28,9 @@ func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 	}
 }
 
-// TallyResult defines a standard tally for a proposal
-type TallyResult struct {
-	Yes        sdk.Int `json:"yes" yaml:"yes"`
-	Abstain    sdk.Int `json:"abstain" yaml:"abstain"`
-	No         sdk.Int `json:"no" yaml:"no"`
-	NoWithVeto sdk.Int `json:"no_with_veto" yaml:"no_with_veto"`
-}
-
 // NewTallyResult creates a new TallyResult instance
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
-	return TallyResult{
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) *TallyResult {
+	return &TallyResult{
 		Yes:        yes,
 		Abstain:    abstain,
 		No:         no,
@@ -47,7 +39,7 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 }
 
 // NewTallyResultFromMap creates a new TallyResult instance from a Option -> Dec map
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) *TallyResult {
 	return NewTallyResult(
 		results[OptionYes].TruncateInt(),
 		results[OptionAbstain].TruncateInt(),
@@ -57,7 +49,7 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 }
 
 // EmptyTallyResult returns an empty TallyResult.
-func EmptyTallyResult() TallyResult {
+func EmptyTallyResult() *TallyResult {
 	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
 }
 

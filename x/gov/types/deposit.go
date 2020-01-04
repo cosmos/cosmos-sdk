@@ -6,13 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Deposit defines an amount deposited by an account address to an active proposal
-type Deposit struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` //  proposalID of the proposal
-	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     //  Address of the depositor
-	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           //  Deposit amount
-}
-
 // NewDeposit creates a new Deposit instance
 func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
 	return Deposit{proposalID, depositor, amount}
@@ -37,9 +30,14 @@ func (d Deposits) String() string {
 	return out
 }
 
+
+func (d Deposit) GetCoinsAmount() sdk.Coins {
+	return d.Amount
+}
+
 // Equals returns whether two deposits are equal.
 func (d Deposit) Equals(comp Deposit) bool {
-	return d.Depositor.Equals(comp.Depositor) && d.ProposalID == comp.ProposalID && d.Amount.IsEqual(comp.Amount)
+	return d.Depositor.Equals(comp.Depositor) && d.ProposalID == comp.ProposalID && d.GetCoinsAmount().IsEqual(comp.Amount)
 }
 
 // Empty returns whether a deposit is empty.

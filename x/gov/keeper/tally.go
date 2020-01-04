@@ -10,7 +10,7 @@ import (
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
 // voters
-func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes bool, burnDeposits bool, tallyResults types.TallyResult) {
+func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes bool, burnDeposits bool, tallyResults *types.TallyResult) {
 	results := make(map[types.VoteOption]sdk.Dec)
 	results[types.OptionYes] = sdk.ZeroDec()
 	results[types.OptionAbstain] = sdk.ZeroDec()
@@ -33,7 +33,7 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal types.Proposal) (passes boo
 		return false
 	})
 
-	keeper.IterateVotes(ctx, proposal.ProposalID, func(vote types.Vote) bool {
+	keeper.IterateVotes(ctx, proposal.GetProposalID(), func(vote types.Vote) bool {
 		// if validator, just record it in the map
 		valAddrStr := sdk.ValAddress(vote.Voter).String()
 		if val, ok := currValidators[valAddrStr]; ok {

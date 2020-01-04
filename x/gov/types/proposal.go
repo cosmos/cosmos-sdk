@@ -13,38 +13,114 @@ import (
 // DefaultStartingProposalID is 1
 const DefaultStartingProposalID uint64 = 1
 
-// Proposal defines a struct used by the governance module to allow for voting
+// Proposal defines an interface used by the governance module to allow for voting
 // on network changes.
-type Proposal struct {
-	Content `json:"content" yaml:"content"` // Proposal content interface
+type Proposal interface {
+	sdk.Marshaler
 
-	ProposalID       uint64         `json:"id" yaml:"id"`                                 //  ID of the proposal
-	Status           ProposalStatus `json:"proposal_status" yaml:"proposal_status"`       // Status of the Proposal {Pending, Active, Passed, Rejected}
-	FinalTallyResult TallyResult    `json:"final_tally_result" yaml:"final_tally_result"` // Result of Tallys
+	GetContent() Content               // Proposal content interface
+	SetContent(content Content) error
 
-	SubmitTime     time.Time `json:"submit_time" yaml:"submit_time"`           // Time of the block where TxGovSubmitProposal was included
-	DepositEndTime time.Time `json:"deposit_end_time" yaml:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
-	TotalDeposit   sdk.Coins `json:"total_deposit" yaml:"total_deposit"`       // Current deposit on this proposal. Initial value is set at InitialDeposit
+	GetProposalID() uint64             //  ID of the proposal
+	SetProposalID(id uint64)
 
-	VotingStartTime time.Time `json:"voting_start_time" yaml:"voting_start_time"` // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
-	VotingEndTime   time.Time `json:"voting_end_time" yaml:"voting_end_time"`     // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	GetStatus() ProposalStatus         // Status of the Proposal {Pending, Active, Passed, Rejected}
+	SetStatus(status ProposalStatus)
+
+	GetFinalTallyResult() *TallyResult // Result of Tallys
+	SetFinalTallyResult(result *TallyResult)
+
+	GetSubmitTime() time.Time          // Time of the block where TxGovSubmitProposal was included
+	SetSubmitTime(time time.Time)
+
+	GetDepositEndTime() time.Time      // Time that the Proposal would expire if deposit amount isn't met
+	SetDepositEndTime(time time.Time)
+
+	GetTotalDeposit() sdk.Coins        // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SetTotalDeposit(coins sdk.Coins)
+
+	GetVotingStartTime() time.Time     // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	SetVotingStartTime(time.Time)
+
+	GetVotingEndTime() time.Time       // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	SetVotingEndTime(time.Time)
 }
 
-// NewProposal creates a new Proposal instance
-func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) Proposal {
-	return Proposal{
-		Content:          content,
-		ProposalID:       id,
-		Status:           StatusDepositPeriod,
-		FinalTallyResult: EmptyTallyResult(),
-		TotalDeposit:     sdk.NewCoins(),
-		SubmitTime:       submitTime,
-		DepositEndTime:   depositEndTime,
-	}
+func (m ProposalBase) GetProposalID() uint64 {
+	return m.ProposalID
 }
 
-// String implements stringer interface
-func (p Proposal) String() string {
+func (m ProposalBase) GetStatus() ProposalStatus {
+	return m.Status
+}
+
+func (m *ProposalBase) GetFinalTallyResult() *TallyResult {
+	return m.FinalTallyResult
+}
+
+func (m *ProposalBase) GetSubmitTime() time.Time {
+	return m.GetSubmitTime()
+}
+
+func (m *ProposalBase) GetDepositEndTime() time.Time {
+	return sdk.ProtoTimestampToTime(m.DepositEndTime)
+}
+
+func (m *ProposalBase) GetTotalDeposit() sdk.Coins {
+	return m.TotalDeposit
+}
+
+func (m *ProposalBase) GetVotingStartTime() time.Time {
+	return sdk.ProtoTimestampToTime(m.VotingStartTime)
+}
+
+func (m *ProposalBase) GetVotingEndTime() time.Time {
+	return sdk.ProtoTimestampToTime(m.VotingEndTime)
+}
+
+func (m *ProposalBase) SetProposalID(id uint64) {
+	m.ProposalID = id
+}
+
+func (m *ProposalBase) SetStatus(status ProposalStatus) {
+	m.Status = status
+}
+
+func (m *ProposalBase) SetFinalTallyResult(result *TallyResult) {
+	m.FinalTallyResult = result
+}
+
+func (m *ProposalBase) SetSubmitTime(t time.Time) {
+	m.SubmitTime = sdk.TimeToProtoTimestamp(t)
+}
+
+func (m *ProposalBase) SetDepositEndTime(t time.Time) {
+	m.DepositEndTime = sdk.TimeToProtoTimestamp(t)
+}
+
+func (m *ProposalBase) SetTotalDeposit(coins sdk.Coins) {
+	m.TotalDeposit = coins
+}
+
+func (m *ProposalBase) SetVotingStartTime(t time.Time) {
+	m.VotingStartTime = sdk.TimeToProtoTimestamp(t)
+}
+
+func (m *ProposalBase) SetVotingEndTime(t time.Time) {
+	m.VotingEndTime = sdk.TimeToProtoTimestamp(t)
+}
+
+var _ Proposal = &BasicProposal{}
+
+func (m *BasicProposal) GetContent() Content {
+	return m.Content.GetContent()
+}
+
+func (m *BasicProposal) SetContent(value Content) error {
+	return m.Content.SetContent(value)
+}
+
+func ProposalToString(p Proposal) string {
 	return fmt.Sprintf(`Proposal %d:
   Title:              %s
   Type:               %s
@@ -55,9 +131,9 @@ func (p Proposal) String() string {
   Voting Start Time:  %s
   Voting End Time:    %s
   Description:        %s`,
-		p.ProposalID, p.GetTitle(), p.ProposalType(),
-		p.Status, p.SubmitTime, p.DepositEndTime,
-		p.TotalDeposit, p.VotingStartTime, p.VotingEndTime, p.GetDescription(),
+		p.GetProposalID(), p.GetContent().GetTitle(), p.GetContent().ProposalType(),
+		p.GetStatus(), p.GetSubmitTime(), p.GetDepositEndTime(),
+		p.GetTotalDeposit(), p.GetVotingStartTime(), p.GetVotingEndTime(), p.GetContent().GetDescription(),
 	)
 }
 
@@ -69,8 +145,8 @@ func (p Proposals) String() string {
 	out := "ID - (Status) [Type] Title\n"
 	for _, prop := range p {
 		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
-			prop.ProposalID, prop.Status,
-			prop.ProposalType(), prop.GetTitle())
+			prop.GetProposalID(), prop.GetStatus(),
+			prop.GetContent().ProposalType(), prop.GetContent().GetTitle())
 	}
 	return strings.TrimSpace(out)
 }
@@ -78,19 +154,6 @@ func (p Proposals) String() string {
 type (
 	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
-
-	// ProposalStatus is a type alias that represents a proposal status as a byte
-	ProposalStatus byte
-)
-
-// Valid Proposal statuses
-const (
-	StatusNil           ProposalStatus = 0x00
-	StatusDepositPeriod ProposalStatus = 0x01
-	StatusVotingPeriod  ProposalStatus = 0x02
-	StatusPassed        ProposalStatus = 0x03
-	StatusRejected      ProposalStatus = 0x04
-	StatusFailed        ProposalStatus = 0x05
 )
 
 // ProposalStatusFromString turns a string into a ProposalStatus

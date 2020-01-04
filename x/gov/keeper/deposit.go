@@ -16,14 +16,20 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return deposit, false
 	}
 
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &deposit)
+	err := deposit.Unmarshal(bz)
+	if err != nil {
+		panic(err)
+	}
 	return deposit, true
 }
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
+	bz, err := deposit.Marshal()
+	if err != nil {
+		panic(err)
+	}
 	store.Set(types.DepositKey(deposit.ProposalID, deposit.Depositor), bz)
 }
 
@@ -68,7 +74,10 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.D
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+		err := deposit.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 
 		if cb(deposit) {
 			break
@@ -84,7 +93,10 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+		err := deposit.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 
 		if cb(deposit) {
 			break
@@ -102,7 +114,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Check if proposal is still depositable
-	if (proposal.Status != types.StatusDepositPeriod) && (proposal.Status != types.StatusVotingPeriod) {
+	if (proposal.GetStatus() != types.StatusDepositPeriod) && (proposal.GetStatus() != types.StatusVotingPeriod) {
 		return false, sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
@@ -113,12 +125,12 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Update proposal
-	proposal.TotalDeposit = proposal.TotalDeposit.Add(depositAmount)
+	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Add(depositAmount))
 	keeper.SetProposal(ctx, proposal)
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
-	if proposal.Status == types.StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
+	if proposal.GetStatus() == types.StatusDepositPeriod && proposal.GetTotalDeposit().IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}
@@ -126,7 +138,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Add or update deposit object
 	deposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
 	if found {
-		deposit.Amount = deposit.Amount.Add(depositAmount)
+		deposit.Amount = deposit.GetCoinsAmount().Add(depositAmount)
 	} else {
 		deposit = types.NewDeposit(proposalID, depositorAddr, depositAmount)
 	}

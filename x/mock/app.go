@@ -64,7 +64,7 @@ func NewApp() *App {
 	}
 
 	// define keepers
-	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
+	app.ParamsKeeper = params.NewKeeper(app.KeyParams, app.TKeyParams)
 
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,

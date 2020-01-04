@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"encoding/json"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -44,24 +44,26 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
+const JSONIndent = "    "
+
 func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	switch path[0] {
 	case types.ParamDeposit:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositParams(ctx))
+		bz, err := json.MarshalIndent(keeper.GetDepositParams(ctx), "", JSONIndent)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 		}
 		return bz, nil
 
 	case types.ParamVoting:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
+		bz, err := json.MarshalIndent(keeper.GetVotingParams(ctx), "", JSONIndent)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 		}
 		return bz, nil
 
 	case types.ParamTallying:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
+		bz, err := json.MarshalIndent(keeper.GetTallyParams(ctx), "", JSONIndent)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 		}
@@ -75,7 +77,7 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 // nolint: unparam
 func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryProposalParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -85,7 +87,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", params.ProposalID)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposal)
+	bz, err := json.MarshalIndent(proposal, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -96,13 +98,13 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 // nolint: unparam
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryDepositParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositor)
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposit)
+	bz, err := json.MarshalIndent(deposit, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -113,13 +115,13 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 // nolint: unparam
 func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryVoteParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	vote, _ := keeper.GetVote(ctx, params.ProposalID, params.Voter)
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, vote)
+	bz, err := json.MarshalIndent(vote, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -130,7 +132,7 @@ func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Kee
 // nolint: unparam
 func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryProposalParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -140,7 +142,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		deposits = types.Deposits{}
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
+	bz, err := json.MarshalIndent(deposits, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -151,7 +153,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 // nolint: unparam
 func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryProposalParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -163,21 +165,21 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
 	}
 
-	var tallyResult types.TallyResult
+	var tallyResult *types.TallyResult
 
 	switch {
-	case proposal.Status == types.StatusDepositPeriod:
+	case proposal.GetStatus() == types.StatusDepositPeriod:
 		tallyResult = types.EmptyTallyResult()
 
-	case proposal.Status == types.StatusPassed || proposal.Status == types.StatusRejected:
-		tallyResult = proposal.FinalTallyResult
+	case proposal.GetStatus() == types.StatusPassed || proposal.GetStatus() == types.StatusRejected:
+		tallyResult = proposal.GetFinalTallyResult()
 
 	default:
 		// proposal is in voting period
 		_, _, tallyResult = keeper.Tally(ctx, proposal)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, tallyResult)
+	bz, err := json.MarshalIndent(tallyResult, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -188,7 +190,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 // nolint: unparam
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryProposalVotesParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -205,7 +207,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		}
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
+	bz, err := json.MarshalIndent(votes, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
@@ -215,7 +217,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 	var params types.QueryProposalsParams
-	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	err := json.Unmarshal(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
@@ -225,7 +227,7 @@ func queryProposals(ctx sdk.Context, _ []string, req abci.RequestQuery, keeper K
 		proposals = types.Proposals{}
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
+	bz, err := json.MarshalIndent(proposals, "", JSONIndent)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

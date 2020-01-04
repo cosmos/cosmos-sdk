@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/gogo/protobuf/types"
 	"time"
 
 	dbm "github.com/tendermint/tm-db"
@@ -79,4 +80,20 @@ func NewLevelDB(name, dir string) (db dbm.DB, err error) {
 		}
 	}()
 	return dbm.NewDB(name, backend, dir), err
+}
+
+func ProtoTimestampToTime(ts *types.Timestamp) time.Time {
+	t, err := types.TimestampFromProto(ts)
+	if err != nil {
+		return time.Time{}
+	}
+	return t
+}
+
+func TimeToProtoTimestamp(t time.Time) *types.Timestamp {
+	ts, err := types.TimestampProto(t)
+	if err != nil {
+		return nil
+	}
+	return ts
 }

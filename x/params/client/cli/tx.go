@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -20,7 +19,7 @@ import (
 
 // GetCmdSubmitProposal implements a command handler for submitting a parameter
 // change proposal transaction.
-func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
+func GetCmdSubmitProposal(ctr func() govtypes.MsgSubmitProposal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param-change [proposal-file]",
 		Args:  cobra.ExactArgs(1),
@@ -77,7 +76,14 @@ Where proposal.json contains:
 			from := cliCtx.GetFromAddress()
 			content := types.NewParameterChangeProposal(proposal.Title, proposal.Description, proposal.Changes.ToParamChanges())
 
-			msg := govtypes.NewMsgSubmitProposal(content, proposal.Deposit, from)
+			msg := ctr()
+			err = msg.SetContent(content)
+			if err != nil {
+				return err
+			}
+			msg.SetInitialDeposit(proposal.Deposit)
+			msg.SetProposer(from)
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

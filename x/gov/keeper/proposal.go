@@ -12,7 +12,7 @@ import (
 // SubmitProposal create new proposal given a content
 func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
+		return nil, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
 	// Execute the proposal content in a cache-wrapped context to validate the
@@ -21,21 +21,28 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
 	if err := handler(cacheCtx, content); err != nil {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+		return nil, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
 	if err != nil {
-		return types.Proposal{}, err
+		return nil, err
 	}
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal := keeper.proposalCtr()
+	err = proposal.SetContent(content)
+	if err != nil {
+		return nil, err
+	}
+	proposal.SetProposalID(proposalID)
+	proposal.SetSubmitTime(submitTime)
+	proposal.SetDepositEndTime(submitTime.Add(depositPeriod))
 
 	keeper.SetProposal(ctx, proposal)
-	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
+	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.GetDepositEndTime())
 	keeper.SetProposalID(ctx, proposalID+1)
 
 	ctx.EventManager().EmitEvent(
@@ -55,15 +62,23 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal t
 	if bz == nil {
 		return
 	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
+	proposal = keeper.proposalCtr()
+	err := proposal.Unmarshal(bz)
+	if err != nil {
+		return nil, false
+	}
 	return proposal, true
 }
 
 // SetProposal set a proposal to store
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
-	store.Set(types.ProposalKey(proposal.ProposalID), bz)
+	proposal = keeper.proposalCtr()
+	bz, err := proposal.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	store.Set(types.ProposalKey(proposal.GetProposalID()), bz)
 }
 
 // DeleteProposal deletes a proposal from store
@@ -73,8 +88,8 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
 	}
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
-	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.VotingEndTime)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposalID, proposal.GetDepositEndTime())
+	keeper.RemoveFromActiveProposalQueue(ctx, proposalID, proposal.GetVotingEndTime())
 	store.Delete(types.ProposalKey(proposalID))
 }
 
@@ -85,8 +100,11 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var proposal types.Proposal
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
+		proposal := keeper.proposalCtr()
+		err := proposal.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(err)
+		}
 
 		if cb(proposal) {
 			break
@@ -121,17 +139,17 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 
 		// match status (if supplied/valid)
 		if types.ValidProposalStatus(params.ProposalStatus) {
-			matchStatus = p.Status == params.ProposalStatus
+			matchStatus = p.GetStatus() == params.ProposalStatus
 		}
 
 		// match voter address (if supplied)
 		if len(params.Voter) > 0 {
-			_, matchVoter = keeper.GetVote(ctx, p.ProposalID, params.Voter)
+			_, matchVoter = keeper.GetVote(ctx, p.GetProposalID(), params.Voter)
 		}
 
 		// match depositor (if supplied)
 		if len(params.Depositor) > 0 {
-			_, matchDepositor = keeper.GetDeposit(ctx, p.ProposalID, params.Depositor)
+			_, matchDepositor = keeper.GetDeposit(ctx, p.GetProposalID(), params.Depositor)
 		}
 
 		if matchVoter && matchDepositor && matchStatus {
@@ -168,12 +186,13 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
-	proposal.VotingStartTime = ctx.BlockHeader().Time
+	startTime := ctx.BlockHeader().Time
+	proposal.SetVotingStartTime(startTime)
 	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
-	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
-	proposal.Status = types.StatusVotingPeriod
+	proposal.SetVotingEndTime(startTime.Add(votingPeriod))
+	proposal.SetStatus(types.StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.ProposalID, proposal.DepositEndTime)
-	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalID, proposal.VotingEndTime)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.GetProposalID(), proposal.GetDepositEndTime())
+	keeper.InsertActiveProposalQueue(ctx, proposal.GetProposalID(), proposal.GetVotingEndTime())
 }

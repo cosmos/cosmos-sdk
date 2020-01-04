@@ -124,7 +124,7 @@ func queryDepositsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// For inactive proposals we must query the txs directly to get the deposits
 		// as they're no longer in state.
-		propStatus := proposal.Status
+		propStatus := proposal.GetStatus()
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryDepositsByTxQuery(cliCtx, params)
 		} else {
@@ -379,7 +379,7 @@ func queryVotesOnProposalHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		// For inactive proposals we must query the txs directly to get the votes
 		// as they're no longer in state.
-		propStatus := proposal.Status
+		propStatus := proposal.GetStatus()
 		if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 			res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 		} else {

@@ -283,7 +283,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.Status
+			propStatus := proposal.GetStatus()
 			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 				res, err = gcutils.QueryVotesByTxQuery(cliCtx, params)
 			} else {
@@ -407,7 +407,7 @@ $ %s query gov deposits 1
 			var proposal types.Proposal
 			cdc.MustUnmarshalJSON(res, &proposal)
 
-			propStatus := proposal.Status
+			propStatus := proposal.GetStatus()
 			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
 				res, err = gcutils.QueryDepositsByTxQuery(cliCtx, params)
 			} else {

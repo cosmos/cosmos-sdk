@@ -3,7 +3,12 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"io/ioutil"
@@ -12,9 +17,23 @@ import (
 
 // StoreLoaderWithUpgrade is used to prepare baseapp with a fixed StoreLoader
 // pattern. This is useful in test cases, or with custom upgrade loading logic.
-func StoreLoaderWithUpgrade(upgrades *storetypes.StoreUpgrades) baseapp.StoreLoader {
+func StoreLoaderWithUpgrade(storeUpgrades *storetypes.StoreUpgrades) baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
-		return ms.LoadLatestVersionAndUpgrade(upgrades)
+
+		home := viper.GetString(flags.FlagHome)
+		upgradeInfoPath := filepath.Join(home, "upgrade-info.json")
+
+		var lastBlockHeight = ms.LastCommitID().Version
+		upgrades, err := GetUpgradeInfoDataFromFile(upgradeInfoPath)
+		if err != nil {
+			return fmt.Errorf("cannot read upgrade file %s: %v", upgradeInfoPath, err)
+		}
+
+		if (len(upgrades.StoreUpgrades.Renamed) > 0 || len(upgrades.StoreUpgrades.Deleted) > 0) &&
+			upgrades.Height == lastBlockHeight {
+			return ms.LoadLatestVersionAndUpgrade(storeUpgrades)
+		}
+		return nil
 	}
 }
 
@@ -32,30 +51,12 @@ func StoreLoaderWithUpgrade(upgrades *storetypes.StoreUpgrades) baseapp.StoreLoa
 // two versions of the software.
 func UpgradeableStoreLoader(upgradeInfoPath string) baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
-		_, err := os.Stat(upgradeInfoPath)
-
-		// If the upgrade-info file is not found, ignore the multistore upgrades and load DefaultStoreLoader
-		if os.IsNotExist(err) {
-			return baseapp.DefaultStoreLoader(ms)
-		} else if err != nil {
-			return err
-		}
-
-		data, err := ioutil.ReadFile(upgradeInfoPath)
-		if err != nil {
-			return fmt.Errorf("cannot read upgrade file %s: %v", upgradeInfoPath, err)
-		}
-
-		var upgrades storetypes.UpgradeInfo
-		err = json.Unmarshal(data, &upgrades)
-
-		var x interface{}
-		err = json.Unmarshal(data, &x)
 
 		var lastBlockHeight = ms.LastCommitID().Version
 
+		upgrades, err := GetUpgradeInfoDataFromFile(upgradeInfoPath)
 		if err != nil {
-			return fmt.Errorf("cannot parse upgrade file: %v", err)
+			return fmt.Errorf("cannot read upgrade file %s: %v", upgradeInfoPath, err)
 		}
 
 		// If the current upgrade has StoreUpgrades planned and the binary is loading for the first time
@@ -97,4 +98,25 @@ func UpgradeableStoreLoader(upgradeInfoPath string) baseapp.StoreLoader {
 			return baseapp.DefaultStoreLoader(ms)
 		}
 	}
+}
+
+func GetUpgradeInfoDataFromFile(upgradeInfoPath string) (storetypes.UpgradeInfo, error) {
+	_, err := os.Stat(upgradeInfoPath)
+
+	// If the upgrade-info file is not found, ignore the multistore upgrades and load DefaultStoreLoader
+	if os.IsNotExist(err) {
+		return storetypes.UpgradeInfo{}, err
+	} else if err != nil {
+		return storetypes.UpgradeInfo{}, err
+	}
+
+	data, err := ioutil.ReadFile(upgradeInfoPath)
+	if err != nil {
+		return storetypes.UpgradeInfo{}, err
+	}
+
+	var upgrades storetypes.UpgradeInfo
+	err = json.Unmarshal(data, &upgrades)
+
+	return upgrades, nil
 }

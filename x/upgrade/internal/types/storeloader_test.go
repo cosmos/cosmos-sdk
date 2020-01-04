@@ -26,7 +26,6 @@ func useFileUpgradeLoader(upgradeInfoPath string) func(*baseapp.BaseApp) {
 	}
 }
 
-// TODO replace logger
 func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
@@ -67,7 +66,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
 	// write a rename to a file
-	f, err := ioutil.TempFile("", "upgrade-*.json")
+	f, err := ioutil.TempFile("", "upgrade-info.json")
 	require.NoError(t, err)
 	data := []byte(`{"height": 0, "store_upgrades": {"renamed":[{"old_key": "bnk", "new_key": "banker"}]}}`)
 	_, err = f.Write(data)
@@ -106,7 +105,7 @@ func TestSetLoader(t *testing.T) {
 		"file loader with existing file": {
 			setLoader:    useFileUpgradeLoader(configName),
 			origStoreKey: "bnk",
-			loadStoreKey: "banker",
+			loadStoreKey: "bank",
 		},
 	}
 

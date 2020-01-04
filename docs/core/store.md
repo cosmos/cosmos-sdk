@@ -6,7 +6,7 @@ order: 5
 
 A store is a data structure that holds the state of the application. {synopsis}
 
-## Pre-requisite Readings {hide}
+### Pre-requisite Readings
 
 - [Anatomy of an SDK application](../basics/app-anatomy.md) {prereq}
 

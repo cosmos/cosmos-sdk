@@ -16,6 +16,14 @@ func TestFromInt64(t *testing.T) {
 	}
 }
 
+func TestFromUint64(t *testing.T) {
+	for n := 0; n < 20; n++ {
+		r := rand.Uint64()
+		require.True(t, NewIntFromUint64(r).IsUint64())
+		require.Equal(t, r, NewIntFromUint64(r).Uint64())
+	}
+}
+
 func TestIntPanic(t *testing.T) {
 	// Max Int = 2^255-1 = 5.789e+76
 	// Min Int = -(2^255-1) = -5.789e+76

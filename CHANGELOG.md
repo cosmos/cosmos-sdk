@@ -174,6 +174,8 @@ that allows for arbitrary vesting periods.
     * Introduces cli commands and rest routes to query historical information at a given height
 * (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
+* (types) [\#5447](https://github.com/cosmos/cosmos-sdk/pull/5447) Added `ApproxRoot` function to sdk.Decimal type in order to get the nth root for a decimal number, where n is a positive integer.
+  * An `ApproxSqrt` function was also added for convenience around the common case of n=2.
 
 ### Improvements
 

@@ -152,10 +152,9 @@ func (sck ScopedCapabilityKeeper) AuthenticateCapability(name string, capability
 }
 ```
 
-`ClaimCapability` allows a module to claim a capability key which it has received (perhaps by calling `NewCapability`, or from another module), so that future `GetCapability` calls will succeed.
+`ClaimCapability` allows a module to claim a capability key which it has received from another module so that future `GetCapability` calls will succeed.
 
-`ClaimCapability` MUST be called, even if `NewCapability` was called by the same module. Capabilities are single-owner, so if multiple modules have a single `Capability` reference, the last module
-to call `ClaimCapability` will own it. To avoid confusion, a module which calls `NewCapability` SHOULD either call `ClaimCapability` or pass the capability to another module which will then claim it.
+`ClaimCapability` MUST be called if a module which receives a capability wishes to access it by name in the future. Capabilities are multi-owner, so if multiple modules have a single `Capability` reference, they will all own it.
 
 ```golang
 func (sck ScopedCapabilityKeeper) ClaimCapability(ctx Context, capability Capability, name string) error {

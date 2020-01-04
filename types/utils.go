@@ -14,6 +14,26 @@ var (
 	DBBackend = ""
 )
 
+// MarshalJSONSort returns a sorted JSON serialization of a type.
+func MarshalJSONSort(v interface{}) ([]byte, error) {
+	bz, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return SortJSON(bz)
+}
+
+// MustMarshalJSONSort calls MarshalJSONSort where it panics on error.
+func MustMarshalJSONSort(v interface{}) []byte {
+	bz, err := MarshalJSONSort(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return bz
+}
+
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.
 // This method can be used to canonicalize JSON to be returned by GetSignBytes,

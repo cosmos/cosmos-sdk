@@ -45,15 +45,15 @@ func (msg MsgChannelOpenInit) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelOpenInit) ValidateBasic() sdk.Error {
+func (msg MsgChannelOpenInit) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
-	return sdk.ConvertError(msg.Channel.ValidateBasic())
+	return msg.Channel.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -108,24 +108,27 @@ func (msg MsgChannelOpenTry) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelOpenTry) ValidateBasic() sdk.Error {
+func (msg MsgChannelOpenTry) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdk.ConvertError(ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank"))
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
-	return sdk.ConvertError(msg.Channel.ValidateBasic())
+	return msg.Channel.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg
@@ -175,21 +178,24 @@ func (msg MsgChannelOpenAck) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelOpenAck) ValidateBasic() sdk.Error {
+func (msg MsgChannelOpenAck) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if strings.TrimSpace(msg.CounterpartyVersion) == "" {
-		return sdk.ConvertError(ErrInvalidCounterpartyChannel(DefaultCodespace, "counterparty version cannot be blank"))
+		return sdkerrors.Wrap(ErrInvalidCounterparty, "counterparty version cannot be blank")
 	}
 	if msg.ProofTry == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofTry.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof try cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -240,18 +246,21 @@ func (msg MsgChannelOpenConfirm) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelOpenConfirm) ValidateBasic() sdk.Error {
+func (msg MsgChannelOpenConfirm) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofAck == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofAck.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil
@@ -295,12 +304,12 @@ func (msg MsgChannelCloseInit) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelCloseInit) ValidateBasic() sdk.Error {
+func (msg MsgChannelCloseInit) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	// Signer can be empty
 	return nil
@@ -351,18 +360,21 @@ func (msg MsgChannelCloseConfirm) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgChannelCloseConfirm) ValidateBasic() sdk.Error {
+func (msg MsgChannelCloseConfirm) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.PortID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid port ID"))
+		return sdkerrors.Wrap(err, "invalid port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.ChannelID); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid channel ID"))
+		return sdkerrors.Wrap(err, "invalid channel ID")
 	}
 	if msg.ProofInit == nil {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.ProofInit.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof init cannot be nil")
 	}
 	if msg.ProofHeight == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "proof height must be > 0"))
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
 	}
 	// Signer can be empty
 	return nil

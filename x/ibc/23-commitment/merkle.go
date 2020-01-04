@@ -151,3 +151,11 @@ func (proof Proof) VerifyNonMembership(root RootI, path PathI) bool {
 	err := runtime.VerifyAbsence(proof.Proof, root.GetHash(), path.String())
 	return err == nil
 }
+
+// ValidateBasic checks if the proof is empty.
+func (proof Proof) ValidateBasic() error {
+	if (proof == Proof{}) || proof.Proof == nil {
+		return ErrInvalidProof
+	}
+	return nil
+}

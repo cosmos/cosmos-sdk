@@ -28,8 +28,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	operatorAddr, val := valAddresses[0], pubkeys[0]
 
 	// create validator
-	res := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
-	suite.True(res.IsOK(), res.Log)
+	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
+	suite.NoError(err)
+	suite.NotNil(res)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -78,8 +79,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	validator, _ := suite.app.StakingKeeper.GetValidator(ctx, operatorAddr)
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, sdk.NewCoin(stakingParams.BondDenom, totalBond))
-	res = staking.NewHandler(suite.app.StakingKeeper)(ctx, msgUnbond)
-	suite.True(res.IsOK())
+	res, err = staking.NewHandler(suite.app.StakingKeeper)(ctx, msgUnbond)
+	suite.NoError(err)
+	suite.NotNil(res)
 }
 
 func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
@@ -92,8 +94,9 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	operatorAddr, val := valAddresses[0], pubkeys[0]
 
 	// create validator
-	res := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
-	suite.True(res.IsOK(), res.Log)
+	res, err := staking.NewHandler(suite.app.StakingKeeper)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
+	suite.NoError(err)
+	suite.NotNil(res)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)

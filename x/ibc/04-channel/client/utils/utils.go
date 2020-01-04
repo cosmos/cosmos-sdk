@@ -3,13 +3,13 @@ package utils
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // QueryPacket returns a packet from the store
 func QueryPacket(
-	ctx client.CLIContext, portID, channelID string, sequence, timeout uint64, prove bool,
+	ctx context.CLIContext, portID, channelID string, sequence, timeout uint64, prove bool,
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -46,7 +46,7 @@ func QueryPacket(
 
 // QueryChannel queries the store to get a channel and a merkle proof.
 func QueryChannel(
-	ctx client.CLIContext, portID, channelID string, prove bool,
+	ctx context.CLIContext, portID, channelID string, prove bool,
 ) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",

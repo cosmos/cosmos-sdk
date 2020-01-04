@@ -6,7 +6,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
@@ -53,7 +52,7 @@ func QueryClientState(
 	}
 
 	var clientState types.State
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &clientState); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
 
@@ -62,10 +61,10 @@ func QueryClientState(
 	return clientStateRes, nil
 }
 
-// QueryConsensusStateProof queries the store to get the consensus state and a
-// merkle proof.
-func QueryConsensusStateProof(
-	cliCtx client.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
+// QueryConsensusState queries the store to get the consensus state and a merkle
+// proof.
+func QueryConsensusState(
+	cliCtx context.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
 	req := abci.RequestQuery{
@@ -80,7 +79,7 @@ func QueryConsensusStateProof(
 	}
 
 	var cs tendermint.ConsensusState
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &cs); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
 
@@ -104,7 +103,7 @@ func QueryCommitmentRoot(
 	}
 
 	var root commitment.Root
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &root); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &root); err != nil {
 		return types.RootResponse{}, err
 	}
 
@@ -129,7 +128,7 @@ func QueryCommitter(
 	}
 
 	var committer tendermint.Committer
-	if err := cliCtx.Codec.UnmarshalJSON(res.Value, &committer); err != nil {
+	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
 		return types.CommitterResponse{}, err
 	}
 

@@ -16,9 +16,15 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	// create validator with 50% commission
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	msg := staking.NewMsgCreateValidator(
+		valOpAddr1, valConsPk1,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt(),
+	)
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
 	val := sk.Validator(ctx, valOpAddr1)
 
 	// allocate tokens
@@ -45,13 +51,19 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// create second validator with 0% commission
 	commission = staking.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+
+	res, err = sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -76,7 +88,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err := feeCollector.SetCoins(fees)
+	err = feeCollector.SetCoins(fees)
 	require.NoError(t, err)
 	ak.SetAccount(ctx, feeCollector)
 
@@ -116,19 +128,25 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	commission := staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(110)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	res, err := sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// create second validator with 10% commission
 	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	res, err = sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	// create third validator with 10% commission
 	commission = staking.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
 	msg = staking.NewMsgCreateValidator(valOpAddr3, valConsPk3,
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
-	require.True(t, sh(ctx, msg).IsOK())
+	res, err = sh(ctx, msg)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -159,7 +177,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := supplyKeeper.GetModuleAccount(ctx, k.feeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err := feeCollector.SetCoins(fees)
+	err = feeCollector.SetCoins(fees)
 	require.NoError(t, err)
 
 	ak.SetAccount(ctx, feeCollector)

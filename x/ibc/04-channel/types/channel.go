@@ -2,11 +2,11 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 type Channel struct {
@@ -34,25 +34,25 @@ func NewChannel(
 // ValidateBasic performs a basic validation of the channel fields
 func (ch Channel) ValidateBasic() error {
 	if ch.State.String() == "" {
-		return ErrInvalidChannelState(
-			DefaultCodespace,
-			"channel order should be either 'ORDERED' or 'UNORDERED'",
-		)
+		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelState.Error())
 	}
 	if ch.Ordering.String() == "" {
-		return ErrInvalidChannel(
-			DefaultCodespace,
-			"channel order should be either 'ORDERED' or 'UNORDERED'",
-		)
+		return sdkerrors.Wrap(ErrInvalidChannel, ErrInvalidChannelOrdering.Error())
 	}
 	if len(ch.ConnectionHops) != 1 {
-		return ErrInvalidChannel(DefaultCodespace, "IBC v1 only supports one connection hop")
+		return sdkerrors.Wrap(ErrInvalidChannel, "IBC v1 only supports one connection hop")
 	}
 	if err := host.DefaultConnectionIdentifierValidator(ch.ConnectionHops[0]); err != nil {
-		return sdkerrors.Wrap(err, "invalid connection hop ID")
+		return sdkerrors.Wrap(
+			ErrInvalidChannel,
+			sdkerrors.Wrap(err, "invalid connection hop ID").Error(),
+		)
 	}
 	if strings.TrimSpace(ch.Version) == "" {
-		return ErrInvalidChannel(DefaultCodespace, "channel version can't be blank")
+		return sdkerrors.Wrap(
+			ErrInvalidChannel,
+			sdkerrors.Wrap(ibctypes.ErrInvalidVersion, "channel version can't be blank").Error(),
+		)
 	}
 	return ch.Counterparty.ValidateBasic()
 }
@@ -74,10 +74,16 @@ func NewCounterparty(portID, channelID string) Counterparty {
 // ValidateBasic performs a basic validation check of the identifiers
 func (c Counterparty) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(c.PortID); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty connection ID")
+		return sdkerrors.Wrap(
+			ErrInvalidCounterparty,
+			sdkerrors.Wrap(err, "invalid counterparty connection ID").Error(),
+		)
 	}
 	if err := host.DefaultChannelIdentifierValidator(c.ChannelID); err != nil {
-		return sdkerrors.Wrap(err, "invalid counterparty client ID")
+		return sdkerrors.Wrap(
+			ErrInvalidCounterparty,
+			sdkerrors.Wrap(err, "invalid counterparty client ID").Error(),
+		)
 	}
 	return nil
 }
@@ -94,7 +100,7 @@ const (
 
 // channel order types
 const (
-	OrderNone      string = "NONE"
+	OrderNone      string = ""
 	OrderUnordered string = "UNORDERED"
 	OrderOrdered   string = "ORDERED"
 )
@@ -102,14 +108,12 @@ const (
 // String implements the Stringer interface
 func (o Order) String() string {
 	switch o {
-	case NONE:
-		return OrderNone
 	case UNORDERED:
 		return OrderUnordered
 	case ORDERED:
 		return OrderOrdered
 	default:
-		return ""
+		return OrderNone
 	}
 }
 
@@ -126,26 +130,24 @@ func (o *Order) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	bz2, err := OrderFromString(s)
-	if err != nil {
-		return err
+	order := OrderFromString(s)
+	if order == 0 {
+		return sdkerrors.Wrap(ErrInvalidChannelOrdering, s)
 	}
 
-	*o = bz2
+	*o = order
 	return nil
 }
 
 // OrderFromString parses a string into a channel order byte
-func OrderFromString(order string) (Order, error) {
+func OrderFromString(order string) Order {
 	switch order {
-	case OrderNone:
-		return NONE, nil
 	case OrderUnordered:
-		return UNORDERED, nil
+		return UNORDERED
 	case OrderOrdered:
-		return ORDERED, nil
+		return ORDERED
 	default:
-		return 0, fmt.Errorf("'%s' is not a valid channel ordering", order)
+		return NONE
 	}
 }
 
@@ -155,33 +157,35 @@ type State byte
 
 // channel state types
 const (
-	CLOSED  State = iota + 1 // A channel end has been closed and can no longer be used to send or receive packets.
-	INIT                     // A channel end has just started the opening handshake.
-	OPENTRY                  // A channel end has acknowledged the handshake step on the counterparty chain.
-	OPEN                     // A channel end has completed the handshake and is ready to send and receive packets.
+	UNINITIALIZED State = iota // Default State
+	INIT                       // A channel end has just started the opening handshake.
+	TRYOPEN                    // A channel end has acknowledged the handshake step on the counterparty chain.
+	OPEN                       // A channel end has completed the handshake and is ready to send and receive packets.
+	CLOSED                     // A channel end has been closed and can no longer be used to send or receive packets.
 )
 
 // string representation of the channel states
 const (
-	StateClosed  string = "CLOSED"
-	StateInit    string = "INIT"
-	StateOpenTry string = "OPENTRY"
-	StateOpen    string = "OPEN"
+	StateUninitialized string = "UNINITIALIZED"
+	StateInit          string = "INIT"
+	StateTryOpen       string = "TRYOPEN"
+	StateOpen          string = "OPEN"
+	StateClosed        string = "CLOSED"
 )
 
 // String implements the Stringer interface
 func (s State) String() string {
 	switch s {
-	case CLOSED:
-		return StateClosed
 	case INIT:
 		return StateInit
-	case OPENTRY:
-		return StateOpenTry
+	case TRYOPEN:
+		return StateTryOpen
 	case OPEN:
 		return StateOpen
+	case CLOSED:
+		return StateClosed
 	default:
-		return ""
+		return StateUninitialized
 	}
 }
 
@@ -198,27 +202,22 @@ func (s *State) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	bz2, err := StateFromString(stateStr)
-	if err != nil {
-		return err
-	}
-
-	*s = bz2
+	*s = StateFromString(stateStr)
 	return nil
 }
 
 // StateFromString parses a string into a channel state byte
-func StateFromString(state string) (State, error) {
+func StateFromString(state string) State {
 	switch state {
 	case StateClosed:
-		return CLOSED, nil
+		return CLOSED
 	case StateInit:
-		return INIT, nil
-	case StateOpenTry:
-		return OPENTRY, nil
+		return INIT
+	case StateTryOpen:
+		return TRYOPEN
 	case StateOpen:
-		return OPEN, nil
+		return OPEN
 	default:
-		return CLOSED, fmt.Errorf("'%s' is not a valid channel state", state)
+		return UNINITIALIZED
 	}
 }

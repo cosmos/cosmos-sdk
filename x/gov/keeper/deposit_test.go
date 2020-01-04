@@ -33,7 +33,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, proposal.VotingStartTime.Equal(time.Time{}))
 
 	// Check first deposit
-	err, votingStarted := keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
+	votingStarted, err := keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 	require.NoError(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
@@ -46,7 +46,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, addr0Initial.Sub(fourStake), ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
 
 	// Check a second deposit from same address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
+	votingStarted, err = keeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
 	require.NoError(t, err)
 	require.False(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[0])
@@ -59,7 +59,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, addr0Initial.Sub(fourStake).Sub(fiveStake), ak.GetAccount(ctx, TestAddrs[0]).GetCoins())
 
 	// Check third deposit from a new address
-	err, votingStarted = keeper.AddDeposit(ctx, proposalID, TestAddrs[1], fourStake)
+	votingStarted, err = keeper.AddDeposit(ctx, proposalID, TestAddrs[1], fourStake)
 	require.NoError(t, err)
 	require.True(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, TestAddrs[1])

@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -36,26 +37,27 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)
-func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) sdk.Error {
+func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 	if err := plan.ValidateBasic(); err != nil {
 		return err
 	}
 
 	if !plan.Time.IsZero() {
 		if !plan.Time.After(ctx.BlockHeader().Time) {
-			return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 		}
 	} else if plan.Height <= ctx.BlockHeight() {
-		return sdk.ErrUnknownRequest("upgrade cannot be scheduled in the past")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "upgrade cannot be scheduled in the past")
 	}
 
 	if k.getDoneHeight(ctx, plan.Name) != 0 {
-		return sdk.ErrUnknownRequest(fmt.Sprintf("upgrade with name %s has already been completed", plan.Name))
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "upgrade with name %s has already been completed", plan.Name)
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(plan)
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.PlanKey(), bz)
+
 	return nil
 }
 

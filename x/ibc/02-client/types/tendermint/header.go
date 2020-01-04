@@ -42,13 +42,13 @@ func (h Header) GetHeight() uint64 {
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
 	if err := h.SignedHeader.ValidateBasic(chainID); err != nil {
-		return err
+		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader, err.Error())
 	}
 	if h.ValidatorSet == nil {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace), "ValidatorSet is nil")
+		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader, "validator set is nil")
 	}
 	if h.NextValidatorSet == nil {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader(clienterrors.DefaultCodespace), "NextValidatorSet is nil")
+		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader, "next validator set is nil")
 	}
 	return nil
 }

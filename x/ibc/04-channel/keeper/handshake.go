@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	port "github.com/cosmos/cosmos-sdk/x/ibc/05-port"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -38,18 +39,18 @@ func (k Keeper) ChanOpenInit(
 	// TODO: abortTransactionUnless(validateChannelIdentifier(portIdentifier, channelIdentifier))
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return types.ErrChannelExists(k.codespace, channelID)
+		return sdkerrors.Wrap(types.ErrChannelExists, channelID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, connectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
-	if connectionEnd.State == connection.NONE {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state cannot be NONE"),
+	if connectionEnd.State == connection.UNINITIALIZED {
+		return sdkerrors.Wrap(
+			connection.ErrInvalidConnectionState,
+			"connection state cannot be UNINITIALIZED",
 		)
 	}
 
@@ -58,7 +59,7 @@ func (k Keeper) ChanOpenInit(
 		key := sdk.NewKVStoreKey(portID)
 
 		if !k.portKeeper.Authenticate(key, portID) {
-			return errors.New("port is not valid")
+			return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 		}
 
 	*/
@@ -88,31 +89,31 @@ func (k Keeper) ChanOpenTry(
 ) error {
 	_, found := k.GetChannel(ctx, portID, channelID)
 	if found {
-		return types.ErrChannelExists(k.codespace, channelID)
+		return sdkerrors.Wrap(types.ErrChannelExists, channelID)
 	}
 
 	// TODO: Maybe not right
 	key := sdk.NewKVStoreKey(portID)
 
 	if !k.portKeeper.Authenticate(key, portID) {
-		return errors.New("port is not valid")
+		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, connectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, connectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, connectionHops[0])
 	}
 
 	if connectionEnd.State != connection.OPEN {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		return sdkerrors.Wrapf(
+			connection.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
 		)
 	}
 
 	// NOTE: this step has been switched with the one below to reverse the connection
 	// hops
-	channel := types.NewChannel(types.OPENTRY, order, counterparty, connectionHops, version)
+	channel := types.NewChannel(types.TRYOPEN, order, counterparty, connectionHops, version)
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
 	if !found {
@@ -130,7 +131,7 @@ func (k Keeper) ChanOpenTry(
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
@@ -138,7 +139,7 @@ func (k Keeper) ChanOpenTry(
 		types.ChannelPath(counterparty.PortID, counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
+		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
 	}
 
 	k.SetChannel(ctx, portID, channelID, channel)
@@ -162,13 +163,13 @@ func (k Keeper) ChanOpenAck(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, portID, channelID)
+		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
 	if channel.State != types.INIT {
-		return types.ErrInvalidChannelState(
-			k.codespace,
-			fmt.Sprintf("channel state is not INIT (got %s)", channel.State.String()),
+		return sdkerrors.Wrapf(
+			types.ErrInvalidChannelState,
+			"channel state is not INIT (got %s)", channel.State.String(),
 		)
 	}
 
@@ -176,18 +177,18 @@ func (k Keeper) ChanOpenAck(
 	key := sdk.NewKVStoreKey(portID)
 
 	if !k.portKeeper.Authenticate(key, portID) {
-		return errors.New("port is not valid")
+		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.State != connection.OPEN {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		return sdkerrors.Wrapf(
+			connection.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
 		)
 	}
 
@@ -200,13 +201,13 @@ func (k Keeper) ChanOpenAck(
 	// counterparty of the counterparty channel end (i.e self)
 	counterparty := types.NewCounterparty(portID, channelID)
 	expectedChannel := types.NewChannel(
-		types.OPENTRY, channel.Ordering, counterparty,
+		types.TRYOPEN, channel.Ordering, counterparty,
 		counterpartyHops, channel.Version,
 	)
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
@@ -214,7 +215,9 @@ func (k Keeper) ChanOpenAck(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
+		return sdkerrors.Wrap(
+			types.ErrInvalidCounterparty, "channel membership verification failed",
+		)
 	}
 
 	channel.State = types.OPEN
@@ -235,13 +238,13 @@ func (k Keeper) ChanOpenConfirm(
 ) error {
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, portID, channelID)
+		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != types.OPENTRY {
-		return types.ErrInvalidChannelState(
-			k.codespace,
-			fmt.Sprintf("channel state is not OPENTRY (got %s)", channel.State.String()),
+	if channel.State != types.TRYOPEN {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidChannelState,
+			"channel state is not OPENTRY (got %s)", channel.State.String(),
 		)
 	}
 
@@ -249,18 +252,18 @@ func (k Keeper) ChanOpenConfirm(
 	key := sdk.NewKVStoreKey(portID)
 
 	if !k.portKeeper.Authenticate(key, portID) {
-		return errors.New("port is not valid")
+		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.State != connection.OPEN {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		return sdkerrors.Wrapf(
+			connection.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
 		)
 	}
 
@@ -278,7 +281,7 @@ func (k Keeper) ChanOpenConfirm(
 
 	bz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedChannel)
 	if err != nil {
-		return errors.New("failed to marshal expected channel")
+		return err
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
@@ -286,7 +289,7 @@ func (k Keeper) ChanOpenConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
+		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
 	}
 
 	channel.State = types.OPEN
@@ -311,27 +314,27 @@ func (k Keeper) ChanCloseInit(
 	key := sdk.NewKVStoreKey(portID)
 
 	if !k.portKeeper.Authenticate(key, portID) {
-		return errors.New("port is not valid")
+		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, portID, channelID)
+		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
 	if channel.State == types.CLOSED {
-		return types.ErrInvalidChannelState(k.codespace, "channel is already CLOSED")
+		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.State != connection.OPEN {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		return sdkerrors.Wrapf(
+			connection.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
 		)
 	}
 
@@ -354,27 +357,27 @@ func (k Keeper) ChanCloseConfirm(
 	key := sdk.NewKVStoreKey(portID)
 
 	if !k.portKeeper.Authenticate(key, portID) {
-		return errors.New("port is not valid")
+		return sdkerrors.Wrap(port.ErrInvalidPort, portID)
 	}
 
 	channel, found := k.GetChannel(ctx, portID, channelID)
 	if !found {
-		return types.ErrChannelNotFound(k.codespace, portID, channelID)
+		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
 	if channel.State == types.CLOSED {
-		return types.ErrInvalidChannelState(k.codespace, "channel is already CLOSED")
+		return sdkerrors.Wrap(types.ErrInvalidChannelState, "channel is already CLOSED")
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if connectionEnd.State != connection.OPEN {
-		return connection.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not OPEN (got %s)", connectionEnd.State.String()),
+		return sdkerrors.Wrapf(
+			connection.ErrInvalidConnectionState,
+			"connection state is not OPEN (got %s)", connectionEnd.State.String(),
 		)
 	}
 
@@ -400,7 +403,7 @@ func (k Keeper) ChanCloseConfirm(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
+		return sdkerrors.Wrap(types.ErrInvalidCounterparty, "channel membership verification failed")
 	}
 
 	channel.State = types.CLOSED

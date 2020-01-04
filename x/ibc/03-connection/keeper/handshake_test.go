@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 	}
 
 	invalidConnectionState := func() error {
-		suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.NONE)
+		suite.createConnection(testConnectionID2, testConnectionID1, testClientID2, testClientID1, connection.UNINITIALIZED)
 		//suite.updateClient(testClientID2)
 
 		proofTry, proofHeight := suite.queryProof(connectionKey)

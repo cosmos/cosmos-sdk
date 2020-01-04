@@ -20,7 +20,7 @@ func (k Keeper) CreateClient(
 ) (types.State, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.State{}, errors.ErrClientExists(k.codespace, clientID)
+		return types.State{}, sdkerrors.Wrapf(errors.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -41,31 +41,31 @@ func (k Keeper) CreateClient(
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(errors.ErrClientTypeNotFound(k.codespace), "cannot update client")
+		return sdkerrors.Wrapf(errors.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	// check that the header consensus matches the client one
 	if header.ClientType() != clientType {
-		return sdkerrors.Wrap(errors.ErrInvalidConsensus(k.codespace), "cannot update client")
+		return sdkerrors.Wrapf(errors.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(errors.ErrClientNotFound(k.codespace, clientID), "cannot update client")
+		return sdkerrors.Wrapf(errors.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	if clientState.Frozen {
-		return sdkerrors.Wrap(errors.ErrClientFrozen(k.codespace, clientID), "cannot update client")
+		return sdkerrors.Wrapf(errors.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
 	consensusState, found := k.GetConsensusState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrap(errors.ErrConsensusStateNotFound(k.codespace), "cannot update client")
+		return sdkerrors.Wrapf(errors.ErrConsensusStateNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
-		return sdkerrors.Wrap(err, "cannot update client")
+		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
 	k.SetConsensusState(ctx, clientID, consensusState)
@@ -83,25 +83,25 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, evidence evidenceexported.Evidence) error {
 	misbehaviour, ok := evidence.(tendermint.Misbehaviour)
 	if !ok {
-		return errors.ErrInvalidClientType(k.codespace, "consensus type is not Tendermint")
+		return sdkerrors.Wrap(errors.ErrInvalidClientType, "consensus type is not Tendermint")
 	}
 
 	clientState, found := k.GetClientState(ctx, misbehaviour.ClientID)
 	if !found {
-		return errors.ErrClientNotFound(k.codespace, misbehaviour.ClientID)
+		return sdkerrors.Wrap(errors.ErrClientNotFound, misbehaviour.ClientID)
 	}
 
 	committer, found := k.GetCommitter(ctx, misbehaviour.ClientID, uint64(misbehaviour.GetHeight()))
 	if !found {
-		return errors.ErrCommitterNotFound(k.codespace, fmt.Sprintf("committer not found for height %d", misbehaviour.GetHeight()))
+		return errors.ErrCommitterNotFound
 	}
 	tmCommitter, ok := committer.(tendermint.Committer)
 	if !ok {
-		return errors.ErrInvalidCommitter(k.codespace, "committer type is not Tendermint")
+		return sdkerrors.Wrap(errors.ErrInvalidCommitter, "committer type is not Tendermint")
 	}
 
 	if err := tendermint.CheckMisbehaviour(tmCommitter, misbehaviour); err != nil {
-		return errors.ErrInvalidEvidence(k.codespace, err.Error())
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
 	}
 
 	clientState, err := k.freeze(ctx, clientState)

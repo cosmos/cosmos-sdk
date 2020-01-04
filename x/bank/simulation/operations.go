@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -108,15 +107,16 @@ func sendMsgSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
 		privkeys...,
 	)
 
-	res := app.Deliver(tx)
-	if !res.IsOK() {
-		return errors.New(res.Log)
+	_, _, err = app.Deliver(tx)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -251,15 +251,16 @@ func sendMsgMultiSend(
 	tx := helpers.GenTx(
 		[]sdk.Msg{msg},
 		fees,
+		helpers.DefaultGenTxGas,
 		chainID,
 		accountNumbers,
 		sequenceNumbers,
 		privkeys...,
 	)
 
-	res := app.Deliver(tx)
-	if !res.IsOK() {
-		return errors.New(res.Log)
+	_, _, err = app.Deliver(tx)
+	if err != nil {
+		return err
 	}
 
 	return nil

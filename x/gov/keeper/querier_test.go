@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -122,10 +124,11 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk
 	return vote
 }
 
-func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []types.Vote {
+func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier,
+	proposalID uint64, page, limit int) []types.Vote {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryVote}, "/"),
-		Data: cdc.MustMarshalJSON(types.NewQueryProposalParams(proposalID)),
+		Data: cdc.MustMarshalJSON(types.NewQueryProposalVotesParams(proposalID, page, limit)),
 	}
 
 	bz, err := querier(ctx, []string{types.QueryVotes}, query)
@@ -153,7 +156,7 @@ func TestQueries(t *testing.T) {
 	proposal1, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit1 := types.NewDeposit(proposal1.ProposalID, TestAddrs[0], oneCoins)
-	err, _ = keeper.AddDeposit(ctx, deposit1.ProposalID, deposit1.Depositor, deposit1.Amount)
+	_, err = keeper.AddDeposit(ctx, deposit1.ProposalID, deposit1.Depositor, deposit1.Amount)
 	require.NoError(t, err)
 
 	proposal1.TotalDeposit = proposal1.TotalDeposit.Add(deposit1.Amount)
@@ -161,7 +164,7 @@ func TestQueries(t *testing.T) {
 	proposal2, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit2 := types.NewDeposit(proposal2.ProposalID, TestAddrs[0], consCoins)
-	err, _ = keeper.AddDeposit(ctx, deposit2.ProposalID, deposit2.Depositor, deposit2.Amount)
+	_, err = keeper.AddDeposit(ctx, deposit2.ProposalID, deposit2.Depositor, deposit2.Amount)
 	require.NoError(t, err)
 
 	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit2.Amount)
@@ -170,14 +173,14 @@ func TestQueries(t *testing.T) {
 	proposal3, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
 	deposit3 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], oneCoins)
-	err, _ = keeper.AddDeposit(ctx, deposit3.ProposalID, deposit3.Depositor, deposit3.Amount)
+	_, err = keeper.AddDeposit(ctx, deposit3.ProposalID, deposit3.Depositor, deposit3.Amount)
 	require.NoError(t, err)
 
 	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit3.Amount)
 
 	// TestAddrs[1] deposits on proposals #2 & #3
 	deposit4 := types.NewDeposit(proposal2.ProposalID, TestAddrs[1], depositParams.MinDeposit)
-	err, _ = keeper.AddDeposit(ctx, deposit4.ProposalID, deposit4.Depositor, deposit4.Amount)
+	_, err = keeper.AddDeposit(ctx, deposit4.ProposalID, deposit4.Depositor, deposit4.Amount)
 	require.NoError(t, err)
 
 	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount)
@@ -185,7 +188,7 @@ func TestQueries(t *testing.T) {
 	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(types.DefaultPeriod)
 
 	deposit5 := types.NewDeposit(proposal3.ProposalID, TestAddrs[1], depositParams.MinDeposit)
-	err, _ = keeper.AddDeposit(ctx, deposit5.ProposalID, deposit5.Depositor, deposit5.Amount)
+	_, err = keeper.AddDeposit(ctx, deposit5.ProposalID, deposit5.Depositor, deposit5.Amount)
 	require.NoError(t, err)
 
 	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount)
@@ -244,7 +247,7 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, proposal3, proposals[1])
 
 	// Test query votes on types.Proposal 2
-	votes := getQueriedVotes(t, ctx, keeper.cdc, querier, proposal2.ProposalID)
+	votes := getQueriedVotes(t, ctx, keeper.cdc, querier, proposal2.ProposalID, 1, 0)
 	require.Len(t, votes, 1)
 	require.Equal(t, vote1, votes[0])
 
@@ -252,7 +255,7 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, vote1, vote)
 
 	// Test query votes on types.Proposal 3
-	votes = getQueriedVotes(t, ctx, keeper.cdc, querier, proposal3.ProposalID)
+	votes = getQueriedVotes(t, ctx, keeper.cdc, querier, proposal3.ProposalID, 1, 0)
 	require.Len(t, votes, 2)
 	require.Equal(t, vote2, votes[0])
 	require.Equal(t, vote3, votes[1])
@@ -279,4 +282,73 @@ func TestQueries(t *testing.T) {
 	// Test query voted AND deposited by addr1
 	proposals = getQueriedProposals(t, ctx, keeper.cdc, querier, TestAddrs[0], TestAddrs[0], types.StatusNil, 1, 0)
 	require.Equal(t, proposal2.ProposalID, proposals[0].ProposalID)
+}
+
+func TestPaginatedVotesQuery(t *testing.T) {
+	ctx, _, keeper, _, _ := createTestInput(t, false, 1000)
+
+	proposal := types.Proposal{
+		ProposalID: 100,
+		Status:     types.StatusVotingPeriod,
+	}
+	keeper.SetProposal(ctx, proposal)
+
+	votes := make([]types.Vote, 20)
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	addr := make(sdk.AccAddress, 20)
+	for i := range votes {
+		rand.Read(addr)
+		vote := types.Vote{
+			ProposalID: proposal.ProposalID,
+			Voter:      addr,
+			Option:     types.OptionYes,
+		}
+		votes[i] = vote
+		keeper.SetVote(ctx, vote)
+	}
+
+	querier := NewQuerier(keeper)
+
+	// keeper preserves consistent order for each query, but this is not the insertion order
+	all := getQueriedVotes(t, ctx, keeper.cdc, querier, proposal.ProposalID, 1, 0)
+	require.Equal(t, len(all), len(votes))
+
+	type testCase struct {
+		description string
+		page        int
+		limit       int
+		votes       []types.Vote
+	}
+	for _, tc := range []testCase{
+		{
+			description: "SkipAll",
+			page:        2,
+			limit:       len(all),
+		},
+		{
+			description: "GetFirstChunk",
+			page:        1,
+			limit:       10,
+			votes:       all[:10],
+		},
+		{
+			description: "GetSecondsChunk",
+			page:        2,
+			limit:       10,
+			votes:       all[10:],
+		},
+		{
+			description: "InvalidPage",
+			page:        -1,
+		},
+	} {
+		tc := tc
+		t.Run(tc.description, func(t *testing.T) {
+			votes := getQueriedVotes(t, ctx, keeper.cdc, querier, proposal.ProposalID, tc.page, tc.limit)
+			require.Equal(t, len(tc.votes), len(votes))
+			for i := range votes {
+				require.Equal(t, tc.votes[i], votes[i])
+			}
+		})
+	}
 }

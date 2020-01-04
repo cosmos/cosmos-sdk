@@ -38,6 +38,8 @@ type ProofI interface {
 	GetCommitmentType() Type
 	VerifyMembership(RootI, PathI, []byte) bool
 	VerifyNonMembership(RootI, PathI) bool
+
+	ValidateBasic() error
 }
 
 // Type defines the type of the commitment

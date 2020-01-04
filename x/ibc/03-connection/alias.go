@@ -12,33 +12,23 @@ import (
 )
 
 const (
-	NONE                              = types.NONE
-	INIT                              = types.INIT
-	TRYOPEN                           = types.TRYOPEN
-	OPEN                              = types.OPEN
-	StateNone                         = types.StateNone
-	StateInit                         = types.StateInit
-	StateTryOpen                      = types.StateTryOpen
-	StateOpen                         = types.StateOpen
-	DefaultCodespace                  = types.DefaultCodespace
-	CodeConnectionExists              = types.CodeConnectionExists
-	CodeConnectionNotFound            = types.CodeConnectionNotFound
-	CodeClientConnectionPathsNotFound = types.CodeClientConnectionPathsNotFound
-	CodeConnectionPath                = types.CodeConnectionPath
-	CodeInvalidCounterpartyConnection = types.CodeInvalidCounterpartyConnection
-	CodeInvalidVersion                = types.CodeInvalidVersion
-	CodeInvalidHeight                 = types.CodeInvalidHeight
-	CodeInvalidConnectionState        = types.CodeInvalidConnectionState
-	CodeInvalidCounterparty           = types.CodeInvalidCounterparty
-	AttributeKeyConnectionID          = types.AttributeKeyConnectionID
-	AttributeKeyCounterpartyClientID  = types.AttributeKeyCounterpartyClientID
-	SubModuleName                     = types.SubModuleName
-	StoreKey                          = types.StoreKey
-	RouterKey                         = types.RouterKey
-	QuerierRoute                      = types.QuerierRoute
-	QueryAllConnections               = types.QueryAllConnections
-	QueryConnection                   = types.QueryConnection
-	QueryClientConnections            = types.QueryClientConnections
+	UNINITIALIZED                    = types.UNINITIALIZED
+	INIT                             = types.INIT
+	TRYOPEN                          = types.TRYOPEN
+	OPEN                             = types.OPEN
+	StateUninitialized               = types.StateUninitialized
+	StateInit                        = types.StateInit
+	StateTryOpen                     = types.StateTryOpen
+	StateOpen                        = types.StateOpen
+	AttributeKeyConnectionID         = types.AttributeKeyConnectionID
+	AttributeKeyCounterpartyClientID = types.AttributeKeyCounterpartyClientID
+	SubModuleName                    = types.SubModuleName
+	StoreKey                         = types.StoreKey
+	RouterKey                        = types.RouterKey
+	QuerierRoute                     = types.QuerierRoute
+	QueryAllConnections              = types.QueryAllConnections
+	QueryConnection                  = types.QueryConnection
+	QueryClientConnections           = types.QueryClientConnections
 )
 
 var (
@@ -55,8 +45,6 @@ var (
 	ErrConnectionNotFound            = types.ErrConnectionNotFound
 	ErrClientConnectionPathsNotFound = types.ErrClientConnectionPathsNotFound
 	ErrConnectionPath                = types.ErrConnectionPath
-	ErrInvalidCounterpartyConnection = types.ErrInvalidCounterpartyConnection
-	ErrInvalidHeight                 = types.ErrInvalidHeight
 	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ErrInvalidCounterparty           = types.ErrInvalidCounterparty
 	ConnectionPath                   = types.ConnectionPath

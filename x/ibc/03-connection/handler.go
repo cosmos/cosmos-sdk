@@ -7,10 +7,10 @@ import (
 )
 
 // HandleMsgConnectionOpenInit defines the sdk.Handler for MsgConnectionOpenInit
-func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenInit) sdk.Result {
+func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenInit) (*sdk.Result, error) {
 	err := k.ConnOpenInit(ctx, msg.ConnectionID, msg.ClientID, msg.Counterparty)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -27,16 +27,18 @@ func HandleMsgConnectionOpenInit(ctx sdk.Context, k keeper.Keeper, msg types.Msg
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandleMsgConnectionOpenTry defines the sdk.Handler for MsgConnectionOpenTry
-func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) sdk.Result {
+func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenTry) (*sdk.Result, error) {
 	err := k.ConnOpenTry(
 		ctx, msg.ConnectionID, msg.Counterparty, msg.ClientID,
 		msg.CounterpartyVersions, msg.ProofInit, msg.ProofConsensus, msg.ProofHeight, msg.ConsensusHeight)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -53,17 +55,19 @@ func HandleMsgConnectionOpenTry(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandleMsgConnectionOpenAck defines the sdk.Handler for MsgConnectionOpenAck
-func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) sdk.Result {
+func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenAck) (*sdk.Result, error) {
 	err := k.ConnOpenAck(
 		ctx, msg.ConnectionID, msg.Version, msg.ProofTry, msg.ProofConsensus,
 		msg.ProofHeight, msg.ConsensusHeight,
 	)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -78,14 +82,16 @@ func HandleMsgConnectionOpenAck(ctx sdk.Context, k keeper.Keeper, msg types.MsgC
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
 // HandleMsgConnectionOpenConfirm defines the sdk.Handler for MsgConnectionOpenConfirm
-func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) sdk.Result {
+func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.MsgConnectionOpenConfirm) (*sdk.Result, error) {
 	err := k.ConnOpenConfirm(ctx, msg.ConnectionID, msg.ProofAck, msg.ProofHeight)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -100,5 +106,7 @@ func HandleMsgConnectionOpenConfirm(ctx sdk.Context, k keeper.Keeper, msg types.
 		),
 	})
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }

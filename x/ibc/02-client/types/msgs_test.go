@@ -38,7 +38,7 @@ type mockBadEvidence struct {
 
 // Override ValidateBasic
 func (mbe mockBadEvidence) ValidateBasic() error {
-	return errors.ErrInvalidEvidence(errors.DefaultCodespace, "invalid evidence")
+	return errors.ErrInvalidEvidence
 }
 
 func TestMsgCreateClientValidateBasic(t *testing.T) {

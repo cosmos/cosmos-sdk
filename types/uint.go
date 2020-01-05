@@ -113,7 +113,7 @@ func (u Uint) Incr() Uint {
 }
 
 // Decr decrements the Uint by one.
-// Decr will panic if the Uint is zero
+// Decr will panic if the Uint is zero.
 func (u Uint) Decr() Uint {
 	return u.Sub(OneUint())
 }

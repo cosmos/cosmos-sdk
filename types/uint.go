@@ -107,7 +107,7 @@ func (u Uint) Mod(u2 Uint) Uint {
 	return Uint{mod(u.i, u2.i)}
 }
 
-// Incr increments the Uint by one
+// Incr increments the Uint by one.
 func (u Uint) Incr() Uint {
 	return u.Add(OneUint())
 }

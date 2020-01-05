@@ -6,7 +6,7 @@ order: 2
 
 This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/transactions.md). The transaction will be referred to as `Tx`. {synopsis}
 
-## Pre-requisite Readings {hide}
+### Pre-requisite Readings
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 

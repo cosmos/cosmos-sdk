@@ -6,7 +6,7 @@ This document describes the in-built accounts system of the Cosmos SDK. {synopsi
 
 # Accounts 
 
-## Pre-requisite Readings {hide}
+### Pre-requisite Readings
 
 - [Anatomy of an SDK Application](./app-anatomy.md) {prereq}
 

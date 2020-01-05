@@ -40,6 +40,18 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return types.KVStoreReversePrefixIterator(kvs, prefix)
 }
 
+// KVStorePrefixIteratorPaginated returns iterator over items in the selected page.
+// Items iterated and skipped in ascending order.
+func KVStorePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
+	return types.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
+}
+
+// KVStoreReversePrefixIteratorPaginated returns iterator over items in the selected page.
+// Items iterated and skipped in descending order.
+func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, limit uint) Iterator {
+	return types.KVStorePrefixIteratorPaginated(kvs, prefix, page, limit)
+}
+
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes
 func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []cmn.KVPair) {

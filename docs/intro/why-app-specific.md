@@ -1,7 +1,7 @@
----
+<!--
 order: 2
 synopsis: This document explains what application-specific blockchains are, and why developers would want to build one as opposed to writing Smart Contracts.
----
+-->
 
 # Application-Specific Blockchains 
 

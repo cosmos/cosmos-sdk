@@ -15,7 +15,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, ak types.AccountKeeper, data Ge
 		var totalSupply sdk.Coins
 		ak.IterateAccounts(ctx,
 			func(acc authexported.Account) (stop bool) {
-				totalSupply = totalSupply.Add(acc.GetCoins())
+				totalSupply = totalSupply.Add(acc.GetCoins()...)
 				return false
 			},
 		)

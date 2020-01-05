@@ -81,7 +81,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val exported.Validat
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
-					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+					rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
 
 					// Note: It is necessary to truncate so we don't allow withdrawing
 					// more rewards than owed.
@@ -132,14 +132,14 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val exported.Validat
 	}
 
 	// calculate rewards for final period
-	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+	rewards = rewards.Add(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)...)
 	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI) (sdk.Coins, sdk.Error) {
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.ValidatorI, del exported.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return nil, types.ErrNoDelegationDistInfo(k.codespace)
+		return nil, types.ErrEmptyDelegationDistInfo
 	}
 
 	// end current period and calculate rewards
@@ -173,7 +173,7 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val exported.Validato
 	// transaction was successful
 	k.SetValidatorOutstandingRewards(ctx, del.GetValidatorAddr(), outstanding.Sub(rewards))
 	feePool := k.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(remainder)
+	feePool.CommunityPool = feePool.CommunityPool.Add(remainder...)
 	k.SetFeePool(ctx, feePool)
 
 	// decrement reference count of starting period

@@ -1,6 +1,6 @@
----
+<!--
 order: 3
----
+-->
 
 # Blockchain Architecture
 
@@ -65,21 +65,21 @@ The Tendermint [consensus algorithm](https://tendermint.com/docs/introduction/wh
 Tendermint passes transactions to the application through an interface called the [ABCI](https://tendermint.com/docs/spec/abci/), which the application must implement. 
 
 ```
-+---------------------+
-|                     |
-|     Application     |
-|                     |
-+--------+---+--------+
-         ^   |
-         |   | ABCI
-         |   v
-+--------+---+--------+
-|                     |
-|                     |
-|     Tendermint      |
-|                     |
-|                     |
-+---------------------+
+              +---------------------+
+              |                     |
+              |     Application     |
+              |                     |
+              +--------+---+--------+
+                       ^   |
+                       |   | ABCI
+                       |   v
+              +--------+---+--------+
+              |                     |
+              |                     |
+              |     Tendermint      |
+              |                     |
+              |                     |
+              +---------------------+
 ```
 
 Note that **Tendermint only handles transaction bytes**. It has no knowledge of what these bytes mean. All Tendermint does is order these transaction bytes deterministically. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the messages contained in the transactions were successfully processed or not. 

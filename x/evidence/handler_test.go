@@ -31,8 +31,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := evidence.NewKeeper(
-		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName),
-		evidence.DefaultCodespace, app.StakingKeeper, app.SlashingKeeper,
+		cdc, app.GetKey(evidence.StoreKey), app.GetSubspace(evidence.ModuleName), app.StakingKeeper, app.SlashingKeeper,
 	)
 	router := evidence.NewRouter()
 	router = router.AddRoute(types.TestEvidenceRouteEquivocation, types.TestEquivocationHandler(*evidenceKeeper))
@@ -66,8 +65,9 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence_Valid() {
 
 	ctx := suite.ctx.WithIsCheckTx(false)
 	msg := evidence.NewMsgSubmitEvidence(e, s)
-	res := suite.handler(ctx, msg)
-	suite.True(res.IsOK())
+	res, err := suite.handler(ctx, msg)
+	suite.NoError(err)
+	suite.NotNil(res)
 	suite.Equal(e.Hash().Bytes(), res.Data)
 }
 
@@ -94,8 +94,9 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence_Invalid() {
 
 	ctx := suite.ctx.WithIsCheckTx(false)
 	msg := evidence.NewMsgSubmitEvidence(e, s)
-	res := suite.handler(ctx, msg)
-	suite.False(res.IsOK())
+	res, err := suite.handler(ctx, msg)
+	suite.Error(err)
+	suite.Nil(res)
 }
 
 func TestHandlerTestSuite(t *testing.T) {

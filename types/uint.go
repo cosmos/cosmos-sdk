@@ -99,6 +99,14 @@ func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 // Quo divides Uint with Uint
 func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
 
+// Mod returns remainder after dividing with Uint
+func (u Uint) Mod(u2 Uint) Uint {
+	if u2.IsZero() {
+		panic("division-by-zero")
+	}
+	return Uint{mod(u.i, u2.i)}
+}
+
 // Quo divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
@@ -171,4 +179,40 @@ func checkNewUint(i *big.Int) (Uint, error) {
 		return Uint{}, err
 	}
 	return Uint{i}, nil
+}
+
+// RelativePow raises x to the power of n, where x (and the result, z) are scaled by factor b
+// for example, RelativePow(210, 2, 100) = 441 (2.1^2 = 4.41)
+func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
+	if x.IsZero() {
+		if n.IsZero() {
+			z = b // 0^0 = 1
+			return
+		}
+		z = ZeroUint() // otherwise 0^a = 0
+		return
+	}
+
+	z = x
+	if n.Mod(NewUint(2)).Equal(ZeroUint()) {
+		z = b
+	}
+
+	halfOfB := b.Quo(NewUint(2))
+	n = n.Quo(NewUint(2))
+
+	for n.GT(ZeroUint()) {
+		xSquared := x.Mul(x)
+		xSquaredRounded := xSquared.Add(halfOfB)
+
+		x = xSquaredRounded.Quo(b)
+
+		if n.Mod(NewUint(2)).Equal(OneUint()) {
+			zx := z.Mul(x)
+			zxRounded := zx.Add(halfOfB)
+			z = zxRounded.Quo(b)
+		}
+		n = n.Quo(NewUint(2))
+	}
+	return z
 }

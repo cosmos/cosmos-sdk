@@ -8,6 +8,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ensure Msg interface compliance at compile time
@@ -151,34 +152,34 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+func (msg MsgCreateValidator) ValidateBasic() error {
 	// note that unmarshaling from bech32 ensures either empty or valid
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	if !sdk.AccAddress(msg.ValidatorAddress).Equals(msg.DelegatorAddress) {
-		return ErrBadValidatorAddr(DefaultCodespace)
+		return ErrBadValidatorAddr
 	}
 	if !msg.Value.Amount.IsPositive() {
-		return ErrBadDelegationAmount(DefaultCodespace)
+		return ErrBadDelegationAmount
 	}
 	if msg.Description == (Description{}) {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 	if msg.Commission == (CommissionRates{}) {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
 	if err := msg.Commission.Validate(); err != nil {
 		return err
 	}
 	if !msg.MinSelfDelegation.IsPositive() {
-		return ErrMinSelfDelegationInvalid(DefaultCodespace)
+		return ErrMinSelfDelegationInvalid
 	}
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return ErrSelfDelegationBelowMinimum(DefaultCodespace)
+		return ErrSelfDelegationBelowMinimum
 	}
 
 	return nil
@@ -226,22 +227,19 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgEditValidator) ValidateBasic() sdk.Error {
+func (msg MsgEditValidator) ValidateBasic() error {
 	if msg.ValidatorAddress.Empty() {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
+		return ErrEmptyValidatorAddr
 	}
-
 	if msg.Description == (Description{}) {
-		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
-
 	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return ErrMinSelfDelegationInvalid(DefaultCodespace)
+		return ErrMinSelfDelegationInvalid
 	}
-
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
-			return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission rate must be between 0 and 1, inclusive")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
 		}
 	}
 
@@ -282,15 +280,15 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgDelegate) ValidateBasic() sdk.Error {
+func (msg MsgDelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	if !msg.Amount.Amount.IsPositive() {
-		return ErrBadDelegationAmount(DefaultCodespace)
+		return ErrBadDelegationAmount
 	}
 	return nil
 }
@@ -335,18 +333,18 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
+func (msg MsgBeginRedelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorSrcAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	if msg.ValidatorDstAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	if !msg.Amount.Amount.IsPositive() {
-		return ErrBadSharesAmount(DefaultCodespace)
+		return ErrBadSharesAmount
 	}
 	return nil
 }
@@ -383,15 +381,15 @@ func (msg MsgUndelegate) GetSignBytes() []byte {
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgUndelegate) ValidateBasic() sdk.Error {
+func (msg MsgUndelegate) ValidateBasic() error {
 	if msg.DelegatorAddress.Empty() {
-		return ErrNilDelegatorAddr(DefaultCodespace)
+		return ErrEmptyDelegatorAddr
 	}
 	if msg.ValidatorAddress.Empty() {
-		return ErrNilValidatorAddr(DefaultCodespace)
+		return ErrEmptyValidatorAddr
 	}
 	if !msg.Amount.Amount.IsPositive() {
-		return ErrBadSharesAmount(DefaultCodespace)
+		return ErrBadSharesAmount
 	}
 	return nil
 }

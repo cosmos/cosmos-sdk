@@ -117,7 +117,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// add bonded tokens to pool for (re)delegations
 	startCoins := sdk.NewCoins(sdk.NewInt64Coin(keeper.BondDenom(ctx), 15))
 	bondedPool := keeper.GetBondedPool(ctx)
-	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(startCoins))
+	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(startCoins...))
 	require.NoError(t, err)
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -371,7 +371,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
-	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(rdCoins))
+	err := bondedPool.SetCoins(bondedPool.GetCoins().Add(rdCoins...))
 	require.NoError(t, err)
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -515,8 +515,8 @@ func TestSlashBoth(t *testing.T) {
 	// update bonded tokens
 	bondedPool := keeper.GetBondedPool(ctx)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
-	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(bondedCoins)))
-	require.NoError(t, bondedPool.SetCoins(notBondedPool.GetCoins().Add(notBondedCoins)))
+	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(bondedCoins...)))
+	require.NoError(t, bondedPool.SetCoins(notBondedPool.GetCoins().Add(notBondedCoins...)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 

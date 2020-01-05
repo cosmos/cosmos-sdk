@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -28,7 +29,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	govQueryCmd.AddCommand(client.GetCommands(
+	govQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryProposal(queryRoute, cdc),
 		GetCmdQueryProposals(queryRoute, cdc),
 		GetCmdQueryVote(queryRoute, cdc),
@@ -242,7 +243,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 // GetCmdQueryVotes implements the command to query for proposal votes.
 func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "votes [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query votes on a proposal",
@@ -250,7 +251,8 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			fmt.Sprintf(`Query vote details for a single proposal by its identifier.
 
 Example:
-$ %s query gov votes 1
+$ %[1]s query gov votes 1
+$ %[1]s query gov votes 1 --page=2 --limit=100
 `,
 				version.ClientName,
 			),
@@ -263,8 +265,10 @@ $ %s query gov votes 1
 			if err != nil {
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
+			page := viper.GetInt(flagPage)
+			limit := viper.GetInt(flagNumLimit)
 
-			params := types.NewQueryProposalParams(proposalID)
+			params := types.NewQueryProposalVotesParams(proposalID, page, limit)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -295,6 +299,9 @@ $ %s query gov votes 1
 			return cliCtx.PrintOutput(votes)
 		},
 	}
+	cmd.Flags().Int(flagPage, 1, "pagination page of votes to to query for")
+	cmd.Flags().Int(flagNumLimit, 100, "pagination limit of votes to query for")
+	return cmd
 }
 
 // Command to Get a specific Deposit Information

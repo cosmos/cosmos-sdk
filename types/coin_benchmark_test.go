@@ -21,7 +21,7 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				coinsA.Add(coinsB)
+				coinsA.Add(coinsB...)
 			}
 		}
 	}
@@ -50,7 +50,7 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				coinsA.Add(coinsB)
+				coinsA.Add(coinsB...)
 			}
 		}
 	}

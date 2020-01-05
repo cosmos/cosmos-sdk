@@ -90,6 +90,6 @@ func (k Keeper) AssertInvariants(ctx sdk.Context) {
 func (k Keeper) InvCheckPeriod() uint { return k.invCheckPeriod }
 
 // SendCoinsFromAccountToFeeCollector transfers amt to the fee collector account.
-func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func (k Keeper) SendCoinsFromAccountToFeeCollector(ctx sdk.Context, senderAddr sdk.AccAddress, amt sdk.Coins) error {
 	return k.supplyKeeper.SendCoinsFromAccountToModule(ctx, senderAddr, k.feeCollectorName, amt)
 }

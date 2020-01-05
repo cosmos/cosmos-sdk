@@ -14,7 +14,7 @@ import (
 const (
 	TypeMsgCreateClient    string = "create_client"
 	TypeMsgUpdateClient    string = "update_client"
-	TypeClientMisbehaviour string = "client_misbehaviour"
+	TypeClientMisbehaviour string = "submit_misbehaviour"
 )
 
 var _ sdk.Msg = MsgCreateClient{}
@@ -143,7 +143,7 @@ func (msg MsgSubmitMisbehaviour) Route() string {
 
 // Type implements sdk.Msg
 func (msg MsgSubmitMisbehaviour) Type() string {
-	return "submit_misbehaviour"
+	return TypeClientMisbehaviour
 }
 
 // ValidateBasic implements sdk.Msg

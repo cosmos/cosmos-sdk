@@ -2,50 +2,43 @@ package tendermint
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ exported.Misbehaviour = Misbehaviour{}
-var _ evidenceexported.Evidence = Misbehaviour{}
+// CheckMisbehaviourAndUpdateState
+func CheckMisbehaviourAndUpdateState(
+	clientState clientexported.ClientState, committer clientexported.Committer,
+	misbehaviour clientexported.Misbehaviour,
+) (clientexported.ClientState, error) {
 
-// Misbehaviour contains evidence that a light client submitted a different header from
-// a full node at the same height.
-type Misbehaviour struct {
-	*Evidence
-	ClientID string `json:"client_id" yaml:"client_id"`
-}
-
-// ClientType is Tendermint light client
-func (m Misbehaviour) ClientType() exported.ClientType {
-	return exported.Tendermint
-}
-
-// GetEvidence returns the evidence to handle a light client misbehaviour
-func (m Misbehaviour) GetEvidence() evidenceexported.Evidence {
-	return m.Evidence
-}
-
-// ValidateBasic performs the basic validity checks for the evidence and the
-// client ID.
-func (m Misbehaviour) ValidateBasic() error {
-	if m.Evidence == nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "evidence is empty")
+	tmClientState, ok := clientState.(ClientState)
+	if !ok {
+		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "client state type is not Tendermint")
 	}
-	if err := m.Evidence.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+
+	tmCommitter, ok := committer.(Committer)
+	if !ok {
+		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "committer type is not Tendermint")
 	}
-	if err := host.DefaultClientIdentifierValidator(m.ClientID); err != nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+
+	tmEvidence, ok := misbehaviour.(Evidence)
+	if !ok {
+		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "committer type is not Tendermint")
 	}
-	return nil
+
+	if err := CheckMisbehaviour(tmCommitter, tmEvidence); err != nil {
+		return nil, sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+	}
+
+	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
+
+	return clientState, nil
 }
 
 // CheckMisbehaviour checks if the evidence provided is a valid light client misbehaviour
-func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
-	if err := m.ValidateBasic(); err != nil {
+func CheckMisbehaviour(trustedCommitter Committer, evidence Evidence) error {
+	if err := evidence.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -55,14 +48,14 @@ func CheckMisbehaviour(trustedCommitter Committer, m Misbehaviour) error {
 	// check that the validator sets on both headers are valid given the last trusted validatorset
 	// less than or equal to evidence height
 	if err := trustedValSet.VerifyFutureCommit(
-		m.Evidence.Header1.ValidatorSet, m.Evidence.ChainID,
-		m.Evidence.Header1.Commit.BlockID, m.Evidence.Header1.Height, m.Evidence.Header1.Commit,
+		evidence.Header1.ValidatorSet, evidence.ChainID,
+		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
 	); err != nil {
 		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "validator set in header 1 has too much change from last known committer: %v", err)
 	}
 	if err := trustedValSet.VerifyFutureCommit(
-		m.Evidence.Header2.ValidatorSet, m.Evidence.ChainID,
-		m.Evidence.Header2.Commit.BlockID, m.Evidence.Header2.Height, m.Evidence.Header2.Commit,
+		evidence.Header2.ValidatorSet, evidence.ChainID,
+		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
 	); err != nil {
 		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "validator set in header 2 has too much change from last known committer: %v", err)
 	}

@@ -174,17 +174,18 @@ func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, co
 func (k Keeper) initialize(
 	ctx sdk.Context, clientID string, clientType exported.ClientType,
 	consensusState exported.ConsensusState,
-) exported.ClientState {
+) (exported.ClientState, error) {
 	var clientState exported.ClientState
+
 	switch clientType {
 	case exported.Tendermint:
 		clientState = tendermint.NewClientState(clientID)
 	default:
-		panic("invalid client type")
+		return nil, errors.ErrInvalidClientType
 	}
 
 	k.SetConsensusState(ctx, clientID, consensusState)
-	return clientState
+	return clientState, nil
 }
 
 // freeze updates the state of the client in the event of a misbehaviour

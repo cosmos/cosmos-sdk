@@ -17,43 +17,41 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	testCases := []struct {
 		name     string
 		evidence *Evidence
-		clientID string
 		expErr   bool
 	}{
 		{
 			"valid misbehavior",
 			&Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			false,
 		},
 		{
 			"nil evidence",
 			nil,
-			"gaiamainnet",
 			true,
 		},
 		{
 			"invalid evidence",
 			&Evidence{
-				Header1: suite.header,
-				Header2: suite.header,
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  suite.header,
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			true,
 		},
 		{
 			"invalid ClientID",
 			&Evidence{
-				Header1: MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
-				Header2: MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
-				ChainID: "gaia123?",
+				Header1:  MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
+				Header2:  MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
+				ChainID:  "gaia123?",
+				ClientID: "gaia123?",
 			},
-			"gaia123?",
 			true,
 		},
 	}
@@ -61,12 +59,7 @@ func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
 	for _, tc := range testCases {
 		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
-			misbehaviour := Misbehaviour{
-				Evidence: tc.evidence,
-				ClientID: tc.clientID,
-			}
-
-			err := misbehaviour.ValidateBasic()
+			err := tc.evidence.ValidateBasic()
 
 			if tc.expErr {
 				suite.Error(err, "Invalid Misbehaviour passed ValidateBasic")

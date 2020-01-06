@@ -9,17 +9,33 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
-var _ evidenceexported.Evidence = Evidence{}
+var (
+	_ evidenceexported.Evidence   = Evidence{}
+	_ clientexported.Misbehaviour = Evidence{}
+)
 
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	Header1 Header `json:"header1" yaml:"header1"`
-	Header2 Header `json:"header2" yaml:"header2"`
-	ChainID string `json:"chain_id" yaml:"chain_id"`
+	ClientID string `json:"client_id" yaml:"client_id"`
+	Header1  Header `json:"header1" yaml:"header1"`
+	Header2  Header `json:"header2" yaml:"header2"`
+	ChainID  string `json:"chain_id" yaml:"chain_id"`
+}
+
+// ClientType is Tendermint light client
+func (ev Evidence) ClientType() clientexported.ClientType {
+	return clientexported.Tendermint
+}
+
+// GetClientID returns the ID of the client that committed a misbehaviour.
+func (ev Evidence) GetClientID() string {
+	return ev.ClientID
 }
 
 // Route implements Evidence interface
@@ -53,6 +69,10 @@ func (ev Evidence) GetHeight() int64 {
 
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
+	if err := host.DefaultClientIdentifierValidator(ev.ClientID); err != nil {
+		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+	}
+
 	// ValidateBasic on both validators
 	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
 		return sdkerrors.Wrap(

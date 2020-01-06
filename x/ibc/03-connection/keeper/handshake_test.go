@@ -6,7 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )

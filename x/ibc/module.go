@@ -15,6 +15,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
@@ -43,6 +44,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	client.RegisterCodec(cdc)
 	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
+	tendermint.RegisterCodec(cdc)
 	transfer.RegisterCodec(cdc)
 	commitment.RegisterCodec(cdc)
 }

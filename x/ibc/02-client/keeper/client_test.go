@@ -8,8 +8,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -23,10 +22,7 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 	suite.NoError(err, "CreateClient failed")
 
 	// Test ClientState stored correctly
-	expectedState := types.State{
-		ID:     testClientID,
-		Frozen: false,
-	}
+	expectedState := tendermint.NewClientState(testClientID)
 	require.Equal(suite.T(), expectedState, state, "Incorrect ClientState returned")
 
 	// Test ClientType and VerifiedRoot stored correctly

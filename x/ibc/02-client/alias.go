@@ -13,15 +13,16 @@ import (
 )
 
 const (
-	AttributeKeyClientID = types.AttributeKeyClientID
-	SubModuleName        = types.SubModuleName
-	StoreKey             = types.StoreKey
-	RouterKey            = types.RouterKey
-	QuerierRoute         = types.QuerierRoute
-	QueryAllClients      = types.QueryAllClients
-	QueryClientState     = types.QueryClientState
-	QueryConsensusState  = types.QueryConsensusState
-	QueryVerifiedRoot    = types.QueryVerifiedRoot
+	AttributeKeyClientID  = types.AttributeKeyClientID
+	AttrbuteKeyClientType = types.AttributeKeyClientType
+	SubModuleName         = types.SubModuleName
+	StoreKey              = types.StoreKey
+	RouterKey             = types.RouterKey
+	QuerierRoute          = types.QuerierRoute
+	QueryAllClients       = types.QueryAllClients
+	QueryClientState      = types.QueryClientState
+	QueryConsensusState   = types.QueryConsensusState
+	QueryVerifiedRoot     = types.QueryVerifiedRoot
 )
 
 var (

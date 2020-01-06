@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -81,7 +81,7 @@ func (suite *HandlerTestSuite) createClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	consensusState := clienttypestm.ConsensusState{
+	consensusState := tendermint.ConsensusState{
 		ChainID:          testChainID,
 		Height:           uint64(commitID.Version),
 		Root:             commitment.NewRoot(commitID.Hash),
@@ -101,7 +101,7 @@ func (suite *HandlerTestSuite) updateClient() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
-	state := clienttypestm.ConsensusState{
+	state := tendermint.ConsensusState{
 		ChainID: testChainID,
 		Height:  uint64(commitID.Version),
 		Root:    commitment.NewRoot(commitID.Hash),

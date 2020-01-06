@@ -12,8 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 
 	"github.com/stretchr/testify/require"
@@ -67,7 +66,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestSetClientState() {
-	clientState := types.NewClientState(testClientID)
+	clientState := tendermint.NewClientState(testClientID)
 	suite.keeper.SetClientState(suite.ctx, clientState)
 
 	retrievedState, ok := suite.keeper.GetClientState(suite.ctx, testClientID)
@@ -152,10 +151,10 @@ func (suite KeeperTestSuite) TestSetCommitter() {
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {
-	expClients := []types.State{
-		types.NewClientState(testClientID2),
-		types.NewClientState(testClientID3),
-		types.NewClientState(testClientID),
+	expClients := []exported.ClientState{
+		tendermint.NewClientState(testClientID2),
+		tendermint.NewClientState(testClientID3),
+		tendermint.NewClientState(testClientID),
 	}
 
 	for i := range expClients {

@@ -19,7 +19,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenInit(suite.ctx, testConnectionID1, testClientID1, counterparty)
 
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-		suite.True(existed)
+		suite.Require().True(existed)
 
 		expectConn := connection.ConnectionEnd{
 			State:        connection.INIT,
@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 			Counterparty: counterparty,
 			Versions:     connection.GetCompatibleVersions(),
 		}
-		suite.EqualValues(expectConn, conn)
+		suite.Require().EqualValues(expectConn, conn)
 
 		return err
 	}
@@ -42,8 +42,13 @@ func (suite *KeeperTestSuite) TestConnOpenInit() {
 		{connectionExists, false, "connection already exists"},
 	}
 
-	for _, tc := range testCases {
-		suite.Equal(tc.expected, tc.fun() == nil, "error: %s", tc.errMsg)
+	for i, tc := range testCases {
+		tc := tc
+		if tc.expectedPass {
+			suite.Require().NoError(tc.fun(), "case %d should have passed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(tc.fun(), "case %d should have failed: %s", i, tc.errMsg)
+		}
 	}
 }
 
@@ -68,26 +73,6 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		return err
 	}
 
-	success := func() error {
-		suite.updateClient(testClientID1)
-		proofInit, proofHeight := suite.queryProof(connectionKey)
-		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
-
-		counterparty := connection.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
-		err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(suite.ctx,
-			testConnectionID1, counterparty, testClientID1,
-			connection.GetCompatibleVersions(),
-			proofInit, proofConsensus,
-			uint64(proofHeight), uint64(consensusHeight))
-		suite.NoError(err)
-
-		//check connection state
-		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-		suite.True(existed)
-		suite.Equal(connection.TRYOPEN.String(), conn.State.String(), "invalid connection state")
-		return err
-	}
-
 	connectionExists := func() error {
 		suite.updateClient(testClientID1)
 		proofInit, proofHeight := suite.queryProof(connectionKey)
@@ -102,16 +87,40 @@ func (suite *KeeperTestSuite) TestConnOpenTry() {
 		return err
 	}
 
+	success := func() error {
+		suite.updateClient(testClientID1)
+		proofInit, proofHeight := suite.queryProof(connectionKey)
+		proofConsensus, consensusHeight := suite.queryProof(consensusKey)
+
+		counterparty := connection.NewCounterparty(testClientID2, testConnectionID2, suite.app.IBCKeeper.ConnectionKeeper.GetCommitmentPrefix())
+		err := suite.app.IBCKeeper.ConnectionKeeper.ConnOpenTry(suite.ctx,
+			testConnectionID1, counterparty, testClientID1,
+			connection.GetCompatibleVersions(),
+			proofInit, proofConsensus,
+			uint64(proofHeight), uint64(consensusHeight))
+		suite.Require().NoError(err)
+
+		//check connection state
+		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
+		suite.Require().True(existed)
+		suite.Require().Equal(connection.TRYOPEN.String(), conn.State.String(), "invalid connection state")
+		return err
+	}
+
 	var testCases = []TestCase{
 		{invalidProof, false, "invalid proof"},
-		{success, true, ""},
 		{connectionExists, false, "connection already exists"},
+		{success, true, ""},
 	}
 
-	for _, tc := range testCases {
-		suite.Equal(tc.expected, tc.fun() == nil, "error: %s", tc.errMsg)
+	for i, tc := range testCases {
+		tc := tc
+		if tc.expectedPass {
+			suite.Require().NoError(tc.fun(), "case %d should have passed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(tc.fun(), "case %d should have failed: %s", i, tc.errMsg)
+		}
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestConnOpenAck() {
@@ -171,8 +180,8 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 
 		//check connection state
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID2)
-		suite.True(existed)
-		suite.Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
+		suite.Require().True(existed)
+		suite.Require().Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
 		return err
 
 	}
@@ -185,10 +194,14 @@ func (suite *KeeperTestSuite) TestConnOpenAck() {
 		{success, true, ""},
 	}
 
-	for _, tc := range testCases {
-		suite.Equal(tc.expected, tc.fun() == nil, "error: %s", tc.errMsg)
+	for i, tc := range testCases {
+		tc := tc
+		if tc.expectedPass {
+			suite.Require().NoError(tc.fun(), "case %d should have passed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(tc.fun(), "case %d should have failed: %s", i, tc.errMsg)
+		}
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestConnOpenConfirm() {
@@ -227,8 +240,8 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 
 		//check connection state
 		conn, existed := suite.app.IBCKeeper.ConnectionKeeper.GetConnection(suite.ctx, testConnectionID1)
-		suite.True(existed)
-		suite.Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
+		suite.Require().True(existed)
+		suite.Require().Equal(connection.OPEN.String(), conn.State.String(), "invalid connection state")
 		return err
 	}
 
@@ -239,8 +252,13 @@ func (suite *KeeperTestSuite) TestConnOpenConfirm() {
 		{success, true, ""},
 	}
 
-	for _, tc := range testCases {
-		suite.Equal(tc.expected, tc.fun() == nil, "error: %s", tc.errMsg)
+	for i, tc := range testCases {
+		tc := tc
+		if tc.expectedPass {
+			suite.Require().NoError(tc.fun(), "case %d should have passed: %s", i, tc.errMsg)
+		} else {
+			suite.Require().Error(tc.fun(), "case %d should have failed: %s", i, tc.errMsg)
+		}
 	}
 }
 
@@ -260,18 +278,20 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, he
 }
 
 func (suite *KeeperTestSuite) createClient(clientID string) {
-	suite.app.Commit()
+	_ = suite.app.Commit()
 	commitID := suite.app.LastCommitID()
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	height := suite.app.LastBlockHeight() + 1
+	header := abci.Header{Height: height, ChainID: chainID}
+	_ = suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.ctx = suite.app.BaseApp.NewContext(false, header)
 
 	consensusState := tendermint.ConsensusState{
 		ChainID:          chainID,
 		Height:           uint64(commitID.Version),
 		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSet:     suite.valSets[height],
+		NextValidatorSet: suite.valSets[height+1],
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)
@@ -280,15 +300,16 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 
 func (suite *KeeperTestSuite) updateClient(clientID string) {
 	// always commit when updateClient and begin a new block
-	suite.app.Commit()
+	_ = suite.app.Commit()
 	commitID := suite.app.LastCommitID()
-
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
-	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
+	height := suite.app.LastBlockHeight()
+	header := abci.Header{Height: height + 1}
+	_ = suite.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.ctx = suite.app.BaseApp.NewContext(false, header)
 
 	state := tendermint.ConsensusState{
 		ChainID: chainID,
-		Height:  uint64(commitID.Version),
+		Height:  uint64(height),
 		Root:    commitment.NewRoot(commitID.Hash),
 	}
 
@@ -308,7 +329,7 @@ func (suite *KeeperTestSuite) createConnection(connID, counterpartyConnID string
 }
 
 type TestCase = struct {
-	fun      func() error
-	expected bool
-	errMsg   string
+	fun          func() error
+	expectedPass bool
+	errMsg       string
 }

@@ -151,7 +151,7 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64,
 	}
 
 	height := info.Response.LastBlockHeight
-	prevheight := height - 1
+	prevheight := height - 1 // TODO: should this be next height?
 
 	commit, err := node.Commit(&height)
 	if err != nil {
@@ -191,14 +191,19 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 	}
 
 	height := info.Response.LastBlockHeight
-	prevHeight := height - 1
+	nextHeight := height + 1 // TODO: why was this prevHeight instead of next height?
 
 	commit, err := node.Commit(&height)
 	if err != nil {
 		return tendermint.ConsensusState{}, 0, err
 	}
 
-	validators, err := node.Validators(&prevHeight)
+	validators, err := node.Validators(&height)
+	if err != nil {
+		return tendermint.ConsensusState{}, 0, err
+	}
+
+	nextValidators, err := node.Validators(&nextHeight)
 	if err != nil {
 		return tendermint.ConsensusState{}, 0, err
 	}
@@ -207,7 +212,8 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 		ChainID:          commit.ChainID,
 		Height:           uint64(commit.Height),
 		Root:             commitment.NewRoot(commit.AppHash),
-		NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators), // TODO: Why wasn't this set before?
+		NextValidatorSet: tmtypes.NewValidatorSet(nextValidators.Validators),
 	}
 
 	return state, height, nil

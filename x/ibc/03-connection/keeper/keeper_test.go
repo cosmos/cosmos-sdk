@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -13,12 +14,13 @@ import (
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
 	clientType = clientexported.Tendermint
 	storeKey   = ibctypes.StoreKey
-	chainID    = "test"
+	chainID    = "gaia"
 
 	testClientID1     = "testclientid1"
 	testConnectionID1 = "connectionid1"
@@ -33,10 +35,10 @@ const (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    *codec.Codec
-	ctx    sdk.Context
-	app    *simapp.SimApp
-	valSet *tmtypes.ValidatorSet
+	cdc     *codec.Codec
+	ctx     sdk.Context
+	app     *simapp.SimApp
+	valSets []*tmtypes.ValidatorSet
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -44,13 +46,23 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{}).WithBlockHeight(2)
 	suite.app = app
 
-	privVal := tmtypes.NewMockPV()
+	var validators staking.Validators
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
 
-	validator := tmtypes.NewValidator(privVal.GetPubKey(), 1)
-	suite.valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+		valset := tmtypes.NewValidatorSet(validators.ToTmValidators())
+		suite.valSets = append(suite.valSets, valset)
+
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
+	}
 }
 
 func TestKeeperTestSuite(t *testing.T) {

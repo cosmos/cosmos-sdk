@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -15,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -43,7 +45,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(isCheckTx)
 
 	suite.cdc = app.Codec()
-	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{})
+	suite.ctx = app.BaseApp.NewContext(isCheckTx, abci.Header{}).WithBlockHeight(10)
 	suite.keeper = &app.IBCKeeper.ClientKeeper
 
 	suite.privVal = tmtypes.NewMockPV()
@@ -59,6 +61,22 @@ func (suite *KeeperTestSuite) SetupTest() {
 		Root:             commitment.NewRoot([]byte("hash")),
 		ValidatorSet:     suite.valSet,
 		NextValidatorSet: suite.valSet,
+	}
+
+	var validators staking.Validators
+	var valSets []*tmtypes.ValidatorSet
+	for i := 1; i < 11; i++ {
+		privVal := tmtypes.NewMockPV()
+		pk := privVal.GetPubKey()
+		val := staking.NewValidator(sdk.ValAddress(pk.Address()), pk, staking.Description{})
+		val.Status = sdk.Bonded
+		val.Tokens = sdk.NewInt(rand.Int63())
+		validators = append(validators, val)
+
+		valset := tmtypes.NewValidatorSet(validators.ToTmValidators())
+		valSets = append(valSets, valset)
+
+		app.StakingKeeper.SetHistoricalInfo(suite.ctx, int64(i), staking.NewHistoricalInfo(suite.ctx.BlockHeader(), validators))
 	}
 }
 
@@ -175,6 +193,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 	}{
 		{"latest height", suite.ctx.BlockHeight(), false},
 		{"zero height", 0, false},
+		{"negative height", -1, false},
 		{"height > latest height", suite.ctx.BlockHeight() + 1, false},
 		{"latest height - 1", suite.ctx.BlockHeight() - 1, true},
 	}

@@ -3,6 +3,7 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -162,15 +163,39 @@ func TestWrapEmpty(t *testing.T) {
 func TestWrapIs(t *testing.T) {
 	var errTest = errors.New("test error")
 	err := Wrap(errTest, "some random description")
-	if !stdlib.Is(err, errTest) {
-		t.Error("should be true, because wrapped error contains the errTest")
-	}
+	require.True(t, stdlib.Is(err, errTest))
+}
+
+func TestWrapIsMultiple(t *testing.T) {
+	var errTest = errors.New("test error")
+	var errTest2 = errors.New("test error 2")
+	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	require.True(t, stdlib.Is(err, errTest2))
+}
+
+func TestWrapIsFail(t *testing.T) {
+	var errTest = errors.New("test error")
+	var errTest2 = errors.New("test error 2")
+	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	require.False(t, stdlib.Is(err, errTest))
 }
 
 func TestWrapUnwrap(t *testing.T) {
 	var errTest = errors.New("test error")
 	err := Wrap(errTest, "some random description")
-	if unwrapedErr := stdlib.Unwrap(err); unwrapedErr != errTest {
-		t.Errorf("Unwrapped error should be %v, instead of %v", errTest, unwrapedErr)
-	}
+	require.Equal(t, errTest, stdlib.Unwrap(err))
+}
+
+func TestWrapUnwrapMultiple(t *testing.T) {
+	var errTest = errors.New("test error")
+	var errTest2 = errors.New("test error 2")
+	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	require.Equal(t, errTest2, stdlib.Unwrap(err))
+}
+
+func TestWrapUnwrapFail(t *testing.T) {
+	var errTest = errors.New("test error")
+	var errTest2 = errors.New("test error 2")
+	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
+	require.NotEqual(t, errTest, stdlib.Unwrap(err))
 }

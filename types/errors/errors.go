@@ -268,6 +268,7 @@ func (e *wrappedError) Is(target error) bool {
 	return target == e.parent
 }
 
+// Unwrap implements the built-in errors.Unwrap
 func (e *wrappedError) Unwrap() error {
 	return e.parent
 }

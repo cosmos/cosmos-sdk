@@ -101,7 +101,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 
 			for _, event := range events {
 				if !strings.Contains(event, "=") {
-					return fmt.Errorf("invalid tag; tag %s should be of the format: %s", event, eventFormat)
+					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
 				} else if strings.Count(event, "=") > 1 {
 					return fmt.Errorf("invalid tag; tag %s should be of the format: %s", event, eventFormat)
 				}

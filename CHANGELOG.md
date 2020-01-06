@@ -242,6 +242,9 @@ to detail this new feature and how state transitions occur.
   * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
   * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 * (types) [\#5428](https://github.com/cosmos/cosmos-sdk/pull/5428) Add `Mod` (modulo) method and `RelativePow` (exponentation) function for `Uint`.
+* (cli) [\#5482](https://github.com/cosmos/cosmos-sdk/pull/5482) Remove old "tags" nomenclature from the `q txs` command in
+  favor of the new events system. Functionality remains unchanged except that `=` is used instead of `:` to be
+  consistent with the API's use of event queries.
 
 ### Bug Fixes
 

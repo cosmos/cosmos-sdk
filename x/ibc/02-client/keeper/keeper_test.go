@@ -166,3 +166,28 @@ func (suite KeeperTestSuite) TestGetAllClients() {
 	suite.Require().Len(clients, len(expClients))
 	suite.Require().Equal(expClients, clients)
 }
+
+func (suite KeeperTestSuite) TestGetConsensusState() {
+	cases := []struct {
+		name    string
+		height  int64
+		expPass bool
+	}{
+		{"latest height", suite.ctx.BlockHeight(), false},
+		{"zero height", 0, false},
+		{"height > latest height", suite.ctx.BlockHeight() + 1, false},
+		{"latest height - 1", suite.ctx.BlockHeight() - 1, true},
+	}
+
+	for i, tc := range cases {
+		tc := tc
+		cs, found := suite.keeper.GetConsensusState(suite.ctx, tc.height)
+		if tc.expPass {
+			suite.Require().True(found, "Case %d should have passed: %s", i, tc.name)
+			suite.Require().NotNil(cs, "Case %d should have passed: %s", i, tc.name)
+		} else {
+			suite.Require().False(found, "Case %d should have failed: %s", i, tc.name)
+			suite.Require().Nil(cs, "Case %d should have failed: %s", i, tc.name)
+		}
+	}
+}

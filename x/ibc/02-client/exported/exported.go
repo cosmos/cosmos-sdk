@@ -8,6 +8,72 @@ import (
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
+// ClientState defines the required common functions for light clients.
+type ClientState interface {
+	GetID() string
+	ClientType() ClientType
+	IsFrozen() bool
+
+	// State verification functions
+
+	VerifyClientConsensusState(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		clientID string,
+		consensusState ConsensusState,
+	) error
+	VerifyConnectionState(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		connectionID string,
+		// connectionEnd connection,
+	) error
+	VerifyChannelState(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		portID string,
+		channelID string,
+		// channelEnd channel,
+	) error
+	VerifyPacketCommitment(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		portID string,
+		channelID string,
+		sequence uint64,
+		commitmentBytes []byte,
+	)
+	VerifyPacketAcknowledgement(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		portID string,
+		channelID string,
+		sequence uint64,
+		acknowledgement []byte,
+	)
+	VerifyPacketAcknowledgementAbsence(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		portID string,
+		channelID string,
+		sequence uint64,
+	)
+	VerifyNextSequenceRecv(
+		height uint64,
+		prefix commitment.PrefixI,
+		proof commitment.ProofI,
+		portID string,
+		channelID string,
+		nextSequenceRecv uint64,
+	)
+}
+
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
 	ClientType() ClientType // Consensus kind

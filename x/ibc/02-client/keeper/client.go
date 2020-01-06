@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 )
 
 // CreateClient creates a new client state and populates it with a given consensus
@@ -17,7 +17,7 @@ import (
 func (k Keeper) CreateClient(
 	ctx sdk.Context, clientID string,
 	clientType exported.ClientType, consensusState exported.ConsensusState,
-) (types.State, error) {
+) (exported.ClientState, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
 		return types.State{}, sdkerrors.Wrapf(errors.ErrClientExists, "cannot create client with ID %s", clientID)
@@ -28,7 +28,7 @@ func (k Keeper) CreateClient(
 		panic(fmt.Sprintf("consensus type is already defined for client %s", clientID))
 	}
 
-	clientState := k.initialize(ctx, clientID, consensusState)
+	clientState := k.initialize(ctx, clientID, clientType, consensusState)
 	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
 	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
@@ -54,7 +54,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(errors.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
-	if clientState.Frozen {
+	if clientState.IsFrozen() {
 		return sdkerrors.Wrapf(errors.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 

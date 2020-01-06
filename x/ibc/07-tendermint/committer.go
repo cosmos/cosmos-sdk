@@ -3,10 +3,10 @@ package tendermint
 import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 )
 
-var _ exported.Committer = Committer{}
+var _ clientexported.Committer = Committer{}
 
 // Committer definites a Tendermint Committer
 type Committer struct {
@@ -15,12 +15,12 @@ type Committer struct {
 	NextValSetHash        []byte `json:"next_valset_hash" yaml:"next_valset_hash"`
 }
 
-// Implement exported.Committer interface
-func (c Committer) ClientType() exported.ClientType {
-	return exported.Tendermint
+// ClientType implements exported.Committer interface
+func (c Committer) ClientType() clientexported.ClientType {
+	return clientexported.Tendermint
 }
 
-// Implement exported.Committer interface
+// GetHeight implements exported.Committer interface
 func (c Committer) GetHeight() uint64 {
 	return c.Height
 }

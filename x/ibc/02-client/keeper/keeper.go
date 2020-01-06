@@ -36,23 +36,23 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetClientState gets a particular client from the store
-func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (types.State, bool) {
+func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.ClientState, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyClientState(clientID))
 	if bz == nil {
 		return types.State{}, false
 	}
 
-	var clientState types.State
+	var clientState exported.ClientState
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &clientState)
 	return clientState, true
 }
 
 // SetClientState sets a particular Client to the store
-func (k Keeper) SetClientState(ctx sdk.Context, clientState types.State) {
+func (k Keeper) SetClientState(ctx sdk.Context, clientState exported.ClientState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(clientState)
-	store.Set(types.KeyClientState(clientState.ID), bz)
+	store.Set(types.KeyClientState(clientState.GetID()), bz)
 }
 
 // GetClientType gets the consensus type for a specific client
@@ -170,8 +170,18 @@ func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, co
 
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
-func (k Keeper) initialize(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) types.State {
-	clientState := types.NewClientState(clientID)
+func (k Keeper) initialize(
+	ctx sdk.Context, clientID string, clientType exported.ClientType,
+	consensusState exported.ConsensusState,
+) exported.ClientState {
+	var clientState exported.ClientState
+	switch clientType {
+	case exported.Tendermint:
+		clientState = types.NewClientState(clientID)
+	default:
+		panic("invalid client type")
+	}
+
 	k.SetConsensusState(ctx, clientID, consensusState)
 	return clientState
 }
@@ -200,7 +210,7 @@ func (k Keeper) VerifyMembership(
 		return false
 	}
 
-	if clientState.Frozen {
+	if clientState.IsFrozen() {
 		return false
 	}
 
@@ -225,7 +235,7 @@ func (k Keeper) VerifyNonMembership(
 		return false
 	}
 
-	if clientState.Frozen {
+	if clientState.IsFrozen() {
 		return false
 	}
 

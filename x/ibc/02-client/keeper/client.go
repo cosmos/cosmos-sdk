@@ -20,7 +20,7 @@ func (k Keeper) CreateClient(
 ) (exported.ClientState, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return types.State{}, sdkerrors.Wrapf(errors.ErrClientExists, "cannot create client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(errors.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)

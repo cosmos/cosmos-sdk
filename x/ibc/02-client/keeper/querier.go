@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
@@ -23,7 +24,7 @@ func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 
 	start, end := client.Paginate(len(clients), params.Page, params.Limit, 100)
 	if start < 0 || end < 0 {
-		clients = []types.State{}
+		clients = []exported.ClientState{}
 	} else {
 		clients = clients[start:end]
 	}

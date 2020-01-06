@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -40,7 +41,7 @@ func (k Keeper) GetClientState(ctx sdk.Context, clientID string) (exported.Clien
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.KeyClientState(clientID))
 	if bz == nil {
-		return types.State{}, false
+		return nil, false
 	}
 
 	var clientState exported.ClientState
@@ -118,13 +119,13 @@ func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64,
 // IterateClients provides an iterator over all stored light client State
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.
-func (k Keeper) IterateClients(ctx sdk.Context, cb func(types.State) bool) {
+func (k Keeper) IterateClients(ctx sdk.Context, cb func(exported.ClientState) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetClientKeysPrefix(ibctypes.KeyClientPrefix))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var clientState types.State
+		var clientState exported.ClientState
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &clientState)
 
 		if cb(clientState) {
@@ -134,8 +135,8 @@ func (k Keeper) IterateClients(ctx sdk.Context, cb func(types.State) bool) {
 }
 
 // GetAllClients returns all stored light client State objects.
-func (k Keeper) GetAllClients(ctx sdk.Context) (states []types.State) {
-	k.IterateClients(ctx, func(state types.State) bool {
+func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
+	k.IterateClients(ctx, func(state exported.ClientState) bool {
 		states = append(states, state)
 		return false
 	})
@@ -177,7 +178,7 @@ func (k Keeper) initialize(
 	var clientState exported.ClientState
 	switch clientType {
 	case exported.Tendermint:
-		clientState = types.NewClientState(clientID)
+		clientState = tendermint.NewClientState(clientID)
 	default:
 		panic("invalid client type")
 	}
@@ -187,12 +188,12 @@ func (k Keeper) initialize(
 }
 
 // freeze updates the state of the client in the event of a misbehaviour
-func (k Keeper) freeze(ctx sdk.Context, clientState types.State) (types.State, error) {
-	if clientState.Frozen {
-		return types.State{}, sdkerrors.Wrap(errors.ErrClientFrozen, clientState.ID)
+func (k Keeper) freeze(ctx sdk.Context, clientState exported.ClientState) (exported.ClientState, error) {
+	if clientState.IsFrozen() {
+		return nil, sdkerrors.Wrap(errors.ErrClientFrozen, clientState.GetID())
 	}
 
-	clientState.Frozen = true
+	// clientState.Frozen = true // FIXME: set height
 	return clientState, nil
 }
 

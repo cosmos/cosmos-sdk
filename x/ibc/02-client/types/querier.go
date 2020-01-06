@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/merkle"
 
-	tmtypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -79,15 +79,15 @@ func NewQueryCommitterParams(id string, height uint64) QueryCommitterParams {
 // StateResponse defines the client response for a client state query.
 // It includes the commitment proof and the height of the proof.
 type StateResponse struct {
-	ClientState State            `json:"client_state" yaml:"client_state"`
-	Proof       commitment.Proof `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path  `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64           `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ClientState exported.ClientState `json:"client_state" yaml:"client_state"`
+	Proof       commitment.Proof     `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path      `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64               `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewClientStateResponse creates a new StateResponse instance.
 func NewClientStateResponse(
-	clientID string, clientState State, proof *merkle.Proof, height int64,
+	clientID string, clientState exported.ClientState, proof *merkle.Proof, height int64,
 ) StateResponse {
 	return StateResponse{
 		ClientState: clientState,
@@ -100,15 +100,15 @@ func NewClientStateResponse(
 // ConsensusStateResponse defines the client response for a Consensus state query.
 // It includes the commitment proof and the height of the proof.
 type ConsensusStateResponse struct {
-	ConsensusState tmtypes.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
-	Proof          commitment.Proof       `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath      commitment.Path        `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight    uint64                 `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	ConsensusState exported.ConsensusState `json:"consensus_state" yaml:"consensus_state"`
+	Proof          commitment.Proof        `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath      commitment.Path         `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight    uint64                  `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewConsensusStateResponse creates a new ConsensusStateResponse instance.
 func NewConsensusStateResponse(
-	clientID string, cs tmtypes.ConsensusState, proof *merkle.Proof, height int64,
+	clientID string, cs exported.ConsensusState, proof *merkle.Proof, height int64,
 ) ConsensusStateResponse {
 	return ConsensusStateResponse{
 		ConsensusState: cs,
@@ -142,15 +142,15 @@ func NewRootResponse(
 // CommitterResponse defines the client response for a committer query
 // It includes the commitment proof and the height of the proof
 type CommitterResponse struct {
-	Committer   tmtypes.Committer `json:"committer" yaml:"committer"`
-	Proof       commitment.Proof  `json:"proof,omitempty" yaml:"proof,omitempty"`
-	ProofPath   commitment.Path   `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
-	ProofHeight uint64            `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
+	Committer   exported.Committer `json:"committer" yaml:"committer"`
+	Proof       commitment.Proof   `json:"proof,omitempty" yaml:"proof,omitempty"`
+	ProofPath   commitment.Path    `json:"proof_path,omitempty" yaml:"proof_path,omitempty"`
+	ProofHeight uint64             `json:"proof_height,omitempty" yaml:"proof_height,omitempty"`
 }
 
 // NewCommitterResponse creates a new CommitterResponse instance.
 func NewCommitterResponse(
-	clientID string, height uint64, committer tmtypes.Committer, proof *merkle.Proof, proofHeight int64,
+	clientID string, height uint64, committer exported.Committer, proof *merkle.Proof, proofHeight int64,
 ) CommitterResponse {
 	return CommitterResponse{
 		Committer:   committer,

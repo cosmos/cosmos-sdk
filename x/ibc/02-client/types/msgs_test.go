@@ -12,7 +12,7 @@ import (
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 )
 
 var _ evidenceexported.Evidence = mockEvidence{}

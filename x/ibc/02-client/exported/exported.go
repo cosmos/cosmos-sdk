@@ -34,7 +34,7 @@ type ClientState interface {
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		portID string,
+		portID,
 		channelID string,
 		// channelEnd channel,
 	) error
@@ -42,36 +42,36 @@ type ClientState interface {
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		portID string,
+		portID,
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
-	)
+	) error
 	VerifyPacketAcknowledgement(
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		portID string,
+		portID,
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
-	)
+	) error
 	VerifyPacketAcknowledgementAbsence(
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		portID string,
+		portID,
 		channelID string,
 		sequence uint64,
-	)
+	) error
 	VerifyNextSequenceRecv(
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
-		portID string,
+		portID,
 		channelID string,
 		nextSequenceRecv uint64,
-	)
+	) error
 }
 
 // ConsensusState is the state of the consensus process

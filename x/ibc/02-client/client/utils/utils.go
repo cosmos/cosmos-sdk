@@ -7,14 +7,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // QueryAllClientStates returns all the light client states. It _does not_ return
 // any merkle proof.
-func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.State, int64, error) {
+func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]exported.ClientState, int64, error) {
 	params := types.NewQueryAllClientsParams(page, limit)
 	bz, err := cliCtx.Codec.MarshalJSON(params)
 	if err != nil {
@@ -27,7 +28,7 @@ func QueryAllClientStates(cliCtx context.CLIContext, page, limit int) ([]types.S
 		return nil, 0, err
 	}
 
-	var clients []types.State
+	var clients []exported.ClientState
 	err = cliCtx.Codec.UnmarshalJSON(res, &clients)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to unmarshal light clients: %w", err)
@@ -51,7 +52,7 @@ func QueryClientState(
 		return types.StateResponse{}, err
 	}
 
-	var clientState types.State
+	var clientState exported.ClientState
 	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &clientState); err != nil {
 		return types.StateResponse{}, err
 	}
@@ -78,7 +79,7 @@ func QueryConsensusState(
 		return conStateRes, err
 	}
 
-	var cs tendermint.ConsensusState
+	var cs exported.ConsensusState
 	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &cs); err != nil {
 		return conStateRes, err
 	}
@@ -127,7 +128,7 @@ func QueryCommitter(
 		return types.CommitterResponse{}, err
 	}
 
-	var committer tendermint.Committer
+	var committer exported.Committer
 	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
 		return types.CommitterResponse{}, err
 	}

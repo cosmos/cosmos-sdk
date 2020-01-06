@@ -55,7 +55,6 @@ var (
 	NewMsgSubmitMibehaviour      = types.NewMsgSubmitMisbehaviour
 	NewQueryClientStateParams    = types.NewQueryClientStateParams
 	NewQueryCommitmentRootParams = types.NewQueryCommitmentRootParams
-	NewClientState               = types.NewClientState
 
 	// variable aliases
 	SubModuleCdc           = types.SubModuleCdc
@@ -71,5 +70,4 @@ type (
 	MsgSubmitMisbehaviour     = types.MsgSubmitMisbehaviour
 	QueryClientStateParams    = types.QueryClientStateParams
 	QueryCommitmentRootParams = types.QueryCommitmentRootParams
-	State                     = types.State
 )

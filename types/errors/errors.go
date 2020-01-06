@@ -263,6 +263,15 @@ func (e *wrappedError) Cause() error {
 	return e.parent
 }
 
+// Is implements the built-in errors.Is
+func (e *wrappedError) Is(target error) bool {
+	return target == e.parent
+}
+
+func (e *wrappedError) Unwrap() error {
+	return e.parent
+}
+
 // Recover captures a panic and stop its propagation. If panic happens it is
 // transformed into a ErrPanic instance and assigned to given error. Call this
 // function using defer in order to work as expected.

@@ -158,3 +158,19 @@ func TestWrapEmpty(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestWrapIs(t *testing.T) {
+	var errTest = errors.New("test error")
+	err := Wrap(errTest, "some random description")
+	if !stdlib.Is(err, errTest) {
+		t.Error("should be true, because wrapped error contains the errTest")
+	}
+}
+
+func TestWrapUnwrap(t *testing.T) {
+	var errTest = errors.New("test error")
+	err := Wrap(errTest, "some random description")
+	if unwrapedErr := stdlib.Unwrap(err); unwrapedErr != errTest {
+		t.Errorf("Unwrapped error should be %v, instead of %v", errTest, unwrapedErr)
+	}
+}

@@ -159,7 +159,7 @@ func TestQueries(t *testing.T) {
 	_, err = keeper.AddDeposit(ctx, deposit1.ProposalID, deposit1.Depositor, deposit1.Amount)
 	require.NoError(t, err)
 
-	proposal1.TotalDeposit = proposal1.TotalDeposit.Add(deposit1.Amount)
+	proposal1.TotalDeposit = proposal1.TotalDeposit.Add(deposit1.Amount...)
 
 	proposal2, err := keeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
@@ -167,7 +167,7 @@ func TestQueries(t *testing.T) {
 	_, err = keeper.AddDeposit(ctx, deposit2.ProposalID, deposit2.Depositor, deposit2.Amount)
 	require.NoError(t, err)
 
-	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit2.Amount)
+	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit2.Amount...)
 
 	// TestAddrs[1] proposes (and deposits) on proposal #3
 	proposal3, err := keeper.SubmitProposal(ctx, tp)
@@ -176,14 +176,14 @@ func TestQueries(t *testing.T) {
 	_, err = keeper.AddDeposit(ctx, deposit3.ProposalID, deposit3.Depositor, deposit3.Amount)
 	require.NoError(t, err)
 
-	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit3.Amount)
+	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit3.Amount...)
 
 	// TestAddrs[1] deposits on proposals #2 & #3
 	deposit4 := types.NewDeposit(proposal2.ProposalID, TestAddrs[1], depositParams.MinDeposit)
 	_, err = keeper.AddDeposit(ctx, deposit4.ProposalID, deposit4.Depositor, deposit4.Amount)
 	require.NoError(t, err)
 
-	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount)
+	proposal2.TotalDeposit = proposal2.TotalDeposit.Add(deposit4.Amount...)
 	proposal2.Status = types.StatusVotingPeriod
 	proposal2.VotingEndTime = proposal2.VotingEndTime.Add(types.DefaultPeriod)
 
@@ -191,11 +191,11 @@ func TestQueries(t *testing.T) {
 	_, err = keeper.AddDeposit(ctx, deposit5.ProposalID, deposit5.Depositor, deposit5.Amount)
 	require.NoError(t, err)
 
-	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount)
+	proposal3.TotalDeposit = proposal3.TotalDeposit.Add(deposit5.Amount...)
 	proposal3.Status = types.StatusVotingPeriod
 	proposal3.VotingEndTime = proposal3.VotingEndTime.Add(types.DefaultPeriod)
 	// total deposit of TestAddrs[1] on proposal #3 is worth the proposal deposit + individual deposit
-	deposit5.Amount = deposit5.Amount.Add(deposit3.Amount)
+	deposit5.Amount = deposit5.Amount.Add(deposit3.Amount...)
 
 	// check deposits on proposal1 match individual deposits
 	deposits := getQueriedDeposits(t, ctx, keeper.cdc, querier, proposal1.ProposalID)

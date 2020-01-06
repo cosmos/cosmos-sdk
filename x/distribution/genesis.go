@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 	for _, rew := range data.OutstandingRewards {
 		keeper.SetValidatorOutstandingRewards(ctx, rew.ValidatorAddress, rew.OutstandingRewards)
-		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards)
+		moduleHoldings = moduleHoldings.Add(rew.OutstandingRewards...)
 	}
 	for _, acc := range data.ValidatorAccumulatedCommissions {
 		keeper.SetValidatorAccumulatedCommission(ctx, acc.ValidatorAddress, acc.Accumulated)
@@ -41,7 +41,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, supplyKeeper types.SupplyKeeper
 		keeper.SetValidatorSlashEvent(ctx, evt.ValidatorAddress, evt.Height, evt.Period, evt.Event)
 	}
 
-	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool)
+	moduleHoldings = moduleHoldings.Add(data.FeePool.CommunityPool...)
 	moduleHoldingsInt, _ := moduleHoldings.TruncateDecimal()
 
 	// check if the module account exists

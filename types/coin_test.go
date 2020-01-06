@@ -251,7 +251,7 @@ func TestAddCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Add(tc.inputTwo)
+		res := tc.inputOne.Add(tc.inputTwo...)
 		assert.True(t, res.IsValid())
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}

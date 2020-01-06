@@ -45,6 +45,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (tendermint) Bump Tendermint version to [v0.32.8](https://github.com/tendermint/tendermint/releases/tag/v0.32.8)
+* (cli) [\#5482](https://github.com/cosmos/cosmos-sdk/pull/5482) Remove old "tags" nomenclature from the `q txs` command in
+  favor of the new events system. Functionality remains unchanged except that `=` is used instead of `:` to be
+  consistent with the API's use of event queries.
 
 ### Bug Fixes
 

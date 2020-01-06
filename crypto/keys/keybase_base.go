@@ -267,7 +267,7 @@ func (kb baseKeybase) SupportedAlgosLedger() []SigningAlgo {
 	return kb.options.supportedAlgosLedger
 }
 
-// IsAlgoSupported returns whether the signing algorithm is in the passed in list of supported algos.
+// IsSupportedAlgorithm returns whether the signing algorithm is in the passed-in list of supported algorithms.
 func IsSupportedAlgorithm(supported []SigningAlgo, algo SigningAlgo) bool {
 	for _, supportedAlgo := range supported {
 		if algo == supportedAlgo {

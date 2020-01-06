@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // BroadcastTx broadcasts a transactions either synchronously or asynchronously
@@ -52,19 +53,19 @@ func CheckTendermintError(err error, txBytes []byte) *sdk.TxResponse {
 	switch {
 	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
 		return &sdk.TxResponse{
-			Code:   uint32(sdk.CodeTxInMempoolCache),
+			Code:   sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			TxHash: txHash,
 		}
 
 	case strings.Contains(errStr, "mempool is full"):
 		return &sdk.TxResponse{
-			Code:   uint32(sdk.CodeMempoolIsFull),
+			Code:   sdkerrors.ErrMempoolIsFull.ABCICode(),
 			TxHash: txHash,
 		}
 
 	case strings.Contains(errStr, "tx too large"):
 		return &sdk.TxResponse{
-			Code:   uint32(sdk.CodeTxTooLarge),
+			Code:   sdkerrors.ErrTxTooLarge.ABCICode(),
 			TxHash: txHash,
 		}
 

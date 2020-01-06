@@ -23,7 +23,7 @@ import (
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, 0)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, 0)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		genesisState := NewDefaultGenesisState()
@@ -48,7 +48,7 @@ func Setup(isCheckTx bool) *SimApp {
 // genesis accounts.
 func SetupWithGenesisAccounts(genAccs []authexported.GenesisAccount) *SimApp {
 	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, 0)
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, 0)
 
 	// initialize the chain with the passed in genesis accounts
 	genesisState := NewDefaultGenesisState()
@@ -88,7 +88,7 @@ func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sd
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(len(testAddrs)))))
 	prevSupply := app.SupplyKeeper.GetSupply(ctx)
-	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply)))
+	app.SupplyKeeper.SetSupply(ctx, supply.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
@@ -115,7 +115,7 @@ func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, exp sdk.Coins)
 func SignCheckDeliver(
 	t *testing.T, cdc *codec.Codec, app *bam.BaseApp, header abci.Header, msgs []sdk.Msg,
 	accNums, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
-) sdk.Result {
+) (sdk.GasInfo, *sdk.Result, error) {
 
 	tx := helpers.GenTx(
 		msgs,
@@ -131,28 +131,32 @@ func SignCheckDeliver(
 	require.Nil(t, err)
 
 	// Must simulate now as CheckTx doesn't run Msgs anymore
-	res := app.Simulate(txBytes, tx)
+	_, res, err := app.Simulate(txBytes, tx)
 
 	if expSimPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 
 	// Simulate a sending a transaction and committing a block
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Deliver(tx)
+	gInfo, res, err := app.Deliver(tx)
 
 	if expPass {
-		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	} else {
-		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 
-	return res
+	return gInfo, res, err
 }
 
 // GenSequenceOfTxs generates a set of signed transactions of messages, such

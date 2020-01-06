@@ -105,6 +105,6 @@ func TestFundCommunityPool(t *testing.T) {
 	err := keeper.FundCommunityPool(ctx, amount, delAddr1)
 	assert.Nil(t, err)
 
-	assert.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoins(amount)), keeper.GetFeePool(ctx).CommunityPool)
+	assert.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), keeper.GetFeePool(ctx).CommunityPool)
 	assert.Empty(t, bk.GetCoins(ctx, delAddr1))
 }

@@ -449,7 +449,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		tokens := sdk.TokensFromConsensusPower(power)
 		validators[i], _ = validators[i].AddTokensFromDel(tokens)
 		notBondedPool := keeper.GetNotBondedPool(ctx)
-		require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, tokens)))))
+		require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, tokens))))
 		keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 		validators[i] = TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
@@ -465,8 +465,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(500)
 	validators[0], _ = validators[0].AddTokensFromDel(delTokens)
 	notBondedPool := keeper.GetNotBondedPool(ctx)
-	newTokens := sdk.NewCoins(sdk.NewCoin(params.BondDenom, delTokens))
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens)))
+	newTokens := sdk.NewCoins()
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens...)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	// test that the two largest validators are
@@ -496,7 +496,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
 	newTokens = sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.TokensFromConsensusPower(1)))
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens)))
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(newTokens...)))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
@@ -511,7 +511,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].RemoveDelShares(sdk.NewDec(201))
 
 	bondedPool := keeper.GetBondedPool(ctx)
-	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, rmTokens)))))
+	require.NoError(t, bondedPool.SetCoins(bondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, rmTokens))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)
@@ -525,7 +525,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	validators[3], _ = validators[3].AddTokensFromDel(sdk.NewInt(200))
 
 	notBondedPool = keeper.GetNotBondedPool(ctx)
-	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoins(sdk.NewCoin(params.BondDenom, sdk.NewInt(200))))))
+	require.NoError(t, notBondedPool.SetCoins(notBondedPool.GetCoins().Add(sdk.NewCoin(params.BondDenom, sdk.NewInt(200)))))
 	keeper.supplyKeeper.SetModuleAccount(ctx, notBondedPool)
 
 	validators[3] = TestingUpdateValidator(keeper, ctx, validators[3], true)

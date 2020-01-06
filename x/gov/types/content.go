@@ -1,10 +1,10 @@
 package types
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Constants pertaining to a Content object
@@ -22,31 +22,31 @@ type Content interface {
 	GetDescription() string
 	ProposalRoute() string
 	ProposalType() string
-	ValidateBasic() sdk.Error
+	ValidateBasic() error
 	String() string
 }
 
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
-type Handler func(ctx sdk.Context, content Content) sdk.Error
+type Handler func(ctx sdk.Context, content Content) error
 
 // ValidateAbstract validates a proposal's abstract contents returning an error
 // if invalid.
-func ValidateAbstract(codespace sdk.CodespaceType, c Content) sdk.Error {
+func ValidateAbstract(c Content) error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {
-		return ErrInvalidProposalContent(codespace, "proposal title cannot be blank")
+		return sdkerrors.Wrap(ErrInvalidProposalContent, "proposal title cannot be blank")
 	}
 	if len(title) > MaxTitleLength {
-		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal title is longer than max length of %d", MaxTitleLength))
+		return sdkerrors.Wrapf(ErrInvalidProposalContent, "proposal title is longer than max length of %d", MaxTitleLength)
 	}
 
 	description := c.GetDescription()
 	if len(description) == 0 {
-		return ErrInvalidProposalContent(codespace, "proposal description cannot be blank")
+		return sdkerrors.Wrap(ErrInvalidProposalContent, "proposal description cannot be blank")
 	}
 	if len(description) > MaxDescriptionLength {
-		return ErrInvalidProposalContent(codespace, fmt.Sprintf("proposal description is longer than max length of %d", MaxDescriptionLength))
+		return sdkerrors.Wrapf(ErrInvalidProposalContent, "proposal description is longer than max length of %d", MaxDescriptionLength)
 	}
 
 	return nil

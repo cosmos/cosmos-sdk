@@ -157,9 +157,32 @@ func (coin DecCoin) IsValid() bool {
 // DecCoins defines a slice of coins with decimal values
 type DecCoins []DecCoin
 
-// NewDecCoins constructs a new coin set with decimal values
+// NewDecCoins constructs a new coin set with with decimal values
+// from DecCoins.
+func NewDecCoins(decCoins ...DecCoin) DecCoins {
+	// remove zeroes
+	newDecCoins := removeZeroDecCoins(DecCoins(decCoins))
+	if len(newDecCoins) == 0 {
+		return DecCoins{}
+	}
+
+	newDecCoins.Sort()
+
+	// detect duplicate Denoms
+	if dupIndex := findDup(newDecCoins); dupIndex != -1 {
+		panic(fmt.Errorf("find duplicate denom: %s", newDecCoins[dupIndex]))
+	}
+
+	if !newDecCoins.IsValid() {
+		panic(fmt.Errorf("invalid coin set: %s", newDecCoins))
+	}
+
+	return newDecCoins
+}
+
+// NewDecCoinsFromCoin constructs a new coin set with decimal values
 // from regular Coins.
-func NewDecCoins(coins Coins) DecCoins {
+func NewDecCoinsFromCoins(coins ...Coin) DecCoins {
 	decCoins := make(DecCoins, len(coins))
 	newCoins := NewCoins(coins...)
 	for i, coin := range newCoins {
@@ -191,10 +214,10 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 	for _, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		if !truncated.IsZero() {
-			truncatedCoins = truncatedCoins.Add(NewCoins(truncated))
+			truncatedCoins = truncatedCoins.Add(truncated)
 		}
 		if !change.IsZero() {
-			changeCoins = changeCoins.Add(DecCoins{change})
+			changeCoins = changeCoins.Add(change)
 		}
 	}
 
@@ -208,7 +231,7 @@ func (coins DecCoins) TruncateDecimal() (truncatedCoins Coins, changeCoins DecCo
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins DecCoins) Add(coinsB DecCoins) DecCoins {
+func (coins DecCoins) Add(coinsB ...DecCoin) DecCoins {
 	return coins.safeAdd(coinsB)
 }
 
@@ -311,6 +334,11 @@ func (coins DecCoins) Intersect(coinsB DecCoins) DecCoins {
 	return removeZeroDecCoins(res)
 }
 
+// GetDenomByIndex returns the Denom to make the findDup generic
+func (coins DecCoins) GetDenomByIndex(i int) string {
+	return coins[i].Denom
+}
+
 // IsAnyNegative returns true if there is at least one coin whose amount
 // is negative; returns false otherwise. It returns false if the DecCoins set
 // is empty too.
@@ -338,7 +366,7 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 		}
 
 		if !product.IsZero() {
-			res = res.Add(DecCoins{product})
+			res = res.Add(product)
 		}
 	}
 
@@ -359,7 +387,7 @@ func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
 		}
 
 		if !product.IsZero() {
-			res = res.Add(DecCoins{product})
+			res = res.Add(product)
 		}
 	}
 
@@ -382,7 +410,7 @@ func (coins DecCoins) QuoDec(d Dec) DecCoins {
 		}
 
 		if !quotient.IsZero() {
-			res = res.Add(DecCoins{quotient})
+			res = res.Add(quotient)
 		}
 	}
 
@@ -406,7 +434,7 @@ func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
 		}
 
 		if !quotient.IsZero() {
-			res = res.Add(DecCoins{quotient})
+			res = res.Add(quotient)
 		}
 	}
 

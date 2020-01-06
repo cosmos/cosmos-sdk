@@ -11,7 +11,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/errors"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -497,7 +496,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// query subspace before anything set
 	qres := iavlStore.Query(querySub)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
 	// set data
@@ -506,24 +505,24 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// set data without commit, doesn't show up
 	qres = iavlStore.Query(query)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
 	qres = iavlStore.Query(query)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
 	qres = iavlStore.Query(query)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// and for the subspace
 	qres = iavlStore.Query(querySub)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub1, qres.Value)
 
 	// modify
@@ -532,28 +531,28 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	// query will return old values, as height is fixed
 	qres = iavlStore.Query(query)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
 	qres = iavlStore.Query(query)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v3, qres.Value)
 	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 
 	qres = iavlStore.Query(query2)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
 	qres = iavlStore.Query(querySub)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
 	query0 := abci.RequestQuery{Path: "/key", Data: k1}
 	qres = iavlStore.Query(query0)
-	require.Equal(t, uint32(errors.CodeOK), qres.Code)
+	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 }
 

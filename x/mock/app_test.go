@@ -7,6 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -32,18 +33,20 @@ func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }
 func (tx testMsg) GetSigners() []sdk.AccAddress       { return tx.signers }
 func (tx testMsg) GetSignatures() []auth.StdSignature { return nil }
-func (tx testMsg) ValidateBasic() sdk.Error {
+func (tx testMsg) ValidateBasic() error {
 	if tx.positiveNum >= 0 {
 		return nil
 	}
-	return sdk.ErrTxDecode("positiveNum should be a non-negative integer.")
+	return sdkerrors.Wrap(sdkerrors.ErrTxDecode, "positiveNum should be a non-negative integer")
 }
 
 // getMockApp returns an initialized mock application.
 func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
-	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		return &sdk.Result{}, nil
+	})
 	require.NoError(t, mApp.CompleteSetup())
 
 	return mApp
@@ -71,15 +74,16 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 
 	// Signing a tx with the wrong privKey should result in an auth error
 	header = abci.Header{Height: mApp.LastBlockHeight() + 1}
-	res := SignCheckDeliver(
+	_, _, err := SignCheckDeliver(
 		t, mApp.Cdc, mApp.BaseApp, header, []sdk.Msg{msg},
 		[]uint64{accs[1].GetAccountNumber()}, []uint64{accs[1].GetSequence() + 1},
 		true, false, privKeys[1],
 	)
 
 	// Will fail on SetPubKey decorator
-	require.Equal(t, sdk.CodeInvalidPubKey, res.Code, res.Log)
-	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
+	space, code, log := sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrInvalidPubKey.ABCICode(), code, log)
+	require.Equal(t, sdkerrors.ErrInvalidPubKey.Codespace(), space)
 
 	// Resigning the tx with the correct privKey should result in an OK result
 	header = abci.Header{Height: mApp.LastBlockHeight() + 1}

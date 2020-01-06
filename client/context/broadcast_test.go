@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/tmhash"
-
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/mempool"
 	"github.com/tendermint/tendermint/rpc/client/mock"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type MockClient struct {
@@ -43,9 +42,9 @@ func CreateContextWithErrorAndMode(err error, mode string) CLIContext {
 // Test the correct code is returned when
 func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
-		mempool.ErrTxInCache:       uint32(types.CodeTxInMempoolCache),
-		mempool.ErrTxTooLarge{}:    uint32(types.CodeTxTooLarge),
-		mempool.ErrMempoolIsFull{}: uint32(types.CodeMempoolIsFull),
+		mempool.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),
+		mempool.ErrTxTooLarge{}:    sdkerrors.ErrTxTooLarge.ABCICode(),
+		mempool.ErrMempoolIsFull{}: sdkerrors.ErrMempoolIsFull.ABCICode(),
 	}
 
 	modes := []string{

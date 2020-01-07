@@ -3,8 +3,9 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/pkg/errors"
 )

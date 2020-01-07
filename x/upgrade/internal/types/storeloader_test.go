@@ -2,15 +2,19 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -58,6 +62,7 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 
 	// query data in substore
 	kv, _ := rs.GetStore(key).(store.KVStore)
+
 	require.NotNil(t, kv)
 	require.Equal(t, v, kv.Get(k))
 }
@@ -65,17 +70,20 @@ func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte
 // Test that we can make commits and then reload old versions.
 // Test that LoadLatestVersion actually does.
 func TestSetLoader(t *testing.T) {
-	// write a rename to a file
-	f, err := ioutil.TempFile("", "upgrade-info.json")
+	// set a temporary home dir
+	homeDir, cleanUp := tests.NewTestCaseDir(t)
+	defer cleanUp()
+	// TODO cleanup viper
+	viper.Set(flags.FlagHome, homeDir)
+	home := viper.GetString(flags.FlagHome)
+	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
+
+	data := []byte(`{"height": 0, "store_upgrades": {"renamed":[{"old_key": "bnk", "new_key": "bank"}]}}`)
+	err := ioutil.WriteFile(upgradeInfoFilePath, data, 0644)
 	require.NoError(t, err)
-	data := []byte(`{"height": 0, "store_upgrades": {"renamed":[{"old_key": "bnk", "new_key": "banker"}]}}`)
-	_, err = f.Write(data)
-	require.NoError(t, err)
-	configName := f.Name()
-	require.NoError(t, f.Close())
 
 	// make sure it exists before running everything
-	_, err = os.Stat(configName)
+	_, err = os.Stat(upgradeInfoFilePath)
 	require.NoError(t, err)
 
 	cases := map[string]struct {
@@ -97,13 +105,8 @@ func TestSetLoader(t *testing.T) {
 			origStoreKey: "foo",
 			loadStoreKey: "bar",
 		},
-		"file loader with missing file": {
-			setLoader:    useFileUpgradeLoader(configName + "randomchars"),
-			origStoreKey: "bnk",
-			loadStoreKey: "bnk",
-		},
 		"file loader with existing file": {
-			setLoader:    useFileUpgradeLoader(configName),
+			setLoader:    useFileUpgradeLoader(upgradeInfoFilePath),
 			origStoreKey: "bnk",
 			loadStoreKey: "bank",
 		},
@@ -141,5 +144,4 @@ func TestSetLoader(t *testing.T) {
 			checkStore(t, db, 2, tc.loadStoreKey, []byte("foo"), nil)
 		})
 	}
-
 }

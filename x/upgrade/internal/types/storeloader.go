@@ -24,7 +24,12 @@ func StoreLoaderWithUpgrade(storeUpgrades *storetypes.StoreUpgrades) baseapp.Sto
 		upgradeInfoPath := filepath.Join(home, "upgrade-info.json")
 
 		var lastBlockHeight = ms.LastCommitID().Version
-		upgrades := GetUpgradeInfoDataFromFile(upgradeInfoPath)
+		upgrades, err := GetUpgradeInfoDataFromFile(upgradeInfoPath)
+
+		// There should not be any error in reading upgrade info from filesystem
+		if err != nil {
+			return err
+		}
 
 		// Check if the current commit version and upgrade height matches
 		if (len(upgrades.StoreUpgrades.Renamed) > 0 || len(upgrades.StoreUpgrades.Deleted) > 0) &&
@@ -52,7 +57,13 @@ func StoreLoaderWithUpgrade(storeUpgrades *storetypes.StoreUpgrades) baseapp.Sto
 func UpgradeableStoreLoader(upgradeInfoPath string) baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		var lastBlockHeight = ms.LastCommitID().Version
-		upgrades := GetUpgradeInfoDataFromFile(upgradeInfoPath)
+		upgrades, err := GetUpgradeInfoDataFromFile(upgradeInfoPath)
+
+		// There should not be any error in reading upgrade info from filesystem
+		// Binary should panic
+		if err != nil {
+			return err
+		}
 
 		// If the current upgrade has StoreUpgrades planned and the binary is loading for the first time
 		// i.e., upgrades.Height == currentHeight
@@ -83,9 +94,8 @@ func UpgradeableStoreLoader(upgradeInfoPath string) baseapp.StoreLoader {
 
 			// There should not be any error in writing the upgrade info to file.
 			// Otherwise it will lead to restart the multistore upgrades every time when the binary restarts.
-			// So panic
 			if err != nil {
-				panic(fmt.Errorf("error in multistore upgrade: %v", err))
+				return fmt.Errorf("error in multistore upgrade: %v", err)
 			}
 
 			return nil
@@ -95,21 +105,24 @@ func UpgradeableStoreLoader(upgradeInfoPath string) baseapp.StoreLoader {
 	}
 }
 
-func GetUpgradeInfoDataFromFile(upgradeInfoPath string) storetypes.UpgradeInfo {
+func GetUpgradeInfoDataFromFile(upgradeInfoPath string) (storetypes.UpgradeInfo, error) {
+	var upgrades storetypes.UpgradeInfo
 	_, err := os.Stat(upgradeInfoPath)
 
 	// If the upgrade-info file is not found, panic with error
 	if err != nil {
-		panic(fmt.Errorf("upgrade-file is not found: %s", err.Error()))
+		return upgrades, fmt.Errorf("upgrade-file is not found: %s", err.Error())
 	}
 
 	data, err := ioutil.ReadFile(upgradeInfoPath)
 	if err != nil {
-		panic(fmt.Errorf("error while reading upgrade-file from filesystem: %s", err.Error()))
+		return upgrades, fmt.Errorf("error while reading upgrade-file from filesystem: %s", err.Error())
 	}
 
-	var upgrades storetypes.UpgradeInfo
 	err = json.Unmarshal(data, &upgrades)
+	if err != nil {
+		return upgrades, fmt.Errorf("error while decoding upgrade-file from filesystem: %s", err.Error())
+	}
 
-	return upgrades
+	return upgrades, err
 }

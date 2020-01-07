@@ -1,0 +1,19 @@
+build:
+  roots:
+    - .
+  excludes:
+    - vendor/github.com/tendermint
+lint:
+  use:
+    - DEFAULT
+    - COMMENTS
+    - FILE_LOWER_SNAKE_CASE
+  except:
+    - UNARY_RPC
+    - COMMENT_FIELD
+    - PACKAGE_DIRECTORY_MATCH
+  ignore:
+    - vendor
+breaking:
+  use:
+    - FILE

@@ -1,0 +1,19 @@
+package types
+
+import (
+	_ "github.com/gogo/protobuf/gogoproto"
+)
+
+// CustomProtoType defines the interface custom gogo proto types must implement
+// in order to be used as a "customtype" extension.
+//
+// ref: https://github.com/gogo/protobuf/blob/master/custom_types.md
+type CustomProtoType interface {
+	Marshal() ([]byte, error)
+	MarshalTo(data []byte) (n int, err error)
+	Unmarshal(data []byte) error
+	Size() int
+
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON(data []byte) error
+}

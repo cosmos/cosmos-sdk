@@ -212,6 +212,9 @@ func (kb baseKeybase) CreateMnemonic(
 	}
 
 	info, err = kb.CreateAccount(keyWriter, name, mnemonic, DefaultBIP39Passphrase, passwd, types.GetConfig().GetFullFundraiserPath(), algo)
+	if err != nil {
+		return nil, "", err
+	}
 
 	return info, mnemonic, err
 }

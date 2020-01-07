@@ -78,7 +78,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	return bz, nil
 }
 
-// Unarmor the PubKeyBytes.  Returns the pubkey byte slice, a string of the algo type, and an error
+// UnarmorPubKeyBytes returns the pubkey byte slice, a string of the algo type, and an error
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	switch header["version"] {
@@ -138,7 +138,7 @@ func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
-// Unarmor and decrypt the private key.
+// UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
 func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey crypto.PrivKey, algo string, err error) {
 	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
 	if err != nil {

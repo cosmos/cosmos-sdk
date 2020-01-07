@@ -263,9 +263,27 @@ func (e *wrappedError) Cause() error {
 	return e.parent
 }
 
-// Is implements the built-in errors.Is
+// Is reports whether any error in e's chain matches a target.
 func (e *wrappedError) Is(target error) bool {
-	return target == e.parent
+	if target == nil {
+		return e == target
+	}
+
+	w := e.Cause()
+
+	for {
+		if w == target {
+			return true
+		}
+
+		x, ok := w.(causer)
+		if ok {
+			w = x.Cause()
+		}
+		if x == nil {
+			return false
+		}
+	}
 }
 
 // Unwrap implements the built-in errors.Unwrap

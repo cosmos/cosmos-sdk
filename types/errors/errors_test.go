@@ -160,40 +160,48 @@ func TestWrapEmpty(t *testing.T) {
 	}
 }
 
-func TestWrapIs(t *testing.T) {
-	var errTest = errors.New("test error")
-	err := Wrap(errTest, "some random description")
-	require.True(t, stdlib.Is(err, errTest))
+func TestWrappedIs(t *testing.T) {
+	err := Wrap(ErrTxTooLarge, "context")
+	require.True(t, stdlib.Is(err, ErrTxTooLarge))
+
+	err = Wrap(err, "more context")
+	require.True(t, stdlib.Is(err, ErrTxTooLarge))
+
+	err = Wrap(err, "even more context")
+	require.True(t, stdlib.Is(err, ErrTxTooLarge))
+
+	err = Wrap(ErrInsufficientFee, "...")
+	require.False(t, stdlib.Is(err, ErrTxTooLarge))
 }
 
-func TestWrapIsMultiple(t *testing.T) {
+func TestWrappedIsMultiple(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	require.True(t, stdlib.Is(err, errTest2))
 }
 
-func TestWrapIsFail(t *testing.T) {
+func TestWrappedIsFail(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	require.False(t, stdlib.Is(err, errTest))
 }
 
-func TestWrapUnwrap(t *testing.T) {
+func TestWrappedUnwrap(t *testing.T) {
 	var errTest = errors.New("test error")
 	err := Wrap(errTest, "some random description")
 	require.Equal(t, errTest, stdlib.Unwrap(err))
 }
 
-func TestWrapUnwrapMultiple(t *testing.T) {
+func TestWrappedUnwrapMultiple(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	require.Equal(t, errTest2, stdlib.Unwrap(err))
 }
 
-func TestWrapUnwrapFail(t *testing.T) {
+func TestWrappedUnwrapFail(t *testing.T) {
 	var errTest = errors.New("test error")
 	var errTest2 = errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())

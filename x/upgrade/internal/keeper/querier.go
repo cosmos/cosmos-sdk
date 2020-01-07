@@ -2,16 +2,16 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // NewQuerier creates a querier for upgrade cli and REST endpoints
 func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 
 		case types.QueryCurrent:
@@ -21,38 +21,40 @@ func NewQuerier(k Keeper) sdk.Querier {
 			return queryApplied(ctx, req, k)
 
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown supply query endpoint")
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }
 
-func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func queryCurrent(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	plan, has := k.GetUpgradePlan(ctx)
 	if !has {
-		// empty data - client can respond Not Found
 		return nil, nil
 	}
+
 	res, err := k.cdc.MarshalJSON(&plan)
 	if err != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to JSON marshal result: %s", err.Error()))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}
+
 	return res, nil
 }
 
-func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func queryApplied(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
 	var params types.QueryAppliedParams
 
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("failed to parse params: %s", err))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
 	applied := k.getDoneHeight(ctx, params.Name)
 	if applied == 0 {
-		// empty data - client can respond Not Found
 		return nil, nil
 	}
+
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, uint64(applied))
+
 	return bz, nil
 }

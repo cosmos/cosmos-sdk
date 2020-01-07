@@ -139,19 +139,19 @@ func createTestInput(t *testing.T, isCheckTx bool, initPower int64) (sdk.Context
 	blacklistedAddrs[notBondedPool.GetAddress().String()] = true
 	blacklistedAddrs[bondPool.GetAddress().String()] = true
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace, blacklistedAddrs)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), blacklistedAddrs)
 	supplyKeeper := supply.NewKeeper(cdc, keySupply, accountKeeper, bankKeeper, maccPerms)
 
-	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
 	rtr := types.NewRouter().
 		AddRoute(types.RouterKey, types.ProposalHandler)
 
 	keeper := NewKeeper(
-		cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, types.DefaultCodespace, rtr,
+		cdc, keyGov, pk.Subspace(types.DefaultParamspace).WithKeyTable(types.ParamKeyTable()), supplyKeeper, sk, rtr,
 	)
 
 	keeper.SetProposalID(ctx, types.DefaultStartingProposalID)

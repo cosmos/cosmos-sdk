@@ -44,10 +44,6 @@ func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
 
-func (res Result) IsBreak() bool {
-	return res.Code.IsBreak()
-}
-
 // ABCIMessageLogs represents a slice of ABCIMessageLog.
 type ABCIMessageLogs []ABCIMessageLog
 

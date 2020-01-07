@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	connectiontypes "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -44,24 +43,24 @@ func (MsgTransfer) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgTransfer) ValidateBasic() sdk.Error {
+func (msg MsgTransfer) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid source port ID"))
+		return sdkerrors.Wrap(err, "invalid source port ID")
 	}
 	if err := host.DefaultChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdk.ConvertError(sdkerrors.Wrap(err, "invalid source channel ID"))
+		return sdkerrors.Wrap(err, "invalid source channel ID")
 	}
 	if !msg.Amount.IsAllPositive() {
-		return sdk.ErrInsufficientCoins("transfer amount must be positive")
+		return sdkerrors.ErrInsufficientFunds
 	}
 	if !msg.Amount.IsValid() {
-		return sdk.ErrInvalidCoins("transfer amount is invalid")
+		return sdkerrors.ErrInvalidCoins
 	}
 	if msg.Sender.Empty() {
-		return sdk.ErrInvalidAddress("missing sender address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if msg.Receiver.Empty() {
-		return sdk.ErrInvalidAddress("missing recipient address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
 	}
 	return nil
 }
@@ -104,26 +103,22 @@ func (MsgRecvPacket) Type() string {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgRecvPacket) ValidateBasic() sdk.Error {
+func (msg MsgRecvPacket) ValidateBasic() error {
 	if msg.Height == 0 {
-		return sdk.ConvertError(connectiontypes.ErrInvalidHeight(DefaultCodespace, "height must be > 0"))
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "height must be > 0")
 	}
-
 	if msg.Proofs == nil || len(msg.Proofs) == 0 {
-		return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "missing proofs"))
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "missing proof")
 	}
-
 	for _, proof := range msg.Proofs {
-		if proof.Proof == nil {
-			return sdk.ConvertError(ibctypes.ErrInvalidProof(DefaultCodespace, "cannot submit an empty proof"))
+		if err := proof.ValidateBasic(); err != nil {
+			return err
 		}
 	}
-
 	if msg.Signer.Empty() {
-		return sdk.ErrInvalidAddress("missing signer address")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
-
-	return sdk.ConvertError(msg.Packet.ValidateBasic())
+	return msg.Packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg

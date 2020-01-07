@@ -10,7 +10,7 @@ import (
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) *sdk.Result {
 		switch msg := msg.(type) {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
@@ -37,10 +37,10 @@ func NewHandler(k Keeper) sdk.Handler {
 	}
 }
 
-func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
+func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) (*sdk.Result, error) {
 	err := k.SendTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.Amount, msg.Sender, msg.Receiver, msg.Source)
 	if err != nil {
-		return sdk.ResultFromError(err)
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -52,10 +52,12 @@ func handleMsgTransfer(ctx sdk.Context, k Keeper, msg MsgTransfer) sdk.Result {
 		),
 	)
 
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }
 
-func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer) sdk.Result {
+func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPacket, data types.PacketDataTransfer) (*sdk.Result, error) {
 	packet := msg.Packet
 	err := k.ReceiveTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
 	if err != nil {
@@ -70,7 +72,9 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPac
 	)
 
 	// packet receiving should not fail
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events()
+	}, nil
 }
 
 func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) sdk.Result {
@@ -81,5 +85,7 @@ func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTi
 		panic(err)
 	}
 	// packet timeout should not fail
-	return sdk.Result{Events: ctx.EventManager().Events()}
+	return &sdk.Result{
+		Events: ctx.EventManager().Events(),
+	}, nil
 }

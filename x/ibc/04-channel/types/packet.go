@@ -2,9 +2,8 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
@@ -42,12 +41,12 @@ func NewPacket(
 	destinationPort, destinationChannel string,
 ) Packet {
 	return Packet{
-		data,
-		sequence,
-		sourcePort,
-		sourceChannel,
-		destinationPort,
-		destinationChannel,
+		PacketDataI:        data,
+		Sequence:           sequence,
+		SourcePort:         sourcePort,
+		SourceChannel:      sourceChannel,
+		DestinationPort:    destinationPort,
+		DestinationChannel: destinationChannel,
 	}
 }
 
@@ -69,25 +68,37 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
 	if err := host.DefaultPortIdentifierValidator(p.SourcePort); err != nil {
-		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source port ID: %s", err.Error()))
+		return sdkerrors.Wrapf(
+			ErrInvalidPacket,
+			sdkerrors.Wrapf(err, "invalid source port ID: %s", p.SourcePort).Error(),
+		)
 	}
 	if err := host.DefaultPortIdentifierValidator(p.DestinationPort); err != nil {
-		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination port ID: %s", err.Error()))
+		return sdkerrors.Wrapf(
+			ErrInvalidPacket,
+			sdkerrors.Wrapf(err, "invalid destination port ID: %s", p.DestinationPort).Error(),
+		)
 	}
 	if err := host.DefaultChannelIdentifierValidator(p.SourceChannel); err != nil {
-		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid source channel ID: %s", err.Error()))
+		return sdkerrors.Wrapf(
+			ErrInvalidPacket,
+			sdkerrors.Wrapf(err, "invalid source channel ID: %s", p.SourceChannel).Error(),
+		)
 	}
 	if err := host.DefaultChannelIdentifierValidator(p.DestinationChannel); err != nil {
-		return ErrInvalidPacket(DefaultCodespace, fmt.Sprintf("invalid destination channel ID: %s", err.Error()))
+		return sdkerrors.Wrapf(
+			ErrInvalidPacket,
+			sdkerrors.Wrapf(err, "invalid destination channel ID: %s", p.DestinationChannel).Error(),
+		)
 	}
 	if p.Sequence == 0 {
-		return ErrInvalidPacket(DefaultCodespace, "packet sequence cannot be 0")
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
 	if p.GetTimeoutHeight() == 0 {
-		return ErrPacketTimeout(DefaultCodespace)
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
 	}
 	if len(p.GetData()) == 0 {
-		return ErrInvalidPacket(DefaultCodespace, "packet data cannot be empty")
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet data cannot be empty")
 	}
 	return nil
 }

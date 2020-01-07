@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -16,7 +16,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ics02ClientQueryCmd.AddCommand(client.GetCommands(
+	ics02ClientQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryClientStates(queryRoute, cdc),
 		GetCmdQueryClientState(queryRoute, cdc),
 		GetCmdQueryConsensusState(queryRoute, cdc),
@@ -37,7 +37,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 	}
 
-	ics02ClientTxCmd.AddCommand(client.PostCommands(
+	ics02ClientTxCmd.AddCommand(flags.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdUpdateClient(cdc),
 	)...)

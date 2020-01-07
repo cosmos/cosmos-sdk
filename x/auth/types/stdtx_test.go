@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
@@ -78,7 +79,8 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeInsufficientFee, err.Result().Code)
+	_, code, _ := sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrInsufficientFee.ABCICode(), code)
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
@@ -86,7 +88,8 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeNoSignatures, err.Result().Code)
+	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrNoSignatures.ABCICode(), code)
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
@@ -94,7 +97,8 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
+	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrUnauthorized.ABCICode(), code)
 
 	// require to fail with invalid gas supplied
 	badFee = NewTestStdFee()
@@ -103,7 +107,8 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeGasOverflow, err.Result().Code)
+	_, code, _ = sdkerrors.ABCIInfo(err, false)
+	require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), code)
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}

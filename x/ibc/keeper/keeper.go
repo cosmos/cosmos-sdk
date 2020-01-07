@@ -20,13 +20,13 @@ type Keeper struct {
 
 // NewKeeper creates a new ibc Keeper
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType,
+	cdc *codec.Codec, key sdk.StoreKey,
 	bk transfer.BankKeeper, sk transfer.SupplyKeeper,
 ) Keeper {
-	clientKeeper := client.NewKeeper(cdc, key, codespace)
-	connectionKeeper := connection.NewKeeper(cdc, key, codespace, clientKeeper)
-	portKeeper := port.NewKeeper(cdc, key, codespace)
-	channelKeeper := channel.NewKeeper(cdc, key, codespace, clientKeeper, connectionKeeper, portKeeper)
+	clientKeeper := client.NewKeeper(cdc, key)
+	connectionKeeper := connection.NewKeeper(cdc, key, clientKeeper)
+	portKeeper := port.NewKeeper(cdc, key)
+	channelKeeper := channel.NewKeeper(cdc, key, clientKeeper, connectionKeeper, portKeeper)
 
 	return Keeper{
 		ClientKeeper:     clientKeeper,

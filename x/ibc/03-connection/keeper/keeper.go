@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -17,16 +18,14 @@ import (
 type Keeper struct {
 	storeKey     sdk.StoreKey
 	cdc          *codec.Codec
-	codespace    sdk.CodespaceType
 	clientKeeper types.ClientKeeper
 }
 
 // NewKeeper creates a new IBC connection Keeper instance
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType, ck types.ClientKeeper) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ck types.ClientKeeper) Keeper {
 	return Keeper{
 		storeKey:     key,
 		cdc:          cdc,
-		codespace:    sdk.CodespaceType(fmt.Sprintf("%s/%s", codespace, types.DefaultCodespace)), // "ibc/connection",
 		clientKeeper: ck,
 	}
 }
@@ -133,12 +132,12 @@ func (k Keeper) addConnectionToClient(ctx sdk.Context, clientID, connectionID st
 func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connectionID string) error {
 	conns, found := k.GetClientConnectionPaths(ctx, clientID)
 	if !found {
-		return types.ErrClientConnectionPathsNotFound(k.codespace, clientID)
+		return sdkerrors.Wrap(types.ErrClientConnectionPathsNotFound, clientID)
 	}
 
 	conns, ok := host.RemovePath(conns, connectionID)
 	if !ok {
-		return types.ErrConnectionPath(k.codespace)
+		return sdkerrors.Wrap(types.ErrConnectionPath, clientID)
 	}
 
 	k.SetClientConnectionPaths(ctx, clientID, conns)

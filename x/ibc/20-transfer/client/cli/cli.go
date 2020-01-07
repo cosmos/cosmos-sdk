@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -14,7 +14,7 @@ func GetQueryCmd(cdc *codec.Codec, queryRoute string) *cobra.Command {
 		Short: "IBC fungible token transfer query subcommands",
 	}
 
-	ics20TransferQueryCmd.AddCommand(client.GetCommands(
+	ics20TransferQueryCmd.AddCommand(flags.GetCommands(
 		GetCmdQueryNextSequence(cdc, queryRoute),
 	)...)
 
@@ -28,7 +28,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "IBC fungible token transfer transaction subcommands",
 	}
 
-	ics20TransferTxCmd.AddCommand(client.PostCommands(
+	ics20TransferTxCmd.AddCommand(flags.PostCommands(
 		GetTransferTxCmd(cdc),
 		// GetMsgRecvPacketCmd(cdc),
 	)...)

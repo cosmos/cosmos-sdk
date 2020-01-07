@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,7 +21,7 @@ func (k Keeper) SendTransfer(
 	// get the port and channel of the counterparty
 	sourceChan, found := k.channelKeeper.GetChannel(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channel.ErrChannelNotFound(k.codespace, sourcePort, sourceChannel)
+		return sdkerrors.Wrap(channel.ErrChannelNotFound, sourceChannel)
 	}
 
 	destinationPort := sourceChan.Counterparty.PortID
@@ -31,7 +30,7 @@ func (k Keeper) SendTransfer(
 	// get the next sequence
 	sequence, found := k.channelKeeper.GetNextSequenceSend(ctx, sourcePort, sourceChannel)
 	if !found {
-		return channel.ErrSequenceNotFound(k.codespace, "send")
+		return channel.ErrSequenceSendNotFound
 	}
 
 	coins := make(sdk.Coins, len(amount))
@@ -62,7 +61,10 @@ func (k Keeper) ReceiveTransfer(
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
 		for _, coin := range data.Amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+				return sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidCoins,
+					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
+				)
 			}
 		}
 
@@ -83,7 +85,10 @@ func (k Keeper) ReceiveTransfer(
 	coins := make(sdk.Coins, len(data.Amount))
 	for i, coin := range data.Amount {
 		if !strings.HasPrefix(coin.Denom, prefix) {
-			return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidCoins,
+				"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
+			)
 		}
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}
@@ -146,7 +151,10 @@ func (k Keeper) createOutgoingPacket(
 		coins := make(sdk.Coins, len(amount))
 		for i, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+				return sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidCoins,
+					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
+				)
 			}
 			coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 		}
@@ -161,7 +169,10 @@ func (k Keeper) createOutgoingPacket(
 		prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
 		for _, coin := range amount {
 			if !strings.HasPrefix(coin.Denom, prefix) {
-				return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+				return sdkerrors.Wrapf(
+					sdkerrors.ErrInvalidCoins,
+					"%s doesn't contain the prefix '%s'", coin.Denom, prefix,
+				)
 			}
 		}
 

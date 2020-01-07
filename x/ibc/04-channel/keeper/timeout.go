@@ -3,9 +3,9 @@ package keeper
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -25,52 +25,68 @@ func (k Keeper) TimeoutPacket(
 ) (types.Packet, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), packet.GetSourceChannel())
+		return types.Packet{}, sdkerrors.Wrapf(
+			types.ErrChannelNotFound,
+			packet.GetSourcePort(), packet.GetSourceChannel()
+		)
 	}
 
 	if channel.State != types.OPEN {
-		return types.Packet{}, types.ErrInvalidChannelState(
-			k.codespace,
-			fmt.Sprintf("channel state is not OPEN (got %s)", channel.State.String()),
+		return types.Packet{}, sdkerrors.Wrapf(
+			ErrInvalidChannelState,
+			"channel state is not OPEN (got %s)", channel.State.String()
+		)
 		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, types.ErrChannelCapabilityNotFound(k.codespace)
+		return types.Packet{}, sdkerrors.Wrapf(
+			types.ErrChannelCapabilityNotFound,
+		)
 	}
 
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
-		return types.Packet{}, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID),
-		)
+		return types.Packet{}, sdkerrors.Wrapf(
+			ErrInvalidPacket,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
+	)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return types.Packet{}, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return types.Packet{}, sdkerrors.Wrapf(
+			connection.ErrConnectionNotFound,
+			channel.ConnectionHops[0],
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
-		return types.Packet{}, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID),
-		)
+		return types.Packet{}, sdkerrors.Wrapf(
+			ErrInvalidPacket,
+		  "packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+	)
 	}
 
 	if proofHeight < packet.GetTimeoutHeight() {
-		return types.Packet{}, types.ErrPacketTimeout(k.codespace)
+		return types.Packet{}, sdkerrors.Wrapf(
+			ErrPacketTimeout,
+		)
 	}
 
 	if nextSequenceRecv >= packet.GetSequence() {
-		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet already received")
+		return types.Packet{}, sdkerrors.Wrapf(
+			ErrInvalidPacket, 
+			"packet already received",
+		)
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
-		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
-	}
+		return types.Packet{}, sdkerrors.Wrapf(
+			types.ErrInvalidPacket, 
+			"packet hasn't been sent",
+		)
+}
 
 	var ok bool
 	switch channel.Ordering {
@@ -86,11 +102,11 @@ func (k Keeper) TimeoutPacket(
 			types.PacketAcknowledgementPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
 		)
 	default:
-		panic(fmt.Sprintf("invalid channel ordering type %v", channel.Ordering))
+		panic(sdkerrors.Wrapf(types.ErrInvalidChannelOrdering, channel.Ordering.String()))
 	}
 
 	if !ok {
-		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet verification failed")
+		return types.Packet{}, sdkerrors.Wrap(types.ErrInvalidPacket, "packet verification failed")
 	}
 
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
@@ -116,12 +132,12 @@ func (k Keeper) TimeoutOnClose(
 ) (types.Packet, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, types.ErrChannelNotFound(k.codespace, packet.GetSourcePort(), packet.GetSourceChannel())
+		return types.Packet{}, sdkerrors.Wrapf(ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, types.ErrChannelCapabilityNotFound(k.codespace)
+		return types.Packet{}, types.ErrChannelCapabilityNotFound
 	}
 
 	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
@@ -129,27 +145,27 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
-		return types.Packet{}, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID),
+		return types.Packet{}, sdkerrors.Wrapf(
+			types.ErrInvalidPacket,
+			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
 		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return types.Packet{}, connection.ErrConnectionNotFound(k.codespace, channel.ConnectionHops[0])
+		return types.Packet{}, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
-		return types.Packet{}, types.ErrInvalidPacket(
-			k.codespace,
-			fmt.Sprintf("packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID),
+		return types.Packet{}, sdkerrors.Wrapf(
+			types.ErrInvalidPacket,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
 		)
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
-		return types.Packet{}, types.ErrInvalidPacket(k.codespace, "packet hasn't been sent")
+		return types.Packet{}, sdkerrors.Wrapf(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)
@@ -173,7 +189,10 @@ func (k Keeper) TimeoutOnClose(
 		types.ChannelPath(channel.Counterparty.PortID, channel.Counterparty.ChannelID),
 		bz,
 	) {
-		return types.Packet{}, types.ErrInvalidCounterpartyChannel(k.codespace, "channel membership verification failed")
+		return types.Packet{}, sdkerrors.Wrap(
+			types.ErrInvalidCounterparty,
+			"channel membership verification failed",
+		)
 	}
 
 	if !k.connectionKeeper.VerifyNonMembership(

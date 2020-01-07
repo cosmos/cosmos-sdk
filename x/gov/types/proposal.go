@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // DefaultStartingProposalID is 1
@@ -232,7 +233,7 @@ func (tp TextProposal) ProposalRoute() string { return RouterKey }
 func (tp TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
-func (tp TextProposal) ValidateBasic() sdk.Error { return ValidateAbstract(DefaultCodespace, tp) }
+func (tp TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
 
 // String implements Stringer interface
 func (tp TextProposal) String() string {
@@ -280,14 +281,13 @@ func IsValidProposalType(ty string) bool {
 // proposals (ie. TextProposal ). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
-func ProposalHandler(_ sdk.Context, c Content) sdk.Error {
+func ProposalHandler(_ sdk.Context, c Content) error {
 	switch c.ProposalType() {
 	case ProposalTypeText:
 		// both proposal types do not change state so this performs a no-op
 		return nil
 
 	default:
-		errMsg := fmt.Sprintf("unrecognized gov proposal type: %s", c.ProposalType())
-		return sdk.ErrUnknownRequest(errMsg)
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gov proposal type: %s", c.ProposalType())
 	}
 }

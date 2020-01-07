@@ -624,7 +624,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// only update state if all messages pass
-	if result.IsOK() || result.IsBreak() {
+	if result.IsOK() {
 		msCache.Write()
 	}
 

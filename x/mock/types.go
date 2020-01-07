@@ -4,7 +4,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 	"github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -22,24 +22,23 @@ func NewDummySupplyKeeper(ak auth.AccountKeeper) DummySupplyKeeper {
 }
 
 // SendCoinsFromAccountToModule for the dummy supply keeper
-func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error {
-
+func (sk DummySupplyKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, fromAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
 	fromAcc := sk.ak.GetAccount(ctx, fromAddr)
 	moduleAcc := sk.GetModuleAccount(ctx, recipientModule)
 
 	newFromCoins, hasNeg := fromAcc.GetCoins().SafeSub(amt)
 	if hasNeg {
-		return sdk.ErrInsufficientCoins(fromAcc.GetCoins().String())
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fromAcc.GetCoins().String())
 	}
 
 	newToCoins := moduleAcc.GetCoins().Add(amt)
 
 	if err := fromAcc.SetCoins(newFromCoins); err != nil {
-		return sdk.ErrInternal(err.Error())
+		return err
 	}
 
 	if err := moduleAcc.SetCoins(newToCoins); err != nil {
-		return sdk.ErrInternal(err.Error())
+		return err
 	}
 
 	sk.ak.SetAccount(ctx, fromAcc)

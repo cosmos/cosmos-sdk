@@ -161,21 +161,25 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	handler := transfer.NewHandler(suite.app.TransferKeeper)
 
 	msg := transfer.NewMsgTransfer(testPort1, testChannel1, testCoins, testAddr1, testAddr2, source)
-	res := handler(suite.ctx, msg)
-	suite.False(res.Code.IsOK(), "%+v", res) // channel does not exist
+	res, err := handler(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // channel does not exist
 
 	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, channel.OPEN)
-	res = handler(suite.ctx, msg)
-	suite.False(res.Code.IsOK(), "%+v", res) // next send sequence not found
+	res, err = handler(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // next send sequence not found
 
 	nextSeqSend := uint64(1)
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, testPort1, testChannel1, nextSeqSend)
-	res = handler(suite.ctx, msg)
-	suite.False(res.Code.IsOK(), "%+v", res) // sender has insufficient coins
+	res, err = handler(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // sender has insufficient coins
 
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testCoins)
-	res = handler(suite.ctx, msg)
-	suite.True(res.Code.IsOK(), "%+v", res) // successfully executed
+	res, err = handler(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res, "%+v", res) // successfully executed
 
 	// test when the source is false
 	source = false
@@ -183,13 +187,16 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins2, testAddr1, testAddr2, source)
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins2)
 
-	res = handler(suite.ctx, msg)
-	suite.False(res.Code.IsOK(), "%+v", res) // incorrect denom prefix
+	res, err = handler(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(res, "%+v", res) // incorrect denom prefix
 
 	msg = transfer.NewMsgTransfer(testPort1, testChannel1, testPrefixedCoins1, testAddr1, testAddr2, source)
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
+
 	res = handler(suite.ctx, msg)
+	suite.Require().NoError(err)
 	suite.True(res.Code.IsOK(), "%+v", res) // successfully executed
 }
 

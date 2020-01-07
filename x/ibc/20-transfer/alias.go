@@ -13,7 +13,6 @@ import (
 
 const (
 	DefaultPacketTimeout = keeper.DefaultPacketTimeout
-	DefaultCodespace     = types.DefaultCodespace
 	AttributeKeyReceiver = types.AttributeKeyReceiver
 	SubModuleName        = types.SubModuleName
 	StoreKey             = types.StoreKey

@@ -204,7 +204,7 @@ type PacketDataI interface {
 	GetCommitment() []byte // Commitment form that will be stored in the state.
 	GetTimeoutHeight() uint64
 
-	ValidateBasic() sdk.Error
+	ValidateBasic() error
 	Type() string
 }
 ```

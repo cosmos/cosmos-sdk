@@ -1,104 +1,20 @@
 package types
 
 import (
-	"fmt"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// channel error codes
-const (
-	DefaultCodespace sdk.CodespaceType = SubModuleName
-
-	CodeChannelExists              sdk.CodeType = 219
-	CodeChannelNotFound            sdk.CodeType = 220
-	CodeInvalidCounterpartyChannel sdk.CodeType = 221
-	CodeChannelCapabilityNotFound  sdk.CodeType = 222
-	CodeInvalidPacket              sdk.CodeType = 223
-	CodeSequenceNotFound           sdk.CodeType = 224
-	CodePacketTimeout              sdk.CodeType = 225
-	CodeInvalidChannel             sdk.CodeType = 226
-	CodeInvalidChannelState        sdk.CodeType = 227
+// IBC channel sentinel errors
+var (
+	ErrChannelExists             = sdkerrors.Register(SubModuleName, 1, "channel already exists")
+	ErrChannelNotFound           = sdkerrors.Register(SubModuleName, 2, "channel not found")
+	ErrInvalidChannel            = sdkerrors.Register(SubModuleName, 3, "invalid channel")
+	ErrInvalidChannelState       = sdkerrors.Register(SubModuleName, 4, "invalid channel state")
+	ErrInvalidChannelOrdering    = sdkerrors.Register(SubModuleName, 5, "invalid channel ordering")
+	ErrInvalidCounterparty       = sdkerrors.Register(SubModuleName, 6, "invalid counterparty channel")
+	ErrChannelCapabilityNotFound = sdkerrors.Register(SubModuleName, 7, "channel capability not found")
+	ErrSequenceSendNotFound      = sdkerrors.Register(SubModuleName, 8, "sequence send not found")
+	ErrSequenceReceiveNotFound   = sdkerrors.Register(SubModuleName, 9, "sequence receive not found")
+	ErrInvalidPacket             = sdkerrors.Register(SubModuleName, 10, "invalid packet")
+	ErrPacketTimeout             = sdkerrors.Register(SubModuleName, 11, "packet timeout")
 )
-
-// ErrChannelExists implements sdk.Error
-func ErrChannelExists(codespace sdk.CodespaceType, channelID string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeChannelExists),
-		fmt.Sprintf("channel with ID %s already exists", channelID),
-	)
-}
-
-// ErrChannelNotFound implements sdk.Error
-func ErrChannelNotFound(codespace sdk.CodespaceType, portID, channelID string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeChannelNotFound),
-		fmt.Sprintf("channel with ID %s on port %s not found", channelID, portID),
-	)
-}
-
-// ErrInvalidCounterpartyChannel implements sdk.Error
-func ErrInvalidCounterpartyChannel(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeInvalidCounterpartyChannel),
-		msg,
-	)
-}
-
-// ErrChannelCapabilityNotFound implements sdk.Error
-func ErrChannelCapabilityNotFound(codespace sdk.CodespaceType) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeChannelCapabilityNotFound),
-		"channel capability key not found",
-	)
-}
-
-// ErrInvalidPacket implements sdk.Error
-func ErrInvalidPacket(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeInvalidPacket),
-		msg,
-	)
-}
-
-// ErrSequenceNotFound implements sdk.Error
-func ErrSequenceNotFound(codespace sdk.CodespaceType, seqType string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeSequenceNotFound),
-		fmt.Sprintf("next %s sequence counter not found", seqType),
-	)
-}
-
-// ErrPacketTimeout implements sdk.Error
-func ErrPacketTimeout(codespace sdk.CodespaceType) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodePacketTimeout),
-		"packet timeout",
-	)
-}
-
-// ErrInvalidChannel implements sdk.Error
-func ErrInvalidChannel(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeInvalidChannel),
-		msg,
-	)
-}
-
-// ErrInvalidChannelState implements sdk.Error
-func ErrInvalidChannelState(codespace sdk.CodespaceType, msg string) error {
-	return sdkerrors.New(
-		string(codespace),
-		uint32(CodeInvalidChannelState),
-		msg,
-	)
-}

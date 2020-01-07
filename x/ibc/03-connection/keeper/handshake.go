@@ -22,7 +22,7 @@ func (k Keeper) ConnOpenInit(
 ) error {
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot initialize connection")
+		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot initialize connection")
 	}
 
 	// connection defines chain A's ConnectionEnd
@@ -58,7 +58,7 @@ func (k Keeper) ConnOpenTry(
 	// XXX: blocked by #5078
 	/*
 		if consensusHeight > uint64(ctx.BlockHeight()) {
-			return errors.New("invalid consensus height") // TODO: sdk.Error
+			return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 		}
 
 		expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
@@ -78,7 +78,7 @@ func (k Keeper) ConnOpenTry(
 	version := types.PickVersion(counterpartyVersions, types.GetCompatibleVersions())
 
 	// connection defines chain B's ConnectionEnd
-	connection := types.NewConnectionEnd(types.NONE, clientID, counterparty, []string{version})
+	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
 	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func (k Keeper) ConnOpenTry(
 
 	_, found := k.GetConnection(ctx, connectionID)
 	if found {
-		return sdkerrors.Wrap(types.ErrConnectionExists(k.codespace, connectionID), "cannot relay connection attempt")
+		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
 	}
 
 	connection.State = types.TRYOPEN
@@ -142,25 +142,25 @@ func (k Keeper) ConnOpenAck(
 	// XXX: blocked by #5078
 	/*
 		if consensusHeight > uint64(ctx.BlockHeight()) {
-			return errors.New("invalid consensus height") // TODO: sdk.Error
+			return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 		}
 	*/
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace, connectionID), "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
 	if connection.State != types.INIT {
-		return types.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not INIT (got %s)", connection.State.String()),
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is not INIT (got %s)", connection.State.String(),
 		)
 	}
 
 	if types.LatestVersion(connection.Versions) != version {
-		return ibctypes.ErrInvalidVersion(
-			k.codespace,
-			fmt.Sprintf("connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version),
+		return sdkerrors.Wrapf(
+			ibctypes.ErrInvalidVersion,
+			"connection version does't match provided one (%s ≠ %s)", types.LatestVersion(connection.Versions), version,
 		)
 	}
 
@@ -223,13 +223,13 @@ func (k Keeper) ConnOpenConfirm(
 ) error {
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrConnectionNotFound(k.codespace, connectionID), "cannot relay ACK of open attempt")
+		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
 	}
 
 	if connection.State != types.TRYOPEN {
-		return types.ErrInvalidConnectionState(
-			k.codespace,
-			fmt.Sprintf("connection state is not TRYOPEN (got %s)", connection.State.String()),
+		return sdkerrors.Wrapf(
+			types.ErrInvalidConnectionState,
+			"connection state is not TRYOPEN (got %s)", connection.State.String(),
 		)
 	}
 
@@ -247,7 +247,7 @@ func (k Keeper) ConnOpenConfirm(
 		types.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
 	)
 	if !ok {
-		return types.ErrInvalidCounterpartyConnection(k.codespace)
+		return errors.New("couldn't verify connection membership on counterparty's client")
 	}
 
 	connection.State = types.OPEN

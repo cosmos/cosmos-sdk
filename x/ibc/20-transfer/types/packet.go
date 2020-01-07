@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 )
 
-var _ channeltypes.PacketDataI = PacketDataTransfer{}
+var _ channelexported.PacketDataI = PacketDataTransfer{}
 
 // PacketDataTransfer defines a struct for the packet payload
 type PacketDataTransfer struct {
@@ -44,9 +44,9 @@ func (pd PacketDataTransfer) String() string {
 	)
 }
 
-// Implements ibc.Packet
+// Implements channelexported.PacketDataI
 // ValidateBasic performs a basic check of the packet fields
-func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
+func (pd PacketDataTransfer) ValidateBasic() error {
 	if !pd.Amount.IsAllPositive() {
 		return sdkerrors.ErrInsufficientFunds
 	}
@@ -62,17 +62,17 @@ func (pd PacketDataTransfer) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// Implements ibc.Packet
-func (pd PacketDataTransfer) GetData() []byte {
+// Implements channelexported.PacketDataI
+func (pd PacketDataTransfer) GetCommitment() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
 }
 
-// Implements ibc.Packet
+// Implements channelexported.PacketDataI
 func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
 	return pd.Timeout
 }
 
-// Implements ibc.Packet
+// Implements channelexported.PacketDataI
 func (pd PacketDataTransfer) Type() string {
 	return "ics20/transfer"
 }

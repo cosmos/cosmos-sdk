@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
@@ -112,7 +113,7 @@ func (k Keeper) TimeoutTransfer(
 	for i, coin := range data.Amount {
 		coin := coin
 		if !strings.HasPrefix(coin.Denom, prefix) {
-			return sdk.ErrInvalidCoins(fmt.Sprintf("%s doesn't contain the prefix '%s'", coin.Denom, prefix))
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", coin.Denom, prefix)
 		}
 		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
 	}
@@ -200,5 +201,5 @@ func (k Keeper) createOutgoingPacket(
 		destinationChannel,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, packet)
+	return k.channelKeeper.SendPacket(ctx, packet, k.boundedCapability)
 }

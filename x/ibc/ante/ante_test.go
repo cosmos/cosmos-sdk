@@ -12,8 +12,10 @@ import (
 	clienttypestm "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	"github.com/cosmos/cosmos-sdk/x/ibc/ante"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -148,7 +150,7 @@ func (suite *HandlerTestSuite) newTx(msg sdk.Msg) sdk.Tx {
 }
 
 func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
-	handler := sdk.ChainAnteDecorators(channel.NewProofVerificationDecorator(
+	handler := sdk.ChainAnteDecorators(ante.NewProofVerificationDecorator(
 		suite.app.IBCKeeper.ClientKeeper,
 		suite.app.IBCKeeper.ChannelKeeper,
 	))
@@ -195,7 +197,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 }
 
 func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
-	handler := sdk.ChainAnteDecorators(channel.NewProofVerificationDecorator(
+	handler := sdk.ChainAnteDecorators(ante.NewProofVerificationDecorator(
 		suite.app.IBCKeeper.ClientKeeper,
 		suite.app.IBCKeeper.ChannelKeeper,
 	))
@@ -233,7 +235,7 @@ func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }
 
-var _ channeltypes.PacketDataI = packetT{}
+var _ channelexported.PacketDataI = packetT{}
 
 type packetT struct {
 	Data uint64
@@ -247,7 +249,7 @@ func (packetT) GetTimeoutHeight() uint64 {
 	return 100
 }
 
-func (packetT) ValidateBasic() sdk.Error {
+func (packetT) ValidateBasic() error {
 	return nil
 }
 

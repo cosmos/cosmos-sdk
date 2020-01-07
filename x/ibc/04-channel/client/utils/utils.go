@@ -4,6 +4,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -33,7 +34,7 @@ func QueryPacket(
 	destPortID := channel.Channel.Counterparty.PortID
 	destChannelID := channel.Channel.Counterparty.ChannelID
 
-	var data types.PacketDataI
+	var data exported.PacketDataI
 	// TODO: commitment data is stored, not the data
 	// but we are unmarshalling the commitment in a json format
 	// because the current ICS 20 implementation uses json commitment form

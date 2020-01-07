@@ -1,16 +1,15 @@
 package transfer
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) *sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
@@ -19,20 +18,17 @@ func NewHandler(k Keeper) sdk.Handler {
 			case PacketDataTransfer: // i.e fulfills the PacketDataI interface
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
-				errMsg := fmt.Sprintf("unrecognized packet data type: %T", data)
-				return sdk.ErrUnknownRequest(errMsg).Result()
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", msg)
 			}
 		case channeltypes.MsgTimeout:
 			switch data := msg.PacketDataI.(type) {
 			case PacketDataTransfer:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
-				errMsg := fmt.Sprintf("unrecognized packet data type: %T", data)
-				return sdk.ErrUnknownRequest(errMsg).Result()
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", data)
 			}
 		default:
-			errMsg := fmt.Sprintf("unrecognized IBC transfer message type: %T", msg)
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecovnized ics20 message type: %T", msg)
 		}
 	}
 }
@@ -73,11 +69,11 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPac
 
 	// packet receiving should not fail
 	return &sdk.Result{
-		Events: ctx.EventManager().Events()
+		Events: ctx.EventManager().Events(),
 	}, nil
 }
 
-func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) sdk.Result {
+func handleTimeoutDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgTimeout, data types.PacketDataTransfer) (*sdk.Result, error) {
 	packet := msg.Packet
 	err := k.TimeoutTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
 	if err != nil {

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -19,7 +20,7 @@ func init() {
 // RegisterCodec registers all the necessary types and interfaces for the
 // IBC channel.
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterInterface((*PacketDataI)(nil), nil)
+	cdc.RegisterInterface((*exported.PacketDataI)(nil), nil)
 	cdc.RegisterConcrete(Channel{}, "ibc/channel/Channel", nil)
 	cdc.RegisterConcrete(Packet{}, "ibc/channel/Packet", nil)
 

@@ -236,8 +236,9 @@ func NewSimApp(
 
 	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], app.BankKeeper, app.SupplyKeeper)
 
+	transferCapKey := app.IBCKeeper.PortKeeper.BindPort(transfer.ModuleName)
 	app.TransferKeeper = transfer.NewKeeper(
-		app.cdc, keys[transfer.StoreKey], transfer.DefaultCodespace,
+		app.cdc, keys[transfer.StoreKey], transferCapKey,
 		app.IBCKeeper.ChannelKeeper, app.BankKeeper, app.SupplyKeeper,
 	)
 

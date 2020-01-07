@@ -27,30 +27,27 @@ func (k Keeper) TimeoutPacket(
 	if !found {
 		return types.Packet{}, sdkerrors.Wrapf(
 			types.ErrChannelNotFound,
-			packet.GetSourcePort(), packet.GetSourceChannel()
+			packet.GetSourcePort(), packet.GetSourceChannel(),
 		)
 	}
 
 	if channel.State != types.OPEN {
 		return types.Packet{}, sdkerrors.Wrapf(
-			ErrInvalidChannelState,
-			"channel state is not OPEN (got %s)", channel.State.String()
-		)
+			types.ErrInvalidChannelState,
+			"channel state is not OPEN (got %s)", channel.State.String(),
 		)
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, sdkerrors.Wrapf(
-			types.ErrChannelCapabilityNotFound,
-		)
+		return types.Packet{}, types.ErrChannelCapabilityNotFound
 	}
 
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
 		return types.Packet{}, sdkerrors.Wrapf(
-			ErrInvalidPacket,
+			types.ErrInvalidPacket,
 			"packet destination channel doesn't match the counterparty's channel (%s ≠ %s)", packet.GetDestChannel(), channel.Counterparty.ChannelID,
-	)
+		)
 	}
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
@@ -58,24 +55,23 @@ func (k Keeper) TimeoutPacket(
 		return types.Packet{}, sdkerrors.Wrapf(
 			connection.ErrConnectionNotFound,
 			channel.ConnectionHops[0],
+		)
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
 		return types.Packet{}, sdkerrors.Wrapf(
-			ErrInvalidPacket,
-		  "packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
-	)
+			types.ErrInvalidPacket,
+			"packet destination port doesn't match the counterparty's port (%s ≠ %s)", packet.GetDestPort(), channel.Counterparty.PortID,
+		)
 	}
 
 	if proofHeight < packet.GetTimeoutHeight() {
-		return types.Packet{}, sdkerrors.Wrapf(
-			ErrPacketTimeout,
-		)
+		return types.Packet{}, types.ErrPacketTimeout
 	}
 
 	if nextSequenceRecv >= packet.GetSequence() {
 		return types.Packet{}, sdkerrors.Wrapf(
-			ErrInvalidPacket, 
+			types.ErrInvalidPacket,
 			"packet already received",
 		)
 	}
@@ -83,10 +79,10 @@ func (k Keeper) TimeoutPacket(
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
 		return types.Packet{}, sdkerrors.Wrapf(
-			types.ErrInvalidPacket, 
+			types.ErrInvalidPacket,
 			"packet hasn't been sent",
 		)
-}
+	}
 
 	var ok bool
 	switch channel.Ordering {
@@ -132,7 +128,7 @@ func (k Keeper) TimeoutOnClose(
 ) (types.Packet, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return types.Packet{}, sdkerrors.Wrapf(ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+		return types.Packet{}, sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())

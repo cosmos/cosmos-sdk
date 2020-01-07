@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -351,11 +352,11 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 	}
 }
 
-var _ PacketDataI = validPacketT{}
+var _ exported.PacketDataI = validPacketT{}
 
 type validPacketT struct{}
 
-func (validPacketT) GetData() []byte {
+func (validPacketT) GetCommitment() []byte {
 	return []byte("testdata")
 }
 
@@ -363,7 +364,7 @@ func (validPacketT) GetTimeoutHeight() uint64 {
 	return 100
 }
 
-func (validPacketT) ValidateBasic() sdk.Error {
+func (validPacketT) ValidateBasic() error {
 	return nil
 }
 
@@ -371,11 +372,11 @@ func (validPacketT) Type() string {
 	return "valid"
 }
 
-var _ PacketDataI = invalidPacketT{}
+var _ exported.PacketDataI = invalidPacketT{}
 
 type invalidPacketT struct{}
 
-func (invalidPacketT) GetData() []byte {
+func (invalidPacketT) GetCommitment() []byte {
 	return []byte("testdata")
 }
 
@@ -383,8 +384,8 @@ func (invalidPacketT) GetTimeoutHeight() uint64 {
 	return 100
 }
 
-func (invalidPacketT) ValidateBasic() sdk.Error {
-	return sdk.ConvertError(errors.New("invalid packet"))
+func (invalidPacketT) ValidateBasic() error {
+	return errors.New("invalid packet")
 }
 
 func (invalidPacketT) Type() string {

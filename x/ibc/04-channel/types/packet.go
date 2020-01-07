@@ -4,28 +4,26 @@ import (
 	"encoding/binary"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
-type PacketDataI interface {
-	GetData() []byte          // GetCommitment returns (possibly non-recoverable) commitment bytes from its Data and Timeout
-	GetTimeoutHeight() uint64 // GetTimeoutHeight returns the timeout height defined specifically for each packet data type instance
-
-	ValidateBasic() sdk.Error // ValidateBasic validates basic properties of the packet data, implements sdk.Msg
-	Type() string             // Type returns human readable identifier, implements sdk.Msg
-}
-
-func CommitPacket(data PacketDataI) []byte {
+// CommitPacket appends bigendian encoded timeout height and commitment bytes
+// TODO: no specification for packet commitment currently,
+// make it spec compatible once we have it
+func CommitPacket(data exported.PacketDataI) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, data.GetTimeoutHeight())
-	buf = append(buf, data.GetData()...)
+	buf = append(buf, data.GetCommitment()...)
 	return tmhash.Sum(buf)
 }
 
+var _ exported.PacketI = Packet{}
+
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
+	exported.PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
 
 	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
 	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
@@ -36,7 +34,7 @@ type Packet struct {
 
 // NewPacket creates a new Packet instance
 func NewPacket(
-	data PacketDataI,
+	data exported.PacketDataI,
 	sequence uint64, sourcePort, sourceChannel,
 	destinationPort, destinationChannel string,
 ) Packet {
@@ -64,6 +62,9 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 
 // GetDestChannel implements PacketI interface
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
+
+// GetData implements PacketI interface
+func (p Packet) GetData() exported.PacketDataI { return p.PacketDataI }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -97,8 +98,8 @@ func (p Packet) ValidateBasic() error {
 	if p.GetTimeoutHeight() == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
 	}
-	if len(p.GetData()) == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacket, "packet data cannot be empty")
+	if len(p.GetCommitment()) == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet commitment bytes cannot be empty")
 	}
 	return nil
 }

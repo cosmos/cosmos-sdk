@@ -195,9 +195,9 @@ func (suite *HandlerTestSuite) TestHandleMsgTransfer() {
 	suite.app.SupplyKeeper.SetSupply(suite.ctx, supply.NewSupply(testPrefixedCoins1))
 	_ = suite.app.BankKeeper.SetCoins(suite.ctx, testAddr1, testPrefixedCoins1)
 
-	res = handler(suite.ctx, msg)
+	res, err = handler(suite.ctx, msg)
 	suite.Require().NoError(err)
-	suite.True(res.Code.IsOK(), "%+v", res) // successfully executed
+	suite.Require().NotNil(res, "%+v", res) // successfully executed
 }
 
 func TestHandlerTestSuite(t *testing.T) {

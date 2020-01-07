@@ -112,7 +112,8 @@ func (k Keeper) CleanupPacket(
 // chain.
 func (k Keeper) SendPacket(
 	ctx sdk.Context,
-	packet types.Packet,
+	packet exported.PacketI,
+	portCapability sdk.CapabilityKey,
 ) error {
 	if err := packet.ValidateBasic(); err != nil {
 		return err
@@ -183,7 +184,7 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.PacketDataI))
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.GetData()))
 
 	return nil
 }
@@ -192,7 +193,7 @@ func (k Keeper) SendPacket(
 // sent on the corresponding channel end on the counterparty chain.
 func (k Keeper) RecvPacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet types.Packet,
 	proof commitment.ProofI,
 	proofHeight uint64,
 ) (exported.PacketI, error) {
@@ -209,9 +210,8 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
-		return types.Packet{}, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetDestPort())
-	}
+	// RecvPacket is called by the antehandler which acts upon the packet.Route(),
+	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
@@ -290,7 +290,7 @@ func (k Keeper) RecvPacket(
 // and acted upon.
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet types.Packet,
 	acknowledgement exported.PacketDataI,
 	proof commitment.ProofI,
 	proofHeight uint64,

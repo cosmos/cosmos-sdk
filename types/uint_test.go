@@ -70,9 +70,6 @@ func TestUintPanics(t *testing.T) {
 	require.False(t,
 		OneUint().LTE(ZeroUint()),
 	)
-	require.Equal(t, 1, OneUint().Cmp(ZeroUint()))
-	require.Equal(t, -1, ZeroUint().Cmp(OneUint()))
-	require.Equal(t, 0, OneUint().Cmp(OneUint()))
 
 	require.False(t, ZeroUint().GT(OneUint()))
 	require.True(t, ZeroUint().LT(OneUint()))
@@ -169,16 +166,6 @@ func TestCompUint(t *testing.T) {
 
 		for tcnum, tc := range cases {
 			require.Equal(t, tc.nres, tc.ires, "Uint comparison operation does not match with uint64 operation. tc #%d", tcnum)
-		}
-
-		if n1 > n2 {
-			require.Equal(t, 1, i1.Cmp(i2))
-			require.Equal(t, -1, i2.Cmp(i1))
-		} else if n2 > n1 {
-			require.Equal(t, -1, i1.Cmp(i2))
-			require.Equal(t, 1, i2.Cmp(i1))
-		} else {
-			require.Equal(t, 0, i1.Cmp(i2))
 		}
 	}
 }

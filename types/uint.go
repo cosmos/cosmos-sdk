@@ -118,19 +118,6 @@ func (u Uint) Decr() Uint {
 	return u.Sub(OneUint())
 }
 
-// Compare compares two Uints.
-// If a > b, 1 is returned. If a < b, -1 is returned.
-// If a == b, 0 is returned.
-func (u Uint) Cmp(other Uint) int {
-	if u.GT(other) {
-		return 1
-	}
-	if u.LT(other) {
-		return -1
-	}
-	return 0
-}
-
 // Quo divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 

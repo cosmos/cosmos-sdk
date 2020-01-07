@@ -242,21 +242,35 @@ to detail this new feature and how state transitions occur.
   * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
   * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 * (types) [\#5428](https://github.com/cosmos/cosmos-sdk/pull/5428) Add `Mod` (modulo) method and `RelativePow` (exponentation) function for `Uint`.
+
+### Bug Fixes
+
+* (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
+* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
+* (keys) Fix ledger custom coin type support bug
+* (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
+* (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+
+## [v0.37.5] - 2020-01-07
+
+### Features
+
+* (types) [\#5360](https://github.com/cosmos/cosmos-sdk/pull/5360) Implement `SortableDecBytes` which
+  allows the `Dec` type be sortable.
+
+### Improvements
+
+* (tendermint) Bump Tendermint version to [v0.32.8](https://github.com/tendermint/tendermint/releases/tag/v0.32.8)
 * (cli) [\#5482](https://github.com/cosmos/cosmos-sdk/pull/5482) Remove old "tags" nomenclature from the `q txs` command in
   favor of the new events system. Functionality remains unchanged except that `=` is used instead of `:` to be
   consistent with the API's use of event queries.
 
 ### Bug Fixes
 
-* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`
-* (client) [\#5303](https://github.com/cosmos/cosmos-sdk/issues/5303) Fix ignored error in tx generate only mode.
 * (iavl) [\#5276](https://github.com/cosmos/cosmos-sdk/issues/5276) Fix potential race condition in `iavlIterator#Close`.
-* (cli) [\#4763](https://github.com/cosmos/cosmos-sdk/issues/4763) Fix flag `--min-self-delegation` for staking `EditValidator`
-* (keys) Fix ledger custom coin type support bug
-* (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
-* (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
-* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully after a `halt-height` or `halt-time`
-  has been triggered.
+* (baseapp) [\#5350](https://github.com/cosmos/cosmos-sdk/issues/5350) Allow a node to restart successfully
+  after a `halt-height` or `halt-time` has been triggered.
+* (types) [\#5395](https://github.com/cosmos/cosmos-sdk/issues/5395) Fix `Uint#LTE`.
 * (types) [\#5408](https://github.com/cosmos/cosmos-sdk/issues/5408) `NewDecCoins` constructor now sorts the coins.
 
 ## [v0.37.4] - 2019-11-04
@@ -2822,11 +2836,10 @@ BUG FIXES:
 
 <!-- Release links -->
 
-[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.4...HEAD
+[Unreleased]: https://github.com/cosmos/cosmos-sdk/compare/v0.37.5...HEAD
+[v0.37.5]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.5
 [v0.37.4]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.4
 [v0.37.3]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.3
 [v0.37.1]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.1
 [v0.37.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.37.0
 [v0.36.0]: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.36.0
-
-

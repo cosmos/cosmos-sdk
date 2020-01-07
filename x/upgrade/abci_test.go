@@ -1,7 +1,15 @@
 package upgrade_test
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -397,13 +405,39 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
+
+	// set a temporary home dir
+	homeDir, cleanUp := tests.NewTestCaseDir(t)
+	defer cleanUp()
+	// TODO cleanup viper
+	viper.Set(flags.FlagHome, homeDir)
+
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
+	planHeight := s.ctx.BlockHeight() + 1
+	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: planHeight}})
 	require.Nil(t, err)
-	t.Log("Verify if upgrade happens without skip upgrade")
+
+	t.Log("verify if binary panics when there exists a upgrade plan")
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
+
+	// TODO cleanup viper
+	home := viper.GetString(flags.FlagHome)
+	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
+
+	_, err = os.Stat(upgradeInfoFilePath)
+
+	t.Log("verify if upgrade height is written to filesystem when binary panics")
+	require.Nil(t, err)
+
+	var upgradeInfo store.UpgradeInfo
+	info, err := ioutil.ReadFile(upgradeInfoFilePath)
+	require.Nil(t, err)
+
+	err = json.Unmarshal(info, &upgradeInfo)
+	require.Nil(t, err)
+	require.Equal(t, planHeight, upgradeInfo.Height)
 
 	VerifyDoUpgrade(t)
 	VerifyDone(t, s.ctx, "test")

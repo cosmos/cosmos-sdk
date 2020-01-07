@@ -142,7 +142,8 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // WriteToFile adds plan height to upgrade-info.json
 func (k Keeper) DumpUpgradeInfoToFile(height int64) {
-	home := viper.GetString(viper.GetString(flags.FlagHome))
+	// TODO cleanup viper
+	home := viper.GetString(flags.FlagHome)
 	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
 	_, err := os.Stat(upgradeInfoFilePath)
 
@@ -151,17 +152,17 @@ func (k Keeper) DumpUpgradeInfoToFile(height int64) {
 		_, err := os.Create(upgradeInfoFilePath)
 
 		if err != nil {
-			fmt.Println("error while creating upgrade-info file", err)
+			panic(fmt.Errorf("error while creating upgrade-info file: %s", err))
 		}
 	}
 
 	var upgradeInfo store.UpgradeInfo
-
 	upgradeInfo.Height = height
 
 	info, err := json.Marshal(upgradeInfo)
+
 	if err != nil {
-		_ = fmt.Errorf("Unable to marshal ")
+		panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 	}
 
 	err = ioutil.WriteFile(upgradeInfoFilePath, info, 0644)

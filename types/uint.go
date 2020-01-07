@@ -107,6 +107,17 @@ func (u Uint) Mod(u2 Uint) Uint {
 	return Uint{mod(u.i, u2.i)}
 }
 
+// Incr increments the Uint by one.
+func (u Uint) Incr() Uint {
+	return u.Add(OneUint())
+}
+
+// Decr decrements the Uint by one.
+// Decr will panic if the Uint is zero.
+func (u Uint) Decr() Uint {
+	return u.Sub(OneUint())
+}
+
 // Quo divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 

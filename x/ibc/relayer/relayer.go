@@ -1,6 +1,7 @@
 package relayer
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	clientExported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -14,10 +15,8 @@ import (
 // TODO: See what existing abstractions we can reuse. Maybe this should be CLIContext and the
 // Counterparties should be just a list of chain-ids?
 type Chain struct {
-	ChainID        string         `json:"chain-id"`
-	Endpoint       string         `json:"endpoint"`
-	Counterparties []Chain        `json:"counterparties"`
-	From           sdk.AccAddress `json:"from"`
+	Context        context.CLIContext
+	Counterparties []string
 }
 
 // SubmitDatagrams sends the standard transactions to the individual chain
@@ -76,14 +75,25 @@ func (c Chain) QueryTxs(height uint64, tag string) []auth.StdTx {
 	return []auth.StdTx{}
 }
 
+// GetChain returns the chain associated with a chain-id from a []Chain
+func GetChain(chainID string, chains []Chain) Chain {
+	for _, chain := range chains {
+		if chain.Context.ChainID == chainID {
+			return chain
+		}
+	}
+	return Chain{}
+}
+
 // Relay implements the algorithm described in ICS18 (https://github.com/cosmos/ics/tree/master/spec/ics-018-relayer-algorithms)
 func Relay(chains []Chain) {
 	for _, chain := range chains {
 		for _, cp := range chain.Counterparties {
-			if cp.ChainID != chain.ChainID {
-				datagrams := chain.PendingDatagrams(chain, cp)
+			if cp != chain.Context.ChainID {
+				counterparty := GetChain(cp, chains)
+				datagrams := chain.PendingDatagrams(chain, counterparty)
 				chain.SubmitDatagrams(datagrams[0])
-				cp.SubmitDatagrams(datagrams[1])
+				counterparty.SubmitDatagrams(datagrams[1])
 			}
 		}
 	}
@@ -99,13 +109,13 @@ func (c Chain) PendingDatagrams(chain Chain, counterparty Chain) [][]sdk.Msg {
 	// Determine if light client needs to be updated on counterparty
 	if counterparty.QueryConsensusState().ProofHeight < chain.LatestHeight() {
 		cpDatagrams = append(cpDatagrams,
-			clientTypes.NewMsgUpdateClient("client-id", chain.LatestHeader(), chain.From))
+			clientTypes.NewMsgUpdateClient("client-id", chain.LatestHeader(), chain.Context.FromAddress))
 	}
 
 	// Determine if light client needs to be updated locally
 	if chain.QueryConsensusState().ProofHeight < counterparty.LatestHeight() {
 		localDatagrams = append(localDatagrams,
-			clientTypes.NewMsgUpdateClient("client-id", counterparty.LatestHeader(), counterparty.From))
+			clientTypes.NewMsgUpdateClient("client-id", counterparty.LatestHeader(), counterparty.Context.FromAddress))
 	}
 
 	// ICS3 : Connections

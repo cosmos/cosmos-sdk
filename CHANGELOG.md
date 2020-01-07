@@ -96,6 +96,8 @@ if the provided arguments are invalid.
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Initializing a new keybase through `NewKeyringFromHomeFlag`, `NewKeyringFromDir`, `NewKeyBaseFromHomeFlag`, `NewKeyBaseFromDir`, or `NewInMemory` functions now accept optional parameters of type `KeybaseOption`. These optional parameters are also added on the keys subcommands functions, which are now public, and allows these options to be set on the commands or ignored to default to previous behavior.
   * The option introduced in this PR is `WithKeygenFunc` which allows a custom bytes to key implementation to be defined when keys are created.
 * (simapp) [\#5419](https://github.com/cosmos/cosmos-sdk/pull/5419) simapp/helpers.GenTx() now accepts a gas argument.
+* (baseapp) [\#5455](https://github.com/cosmos/cosmos-sdk/issues/5455) An `sdk.Context` is passed into the `router.Route()`
+function.
 
 ### Client Breaking Changes
 
@@ -172,6 +174,8 @@ that allows for arbitrary vesting periods.
     * Introduces cli commands and rest routes to query historical information at a given height
 * (modules) [\#5249](https://github.com/cosmos/cosmos-sdk/pull/5249) Funds are now allowed to be directly sent to the community pool (via the distribution module account).
 * (keys) [\#4941](https://github.com/cosmos/cosmos-sdk/issues/4941) Introduce keybase option to allow overriding the default private key implementation of a key generated through the `keys add` cli command.
+* (types) [\#5447](https://github.com/cosmos/cosmos-sdk/pull/5447) Added `ApproxRoot` function to sdk.Decimal type in order to get the nth root for a decimal number, where n is a positive integer.
+  * An `ApproxSqrt` function was also added for convenience around the common case of n=2.
 
 ### Improvements
 
@@ -238,6 +242,9 @@ to detail this new feature and how state transitions occur.
   * (docs/interfaces/) Add documentation on building interfaces for the Cosmos SDK.
   * Redesigned user interface that features new dynamically generated sidebar, build-time code embedding from GitHub, new homepage as well as many other improvements.
 * (types) [\#5428](https://github.com/cosmos/cosmos-sdk/pull/5428) Add `Mod` (modulo) method and `RelativePow` (exponentation) function for `Uint`.
+* (cli) [\#5482](https://github.com/cosmos/cosmos-sdk/pull/5482) Remove old "tags" nomenclature from the `q txs` command in
+  favor of the new events system. Functionality remains unchanged except that `=` is used instead of `:` to be
+  consistent with the API's use of event queries.
 
 ### Bug Fixes
 

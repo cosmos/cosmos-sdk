@@ -425,6 +425,48 @@ func TestDecCeil(t *testing.T) {
 	}
 }
 
+func TestPower(t *testing.T) {
+	testCases := []struct {
+		input    Dec
+		power    uint64
+		expected Dec
+	}{
+		{OneDec(), 10, OneDec()},                                               // 1.0 ^ (10) => 1.0
+		{NewDecWithPrec(5, 1), 2, NewDecWithPrec(25, 2)},                       // 0.5 ^ 2 => 0.25
+		{NewDecWithPrec(2, 1), 2, NewDecWithPrec(4, 2)},                        // 0.2 ^ 2 => 0.04
+		{NewDecFromInt(NewInt(3)), 3, NewDecFromInt(NewInt(27))},               // 3 ^ 3 => 27
+		{NewDecFromInt(NewInt(-3)), 4, NewDecFromInt(NewInt(81))},              // -3 ^ 4 = 81
+		{NewDecWithPrec(1414213562373095049, 18), 2, NewDecFromInt(NewInt(2))}, // 1.414213562373095049 ^ 2 = 2
+	}
+
+	for i, tc := range testCases {
+		res := tc.input.Power(tc.power)
+		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+	}
+}
+
+func TestApproxRoot(t *testing.T) {
+	testCases := []struct {
+		input    Dec
+		root     uint64
+		expected Dec
+	}{
+		{OneDec(), 10, OneDec()},                                               // 1.0 ^ (0.1) => 1.0
+		{NewDecWithPrec(25, 2), 2, NewDecWithPrec(5, 1)},                       // 0.25 ^ (0.5) => 0.5
+		{NewDecWithPrec(4, 2), 2, NewDecWithPrec(2, 1)},                        // 0.04 => 0.2
+		{NewDecFromInt(NewInt(27)), 3, NewDecFromInt(NewInt(3))},               // 27 ^ (1/3) => 3
+		{NewDecFromInt(NewInt(-81)), 4, NewDecFromInt(NewInt(-3))},             // -81 ^ (0.25) => -3
+		{NewDecFromInt(NewInt(2)), 2, NewDecWithPrec(1414213562373095049, 18)}, // 2 ^ (0.5) => 1.414213562373095049
+		{NewDecWithPrec(1005, 3), 31536000, MustNewDecFromStr("1.000000000158153904")},
+	}
+
+	for i, tc := range testCases {
+		res, err := tc.input.ApproxRoot(tc.root)
+		require.NoError(t, err)
+		require.True(t, tc.expected.Sub(res).Abs().LTE(SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+	}
+}
+
 func TestApproxSqrt(t *testing.T) {
 	testCases := []struct {
 		input    Dec
@@ -439,7 +481,8 @@ func TestApproxSqrt(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		res := tc.input.ApproxSqrt()
+		res, err := tc.input.ApproxSqrt()
+		require.NoError(t, err)
 		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }

@@ -1,7 +1,7 @@
 package types
 
 import (
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/gogo/protobuf/gogoproto" // nolint
 )
 
 // CustomProtoType defines the interface custom gogo proto types must implement

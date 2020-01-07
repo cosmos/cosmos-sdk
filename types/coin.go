@@ -52,7 +52,7 @@ func (coin Coin) String() string {
 // validate returns an error if the Coin has a negative amount or if
 // the denom is invalid.
 func validate(denom string, amount Int) error {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		return err
 	}
 
@@ -203,7 +203,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		if err := validateDenom(coins[0].Denom); err != nil {
+		if err := ValidateDenom(coins[0].Denom); err != nil {
 			return false
 		}
 		return coins[0].IsPositive()
@@ -244,7 +244,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Add(coinsB Coins) Coins {
+func (coins Coins) Add(coinsB ...Coin) Coins {
 	return coins.safeAdd(coinsB)
 }
 
@@ -506,6 +506,11 @@ func (coins Coins) AmountOf(denom string) Int {
 	}
 }
 
+// GetDenomByIndex returns the Denom of the certain coin to make the findDup generic
+func (coins Coins) GetDenomByIndex(i int) string {
+	return coins[i].Denom
+}
+
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 func (coins Coins) IsAllPositive() bool {
@@ -599,7 +604,9 @@ var (
 	reDecCoin   = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnmString))
 )
 
-func validateDenom(denom string) error {
+// ValidateDenom validates a denomination string returning an error if it is
+// invalid.
+func ValidateDenom(denom string) error {
 	if !reDnm.MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
@@ -607,7 +614,7 @@ func validateDenom(denom string) error {
 }
 
 func mustValidateDenom(denom string) {
-	if err := validateDenom(denom); err != nil {
+	if err := ValidateDenom(denom); err != nil {
 		panic(err)
 	}
 }
@@ -629,7 +636,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	if err := validateDenom(denomStr); err != nil {
+	if err := ValidateDenom(denomStr); err != nil {
 		return Coin{}, fmt.Errorf("invalid denom cannot contain upper case characters or spaces: %s", err)
 	}
 
@@ -667,18 +674,23 @@ func ParseCoins(coinsStr string) (Coins, error) {
 	return coins, nil
 }
 
+type findDupDescriptor interface {
+	GetDenomByIndex(int) string
+	Len() int
+}
+
 // findDup works on the assumption that coins is sorted
-func findDup(coins Coins) int {
-	if len(coins) <= 1 {
+func findDup(coins findDupDescriptor) int {
+	if coins.Len() <= 1 {
 		return -1
 	}
 
-	prevDenom := coins[0].Denom
-	for i := 1; i < len(coins); i++ {
-		if coins[i].Denom == prevDenom {
+	prevDenom := coins.GetDenomByIndex(0)
+	for i := 1; i < coins.Len(); i++ {
+		if coins.GetDenomByIndex(i) == prevDenom {
 			return i
 		}
-		prevDenom = coins[i].Denom
+		prevDenom = coins.GetDenomByIndex(i)
 	}
 
 	return -1

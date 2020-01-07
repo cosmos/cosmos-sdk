@@ -6,70 +6,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func (suite *TendermintTestSuite) TestMisbehaviourValidateBasic() {
-	altPrivVal := tmtypes.NewMockPV()
-	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
-
-	// Create bothValSet with both suite validator and altVal
-	bothValSet := tmtypes.NewValidatorSet(append(suite.valSet.Validators, altVal))
-
-	signers := []tmtypes.PrivValidator{suite.privVal}
-	testCases := []struct {
-		name     string
-		evidence *Evidence
-		expErr   bool
-	}{
-		{
-			"valid misbehavior",
-			&Evidence{
-				Header1:  suite.header,
-				Header2:  MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
-			},
-			false,
-		},
-		{
-			"nil evidence",
-			nil,
-			true,
-		},
-		{
-			"invalid evidence",
-			&Evidence{
-				Header1:  suite.header,
-				Header2:  suite.header,
-				ChainID:  "gaia",
-				ClientID: "gaiamainnet",
-			},
-			true,
-		},
-		{
-			"invalid ClientID",
-			&Evidence{
-				Header1:  MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
-				Header2:  MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
-				ChainID:  "gaia123?",
-				ClientID: "gaia123?",
-			},
-			true,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc // pin for scopelint
-		suite.Run(tc.name, func() {
-			err := tc.evidence.ValidateBasic()
-
-			if tc.expErr {
-				suite.Error(err, "Invalid Misbehaviour passed ValidateBasic")
-			} else {
-				suite.NoError(err, "Valid Misbehaviour failed ValidateBasic: %v", err)
-			}
-		})
-	}
-}
-
 func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	altPrivVal := tmtypes.NewMockPV()
 	altVal := tmtypes.NewValidator(altPrivVal.GetPubKey(), 4)
@@ -97,48 +33,47 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 
 	testCases := []struct {
 		name     string
-		evidence *Evidence
-		clientID string
+		evidence Evidence
 		expErr   bool
 	}{
 		{
 			"trusting period misbehavior should pass",
-			&Evidence{
-				Header1: MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
-				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+			Evidence{
+				Header1:  MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
+				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			false,
 		},
 		{
 			"first valset has too much change",
-			&Evidence{
-				Header1: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				Header2: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+			Evidence{
+				Header1:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			true,
 		},
 		{
 			"second valset has too much change",
-			&Evidence{
-				Header1: MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
-				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID: "gaia",
+			Evidence{
+				Header1:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
+				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			true,
 		},
 		{
 			"both valsets have too much change",
-			&Evidence{
-				Header1: MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
-				Header2: MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
-				ChainID: "gaia",
+			Evidence{
+				Header1:  MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
+				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
-			"gaiamainnet",
 			true,
 		},
 	}
@@ -146,13 +81,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	for _, tc := range testCases {
 		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
-			misbehaviour := Misbehaviour{
-				Evidence: tc.evidence,
-				ClientID: tc.clientID,
-			}
-
-			err := CheckMisbehaviour(committer, misbehaviour)
-
+			err := CheckMisbehaviour(committer, tc.evidence)
 			if tc.expErr {
 				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
 			} else {

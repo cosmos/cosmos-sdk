@@ -36,9 +36,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"valid evidence",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("gaia", 4, suite.valSet, bothValSet, signers),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {},
 			false,
@@ -46,9 +47,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"wrong chainID on header1",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("ethermint", 4, suite.valSet, bothValSet, signers),
-				ChainID: "ethermint",
+				Header1:  suite.header,
+				Header2:  MakeHeader("ethermint", 4, suite.valSet, bothValSet, signers),
+				ChainID:  "ethermint",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {},
 			true,
@@ -56,9 +58,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"wrong chainID on header2",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("ethermint", 4, suite.valSet, bothValSet, signers),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("ethermint", 4, suite.valSet, bothValSet, signers),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {},
 			true,
@@ -66,9 +69,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"mismatched heights",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("gaia", 6, suite.valSet, bothValSet, signers),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("gaia", 6, suite.valSet, bothValSet, signers),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {},
 			true,
@@ -76,9 +80,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"same block id",
 			Evidence{
-				Header1: suite.header,
-				Header2: suite.header,
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  suite.header,
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {},
 			true,
@@ -86,9 +91,10 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"header doesn't have 2/3 majority",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {
 				// voteSet contains only altVal which is less than 2/3 of total power (4/14)
@@ -104,13 +110,25 @@ func (suite *TendermintTestSuite) TestEvidenceValidateBasic() {
 		{
 			"validators sign off on wrong commit",
 			Evidence{
-				Header1: suite.header,
-				Header2: MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
-				ChainID: "gaia",
+				Header1:  suite.header,
+				Header2:  MakeHeader("gaia", 4, bothValSet, bothValSet, bothSigners),
+				ChainID:  "gaia",
+				ClientID: "gaiamainnet",
 			},
 			func(ev *Evidence) {
 				ev.Header2.Commit.BlockID = makeBlockID(tmhash.Sum([]byte("other_hash")), 3, tmhash.Sum([]byte("other_partset")))
 			},
+			true,
+		},
+		{
+			"invalid ClientID",
+			Evidence{
+				Header1:  MakeHeader("gaia123??", 5, suite.valSet, suite.valSet, signers),
+				Header2:  MakeHeader("gaia123?", 5, suite.valSet, suite.valSet, signers),
+				ChainID:  "gaia123?",
+				ClientID: "gaia123?",
+			},
+			func(ev *Evidence) {},
 			true,
 		},
 	}

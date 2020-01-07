@@ -12,8 +12,8 @@ var _ clientexported.ClientState = ClientState{}
 type ClientState struct {
 	// Client ID
 	ID string `json:"id" yaml:"id"`
-	// Latests block height
-	LastestHeight uint64 `json:"latest_height" yaml:"latest_height"`
+	// Latest block height
+	LatestHeight uint64 `json:"latest_height" yaml:"latest_height"`
 	// Block height when the client was frozen due to a misbehaviour
 	FrozenHeight uint64 `json:"frozen_height" yaml:"frozen_height"`
 }
@@ -21,9 +21,9 @@ type ClientState struct {
 // NewClientState creates a new ClientState instance
 func NewClientState(id string) ClientState {
 	return ClientState{
-		ID:            id,
-		LastestHeight: 0,
-		FrozenHeight:  0,
+		ID:           id,
+		LatestHeight: 0,
+		FrozenHeight: 0,
 	}
 }
 

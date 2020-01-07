@@ -746,6 +746,10 @@ func (d *Dec) Size() int {
 	return len(bz)
 }
 
+// Override Amino binary serialization by proxying to protobuf.
+func (d Dec) MarshalAmino() ([]byte, error)   { return d.Marshal() }
+func (d *Dec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
+
 //___________________________________________________________________________________
 // helpers
 

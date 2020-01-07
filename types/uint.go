@@ -203,6 +203,10 @@ func (u *Uint) Size() int {
 	return len(bz)
 }
 
+// Override Amino binary serialization by proxying to protobuf.
+func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
+func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
+
 //__________________________________________________________________________
 
 // UintOverflow returns true if a given unsigned integer overflows and false

@@ -198,7 +198,7 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	if alias.PubKey != "" {
-		pk, err := sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}

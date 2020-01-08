@@ -55,14 +55,14 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 				pubkeyBytes, err2 = base64.StdEncoding.DecodeString(pubkeyString)
 				if err2 != nil {
 					var err3 error
-					pubKeyI, err3 = sdk.GetAccPubKeyBech32(pubkeyString)
+					pubKeyI, err3 = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, pubkeyString)
 					if err3 != nil {
 						var err4 error
-						pubKeyI, err4 = sdk.GetValPubKeyBech32(pubkeyString)
+						pubKeyI, err4 = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, pubkeyString)
 
 						if err4 != nil {
 							var err5 error
-							pubKeyI, err5 = sdk.GetConsPubKeyBech32(pubkeyString)
+							pubKeyI, err5 = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubkeyString)
 							if err5 != nil {
 								return fmt.Errorf("expected hex, base64, or bech32. Got errors: hex: %v, base64: %v, bech32 Acc: %v, bech32 Val: %v, bech32 Cons: %v",
 									err, err2, err3, err4, err5)
@@ -90,15 +90,16 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			valPub, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, pubKey)
+			valPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, pubKey)
 			if err != nil {
 				return err
 			}
 
-			consenusPub, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubKey)
+			consenusPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, pubKey)
 			if err != nil {
 				return err
 			}
+
 			cmd.Println("Address:", pubKey.Address())
 			cmd.Printf("Hex: %X\n", pubkeyBytes)
 			cmd.Println("JSON (base64):", string(pubKeyJSONBytes))

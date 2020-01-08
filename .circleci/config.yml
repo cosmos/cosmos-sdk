@@ -80,8 +80,17 @@ jobs:
     executor: protoc
     steps:
       - make:
-          target: proto-all
-          description: "Lint and verify Protocol Buffer definitions"
+          target: protoc-gen-gocosmos
+          description: "Generate go plugin for protoc"
+      - make:
+          target: proto-gen
+          description: "Generate proto files"
+      - make:
+          target: proto-lint
+          description: "Lint Protocol Buffer definitions"
+      - make:
+          target: proto-check-breaking
+          description: "Verify Protocol Buffer definitions"
 
   test-sim-nondeterminism:
     executor: golang

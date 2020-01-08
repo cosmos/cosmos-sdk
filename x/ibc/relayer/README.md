@@ -25,13 +25,27 @@ The `relayer` package contains some basic relayer implemenations that are meant 
 
 There are two major parts of `relayer` configuration:
 
+```go
+type Config struct {
+    Global Global `yaml:"global"`
+    Chains []Chain `yaml:"chains"`
+}
+```
+
 #### Global Configuration
 
 - Amount of time to sleep between relayer loops
 - Which strategy to use for your relayer (`naieve` is the only one implemented)
-- Home directory for the relayer (`~/.relayer`)
+- Home directory for the relayer (`~/.relayer`), to be passed in via flag
 
-#### Chain Specific config
+```go
+type Global struct {
+    RelayTimeout string `yaml:"relay-timeout"`
+    Strategy     string `yaml:"strategy"`
+}
+```
+
+#### Chains config
 
 The `Chain` abstraction contains all the necessary data to connect to a given chain, query it's state, and send transactions to it. The config will contain an array of these chains (`[]Chain`). Using the `naieve` strategy it will attempt to connect all the chains to all their counterparties. The following data and tools will be needed by each `Chain`:
 

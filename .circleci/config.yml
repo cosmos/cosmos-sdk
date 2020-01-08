@@ -9,6 +9,9 @@ executors:
       - image: tendermintdev/docker-website-deployment
     environment:
       AWS_REGION: us-east-1
+  protoc:
+    docker:
+      - image: tendermintdev/docker-protoc
 
 commands:
   make:
@@ -74,7 +77,7 @@ jobs:
           paths:
             - ".git"
   proto:
-    executor: golang
+    executor: protoc
     steps:
       - make:
           target: proto-all

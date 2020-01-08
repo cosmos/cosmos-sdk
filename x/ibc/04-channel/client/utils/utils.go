@@ -13,8 +13,6 @@ func QueryPacket(
 	ctx context.CLIContext, portID, channelID string,
 	sequence, timeout uint64, prove bool,
 ) (types.PacketResponse, error) {
-	var packetRes types.PacketResponse
-
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  types.KeyPacketCommitment(portID, channelID, sequence),
@@ -26,13 +24,13 @@ func QueryPacket(
 		return types.PacketResponse{}, err
 	}
 
-	channel, err := QueryChannel(ctx, portID, channelID, true)
+	channelRes, err := QueryChannel(ctx, portID, channelID, prove)
 	if err != nil {
-		return packetRes, err
+		return types.PacketResponse{}, err
 	}
 
-	destPortID := channel.Channel.Counterparty.PortID
-	destChannelID := channel.Channel.Counterparty.ChannelID
+	destPortID := channelRes.Channel.Counterparty.PortID
+	destChannelID := channelRes.Channel.Counterparty.ChannelID
 
 	var data exported.PacketDataI
 	// TODO: commitment data is stored, not the data
@@ -41,7 +39,7 @@ func QueryPacket(
 	// need to be changed to use external source of packet(e.g. event logs)
 	err = ctx.Codec.UnmarshalJSON(res.Value, &data)
 	if err != nil {
-		return packetRes, err
+		return types.PacketResponse{}, err
 	}
 
 	packet := types.NewPacket(

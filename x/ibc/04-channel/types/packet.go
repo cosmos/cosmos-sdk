@@ -101,5 +101,5 @@ func (p Packet) ValidateBasic() error {
 	if len(p.GetCommitment()) == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet commitment bytes cannot be empty")
 	}
-	return nil
+	return p.PacketDataI.ValidateBasic()
 }

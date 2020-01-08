@@ -7,7 +7,6 @@ package channel
 // ALIASGEN: github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
@@ -117,7 +116,4 @@ type (
 	Packet                 = types.Packet
 	ChannelResponse        = types.ChannelResponse
 	QueryChannelParams     = types.QueryChannelParams
-
-	PacketI     = exported.PacketI
-	PacketDataI = exported.PacketDataI
 )

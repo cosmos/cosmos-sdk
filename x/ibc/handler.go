@@ -19,7 +19,8 @@ func NewHandler(k Keeper) sdk.Handler {
 			return client.HandleMsgCreateClient(ctx, k.ClientKeeper, msg)
 
 		case client.MsgUpdateClient:
-			return &sdk.Result{}, nil // XXX: add events either here or in ante
+			return &sdk.Result{}, nil
+
 		// IBC connection  msgs
 		case connection.MsgConnectionOpenInit:
 			return connection.HandleMsgConnectionOpenInit(ctx, k.ConnectionKeeper, msg)

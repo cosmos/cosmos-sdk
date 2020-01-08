@@ -415,12 +415,12 @@ func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, si
 	}
 }
 
-// Implements sdk.Msg
+// Route implements sdk.Msg
 func (msg MsgPacket) Route() string {
 	return msg.DestinationPort
 }
 
-// Implements sdk.Msg
+// ValidateBasic implements sdk.Msg
 func (msg MsgPacket) ValidateBasic() error {
 	if msg.Proof == nil {
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
@@ -438,12 +438,12 @@ func (msg MsgPacket) ValidateBasic() error {
 	return msg.PacketDataI.ValidateBasic()
 }
 
-// Implements sdk.Msg
+// GetSignBytes implements sdk.Msg
 func (msg MsgPacket) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
-// Implements sdk.Msg
+// GetSigners implements sdk.Msg
 func (msg MsgPacket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
@@ -472,12 +472,12 @@ func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.Proo
 	}
 }
 
-// Implements sdk.Msg
+// Route implements sdk.Msg
 func (msg MsgTimeout) Route() string {
 	return msg.SourcePort
 }
 
-// Implements sdk.Msg
+// ValidateBasic implements sdk.Msg
 func (msg MsgTimeout) ValidateBasic() error {
 	if msg.Proof == nil {
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
@@ -495,12 +495,12 @@ func (msg MsgTimeout) ValidateBasic() error {
 	return msg.Packet.ValidateBasic()
 }
 
-// Implements sdk.Msg
+// GetSignBytes implements sdk.Msg
 func (msg MsgTimeout) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
-// Implements sdk.Msg
+// GetSigners implements sdk.Msg
 func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }
@@ -529,12 +529,12 @@ func NewMsgAcknowledgement(packet Packet, ack exported.PacketDataI, proof commit
 	}
 }
 
-// Implements sdk.Msg
+// Route implements sdk.Msg
 func (msg MsgAcknowledgement) Route() string {
 	return msg.SourcePort
 }
 
-// Implements sdk.Msg
+// ValidateBasic implements sdk.Msg
 func (msg MsgAcknowledgement) ValidateBasic() error {
 	if msg.Proof == nil {
 		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
@@ -555,12 +555,12 @@ func (msg MsgAcknowledgement) ValidateBasic() error {
 	return msg.Packet.ValidateBasic()
 }
 
-// Implements sdk.Msg
+// GetSignBytes implements sdk.Msg
 func (msg MsgAcknowledgement) GetSignBytes() []byte {
 	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
 }
 
-// Implements sdk.Msg
+// GetSigners implements sdk.Msg
 func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

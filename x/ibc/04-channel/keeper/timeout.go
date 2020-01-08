@@ -19,7 +19,7 @@ import (
 // perform appropriate state transitions.
 func (k Keeper) TimeoutPacket(
 	ctx sdk.Context,
-	packet types.Packet,
+	packet exported.PacketI,
 	proof commitment.ProofI,
 	proofHeight uint64,
 	nextSequenceRecv uint64,
@@ -155,7 +155,7 @@ func (k Keeper) TimeoutOnClose(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	if !bytes.Equal(commitment, types.CommitPacket(packet.PacketDataI)) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidPacket, "packet hasn't been sent")
+		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
 	counterpartyHops, found := k.CounterpartyHops(ctx, channel)

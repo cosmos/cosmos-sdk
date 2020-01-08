@@ -23,7 +23,7 @@ var _ exported.PacketI = Packet{}
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
-	exported.PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
+	Data exported.PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
 
 	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
 	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
@@ -39,7 +39,7 @@ func NewPacket(
 	destinationPort, destinationChannel string,
 ) Packet {
 	return Packet{
-		PacketDataI:        data,
+		Data:        data,
 		Sequence:           sequence,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,
@@ -64,7 +64,7 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData implements PacketI interface
-func (p Packet) GetData() exported.PacketDataI { return p.PacketDataI }
+func (p Packet) GetData() exported.PacketDataI { return p.Data }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {

@@ -75,8 +75,8 @@ func TestSetLoader(t *testing.T) {
 	defer cleanUp()
 	// TODO cleanup viper
 	viper.Set(flags.FlagHome, homeDir)
-	home := viper.GetString(flags.FlagHome)
-	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
+
+	upgradeInfoFilePath := filepath.Join(homeDir, "upgrade-info.json")
 
 	data := []byte(`{"height": 0, "store_upgrades": {"renamed":[{"old_key": "bnk", "new_key": "bank"}]}}`)
 	err := ioutil.WriteFile(upgradeInfoFilePath, data, 0644)

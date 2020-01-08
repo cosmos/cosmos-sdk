@@ -73,6 +73,12 @@ jobs:
           key: go-src-v1-{{ .Revision }}
           paths:
             - ".git"
+  proto:
+    executor: golang
+    steps:
+      - make:
+          target: tools proto-all
+          description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-nondeterminism:
     executor: golang
@@ -182,6 +188,9 @@ workflows:
             tags:
               only:
                 - /^v.*/
+      - proto:
+          requires:
+            - setup-dependencies                       
       - test-sim-nondeterminism:
           requires:
             - setup-dependencies

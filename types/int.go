@@ -65,7 +65,7 @@ func unmarshalText(i *big.Int, text string) error {
 	return nil
 }
 
-var _ CustomProtoType = (*Int)(nil)
+var _ CustomProtobufType = (*Int)(nil)
 
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero

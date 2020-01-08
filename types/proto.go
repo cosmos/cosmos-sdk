@@ -4,11 +4,11 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto" // nolint
 )
 
-// CustomProtoType defines the interface custom gogo proto types must implement
+// CustomProtobufType defines the interface custom gogo proto types must implement
 // in order to be used as a "customtype" extension.
 //
 // ref: https://github.com/gogo/protobuf/blob/master/custom_types.md
-type CustomProtoType interface {
+type CustomProtobufType interface {
 	Marshal() ([]byte, error)
 	MarshalTo(data []byte) (n int, err error)
 	Unmarshal(data []byte) error

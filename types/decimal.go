@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var _ CustomProtoType = (*Dec)(nil)
+var _ CustomProtobufType = (*Dec)(nil)
 
 // NOTE: never use new(Dec) or else we will panic unmarshalling into the
 // nil embedded big.Int

@@ -77,7 +77,7 @@ jobs:
     executor: golang
     steps:
       - make:
-          target: tools proto-all
+          target: proto-all
           description: "Lint and verify Protocol Buffer definitions"
 
   test-sim-nondeterminism:

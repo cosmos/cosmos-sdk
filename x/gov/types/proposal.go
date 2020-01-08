@@ -78,19 +78,6 @@ func (p Proposals) String() string {
 type (
 	// ProposalQueue defines a queue for proposal ids
 	ProposalQueue []uint64
-
-	// ProposalStatus is a type alias that represents a proposal status as a byte
-	ProposalStatus byte
-)
-
-// Valid Proposal statuses
-const (
-	StatusNil           ProposalStatus = 0x00
-	StatusDepositPeriod ProposalStatus = 0x01
-	StatusVotingPeriod  ProposalStatus = 0x02
-	StatusPassed        ProposalStatus = 0x03
-	StatusRejected      ProposalStatus = 0x04
-	StatusFailed        ProposalStatus = 0x05
 )
 
 // ProposalStatusFromString turns a string into a ProposalStatus

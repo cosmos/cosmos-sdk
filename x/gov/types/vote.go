@@ -49,18 +49,6 @@ func (v Vote) Empty() bool {
 	return v.Equals(Vote{})
 }
 
-// VoteOption defines a vote option
-type VoteOption byte
-
-// Vote options
-const (
-	OptionEmpty      VoteOption = 0x00
-	OptionYes        VoteOption = 0x01
-	OptionAbstain    VoteOption = 0x02
-	OptionNo         VoteOption = 0x03
-	OptionNoWithVeto VoteOption = 0x04
-)
-
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
 func VoteOptionFromString(str string) (VoteOption, error) {

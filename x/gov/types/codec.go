@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	_ "github.com/regen-network/cosmos-proto"
 )
 
 // module codec

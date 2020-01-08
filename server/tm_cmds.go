@@ -53,7 +53,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 				return printlnJSON(valPubKey)
 			}
 
-			pubkey, err := sdk.Bech32ifyConsPub(valPubKey)
+			pubkey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, valPubKey)
 			if err != nil {
 				return err
 			}

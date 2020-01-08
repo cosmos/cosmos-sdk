@@ -220,7 +220,7 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(bva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -250,7 +250,7 @@ func (bva BaseVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if bva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(bva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, bva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +406,7 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(cva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -437,7 +437,7 @@ func (cva ContinuousVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if cva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(cva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, cva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -622,7 +622,7 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(pva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -654,7 +654,7 @@ func (pva PeriodicVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if pva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(pva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pva.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -781,7 +781,7 @@ func (dva DelayedVestingAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if dva.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(dva.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, dva.PubKey)
 		if err != nil {
 			return nil, err
 		}

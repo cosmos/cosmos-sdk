@@ -69,7 +69,7 @@ func TestCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyAccPub(pubKey)
+	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -80,7 +80,7 @@ func TestCreateLedger(t *testing.T) {
 	assert.Equal(t, "some_account", restoredKey.GetName())
 	assert.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyAccPub(pubKey)
+	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 

@@ -89,7 +89,7 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 		Commission:        msg.Commission,
 		DelegatorAddress:  msg.DelegatorAddress,
 		ValidatorAddress:  msg.ValidatorAddress,
-		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
+		PubKey:            sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msg.PubKey),
 		Value:             msg.Value,
 		MinSelfDelegation: msg.MinSelfDelegation,
 	})
@@ -134,7 +134,7 @@ func (msg MsgCreateValidator) MarshalYAML() (interface{}, error) {
 		MinSelfDelegation: msg.MinSelfDelegation,
 		DelegatorAddress:  msg.DelegatorAddress,
 		ValidatorAddress:  msg.ValidatorAddress,
-		PubKey:            sdk.MustBech32ifyConsPub(msg.PubKey),
+		PubKey:            sdk.MustGetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, msg.PubKey),
 		Value:             msg.Value,
 	})
 

@@ -86,16 +86,16 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := sdk.Bech32ifyAccPub(pubKey)
+			accPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
 			if err != nil {
 				return err
 			}
-			valPub, err := sdk.Bech32ifyValPub(pubKey)
+			valPub, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, pubKey)
 			if err != nil {
 				return err
 			}
 
-			consenusPub, err := sdk.Bech32ifyConsPub(pubKey)
+			consenusPub, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, pubKey)
 			if err != nil {
 				return err
 			}

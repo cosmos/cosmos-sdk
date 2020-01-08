@@ -32,8 +32,6 @@ func (k Keeper) CreateClient(
 		return nil, sdkerrors.Wrapf(err, "cannot create client with ID %s", clientID)
 	}
 
-	// k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
-	// k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetSequence()))
@@ -80,8 +78,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 
 	k.SetClientState(ctx, clientState)
 	k.SetConsensusState(ctx, clientID, header.GetHeight(), consensusState)
-	// k.SetCommitter(ctx, clientID, header.GetHeight(), consensusState.GetCommitter())
-	// k.SetVerifiedRoot(ctx, clientID, header.GetHeight(), consensusState.GetRoot())
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
 	return nil
 }
@@ -94,15 +90,15 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 		return sdkerrors.Wrap(errors.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
-	committer, found := k.GetCommitter(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
+	consensusState, found := k.GetConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
 	if !found {
-		return errors.ErrCommitterNotFound
+		return sdkerrors.Wrap(errors.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}
 
 	var err error
 	switch e := misbehaviour.(type) {
 	case tendermint.Evidence:
-		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(clientState, committer, misbehaviour)
+		clientState, err = tendermint.CheckMisbehaviourAndUpdateState(clientState, consensusState, misbehaviour, uint64(misbehaviour.GetHeight()))
 
 	default:
 		err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized IBC client evidence type: %T", e)

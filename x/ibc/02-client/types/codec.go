@@ -12,7 +12,6 @@ var SubModuleCdc *codec.Codec
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*exported.ClientState)(nil), nil)
 	cdc.RegisterInterface((*exported.ConsensusState)(nil), nil)
-	cdc.RegisterInterface((*exported.Committer)(nil), nil)
 	cdc.RegisterInterface((*exported.Header)(nil), nil)
 	cdc.RegisterInterface((*exported.Misbehaviour)(nil), nil)
 

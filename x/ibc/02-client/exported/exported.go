@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
@@ -18,6 +19,7 @@ type ClientState interface {
 	// State verification functions
 
 	VerifyClientConsensusState(
+		cdc *codec.Codec,
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
@@ -25,19 +27,23 @@ type ClientState interface {
 		consensusState ConsensusState,
 	) error
 	VerifyConnectionState(
+		cdc *codec.Codec,
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
 		connectionID string,
 		// connectionEnd connection,
+		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
+		cdc *codec.Codec,
 		height uint64,
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
 		portID,
 		channelID string,
 		// channelEnd channel,
+		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(
 		height uint64,
@@ -47,6 +53,7 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		commitmentBytes []byte,
+		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgement(
 		height uint64,
@@ -56,6 +63,7 @@ type ClientState interface {
 		channelID string,
 		sequence uint64,
 		acknowledgement []byte,
+		consensusState ConsensusState,
 	) error
 	VerifyPacketAcknowledgementAbsence(
 		height uint64,
@@ -64,6 +72,7 @@ type ClientState interface {
 		portID,
 		channelID string,
 		sequence uint64,
+		consensusState ConsensusState,
 	) error
 	VerifyNextSequenceRecv(
 		height uint64,
@@ -72,6 +81,7 @@ type ClientState interface {
 		portID,
 		channelID string,
 		nextSequenceRecv uint64,
+		consensusState ConsensusState,
 	) error
 }
 
@@ -95,16 +105,6 @@ type Misbehaviour interface {
 
 // Header is the consensus state update information
 type Header interface {
-	ClientType() ClientType
-	GetCommitter() Committer
-	GetHeight() uint64
-}
-
-// Committer defines the type that is responsible for
-// updating the consensusState at a given height
-//
-// In Tendermint, this is the ValidatorSet at the given height
-type Committer interface {
 	ClientType() ClientType
 	GetHeight() uint64
 }

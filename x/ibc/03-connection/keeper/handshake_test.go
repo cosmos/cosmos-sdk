@@ -6,8 +6,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -267,11 +267,10 @@ func (suite *KeeperTestSuite) createClient(clientID string) {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID:          chainID,
-		Height:           uint64(commitID.Version),
-		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ChainID:      chainID,
+		Height:       uint64(commitID.Version),
+		Root:         commitment.NewRoot(commitID.Hash),
+		ValidatorSet: suite.valSet,
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, clientID, clientType, consensusState)

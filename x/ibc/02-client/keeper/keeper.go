@@ -118,32 +118,6 @@ func (k Keeper) GetAllClients(ctx sdk.Context) (states []exported.ClientState) {
 	return states
 }
 
-// GetCommitter will get the Committer of a particular client at the oldest height
-// that is less than or equal to the height passed in
-func (k Keeper) GetCommitter(ctx sdk.Context, clientID string, height uint64) (exported.Committer, bool) {
-	store := ctx.KVStore(k.storeKey)
-
-	var committer exported.Committer
-
-	// TODO: Replace this for-loop with a ReverseIterator for efficiency
-	for i := height; i > 0; i-- {
-		bz := store.Get(types.KeyCommitter(clientID, i))
-		if bz != nil {
-			k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &committer)
-			return committer, true
-		}
-	}
-	return nil, false
-}
-
-// SetCommitter sets a committer from a particular height to
-// a particular client
-func (k Keeper) SetCommitter(ctx sdk.Context, clientID string, height uint64, committer exported.Committer) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(committer)
-	store.Set(types.KeyCommitter(clientID, height), bz)
-}
-
 // State returns a new client state with a given id as defined in
 // https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#example-implementation
 func (k Keeper) initialize(

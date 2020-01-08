@@ -88,31 +88,6 @@ func QueryConsensusState(
 	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
 }
 
-// QueryCommitter queries the store to get the committer and a merkle proof
-func QueryCommitter(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
-) (types.CommitterResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyCommitter(clientID, height),
-		Prove: prove,
-	}
-
-	res, err := cliCtx.QueryABCI(req)
-	if err != nil {
-		return types.CommitterResponse{}, err
-	}
-
-	var committer exported.Committer
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &committer); err != nil {
-		return types.CommitterResponse{}, err
-	}
-
-	committerRes := types.NewCommitterResponse(clientID, height, committer, res.Proof, res.Height)
-
-	return committerRes, nil
-}
-
 // QueryTendermintHeader takes a client context and returns the appropriate
 // tendermint header
 func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64, error) {
@@ -139,15 +114,9 @@ func QueryTendermintHeader(cliCtx context.CLIContext) (tendermint.Header, int64,
 		return tendermint.Header{}, 0, err
 	}
 
-	nextvalidators, err := node.Validators(&height)
-	if err != nil {
-		return tendermint.Header{}, 0, err
-	}
-
 	header := tendermint.Header{
-		SignedHeader:     commit.SignedHeader,
-		ValidatorSet:     tmtypes.NewValidatorSet(validators.Validators),
-		NextValidatorSet: tmtypes.NewValidatorSet(nextvalidators.Validators),
+		SignedHeader: commit.SignedHeader,
+		ValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
 	}
 
 	return header, height, nil

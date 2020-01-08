@@ -54,6 +54,9 @@ func (msg MsgCreateClient) ValidateBasic() error {
 	if msg.ConsensusState == nil {
 		return errors.ErrInvalidConsensus
 	}
+	if err := msg.ConsensusState.ValidateBasic(); err != nil {
+		return err
+	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress
 	}

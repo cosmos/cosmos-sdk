@@ -19,8 +19,6 @@ var (
 	ErrRootNotFound                           = sdkerrors.Register(SubModuleName, 8, "commitment root not found")
 	ErrInvalidHeader                          = sdkerrors.Register(SubModuleName, 9, "invalid block header")
 	ErrInvalidEvidence                        = sdkerrors.Register(SubModuleName, 10, "invalid light client misbehaviour evidence")
-	ErrCommitterNotFound                      = sdkerrors.Register(SubModuleName, 11, "commiter not found")
-	ErrInvalidCommitter                       = sdkerrors.Register(SubModuleName, 12, "invalid commiter")
 	ErrFailedClientConsensusStateVerification = sdkerrors.Register(SubModuleName, 13, "client consensus state verification failed")
 	ErrFailedConnectionStateVerification      = sdkerrors.Register(SubModuleName, 14, "connection state verification failed")
 	ErrFailedChannelStateVerification         = sdkerrors.Register(SubModuleName, 15, "channel state verification failed")

@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
 // QuerierClients defines the sdk.Querier to query all the light client states.
@@ -35,25 +34,4 @@ func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 	}
 
 	return res, nil
-}
-
-// QuerierCommitter defines the sdk.Querier to query a committer
-func QuerierCommitter(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryCommitterParams
-
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	committer, found := k.GetCommitter(ctx, params.ClientID, params.Height)
-	if !found {
-		return nil, errors.ErrCommitterNotFound
-	}
-
-	bz, err := codec.MarshalJSONIndent(k.cdc, committer)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
 }

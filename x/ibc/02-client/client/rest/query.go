@@ -17,7 +17,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/committers/{%s}", RestClientID, RestRootHeight), queryCommitterHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/path", queryPathHandlerFn(cliCtx)).Methods("GET")
@@ -127,45 +126,6 @@ func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 		cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
 		rest.PostProcessResponse(w, cliCtx, csRes)
-	}
-}
-
-// queryCommitterHandlerFn implements a committer querying route
-//
-// @Summary Query committer
-// @Tags IBC
-// @Produce json
-// @Param client-id path string true "Client ID"
-// @Param height path number true "Committer height"
-// @Success 200 {object} QueryCommitter "OK"
-// @Failure 400 {object} rest.ErrorResponse "Invalid client id or height"
-// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/{client-id}/committers/{height} [get]
-func queryCommitterHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		clientID := vars[RestClientID]
-		height, err := strconv.ParseUint(vars[RestRootHeight], 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		prove := rest.ParseQueryProve(r)
-
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		if !ok {
-			return
-		}
-
-		committerRes, err := utils.QueryCommitter(cliCtx, clientID, height, prove)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		cliCtx = cliCtx.WithHeight(int64(committerRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, committerRes)
 	}
 }
 

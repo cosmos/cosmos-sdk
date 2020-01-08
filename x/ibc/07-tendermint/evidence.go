@@ -22,10 +22,11 @@ var (
 // Evidence is a wrapper over tendermint's DuplicateVoteEvidence
 // that implements Evidence interface expected by ICS-02
 type Evidence struct {
-	ClientID string `json:"client_id" yaml:"client_id"`
-	Header1  Header `json:"header1" yaml:"header1"`
-	Header2  Header `json:"header2" yaml:"header2"`
-	ChainID  string `json:"chain_id" yaml:"chain_id"`
+	ClientID         string                `json:"client_id" yaml:"client_id"`
+	FromValidatorSet *tmtypes.ValidatorSet `json:"from_validator_set" yaml:"from_validator_set"`
+	Header1          Header                `json:"header1" yaml:"header1"`
+	Header2          Header                `json:"header2" yaml:"header2"`
+	ChainID          string                `json:"chain_id" yaml:"chain_id"`
 }
 
 // ClientType is Tendermint light client
@@ -63,6 +64,8 @@ func (ev Evidence) Hash() cmn.HexBytes {
 }
 
 // GetHeight returns the height at which misbehaviour occurred
+//
+// NOTE: assumes that evidence headers have the same height
 func (ev Evidence) GetHeight() int64 {
 	return ev.Header1.Height
 }

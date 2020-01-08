@@ -28,8 +28,6 @@ func (suite *KeeperTestSuite) createClient() {
 		NextValidatorSet: suite.valSet,
 	}
 
-	_ = consensusState.GetCommitter()
-
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
 	suite.NoError(err)
 }

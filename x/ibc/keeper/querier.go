@@ -21,14 +21,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 		switch path[0] {
 		case client.SubModuleName:
 			switch path[1] {
-			case client.QueryClientState:
-				res, err = client.QuerierClientState(ctx, req, k.ClientKeeper)
 			case client.QueryAllClients:
 				res, err = client.QuerierClients(ctx, req, k.ClientKeeper)
-			case client.QueryConsensusState:
-				res, err = client.QuerierConsensusState(ctx, req, k.ClientKeeper)
-			case client.QueryVerifiedRoot:
-				res, err = client.QuerierVerifiedRoot(ctx, req, k.ClientKeeper)
 			default:
 				err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown IBC %s query endpoint", client.SubModuleName)
 			}

@@ -46,12 +46,6 @@ func RootPath(clientID string, height uint64) string {
 	return string(KeyRoot(clientID, height))
 }
 
-// CommitterPath takes an Identifier and returns a Path under which
-// to store the committer of a client at a particular height
-func CommitterPath(clientID string, height uint64) string {
-	return string(KeyCommitter(clientID, height))
-}
-
 // KeyClientState returns the store key for a particular client state
 func KeyClientState(clientID string) []byte {
 	return append(
@@ -86,15 +80,6 @@ func KeyRoot(clientID string, height uint64) []byte {
 	)
 }
 
-// KeyCommitter returns the store key for a validator (aka commiter) of a particular
-// client at a given height.
-func KeyCommitter(clientID string, height uint64) []byte {
-	return append(
-		ibctypes.KeyPrefixBytes(ibctypes.KeyCommiterPrefix),
-		[]byte(committerPath(clientID, height))...,
-	)
-}
-
 // GetClientKeysPrefix return the ICS02 prefix bytes
 func GetClientKeysPrefix(prefix int) []byte {
 	return []byte(fmt.Sprintf("%d/clients", prefix))
@@ -114,8 +99,4 @@ func consensusStatePath(clientID string, height uint64) string {
 
 func rootPath(clientID string, height uint64) string {
 	return fmt.Sprintf("clients/%s/roots/%d", clientID, height)
-}
-
-func committerPath(clientID string, height uint64) string {
-	return fmt.Sprintf("clients/%s/committer/%d", clientID, height)
 }

@@ -119,46 +119,6 @@ func GetCmdQueryConsensusState(queryRoute string, cdc *codec.Codec) *cobra.Comma
 	return cmd
 }
 
-// GetCmdQueryCommitter defines the command to query the committer of the chain
-// at a given height
-func GetCmdQueryCommitter(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "committer [client-id] [height]",
-		Short: "Query a committer",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query a committer at a specific height for a particular client
-
-Example:
-$ %s query ibc client committer [client-id] [height]
-`, version.ClientName),
-		),
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			clientID := args[0]
-			if strings.TrimSpace(clientID) == "" {
-				return errors.New("client ID can't be blank")
-			}
-
-			height, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("expected integer height, got: %v", args[1])
-			}
-
-			prove := viper.GetBool(flags.FlagProve)
-
-			committerRes, err := utils.QueryCommitter(cliCtx, clientID, height, prove)
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.PrintOutput(committerRes)
-		},
-	}
-	cmd.Flags().Bool(flags.FlagProve, true, "show proofs for the query results")
-	return cmd
-}
-
 // GetCmdQueryHeader defines the command to query the latest header on the chain
 func GetCmdQueryHeader(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{

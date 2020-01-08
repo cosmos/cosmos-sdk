@@ -57,8 +57,7 @@ func MakeHeader(chainID string, height int64, valSet *tmtypes.ValidatorSet, next
 	}
 
 	return Header{
-		SignedHeader:     signedHeader,
-		ValidatorSet:     valSet,
-		NextValidatorSet: nextValSet,
+		SignedHeader: signedHeader,
+		ValidatorSet: valSet,
 	}
 }

@@ -25,55 +25,64 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 
 	altSigners := []tmtypes.PrivValidator{altPrivVal}
 
-	committer := Committer{
-		ValidatorSet:   suite.valSet,
-		Height:         3,
-		NextValSetHash: suite.valSet.Hash(),
-	}
-
 	testCases := []struct {
-		name     string
-		evidence Evidence
-		expErr   bool
+		name           string
+		clientState    ClientState
+		consensusState ConsensusState
+		evidence       Evidence
+		height         uint64
+		expErr         bool
 	}{
 		{
 			"trusting period misbehavior should pass",
+			ClientState{},
+			ConsensusState{},
 			Evidence{
 				Header1:  MakeHeader("gaia", 5, bothValSet, suite.valSet, bothSigners),
 				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
+			5,
 			false,
 		},
 		{
 			"first valset has too much change",
+			ClientState{},
+			ConsensusState{},
 			Evidence{
 				Header1:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				Header2:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
+			5,
 			true,
 		},
 		{
 			"second valset has too much change",
+			ClientState{},
+			ConsensusState{},
 			Evidence{
 				Header1:  MakeHeader("gaia", 5, bothValSet, bothValSet, bothSigners),
 				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
+			5,
 			true,
 		},
 		{
 			"both valsets have too much change",
+			ClientState{},
+			ConsensusState{},
 			Evidence{
 				Header1:  MakeHeader("gaia", 5, altValSet, altValSet, altSigners),
 				Header2:  MakeHeader("gaia", 5, altValSet, bothValSet, altSigners),
 				ChainID:  "gaia",
 				ClientID: "gaiamainnet",
 			},
+			5,
 			true,
 		},
 	}
@@ -81,7 +90,7 @@ func (suite *TendermintTestSuite) TestCheckMisbehaviour() {
 	for _, tc := range testCases {
 		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
-			err := CheckMisbehaviour(committer, tc.evidence)
+			err := checkMisbehaviour(tc.clientState, tc.consensusState, tc.evidence, tc.height)
 			if tc.expErr {
 				suite.Error(err, "CheckMisbehaviour passed unexpectedly")
 			} else {

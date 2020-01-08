@@ -52,7 +52,7 @@ func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
+	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -64,7 +64,7 @@ func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
+	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}

@@ -7,12 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -74,9 +72,9 @@ func (k Keeper) SetClientType(ctx sdk.Context, clientID string, clientType expor
 }
 
 // GetConsensusState creates a new client state and populates it with a given consensus state
-func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string) (exported.ConsensusState, bool) {
+func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string, height uint64) (exported.ConsensusState, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyConsensusState(clientID))
+	bz := store.Get(types.KeyConsensusState(clientID, height))
 	if bz == nil {
 		return nil, false
 	}
@@ -87,33 +85,10 @@ func (k Keeper) GetConsensusState(ctx sdk.Context, clientID string) (exported.Co
 }
 
 // SetConsensusState sets a ConsensusState to a particular client
-func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, consensusState exported.ConsensusState) {
+func (k Keeper) SetConsensusState(ctx sdk.Context, clientID string, height uint64, consensusState exported.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consensusState)
-	store.Set(types.KeyConsensusState(clientID), bz)
-}
-
-// GetVerifiedRoot gets a verified commitment Root from a particular height to
-// a client
-func (k Keeper) GetVerifiedRoot(ctx sdk.Context, clientID string, height uint64) (commitment.RootI, bool) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyRoot(clientID, height))
-	if bz == nil {
-		return nil, false
-	}
-
-	var root commitment.RootI
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &root)
-	return root, true
-}
-
-// SetVerifiedRoot sets a verified commitment Root from a particular height to
-// a client
-func (k Keeper) SetVerifiedRoot(ctx sdk.Context, clientID string, height uint64, root commitment.RootI) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(root)
-	store.Set(types.KeyRoot(clientID, height), bz)
+	store.Set(types.KeyConsensusState(clientID, height), bz)
 }
 
 // IterateClients provides an iterator over all stored light client State
@@ -176,75 +151,15 @@ func (k Keeper) initialize(
 	consensusState exported.ConsensusState,
 ) (exported.ClientState, error) {
 	var clientState exported.ClientState
+	height := uint64(ctx.BlockHeight())
 
 	switch clientType {
 	case exported.Tendermint:
-		clientState = tendermint.NewClientState(clientID)
+		clientState = tendermint.NewClientState(clientID, height)
 	default:
 		return nil, errors.ErrInvalidClientType
 	}
 
-	k.SetConsensusState(ctx, clientID, consensusState)
+	k.SetConsensusState(ctx, clientID, height, consensusState)
 	return clientState, nil
-}
-
-// freeze updates the state of the client in the event of a misbehaviour
-func (k Keeper) freeze(ctx sdk.Context, clientState exported.ClientState) (exported.ClientState, error) {
-	if clientState.IsFrozen() {
-		return nil, sdkerrors.Wrap(errors.ErrClientFrozen, clientState.GetID())
-	}
-
-	// clientState.Frozen = true // FIXME: set height
-	return clientState, nil
-}
-
-// VerifyMembership state membership verification function defined by the client type
-func (k Keeper) VerifyMembership(
-	ctx sdk.Context,
-	clientID string,
-	height uint64, // sequence
-	proof commitment.ProofI,
-	path commitment.PathI,
-	value []byte,
-) bool {
-	clientState, found := k.GetClientState(ctx, clientID)
-	if !found {
-		return false
-	}
-
-	if clientState.IsFrozen() {
-		return false
-	}
-
-	root, found := k.GetVerifiedRoot(ctx, clientID, height)
-	if !found {
-		return false
-	}
-
-	return proof.VerifyMembership(root, path, value)
-}
-
-// VerifyNonMembership state non-membership function defined by the client type
-func (k Keeper) VerifyNonMembership(
-	ctx sdk.Context,
-	clientID string,
-	height uint64, // sequence
-	proof commitment.ProofI,
-	path commitment.PathI,
-) bool {
-	clientState, found := k.GetClientState(ctx, clientID)
-	if !found {
-		return false
-	}
-
-	if clientState.IsFrozen() {
-		return false
-	}
-
-	root, found := k.GetVerifiedRoot(ctx, clientID, height)
-	if !found {
-		return false
-	}
-
-	return proof.VerifyNonMembership(root, path)
 }

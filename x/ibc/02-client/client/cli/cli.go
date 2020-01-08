@@ -20,7 +20,6 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		GetCmdQueryClientStates(queryRoute, cdc),
 		GetCmdQueryClientState(queryRoute, cdc),
 		GetCmdQueryConsensusState(queryRoute, cdc),
-		GetCmdQueryRoot(queryRoute, cdc),
 		GetCmdQueryHeader(cdc),
 		GetCmdNodeConsensusState(queryRoute, cdc),
 		GetCmdQueryPath(queryRoute, cdc),
@@ -40,6 +39,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	ics02ClientTxCmd.AddCommand(flags.PostCommands(
 		GetCmdCreateClient(cdc),
 		GetCmdUpdateClient(cdc),
+		GetCmdSubmitMisbehaviour(cdc),
 	)...)
 
 	return ics02ClientTxCmd

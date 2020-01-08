@@ -36,8 +36,8 @@ func ClientTypePath(clientID string) string {
 
 // ConsensusStatePath takes an Identifier and returns a Path under which to
 // store the consensus state of a client.
-func ConsensusStatePath(clientID string) string {
-	return string(KeyConsensusState(clientID))
+func ConsensusStatePath(clientID string, height uint64) string {
+	return string(KeyConsensusState(clientID, height))
 }
 
 // RootPath takes an Identifier and returns a Path under which to
@@ -70,10 +70,10 @@ func KeyClientType(clientID string) []byte {
 
 // KeyConsensusState returns the store key for the consensus state of a particular
 // client
-func KeyConsensusState(clientID string) []byte {
+func KeyConsensusState(clientID string, height uint64) []byte {
 	return append(
 		ibctypes.KeyPrefixBytes(ibctypes.KeyConsensusStatePrefix),
-		[]byte(consensusStatePath(clientID))...,
+		[]byte(consensusStatePath(clientID, height))...,
 	)
 }
 
@@ -108,8 +108,8 @@ func clientTypePath(clientID string) string {
 	return fmt.Sprintf("clients/%s/type", clientID)
 }
 
-func consensusStatePath(clientID string) string {
-	return fmt.Sprintf("clients/%s/consensusState", clientID)
+func consensusStatePath(clientID string, height uint64) string {
+	return fmt.Sprintf("consensusState/%s/%d", clientID, height)
 }
 
 func rootPath(clientID string, height uint64) string {

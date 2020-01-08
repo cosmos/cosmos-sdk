@@ -10,7 +10,7 @@ import (
 // CheckValidityAndUpdateState checks if the provided header is valid and updates
 // the consensus state if appropriate
 func CheckValidityAndUpdateState(
-	clientState clientexported.ClientState, header clientexported.Header,
+	clientState clientexported.ClientState, header clientexported.Header, chainID string,
 ) (clientexported.ClientState, clientexported.ConsensusState, error) {
 	tmClientState, ok := clientState.(ClientState)
 	if !ok {
@@ -26,7 +26,7 @@ func CheckValidityAndUpdateState(
 		)
 	}
 
-	if err := checkValidity(tmClientState, tmHeader); err != nil {
+	if err := checkValidity(tmClientState, tmHeader, chainID); err != nil {
 		return nil, nil, err
 	}
 
@@ -37,7 +37,7 @@ func CheckValidityAndUpdateState(
 // checkValidity checks if the Tendermint header is valid
 //
 // CONTRACT: assumes header.Height > consensusState.Height
-func checkValidity(clientState ClientState, header Header) error {
+func checkValidity(clientState ClientState, header Header, chainID string) error {
 	if header.GetHeight() < clientState.LatestHeight {
 		return sdkerrors.Wrapf(
 			clienterrors.ErrInvalidHeader,
@@ -46,7 +46,7 @@ func checkValidity(clientState ClientState, header Header) error {
 	}
 
 	// basic consistency check
-	if err := header.ValidateBasic(); err != nil {
+	if err := header.ValidateBasic(chainID); err != nil {
 		return err
 	}
 

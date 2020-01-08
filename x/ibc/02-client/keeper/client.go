@@ -32,11 +32,11 @@ func (k Keeper) CreateClient(
 		return nil, sdkerrors.Wrapf(err, "cannot create client with ID %s", clientID)
 	}
 
-	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
-	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
+	// k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
+	// k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
-	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, consensusState.GetHeight()))
+	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetSequence()))
 	return clientState, nil
 }
 
@@ -57,24 +57,32 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		return sdkerrors.Wrapf(errors.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
+	// addittion to spec: prevent update if the client is frozen
 	if clientState.IsFrozen() {
 		return sdkerrors.Wrapf(errors.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
-	consensusState, found := k.GetConsensusState(ctx, clientID)
-	if !found {
-		return sdkerrors.Wrapf(errors.ErrConsensusStateNotFound, "cannot update client with ID %s", clientID)
+	var (
+		consensusState exported.ConsensusState
+		err            error
+	)
+
+	switch clientType {
+	case exported.Tendermint:
+		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(clientState, header, ctx.ChainID())
+	default:
+		return sdkerrors.Wrapf(errors.ErrInvalidClientType, "cannot update client with ID %s", clientID)
 	}
 
-	consensusState, err := consensusState.CheckValidityAndUpdateState(header)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "cannot update client with ID %s", clientID)
 	}
 
-	k.SetConsensusState(ctx, clientID, consensusState)
-	k.SetCommitter(ctx, clientID, consensusState.GetHeight(), consensusState.GetCommitter())
-	k.SetVerifiedRoot(ctx, clientID, consensusState.GetHeight(), consensusState.GetRoot())
-	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, consensusState.GetHeight()))
+	k.SetClientState(ctx, clientState)
+	k.SetConsensusState(ctx, clientID, header.GetHeight(), consensusState)
+	// k.SetCommitter(ctx, clientID, header.GetHeight(), consensusState.GetCommitter())
+	// k.SetVerifiedRoot(ctx, clientID, header.GetHeight(), consensusState.GetRoot())
+	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
 	return nil
 }
 

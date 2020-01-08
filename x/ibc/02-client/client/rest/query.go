@@ -17,7 +17,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/ibc/clients", queryAllClientStatesFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/client-state", RestClientID), queryClientStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/consensus-state", RestClientID), queryConsensusStateHandlerFn(cliCtx)).Methods("GET")
-	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/roots/{%s}", RestClientID, RestRootHeight), queryRootHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/ibc/clients/{%s}/committers/{%s}", RestClientID, RestRootHeight), queryCommitterHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/header", queryHeaderHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/ibc/node-state", queryNodeConsensusStateHandlerFn(cliCtx)).Methods("GET")
@@ -97,45 +96,13 @@ func queryClientStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // @Tags IBC
 // @Produce  json
 // @Param client-id path string true "Client ID"
+// @Param height path number true "Height"
 // @Param prove query boolean false "Proof of result"
 // @Success 200 {object} QueryConsensusState "OK"
 // @Failure 400 {object} rest.ErrorResponse "Invalid client id"
 // @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
 // @Router /ibc/clients/{client-id}/consensus-state [get]
 func queryConsensusStateHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		clientID := vars[RestClientID]
-		prove := rest.ParseQueryProve(r)
-
-		cliCtx, ok := rest.ParseQueryHeightOrReturnBadRequest(w, cliCtx, r)
-		if !ok {
-			return
-		}
-
-		csRes, err := utils.QueryConsensusState(cliCtx, clientID, prove)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, csRes)
-	}
-}
-
-// queryRootHandlerFn implements a root querying route
-//
-// @Summary Query client root
-// @Tags IBC
-// @Produce  json
-// @Param client-id path string true "Client ID"
-// @Param height path number true "Root height"
-// @Success 200 {object} QueryRoot "OK"
-// @Failure 400 {object} rest.ErrorResponse "Invalid client id or height"
-// @Failure 500 {object} rest.ErrorResponse "Internal Server Error"
-// @Router /ibc/clients/{client-id}/roots/{height} [get]
-func queryRootHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clientID := vars[RestClientID]
@@ -152,14 +119,14 @@ func queryRootHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		rootRes, err := utils.QueryCommitmentRoot(cliCtx, clientID, height, prove)
+		csRes, err := utils.QueryConsensusState(cliCtx, clientID, height, prove)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		cliCtx = cliCtx.WithHeight(int64(rootRes.ProofHeight))
-		rest.PostProcessResponse(w, cliCtx, rootRes)
+		cliCtx = cliCtx.WithHeight(int64(csRes.ProofHeight))
+		rest.PostProcessResponse(w, cliCtx, csRes)
 	}
 }
 

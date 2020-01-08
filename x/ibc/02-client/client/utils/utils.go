@@ -65,12 +65,13 @@ func QueryClientState(
 // QueryConsensusState queries the store to get the consensus state and a merkle
 // proof.
 func QueryConsensusState(
-	cliCtx context.CLIContext, clientID string, prove bool) (types.ConsensusStateResponse, error) {
+	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
+) (types.ConsensusStateResponse, error) {
 	var conStateRes types.ConsensusStateResponse
 
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
-		Data:  types.KeyConsensusState(clientID),
+		Data:  types.KeyConsensusState(clientID, height),
 		Prove: prove,
 	}
 
@@ -85,32 +86,6 @@ func QueryConsensusState(
 	}
 
 	return types.NewConsensusStateResponse(clientID, cs, res.Proof, res.Height), nil
-}
-
-// QueryCommitmentRoot queries the store to get the commitment root and a merkle
-// proof.
-func QueryCommitmentRoot(
-	cliCtx context.CLIContext, clientID string, height uint64, prove bool,
-) (types.RootResponse, error) {
-	req := abci.RequestQuery{
-		Path:  "store/ibc/key",
-		Data:  types.KeyRoot(clientID, height),
-		Prove: prove,
-	}
-
-	res, err := cliCtx.QueryABCI(req)
-	if err != nil {
-		return types.RootResponse{}, err
-	}
-
-	var root commitment.Root
-	if err := cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &root); err != nil {
-		return types.RootResponse{}, err
-	}
-
-	rootRes := types.NewRootResponse(clientID, height, root, res.Proof, res.Height)
-
-	return rootRes, nil
 }
 
 // QueryCommitter queries the store to get the committer and a merkle proof
@@ -205,10 +180,8 @@ func QueryNodeConsensusState(cliCtx context.CLIContext) (tendermint.ConsensusSta
 	}
 
 	state := tendermint.ConsensusState{
-		ChainID:          commit.ChainID,
-		Height:           uint64(commit.Height),
 		Root:             commitment.NewRoot(commit.AppHash),
-		NextValidatorSet: tmtypes.NewValidatorSet(validators.Validators),
+		ValidatorSetHash: tmtypes.NewValidatorSet(validators.Validators).Hash(),
 	}
 
 	return state, height, nil

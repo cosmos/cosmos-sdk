@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
@@ -35,69 +35,6 @@ func QuerierClients(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, e
 	}
 
 	return res, nil
-}
-
-// QuerierClientState defines the sdk.Querier to query the IBC client state
-func QuerierClientState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryClientStateParams
-
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	clientState, found := k.GetClientState(ctx, params.ClientID)
-	if !found {
-		return nil, sdkerrors.Wrap(errors.ErrClientTypeNotFound, params.ClientID)
-	}
-
-	bz, err := codec.MarshalJSONIndent(k.cdc, clientState)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
-}
-
-// QuerierConsensusState defines the sdk.Querier to query a consensus state
-func QuerierConsensusState(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryClientStateParams
-
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	consensusState, found := k.GetConsensusState(ctx, params.ClientID)
-	if !found {
-		return nil, errors.ErrConsensusStateNotFound
-	}
-
-	bz, err := codec.MarshalJSONIndent(k.cdc, consensusState)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
-}
-
-// QuerierVerifiedRoot defines the sdk.Querier to query a verified commitment root
-func QuerierVerifiedRoot(ctx sdk.Context, req abci.RequestQuery, k Keeper) ([]byte, error) {
-	var params types.QueryCommitmentRootParams
-
-	if err := k.cdc.UnmarshalJSON(req.Data, &params); err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	root, found := k.GetVerifiedRoot(ctx, params.ClientID, params.Height)
-	if !found {
-		return nil, errors.ErrRootNotFound
-	}
-
-	bz, err := codec.MarshalJSONIndent(k.cdc, root)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return bz, nil
 }
 
 // QuerierCommitter defines the sdk.Querier to query a committer

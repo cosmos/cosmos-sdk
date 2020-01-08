@@ -12,6 +12,7 @@ import (
 type ClientState interface {
 	GetID() string
 	ClientType() ClientType
+	GetSequence() uint64
 	IsFrozen() bool
 
 	// State verification functions
@@ -77,18 +78,12 @@ type ClientState interface {
 // ConsensusState is the state of the consensus process
 type ConsensusState interface {
 	ClientType() ClientType // Consensus kind
-	GetHeight() uint64
 
 	// GetRoot returns the commitment root of the consensus state,
 	// which is used for key-value pair verification.
 	GetRoot() commitment.RootI
 
-	// GetCommitter returns the committer that committed the consensus state
-	GetCommitter() Committer
-
-	// CheckValidityAndUpdateState returns the updated consensus state
-	// only if the header is a descendent of this consensus state.
-	CheckValidityAndUpdateState(Header) (ConsensusState, error)
+	ValidateBasic() error
 }
 
 // Misbehaviour defines a specific consensus kind and an evidence

@@ -1,8 +1,8 @@
-# ADR {ADR-NUMBER}: {TITLE}
+# ADR 004: Split Denomination Keys
 
 ## Changelog
 
-- {date}: {changelog}
+- 2020-01-08: Initial version
 
 ## Context
 
@@ -11,30 +11,37 @@
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
+Balances shall be stored per-account & per-denomination under a denomination- and account-unique key, thus enabling O(1) read & write access to the balance of a particular account in a particular denomination.
+
+### Account interface (x/auth)
+
+`GetCoins() and `SetCoins()` will be removed from the account interface, since coin balances will now be stored in & managed by the bank module.
+
+`GetVestedCoins()`, `GetVestingCoins()`, `GetOrginalVesting()`, `GetDelegatedFree()`, and `GetDelegatedVesting()` will be altered to take a bank keeper and a denomination as two additional arguments, which will be used to lookup the balances from the base account as necessary.
+
+### Bank keeper (x/bank)
+
+`GetBalance(denom string) Int` and `SetBalance(denom string, balance Int)` methods will be added to the bank keeper to retrieve & set balances, respectively.
 
 ## Status
 
-> A decision may be "proposed" if the project stakeholders haven't agreed with it yet, or "accepted" once it is agreed. If a later ADR changes or reverses a decision, it may be marked as "deprecated" or "superseded" with a reference to its replacement.
-> {Deprecated|Proposed|Accepted}
+Proposed.
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Positive
 
-{positive consequences}
+- O(1) reads & writes of balances (with respect to the number of denominations for which an account has non-zero balances)
 
 ### Negative
 
-{negative consequences}
+- Slighly less efficient reads/writes when reading & writing all balances of a single account in a transaction.
 
 ### Neutral
 
-{neutral consequences}
+None in particular.
 
 ## References
 
-- {reference link}
+Ref https://github.com/cosmos/cosmos-sdk/issues/5492
+Ref https://github.com/cosmos/cosmos-sdk/issues/5467

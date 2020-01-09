@@ -96,12 +96,9 @@ enum ProposalStatus {
 
 // TallyResult defines a standard tally for a proposal
 message TallyResult {
-    bytes yes = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false
-                  ,(gogoproto.moretags) = "yaml:\"yes\""];
-    bytes abstain = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false
-                      ,(gogoproto.moretags) = "yaml:\"abstain\""];
-    bytes no = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false
-                 ,(gogoproto.moretags) = "yaml:\"no\""];
+    bytes yes = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+    bytes abstain = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+    bytes no = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
     bytes no_with_veto = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false
                            ,(gogoproto.moretags) = "yaml:\"no_with_veto\""];
 }

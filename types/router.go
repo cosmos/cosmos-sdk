@@ -9,7 +9,7 @@ var IsAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 // Router provides handlers for each transaction type.
 type Router interface {
 	AddRoute(r string, h Handler) Router
-	Route(path string) Handler
+	Route(ctx Context, path string) Handler
 }
 
 // QueryRouter provides queryables for each query path.

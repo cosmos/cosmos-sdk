@@ -74,7 +74,7 @@ func (bva BaseVestingAccount) SpendableCoinsVestingAccount(vestingCoins sdk.Coin
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Add(sdk.Coins{spendableCoin})
+			spendableCoins = spendableCoins.Add(spendableCoin)
 		}
 	}
 
@@ -108,12 +108,12 @@ func (bva *BaseVestingAccount) TrackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Add(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Add(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Add(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Add(yCoin)
 		}
 	}
 }
@@ -543,7 +543,7 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 		if x < period.Length {
 			break
 		}
-		vestedCoins = vestedCoins.Add(period.Amount)
+		vestedCoins = vestedCoins.Add(period.Amount...)
 		// Update the start time of the next period
 		currentPeriodStartTime += period.Length
 	}
@@ -589,7 +589,7 @@ func (pva PeriodicVestingAccount) Validate() error {
 	originalVesting := sdk.NewCoins()
 	for _, p := range pva.VestingPeriods {
 		endTime += p.Length
-		originalVesting = originalVesting.Add(p.Amount)
+		originalVesting = originalVesting.Add(p.Amount...)
 	}
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")

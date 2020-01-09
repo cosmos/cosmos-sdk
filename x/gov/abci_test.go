@@ -279,7 +279,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	moduleAccCoins := macc.GetCoins()
 
-	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit).Add(proposalCoins)
+	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 	require.True(t, moduleAccCoins.IsEqual(deposits))
 
 	err = input.keeper.AddVote(ctx, proposal.ProposalID, input.addrs[0], OptionYes)

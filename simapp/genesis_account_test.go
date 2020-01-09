@@ -82,7 +82,7 @@ func TestSimGenesisAccountValidate(t *testing.T) {
 			"valid basic account with invalid original vesting coins",
 			simapp.SimGenesisAccount{
 				BaseAccount:     baseAcc,
-				OriginalVesting: coins.Add(coins),
+				OriginalVesting: coins.Add(coins...),
 				StartTime:       vestingStart.Unix(),
 				EndTime:         vestingStart.Add(1 * time.Hour).Unix(),
 			},

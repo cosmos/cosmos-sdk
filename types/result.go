@@ -83,10 +83,6 @@ type TxResponse struct {
 	GasUsed   int64           `json:"gas_used,omitempty"`
 	Tx        Tx              `json:"tx,omitempty"`
 	Timestamp string          `json:"timestamp,omitempty"`
-
-	// DEPRECATED: Remove in the next next major release in favor of using the
-	// ABCIMessageLog.Events field.
-	Events StringEvents `json:"events,omitempty"`
 }
 
 // NewResponseResultTx returns a TxResponse given a ResultTx from tendermint
@@ -108,7 +104,6 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx, timestamp string) TxRespon
 		Info:      res.TxResult.Info,
 		GasWanted: res.TxResult.GasWanted,
 		GasUsed:   res.TxResult.GasUsed,
-		Events:    StringifyEvents(res.TxResult.Events),
 		Tx:        tx,
 		Timestamp: timestamp,
 	}
@@ -151,7 +146,6 @@ func newTxResponseCheckTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.CheckTx.Info,
 		GasWanted: res.CheckTx.GasWanted,
 		GasUsed:   res.CheckTx.GasUsed,
-		Events:    StringifyEvents(res.CheckTx.Events),
 	}
 }
 
@@ -178,7 +172,6 @@ func newTxResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) TxResponse {
 		Info:      res.DeliverTx.Info,
 		GasWanted: res.DeliverTx.GasWanted,
 		GasUsed:   res.DeliverTx.GasUsed,
-		Events:    StringifyEvents(res.DeliverTx.Events),
 	}
 }
 
@@ -206,49 +199,35 @@ func (r TxResponse) String() string {
 	if r.Height > 0 {
 		sb.WriteString(fmt.Sprintf("  Height: %d\n", r.Height))
 	}
-
 	if r.TxHash != "" {
 		sb.WriteString(fmt.Sprintf("  TxHash: %s\n", r.TxHash))
 	}
-
 	if r.Code > 0 {
 		sb.WriteString(fmt.Sprintf("  Code: %d\n", r.Code))
 	}
-
 	if r.Data != "" {
 		sb.WriteString(fmt.Sprintf("  Data: %s\n", r.Data))
 	}
-
 	if r.RawLog != "" {
 		sb.WriteString(fmt.Sprintf("  Raw Log: %s\n", r.RawLog))
 	}
-
 	if r.Logs != nil {
 		sb.WriteString(fmt.Sprintf("  Logs: %s\n", r.Logs))
 	}
-
 	if r.Info != "" {
 		sb.WriteString(fmt.Sprintf("  Info: %s\n", r.Info))
 	}
-
 	if r.GasWanted != 0 {
 		sb.WriteString(fmt.Sprintf("  GasWanted: %d\n", r.GasWanted))
 	}
-
 	if r.GasUsed != 0 {
 		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
 	}
-
 	if r.Codespace != "" {
 		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
 	}
-
 	if r.Timestamp != "" {
 		sb.WriteString(fmt.Sprintf("  Timestamp: %s\n", r.Timestamp))
-	}
-
-	if len(r.Events) > 0 {
-		sb.WriteString(fmt.Sprintf("  Events: \n%s\n", r.Events.String()))
 	}
 
 	return strings.TrimSpace(sb.String())

@@ -38,7 +38,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicM
 
 			var genState map[string]json.RawMessage
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genState); err != nil {
-				return fmt.Errorf("error unmarshaling genesis doc %s: %s", genesis, err.Error())
+				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
 			if err = mbm.ValidateGenesis(genState); err != nil {

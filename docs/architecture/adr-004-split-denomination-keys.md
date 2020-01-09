@@ -32,6 +32,8 @@ Vesting accounts will continue to store original vesting, delegated free, and de
 
 `trackDelegation()` and `trackUndelegation()` will be altered to read & write the balances directly instead of calling `GetCoins()` / `SetCoins()` (which no longer exist).
 
+External APIs will need to scan all balances under an account to retain backwards-compatibility - additional methods should be added to fetch a balance for a single denomination only.
+
 ## Status
 
 Proposed.

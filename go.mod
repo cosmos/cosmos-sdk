@@ -1,5 +1,7 @@
 module github.com/cosmos/cosmos-sdk
 
+go 1.12
+
 require (
 	github.com/99designs/keyring v1.1.3
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
@@ -15,9 +17,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
-	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.1
 	github.com/stretchr/testify v1.4.0
@@ -26,8 +26,10 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/iavl v0.12.4
 	github.com/tendermint/tendermint v0.32.8
-	github.com/tendermint/tm-db v0.2.0
+	github.com/tendermint/tm-db v0.3.0
 	gopkg.in/yaml.v2 v2.2.7
 )
 
-go 1.13
+replace github.com/tendermint/tendermint => ./../tendermint
+
+replace github.com/corestario/dkglib => ./../dkglib

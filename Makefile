@@ -230,7 +230,6 @@ devdoc-update:
 proto-all: proto-gen proto-lint proto-check-breaking
 
 proto-gen:
-	@go mod vendor
 	@./scripts/protocgen.sh
 
 proto-lint:

@@ -1,8 +1,6 @@
 build:
   roots:
     - .
-  excludes:
-    - vendor/github.com/tendermint
 lint:
   use:
     - DEFAULT
@@ -13,7 +11,9 @@ lint:
     - COMMENT_FIELD
     - PACKAGE_DIRECTORY_MATCH
   ignore:
-    - vendor
+    - third_party
 breaking:
   use:
     - FILE
+  ignore:
+    - third_party

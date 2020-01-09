@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.37.78] - TBD
 
+### Bug Fixes
+
+* (x/genutil) [\#5499](https://github.com/cosmos/cosmos-sdk/pull/) Ensure `DefaultGenesis` returns valid and non-nil default genesis state.
+
 ## [v0.37.7] - 2020-02-10
 
 ### Improvements

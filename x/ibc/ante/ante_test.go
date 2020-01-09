@@ -159,7 +159,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketOrdered() {
 
 	cctx, _ := suite.ctx.CacheContext()
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, 1)
-	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, packet.GetCommitment())
+	suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, channeltypes.CommitPacket(packet.Data))
 	msg := channel.NewMsgPacket(packet, nil, 0, addr1)
 	_, err := handler(cctx, suite.newTx(msg), false)
 	suite.Error(err, "%+v", err) // channel does not exist
@@ -207,7 +207,7 @@ func (suite *HandlerTestSuite) TestHandleMsgPacketUnordered() {
 	var packet channeltypes.Packet
 	for i := 0; i < 5; i++ {
 		packet = channel.NewPacket(newPacket(uint64(i)), uint64(i), portid, chanid, cpportid, cpchanid)
-		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(i), packet.GetCommitment())
+		suite.app.IBCKeeper.ChannelKeeper.SetPacketCommitment(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(i), channeltypes.CommitPacket(packet.Data))
 	}
 
 	suite.app.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.ctx, packet.SourcePort, packet.SourceChannel, uint64(10))

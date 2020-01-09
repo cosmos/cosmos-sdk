@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 )
 

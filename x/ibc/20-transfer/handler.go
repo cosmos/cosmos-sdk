@@ -15,21 +15,21 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgTransfer:
 			return handleMsgTransfer(ctx, k, msg)
 		case channeltypes.MsgPacket:
-			switch data := msg.PacketDataI.(type) {
-			case PacketDataTransfer: // i.e fulfills the PacketDataI interface
+			switch data := msg.Data.(type) {
+			case PacketDataTransfer: // i.e fulfills the Data interface
 				return handlePacketDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", msg)
 			}
 		case channeltypes.MsgTimeout:
-			switch data := msg.PacketDataI.(type) {
+			switch data := msg.Data.(type) {
 			case PacketDataTransfer:
 				return handleTimeoutDataTransfer(ctx, k, msg, data)
 			default:
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 packet data type: %T", data)
 			}
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecovnized ics20 message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ics20 message type: %T", msg)
 		}
 	}
 }

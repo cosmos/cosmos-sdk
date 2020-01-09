@@ -435,7 +435,7 @@ func (msg MsgPacket) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress
 	}
 
-	return msg.PacketDataI.ValidateBasic()
+	return msg.Packet.ValidateBasic()
 }
 
 // GetSignBytes implements sdk.Msg

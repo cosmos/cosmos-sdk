@@ -39,13 +39,18 @@ func NewPacket(
 	destinationPort, destinationChannel string,
 ) Packet {
 	return Packet{
-		Data:        data,
+		Data:               data,
 		Sequence:           sequence,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,
 		DestinationPort:    destinationPort,
 		DestinationChannel: destinationChannel,
 	}
+}
+
+// Type exports Packet.Data.Type
+func (p Packet) Type() string {
+	return p.Data.Type()
 }
 
 // GetSequence implements PacketI interface
@@ -65,6 +70,9 @@ func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData implements PacketI interface
 func (p Packet) GetData() exported.PacketDataI { return p.Data }
+
+// GetTimeoutHeight implements PacketI interface
+func (p Packet) GetTimeoutHeight() uint64 { return p.Data.GetTimeoutHeight() }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -95,11 +103,11 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.GetTimeoutHeight() == 0 {
+	if p.Data.GetTimeoutHeight() == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
 	}
-	if len(p.GetCommitment()) == 0 {
+	if len(p.Data.GetCommitment()) == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet commitment bytes cannot be empty")
 	}
-	return p.PacketDataI.ValidateBasic()
+	return p.Data.ValidateBasic()
 }

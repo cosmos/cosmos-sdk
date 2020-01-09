@@ -278,7 +278,7 @@ func (k Keeper) WriteAcknowledgement(
 	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
 		k.SetPacketAcknowledgement(
 			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-			acknowledgement.GetCommitment(), // TODO: hash ACK
+			types.CommitAcknowledgement(acknowledgement),
 		)
 	}
 

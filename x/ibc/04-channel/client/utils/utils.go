@@ -56,8 +56,9 @@ func QueryPacket(
 }
 
 // QueryChannel queries the store to get a channel and a merkle proof.
-func QueryChannel(ctx context.CLIContext, portID string, channelID string, prove bool) (types.ChannelResponse, error) {
-	var connRes types.ChannelResponse
+func QueryChannel(
+	ctx context.CLIContext, portID string, channelID string, prove bool,
+) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
 		Data:  types.KeyChannel(portID, channelID),
@@ -71,7 +72,7 @@ func QueryChannel(ctx context.CLIContext, portID string, channelID string, prove
 
 	var channel types.Channel
 	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
-		return connRes, err
+		return types.ChannelResponse{}, err
 	}
 	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

@@ -10,6 +10,7 @@ import (
 )
 
 // CommitPacket appends bigendian encoded timeout height and commitment bytes
+// and then returns the hash of the result bytes.
 // TODO: no specification for packet commitment currently,
 // make it spec compatible once we have it
 func CommitPacket(data exported.PacketDataI) []byte {
@@ -17,6 +18,11 @@ func CommitPacket(data exported.PacketDataI) []byte {
 	binary.BigEndian.PutUint64(buf, data.GetTimeoutHeight())
 	buf = append(buf, data.GetCommitment()...)
 	return tmhash.Sum(buf)
+}
+
+// CommitAcknowledgement returns the hash of commitment bytes
+func CommitAcknowledgement(data exported.PacketDataI) []byte {
+	return tmhash.Sum(data.GetCommitment())
 }
 
 var _ exported.PacketI = Packet{}

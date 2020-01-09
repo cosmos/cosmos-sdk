@@ -27,7 +27,6 @@ func TestNetGenesisState(t *testing.T) {
 			[]byte(`{"foo":"bar"}`),
 		},
 	)
-	assert.NotNil(t, gen.GenTxs) // https://github.com/cosmos/cosmos-sdk/issues/5086
 	assert.Equal(t, string(gen.GenTxs[0]), `{"foo":"bar"}`)
 }
 

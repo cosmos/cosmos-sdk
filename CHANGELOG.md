@@ -50,6 +50,9 @@ logic has been implemented for v0.38 target version. Applications can migrate vi
 
 ### API Breaking Changes
 
+* (types) [\#5495](https://github.com/cosmos/cosmos-sdk/pull/5495) Remove redundant `(Must)Bech32ify*` and `(Must)Get*KeyBech32`
+  functions in favor of `(Must)Bech32ifyPubKey` and `(Must)GetPubKeyFromBech32` respectively, both of
+  which take a `Bech32PubKeyType` (string).
 * (types) [\#5430](https://github.com/cosmos/cosmos-sdk/pull/5430) `DecCoins#Add` parameter changed from `DecCoins` 
   to `...DecCoin`, `Coins#Add` parameter changed from `Coins` to `...Coin`
 * (baseapp/types) [\#5421](https://github.com/cosmos/cosmos-sdk/pull/5421) The `Error` interface (`types/errors.go`)

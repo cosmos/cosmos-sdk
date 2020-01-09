@@ -31,8 +31,8 @@ func DecodeStore(cdc *codec.Codec, kvA, kvB cmn.KVPair) string {
 		var pubKeyA, pubKeyB crypto.PubKey
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvA.Value, &pubKeyA)
 		cdc.MustUnmarshalBinaryLengthPrefixed(kvB.Value, &pubKeyB)
-		bechPKA := sdk.MustBech32ifyAccPub(pubKeyA)
-		bechPKB := sdk.MustBech32ifyAccPub(pubKeyB)
+		bechPKA := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKeyA)
+		bechPKB := sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKeyB)
 		return fmt.Sprintf("PubKeyA: %s\nPubKeyB: %s", bechPKA, bechPKB)
 
 	default:

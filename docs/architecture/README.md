@@ -39,4 +39,5 @@ Please add a entry below in your Pull Request for an ADR.
 - [ADR 011: Generalize Genesis Accounts](./adr-011-generalize-genesis-accounts.md)
 - [ADR 012: State Accessors](./adr-012-state-accessors.md)
 - [ADR 015: IBC Packet Receiver](./adr-015-ibc-packet-receiver.md)
+- [ADR 016: Validator Consensus Key Rotation](./adr-016-validator-consensus-key-rotation.md)
 - [ADR 017: Historical Header Module](./adr-017-historical-header-module.md)

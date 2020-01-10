@@ -177,28 +177,39 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		}
 
 		// query commission
-		commissionRes, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
+		bz, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		var valCom types.ValidatorAccumulatedCommission
-		cliCtx.Codec.MustUnmarshalJSON(commissionRes, &valCom)
+		var commission types.ValidatorAccumulatedCommission
+		if err := cliCtx.Codec.UnmarshalJSON(bz, &commission); err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
 		// self bond rewards
 		delAddr := sdk.AccAddress(validatorAddr)
-		rewardsRes, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr.String(), valAddr)
+		bz, height, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr.String(), valAddr)
 		if !ok {
 			return
 		}
 
 		var rewards sdk.DecCoins
-		cliCtx.Codec.MustUnmarshalJSON(rewardsRes, &rewards)
+		if err := cliCtx.Codec.UnmarshalJSON(bz, &rewards); err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-		// Prepare response
-		res := cliCtx.Codec.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
-		rest.PostProcessResponse(w, cliCtx, res)
+		bz, err = cliCtx.Codec.MarshalJSON(NewValidatorDistInfo(delAddr, rewards, commission))
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, bz)
 	}
 }
 
@@ -217,12 +228,13 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 		}
 
 		delAddr := sdk.AccAddress(validatorAddr).String()
-		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr, valAddr)
+		bz, height, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr, valAddr)
 		if !ok {
 			return
 		}
 
-		rest.PostProcessResponse(w, cliCtx, res)
+		cliCtx = cliCtx.WithHeight(height)
+		rest.PostProcessResponse(w, cliCtx, bz)
 	}
 }
 

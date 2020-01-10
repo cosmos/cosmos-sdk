@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -105,24 +103,8 @@ func DefaultGenesisState() GenesisState {
 
 // ValidateGenesis validates the genesis state of distribution genesis input
 func ValidateGenesis(gs GenesisState) error {
-	if gs.Params.CommunityTax.IsNegative() || gs.Params.CommunityTax.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter CommunityTax should non-negative and "+
-			"less than one, is %s", gs.Params.CommunityTax.String())
+	if err := gs.Params.ValidateBasic(); err != nil {
+		return err
 	}
-	if gs.Params.BaseProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BaseProposerReward should be positive, is %s",
-			gs.Params.BaseProposerReward.String())
-	}
-	if gs.Params.BonusProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BonusProposerReward should be positive, is %s",
-			gs.Params.BonusProposerReward.String())
-	}
-	if (gs.Params.BaseProposerReward.Add(gs.Params.BonusProposerReward)).
-		GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameters BaseProposerReward and "+
-			"BonusProposerReward cannot add to be greater than one, "+
-			"adds to %s", gs.Params.BaseProposerReward.Add(gs.Params.BonusProposerReward).String())
-	}
-
 	return gs.FeePool.ValidateGenesis()
 }

@@ -99,6 +99,7 @@ func (k Keeper) ReceiveTransfer(
 
 }
 
+// TimeoutTransfer handles transfer timeout logic
 func (k Keeper) TimeoutTransfer(
 	ctx sdk.Context,
 	sourcePort,

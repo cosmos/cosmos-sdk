@@ -1,11 +1,6 @@
 module.exports = {
   theme: "cosmos",
   title: "Cosmos SDK",
-  markdown: {
-    anchor: {
-      permalinkSymbol: ""
-    }
-  },
   head: [
     [
       "link",

@@ -229,14 +229,29 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 				return cliCtx.PrintOutput(result)
 			}
 
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			params := types.NewQueryDelegatorParams(delegatorAddr)
+			bz, err := cdc.MarshalJSON(params)
+			if err != nil {
+				return fmt.Errorf("failed to marshal params: %w", err)
+			}
+
 			// query for delegator total rewards
-			resp, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, args[0])
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			var result types.QueryDelegatorTotalRewardsResponse
-			cdc.MustUnmarshalJSON(resp, &result)
+			if err = cdc.UnmarshalJSON(res, &result); err != nil {
+				return fmt.Errorf("failed to unmarshal response: %w", err)
+			}
+
 			return cliCtx.PrintOutput(result)
 		},
 	}

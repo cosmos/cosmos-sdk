@@ -290,16 +290,3 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
-
-func checkResponseQueryDelegationRewards(
-	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr, valAddr string,
-) (res []byte, ok bool) {
-
-	res, err := common.QueryDelegationRewards(cliCtx, queryRoute, delAddr, valAddr)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return nil, false
-	}
-
-	return res, true
-}

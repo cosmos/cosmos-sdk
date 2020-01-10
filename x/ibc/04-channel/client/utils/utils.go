@@ -57,7 +57,7 @@ func QueryPacket(
 
 // QueryChannel queries the store to get a channel and a merkle proof.
 func QueryChannel(
-	ctx context.CLIContext, portID string, channelID string, prove bool,
+	ctx context.CLIContext, portID, channelID string, prove bool,
 ) (types.ChannelResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",

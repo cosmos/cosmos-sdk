@@ -16,13 +16,13 @@ import (
 func CommitPacket(data exported.PacketDataI) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, data.GetTimeoutHeight())
-	buf = append(buf, data.GetCommitment()...)
+	buf = append(buf, data.GetBytes()...)
 	return tmhash.Sum(buf)
 }
 
 // CommitAcknowledgement returns the hash of commitment bytes
 func CommitAcknowledgement(data exported.PacketDataI) []byte {
-	return tmhash.Sum(data.GetCommitment())
+	return tmhash.Sum(data.GetBytes())
 }
 
 var _ exported.PacketI = Packet{}
@@ -112,8 +112,8 @@ func (p Packet) ValidateBasic() error {
 	if p.Data.GetTimeoutHeight() == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
 	}
-	if len(p.Data.GetCommitment()) == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacket, "packet commitment bytes cannot be empty")
+	if len(p.Data.GetBytes()) == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet data bytes cannot be empty")
 	}
 	return p.Data.ValidateBasic()
 }

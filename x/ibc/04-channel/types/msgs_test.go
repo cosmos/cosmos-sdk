@@ -356,7 +356,7 @@ var _ exported.PacketDataI = validPacketT{}
 
 type validPacketT struct{}
 
-func (validPacketT) GetCommitment() []byte {
+func (validPacketT) GetBytes() []byte {
 	return []byte("testdata")
 }
 
@@ -376,7 +376,7 @@ var _ exported.PacketDataI = invalidPacketT{}
 
 type invalidPacketT struct{}
 
-func (invalidPacketT) GetCommitment() []byte {
+func (invalidPacketT) GetBytes() []byte {
 	return []byte("testdata")
 }
 

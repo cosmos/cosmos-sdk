@@ -365,7 +365,7 @@ func (k Keeper) AcknowledgePacket(
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
 		types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
-		acknowledgement.GetCommitment(),
+		acknowledgement.GetBytes(),
 	) {
 		return nil, errors.New("invalid acknowledgement on counterparty chain")
 	}

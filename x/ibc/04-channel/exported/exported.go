@@ -16,7 +16,7 @@ type PacketI interface {
 // IBC application modules should define which data they want to
 // send and receive over IBC channels.
 type PacketDataI interface {
-	GetCommitment() []byte    // GetCommitment returns (possibly non-recoverable) commitment bytes from its Data and Timeout
+	GetBytes() []byte         // GetBytes returns the serialised packet data (without timeout)
 	GetTimeoutHeight() uint64 // GetTimeoutHeight returns the timeout height defined specifically for each packet data type instance
 
 	ValidateBasic() error // ValidateBasic validates basic properties of the packet data, implements sdk.Msg

@@ -63,7 +63,7 @@ func (pd PacketDataTransfer) ValidateBasic() error {
 }
 
 // Implements channelexported.PacketDataI
-func (pd PacketDataTransfer) GetCommitment() []byte {
+func (pd PacketDataTransfer) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(pd))
 }
 

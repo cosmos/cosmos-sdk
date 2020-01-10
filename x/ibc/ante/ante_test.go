@@ -240,7 +240,7 @@ type packetT struct {
 	Data uint64
 }
 
-func (packet packetT) GetCommitment() []byte {
+func (packet packetT) GetBytes() []byte {
 	return []byte(fmt.Sprintf("%d", packet.Data))
 }
 

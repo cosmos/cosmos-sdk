@@ -449,7 +449,7 @@ var _ sdk.Msg = MsgTimeout{}
 // MsgTimeout receives timeouted packet
 type MsgTimeout struct {
 	Packet           `json:"packet" yaml:"packet"`
-	NextSequenceRecv uint64            `json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv,omitempty"`
+	NextSequenceRecv uint64            `json:"next_sequence_recv" yaml:"next_sequence_recv"`
 	Proof            commitment.ProofI `json:"proof" yaml:"proof"`
 	ProofHeight      uint64            `json:"proof_height" yaml:"proof_height"`
 	Signer           sdk.AccAddress    `json:"signer" yaml:"signer"`

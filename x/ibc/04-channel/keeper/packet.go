@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -240,24 +241,6 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	if channel.Ordering == types.ORDERED {
-		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
-		if !found {
-			return nil, types.ErrSequenceReceiveNotFound
-		}
-
-		if packet.GetSequence() != nextSequenceRecv {
-			return nil, sdkerrors.Wrapf(
-				types.ErrInvalidPacket,
-				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
-			)
-		}
-
-		nextSequenceRecv++
-
-		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
-	}
-
 	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
 		return nil, types.ErrPacketTimeout
 	}
@@ -285,6 +268,8 @@ func (k Keeper) PacketExecuted(
 	if !found {
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
+
+	fmt.Printf("packet executed was called\n")
 
 	if channel.State != types.OPEN {
 		return sdkerrors.Wrapf(

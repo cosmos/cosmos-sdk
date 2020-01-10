@@ -19,7 +19,6 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -263,8 +262,6 @@ func newPacket(data uint64) packetT {
 
 // define variables used for testing
 var (
-	proof = commitment.Proof{Proof: &merkle.Proof{}}
-
 	addr1 = sdk.AccAddress("testaddr1")
 
 	portid   = "testportid"

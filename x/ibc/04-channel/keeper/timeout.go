@@ -39,6 +39,9 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
+	// TimeoutPacket is called by the antehandler which acts upon the packet.Route(),
+	// so the capability authentication can be omitted here
+
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return nil, types.ErrChannelCapabilityNotFound
@@ -197,8 +200,8 @@ func (k Keeper) TimeoutOnClose(
 	return packet, nil
 }
 
-// DeleteCommitmentTimeout deletes the commitment send from this chain after it verifies timeout
-func (k Keeper) DeleteCommitmentTimeout(ctx sdk.Context, packet exported.PacketI) error {
+// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout
+func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())

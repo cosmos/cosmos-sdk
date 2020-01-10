@@ -393,12 +393,10 @@ func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
 
 // MsgPacket receives incoming IBC packet
 type MsgPacket struct {
-	Packet `json:"packet" yaml:"packet"`
-
+	Packet      `json:"packet" yaml:"packet"`
 	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
 	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
-
-	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+	Signer      sdk.AccAddress    `json:"signer" yaml:"signer"`
 }
 
 var _ sdk.Msg = MsgPacket{}
@@ -406,12 +404,10 @@ var _ sdk.Msg = MsgPacket{}
 // NewMsgPacket constructs new MsgPacket
 func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
 	return MsgPacket{
-		Packet: packet,
-
+		Packet:      packet,
 		Proof:       proof,
 		ProofHeight: proofHeight,
-
-		Signer: signer,
+		Signer:      signer,
 	}
 }
 
@@ -453,12 +449,10 @@ var _ sdk.Msg = MsgTimeout{}
 // MsgTimeout receives timeouted packet
 type MsgTimeout struct {
 	Packet           `json:"packet" yaml:"packet"`
-	NextSequenceRecv uint64 `json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv,omitempty"`
-
-	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
-	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
-
-	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+	NextSequenceRecv uint64            `json:"next_sequence_recv,omitempty" yaml:"next_sequence_recv,omitempty"`
+	Proof            commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight      uint64            `json:"proof_height" yaml:"proof_height"`
+	Signer           sdk.AccAddress    `json:"signer" yaml:"signer"`
 }
 
 // NewMsgTimeout constructs new MsgTimeout
@@ -511,11 +505,9 @@ var _ sdk.Msg = MsgAcknowledgement{}
 type MsgAcknowledgement struct {
 	Packet          `json:"packet" yaml:"packet"`
 	Acknowledgement exported.PacketDataI `json:"acknowledgement" yaml:"acknowledgement"`
-
-	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
-	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
-
-	Signer sdk.AccAddress `json:"signer" yaml:"signer"`
+	Proof           commitment.ProofI    `json:"proof" yaml:"proof"`
+	ProofHeight     uint64               `json:"proof_height" yaml:"proof_height"`
+	Signer          sdk.AccAddress       `json:"signer" yaml:"signer"`
 }
 
 // NewMsgAcknowledgement constructs a new MsgAcknowledgement

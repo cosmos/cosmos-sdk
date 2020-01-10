@@ -255,10 +255,10 @@ func (k Keeper) RecvPacket(
 	return packet, nil
 }
 
-// WriteAcknowledgement writes the packet execution acknowledgement to the state,
+// PacketExecuted writes the packet execution acknowledgement to the state,
 // which will be verified by the counterparty chain using AcknowledgePacket.
 // CONTRACT: each packet handler function should call WriteAcknowledgement at the end of the execution
-func (k Keeper) WriteAcknowledgement(
+func (k Keeper) PacketExecuted(
 	ctx sdk.Context,
 	packet exported.PacketI,
 	acknowledgement exported.PacketDataI,
@@ -373,8 +373,8 @@ func (k Keeper) AcknowledgePacket(
 	return packet, nil
 }
 
-// DeleteCommitment deletes the commitment send from this chain after it receives the acknowlegement
+// AcknowledgementExecuted deletes the commitment send from this chain after it receives the acknowlegement
 // CONTRACT: each acknowledgement handler function should call WriteAcknowledgement at the end of the execution
-func (k Keeper) DeleteCommitment(ctx sdk.Context, packet exported.PacketI) {
+func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI) {
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }

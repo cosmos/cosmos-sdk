@@ -3,15 +3,13 @@ package upgrade_test
 import (
 	"encoding/json"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	store "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -406,12 +404,6 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
-	// set a temporary home dir
-	homeDir, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
-	// TODO cleanup viper
-	viper.Set(flags.FlagHome, homeDir)
-
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	planHeight := s.ctx.BlockHeight() + 1
 	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: planHeight}})
@@ -421,13 +413,11 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	require.Panics(t, func() {
 		s.module.BeginBlock(newCtx, req)
 	})
-
-	// TODO cleanup viper
-	home := viper.GetString(flags.FlagHome)
+	t.Log("this is after begin block")
+	home := s.keeper.GetHomePath()
 	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
 
 	_, err = os.Stat(upgradeInfoFilePath)
-
 	t.Log("verify if upgrade height is written to filesystem when binary panics")
 	require.Nil(t, err)
 

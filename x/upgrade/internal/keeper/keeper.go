@@ -4,16 +4,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-
-	"github.com/spf13/viper"
-
 	"io/ioutil"
-	"os"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -23,6 +17,7 @@ import (
 )
 
 type Keeper struct {
+	homePath           string
 	skipUpgradeHeights map[int64]bool
 	storeKey           sdk.StoreKey
 	cdc                *codec.Codec
@@ -30,8 +25,9 @@ type Keeper struct {
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc *codec.Codec, homePath string) Keeper {
 	return Keeper{
+		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
@@ -142,18 +138,12 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 
 // WriteToFile adds plan height to upgrade-info.json
 func (k Keeper) DumpUpgradeInfoToFile(height int64) {
-	// TODO cleanup viper
-	home := viper.GetString(flags.FlagHome)
-	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
-	_, err := os.Stat(upgradeInfoFilePath)
-
+	upgradeInfoFileDir := k.GetHomePath()
 	// If the upgrade-info file is not found, create new
-	if os.IsNotExist(err) {
-		_, err := os.Create(upgradeInfoFilePath)
-
-		if err != nil {
-			panic(fmt.Errorf("error while creating upgrade-info file: %s", err))
-		}
+	upgradeInfoFilePath, err := types.EnsureConfigExists(upgradeInfoFileDir)
+	fmt.Printf("this is err in os create in dump %v", upgradeInfoFilePath)
+	if err != nil {
+		panic(fmt.Errorf("unable to create upgrade info file %s", err.Error()))
 	}
 
 	var upgradeInfo store.UpgradeInfo
@@ -166,4 +156,9 @@ func (k Keeper) DumpUpgradeInfoToFile(height int64) {
 	}
 
 	err = ioutil.WriteFile(upgradeInfoFilePath, info, 0644)
+}
+
+// GetHomepath returns the height at which the given upgrade was executed
+func (k Keeper) GetHomePath() string {
+	return k.homePath
 }

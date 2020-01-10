@@ -73,12 +73,26 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) htt
 			return
 		}
 
-		// query for rewards from a particular delegator
-		res, ok := checkResponseQueryDelegatorTotalRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"])
+		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
 		if !ok {
 			return
 		}
 
+		params := types.NewQueryDelegatorParams(delegatorAddr)
+		bz, err := cliCtx.Codec.MarshalJSON(params)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal params: %s", err))
+			return
+		}
+
+		route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards)
+		res, height, err := cliCtx.QueryWithData(route, bz)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -275,19 +289,6 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
-}
-
-func checkResponseQueryDelegatorTotalRewards(
-	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr string,
-) (res []byte, ok bool) {
-
-	res, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, delAddr)
-	if err != nil {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return nil, false
-	}
-
-	return res, true
 }
 
 func checkResponseQueryDelegationRewards(

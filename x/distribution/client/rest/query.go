@@ -105,12 +105,16 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) ht
 			return
 		}
 
+		delAddr := mux.Vars(r)["delegatorAddr"]
+		valAddr := mux.Vars(r)["validatorAddr"]
+
 		// query for rewards from a particular delegation
-		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
+		res, height, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr, valAddr)
 		if !ok {
 			return
 		}
 
+		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
 }
@@ -289,4 +293,17 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, queryRoute string) h
 		cliCtx = cliCtx.WithHeight(height)
 		rest.PostProcessResponse(w, cliCtx, res)
 	}
+}
+
+func checkResponseQueryDelegationRewards(
+	w http.ResponseWriter, cliCtx context.CLIContext, queryRoute, delAddr, valAddr string,
+) (res []byte, height int64, ok bool) {
+
+	res, height, err := common.QueryDelegationRewards(cliCtx, queryRoute, delAddr, valAddr)
+	if err != nil {
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return nil, 0, false
+	}
+
+	return res, height, true
 }

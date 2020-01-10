@@ -217,15 +217,18 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			// query for rewards from a particular delegation
 			if len(args) == 2 {
-				// query for rewards from a particular delegation
-				resp, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
+				resp, _, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
 				if err != nil {
 					return err
 				}
 
 				var result sdk.DecCoins
-				cdc.MustUnmarshalJSON(resp, &result)
+				if err = cdc.UnmarshalJSON(resp, &result); err != nil {
+					return fmt.Errorf("failed to unmarshal response: %w", err)
+				}
+
 				return cliCtx.PrintOutput(result)
 			}
 

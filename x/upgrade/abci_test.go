@@ -3,15 +3,16 @@ package upgrade_test
 import (
 	"encoding/json"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

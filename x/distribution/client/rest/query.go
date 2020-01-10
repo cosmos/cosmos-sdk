@@ -165,8 +165,7 @@ func NewValidatorDistInfo(operatorAddr sdk.AccAddress, rewards sdk.DecCoins,
 // HTTP request handler to query validator's distribution information
 func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		valAddr := mux.Vars(r)["validatorAddr"]
-		validatorAddr, ok := checkValidatorAddressVar(w, r)
+		valAddr, ok := checkValidatorAddressVar(w, r)
 		if !ok {
 			return
 		}
@@ -177,7 +176,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		}
 
 		// query commission
-		bz, err := common.QueryValidatorCommission(cliCtx, queryRoute, validatorAddr)
+		bz, err := common.QueryValidatorCommission(cliCtx, queryRoute, valAddr)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -190,8 +189,8 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, queryRoute string) http.H
 		}
 
 		// self bond rewards
-		delAddr := sdk.AccAddress(validatorAddr)
-		bz, height, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr.String(), valAddr)
+		delAddr := sdk.AccAddress(valAddr)
+		bz, height, ok := checkResponseQueryDelegationRewards(w, cliCtx, queryRoute, delAddr.String(), valAddr.String())
 		if !ok {
 			return
 		}

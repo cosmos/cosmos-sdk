@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -282,7 +281,6 @@ func (k Keeper) PacketExecuted(
 	if !found {
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
-
 
 	if channel.State != types.OPEN {
 		return sdkerrors.Wrapf(

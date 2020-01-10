@@ -9,7 +9,6 @@ import (
 // nolint
 
 const (
-	DefaultParamspace                = keeper.DefaultParamspace
 	ModuleName                       = types.ModuleName
 	StoreKey                         = types.StoreKey
 	RouterKey                        = types.RouterKey
@@ -24,10 +23,7 @@ const (
 	QueryDelegatorValidators         = types.QueryDelegatorValidators
 	QueryWithdrawAddr                = types.QueryWithdrawAddr
 	QueryCommunityPool               = types.QueryCommunityPool
-	ParamCommunityTax                = types.ParamCommunityTax
-	ParamBaseProposerReward          = types.ParamBaseProposerReward
-	ParamBonusProposerReward         = types.ParamBonusProposerReward
-	ParamWithdrawAddrEnabled         = types.ParamWithdrawAddrEnabled
+	DefaultParamspace                = types.DefaultParamspace
 	TypeMsgFundCommunityPool         = types.TypeMsgFundCommunityPool
 )
 
@@ -57,12 +53,13 @@ var (
 	GetValidatorSlashEventPrefix               = keeper.GetValidatorSlashEventPrefix
 	GetValidatorSlashEventKeyPrefix            = keeper.GetValidatorSlashEventKeyPrefix
 	GetValidatorSlashEventKey                  = keeper.GetValidatorSlashEventKey
-	ParamKeyTable                              = keeper.ParamKeyTable
 	HandleCommunityPoolSpendProposal           = keeper.HandleCommunityPoolSpendProposal
 	NewQuerier                                 = keeper.NewQuerier
 	MakeTestCodec                              = keeper.MakeTestCodec
 	CreateTestInputDefault                     = keeper.CreateTestInputDefault
 	CreateTestInputAdvanced                    = keeper.CreateTestInputAdvanced
+	ParamKeyTable                              = types.ParamKeyTable
+	DefaultParams                              = types.DefaultParams
 	RegisterCodec                              = types.RegisterCodec
 	NewDelegatorStartingInfo                   = types.NewDelegatorStartingInfo
 	ErrEmptyDelegatorAddr                      = types.ErrEmptyDelegatorAddr
@@ -100,20 +97,19 @@ var (
 	NewValidatorSlashEvent                     = types.NewValidatorSlashEvent
 
 	// variable aliases
-	FeePoolKey                           = keeper.FeePoolKey
-	ProposerKey                          = keeper.ProposerKey
-	ValidatorOutstandingRewardsPrefix    = keeper.ValidatorOutstandingRewardsPrefix
-	DelegatorWithdrawAddrPrefix          = keeper.DelegatorWithdrawAddrPrefix
-	DelegatorStartingInfoPrefix          = keeper.DelegatorStartingInfoPrefix
-	ValidatorHistoricalRewardsPrefix     = keeper.ValidatorHistoricalRewardsPrefix
-	ValidatorCurrentRewardsPrefix        = keeper.ValidatorCurrentRewardsPrefix
-	ValidatorAccumulatedCommissionPrefix = keeper.ValidatorAccumulatedCommissionPrefix
-	ValidatorSlashEventPrefix            = keeper.ValidatorSlashEventPrefix
-	ParamStoreKeyCommunityTax            = keeper.ParamStoreKeyCommunityTax
-	ParamStoreKeyBaseProposerReward      = keeper.ParamStoreKeyBaseProposerReward
-	ParamStoreKeyBonusProposerReward     = keeper.ParamStoreKeyBonusProposerReward
-	ParamStoreKeyWithdrawAddrEnabled     = keeper.ParamStoreKeyWithdrawAddrEnabled
-	TestAddrs                            = keeper.TestAddrs
+	FeePoolKey                           = types.FeePoolKey
+	ProposerKey                          = types.ProposerKey
+	ValidatorOutstandingRewardsPrefix    = types.ValidatorOutstandingRewardsPrefix
+	DelegatorWithdrawAddrPrefix          = types.DelegatorWithdrawAddrPrefix
+	DelegatorStartingInfoPrefix          = types.DelegatorStartingInfoPrefix
+	ValidatorHistoricalRewardsPrefix     = types.ValidatorHistoricalRewardsPrefix
+	ValidatorCurrentRewardsPrefix        = types.ValidatorCurrentRewardsPrefix
+	ValidatorAccumulatedCommissionPrefix = types.ValidatorAccumulatedCommissionPrefix
+	ValidatorSlashEventPrefix            = types.ValidatorSlashEventPrefix
+	ParamStoreKeyCommunityTax            = types.ParamStoreKeyCommunityTax
+	ParamStoreKeyBaseProposerReward      = types.ParamStoreKeyBaseProposerReward
+	ParamStoreKeyBonusProposerReward     = types.ParamStoreKeyBonusProposerReward
+	ParamStoreKeyWithdrawAddrEnabled     = types.ParamStoreKeyWithdrawAddrEnabled
 	ModuleCdc                            = types.ModuleCdc
 	EventTypeSetWithdrawAddress          = types.EventTypeSetWithdrawAddress
 	EventTypeRewards                     = types.EventTypeRewards
@@ -139,6 +135,7 @@ type (
 	ValidatorCurrentRewardsRecord          = types.ValidatorCurrentRewardsRecord
 	DelegatorStartingInfoRecord            = types.DelegatorStartingInfoRecord
 	ValidatorSlashEventRecord              = types.ValidatorSlashEventRecord
+	Params                                 = types.Params
 	GenesisState                           = types.GenesisState
 	MsgSetWithdrawAddress                  = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorReward             = types.MsgWithdrawDelegatorReward

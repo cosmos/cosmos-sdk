@@ -241,6 +241,20 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return nil, types.ErrSequenceReceiveNotFound
+		}
+
+		if packet.GetSequence() != nextSequenceRecv {
+			return nil, sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
+			)
+		}
+	}
+
 	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
 		return nil, types.ErrPacketTimeout
 	}

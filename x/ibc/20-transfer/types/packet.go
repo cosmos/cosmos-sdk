@@ -76,3 +76,29 @@ func (pd PacketDataTransfer) GetTimeoutHeight() uint64 {
 func (pd PacketDataTransfer) Type() string {
 	return "ics20/transfer"
 }
+
+var _ channelexported.PacketDataI = AckDataTransfer{}
+
+type AckDataTransfer struct {
+}
+
+// Implements channelexported.PacketDataI
+// ValidateBasic performs a basic check of the packet fields
+func (ack AckDataTransfer) ValidateBasic() error {
+	return nil
+}
+
+// Implements channelexported.PacketDataI
+func (ack AckDataTransfer) GetBytes() []byte {
+	return []byte("ok")
+}
+
+// Implements channelexported.PacketDataI
+func (ack AckDataTransfer) GetTimeoutHeight() uint64 {
+	return 0
+}
+
+// Implements channelexported.PacketDataI
+func (ack AckDataTransfer) Type() string {
+	return "ics20/transfer/ack"
+}

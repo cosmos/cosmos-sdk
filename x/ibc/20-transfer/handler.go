@@ -58,8 +58,17 @@ func handlePacketDataTransfer(ctx sdk.Context, k Keeper, msg channeltypes.MsgPac
 	packet := msg.Packet
 	err := k.ReceiveTransfer(ctx, packet.SourcePort, packet.SourceChannel, packet.DestinationPort, packet.DestinationChannel, data)
 	if err != nil {
+		panic(err)
 		// TODO: Source chain sent invalid packet, shutdown channel
 	}
+
+	acknowledgement := types.AckDataTransfer{}
+	err = k.PacketExecuted(ctx, packet, acknowledgement)
+	if err != nil {
+		panic(err)
+		// TODO: This should not happen
+	}
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

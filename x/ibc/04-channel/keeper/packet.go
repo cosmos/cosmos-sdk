@@ -283,7 +283,6 @@ func (k Keeper) PacketExecuted(
 		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
 	}
 
-	fmt.Printf("packet executed was called\n")
 
 	if channel.State != types.OPEN {
 		return sdkerrors.Wrapf(

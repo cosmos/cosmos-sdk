@@ -56,7 +56,7 @@ func (k Keeper) TimeoutPacket(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrap(
 			connection.ErrConnectionNotFound,
 			channel.ConnectionHops[0],
 		)
@@ -74,7 +74,7 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	if nextSequenceRecv >= packet.GetSequence() {
-		return nil, sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrap(
 			types.ErrInvalidPacket,
 			"packet already received",
 		)
@@ -82,7 +82,7 @@ func (k Keeper) TimeoutPacket(
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
-		return nil, sdkerrors.Wrapf(
+		return nil, sdkerrors.Wrap(
 			types.ErrInvalidPacket,
 			"packet hasn't been sent",
 		)

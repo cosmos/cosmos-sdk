@@ -86,7 +86,7 @@ func getMockApp(
 	)
 
 	keeper := keep.NewKeeper(
-		types.NewBasicProposal, keyGov, pk.Subspace(DefaultParamspace).WithKeyTable(ParamKeyTable()), supplyKeeper, sk, rtr,
+		mApp.Cdc, types.NewBasicProposal, keyGov, pk.Subspace(DefaultParamspace).WithKeyTable(ParamKeyTable()), supplyKeeper, sk, rtr,
 	)
 
 	mApp.Router().AddRoute(types.RouterKey, NewHandler(keeper))

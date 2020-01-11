@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,14 +17,14 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return deposit, false
 	}
 
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &deposit)
+	proto.Cdc.MustUnmarshalBinaryLengthPrefixed(bz, &deposit)
 	return deposit, true
 }
 
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(&deposit)
+	bz := proto.Cdc.MustMarshalBinaryLengthPrefixed(&deposit)
 	store.Set(types.DepositKey(deposit.ProposalID, deposit.Depositor), bz)
 }
 
@@ -68,7 +69,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.D
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+		proto.Cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
 
 		if cb(deposit) {
 			break
@@ -84,7 +85,7 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
+		proto.Cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &deposit)
 
 		if cb(deposit) {
 			break

@@ -204,6 +204,10 @@ github.com/regen-network/cosmos-proto v0.0.0-20200110161141-d50327c8f61b h1:H+bW
 github.com/regen-network/cosmos-proto v0.0.0-20200110161141-d50327c8f61b/go.mod h1:wfwTv49O7GMURr5HfV1APBA+ant475LdKfMQ+wDTiKg=
 github.com/regen-network/cosmos-proto v0.0.0-20200110230910-60122eba6250 h1:eo0Y4OFsKqkTIVe2aeF1vMg6hiVmTORJgrhNfWhE+Ss=
 github.com/regen-network/cosmos-proto v0.0.0-20200110230910-60122eba6250/go.mod h1:Pqghfcsvn4F2kVdM402xqGXTUb6lYUv19vs0HT78taI=
+github.com/regen-network/cosmos-proto v0.0.0-20200111220242-59c984ad23ad h1:6L3cwo/j5fZYLcwA4/FVjNswQ1cDPmCLa66UKCoL3lI=
+github.com/regen-network/cosmos-proto v0.0.0-20200111220242-59c984ad23ad/go.mod h1:+r7jN10xXCypD4yBgzKOa+vgLz0riqYMHeDcKekxPvA=
+github.com/regen-network/cosmos-proto v0.0.0-20200111221245-def99838157d h1:tq8OU+0yoDEPVl2N/uN48yST1G18ZEQsO9GuwcS7xnU=
+github.com/regen-network/cosmos-proto v0.0.0-20200111221245-def99838157d/go.mod h1:+r7jN10xXCypD4yBgzKOa+vgLz0riqYMHeDcKekxPvA=
 github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b h1:zM+74wmjZdhbGWLzeYdOFMEdd1Bsn7PVMlSPWaKq/Bc=
 github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b/go.mod h1:lye6mqhOn/GCw1zRl3uPD5VP8rC+LPMyTyPAyQV872U=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=

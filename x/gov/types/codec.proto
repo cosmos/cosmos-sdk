@@ -11,7 +11,7 @@ option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all) = false;
 option (gogoproto.goproto_getters_all) = false;
 
-message MsgBase {
+message MsgCommon {
     option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/types.Msg";
     option (gogoproto.stringer) = true;
     oneof sum {
@@ -32,7 +32,7 @@ message MsgSubmitProposalBase {
 message MsgDeposit {
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
                            ,(gogoproto.moretags) = "yaml:\"proposal_id\""
-                           ,(gogoproto.nullable) = false];
+                           ,(gogoproto.jsontag) = "proposal_id"];
     bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     repeated cosmos_sdk.v1.Coin amount = 3 [(gogoproto.nullable) = false,
                                            (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -54,7 +54,7 @@ enum VoteOption {
 message MsgVote {
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
                            ,(gogoproto.moretags) = "yaml:\"proposal_id\""
-                           ,(gogoproto.nullable) = false];
+                           ,(gogoproto.jsontag) = "proposal_id"];
     bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     VoteOption option = 3;
 }
@@ -69,7 +69,7 @@ message TextProposal {
 // Deposit defines an amount deposited by an account address to an active proposal
 message Deposit {
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
-                           ,(gogoproto.nullable) = false];
+                           ,(gogoproto.moretags) = "yaml:\"proposal_id\""];
     bytes depositor = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     repeated cosmos_sdk.v1.Coin amount = 3 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -78,7 +78,7 @@ message ProposalBase {
     option (gogoproto.goproto_stringer) = true;
     option (gogoproto.face) = true;
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
-                           ,(gogoproto.nullable) = false];
+                           ,(gogoproto.moretags) = "yaml:\"proposal_id\""];
     ProposalStatus status = 2;
     TallyResult final_tally_result = 3 [(gogoproto.nullable) = false];
     google.protobuf.Timestamp submit_time = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -112,7 +112,7 @@ message TallyResult {
 
 message Vote {
     uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"
-                           ,(gogoproto.nullable) = false];
+                           ,(gogoproto.moretags) = "yaml:\"proposal_id\""];
     bytes voter = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     VoteOption option = 3;
 }

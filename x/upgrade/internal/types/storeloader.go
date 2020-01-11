@@ -7,12 +7,13 @@ import (
 
 	"github.com/spf13/viper"
 
+	"io/ioutil"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"io/ioutil"
-	"os"
 )
 
 // StoreLoaderWithUpgrade is used to prepare baseapp with a fixed StoreLoader

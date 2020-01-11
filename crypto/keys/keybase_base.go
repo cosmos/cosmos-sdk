@@ -88,14 +88,20 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 	return baseKeybase{options: options}
 }
 
-// StdPrivKeyGen generates a secp256k1 private key from the given bytes
+// StdPrivKeyGen is the default PrivKeyGen function in the keybase.
+// For now, it only supports Secp256k1
 func StdPrivKeyGen(bz []byte, algo SigningAlgo) tmcrypto.PrivKey {
 	if algo == Secp256k1 {
-		var bzArr [32]byte
-		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr)
+		return SecpPrivKeyGen(bz)
 	}
 	return nil
+}
+
+// SecpPrivKeyGen generates a secp256k1 private key from the given bytes
+func SecpPrivKeyGen(bz []byte) tmcrypto.PrivKey {
+	var bzArr [32]byte
+	copy(bzArr[:], bz)
+	return secp256k1.PrivKeySecp256k1(bzArr)
 }
 
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
@@ -237,22 +243,28 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 	return info
 }
 
-// StdDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+// StdDeriveKey is the default DeriveKey function in the keybase.
+// For now, it only supports Secp256k1
 func StdDeriveKey(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error) {
+	if algo == Secp256k1 {
+		return SecpDeriveKey(mnemonic, bip39Passphrase, hdPath)
+	}
+	return nil, ErrUnsupportedSigningAlgo
+}
+
+// SecpDeriveKey derives and returns the secp256k1 private key for the given seed and HD path.
+func SecpDeriveKey(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
 		return nil, err
 	}
 
-	if algo == Secp256k1 {
-		masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-		if len(hdPath) == 0 {
-			return masterPriv[:], nil
-		}
-		derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
-		return derivedKey[:], err
+	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+	if len(hdPath) == 0 {
+		return masterPriv[:], nil
 	}
-	return nil, nil
+	derivedKey, err := hd.DerivePrivateKeyForPath(masterPriv, ch, hdPath)
+	return derivedKey[:], err
 }
 
 // CreateHDPath returns BIP 44 object from account and index parameters.

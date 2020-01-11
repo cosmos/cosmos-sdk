@@ -212,24 +212,12 @@ func (lkb lazyKeybase) ExportPrivKey(name string, decryptPassphrase string,
 
 // SupportedAlgos returns a list of supported signing algorithms.
 func (lkb lazyKeybase) SupportedAlgos() []SigningAlgo {
-	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
-	if err != nil {
-		return []SigningAlgo{}
-	}
-	defer db.Close()
-
-	return newDBKeybase(db, lkb.options...).SupportedAlgos()
+	return newBaseKeybase(lkb.options...).SupportedAlgos()
 }
 
 // SupportedAlgosLedger returns a list of supported ledger signing algorithms.
 func (lkb lazyKeybase) SupportedAlgosLedger() []SigningAlgo {
-	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
-	if err != nil {
-		return []SigningAlgo{}
-	}
-	defer db.Close()
-
-	return newDBKeybase(db, lkb.options...).SupportedAlgosLedger()
+	return newBaseKeybase(lkb.options...).SupportedAlgosLedger()
 }
 
 func (lkb lazyKeybase) CloseDB() {}

@@ -13,6 +13,13 @@ import (
 // amino codec to marshal/unmarshal
 type Codec = amino.Codec
 
+type CodecI interface {
+	MarshalJSON(obj interface{}) ([]byte, error)
+
+}
+
+var _ CodecI = &Codec{}
+
 func New() *Codec {
 	return amino.NewCodec()
 }
@@ -28,7 +35,7 @@ func RegisterEvidences(cdc *Codec) {
 }
 
 // attempt to make some pretty json
-func MarshalJSONIndent(cdc *Codec, obj interface{}) ([]byte, error) {
+func MarshalJSONIndent(cdc CodecI, obj interface{}) ([]byte, error) {
 	bz, err := cdc.MarshalJSON(obj)
 	if err != nil {
 		return nil, err

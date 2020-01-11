@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -55,14 +54,32 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal t
 	if bz == nil {
 		return
 	}
-	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
+	proposalI := keeper.proposalCodecCtr()
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, proposalI)
+	proposal = ProposalFromProposalI(proposalI)
 	return proposal, true
+}
+
+func ProposalFromProposalI(proposalI types.ProposalI) types.Proposal {
+	return types.Proposal{
+		Content:          proposalI.GetContent(),
+		ProposalID:       proposalI.GetProposalID(),
+		Status:           proposalI.GetStatus(),
+		FinalTallyResult: proposalI.GetFinalTallyResult(),
+		SubmitTime:       proposalI.GetSubmitTime(),
+		DepositEndTime:   proposalI.GetDepositEndTime(),
+		TotalDeposit:     proposalI.GetTotalDeposit(),
+		VotingStartTime:  proposalI.GetVotingStartTime(),
+		VotingEndTime:    proposalI.GetVotingEndTime(),
+	}
 }
 
 // SetProposal set a proposal to store
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
+	proposalI := keeper.proposalCodecCtr()
+	panic("TODO: set proposalI fields")
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalI)
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }
 
@@ -85,10 +102,10 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var proposal types.Proposal
-		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &proposal)
+		proposalI := keeper.proposalCodecCtr()
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), proposalI)
 
-		if cb(proposal) {
+		if cb(ProposalFromProposalI(proposalI)) {
 			break
 		}
 	}

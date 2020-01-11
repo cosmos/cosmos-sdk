@@ -81,6 +81,10 @@ func (m *ProposalBase) SetVotingEndTime(t time.Time) {
 
 var _ ProposalI = &BasicProposal{}
 
+func NewBasicProposal() ProposalI {
+	return &BasicProposal{}
+}
+
 func (m *BasicProposal) GetContent() Content {
 	return m.Content.GetContent()
 }

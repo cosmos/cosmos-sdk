@@ -23,7 +23,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(&deposit)
 	store.Set(types.DepositKey(deposit.ProposalID, deposit.Depositor), bz)
 }
 

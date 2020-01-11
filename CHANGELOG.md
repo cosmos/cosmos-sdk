@@ -330,6 +330,8 @@ to detail this new feature and how state transitions occur.
 * (keys) Fix ledger custom coin type support bug.
 * (x/gov) [\#5107](https://github.com/cosmos/cosmos-sdk/pull/5107) Sum validator operator's all voting power when tally votes
 * (rest) [\#5212](https://github.com/cosmos/cosmos-sdk/issues/5212) Fix pagination in the `/gov/proposals` handler.
+* (genesis) [\#5086](https://github.com/cosmos/cosmos-sdk/issues/5086) Ensure
+  `gentxs` are always an empty array instead of `nil`
 
 ## [v0.37.7] - 2020-02-10
 

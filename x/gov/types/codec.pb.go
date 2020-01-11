@@ -783,22 +783,22 @@ func (this *MsgCommon) GetMsg() github_com_cosmos_cosmos_sdk_types.Msg {
 }
 
 func (this *MsgCommon) SetMsg(value github_com_cosmos_cosmos_sdk_types.Msg) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
 	switch vt := value.(type) {
 	case *MsgDeposit:
 		this.Sum = &MsgCommon_GovDeposit{vt}
 		return nil
 	case MsgDeposit:
-		x := new(MsgDeposit)
-		*x = vt
-		this.Sum = &MsgCommon_GovDeposit{x}
+		this.Sum = &MsgCommon_GovDeposit{&vt}
 		return nil
 	case *MsgVote:
 		this.Sum = &MsgCommon_GovVote{vt}
 		return nil
 	case MsgVote:
-		x := new(MsgVote)
-		*x = vt
-		this.Sum = &MsgCommon_GovVote{x}
+		this.Sum = &MsgCommon_GovVote{&vt}
 		return nil
 	}
 	return fmt.Errorf("can't encode value of type %T as message MsgCommon", value)
@@ -812,15 +812,16 @@ func (this *BasicContent) GetContent() Content {
 }
 
 func (this *BasicContent) SetContent(value Content) error {
+	if value == nil {
+		this.Sum = nil
+		return nil
+	}
 	switch vt := value.(type) {
 	case *TextProposal:
 		this.Sum = &BasicContent_Text{vt}
 		return nil
 	case TextProposal:
-		x := new(TextProposal)
-		*x = vt
-		y := &BasicContent_Text{x}
-		this.Sum = y
+		this.Sum = &BasicContent_Text{&vt}
 		return nil
 	}
 	return fmt.Errorf("can't encode value of type %T as message BasicContent", value)

@@ -19,31 +19,31 @@ const DefaultStartingProposalID uint64 = 1
 type ProposalI interface {
 	proto.Marshaler
 
-	GetContent() Content               // Proposal content interface
+	GetContent() Content // Proposal content interface
 	SetContent(content Content) error
 
-	GetProposalID() uint64             //  ID of the proposal
+	GetProposalID() uint64 //  ID of the proposal
 	SetProposalID(id uint64)
 
-	GetStatus() ProposalStatus         // Status of the Proposal {Pending, Active, Passed, Rejected}
+	GetStatus() ProposalStatus // Status of the Proposal {Pending, Active, Passed, Rejected}
 	SetStatus(status ProposalStatus)
 
 	GetFinalTallyResult() TallyResult // Result of Tallys
 	SetFinalTallyResult(result TallyResult)
 
-	GetSubmitTime() time.Time          // Time of the block where TxGovSubmitProposal was included
+	GetSubmitTime() time.Time // Time of the block where TxGovSubmitProposal was included
 	SetSubmitTime(time time.Time)
 
-	GetDepositEndTime() time.Time      // Time that the Proposal would expire if deposit amount isn't met
+	GetDepositEndTime() time.Time // Time that the Proposal would expire if deposit amount isn't met
 	SetDepositEndTime(time time.Time)
 
-	GetTotalDeposit() sdk.Coins        // Current deposit on this proposal. Initial value is set at InitialDeposit
+	GetTotalDeposit() sdk.Coins // Current deposit on this proposal. Initial value is set at InitialDeposit
 	SetTotalDeposit(coins sdk.Coins)
 
-	GetVotingStartTime() time.Time     // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	GetVotingStartTime() time.Time // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 	SetVotingStartTime(time.Time)
 
-	GetVotingEndTime() time.Time       // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	GetVotingEndTime() time.Time // Time that the VotingPeriod for this proposal will end and votes will be tallied
 	SetVotingEndTime(time.Time)
 }
 
@@ -82,7 +82,10 @@ func (m *ProposalBase) SetVotingEndTime(t time.Time) {
 var _ ProposalI = &BasicProposal{}
 
 func NewBasicProposal() ProposalI {
-	return &BasicProposal{}
+	return &BasicProposal{
+		ProposalBase: &ProposalBase{},
+		Content:      &BasicContent{},
+	}
 }
 
 func (m *BasicProposal) GetContent() Content {

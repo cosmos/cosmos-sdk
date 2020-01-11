@@ -15,6 +15,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
+	github.com/regen-network/cosmos-proto v0.0.0-20200110230910-60122eba6250 // indirect
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -29,5 +30,7 @@ require (
 	github.com/tendermint/tm-db v0.2.0
 	gopkg.in/yaml.v2 v2.2.7
 )
+
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b
 
 go 1.13

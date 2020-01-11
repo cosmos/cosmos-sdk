@@ -92,7 +92,7 @@ func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier 
 	return deposit
 }
 
-func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []types.Deposit {
+func getQueriedDeposits(t *testing.T, ctx sdk.Context, querier sdk.Querier, proposalID uint64) []types.Deposit {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, types.QueryDeposits}, "/"),
 		Data: cdc.MustMarshalJSON(types.NewQueryProposalParams(proposalID)),

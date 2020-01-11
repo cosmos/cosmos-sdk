@@ -48,6 +48,10 @@ func (c Codec) UnmarshalJSON(data []byte, t interface{}) error {
 	return jsonpb.UnmarshalString(string(data), msg)
 }
 
+func (c Codec) UnmarshalBinaryLengthPrefixed(value []byte, u *uint64) {
+	panic("TODO")
+}
+
 type Marshaler interface {
 	Marshal() ([]byte, error)
 	MarshalTo(data []byte) (n int, err error)

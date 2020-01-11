@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/proto"
 	"strings"
 	"time"
 
@@ -12,6 +13,98 @@ import (
 
 // DefaultStartingProposalID is 1
 const DefaultStartingProposalID uint64 = 1
+
+// ProposalI defines an interface used by the governance module to allow for voting
+// on network changes.
+type ProposalI interface {
+	proto.Marshaler
+
+	GetContent() Content               // Proposal content interface
+	SetContent(content Content) error
+
+	GetProposalID() uint64             //  ID of the proposal
+	SetProposalID(id uint64)
+
+	GetStatus() ProposalStatus         // Status of the Proposal {Pending, Active, Passed, Rejected}
+	SetStatus(status ProposalStatus)
+
+	GetFinalTallyResult() TallyResult // Result of Tallys
+	SetFinalTallyResult(result TallyResult)
+
+	GetSubmitTime() time.Time          // Time of the block where TxGovSubmitProposal was included
+	SetSubmitTime(time time.Time)
+
+	GetDepositEndTime() time.Time      // Time that the Proposal would expire if deposit amount isn't met
+	SetDepositEndTime(time time.Time)
+
+	GetTotalDeposit() sdk.Coins        // Current deposit on this proposal. Initial value is set at InitialDeposit
+	SetTotalDeposit(coins sdk.Coins)
+
+	GetVotingStartTime() time.Time     // Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	SetVotingStartTime(time.Time)
+
+	GetVotingEndTime() time.Time       // Time that the VotingPeriod for this proposal will end and votes will be tallied
+	SetVotingEndTime(time.Time)
+}
+
+func (m *ProposalBase) SetProposalID(id uint64) {
+	m.ProposalID = id
+}
+
+func (m *ProposalBase) SetStatus(status ProposalStatus) {
+	m.Status = status
+}
+
+func (m *ProposalBase) SetFinalTallyResult(result TallyResult) {
+	m.FinalTallyResult = result
+}
+
+func (m *ProposalBase) SetSubmitTime(t time.Time) {
+	m.SubmitTime = t
+}
+
+func (m *ProposalBase) SetDepositEndTime(t time.Time) {
+	m.DepositEndTime = t
+}
+
+func (m *ProposalBase) SetTotalDeposit(coins sdk.Coins) {
+	m.TotalDeposit = coins
+}
+
+func (m *ProposalBase) SetVotingStartTime(t time.Time) {
+	m.VotingStartTime = t
+}
+
+func (m *ProposalBase) SetVotingEndTime(t time.Time) {
+	m.VotingEndTime = t
+}
+
+var _ ProposalI = &BasicProposal{}
+
+func (m *BasicProposal) GetContent() Content {
+	return m.Content.GetContent()
+}
+
+func (m *BasicProposal) SetContent(value Content) error {
+	return m.Content.SetContent(value)
+}
+
+//func ProposalToString(p Proposal) string {
+//	return fmt.Sprintf(`Proposal %d:
+//  Title:              %s
+//  Type:               %s
+//  Status:             %s
+//  Submit Time:        %s
+//  Deposit End Time:   %s
+//  Total Deposit:      %s
+//  Voting Start Time:  %s
+//  Voting End Time:    %s
+//  Description:        %s`,
+//		p.GetProposalID(), p.GetContent().GetTitle(), p.GetContent().ProposalType(),
+//		p.GetStatus(), p.GetSubmitTime(), p.GetDepositEndTime(),
+//		p.GetTotalDeposit(), p.GetVotingStartTime(), p.GetVotingEndTime(), p.GetContent().GetDescription(),
+//	)
+//}
 
 // Proposal defines a struct used by the governance module to allow for voting
 // on network changes.
@@ -191,13 +284,6 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 const (
 	ProposalTypeText string = "Text"
 )
-
-// TextProposal defines a standard text proposal whose changes need to be
-// manually updated in case of approval
-type TextProposal struct {
-	Title       string `json:"title" yaml:"title"`
-	Description string `json:"description" yaml:"description"`
-}
 
 // NewTextProposal creates a text proposal Content
 func NewTextProposal(title, description string) Content {

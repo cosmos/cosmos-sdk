@@ -75,13 +75,6 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Proposer}
 }
 
-// MsgDeposit defines a message to submit a deposit to an existing proposal
-type MsgDeposit struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
-	Depositor  sdk.AccAddress `json:"depositor" yaml:"depositor"`     // Address of the depositor
-	Amount     sdk.Coins      `json:"amount" yaml:"amount"`           // Coins to add to the proposal's deposit
-}
-
 // NewMsgDeposit creates a new MsgDeposit instance
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
 	return MsgDeposit{proposalID, depositor, amount}
@@ -126,13 +119,6 @@ func (msg MsgDeposit) GetSignBytes() []byte {
 // GetSigners implements Msg
 func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Depositor}
-}
-
-// MsgVote defines a message to cast a vote
-type MsgVote struct {
-	ProposalID uint64         `json:"proposal_id" yaml:"proposal_id"` // ID of the proposal
-	Voter      sdk.AccAddress `json:"voter" yaml:"voter"`             //  address of the voter
-	Option     VoteOption     `json:"option" yaml:"option"`           //  option from OptionSet chosen by the voter
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal

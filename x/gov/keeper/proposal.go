@@ -78,7 +78,18 @@ func ProposalFromProposalI(proposalI types.ProposalI) types.Proposal {
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	proposalI := keeper.proposalCodecCtr()
-	panic("TODO: set proposalI fields")
+	err := proposalI.SetContent(proposal.Content)
+	if err != nil {
+		panic(err)
+	}
+	proposalI.SetProposalID(proposal.ProposalID)
+	proposalI.SetSubmitTime(proposal.SubmitTime)
+	proposalI.SetDepositEndTime(proposal.DepositEndTime)
+	proposalI.SetVotingStartTime(proposal.VotingStartTime)
+	proposalI.SetVotingEndTime(proposal.VotingEndTime)
+	proposalI.SetFinalTallyResult(proposal.FinalTallyResult)
+	proposalI.SetTotalDeposit(proposal.TotalDeposit)
+	proposalI.SetStatus(proposal.Status)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalI)
 	store.Set(types.ProposalKey(proposal.ProposalID), bz)
 }

@@ -9,9 +9,10 @@ for dir in $proto_dirs; do
   --gocosmos_out=\
 Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
+Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types,\
-plugins=interfacetype,paths=source_relative:. \
+plugins=interfacetype+grpc,paths=source_relative:. \
   $(find "${dir}" -name '*.proto')
 done

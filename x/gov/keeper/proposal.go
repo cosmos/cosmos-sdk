@@ -50,6 +50,15 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 
 // GetProposal get proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal types.Proposal, ok bool) {
+	proposalI, ok := keeper.GetProposalI(ctx, proposalID)
+	if !ok {
+		return types.Proposal{}, false
+	}
+	proposal = ProposalFromProposalI(proposalI)
+	return proposal, true
+}
+
+func (keeper Keeper) GetProposalI(ctx sdk.Context, proposalID uint64) (proposal types.ProposalI, ok bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
@@ -57,8 +66,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (proposal t
 	}
 	proposalI := keeper.proposalCodecCtr()
 	proto.Cdc.MustUnmarshalBinaryLengthPrefixed(bz, proposalI)
-	proposal = ProposalFromProposalI(proposalI)
-	return proposal, true
+	return proposalI, true
 }
 
 func ProposalFromProposalI(proposalI types.ProposalI) types.Proposal {

@@ -178,7 +178,7 @@ message GetVoteRequest {
 
 message GetDepositsResponse {
     option (gogoproto.stringer) = true;
-    repeated Deposit deposits = 1;
+    repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
 }
 
 message GetVotesRequest {

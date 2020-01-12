@@ -45,6 +45,8 @@ type ProposalI interface {
 
 	GetVotingEndTime() time.Time // Time that the VotingPeriod for this proposal will end and votes will be tallied
 	SetVotingEndTime(time.Time)
+
+	GetProposalBase() *ProposalBase
 }
 
 func (m *ProposalBase) SetProposalID(id uint64) {
@@ -95,6 +97,11 @@ func (m *BasicProposal) GetContent() Content {
 func (m *BasicProposal) SetContent(value Content) error {
 	return m.Content.SetContent(value)
 }
+
+func (m *BasicProposal) GetProposalBase() *ProposalBase {
+	return m.ProposalBase
+}
+
 
 //func ProposalToString(p Proposal) string {
 //	return fmt.Sprintf(`Proposal %d:

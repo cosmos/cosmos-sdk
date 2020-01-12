@@ -21,6 +21,6 @@
     "query-selector": "^2.0.0",
     "tiny-cookie": "^2.3.1",
     "vuepress-plugin-smooth-scroll": "0.0.9",
-    "vuepress-theme-cosmos": "^1.0.131"
+    "vuepress-theme-cosmos": "^1.0.132"
   }
 }

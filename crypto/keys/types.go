@@ -347,7 +347,7 @@ type (
 	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
 	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error)
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) crypto.PrivKey
+	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error)
 
 	// KeybaseOption overrides options for the db
 	KeybaseOption func(*kbOptions)

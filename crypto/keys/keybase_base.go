@@ -90,11 +90,11 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 
 // StdPrivKeyGen is the default PrivKeyGen function in the keybase.
 // For now, it only supports Secp256k1
-func StdPrivKeyGen(bz []byte, algo SigningAlgo) tmcrypto.PrivKey {
+func StdPrivKeyGen(bz []byte, algo SigningAlgo) (tmcrypto.PrivKey, error) {
 	if algo == Secp256k1 {
-		return SecpPrivKeyGen(bz)
+		return SecpPrivKeyGen(bz), nil
 	}
-	return nil
+	return nil, ErrUnsupportedSigningAlgo
 }
 
 // SecpPrivKeyGen generates a secp256k1 private key from the given bytes
@@ -160,12 +160,17 @@ func (kb baseKeybase) CreateAccount(
 		return nil, err
 	}
 
+	privKey, err := kb.options.keygenFunc(derivedPriv, algo)
+	if err != nil {
+		return nil, err
+	}
+
 	var info Info
 
 	if encryptPasswd != "" {
-		info = keyWriter.writeLocalKey(name, kb.options.keygenFunc(derivedPriv, algo), encryptPasswd, algo)
+		info = keyWriter.writeLocalKey(name, privKey, encryptPasswd, algo)
 	} else {
-		info = kb.writeOfflineKey(keyWriter, name, kb.options.keygenFunc(derivedPriv, algo).PubKey(), algo)
+		info = kb.writeOfflineKey(keyWriter, name, privKey.PubKey(), algo)
 	}
 
 	return info, nil

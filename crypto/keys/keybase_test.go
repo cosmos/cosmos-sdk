@@ -437,10 +437,10 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	customKeyGenFunc := func(bz []byte, algo SigningAlgo) crypto.PrivKey {
+	customKeyGenFunc := func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error) {
 		var bzArr [32]byte
 		copy(bzArr[:], bz)
-		return secp256k1.PrivKeySecp256k1(bzArr)
+		return secp256k1.PrivKeySecp256k1(bzArr), nil
 	}
 	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
 

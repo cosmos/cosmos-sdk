@@ -13,7 +13,7 @@ option (gogoproto.stringer_all) = false;
 // signatures required by gogoproto.
 message Coin {
   string denom = 1;
-  bytes amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
+  string amount = 2 [ (gogoproto.customtype) = "Int", (gogoproto.nullable) = false ];
 }
 
 // DecCoin defines a token with a denomination and a decimal amount.
@@ -22,5 +22,5 @@ message Coin {
 // signatures required by gogoproto.
 message DecCoin {
   string denom = 1;
-  bytes amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
+  string amount = 2 [ (gogoproto.customtype) = "Dec", (gogoproto.nullable) = false ];
 }

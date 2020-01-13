@@ -30,4 +30,6 @@ require (
 	gopkg.in/yaml.v2 v2.2.7
 )
 
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b
+
 go 1.13

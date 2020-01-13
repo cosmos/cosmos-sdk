@@ -3,16 +3,11 @@ package upgrade_test
 import (
 	"encoding/json"
 	"errors"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/types"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -405,41 +400,23 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 
-	// set a temporary home dir
-	homeDir, cleanUp := tests.NewTestCaseDir(t)
-	defer cleanUp()
-	// TODO cleanup viper
-	viper.Set(flags.FlagHome, homeDir)
-
-	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	planHeight := s.ctx.BlockHeight() + 1
-	err := s.handler(s.ctx, upgrade.SoftwareUpgradeProposal{Title: "prop", Plan: upgrade.Plan{Name: "test", Height: planHeight}})
+
+	t.Log("verify if upgrade height is dumped to file")
+	err := s.keeper.DumpUpgradeInfoToFile(planHeight)
 	require.Nil(t, err)
 
-	t.Log("verify if binary panics when there exists a upgrade plan")
-	require.Panics(t, func() {
-		s.module.BeginBlock(newCtx, req)
-	})
-
-	// TODO cleanup viper
-	home := viper.GetString(flags.FlagHome)
-	upgradeInfoFilePath := filepath.Join(home, "upgrade-info.json")
-
-	_, err = os.Stat(upgradeInfoFilePath)
-
-	t.Log("verify if upgrade height is written to filesystem when binary panics")
+	upgradeInfoFileDir := s.keeper.GetHomePath()
+	upgradeInfoFilePath, err := types.EnsureConfigExists(upgradeInfoFileDir)
 	require.Nil(t, err)
 
-	var upgradeInfo store.UpgradeInfo
-	info, err := ioutil.ReadFile(upgradeInfoFilePath)
+	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+
+	var upgrades storetypes.UpgradeInfo
+	err = json.Unmarshal(data, &upgrades)
 	require.Nil(t, err)
 
-	err = json.Unmarshal(info, &upgradeInfo)
-	require.Nil(t, err)
-	require.Equal(t, planHeight, upgradeInfo.Height)
-
-	VerifyDoUpgrade(t)
-	VerifyDone(t, s.ctx, "test")
+	t.Log("Verify upgrade height from file matches ")
+	require.Equal(t, upgrades.Height, planHeight)
 }

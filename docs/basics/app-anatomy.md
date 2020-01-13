@@ -1,7 +1,7 @@
----
+<!--
 order: 1
 synopsis: "This document describes the core parts of a Cosmos SDK application. Throughout the document, a placeholder application named `app` will be used."
----
+-->
 
 # Anatomy of an SDK Application 
 

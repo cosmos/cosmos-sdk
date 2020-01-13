@@ -12,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 )
@@ -39,7 +39,7 @@ func TestGetMigrationCallback(t *testing.T) {
 func TestMigrateGenesis(t *testing.T) {
 	home, cleanup := tests.NewTestCaseDir(t)
 	viper.Set(cli.HomeFlag, home)
-	viper.Set(client.FlagName, "moniker")
+	viper.Set(flags.FlagName, "moniker")
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)

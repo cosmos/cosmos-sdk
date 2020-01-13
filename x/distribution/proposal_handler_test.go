@@ -33,7 +33,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 
 	// add coins to the module account
 	macc := keeper.GetDistributionAccount(ctx)
-	err := macc.SetCoins(macc.GetCoins().Add(amount))
+	err := macc.SetCoins(macc.GetCoins().Add(amount...))
 	require.NoError(t, err)
 
 	supplyKeeper.SetModuleAccount(ctx, macc)
@@ -43,7 +43,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	accountKeeper.SetAccount(ctx, account)
 
 	feePool := keeper.GetFeePool(ctx)
-	feePool.CommunityPool = sdk.NewDecCoins(amount)
+	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
 	keeper.SetFeePool(ctx, feePool)
 
 	tp := testProposal(recipient, amount)

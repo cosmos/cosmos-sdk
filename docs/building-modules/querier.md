@@ -1,7 +1,7 @@
----
+<!--
 order: 5
 synopsis: "A `Querier` designates a function that processes [`queries`](./messages-and-queries.md#queries). `querier`s are specific to the module in which they are defined, and only process `queries` defined within said module. They are called from `baseapp`'s [`Query` method](../core/baseapp.md#query)."
----
+-->
 
 # Queriers
 
@@ -29,14 +29,16 @@ Module `querier`s are typically implemented in a `./internal/keeper/querier.go` 
 
 ```go
 func NewQuerier(keeper Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case QueryType1:
 			return queryType1(ctx, path[1:], req, keeper)
+
 		case QueryType2:
 			return queryType2(ctx, path[1:], req, keeper)
+
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown nameservice query endpoint")
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])
 		}
 	}
 }

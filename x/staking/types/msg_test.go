@@ -175,7 +175,7 @@ func TestMsgMarshalYAML(t *testing.T) {
 	msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.CommissionRates, tc.minSelfDelegation)
 	bs, err := yaml.Marshal(msg)
 	require.NoError(t, err)
-	bechifiedPub, err := sdk.Bech32ifyConsPub(msg.PubKey)
+	bechifiedPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, msg.PubKey)
 	require.NoError(t, err)
 
 	want := fmt.Sprintf(`|

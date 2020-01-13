@@ -60,33 +60,33 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		mustBech32AccPub := types.MustBech32ifyAccPub(pub)
-		bech32AccPub, err := types.Bech32ifyAccPub(pub)
+		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
+		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32AccPub, mustBech32AccPub)
 
-		mustBech32ValPub := types.MustBech32ifyValPub(pub)
-		bech32ValPub, err := types.Bech32ifyValPub(pub)
+		mustBech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
+		bech32ValPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32ValPub, mustBech32ValPub)
 
-		mustBech32ConsPub := types.MustBech32ifyConsPub(pub)
-		bech32ConsPub, err := types.Bech32ifyConsPub(pub)
+		mustBech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
+		bech32ConsPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
 		require.Nil(t, err)
 		require.Equal(t, bech32ConsPub, mustBech32ConsPub)
 
-		mustAccPub := types.MustGetAccPubKeyBech32(bech32AccPub)
-		accPub, err := types.GetAccPubKeyBech32(bech32AccPub)
+		mustAccPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
+		accPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
 		require.Nil(t, err)
 		require.Equal(t, accPub, mustAccPub)
 
-		mustValPub := types.MustGetValPubKeyBech32(bech32ValPub)
-		valPub, err := types.GetValPubKeyBech32(bech32ValPub)
+		mustValPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
+		valPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
 		require.Nil(t, err)
 		require.Equal(t, valPub, mustValPub)
 
-		mustConsPub := types.MustGetConsPubKeyBech32(bech32ConsPub)
-		consPub, err := types.GetConsPubKeyBech32(bech32ConsPub)
+		mustConsPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
+		consPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
 		require.Nil(t, err)
 		require.Equal(t, consPub, mustConsPub)
 
@@ -246,7 +246,7 @@ func TestConfiguredPrefix(t *testing.T) {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := types.MustBech32ifyAccPub(pub)
+			bech32Pub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -260,7 +260,7 @@ func TestConfiguredPrefix(t *testing.T) {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := types.MustBech32ifyValPub(pub)
+			bech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -274,12 +274,11 @@ func TestConfiguredPrefix(t *testing.T) {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := types.MustBech32ifyConsPub(pub)
+			bech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
 			require.True(t, strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))
 		}
-
 	}
 }
 

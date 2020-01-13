@@ -244,7 +244,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-func (coins Coins) Add(coinsB Coins) Coins {
+func (coins Coins) Add(coinsB ...Coin) Coins {
 	return coins.safeAdd(coinsB)
 }
 
@@ -506,6 +506,11 @@ func (coins Coins) AmountOf(denom string) Int {
 	}
 }
 
+// GetDenomByIndex returns the Denom of the certain coin to make the findDup generic
+func (coins Coins) GetDenomByIndex(i int) string {
+	return coins[i].Denom
+}
+
 // IsAllPositive returns true if there is at least one coin and all currencies
 // have a positive value.
 func (coins Coins) IsAllPositive() bool {
@@ -669,18 +674,23 @@ func ParseCoins(coinsStr string) (Coins, error) {
 	return coins, nil
 }
 
+type findDupDescriptor interface {
+	GetDenomByIndex(int) string
+	Len() int
+}
+
 // findDup works on the assumption that coins is sorted
-func findDup(coins Coins) int {
-	if len(coins) <= 1 {
+func findDup(coins findDupDescriptor) int {
+	if coins.Len() <= 1 {
 		return -1
 	}
 
-	prevDenom := coins[0].Denom
-	for i := 1; i < len(coins); i++ {
-		if coins[i].Denom == prevDenom {
+	prevDenom := coins.GetDenomByIndex(0)
+	for i := 1; i < coins.Len(); i++ {
+		if coins.GetDenomByIndex(i) == prevDenom {
 			return i
 		}
-		prevDenom = coins[i].Denom
+		prevDenom = coins.GetDenomByIndex(i)
 	}
 
 	return -1

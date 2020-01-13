@@ -578,6 +578,6 @@ func fakePrompt(prompt string) (string, error) {
 func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
 	return keyringKeybase{
 		db:   db,
-		base: newBaseKeybase(opts...),
+		base: newBaseKeybase(types.GetConfig(), opts...),
 	}
 }

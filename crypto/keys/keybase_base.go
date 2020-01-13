@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -23,6 +23,7 @@ type (
 	// baseKeybase is an auxiliary type that groups Keybase storage agnostic features
 	// together.
 	baseKeybase struct {
+		config  *sdk.Config
 		options kbOptions
 	}
 
@@ -48,7 +49,7 @@ func WithKeygenFunc(f PrivKeyGenFunc) KeybaseOption {
 }
 
 // newBaseKeybase generates the base keybase with defaulting to tendermint SECP256K1 key type
-func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
+func newBaseKeybase(config *sdk.Config, optionsFns ...KeybaseOption) baseKeybase {
 	// Default options for keybase
 	options := kbOptions{keygenFunc: baseSecpPrivKeyGen}
 
@@ -56,7 +57,7 @@ func newBaseKeybase(optionsFns ...KeybaseOption) baseKeybase {
 		optionFn(&options)
 	}
 
-	return baseKeybase{options: options}
+	return baseKeybase{config: config, options: options}
 }
 
 // baseSecpPrivKeyGen generates a secp256k1 private key from the given bytes
@@ -114,7 +115,7 @@ func (kb baseKeybase) CreateAccount(
 	keyWriter keyWriter, name, mnemonic, bip39Passwd, encryptPasswd string, account, index uint32,
 ) (Info, error) {
 
-	hdPath := CreateHDPath(account, index)
+	hdPath := hd.NewFundraiserParams(account, kb.config.GetCoinType(), index)
 	return kb.Derive(keyWriter, name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
@@ -149,7 +150,7 @@ func (kb baseKeybase) CreateLedger(
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	coinType := types.GetConfig().GetCoinType()
+	coinType := kb.config.GetCoinType()
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath, hrp)
@@ -188,7 +189,7 @@ func (kb baseKeybase) CreateMnemonic(
 	info, err = kb.persistDerivedKey(
 		keyWriter,
 		bip39.NewSeed(mnemonic, DefaultBIP39Passphrase), passwd,
-		name, types.GetConfig().GetFullFundraiserPath(),
+		name, kb.config.GetFullFundraiserPath(),
 	)
 
 	return info, mnemonic, err
@@ -230,11 +231,6 @@ func (kb baseKeybase) writeMultisigKey(w infoWriter, name string, pub tmcrypto.P
 func ComputeDerivedKey(seed []byte, fullHdPath string) ([32]byte, error) {
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	return hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
-}
-
-// CreateHDPath returns BIP 44 object from account and index parameters.
-func CreateHDPath(account uint32, index uint32) *hd.BIP44Params {
-	return hd.NewFundraiserParams(account, types.GetConfig().GetCoinType(), index)
 }
 
 // IsAlgoSupported returns whether the signing algorithm is supported.

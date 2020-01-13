@@ -77,7 +77,7 @@ type dbKeybase struct {
 // reading and writing keys.
 func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
 	return dbKeybase{
-		base: newBaseKeybase(opts...),
+		base: newBaseKeybase(types.GetConfig(), opts...),
 		db:   db,
 	}
 }

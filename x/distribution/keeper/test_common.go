@@ -135,7 +135,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 	sk := staking.NewKeeper(cdc, keyStaking, supplyKeeper, pk.Subspace(staking.DefaultParamspace))
 	sk.SetParams(ctx, staking.DefaultParams())
 
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(types.DefaultParamspace), sk, supplyKeeper, auth.FeeCollectorName, blacklistedAddrs)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sk.BondDenom(ctx), initTokens.MulRaw(int64(len(TestAddrs)))))
@@ -158,9 +158,12 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initPower int64,
 
 	// set genesis items required for distribution
 	keeper.SetFeePool(ctx, types.InitialFeePool())
-	keeper.SetCommunityTax(ctx, communityTax)
-	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
-	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
+
+	params := types.DefaultParams()
+	params.CommunityTax = communityTax
+	params.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
+	params.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
+	keeper.SetParams(ctx, params)
 
 	return ctx, accountKeeper, bankKeeper, keeper, sk, pk, supplyKeeper
 }

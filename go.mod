@@ -31,7 +31,7 @@ require (
 	gopkg.in/yaml.v2 v2.2.7
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.1
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 

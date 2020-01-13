@@ -194,8 +194,8 @@ github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165 h1:nkcn14uNmFE
 github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/regen-network/cosmos-proto v0.1.0 h1:gsV+YO2kMvY430zQn8ioPXRxEJgb/ms0iMPeWo3VEyY=
 github.com/regen-network/cosmos-proto v0.1.0/go.mod h1:+r7jN10xXCypD4yBgzKOa+vgLz0riqYMHeDcKekxPvA=
-github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b h1:zM+74wmjZdhbGWLzeYdOFMEdd1Bsn7PVMlSPWaKq/Bc=
-github.com/regen-network/protobuf v1.3.2-0.20200110230508-e09b9477765b/go.mod h1:lye6mqhOn/GCw1zRl3uPD5VP8rC+LPMyTyPAyQV872U=
+github.com/regen-network/protobuf v1.3.2-alpha.regen.1 h1:YdeZbBS0lG1D13COb7b57+nM/RGgIs8WF9DwitU6EBM=
+github.com/regen-network/protobuf v1.3.2-alpha.regen.1/go.mod h1:lye6mqhOn/GCw1zRl3uPD5VP8rC+LPMyTyPAyQV872U=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rs/cors v1.6.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
 github.com/rs/cors v1.7.0 h1:+88SsELBHx5r+hZ8TCkggzSstaWNbDvThkVK8H6f9ik=

@@ -22,6 +22,9 @@ const (
 	blockTypePubKey  = "TENDERMINT PUBLIC KEY"
 
 	defaultAlgo = "secp256k1"
+
+	headerVersion = "version"
+	headerType    = "type"
 )
 
 // Make bcrypt security parameter var, so it can be changed within the lcd test
@@ -45,8 +48,8 @@ var BcryptSecurityParameter = 12
 // Armor the InfoBytes
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
-		"type":    "Info",
-		"version": "0.0.0",
+		headerType:    "Info",
+		headerVersion: "0.0.0",
 	}
 	return armor.EncodeArmor(blockTypeKeyInfo, header, bz)
 }
@@ -54,10 +57,10 @@ func ArmorInfoBytes(bz []byte) string {
 // Armor the PubKeyBytes
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
-		"version": "0.0.1",
+		headerVersion: "0.0.1",
 	}
 	if algo != "" {
-		header["type"] = algo
+		header[headerType] = algo
 	}
 	return armor.EncodeArmor(blockTypePubKey, header, bz)
 }
@@ -72,8 +75,8 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	if header["version"] != "0.0.0" {
-		return nil, fmt.Errorf("unrecognized version: %v", header["version"])
+	if header[headerVersion] != "0.0.0" {
+		return nil, fmt.Errorf("unrecognized version: %v", header[headerVersion])
 	}
 	return bz, nil
 }
@@ -81,16 +84,16 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 // UnarmorPubKeyBytes returns the pubkey byte slice, a string of the algo type, and an error
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
-	switch header["version"] {
+	switch header[headerVersion] {
 	case "0.0.0":
 		return bz, defaultAlgo, err
 	case "0.0.1":
-		if header["type"] == "" {
-			header["type"] = defaultAlgo
+		if header[headerType] == "" {
+			header[headerType] = defaultAlgo
 		}
-		return bz, header["type"], err
+		return bz, header[headerType], err
 	default:
-		err = fmt.Errorf("unrecognized version: %v", header["version"])
+		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
 		return nil, "", err
 	}
 }
@@ -118,7 +121,7 @@ func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string, algo string)
 		"salt": fmt.Sprintf("%X", saltBytes),
 	}
 	if algo != "" {
-		header["type"] = algo
+		header[headerType] = algo
 	}
 	armorStr := armor.EncodeArmor(blockTypePrivKey, header, encBytes)
 	return armorStr
@@ -159,11 +162,10 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (privKey crypto.P
 	}
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
 
-	if header["type"] == "" {
-		header["type"] = defaultAlgo
-		fmt.Println("mice")
+	if header[headerType] == "" {
+		header[headerType] = defaultAlgo
 	}
-	return privKey, header["type"], err
+	return privKey, header[headerType], err
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {

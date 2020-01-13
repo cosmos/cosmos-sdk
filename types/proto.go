@@ -2,6 +2,7 @@ package types
 
 import (
 	_ "github.com/gogo/protobuf/gogoproto" // nolint
+	_ "github.com/regen-network/cosmos-proto" // nolint
 )
 
 // CustomProtobufType defines the interface custom gogo proto types must implement

@@ -55,7 +55,7 @@ PROTOC_GEN_GOCOSMOS_VERSION ?= cbe0e228fcf93ad5ba34e71cba62557aa33a4b5b
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 GOLANGCI_LINT  = $(TOOLS_DESTDIR)/golangci-lint
 STATIK         = $(TOOLS_DESTDIR)/statik
-RUNSIM			   = $(TOOLS_DESTDIR)/runsim
+RUNSIM         = $(TOOLS_DESTDIR)/runsim
 
 tools: protoc buf statik runsim golangci-lint
 

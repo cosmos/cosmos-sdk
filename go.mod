@@ -15,6 +15,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0
 	github.com/pkg/errors v0.8.1
 	github.com/rakyll/statik v0.1.6
+	github.com/regen-network/cosmos-proto v0.0.0-20200111234523-cbe0e228fcf9 // indirect
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

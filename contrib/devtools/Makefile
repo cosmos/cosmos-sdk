@@ -50,7 +50,6 @@ GITHUBDIR := $(GOPATH)$(FS)src$(FS)github.com
 GOLANGCI_LINT_HASHSUM := f11179f445385a4a6d5079d67de63fe48a9113cee8e9ee0ced19327a83a4394b
 
 BUF_VERSION ?= 0.4.0
-PROTOC_GEN_GOCOSMOS_VERSION ?= cbe0e228fcf93ad5ba34e71cba62557aa33a4b5b
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 GOLANGCI_LINT  = $(TOOLS_DESTDIR)/golangci-lint
@@ -102,7 +101,7 @@ protoc:
 
 protoc-gen-gocosmos:
 	@echo "Installing protoc-gen-gocosmos..."
-	@(cd /tmp && go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@${PROTOC_GEN_GOCOSMOS_VERSION})
+	@go install github.com/regen-network/cosmos-proto/protoc-gen-gocosmos
 
 buf: protoc-gen-buf-check-breaking protoc-gen-buf-check-lint
 	@echo "Installing buf..."

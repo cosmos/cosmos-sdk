@@ -20,13 +20,13 @@ Balances shall be stored per-account & per-denomination under a denomination- an
 
 `GetCoins()` and `SetCoins()` will be removed from the account interface, since coin balances will now be stored in & managed by the bank module.
 
-`GetVestedCoins()`, `GetVestingCoins()`, `GetOriginalVesting()`, `GetDelegatedFree()`, and `GetDelegatedVesting()` will be altered to take a bank keeper and a denomination as two additional arguments, which will be used to lookup the balances from the base account as necessary.
+`SpendableCoinsVestingAccount()` and `TrackDelegation()` will be altered to take a bank keeper and a denomination as two additional arguments, which will be used to lookup the balances from the base account as necessary.
 
 Vesting accounts will continue to store original vesting, delegated free, and delegated vesting coins (which is safe since these cannot contain arbitrary denominations).
 
 ### Bank keeper (x/bank)
 
-`GetBalance(addr AccAddress, denom string) Int` and `SetBalance(addr AccAddress, denom string, balance Int)` methods will be added to the bank keeper to retrieve & set balances, respectively.
+`GetBalance(addr AccAddress, denom string) sdk.Coin` and `SetBalance(addr AccAddress, coin sdk.Coin)` methods will be added to the bank keeper to retrieve & set balances, respectively.
 
 `DelegateCoins()` and `UndelegateCoins()` will be altered to take a single `sdk.Coin` (one denomination & amount) instead of `sdk.Coins`. They will read balances directly instead of calling `GetCoins()` (which no longer exists).
 

@@ -44,7 +44,7 @@ func (k Keeper) GetCommitmentPrefix() commitment.PrefixI {
 // GetConnection returns a connection with a particular identifier
 func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.ConnectionEnd, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyConnection(connectionID))
+	bz := store.Get(ibctypes.KeyConnection(connectionID))
 	if bz == nil {
 		return types.ConnectionEnd{}, false
 	}
@@ -58,14 +58,14 @@ func (k Keeper) GetConnection(ctx sdk.Context, connectionID string) (types.Conne
 func (k Keeper) SetConnection(ctx sdk.Context, connectionID string, connection types.ConnectionEnd) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(connection)
-	store.Set(types.KeyConnection(connectionID), bz)
+	store.Set(ibctypes.KeyConnection(connectionID), bz)
 }
 
 // GetClientConnectionPaths returns all the connection paths stored under a
 // particular client
 func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]string, bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.KeyClientConnections(clientID))
+	bz := store.Get(ibctypes.KeyClientConnections(clientID))
 	if bz == nil {
 		return nil, false
 	}
@@ -79,7 +79,7 @@ func (k Keeper) GetClientConnectionPaths(ctx sdk.Context, clientID string) ([]st
 func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths []string) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(paths)
-	store.Set(types.KeyClientConnections(clientID), bz)
+	store.Set(ibctypes.KeyClientConnections(clientID), bz)
 }
 
 // IterateConnections provides an iterator over all ConnectionEnd objects.
@@ -87,7 +87,7 @@ func (k Keeper) SetClientConnectionPaths(ctx sdk.Context, clientID string, paths
 // iterator will close and stop.
 func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.ConnectionEnd) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetConnectionsKeysPrefix(ibctypes.KeyConnectionPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, ibctypes.KeyConnectionPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

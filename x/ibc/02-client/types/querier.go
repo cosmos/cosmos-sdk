@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
+	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
 // query routes supported by the IBC client Querier
@@ -47,7 +48,7 @@ func NewClientStateResponse(
 	return StateResponse{
 		ClientState: clientState,
 		Proof:       commitment.Proof{Proof: proof},
-		ProofPath:   commitment.NewPath(strings.Split(ClientStatePath(clientID), "/")),
+		ProofPath:   commitment.NewPath(strings.Split(ibctypes.ClientStatePath(clientID), "/")),
 		ProofHeight: uint64(height),
 	}
 }
@@ -68,7 +69,7 @@ func NewConsensusStateResponse(
 	return ConsensusStateResponse{
 		ConsensusState: cs,
 		Proof:          commitment.Proof{Proof: proof},
-		ProofPath:      commitment.NewPath(strings.Split(ConsensusStatePath(clientID, uint64(height)), "/")),
+		ProofPath:      commitment.NewPath(strings.Split(ibctypes.ConsensusStatePath(clientID, uint64(height)), "/")),
 		ProofHeight:    uint64(height),
 	}
 }

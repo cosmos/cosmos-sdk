@@ -39,14 +39,6 @@ var (
 	ErrRootNotFound           = errors.ErrRootNotFound
 	ErrInvalidHeader          = errors.ErrInvalidHeader
 	ErrInvalidEvidence        = errors.ErrInvalidEvidence
-	ClientStatePath           = types.ClientStatePath
-	ClientTypePath            = types.ClientTypePath
-	ConsensusStatePath        = types.ConsensusStatePath
-	RootPath                  = types.RootPath
-	KeyClientState            = types.KeyClientState
-	KeyClientType             = types.KeyClientType
-	KeyConsensusState         = types.KeyConsensusState
-	KeyRoot                   = types.KeyRoot
 	NewMsgCreateClient        = types.NewMsgCreateClient
 	NewMsgUpdateClient        = types.NewMsgUpdateClient
 

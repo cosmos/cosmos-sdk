@@ -102,37 +102,37 @@ func KeyConnection(connectionID string) []byte {
 }
 
 // ICS04
-// The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#store-paths
+// The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
 
 // ChannelPath defines the path under which channels are stored
 func ChannelPath(portID, channelID string) string {
-	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+	return fmt.Sprintf("%d/", KeyChannelPrefix) + channelPath(portID, channelID)
 }
 
 // ChannelCapabilityPath defines the path under which capability keys associated
 // with a channel are stored
 func ChannelCapabilityPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/key"
+	return fmt.Sprintf("%d/", KeyChannelCapabilityPrefix) + channelPath(portID, channelID) + "/key"
 }
 
 // NextSequenceSendPath defines the next send sequence counter store path
 func NextSequenceSendPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/nextSequenceSend"
+	return fmt.Sprintf("%d/", KeyNextSeqSendPrefix) + channelPath(portID, channelID) + "/nextSequenceSend"
 }
 
 // NextSequenceRecvPath defines the next receive sequence counter store path
 func NextSequenceRecvPath(portID, channelID string) string {
-	return ChannelPath(portID, channelID) + "/nextSequenceRecv"
+	return fmt.Sprintf("%d/", KeyNextSeqRecvPrefix) + channelPath(portID, channelID) + "/nextSequenceRecv"
 }
 
 // PacketCommitmentPath defines the commitments to packet data fields store path
 func PacketCommitmentPath(portID, channelID string, sequence uint64) string {
-	return ChannelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
+	return fmt.Sprintf("%d/", KeyPacketCommitmentPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/packets/%d", sequence)
 }
 
 // PacketAcknowledgementPath defines the packet acknowledgement store path
 func PacketAcknowledgementPath(portID, channelID string, sequence uint64) string {
-	return ChannelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
+	return fmt.Sprintf("%d/", KeyPacketAckPrefix) + channelPath(portID, channelID) + fmt.Sprintf("/acknowledgements/%d", sequence)
 }
 
 // KeyChannel returns the store key for a particular channel
@@ -170,17 +170,19 @@ func KeyPacketAcknowledgement(portID, channelID string, sequence uint64) []byte 
 	return []byte(PacketAcknowledgementPath(portID, channelID, sequence))
 }
 
+func channelPath(portID, channelID string) string {
+	return fmt.Sprintf("ports/%s/channels/%s", portID, channelID)
+}
+
 // ICS05
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#store-paths
 
 // PortPath defines the path under which ports paths are stored
 func PortPath(portID string) string {
-	return fmt.Sprintf("ports/%s", portID)
+	return fmt.Sprintf("%d/ports/%s", KeyPortsPrefix, portID)
 }
 
 // KeyPort returns the store key for a particular port
 func KeyPort(portID string) []byte {
 	return []byte(PortPath(portID))
 }
-
-

@@ -47,10 +47,6 @@ var (
 	ErrConnectionPath                = types.ErrConnectionPath
 	ErrInvalidConnectionState        = types.ErrInvalidConnectionState
 	ErrInvalidCounterparty           = types.ErrInvalidCounterparty
-	ConnectionPath                   = types.ConnectionPath
-	ClientConnectionsPath            = types.ClientConnectionsPath
-	KeyConnection                    = types.KeyConnection
-	KeyClientConnections             = types.KeyClientConnections
 	NewMsgConnectionOpenInit         = types.NewMsgConnectionOpenInit
 	NewMsgConnectionOpenTry          = types.NewMsgConnectionOpenTry
 	NewMsgConnectionOpenAck          = types.NewMsgConnectionOpenAck

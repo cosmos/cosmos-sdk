@@ -8,7 +8,6 @@
 ## Context
 
 > This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts.
-> {context body}
 
 ## Decision
 
@@ -16,7 +15,7 @@ Balances shall be stored per-account & per-denomination under a denomination- an
 
 ### Account interface (x/auth)
 
-`GetCoins() and `SetCoins()` will be removed from the account interface, since coin balances will now be stored in & managed by the bank module.
+`GetCoins()` and `SetCoins()` will be removed from the account interface, since coin balances will now be stored in & managed by the bank module.
 
 `GetVestedCoins()`, `GetVestingCoins()`, `GetOriginalVesting()`, `GetDelegatedFree()`, and `GetDelegatedVesting()` will be altered to take a bank keeper and a denomination as two additional arguments, which will be used to lookup the balances from the base account as necessary.
 

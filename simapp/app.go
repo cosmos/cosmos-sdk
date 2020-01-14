@@ -302,7 +302,12 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(
+		ante.NewAnteHandler(
+			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, 
+			ante.DefaultSigVerificationGasConsumer,
+			),
+		)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

@@ -38,7 +38,7 @@ func TestSimulateGasCost(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -89,7 +89,7 @@ func TestSimulateGasCost(t *testing.T) {
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -138,7 +138,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -195,7 +195,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(0)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -251,7 +251,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -327,7 +327,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -367,7 +367,7 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -407,7 +407,7 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(false)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -457,7 +457,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -534,7 +534,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -652,7 +652,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	// setup
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// keys and addresses
 	priv1, _, addr1 := types.KeyTestPubAddr()
@@ -692,7 +692,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 	app, ctx := createTestApp(true)
 	ctx = ctx.WithBlockHeight(1)
 	// setup an ante handler that only accepts PubKeyEd25519
-	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
+	anteHandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, func(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params types.Params) error {
 		switch pubkey := pubkey.(type) {
 		case ed25519.PubKeyEd25519:
 			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -749,7 +749,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	require.NoError(t, acc1.SetAccountNumber(0))
 	app.AccountKeeper.SetAccount(ctx, acc1)
 
-	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, ante.DefaultSigVerificationGasConsumer)
+	antehandler := ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, ante.DefaultSigVerificationGasConsumer)
 
 	// test that operations skipped on recheck do not run
 

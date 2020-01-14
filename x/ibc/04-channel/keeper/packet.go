@@ -77,7 +77,7 @@ func (k Keeper) CleanupPacket(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
+	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
@@ -184,7 +184,7 @@ func (k Keeper) SendPacket(
 
 	nextSequenceSend++
 	k.SetNextSequenceSend(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), nextSequenceSend)
-	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), packet.GetData()) // TODO: hash packet data
+	k.SetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence(), types.CommitPacket(packet.GetData()))
 
 	return nil
 }
@@ -196,8 +196,6 @@ func (k Keeper) RecvPacket(
 	packet exported.PacketI,
 	proof commitment.ProofI,
 	proofHeight uint64,
-	acknowledgement []byte,
-	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 
 	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
@@ -212,9 +210,8 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetDestPort()) {
-		return nil, sdkerrors.Wrap(port.ErrInvalidPort, packet.GetDestPort())
-	}
+	// RecvPacket is called by the antehandler which acts upon the packet.Route(),
+	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
@@ -243,25 +240,6 @@ func (k Keeper) RecvPacket(
 		)
 	}
 
-	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
-		return nil, types.ErrPacketTimeout
-	}
-
-	if !k.connectionKeeper.VerifyMembership(
-		ctx, connectionEnd, proofHeight, proof,
-		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
-		packet.GetData(), // TODO: hash data
-	) {
-		return nil, errors.New("couldn't verify counterparty packet commitment")
-	}
-
-	if len(acknowledgement) > 0 || channel.Ordering == types.UNORDERED {
-		k.SetPacketAcknowledgement(
-			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
-			acknowledgement, // TODO: hash ACK
-		)
-	}
-
 	if channel.Ordering == types.ORDERED {
 		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
 		if !found {
@@ -274,13 +252,69 @@ func (k Keeper) RecvPacket(
 				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
 			)
 		}
+	}
+
+	if uint64(ctx.BlockHeight()) >= packet.GetTimeoutHeight() {
+		return nil, types.ErrPacketTimeout
+	}
+
+	if !k.connectionKeeper.VerifyMembership(
+		ctx, connectionEnd, proofHeight, proof,
+		types.PacketCommitmentPath(packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence()),
+		types.CommitPacket(packet.GetData()),
+	) {
+		return nil, errors.New("couldn't verify counterparty packet commitment")
+	}
+
+	return packet, nil
+}
+
+// PacketExecuted writes the packet execution acknowledgement to the state,
+// which will be verified by the counterparty chain using AcknowledgePacket.
+// CONTRACT: each packet handler function should call WriteAcknowledgement at the end of the execution
+func (k Keeper) PacketExecuted(
+	ctx sdk.Context,
+	packet exported.PacketI,
+	acknowledgement exported.PacketDataI,
+) error {
+	channel, found := k.GetChannel(ctx, packet.GetDestPort(), packet.GetDestChannel())
+	if !found {
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetDestChannel())
+	}
+
+	if channel.State != types.OPEN {
+		return sdkerrors.Wrapf(
+			types.ErrInvalidChannelState,
+			"channel state is not OPEN (got %s)", channel.State.String(),
+		)
+	}
+
+	if acknowledgement != nil || channel.Ordering == types.UNORDERED {
+		k.SetPacketAcknowledgement(
+			ctx, packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence(),
+			types.CommitAcknowledgement(acknowledgement),
+		)
+	}
+
+	if channel.Ordering == types.ORDERED {
+		nextSequenceRecv, found := k.GetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel())
+		if !found {
+			return types.ErrSequenceReceiveNotFound
+		}
+
+		if packet.GetSequence() != nextSequenceRecv {
+			return sdkerrors.Wrapf(
+				types.ErrInvalidPacket,
+				"packet sequence ≠ next receive sequence (%d ≠ %d)", packet.GetSequence(), nextSequenceRecv,
+			)
+		}
 
 		nextSequenceRecv++
 
 		k.SetNextSequenceRecv(ctx, packet.GetDestPort(), packet.GetDestChannel(), nextSequenceRecv)
 	}
 
-	return packet, nil
+	return nil
 }
 
 // AcknowledgePacket is called by a module to process the acknowledgement of a
@@ -291,10 +325,9 @@ func (k Keeper) RecvPacket(
 func (k Keeper) AcknowledgePacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
-	acknowledgement []byte,
+	acknowledgement exported.PacketDataI,
 	proof commitment.ProofI,
 	proofHeight uint64,
-	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
@@ -308,9 +341,8 @@ func (k Keeper) AcknowledgePacket(
 		)
 	}
 
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-		return nil, errors.New("invalid capability key")
-	}
+	// RecvPacket is called by the antehandler which acts upon the packet.Route(),
+	// so the capability authentication can be omitted here
 
 	// packet must come from the channel's counterparty
 	if packet.GetSourcePort() != channel.Counterparty.PortID {
@@ -340,18 +372,23 @@ func (k Keeper) AcknowledgePacket(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
+	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
 	if !k.connectionKeeper.VerifyMembership(
 		ctx, connectionEnd, proofHeight, proof,
 		types.PacketAcknowledgementPath(packet.GetDestPort(), packet.GetDestChannel(), packet.GetSequence()),
-		acknowledgement, // TODO: hash ACK
+		acknowledgement.GetBytes(),
 	) {
 		return nil, errors.New("invalid acknowledgement on counterparty chain")
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 	return packet, nil
+}
+
+// AcknowledgementExecuted deletes the commitment send from this chain after it receives the acknowlegement
+// CONTRACT: each acknowledgement handler function should call WriteAcknowledgement at the end of the execution
+func (k Keeper) AcknowledgementExecuted(ctx sdk.Context, packet exported.PacketI) {
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 }

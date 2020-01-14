@@ -4,12 +4,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
 // QueryPacket returns a packet from the store
 func QueryPacket(
-	ctx context.CLIContext, portID, channelID string, sequence, timeout uint64, prove bool,
+	ctx context.CLIContext, portID, channelID string,
+	sequence, timeout uint64, prove bool,
 ) (types.PacketResponse, error) {
 	req := abci.RequestQuery{
 		Path:  "store/ibc/key",
@@ -30,14 +32,23 @@ func QueryPacket(
 	destPortID := channelRes.Channel.Counterparty.PortID
 	destChannelID := channelRes.Channel.Counterparty.ChannelID
 
+	var data exported.PacketDataI
+	// TODO: commitment data is stored, not the data
+	// but we are unmarshalling the commitment in a json format
+	// because the current ICS 20 implementation uses json commitment form
+	// need to be changed to use external source of packet(e.g. event logs)
+	err = ctx.Codec.UnmarshalJSON(res.Value, &data)
+	if err != nil {
+		return types.PacketResponse{}, err
+	}
+
 	packet := types.NewPacket(
+		data,
 		sequence,
-		timeout,
 		portID,
 		channelID,
 		destPortID,
 		destChannelID,
-		res.Value,
 	)
 
 	// FIXME: res.Height+1 is hack, fix later
@@ -63,6 +74,5 @@ func QueryChannel(
 	if err := ctx.Codec.UnmarshalBinaryLengthPrefixed(res.Value, &channel); err != nil {
 		return types.ChannelResponse{}, err
 	}
-
 	return types.NewChannelResponse(portID, channelID, channel, res.Proof, res.Height), nil
 }

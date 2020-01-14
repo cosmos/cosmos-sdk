@@ -6,7 +6,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
@@ -20,7 +19,7 @@ type ChannelKeeper interface {
 	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channel.Channel, found bool)
 	GetNextSequenceSend(ctx sdk.Context, portID, channelID string) (uint64, bool)
 	SendPacket(ctx sdk.Context, packet channelexported.PacketI, portCapability sdk.CapabilityKey) error
-	RecvPacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, proofHeight uint64, acknowledgement []byte, portCapability sdk.CapabilityKey) (channelexported.PacketI, error)
+	PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error
 }
 
 // ClientKeeper defines the expected IBC client keeper

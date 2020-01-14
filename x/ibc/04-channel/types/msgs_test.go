@@ -1,10 +1,13 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/merkle"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
@@ -13,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -38,7 +42,7 @@ var (
 	invalidShortConnHops = []string{invalidShortConnection}
 	invalidLongConnHops  = []string{invalidLongConnection}
 
-	proof = commitment.Proof{}
+	proof = commitment.Proof{Proof: &merkle.Proof{}}
 
 	addr = sdk.AccAddress("testaddr")
 )
@@ -346,4 +350,131 @@ func (suite *MsgTestSuite) TestMsgChannelCloseConfirm() {
 			suite.Require().Error(err, "Invalid Msg %d passed: %s", i, tc.errMsg)
 		}
 	}
+}
+
+var _ exported.PacketDataI = validPacketT{}
+
+type validPacketT struct{}
+
+func (validPacketT) GetBytes() []byte {
+	return []byte("testdata")
+}
+
+func (validPacketT) GetTimeoutHeight() uint64 {
+	return 100
+}
+
+func (validPacketT) ValidateBasic() error {
+	return nil
+}
+
+func (validPacketT) Type() string {
+	return "valid"
+}
+
+var _ exported.PacketDataI = invalidPacketT{}
+
+type invalidPacketT struct{}
+
+func (invalidPacketT) GetBytes() []byte {
+	return []byte("testdata")
+}
+
+func (invalidPacketT) GetTimeoutHeight() uint64 {
+	return 100
+}
+
+func (invalidPacketT) ValidateBasic() error {
+	return errors.New("invalid packet")
+}
+
+func (invalidPacketT) Type() string {
+	return "invalid"
+}
+
+// define variables used for testing
+var (
+	packet        = NewPacket(validPacketT{}, 1, portid, chanid, cpportid, cpchanid)
+	invalidPacket = NewPacket(invalidPacketT{}, 0, portid, chanid, cpportid, cpchanid)
+
+	emptyProof     = commitment.Proof{Proof: nil}
+	invalidProofs1 = commitment.ProofI(nil)
+	invalidProofs2 = emptyProof
+
+	addr1     = sdk.AccAddress("testaddr1")
+	emptyAddr sdk.AccAddress
+
+	portid   = "testportid"
+	chanid   = "testchannel"
+	cpportid = "testcpport"
+	cpchanid = "testcpchannel"
+)
+
+// TestMsgPacketRoute tests Route for MsgPacket
+func TestMsgPacketRoute(t *testing.T) {
+	msg := NewMsgPacket(packet, proof, 1, addr1)
+
+	require.Equal(t, cpportid, msg.Route())
+}
+
+// TestMsgPacketType tests Type for MsgPacket
+func TestMsgPacketType(t *testing.T) {
+	msg := NewMsgPacket(packet, proof, 1, addr1)
+
+	require.Equal(t, "valid", msg.Type())
+}
+
+// TestMsgPacketValidation tests ValidateBasic for MsgPacket
+func TestMsgPacketValidation(t *testing.T) {
+	testMsgs := []MsgPacket{
+		NewMsgPacket(packet, proof, 1, addr1),          // valid msg
+		NewMsgPacket(packet, proof, 0, addr1),          // proof height is zero
+		NewMsgPacket(packet, nil, 1, addr1),            // missing proof
+		NewMsgPacket(packet, invalidProofs1, 1, addr1), // missing proof
+		NewMsgPacket(packet, invalidProofs2, 1, addr1), // proof contain empty proof
+		NewMsgPacket(packet, proof, 1, emptyAddr),      // missing signer address
+		NewMsgPacket(invalidPacket, proof, 1, addr1),   // invalid packet
+	}
+
+	testCases := []struct {
+		msg     MsgPacket
+		expPass bool
+		errMsg  string
+	}{
+		{testMsgs[0], true, ""},
+		{testMsgs[1], false, "proof height is zero"},
+		{testMsgs[2], false, "missing proof"},
+		{testMsgs[3], false, "missing proof"},
+		{testMsgs[4], false, "proof contain empty proof"},
+		{testMsgs[5], false, "missing signer address"},
+		{testMsgs[6], false, "invalid packet"},
+	}
+
+	for i, tc := range testCases {
+		err := tc.msg.ValidateBasic()
+		if tc.expPass {
+			require.NoError(t, err, "Msg %d failed: %v", i, err)
+		} else {
+			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
+		}
+	}
+}
+
+// TestMsgPacketGetSignBytes tests GetSignBytes for MsgPacket
+func TestMsgPacketGetSignBytes(t *testing.T) {
+	msg := NewMsgPacket(packet, proof, 1, addr1)
+	SubModuleCdc.RegisterConcrete(validPacketT{}, "test/validPacketT", nil)
+	res := msg.GetSignBytes()
+
+	expected := `{"packet":{"data":{"type":"test/validPacketT","value":{}},"destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid"},"proof":{"type":"ibc/commitment/merkle/Proof","value":{"proof":{"ops":[]}}},"proof_height":"1","signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}`
+	require.Equal(t, expected, string(res))
+}
+
+// TestMsgPacketGetSigners tests GetSigners for MsgPacket
+func TestMsgPacketGetSigners(t *testing.T) {
+	msg := NewMsgPacket(packet, proof, 1, addr1)
+	res := msg.GetSigners()
+
+	expected := "[746573746164647231]"
+	require.Equal(t, expected, fmt.Sprintf("%v", res))
 }

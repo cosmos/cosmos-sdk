@@ -1,45 +1,67 @@
 package types
 
 import (
+	"encoding/binary"
+
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
+// CommitPacket appends bigendian encoded timeout height and commitment bytes
+// and then returns the hash of the result bytes.
+// TODO: no specification for packet commitment currently,
+// make it spec compatible once we have it
+func CommitPacket(data exported.PacketDataI) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, data.GetTimeoutHeight())
+	buf = append(buf, data.GetBytes()...)
+	return tmhash.Sum(buf)
+}
+
+// CommitAcknowledgement returns the hash of commitment bytes
+func CommitAcknowledgement(data exported.PacketDataI) []byte {
+	return tmhash.Sum(data.GetBytes())
+}
+
 var _ exported.PacketI = Packet{}
 
 // Packet defines a type that carries data across different chains through IBC
 type Packet struct {
+	Data exported.PacketDataI `json:"data" yaml:"data"` // opaque value which can be defined by the application logic of the associated modules.
+
 	Sequence           uint64 `json:"sequence" yaml:"sequence"`                       // number corresponds to the order of sends and receives, where a Packet with an earlier sequence number must be sent and received before a Packet with a later sequence number.
-	Timeout            uint64 `json:"timeout" yaml:"timeout"`                         // indicates a consensus height on the destination chain after which the Packet will no longer be processed, and will instead count as having timed-out.
 	SourcePort         string `json:"source_port" yaml:"source_port"`                 // identifies the port on the sending chain.
 	SourceChannel      string `json:"source_channel" yaml:"source_channel"`           // identifies the channel end on the sending chain.
 	DestinationPort    string `json:"destination_port" yaml:"destination_port"`       // identifies the port on the receiving chain.
 	DestinationChannel string `json:"destination_channel" yaml:"destination_channel"` // identifies the channel end on the receiving chain.
-	Data               []byte `json:"data" yaml:"data"`                               // opaque value which can be defined by the application logic of the associated modules.
 }
 
 // NewPacket creates a new Packet instance
 func NewPacket(
-	sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data []byte,
+	data exported.PacketDataI,
+	sequence uint64, sourcePort, sourceChannel,
+	destinationPort, destinationChannel string,
 ) Packet {
 	return Packet{
+		Data:               data,
 		Sequence:           sequence,
-		Timeout:            timeout,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,
 		DestinationPort:    destinationPort,
 		DestinationChannel: destinationChannel,
-		Data:               data,
 	}
+}
+
+// Type exports Packet.Data.Type
+func (p Packet) Type() string {
+	return p.Data.Type()
 }
 
 // GetSequence implements PacketI interface
 func (p Packet) GetSequence() uint64 { return p.Sequence }
-
-// GetTimeoutHeight implements PacketI interface
-func (p Packet) GetTimeoutHeight() uint64 { return p.Timeout }
 
 // GetSourcePort implements PacketI interface
 func (p Packet) GetSourcePort() string { return p.SourcePort }
@@ -54,7 +76,10 @@ func (p Packet) GetDestPort() string { return p.DestinationPort }
 func (p Packet) GetDestChannel() string { return p.DestinationChannel }
 
 // GetData implements PacketI interface
-func (p Packet) GetData() []byte { return p.Data }
+func (p Packet) GetData() exported.PacketDataI { return p.Data }
+
+// GetTimeoutHeight implements PacketI interface
+func (p Packet) GetTimeoutHeight() uint64 { return p.Data.GetTimeoutHeight() }
 
 // ValidateBasic implements PacketI interface
 func (p Packet) ValidateBasic() error {
@@ -85,34 +110,11 @@ func (p Packet) ValidateBasic() error {
 	if p.Sequence == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet sequence cannot be 0")
 	}
-	if p.Timeout == 0 {
+	if p.Data.GetTimeoutHeight() == 0 {
 		return sdkerrors.Wrap(ErrInvalidPacket, "packet timeout cannot be 0")
 	}
-	if len(p.Data) == 0 {
-		return sdkerrors.Wrap(ErrInvalidPacket, "packet data cannot be empty")
+	if len(p.Data.GetBytes()) == 0 {
+		return sdkerrors.Wrap(ErrInvalidPacket, "packet data bytes cannot be empty")
 	}
-	return nil
+	return p.Data.ValidateBasic()
 }
-
-var _ exported.PacketI = OpaquePacket{}
-
-// OpaquePacket is a Packet, but cloaked in an obscuring data type by the host
-// state machine, such that a module cannot act upon it other than to pass it to
-// the IBC handler
-type OpaquePacket struct {
-	*Packet
-}
-
-// NewOpaquePacket creates a new OpaquePacket instance
-func NewOpaquePacket(sequence, timeout uint64, sourcePort, sourceChannel,
-	destinationPort, destinationChannel string, data []byte,
-) OpaquePacket {
-	Packet := NewPacket(
-		sequence, timeout, sourcePort, sourceChannel, destinationPort,
-		destinationChannel, data,
-	)
-	return OpaquePacket{&Packet}
-}
-
-// GetData implements PacketI interface
-func (op OpaquePacket) GetData() []byte { return nil }

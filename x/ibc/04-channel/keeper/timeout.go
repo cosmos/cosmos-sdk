@@ -23,11 +23,13 @@ func (k Keeper) TimeoutPacket(
 	proof commitment.ProofI,
 	proofHeight uint64,
 	nextSequenceRecv uint64,
-	portCapability sdk.CapabilityKey,
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
+		return nil, sdkerrors.Wrapf(
+			types.ErrChannelNotFound,
+			packet.GetSourcePort(), packet.GetSourceChannel(),
+		)
 	}
 
 	if channel.State != types.OPEN {
@@ -37,13 +39,12 @@ func (k Keeper) TimeoutPacket(
 		)
 	}
 
+	// TimeoutPacket is called by the antehandler which acts upon the packet.Route(),
+	// so the capability authentication can be omitted here
+
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
 		return nil, types.ErrChannelCapabilityNotFound
-	}
-
-	if !k.portKeeper.Authenticate(portCapability, packet.GetSourcePort()) {
-		return nil, errors.New("port is not valid")
 	}
 
 	if packet.GetDestChannel() != channel.Counterparty.ChannelID {
@@ -55,7 +56,10 @@ func (k Keeper) TimeoutPacket(
 
 	connectionEnd, found := k.connectionKeeper.GetConnection(ctx, channel.ConnectionHops[0])
 	if !found {
-		return nil, sdkerrors.Wrap(connection.ErrConnectionNotFound, channel.ConnectionHops[0])
+		return nil, sdkerrors.Wrap(
+			connection.ErrConnectionNotFound,
+			channel.ConnectionHops[0],
+		)
 	}
 
 	if packet.GetDestPort() != channel.Counterparty.PortID {
@@ -70,12 +74,18 @@ func (k Keeper) TimeoutPacket(
 	}
 
 	if nextSequenceRecv >= packet.GetSequence() {
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet already received")
+		return nil, sdkerrors.Wrap(
+			types.ErrInvalidPacket,
+			"packet already received",
+		)
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
-		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
+	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
+		return nil, sdkerrors.Wrap(
+			types.ErrInvalidPacket,
+			"packet hasn't been sent",
+		)
 	}
 
 	var ok bool
@@ -99,13 +109,6 @@ func (k Keeper) TimeoutPacket(
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet verification failed")
 	}
 
-	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-
-	if channel.Ordering == types.ORDERED {
-		channel.State = types.CLOSED
-		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
-	}
-
 	return packet, nil
 }
 
@@ -114,7 +117,7 @@ func (k Keeper) TimeoutPacket(
 // never be received (even if the timeoutHeight has not yet been reached).
 func (k Keeper) TimeoutOnClose(
 	ctx sdk.Context,
-	packet exported.PacketI,
+	packet types.Packet,
 	proofNonMembership,
 	proofClosed commitment.ProofI,
 	proofHeight uint64,
@@ -122,7 +125,7 @@ func (k Keeper) TimeoutOnClose(
 ) (exported.PacketI, error) {
 	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrChannelNotFound, packet.GetSourceChannel())
+		return nil, sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
 	}
 
 	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
@@ -154,7 +157,7 @@ func (k Keeper) TimeoutOnClose(
 	}
 
 	commitment := k.GetPacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
-	if !bytes.Equal(commitment, packet.GetData()) { // TODO: hash packet data
+	if !bytes.Equal(commitment, types.CommitPacket(packet.GetData())) {
 		return nil, sdkerrors.Wrap(types.ErrInvalidPacket, "packet hasn't been sent")
 	}
 
@@ -195,4 +198,26 @@ func (k Keeper) TimeoutOnClose(
 	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
 
 	return packet, nil
+}
+
+// TimeoutExecuted deletes the commitment send from this chain after it verifies timeout
+func (k Keeper) TimeoutExecuted(ctx sdk.Context, packet exported.PacketI) error {
+	channel, found := k.GetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	if !found {
+		return sdkerrors.Wrapf(types.ErrChannelNotFound, packet.GetSourcePort(), packet.GetSourceChannel())
+	}
+
+	_, found = k.GetChannelCapability(ctx, packet.GetSourcePort(), packet.GetSourceChannel())
+	if !found {
+		return types.ErrChannelCapabilityNotFound
+	}
+
+	k.deletePacketCommitment(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetSequence())
+
+	if channel.Ordering == types.ORDERED {
+		channel.State = types.CLOSED
+		k.SetChannel(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), channel)
+	}
+
+	return nil
 }

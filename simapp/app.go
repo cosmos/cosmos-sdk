@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	ibcclient "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	ibctransfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
+	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -65,17 +65,18 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		transfer.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		auth.FeeCollectorName:              nil,
-		distr.ModuleName:                   nil,
-		mint.ModuleName:                    {supply.Minter},
-		staking.BondedPoolName:             {supply.Burner, supply.Staking},
-		staking.NotBondedPoolName:          {supply.Burner, supply.Staking},
-		gov.ModuleName:                     {supply.Burner},
-		ibctransfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
+		auth.FeeCollectorName:           nil,
+		distr.ModuleName:                nil,
+		mint.ModuleName:                 {supply.Minter},
+		staking.BondedPoolName:          {supply.Burner, supply.Staking},
+		staking.NotBondedPoolName:       {supply.Burner, supply.Staking},
+		gov.ModuleName:                  {supply.Burner},
+		transfer.GetModuleAccountName(): {supply.Minter, supply.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -127,6 +128,7 @@ type SimApp struct {
 	ParamsKeeper   params.Keeper
 	EvidenceKeeper evidence.Keeper
 	IBCKeeper      ibc.Keeper
+	TransferKeeper transfer.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -150,8 +152,8 @@ func NewSimApp(
 	keys := sdk.NewKVStoreKeys(
 		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
 		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, upgrade.StoreKey, evidence.StoreKey,
-		ibc.StoreKey,
+		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgrade.StoreKey, evidence.StoreKey,
+		transfer.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
 
@@ -234,6 +236,12 @@ func NewSimApp(
 
 	app.IBCKeeper = ibc.NewKeeper(app.cdc, keys[ibc.StoreKey], app.BankKeeper, app.SupplyKeeper)
 
+	transferCapKey := app.IBCKeeper.PortKeeper.BindPort(bank.ModuleName)
+	app.TransferKeeper = transfer.NewKeeper(
+		app.cdc, keys[transfer.StoreKey], transferCapKey,
+		app.IBCKeeper.ChannelKeeper, app.BankKeeper, app.SupplyKeeper,
+	)
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
@@ -294,7 +302,12 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(ante.NewAnteHandler(app.AccountKeeper, app.SupplyKeeper, auth.DefaultSigVerificationGasConsumer))
+	app.SetAnteHandler(
+		ante.NewAnteHandler(
+			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper,
+			ante.DefaultSigVerificationGasConsumer,
+		),
+	)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

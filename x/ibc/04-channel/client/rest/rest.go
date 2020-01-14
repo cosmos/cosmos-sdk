@@ -73,3 +73,11 @@ type ChannelCloseConfirmReq struct {
 	ProofInit   commitment.ProofI `json:"proof_init" yaml:"proof_init"`
 	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
 }
+
+// RecvPacketReq defines the properties of a receive packet request's body.
+type RecvPacketReq struct {
+	BaseReq rest.BaseReq      `json:"base_req" yaml:"base_req"`
+	Packet  types.Packet      `json:"packet" yaml:"packet"`
+	Proofs  commitment.ProofI `json:"proofs" yaml:"proofs"`
+	Height  uint64            `json:"height" yaml:"height"`
+}

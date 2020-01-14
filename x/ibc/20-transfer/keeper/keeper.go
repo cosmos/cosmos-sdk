@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
@@ -19,10 +20,8 @@ const (
 
 // Keeper defines the IBC transfer keeper
 type Keeper struct {
-	storeKey sdk.StoreKey
-	cdc      *codec.Codec
-
-	// Capability key and port to which ICS20 is binded. Used for packet relaying.
+	storeKey          sdk.StoreKey
+	cdc               *codec.Codec
 	boundedCapability sdk.CapabilityKey
 
 	clientKeeper     types.ClientKeeper
@@ -34,9 +33,8 @@ type Keeper struct {
 
 // NewKeeper creates a new IBC transfer Keeper instance
 func NewKeeper(
-	cdc *codec.Codec, key sdk.StoreKey,
-	capKey sdk.CapabilityKey, clientKeeper types.ClientKeeper,
-	connnectionKeeper types.ConnectionKeeper, channelKeeper types.ChannelKeeper,
+	cdc *codec.Codec, key sdk.StoreKey, capKey sdk.CapabilityKey,
+	channelKeeper types.ChannelKeeper,
 	bankKeeper types.BankKeeper, supplyKeeper types.SupplyKeeper,
 ) Keeper {
 
@@ -49,8 +47,6 @@ func NewKeeper(
 		storeKey:          key,
 		cdc:               cdc,
 		boundedCapability: capKey,
-		clientKeeper:      clientKeeper,
-		connectionKeeper:  connnectionKeeper,
 		channelKeeper:     channelKeeper,
 		bankKeeper:        bankKeeper,
 		supplyKeeper:      supplyKeeper,
@@ -65,4 +61,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // GetTransferAccount returns the ICS20 - transfers ModuleAccount
 func (k Keeper) GetTransferAccount(ctx sdk.Context) supplyexported.ModuleAccountI {
 	return k.supplyKeeper.GetModuleAccount(ctx, types.GetModuleAccountName())
+}
+
+func (k Keeper) PacketExecuted(ctx sdk.Context, packet channelexported.PacketI, acknowledgement channelexported.PacketDataI) error {
+	return k.channelKeeper.PacketExecuted(ctx, packet, acknowledgement)
 }

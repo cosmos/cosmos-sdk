@@ -304,7 +304,7 @@ func NewSimApp(
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
-			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper, 
+			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			),
 		)

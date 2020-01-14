@@ -14,7 +14,7 @@ import (
 func NewAnteHandler(
 	ak keeper.AccountKeeper, supplyKeeper types.SupplyKeeper, ibcKeeper ibckeeper.Keeper,
 	sigGasConsumer SignatureVerificationGasConsumer,
-	) sdk.AnteHandler {
+) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		NewMempoolFeeDecorator(),

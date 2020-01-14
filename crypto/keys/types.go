@@ -31,21 +31,15 @@ type Keybase interface {
 	// same name.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
 
-	// CreateAccount converts a mnemonic to a private key using a BIP44 path 44'/118'/{account}'/0/{index}
+	// CreateAccount converts a mnemonic to a private key and BIP 32 HD Path
 	// and persists it, encrypted with the given password.
-	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)
-
-	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
-	// Derive private key from the seed using the BIP44 params.
-	// Encrypt the key to disk using encryptPasswd.
-	// See https://github.com/cosmos/cosmos-sdk/issues/2095
-	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
+	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo) (Info, error)
 
 	// CreateLedger creates, stores, and returns a new Ledger key reference
 	CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
-	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
+	CreateOffline(name string, pubkey crypto.PubKey, algo SigningAlgo) (info Info, err error)
 
 	// CreateMulti creates, stores, and returns a new multsig (offline) key reference
 	CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -80,6 +74,12 @@ type Keybase interface {
 
 	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
+
+	// SupportedAlgos returns a list of signing algorithms supported by the keybase
+	SupportedAlgos() []SigningAlgo
+
+	// SupportedAlgosLedger returns a list of signing algorithms supported by the keybase's ledger integration
+	SupportedAlgosLedger() []SigningAlgo
 
 	// CloseDB closes the database.
 	CloseDB()
@@ -118,6 +118,8 @@ type Info interface {
 	GetPubKey() crypto.PubKey
 	// Address
 	GetAddress() types.AccAddress
+	// Algo
+	GetAlgo() SigningAlgo
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 }
@@ -132,15 +134,17 @@ var (
 // localInfo is the public information about a locally stored key
 type localInfo struct {
 	Name         string        `json:"name"`
+	Algo         SigningAlgo   `json:"algo"`
 	PubKey       crypto.PubKey `json:"pubkey"`
 	PrivKeyArmor string        `json:"privkey.armor"`
 }
 
-func newLocalInfo(name string, pub crypto.PubKey, privArmor string) Info {
+func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo SigningAlgo) Info {
 	return &localInfo{
 		Name:         name,
 		PubKey:       pub,
 		PrivKeyArmor: privArmor,
+		Algo:         algo,
 	}
 }
 
@@ -165,6 +169,11 @@ func (i localInfo) GetAddress() types.AccAddress {
 }
 
 // GetType implements Info interface
+func (i localInfo) GetAlgo() SigningAlgo {
+	return i.Algo
+}
+
+// GetType implements Info interface
 func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -174,13 +183,15 @@ type ledgerInfo struct {
 	Name   string         `json:"name"`
 	PubKey crypto.PubKey  `json:"pubkey"`
 	Path   hd.BIP44Params `json:"path"`
+	Algo   SigningAlgo    `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params, algo SigningAlgo) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,
 		Path:   path,
+		Algo:   algo,
 	}
 }
 
@@ -205,6 +216,11 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
+func (i ledgerInfo) GetAlgo() SigningAlgo {
+	return i.Algo
+}
+
+// GetPath implements Info interface
 func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
@@ -213,13 +229,15 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`
+	Algo   SigningAlgo   `json:"algo"`
 	PubKey crypto.PubKey `json:"pubkey"`
 }
 
-func newOfflineInfo(name string, pub crypto.PubKey) Info {
+func newOfflineInfo(name string, pub crypto.PubKey, algo SigningAlgo) Info {
 	return &offlineInfo{
 		Name:   name,
 		PubKey: pub,
+		Algo:   algo,
 	}
 }
 
@@ -236,6 +254,11 @@ func (i offlineInfo) GetName() string {
 // GetPubKey implements Info interface
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
+}
+
+// GetAlgo returns the signing algorithm for the key
+func (i offlineInfo) GetAlgo() SigningAlgo {
+	return i.Algo
 }
 
 // GetAddress implements Info interface
@@ -300,6 +323,11 @@ func (i multiInfo) GetAddress() types.AccAddress {
 }
 
 // GetPath implements Info interface
+func (i multiInfo) GetAlgo() SigningAlgo {
+	return MultiAlgo
+}
+
+// GetPath implements Info interface
 func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -316,8 +344,10 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 }
 
 type (
+	// DeriveKeyFunc defines the function to derive a new key from a seed and hd path
+	DeriveKeyFunc func(mnemonic string, bip39Passphrase, hdPath string, algo SigningAlgo) ([]byte, error)
 	// PrivKeyGenFunc defines the function to convert derived key bytes to a tendermint private key
-	PrivKeyGenFunc func(bz [32]byte) crypto.PrivKey
+	PrivKeyGenFunc func(bz []byte, algo SigningAlgo) (crypto.PrivKey, error)
 
 	// KeybaseOption overrides options for the db
 	KeybaseOption func(*kbOptions)

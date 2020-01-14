@@ -28,7 +28,7 @@ Vesting accounts will continue to store original vesting, delegated free, and de
 
 `GetBalance(addr AccAddress, denom string) sdk.Coin` and `SetBalance(addr AccAddress, coin sdk.Coin)` methods will be added to the bank keeper to retrieve & set balances, respectively.
 
-Balances will be stored first by the address, then by the denomination:
+Balances will be stored first by the address, then by the denomination (the reverse is also possible, but retrieval of all balances for a single account is presumed to be more frequent):
 
 ```golang
 func BalanceKey(addr sdk.AccAddress, denom string) []byte {
@@ -36,7 +36,7 @@ func BalanceKey(addr sdk.AccAddress, denom string) []byte {
 }
 ```
 
-`DelegateCoins()` and `UndelegateCoins()` will be altered to take a single `sdk.Coin` (one denomination & amount) instead of `sdk.Coins`. They will read balances directly instead of calling `GetCoins()` (which no longer exists).
+`DelegateCoins()` and `UndelegateCoins()` will be altered to take a single `sdk.Coin` (one denomination & amount) instead of `sdk.Coins`, since they should only operate on one denomination. They will read balances directly instead of calling `GetCoins()` (which no longer exists).
 
 `SubtractCoins()` and `AddCoins()` will be altered to read & write the balances directly instead of calling `GetCoins()` / `SetCoins()` (which no longer exist).
 

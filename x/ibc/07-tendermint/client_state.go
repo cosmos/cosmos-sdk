@@ -1,6 +1,8 @@
 package tendermint
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
@@ -56,7 +58,8 @@ func (cs ClientState) VerifyClientConsensusState(
 	prefix commitment.PrefixI, proof commitment.ProofI,
 	clientID string, consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	// TODO: use path function
+	path, err := commitment.ApplyPrefix(prefix, fmt.Sprintf("consensusState/%s", clientID))
 	if err != nil {
 		return nil
 	}
@@ -88,7 +91,8 @@ func (cs ClientState) VerifyConnectionState(
 	// connectionEnd connection,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	// TODO: use path function
+	path, err := commitment.ApplyPrefix(prefix, fmt.Sprintf("connection/%s", connectionID))
 	if err != nil {
 		return nil
 	}

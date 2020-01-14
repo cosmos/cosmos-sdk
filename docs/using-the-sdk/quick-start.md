@@ -118,7 +118,7 @@ aud collect-gentxs
 A `gentx` does three things: 
 
     1. Makes the `validator` account you created into a validator operator account (i.e. the account that controls the validator).
-    2. Self-delegate the provided `amount` of staking tokens. 
+    2. Self-delegates the provided `amount` of staking tokens. 
     3. Link the operator account with a Tendermint node pubkey that will be used for signing blocks. If no `--pubkey` flag is provided, it defaults to the local node pubkey created via the `aud init` command above. 
 
 For more on `gentx`, use the following command:
@@ -177,9 +177,8 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 ## Next
 
-Congratulations for making it to the end of this short introduction guide! If you want to learn more, check out the following ressources:
+Congratulations on making it to the end of this short introduction guide! If you want to learn more, check out the following resources:
 
 - [How to build a full SDK application from scratch](https://tutorials.cosmos.network/nameservice/tutorial/00-intro.html).
 - [Read the Cosmos SDK Documentation](../intro/overview.md). 
-
 

@@ -3,10 +3,11 @@ package types
 import (
 	"encoding/binary"
 
+	"github.com/tendermint/tendermint/crypto/tmhash"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 // CommitPacket appends bigendian encoded timeout height and commitment bytes

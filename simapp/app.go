@@ -306,8 +306,8 @@ func NewSimApp(
 		ante.NewAnteHandler(
 			app.AccountKeeper, app.SupplyKeeper, app.IBCKeeper,
 			ante.DefaultSigVerificationGasConsumer,
-			),
-		)
+		),
+	)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

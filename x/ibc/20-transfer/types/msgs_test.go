@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
-	"github.com/stretchr/testify/require"
 )
 
 // define constants used for testing

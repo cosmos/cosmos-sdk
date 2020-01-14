@@ -44,6 +44,10 @@ func BalanceKey(addr sdk.AccAddress, denom string) []byte {
 
 External APIs will need to scan all balances under an account to retain backwards-compatibility - additional methods should be added to fetch a balance for a single denomination only.
 
+### Supply module
+
+The supply module, in order to implement the total supply invariant, will now need to scan all accounts & call `GetBalance` using the `x/bank` Keeper for the denomination in question, then sum the balances and check that they match the expected total supply.
+
 ## Status
 
 Proposed.

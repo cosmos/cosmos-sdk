@@ -93,7 +93,7 @@ Now that you have your daemon client `aud` and your command-line interface `acli
 aud init <node-moniker> --chain-id test
 ```
 
-The command above will create all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network. Before starting the chain, you  need to populate the state with at least one account. To do so, first create a new [account](../basics/accounts.md) named `validator` (feel free to choose another name):
+The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network. Before starting the chain, you  need to populate the state with at least one account. To do so, first create a new [account](../basics/accounts.md) named `validator` (feel free to choose another name):
 
 ```bash
 acli keys add validator
@@ -149,7 +149,7 @@ You should see the current balance of the account you created, equal to the orig
 acli keys add receiver
 ```
 
-The command above created a local key-pair that is not yet registered on the chain. An account is registered the first time it receives tokens from another account. Now, run the following command to send tokens to the second account: 
+The command above creates a local key-pair that is not yet registered on the chain. An account is registered the first time it receives tokens from another account. Now, run the following command to send tokens to the second account: 
 
 ```bash
 acli tx send $(acli keys show validator -a) $(acli keys show receiver -a) 1000stake --chain-id test

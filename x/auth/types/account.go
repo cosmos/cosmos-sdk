@@ -153,7 +153,7 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 	}
 
 	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -179,7 +179,7 @@ func (acc BaseAccount) MarshalJSON() ([]byte, error) {
 	}
 
 	if acc.PubKey != nil {
-		pks, err := sdk.Bech32ifyAccPub(acc.PubKey)
+		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, acc.PubKey)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 	}
 
 	if alias.PubKey != "" {
-		pk, err := sdk.GetAccPubKeyBech32(alias.PubKey)
+		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, alias.PubKey)
 		if err != nil {
 			return err
 		}

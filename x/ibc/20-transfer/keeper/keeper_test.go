@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestGetTransferAccount() {
 	expectedMaccName := types.GetModuleAccountName()
 	expectedMaccAddr := sdk.AccAddress(crypto.AddressHash([]byte(expectedMaccName)))
 
-	macc := suite.app.IBCKeeper.TransferKeeper.GetTransferAccount(suite.ctx)
+	macc := suite.app.TransferKeeper.GetTransferAccount(suite.ctx)
 
 	suite.NotNil(macc)
 	suite.Equal(expectedMaccName, macc.GetName())

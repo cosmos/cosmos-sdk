@@ -284,7 +284,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	)
 
 	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyAccPub(ss.PubKey)
+		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.PubKey)
 		if err != nil {
 			return nil, err
 		}

@@ -16,8 +16,6 @@ import (
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/20-transfer"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/ibc/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -45,8 +43,6 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 	connection.RegisterCodec(cdc)
 	channel.RegisterCodec(cdc)
 	tendermint.RegisterCodec(cdc)
-	transfer.RegisterCodec(cdc)
-	commitment.RegisterCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the ibc
@@ -122,7 +118,6 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
 	// check if the IBC transfer module account is set
-	transfer.InitGenesis(ctx, am.keeper.TransferKeeper)
 	return []abci.ValidatorUpdate{}
 }
 

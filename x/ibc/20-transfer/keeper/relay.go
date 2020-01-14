@@ -5,10 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/20-transfer/types"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
 // SendTransfer handles transfer sending logic
@@ -51,22 +49,6 @@ func (k Keeper) SendTransfer(
 	return k.createOutgoingPacket(ctx, sequence, sourcePort, sourceChannel, destinationPort, destinationChannel, coins, sender, receiver, isSourceChain)
 }
 
-// ReceivePacket handles receiving packet
-func (k Keeper) ReceivePacket(ctx sdk.Context, packet channelexported.PacketI, proof commitment.ProofI, height uint64) error {
-	_, err := k.channelKeeper.RecvPacket(ctx, packet, proof, height, []byte{}, k.boundedCapability)
-	if err != nil {
-		return err
-	}
-
-	var data types.PacketData
-	err = k.cdc.UnmarshalBinaryBare(packet.GetData(), &data)
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
-
-	return k.ReceiveTransfer(ctx, packet.GetSourcePort(), packet.GetSourceChannel(), packet.GetDestPort(), packet.GetDestChannel(), data)
-}
-
 // ReceiveTransfer handles transfer receiving logic
 func (k Keeper) ReceiveTransfer(
 	ctx sdk.Context,
@@ -74,7 +56,7 @@ func (k Keeper) ReceiveTransfer(
 	sourceChannel,
 	destinationPort,
 	destinationChannel string,
-	data types.PacketData,
+	data types.PacketDataTransfer,
 ) error {
 	if data.Source {
 		prefix := types.GetDenomPrefix(destinationPort, destinationChannel)
@@ -115,6 +97,40 @@ func (k Keeper) ReceiveTransfer(
 	escrowAddress := types.GetEscrowAddress(destinationPort, destinationChannel)
 	return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Receiver, coins)
 
+}
+
+// TimeoutTransfer handles transfer timeout logic
+func (k Keeper) TimeoutTransfer(
+	ctx sdk.Context,
+	sourcePort,
+	sourceChannel,
+	destinationPort,
+	destinationChannel string,
+	data types.PacketDataTransfer,
+) error {
+	// check the denom prefix
+	prefix := types.GetDenomPrefix(sourcePort, sourceChannel)
+	coins := make(sdk.Coins, len(data.Amount))
+	for i, coin := range data.Amount {
+		coin := coin
+		if !strings.HasPrefix(coin.Denom, prefix) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "%s doesn't contain the prefix '%s'", coin.Denom, prefix)
+		}
+		coins[i] = sdk.NewCoin(coin.Denom[len(prefix):], coin.Amount)
+	}
+
+	if data.Source {
+		escrowAddress := types.GetEscrowAddress(destinationPort, destinationChannel)
+		return k.bankKeeper.SendCoins(ctx, escrowAddress, data.Sender, coins)
+	}
+
+	// mint from supply
+	err := k.supplyKeeper.MintCoins(ctx, types.GetModuleAccountName(), data.Amount)
+	if err != nil {
+		return err
+	}
+
+	return k.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.GetModuleAccountName(), data.Sender, data.Amount)
 }
 
 func (k Keeper) createOutgoingPacket(
@@ -175,22 +191,15 @@ func (k Keeper) createOutgoingPacket(
 		}
 	}
 
-	packetData := types.NewPacketData(amount, sender, receiver, isSourceChain)
-
-	// TODO: This should be hashed (for the commitment in the store).
-	packetDataBz, err := k.cdc.MarshalBinaryBare(packetData)
-	if err != nil {
-		return sdkerrors.Wrap(err, "invalid packet data")
-	}
+	packetData := types.NewPacketDataTransfer(amount, sender, receiver, isSourceChain, uint64(ctx.BlockHeight())+DefaultPacketTimeout)
 
 	packet := channel.NewPacket(
+		packetData,
 		seq,
-		uint64(ctx.BlockHeight())+DefaultPacketTimeout,
 		sourcePort,
 		sourceChannel,
 		destinationPort,
 		destinationChannel,
-		packetDataBz,
 	)
 
 	return k.channelKeeper.SendPacket(ctx, packet, k.boundedCapability)

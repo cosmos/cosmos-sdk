@@ -81,7 +81,6 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 // are returned to Tendermint.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
-	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := sdk.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
@@ -92,14 +91,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	last := k.getLastValidatorsByAddr(ctx)
 
 	// Iterate over validators, highest power to lowest.
-	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator := k.ValidatorsPowerStoreIterator(ctx)
 	defer iterator.Close()
 	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
 
-		// fetch the validator
 		valAddr := sdk.ValAddress(iterator.Value())
 		validator := k.mustGetValidator(ctx, valAddr)
 
@@ -132,43 +130,28 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		copy(valAddrBytes[:], valAddr[:])
 		oldPowerBytes, found := last[valAddrBytes]
 
-		// calculate the new power bytes
 		newPower := validator.ConsensusPower()
 		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(newPower)
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
-
-			// set validator power on lookup index
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
 
-		// validator still in the validator set, so delete from the copy
 		delete(last, valAddrBytes)
 
-		// keep count
 		count++
 		totalPower = totalPower.Add(sdk.NewInt(newPower))
 	}
 
-	// sort the no-longer-bonded validators
 	noLongerBonded := sortNoLongerBonded(last)
-
-	// iterate through the sorted no-longer-bonded validators
 	for _, valAddrBytes := range noLongerBonded {
 
-		// fetch the validator
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
-
-		// bonded to unbonding
 		validator = k.bondedToUnbonding(ctx, validator)
 		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-
-		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
-
-		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
@@ -255,7 +238,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
-	// set the status
 	validator = validator.UpdateStatus(sdk.Bonded)
 
 	// save the now bonded validator record to the two referenced stores
@@ -284,7 +266,6 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
-	// set the status
 	validator = validator.UpdateStatus(sdk.Unbonding)
 
 	// set the unbonding completion time and completion height appropriately
@@ -317,15 +298,13 @@ type validatorsByAddr map[[sdk.AddrLen]byte][]byte
 // get the last validator set
 func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) validatorsByAddr {
 	last := make(validatorsByAddr)
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.LastValidatorPowerKey)
+	iterator := k.LastValidatorsIterator(ctx)
 	defer iterator.Close()
-	// iterate over the last validator set index
+
 	for ; iterator.Valid(); iterator.Next() {
 		var valAddr [sdk.AddrLen]byte
 		// extract the validator address from the key (prefix is 1-byte)
 		copy(valAddr[:], iterator.Key()[1:])
-		// power bytes is just the value
 		powerBytes := iterator.Value()
 		last[valAddr] = make([]byte, len(powerBytes))
 		copy(last[valAddr], powerBytes)

@@ -25,6 +25,13 @@ func NewGenesisState(genTxs []json.RawMessage) GenesisState {
 	}
 }
 
+// DefaultGenesisState returns the genutil module's default genesis state.
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		GenTxs: []json.RawMessage{},
+	}
+}
+
 // NewGenesisStateFromStdTx creates a new GenesisState object
 // from auth transactions
 func NewGenesisStateFromStdTx(genTxs []authtypes.StdTx) GenesisState {

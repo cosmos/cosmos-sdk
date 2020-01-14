@@ -5,11 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/merkle"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channel "github.com/cosmos/cosmos-sdk/x/ibc/04-channel"
-	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -24,17 +21,7 @@ const (
 	invalidLongChannel  = "invalidlongchannelinvalidlongchannel"
 )
 
-// define variables used for testing
 var (
-	packet        = channel.NewPacket(1, 100, "testportid", "testchannel", "testcpport", "testcpchannel", []byte("testdata"))
-	invalidPacket = channel.NewPacket(0, 100, "testportid", "testchannel", "testcpport", "testcpchannel", []byte{})
-
-	proof          = commitment.Proof{Proof: &merkle.Proof{}}
-	emptyProof     = commitment.Proof{Proof: nil}
-	proofs         = []commitment.Proof{proof}
-	invalidProofs1 = []commitment.Proof{}
-	invalidProofs2 = []commitment.Proof{emptyProof}
-
 	addr1     = sdk.AccAddress("testaddr1")
 	addr2     = sdk.AccAddress("testaddr2")
 	emptyAddr sdk.AccAddress
@@ -115,74 +102,6 @@ func TestMsgTransferGetSignBytes(t *testing.T) {
 // TestMsgTransferGetSigners tests GetSigners for MsgTransfer
 func TestMsgTransferGetSigners(t *testing.T) {
 	msg := NewMsgTransfer("testportid", "testchannel", coins, addr1, addr2, true)
-	res := msg.GetSigners()
-
-	expected := "[746573746164647231]"
-	require.Equal(t, expected, fmt.Sprintf("%v", res))
-}
-
-// TestMsgRecvPacketRoute tests Route for MsgRecvPacket
-func TestMsgRecvPacketRoute(t *testing.T) {
-	msg := NewMsgRecvPacket(packet, proofs, 1, addr1)
-
-	require.Equal(t, ibctypes.RouterKey, msg.Route())
-}
-
-// TestMsgRecvPacketType tests Type for MsgRecvPacket
-func TestMsgRecvPacketType(t *testing.T) {
-	msg := NewMsgRecvPacket(packet, proofs, 1, addr1)
-
-	require.Equal(t, "recv_packet", msg.Type())
-}
-
-// TestMsgRecvPacketValidation tests ValidateBasic for MsgRecvPacket
-func TestMsgRecvPacketValidation(t *testing.T) {
-	testMsgs := []MsgRecvPacket{
-		NewMsgRecvPacket(packet, proofs, 1, addr1),         // valid msg
-		NewMsgRecvPacket(packet, proofs, 0, addr1),         // proof height is zero
-		NewMsgRecvPacket(packet, nil, 1, addr1),            // missing proofs
-		NewMsgRecvPacket(packet, invalidProofs1, 1, addr1), // missing proofs
-		NewMsgRecvPacket(packet, invalidProofs2, 1, addr1), // proofs contain empty proof
-		NewMsgRecvPacket(packet, proofs, 1, emptyAddr),     // missing signer address
-		NewMsgRecvPacket(invalidPacket, proofs, 1, addr1),  // invalid packet
-	}
-
-	testCases := []struct {
-		msg     MsgRecvPacket
-		expPass bool
-		errMsg  string
-	}{
-		{testMsgs[0], true, ""},
-		{testMsgs[1], false, "proof height is zero"},
-		{testMsgs[2], false, "missing proofs"},
-		{testMsgs[3], false, "missing proofs"},
-		{testMsgs[4], false, "proofs contain empty proof"},
-		{testMsgs[5], false, "missing signer address"},
-		{testMsgs[6], false, "invalid packet"},
-	}
-
-	for i, tc := range testCases {
-		err := tc.msg.ValidateBasic()
-		if tc.expPass {
-			require.NoError(t, err, "Msg %d failed: %v", i, err)
-		} else {
-			require.Error(t, err, "Invalid Msg %d passed: %s", i, tc.errMsg)
-		}
-	}
-}
-
-// TestMsgRecvPacketGetSignBytes tests GetSignBytes for MsgRecvPacket
-func TestMsgRecvPacketGetSignBytes(t *testing.T) {
-	msg := NewMsgRecvPacket(packet, proofs, 1, addr1)
-	res := msg.GetSignBytes()
-
-	expected := `{"type":"ibc/transfer/MsgRecvPacket","value":{"height":"1","packet":{"type":"ibc/channel/Packet","value":{"data":"dGVzdGRhdGE=","destination_channel":"testcpchannel","destination_port":"testcpport","sequence":"1","source_channel":"testchannel","source_port":"testportid","timeout":"100"}},"proofs":[{"proof":{"ops":[]}}],"signer":"cosmos1w3jhxarpv3j8yvg4ufs4x"}}`
-	require.Equal(t, expected, string(res))
-}
-
-// TestMsgRecvPacketGetSigners tests GetSigners for MsgRecvPacket
-func TestMsgRecvPacketGetSigners(t *testing.T) {
-	msg := NewMsgRecvPacket(packet, proofs, 1, addr1)
 	res := msg.GetSigners()
 
 	expected := "[746573746164647231]"

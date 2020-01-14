@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -387,5 +388,171 @@ func (msg MsgChannelCloseConfirm) GetSignBytes() []byte {
 
 // GetSigners implements sdk.Msg
 func (msg MsgChannelCloseConfirm) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+// MsgPacket receives incoming IBC packet
+type MsgPacket struct {
+	Packet      `json:"packet" yaml:"packet"`
+	Proof       commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight uint64            `json:"proof_height" yaml:"proof_height"`
+	Signer      sdk.AccAddress    `json:"signer" yaml:"signer"`
+}
+
+var _ sdk.Msg = MsgPacket{}
+
+// NewMsgPacket constructs new MsgPacket
+func NewMsgPacket(packet Packet, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgPacket {
+	return MsgPacket{
+		Packet:      packet,
+		Proof:       proof,
+		ProofHeight: proofHeight,
+		Signer:      signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (msg MsgPacket) Route() string {
+	return msg.DestinationPort
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgPacket) ValidateBasic() error {
+	if msg.Proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	}
+	if msg.ProofHeight == 0 {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+	}
+	if msg.Signer.Empty() {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	return msg.Packet.ValidateBasic()
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgPacket) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgPacket) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgTimeout{}
+
+// MsgTimeout receives timeouted packet
+type MsgTimeout struct {
+	Packet           `json:"packet" yaml:"packet"`
+	NextSequenceRecv uint64            `json:"next_sequence_recv" yaml:"next_sequence_recv"`
+	Proof            commitment.ProofI `json:"proof" yaml:"proof"`
+	ProofHeight      uint64            `json:"proof_height" yaml:"proof_height"`
+	Signer           sdk.AccAddress    `json:"signer" yaml:"signer"`
+}
+
+// NewMsgTimeout constructs new MsgTimeout
+func NewMsgTimeout(packet Packet, nextSequenceRecv uint64, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgTimeout {
+	return MsgTimeout{
+		Packet:           packet,
+		NextSequenceRecv: nextSequenceRecv,
+		Proof:            proof,
+		ProofHeight:      proofHeight,
+		Signer:           signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (msg MsgTimeout) Route() string {
+	return msg.SourcePort
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgTimeout) ValidateBasic() error {
+	if msg.Proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	}
+	if msg.ProofHeight == 0 {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+	}
+	if msg.Signer.Empty() {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	return msg.Packet.ValidateBasic()
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgTimeout) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgTimeout) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Signer}
+}
+
+var _ sdk.Msg = MsgAcknowledgement{}
+
+// MsgAcknowledgement receives incoming IBC acknowledgement
+type MsgAcknowledgement struct {
+	Packet          `json:"packet" yaml:"packet"`
+	Acknowledgement exported.PacketDataI `json:"acknowledgement" yaml:"acknowledgement"`
+	Proof           commitment.ProofI    `json:"proof" yaml:"proof"`
+	ProofHeight     uint64               `json:"proof_height" yaml:"proof_height"`
+	Signer          sdk.AccAddress       `json:"signer" yaml:"signer"`
+}
+
+// NewMsgAcknowledgement constructs a new MsgAcknowledgement
+func NewMsgAcknowledgement(packet Packet, ack exported.PacketDataI, proof commitment.ProofI, proofHeight uint64, signer sdk.AccAddress) MsgAcknowledgement {
+	return MsgAcknowledgement{
+		Packet:          packet,
+		Acknowledgement: ack,
+		Proof:           proof,
+		ProofHeight:     proofHeight,
+		Signer:          signer,
+	}
+}
+
+// Route implements sdk.Msg
+func (msg MsgAcknowledgement) Route() string {
+	return msg.SourcePort
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgAcknowledgement) ValidateBasic() error {
+	if msg.Proof == nil {
+		return sdkerrors.Wrap(commitment.ErrInvalidProof, "cannot submit an empty proof")
+	}
+	if err := msg.Proof.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "proof ack cannot be nil")
+	}
+	if msg.ProofHeight == 0 {
+		return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "proof height must be > 0")
+	}
+	if err := msg.Acknowledgement.ValidateBasic(); err != nil {
+		return err
+	}
+	if msg.Signer.Empty() {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	return msg.Packet.ValidateBasic()
+}
+
+// GetSignBytes implements sdk.Msg
+func (msg MsgAcknowledgement) GetSignBytes() []byte {
+	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgAcknowledgement) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Signer}
 }

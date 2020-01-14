@@ -77,8 +77,10 @@ var (
 	NewMsgChannelOpenConfirm     = types.NewMsgChannelOpenConfirm
 	NewMsgChannelCloseInit       = types.NewMsgChannelCloseInit
 	NewMsgChannelCloseConfirm    = types.NewMsgChannelCloseConfirm
+	NewMsgPacket                 = types.NewMsgPacket
+	NewMsgTimeout                = types.NewMsgTimeout
+	NewMsgAcknowledgement        = types.NewMsgAcknowledgement
 	NewPacket                    = types.NewPacket
-	NewOpaquePacket              = types.NewOpaquePacket
 	NewChannelResponse           = types.NewChannelResponse
 	NewQueryChannelParams        = types.NewQueryChannelParams
 
@@ -108,8 +110,10 @@ type (
 	MsgChannelOpenConfirm  = types.MsgChannelOpenConfirm
 	MsgChannelCloseInit    = types.MsgChannelCloseInit
 	MsgChannelCloseConfirm = types.MsgChannelCloseConfirm
+	MsgPacket              = types.MsgPacket
+	MsgAcknowledgement     = types.MsgAcknowledgement
+	MsgTimeout             = types.MsgTimeout
 	Packet                 = types.Packet
-	OpaquePacket           = types.OpaquePacket
 	ChannelResponse        = types.ChannelResponse
 	QueryChannelParams     = types.QueryChannelParams
 )

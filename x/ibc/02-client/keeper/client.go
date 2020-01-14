@@ -35,6 +35,18 @@ func (k Keeper) CreateClient(
 	k.SetClientState(ctx, clientState)
 	k.SetClientType(ctx, clientID, clientType)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s created at height %d", clientID, clientState.GetSequence()))
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeCreateClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
 	return clientState, nil
 }
 
@@ -79,6 +91,18 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	k.SetClientState(ctx, clientState)
 	k.SetConsensusState(ctx, clientID, header.GetHeight(), consensusState)
 	k.Logger(ctx).Info(fmt.Sprintf("client %s updated to height %d", clientID, header.GetHeight()))
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUpdateClient,
+			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	})
+
 	return nil
 }
 

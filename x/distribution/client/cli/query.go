@@ -47,10 +47,18 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params, err := common.QueryParams(cliCtx, queryRoute)
+
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryParams)
+			res, _, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
+
+			var params types.Params
+			if err := cdc.UnmarshalJSON(res, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params: %w", err)
+			}
+
 			return cliCtx.PrintOutput(params)
 		},
 	}
@@ -209,26 +217,44 @@ $ %s query distribution rewards cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p co
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
+			// query for rewards from a particular delegation
 			if len(args) == 2 {
-				// query for rewards from a particular delegation
-				resp, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
+				resp, _, err := common.QueryDelegationRewards(cliCtx, queryRoute, args[0], args[1])
 				if err != nil {
 					return err
 				}
 
 				var result sdk.DecCoins
-				cdc.MustUnmarshalJSON(resp, &result)
+				if err = cdc.UnmarshalJSON(resp, &result); err != nil {
+					return fmt.Errorf("failed to unmarshal response: %w", err)
+				}
+
 				return cliCtx.PrintOutput(result)
 			}
 
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			params := types.NewQueryDelegatorParams(delegatorAddr)
+			bz, err := cdc.MarshalJSON(params)
+			if err != nil {
+				return fmt.Errorf("failed to marshal params: %w", err)
+			}
+
 			// query for delegator total rewards
-			resp, err := common.QueryDelegatorTotalRewards(cliCtx, queryRoute, args[0])
+			route := fmt.Sprintf("custom/%s/%s", queryRoute, types.QueryDelegatorTotalRewards)
+			res, _, err := cliCtx.QueryWithData(route, bz)
 			if err != nil {
 				return err
 			}
 
 			var result types.QueryDelegatorTotalRewardsResponse
-			cdc.MustUnmarshalJSON(resp, &result)
+			if err = cdc.UnmarshalJSON(res, &result); err != nil {
+				return fmt.Errorf("failed to unmarshal response: %w", err)
+			}
+
 			return cliCtx.PrintOutput(result)
 		},
 	}

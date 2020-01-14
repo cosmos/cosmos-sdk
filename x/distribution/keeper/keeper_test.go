@@ -13,12 +13,15 @@ import (
 func TestSetWithdrawAddr(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
-	keeper.SetWithdrawAddrEnabled(ctx, false)
+	params := keeper.GetParams(ctx)
+	params.WithdrawAddrEnabled = false
+	keeper.SetParams(ctx, params)
 
 	err := keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
 	require.NotNil(t, err)
 
-	keeper.SetWithdrawAddrEnabled(ctx, true)
+	params.WithdrawAddrEnabled = true
+	keeper.SetParams(ctx, params)
 
 	err = keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
 	require.Nil(t, err)

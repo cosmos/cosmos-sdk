@@ -44,8 +44,8 @@ func TestDecodeDistributionStore(t *testing.T) {
 	slashEvent := types.NewValidatorSlashEvent(10, sdk.OneDec())
 
 	kvPairs := cmn.KVPairs{
-		cmn.KVPair{Key: keeper.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
-		cmn.KVPair{Key: keeper.ProposerKey, Value: consAddr1.Bytes()},
+		cmn.KVPair{Key: types.FeePoolKey, Value: cdc.MustMarshalBinaryLengthPrefixed(feePool)},
+		cmn.KVPair{Key: types.ProposerKey, Value: consAddr1.Bytes()},
 		cmn.KVPair{Key: keeper.GetValidatorOutstandingRewardsKey(valAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(outstanding)},
 		cmn.KVPair{Key: keeper.GetDelegatorWithdrawAddrKey(delAddr1), Value: delAddr1.Bytes()},
 		cmn.KVPair{Key: keeper.GetDelegatorStartingInfoKey(valAddr1, delAddr1), Value: cdc.MustMarshalBinaryLengthPrefixed(info)},

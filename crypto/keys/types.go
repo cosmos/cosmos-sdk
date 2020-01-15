@@ -118,10 +118,10 @@ type Info interface {
 	GetPubKey() crypto.PubKey
 	// Address
 	GetAddress() types.AccAddress
-	// Algo
-	GetAlgo() SigningAlgo
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
+	// Algo
+	GetAlgo() SigningAlgo
 }
 
 var (
@@ -132,11 +132,12 @@ var (
 )
 
 // localInfo is the public information about a locally stored key
+// Note: Algo must be last field in struct for backwards amino compatibility
 type localInfo struct {
 	Name         string        `json:"name"`
-	Algo         SigningAlgo   `json:"algo"`
 	PubKey       crypto.PubKey `json:"pubkey"`
 	PrivKeyArmor string        `json:"privkey.armor"`
+	Algo         SigningAlgo   `json:"algo"`
 }
 
 func newLocalInfo(name string, pub crypto.PubKey, privArmor string, algo SigningAlgo) Info {
@@ -179,6 +180,7 @@ func (i localInfo) GetPath() (*hd.BIP44Params, error) {
 }
 
 // ledgerInfo is the public information about a Ledger key
+// Note: Algo must be last field in struct for backwards amino compatibility
 type ledgerInfo struct {
 	Name   string         `json:"name"`
 	PubKey crypto.PubKey  `json:"pubkey"`
@@ -227,10 +229,11 @@ func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
 }
 
 // offlineInfo is the public information about an offline key
+// Note: Algo must be last field in struct for backwards amino compatibility
 type offlineInfo struct {
 	Name   string        `json:"name"`
-	Algo   SigningAlgo   `json:"algo"`
 	PubKey crypto.PubKey `json:"pubkey"`
+	Algo   SigningAlgo   `json:"algo"`
 }
 
 func newOfflineInfo(name string, pub crypto.PubKey, algo SigningAlgo) Info {

@@ -17,14 +17,14 @@ func (k Keeper) VerifyClientConsensusState(
 	height uint64,
 	proof commitment.ProofI,
 	consensusState clientexported.ConsensusState,
-) (bool, error) {
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
 	return clientState.VerifyClientConsensusState(
-		k.cdc, height, connection.Counterparty.Prefix, proof, consensusState,
+		k.cdc, height, connection.Counterparty.Prefix, proof, clientState.GetID(), consensusState,
 	)
 }
 
@@ -36,14 +36,15 @@ func (k Keeper) VerifyConnectionState(
 	proof commitment.ProofI,
 	connectionID string,
 	connection types.ConnectionEnd,
-) (bool, error) {
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyConnectionState(
-		ctx, clientState, height, connection.Counterparty.Prefix, proof, connectionID, connection,
+	return clientState.VerifyConnectionState(
+		k.cdc, height, connection.Counterparty.Prefix, proof, connectionID, connection, consensusState,
 	)
 }
 
@@ -58,14 +59,15 @@ func (k Keeper) VerifyChannelState(
 	portID,
 	channelID string,
 	channel channeltypes.Channel,
-) (bool, error) {
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyChannelState(
-		ctx, clientState, height, prefix, proof, portID, channelID, channel,
+	return clientState.VerifyChannelState(
+		k.cdc, height, prefix, proof, portID, channelID, channel, consensusState,
 	)
 }
 
@@ -80,15 +82,16 @@ func (k Keeper) VerifyPacketCommitment(
 	portID,
 	channelID string,
 	sequence uint64,
-	commitmentBz []byte,
-) (bool, error) {
+	commitmentBytes []byte,
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyPacketCommitment(
-		ctx, clientState, height, prefix, proof, portID, channelID, sequence, commitmentBz,
+	return clientState.VerifyPacketCommitment(
+	 height, prefix, proof, portID, channelID, sequence, commitmentBytes, consensusState,
 	)
 }
 
@@ -104,14 +107,15 @@ func (k Keeper) VerifyPacketAcknowledgement(
 	channelID string,
 	sequence uint64,
 	acknowledgement []byte,
-) (bool, error) {
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyPacketAcknowledgement(
-		ctx, clientState, height, prefix, proof, portID, channelID, sequence, acknowledgement,
+	return clientState.VerifyPacketAcknowledgement(
+		height, prefix, proof, portID, channelID, sequence, acknowledgement, consensusState,
 	)
 }
 
@@ -127,14 +131,15 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	portID,
 	channelID string,
 	sequence uint64,
-) (bool, error) {
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyPacketAcknowledgementAbsence(
-		ctx, clientState, height, prefix, proof, portID, channelID, sequence,
+	return clientState.VerifyPacketAcknowledgementAbsence(
+		height, prefix, proof, portID, channelID, sequence, consensusState,
 	)
 }
 
@@ -149,13 +154,14 @@ func (k Keeper) VerifyNextSequenceRecv(
 	portID,
 	channelID string,
 	nextSequenceRecv uint64,
-) (bool, error) {
+	consensusState clientexported.ConsensusState,
+) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return false, clienterrors.ErrClientNotFound
+		return clienterrors.ErrClientNotFound
 	}
 
-	return k.clientKeeper.VerifyNextSequenceRecv(
-		ctx, clientState, height, prefix, proof, portID, channelID, nextSequenceRecv,
+	return clientState.VerifyNextSequenceRecv(
+		height, prefix, proof, portID, channelID, nextSequenceRecv, consensusState,
 	)
 }

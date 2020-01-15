@@ -143,36 +143,3 @@ func (k Keeper) removeConnectionFromClient(ctx sdk.Context, clientID, connection
 	k.SetClientConnectionPaths(ctx, clientID, conns)
 	return nil
 }
-
-// VerifyMembership helper function for state membership verification
-func (k Keeper) VerifyMembership(
-	ctx sdk.Context,
-	connection types.ConnectionEnd,
-	height uint64,
-	proof commitment.ProofI,
-	pathStr string,
-	value []byte,
-) bool {
-	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
-	if err != nil {
-		return false
-	}
-
-	return k.clientKeeper.VerifyMembership(ctx, connection.ClientID, height, proof, path, value)
-}
-
-// VerifyNonMembership helper function for state non-membership verification
-func (k Keeper) VerifyNonMembership(
-	ctx sdk.Context,
-	connection types.ConnectionEnd,
-	height uint64,
-	proof commitment.ProofI,
-	pathStr string,
-) bool {
-	path, err := commitment.ApplyPrefix(connection.Counterparty.Prefix, pathStr)
-	if err != nil {
-		return false
-	}
-
-	return k.clientKeeper.VerifyNonMembership(ctx, connection.ClientID, height, proof, path)
-}

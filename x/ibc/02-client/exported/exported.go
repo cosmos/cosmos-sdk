@@ -6,6 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -32,7 +34,7 @@ type ClientState interface {
 		prefix commitment.PrefixI,
 		proof commitment.ProofI,
 		connectionID string,
-		// connectionEnd connection,
+		connectionEnd connectionexported.ConnectionI,
 		consensusState ConsensusState,
 	) error
 	VerifyChannelState(
@@ -42,7 +44,7 @@ type ClientState interface {
 		proof commitment.ProofI,
 		portID,
 		channelID string,
-		// channelEnd channel,
+		channelEnd channeltypes.Channel,
 		consensusState ConsensusState,
 	) error
 	VerifyPacketCommitment(

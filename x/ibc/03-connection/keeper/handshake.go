@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
@@ -56,22 +56,20 @@ func (k Keeper) ConnOpenTry(
 	consensusHeight uint64,
 ) error {
 	// XXX: blocked by #5078
-	/*
-		if consensusHeight > uint64(ctx.BlockHeight()) {
-			return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-		}
+	// if consensusHeight > uint64(ctx.BlockHeight()) {
+	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	// }
 
-		expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
-		if !found {
-			return errors.New("client consensus state not found") // TODO: use ICS02 error
-		}
-	*/
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
+	if !found {
+		return clienterrors.ErrConsensusStateNotFound
+	}
 
-	// expectedConn defines Chain A's ConnectionEnd
+	// expectedConnection defines Chain A's ConnectionEnd
 	// NOTE: chain A's counterparty is chain B (i.e where this code is executed)
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(clientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
+	expectedConnection := types.NewConnectionEnd(types.INIT, counterparty.ClientID, expectedCounterparty, counterpartyVersions)
 
 	// chain B picks a version from Chain A's available versions that is compatible
 	// with the supported IBC versions
@@ -79,38 +77,25 @@ func (k Keeper) ConnOpenTry(
 
 	// connection defines chain B's ConnectionEnd
 	connection := types.NewConnectionEnd(types.UNINITIALIZED, clientID, counterparty, []string{version})
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+
+	err := k.VerifyConnectionState(
+		ctx, proofHeight, proofInit, counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
+	)
 	if err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofInit,
-		ibctypes.ConnectionPath(counterparty.ConnectionID), expConnBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
-	}
-
 	// XXX: blocked by #5078
-	/*
-		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-		if err != nil {
-			return err
-		}
+	// err = k.VerifyClientConsensusState(
+	// 	ctx, proofHeight, proofInit, expectedConsensusState,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
 
-		ok = k.VerifyMembership(
-			ctx, connection, proofHeight, proofConsensus,
-			clienttypes.ConsensusStatePath(counterparty.ClientID), expConsStateBz,
-		)
-		if !ok {
-			fmt.Sprintf("couldn't verify consensus state membership on counterparty's client\n")
-			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-		}
 
-	*/
-
-	_, found := k.GetConnection(ctx, connectionID)
+	_, found = k.GetConnection(ctx, connectionID)
 	if found {
 		return sdkerrors.Wrap(types.ErrConnectionExists, "cannot relay connection attempt")
 	}
@@ -140,11 +125,10 @@ func (k Keeper) ConnOpenAck(
 	consensusHeight uint64,
 ) error {
 	// XXX: blocked by #5078
-	/*
-		if consensusHeight > uint64(ctx.BlockHeight()) {
-			return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
-		}
-	*/
+	// if consensusHeight > uint64(ctx.BlockHeight()) {
+	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
+	// }
+
 	connection, found := k.GetConnection(ctx, connectionID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrConnectionNotFound, "cannot relay ACK of open attempt")
@@ -164,46 +148,31 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	// XXX: blocked by #5078
-	/*
-		expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
-		if !found {
-			return errors.New("client consensus state not found") // TODO: use ICS02 error
-		}
-	*/
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	if !found {
+		return clienterrors.ErrConsensusStateNotFound
+	}
+
 	prefix := k.GetCommitmentPrefix()
 	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
+	expectedConnection := types.NewConnectionEnd(types.TRYOPEN, connection.Counterparty.ClientID, expectedCounterparty, []string{version})
 
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
+	err := k.VerifyConnectionState(
+		ctx, proofHeight, proofTry, connection.Counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
+	)
 	if err != nil {
 		return err
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofTry,
-		ibctypes.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
-	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client") // TODO: sdk.Error
-	}
-
 	// XXX: blocked by #5078
-	/*
-		expConsStateBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConsensusState)
-		if err != nil {
-			return err
-		}
-
-		ok = k.VerifyMembership(
-			ctx, connection, proofHeight, proofConsensus,
-			clienttypes.ConsensusStatePath(connection.Counterparty.ClientID), expConsStateBz,
-		)
-		if !ok {
-			return errors.New("couldn't verify consensus state membership on counterparty's client") // TODO: sdk.Error
-		}
-
-	*/
+	// err = k.VerifyClientConsensusState(
+	// 	ctx, connection, proofHeight, proofInit, expectedConsensusState,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
+	
 	connection.State = types.OPEN
 	connection.Versions = []string{version}
 	k.SetConnection(ctx, connectionID, connection)
@@ -233,21 +202,21 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	prefix := k.GetCommitmentPrefix()
-	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
-	expectedConn := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
-
-	expConnBz, err := k.cdc.MarshalBinaryLengthPrefixed(expectedConn)
-	if err != nil {
-		return err
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	if !found {
+		return clienterrors.ErrConsensusStateNotFound
 	}
 
-	ok := k.VerifyMembership(
-		ctx, connection, proofHeight, proofAck,
-		ibctypes.ConnectionPath(connection.Counterparty.ConnectionID), expConnBz,
+	prefix := k.GetCommitmentPrefix()
+	expectedCounterparty := types.NewCounterparty(connection.ClientID, connectionID, prefix)
+	expectedConnection := types.NewConnectionEnd(types.OPEN, connection.Counterparty.ClientID, expectedCounterparty, connection.Versions)
+
+	err := k.VerifyConnectionState(
+		ctx, proofHeight, proofAck, connection.Counterparty.ConnectionID,
+		expectedConnection, expectedConsensusState,
 	)
-	if !ok {
-		return errors.New("couldn't verify connection membership on counterparty's client")
+	if err != nil {
+		return err
 	}
 
 	connection.State = types.OPEN

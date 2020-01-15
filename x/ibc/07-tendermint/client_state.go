@@ -1,12 +1,12 @@
 package tendermint
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -54,12 +54,14 @@ func (cs ClientState) IsFrozen() bool {
 }
 
 func (cs ClientState) VerifyClientConsensusState(
-	cdc *codec.Codec, height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
-	clientID string, consensusState clientexported.ConsensusState,
+	cdc *codec.Codec,
+	height uint64,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
+	clientID string,
+	consensusState clientexported.ConsensusState,
 ) error {
-	// TODO: use path function
-	path, err := commitment.ApplyPrefix(prefix, fmt.Sprintf("consensusState/%s", clientID))
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConsensusStatePath(clientID, height))
 	if err != nil {
 		return nil
 	}
@@ -85,14 +87,15 @@ func (cs ClientState) VerifyClientConsensusState(
 }
 
 func (cs ClientState) VerifyConnectionState(
-	cdc *codec.Codec, height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
+	cdc *codec.Codec,
+	height uint64,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
 	connectionID string,
-	// connectionEnd connection,
+	connectionEnd connectionexported.ConnectionI,
 	consensusState clientexported.ConsensusState,
 ) error {
-	// TODO: use path function
-	path, err := commitment.ApplyPrefix(prefix, fmt.Sprintf("connection/%s", connectionID))
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ConnectionPath(connectionID))
 	if err != nil {
 		return nil
 	}
@@ -105,7 +108,7 @@ func (cs ClientState) VerifyConnectionState(
 		return clienterrors.ErrClientFrozen
 	}
 
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := cdc.MarshalBinaryBare(connectionEnd)
 	if err != nil {
 		return err
 	}
@@ -118,13 +121,16 @@ func (cs ClientState) VerifyConnectionState(
 }
 
 func (cs ClientState) VerifyChannelState(
-	cdc *codec.Codec, height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
-	portID, channelID string,
-	// channelEnd channel,
+	cdc *codec.Codec,
+	height uint64,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
+	portID,
+	channelID string,
+	channelEnd channeltypes.Channel,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.ChannelPath(portID, channelID))
 	if err != nil {
 		return nil
 	}
@@ -137,7 +143,7 @@ func (cs ClientState) VerifyChannelState(
 		return clienterrors.ErrClientFrozen
 	}
 
-	bz, err := cdc.MarshalBinaryBare(consensusState)
+	bz, err := cdc.MarshalBinaryBare(channelEnd)
 	if err != nil {
 		return err
 	}
@@ -151,12 +157,15 @@ func (cs ClientState) VerifyChannelState(
 
 func (cs ClientState) VerifyPacketCommitment(
 	height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
-	portID, channelID string,
-	sequence uint64, commitmentBytes []byte,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
+	portID,
+	channelID string,
+	sequence uint64,
+	commitmentBytes []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketCommitmentPath(portID, channelID, sequence))
 	if err != nil {
 		return nil
 	}
@@ -178,12 +187,15 @@ func (cs ClientState) VerifyPacketCommitment(
 
 func (cs ClientState) VerifyPacketAcknowledgement(
 	height uint64,
-	prefix commitment.PrefixI, proof commitment.ProofI,
-	portID, channelID string,
-	sequence uint64, acknowledgement []byte,
+	prefix commitment.PrefixI,
+	proof commitment.ProofI,
+	portID,
+	channelID string,
+	sequence uint64,
+	acknowledgement []byte,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return nil
 	}
@@ -209,7 +221,7 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	portID, channelID string,
 	sequence uint64, consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.PacketAcknowledgementPath(portID, channelID, sequence))
 	if err != nil {
 		return nil
 	}
@@ -238,7 +250,7 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	nextSequenceRecv uint64,
 	consensusState clientexported.ConsensusState,
 ) error {
-	path, err := commitment.ApplyPrefix(prefix, "")
+	path, err := commitment.ApplyPrefix(prefix, ibctypes.NextSequenceRecvPath(portID, channelID))
 	if err != nil {
 		return nil
 	}

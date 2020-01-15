@@ -8,7 +8,7 @@ import (
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -35,8 +35,8 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 		tree.Set([]byte(k), []byte(v))
 	}
 	for i := 0; i < nMoreData; i++ {
-		key := cmn.RandBytes(12)
-		value := cmn.RandBytes(50)
+		key := tmrand.RandBytes(12)
+		value := tmrand.RandBytes(50)
 		tree.Set(key, value)
 	}
 	hash, ver, err := tree.SaveVersion()
@@ -561,8 +561,8 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 	treeSize := 1000
 	tree := iavl.NewMutableTree(db, cacheSize)
 	for i := 0; i < treeSize; i++ {
-		key := cmn.RandBytes(4)
-		value := cmn.RandBytes(50)
+		key := tmrand.RandBytes(4)
+		value := tmrand.RandBytes(50)
 		tree.Set(key, value)
 	}
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)

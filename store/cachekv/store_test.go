@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
@@ -318,7 +318,7 @@ const (
 )
 
 func randInt(n int) int {
-	return cmn.RandInt() % n
+	return tmrand.RandInt() % n
 }
 
 // useful for replaying a error case if we find one

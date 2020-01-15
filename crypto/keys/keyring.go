@@ -41,6 +41,13 @@ type keyringKeybase struct {
 
 var maxPassphraseEntryAttempts = 3
 
+func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
+	return keyringKeybase{
+		db:   db,
+		base: newBaseKeybase(opts...),
+	}
+}
+
 // NewKeyring creates a new instance of a keyring. Keybase
 // options can be applied when generating this new Keybase.
 func NewKeyring(
@@ -576,13 +583,6 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func fakePrompt(prompt string) (string, error) {
-	fmt.Fprintln(os.Stderr, "Fake prompt for passphase. Testing only")
+	fmt.Fprintln(os.Stderr, "Bypassing password entry for testing Keybase.")
 	return "test", nil
-}
-
-func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
-	return keyringKeybase{
-		db:   db,
-		base: newBaseKeybase(opts...),
-	}
 }

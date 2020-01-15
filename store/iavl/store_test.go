@@ -1,14 +1,13 @@
 package iavl
 
 import (
+	crand "crypto/rand"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -28,17 +27,26 @@ var (
 	nMoreData = 0
 )
 
+func randBytes(numBytes int) []byte {
+	b := make([]byte, numBytes)
+	_, _ = crand.Read(b)
+
+	return b
+}
+
 // make a tree with data from above and save it
 func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 	tree := iavl.NewMutableTree(db, cacheSize)
 	for k, v := range treeData {
 		tree.Set([]byte(k), []byte(v))
 	}
+
 	for i := 0; i < nMoreData; i++ {
-		key := tmrand.RandBytes(12)
-		value := tmrand.RandBytes(50)
+		key := randBytes(12)
+		value := randBytes(50)
 		tree.Set(key, value)
 	}
+
 	hash, ver, err := tree.SaveVersion()
 	require.Nil(t, err)
 	return tree, types.CommitID{Version: ver, Hash: hash}
@@ -560,16 +568,20 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 	db := dbm.NewMemDB()
 	treeSize := 1000
 	tree := iavl.NewMutableTree(db, cacheSize)
+
 	for i := 0; i < treeSize; i++ {
-		key := tmrand.RandBytes(4)
-		value := tmrand.RandBytes(50)
+		key := randBytes(4)
+		value := randBytes(50)
 		tree.Set(key, value)
 	}
+
 	iavlStore := UnsafeNewStore(tree, numRecent, storeEvery)
 	iterators := make([]types.Iterator, b.N/treeSize)
+
 	for i := 0; i < len(iterators); i++ {
 		iterators[i] = iavlStore.Iterator([]byte{0}, []byte{255, 255, 255, 255, 255})
 	}
+
 	b.ResetTimer()
 	for i := 0; i < len(iterators); i++ {
 		iter := iterators[i]

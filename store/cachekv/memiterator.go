@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"container/list"
+	"errors"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
 	dbm "github.com/tendermint/tm-db"
@@ -48,8 +49,8 @@ func (mi *memIterator) Valid() bool {
 }
 
 func (mi *memIterator) assertValid() {
-	if !mi.Valid() {
-		panic("memIterator is invalid")
+	if err := mi.Error(); err != nil {
+		panic(err)
 	}
 }
 
@@ -82,4 +83,14 @@ func (mi *memIterator) Close() {
 	mi.start = nil
 	mi.end = nil
 	mi.items = nil
+}
+
+// Error returns an error if the memIterator is invalid defined by the Valid
+// method.
+func (mi *memIterator) Error() error {
+	if !mi.Valid() {
+		return errors.New("invalid memIterator")
+	}
+
+	return nil
 }

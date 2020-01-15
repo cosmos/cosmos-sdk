@@ -62,9 +62,9 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
-		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 	)
 
@@ -85,7 +85,7 @@ var (
 	}
 )
 
-// MakeCodec - custom tx codec
+// MakeCodec custom tx codec
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	ModuleBasics.RegisterCodec(cdc)
@@ -126,8 +126,8 @@ type SimApp struct {
 	CrisisKeeper   crisis.Keeper
 	UpgradeKeeper  upgrade.Keeper
 	ParamsKeeper   params.Keeper
-	EvidenceKeeper evidence.Keeper
 	IBCKeeper      ibc.Keeper
+	EvidenceKeeper evidence.Keeper
 	TransferKeeper transfer.Keeper
 
 	// the module manager
@@ -150,9 +150,9 @@ func NewSimApp(
 	bApp.SetAppVersion(version.Version)
 
 	keys := sdk.NewKVStoreKeys(
-		bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
-		supply.StoreKey, mint.StoreKey, distr.StoreKey, slashing.StoreKey,
-		gov.StoreKey, params.StoreKey, ibc.StoreKey, upgrade.StoreKey, evidence.StoreKey,
+		bam.MainStoreKey, auth.StoreKey, staking.StoreKey, supply.StoreKey,
+		mint.StoreKey, distr.StoreKey, slashing.StoreKey, gov.StoreKey,
+		params.StoreKey, ibc.StoreKey, upgrade.StoreKey, evidence.StoreKey,
 		transfer.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(params.TStoreKey)
@@ -255,6 +255,7 @@ func NewSimApp(
 		slashing.NewAppModule(app.SlashingKeeper, app.AccountKeeper, app.StakingKeeper),
 		distr.NewAppModule(app.DistrKeeper, app.AccountKeeper, app.SupplyKeeper, app.StakingKeeper),
 		staking.NewAppModule(app.StakingKeeper, app.AccountKeeper, app.SupplyKeeper),
+		ibc.NewAppModule(app.IBCKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),

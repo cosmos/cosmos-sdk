@@ -486,10 +486,12 @@ func (kb keyringKeybase) writeInfo(name string, info Info) {
 func lkbToKeyringConfig(name, dir string, buf io.Reader, test bool) keyring.Config {
 	if test {
 		return keyring.Config{
-			AllowedBackends:  []keyring.BackendType{"file"},
-			ServiceName:      name,
-			FileDir:          filepath.Join(dir, testKeyringDirName),
-			FilePasswordFunc: fakePrompt,
+			AllowedBackends: []keyring.BackendType{"file"},
+			ServiceName:     name,
+			FileDir:         filepath.Join(dir, testKeyringDirName),
+			FilePasswordFunc: func(_ string) (string, error) {
+				return "test", nil
+			},
 		}
 	}
 
@@ -580,9 +582,4 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			return pass, nil
 		}
 	}
-}
-
-func fakePrompt(prompt string) (string, error) {
-	fmt.Fprintln(os.Stderr, "Bypassing password entry for testing Keybase.")
-	return "test", nil
 }

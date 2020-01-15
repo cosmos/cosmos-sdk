@@ -15,7 +15,7 @@ func TestCommands(t *testing.T) {
 	assert.NotNil(t, rootCommands)
 
 	// Commands are registered
-	assert.Equal(t, 11, len(rootCommands.Commands()))
+	assert.Equal(t, 12, len(rootCommands.Commands()))
 }
 
 func TestMain(m *testing.M) {

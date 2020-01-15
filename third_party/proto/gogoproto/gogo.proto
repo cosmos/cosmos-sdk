@@ -141,4 +141,5 @@ extend google.protobuf.FieldOptions {
 	optional bool stdduration = 65011;
 	optional bool wktpointer = 65012;
 
+	optional string castrepeated = 65013;
 }

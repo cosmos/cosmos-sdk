@@ -131,7 +131,11 @@ func (kb dbKeybase) CreateMulti(name string, pub tmcrypto.PubKey) (Info, error) 
 func (kb dbKeybase) List() ([]Info, error) {
 	var res []Info
 
-	iter := kb.db.Iterator(nil, nil)
+	iter, err := kb.db.Iterator(nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -153,7 +157,11 @@ func (kb dbKeybase) List() ([]Info, error) {
 
 // Get returns the public information about one key.
 func (kb dbKeybase) Get(name string) (Info, error) {
-	bs := kb.db.Get(infoKey(name))
+	bs, err := kb.db.Get(infoKey(name))
+	if err != nil {
+		return nil, err
+	}
+
 	if len(bs) == 0 {
 		return nil, keyerror.NewErrKeyNotFound(name)
 	}
@@ -164,12 +172,20 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 // GetByAddress returns Info based on a provided AccAddress. An error is returned
 // if the address does not exist.
 func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
-	ik := kb.db.Get(addrKey(address))
+	ik, err := kb.db.Get(addrKey(address))
+	if err != nil {
+		return nil, err
+	}
+
 	if len(ik) == 0 {
 		return nil, fmt.Errorf("key with address %s not found", address)
 	}
 
-	bs := kb.db.Get(ik)
+	bs, err := kb.db.Get(ik)
+	if err != nil {
+		return nil, err
+	}
+
 	return unmarshalInfo(bs)
 }
 
@@ -242,7 +258,11 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 }
 
 func (kb dbKeybase) Export(name string) (armor string, err error) {
-	bz := kb.db.Get(infoKey(name))
+	bz, err := kb.db.Get(infoKey(name))
+	if err != nil {
+		return "", err
+	}
+
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
@@ -253,7 +273,11 @@ func (kb dbKeybase) Export(name string) (armor string, err error) {
 // ExportPubKey returns public keys in ASCII armored format. It retrieves a Info
 // object by its name and return the public key in a portable format.
 func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
-	bz := kb.db.Get(infoKey(name))
+	bz, err := kb.db.Get(infoKey(name))
+	if err != nil {
+		return "", err
+	}
+
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
@@ -302,9 +326,13 @@ func (kb dbKeybase) ImportPrivKey(name string, armor string, passphrase string) 
 }
 
 func (kb dbKeybase) Import(name string, armor string) (err error) {
-	bz := kb.db.Get(infoKey(name))
+	bz, err := kb.db.Get(infoKey(name))
+	if err != nil {
+		return err
+	}
+
 	if len(bz) > 0 {
-		return errors.New("Cannot overwrite data for name " + name)
+		return errors.New("cannot overwrite data for name " + name)
 	}
 
 	infoBytes, err := mintkey.UnarmorInfoBytes(armor)
@@ -320,9 +348,13 @@ func (kb dbKeybase) Import(name string, armor string) (err error) {
 // a public key only, i.e. it will not be possible to sign with it as it lacks the
 // secret key.
 func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
-	bz := kb.db.Get(infoKey(name))
+	bz, err := kb.db.Get(infoKey(name))
+	if err != nil {
+		return err
+	}
+
 	if len(bz) > 0 {
-		return errors.New("Cannot overwrite data for name " + name)
+		return errors.New("cannot overwrite data for name " + name)
 	}
 
 	pubBytes, algo, err := mintkey.UnarmorPubKeyBytes(armor)

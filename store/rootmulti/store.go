@@ -592,12 +592,14 @@ func (si storeInfo) Hash() []byte {
 
 func getLatestVersion(db dbm.DB) int64 {
 	var latest int64
-	latestBytes := db.Get([]byte(latestVersionKey))
-	if latestBytes == nil {
+	latestBytes, err := db.Get([]byte(latestVersionKey))
+	if err != nil {
+		panic(err)
+	} else if latestBytes == nil {
 		return 0
 	}
 
-	err := cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
+	err = cdc.UnmarshalBinaryLengthPrefixed(latestBytes, &latest)
 	if err != nil {
 		panic(err)
 	}
@@ -643,14 +645,16 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 
 	// Get from DB.
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
-	cInfoBytes := db.Get([]byte(cInfoKey))
-	if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("failed to get Store: no data")
+	cInfoBytes, err := db.Get([]byte(cInfoKey))
+	if err != nil {
+		return commitInfo{}, fmt.Errorf("failed to get commit info: %v", err)
+	} else if cInfoBytes == nil {
+		return commitInfo{}, fmt.Errorf("failed to get commit info: no data")
 	}
 
 	var cInfo commitInfo
 
-	err := cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
+	err = cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
 	if err != nil {
 		return commitInfo{}, fmt.Errorf("failed to get Store: %v", err)
 	}

@@ -3,9 +3,10 @@ package types
 import (
 	"fmt"
 
+	"gopkg.in/yaml.v2"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"gopkg.in/yaml.v2"
 )
 
 const (

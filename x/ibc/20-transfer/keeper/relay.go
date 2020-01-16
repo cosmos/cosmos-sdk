@@ -202,5 +202,5 @@ func (k Keeper) createOutgoingPacket(
 		destinationChannel,
 	)
 
-	return k.channelKeeper.SendPacket(ctx, packet, k.boundedCapability)
+	return k.channelKeeper.SendPacket(ctx, packet)
 }

@@ -132,7 +132,9 @@ func (k Keeper) ChanOpenTry(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connectionEnd.GetClientID())
+	consensusState, found := k.clientKeeper.GetConsensusState(
+		ctx, connectionEnd.GetClientID(), proofHeight,
+	)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}
@@ -209,7 +211,9 @@ func (k Keeper) ChanOpenAck(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connectionEnd.GetClientID())
+	consensusState, found := k.clientKeeper.GetConsensusState(
+		ctx, connectionEnd.GetClientID(), proofHeight,
+	)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}
@@ -287,7 +291,9 @@ func (k Keeper) ChanOpenConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connectionEnd.GetClientID())
+	consensusState, found := k.clientKeeper.GetConsensusState(
+		ctx, connectionEnd.GetClientID(), proofHeight,
+	)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}
@@ -411,7 +417,9 @@ func (k Keeper) ChanCloseConfirm(
 		counterpartyHops, channel.Version,
 	)
 
-	consensusState, found := k.clientKeeper.GetConsensusState(ctx, connectionEnd.GetClientID())
+	consensusState, found := k.clientKeeper.GetConsensusState(
+		ctx, connectionEnd.GetClientID(), proofHeight,
+	)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}

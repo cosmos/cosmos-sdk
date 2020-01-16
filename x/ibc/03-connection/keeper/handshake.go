@@ -61,7 +61,7 @@ func (k Keeper) ConnOpenTry(
 	// 	return sdkerrors.Wrap(ibctypes.ErrInvalidHeight, "invalid consensus height")
 	// }
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID)
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID, consensusHeight)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}
@@ -148,7 +148,7 @@ func (k Keeper) ConnOpenAck(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}
@@ -202,7 +202,9 @@ func (k Keeper) ConnOpenConfirm(
 		)
 	}
 
-	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID)
+	// NOTE: should be safe to use proofHeight here
+	// TODO: Update spec
+	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, proofHeight)
 	if !found {
 		return clienterrors.ErrConsensusStateNotFound
 	}

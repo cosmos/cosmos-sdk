@@ -43,7 +43,7 @@ func (ch Channel) GetOrdering() exported.Order {
 }
 
 // GetCounterparty implements Channel interface.
-func (ch Channel) GetCounterparty() Counterparty {
+func (ch Channel) GetCounterparty() exported.CounterpartyI {
 	return ch.Counterparty
 }
 

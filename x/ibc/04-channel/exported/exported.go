@@ -9,7 +9,7 @@ type ChannelI interface {
 	GetState() State
 	GetOrdering() Order
 	GetCounterparty() CounterpartyI
-	GetConnectionHops()
+	GetConnectionHops() []string
 	GetVersion() string
 	ValidateBasic() error
 }

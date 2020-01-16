@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -53,7 +52,7 @@ func (k Keeper) VerifyConnectionState(
 // channel end, under the specified port, stored on the target machine.
 func (k Keeper) VerifyChannelState(
 	ctx sdk.Context,
-	connection exported.ConnectionI,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
@@ -76,7 +75,7 @@ func (k Keeper) VerifyChannelState(
 // the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketCommitment(
 	ctx sdk.Context,
-	connection exported.ConnectionI,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
@@ -100,7 +99,7 @@ func (k Keeper) VerifyPacketCommitment(
 // acknowledgement at the specified port, specified channel, and specified sequence.
 func (k Keeper) VerifyPacketAcknowledgement(
 	ctx sdk.Context,
-	connection exported.ConnectionI,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
@@ -125,7 +124,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 // specified sequence.
 func (k Keeper) VerifyPacketAcknowledgementAbsence(
 	ctx sdk.Context,
-	connection exported.ConnectionI,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	portID,
@@ -148,7 +147,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 // received of the specified channel at the specified port.
 func (k Keeper) VerifyNextSequenceRecv(
 	ctx sdk.Context,
-	connection exported.ConnectionI,
+	connection types.ConnectionEnd,
 	height uint64,
 	proof commitment.ProofI,
 	portID,

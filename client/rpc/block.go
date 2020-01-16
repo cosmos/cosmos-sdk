@@ -53,11 +53,6 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 			return nil, err
 		}
 
-		err = tmliteProxy.ValidateBlockMeta(res.BlockMeta, check)
-		if err != nil {
-			return nil, err
-		}
-
 		err = tmliteProxy.ValidateBlock(res.Block, check)
 		if err != nil {
 			return nil, err
@@ -118,7 +113,6 @@ func printBlock(cmd *cobra.Command, args []string) error {
 func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest,

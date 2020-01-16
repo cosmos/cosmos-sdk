@@ -73,7 +73,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, mbm module.BasicManager,
 
 			chainID := viper.GetString(flags.FlagChainID)
 			if chainID == "" {
-				chainID = fmt.Sprintf("test-chain-%v", tmrand.RandStr(6))
+				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
 
 			nodeID, _, err := genutil.InitializeNodeValidatorFiles(config)

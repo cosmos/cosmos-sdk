@@ -59,14 +59,18 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
 	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
 	if err != nil {
-		fmt.Printf("failed to get from fields: %v", err)
+		fmt.Printf("failed to get from fields: %v\n", err)
 		os.Exit(1)
 	}
 
 	if !genOnly {
 		nodeURI = viper.GetString(flags.FlagNode)
 		if nodeURI != "" {
-			rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
+			rpc, err = rpcclient.NewHTTP(nodeURI, "/websocket")
+			if err != nil {
+				fmt.Printf("failted to get client: %v\n", err)
+				os.Exit(1)
+			}
 		}
 	}
 
@@ -154,7 +158,11 @@ func (ctx CLIContext) WithTrustNode(trustNode bool) CLIContext {
 // WithNodeURI returns a copy of the context with an updated node URI.
 func (ctx CLIContext) WithNodeURI(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
+	client, err := rpcclient.NewHTTP(nodeURI, "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	ctx.Client = client
 	return ctx
 }
 

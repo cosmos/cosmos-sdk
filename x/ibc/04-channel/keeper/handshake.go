@@ -173,7 +173,7 @@ func (k Keeper) ChanOpenAck(
 		return sdkerrors.Wrap(types.ErrChannelNotFound, channelID)
 	}
 
-	if channel.State != exported.INIT || channel.State != exported.TRYOPEN {
+	if !(channel.State == exported.INIT || channel.State == exported.TRYOPEN) {
 		return sdkerrors.Wrapf(
 			types.ErrInvalidChannelState,
 			"channel state should be INIT or TRYOPEN (got %s)", channel.State.String(),

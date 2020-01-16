@@ -28,8 +28,6 @@ func (suite *KeeperTestSuite) TestCreateClient() {
 	// Test ClientType and VerifiedRoot stored correctly
 	clientType, _ := suite.keeper.GetClientType(suite.ctx, testClientID)
 	require.Equal(suite.T(), exported.Tendermint, clientType, "Incorrect ClientType stored")
-	root, _ := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, suite.consensusState.GetHeight())
-	require.Equal(suite.T(), suite.consensusState.GetRoot(), root, "Incorrect root stored")
 
 	// Test that trying to CreateClient on existing client fails
 	_, err = suite.keeper.CreateClient(suite.ctx, testClientID, exported.Tendermint, suite.consensusState)
@@ -54,7 +52,6 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 		}, true},
 		{"frozen client", func() {
 			clientState, _ := suite.keeper.GetClientState(suite.ctx, testClientID)
-			clientState.Frozen = true
 			suite.keeper.SetClientState(suite.ctx, clientState)
 		}, true},
 		{"past height", func() {
@@ -91,7 +88,6 @@ func (suite *KeeperTestSuite) TestUpdateClient() {
 			tmConsState, _ := retrievedConsState.(tendermint.ConsensusState)
 			tmConsState.ValidatorSet.TotalVotingPower()
 			tmConsState.NextValidatorSet.TotalVotingPower()
-			retrievedRoot, _ := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, suite.consensusState.GetHeight()+1)
 			if tc.expErr {
 				suite.Error(err, "Invalid UpdateClient passed", tc.name)
 
@@ -185,8 +181,8 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	for _, tc := range testCases {
 		tc := tc // pin for scopelint
 		suite.Run(tc.name, func() {
-			misbehaviour := tendermint.Misbehaviour{
-				Evidence: tc.evidence,
+			misbehaviour := tendermint.Evidence{
+				tc.evidence,
 				ClientID: tc.clientID,
 			}
 

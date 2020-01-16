@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
+	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -21,11 +23,8 @@ func (suite *KeeperTestSuite) createClient() {
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	consensusState := tendermint.ConsensusState{
-		ChainID:          testChainID,
-		Height:           uint64(commitID.Version),
 		Root:             commitment.NewRoot(commitID.Hash),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 
 	_, err := suite.app.IBCKeeper.ClientKeeper.CreateClient(suite.ctx, testClient, testClientType, consensusState)
@@ -37,20 +36,18 @@ func (suite *KeeperTestSuite) updateClient() {
 	suite.app.Commit()
 	commitID := suite.app.LastCommitID()
 
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: suite.app.LastBlockHeight() + 1}})
+	height := suite.app.LastBlockHeight() + 1
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: abci.Header{Height: height}})
 	suite.ctx = suite.app.BaseApp.NewContext(false, abci.Header{})
 
 	state := tendermint.ConsensusState{
-		ChainID: testChainID,
-		Height:  uint64(commitID.Version),
-		Root:    commitment.NewRoot(commitID.Hash),
+		Root: commitment.NewRoot(commitID.Hash),
 	}
 
-	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, state)
-	suite.app.IBCKeeper.ClientKeeper.SetVerifiedRoot(suite.ctx, testClient, state.GetHeight(), state.GetRoot())
+	suite.app.IBCKeeper.ClientKeeper.SetConsensusState(suite.ctx, testClient, uint64(height), state)
 }
 
-func (suite *KeeperTestSuite) createConnection(state connection.State) {
+func (suite *KeeperTestSuite) createConnection(state connectionexported.State) {
 	connection := connection.ConnectionEnd{
 		State:    state,
 		ClientID: testClient,
@@ -65,7 +62,7 @@ func (suite *KeeperTestSuite) createConnection(state connection.State) {
 	suite.app.IBCKeeper.ConnectionKeeper.SetConnection(suite.ctx, testConnection, connection)
 }
 
-func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state types.State) {
+func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID string, counterpartyPort string, counterpartyChan string, state exported.State) {
 	channel := types.Channel{
 		State:    state,
 		Ordering: testChannelOrder,
@@ -82,7 +79,7 @@ func (suite *KeeperTestSuite) createChannel(portID string, chanID string, connID
 
 func (suite *KeeperTestSuite) deleteChannel(portID string, chanID string) {
 	store := suite.ctx.KVStore(suite.app.GetKey(ibctypes.StoreKey))
-	store.Delete(types.KeyChannel(portID, chanID))
+	store.Delete(ibctypes.KeyChannel(portID, chanID))
 }
 
 func (suite *KeeperTestSuite) bindPort(portID string) sdk.CapabilityKey {
@@ -107,7 +104,7 @@ func (suite *KeeperTestSuite) queryProof(key []byte) (proof commitment.Proof, he
 func (suite *KeeperTestSuite) TestChanOpenInit() {
 	counterparty := types.NewCounterparty(testPort2, testChannel2)
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.INIT)
 	err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.Error(err) // channel has already exist
 
@@ -115,26 +112,26 @@ func (suite *KeeperTestSuite) TestChanOpenInit() {
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.UNINITIALIZED)
+	suite.createConnection(connectionexported.UNINITIALIZED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
+	suite.createConnection(connectionexported.OPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenInit(suite.ctx, testChannelOrder, []string{testConnection}, testPort1, testChannel1, counterparty, testChannelVersion)
 	suite.NoError(err) // successfully executed
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.INIT.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.INIT.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenTry() {
 	counterparty := types.NewCounterparty(testPort1, testChannel1)
 	suite.bindPort(testPort2)
-	channelKey := types.KeyChannel(testPort1, testChannel1)
+	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.INIT)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.INIT)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.INIT)
 	suite.updateClient()
 	proofInit, proofHeight := suite.queryProof(channelKey)
 	err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
@@ -147,18 +144,18 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.UNINITIALIZED)
+	suite.createConnection(connectionexported.UNINITIALIZED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.TRYOPEN)
+	suite.createConnection(connectionexported.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.TRYOPEN)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
 	suite.Error(err) // channel membership verification failed due to invalid counterparty
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.INIT)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenTry(suite.ctx, testChannelOrder, []string{testConnection}, testPort2, testChannel2, counterparty, testChannelVersion, testChannelVersion, proofInit, uint64(proofHeight))
@@ -166,43 +163,43 @@ func (suite *KeeperTestSuite) TestChanOpenTry() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.TRYOPEN.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.TRYOPEN.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenAck() {
 	suite.bindPort(testPort1)
-	channelKey := types.KeyChannel(testPort2, testChannel2)
+	channelKey := ibctypes.KeyChannel(testPort2, testChannel2)
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.TRYOPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.TRYOPEN)
 	suite.updateClient()
 	proofTry, proofHeight := suite.queryProof(channelKey)
 	err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // channel does not exist
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.CLOSED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // invalid channel state
 
-	suite.createChannel(testPort2, testChannel1, testConnection, testPort1, testChannel2, types.INIT)
+	suite.createChannel(testPort2, testChannel1, testConnection, testPort1, testChannel2, exported.INIT)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort2, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // unauthenticated port
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.INIT)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.INIT)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.UNINITIALIZED)
+	suite.createConnection(connectionexported.UNINITIALIZED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.OPEN)
+	suite.createConnection(connectionexported.OPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.OPEN)
 	suite.updateClient()
 	proofTry, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
 	suite.Error(err) // channel membership verification failed due to invalid counterparty
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.TRYOPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.TRYOPEN)
 	suite.updateClient()
 	proofTry, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenAck(suite.ctx, testPort1, testChannel1, testChannelVersion, proofTry, uint64(proofHeight))
@@ -210,43 +207,43 @@ func (suite *KeeperTestSuite) TestChanOpenAck() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.OPEN.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.OPEN.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.KeyChannel(testPort1, testChannel1)
+	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.OPEN)
 	suite.updateClient()
 	proofAck, proofHeight := suite.queryProof(channelKey)
 	err := suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // channel does not exist
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.OPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.OPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // invalid channel state
 
-	suite.createChannel(testPort1, testChannel2, testConnection, testPort2, testChannel1, types.TRYOPEN)
+	suite.createChannel(testPort1, testChannel2, testConnection, testPort2, testChannel1, exported.TRYOPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort1, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // unauthenticated port
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.TRYOPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.TRYOPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.UNINITIALIZED)
+	suite.createConnection(connectionexported.UNINITIALIZED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.TRYOPEN)
+	suite.createConnection(connectionexported.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.TRYOPEN)
 	suite.updateClient()
 	proofAck, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
 	suite.Error(err) // channel membership verification failed due to invalid counterparty
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.OPEN)
 	suite.updateClient()
 	proofAck, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanOpenConfirm(suite.ctx, testPort2, testChannel2, proofAck, uint64(proofHeight))
@@ -254,7 +251,7 @@ func (suite *KeeperTestSuite) TestChanOpenConfirm() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.OPEN.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.OPEN.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanCloseInit() {
@@ -266,32 +263,32 @@ func (suite *KeeperTestSuite) TestChanCloseInit() {
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.ctx, testPort1, testChannel1)
 	suite.Error(err) // channel does not exist
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.CLOSED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.ctx, testPort1, testChannel1)
 	suite.Error(err) // channel is already closed
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.OPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.ctx, testPort1, testChannel1)
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.TRYOPEN)
+	suite.createConnection(connectionexported.TRYOPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.ctx, testPort1, testChannel1)
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
+	suite.createConnection(connectionexported.OPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.ctx, testPort1, testChannel1)
 	suite.NoError(err) // successfully executed
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort1, testChannel1)
 	suite.True(found)
-	suite.Equal(types.CLOSED.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.CLOSED.String(), channel.State.String(), "invalid channel state")
 }
 
 func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	suite.bindPort(testPort2)
-	channelKey := types.KeyChannel(testPort1, testChannel1)
+	channelKey := ibctypes.KeyChannel(testPort1, testChannel1)
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.CLOSED)
 	suite.updateClient()
 	proofInit, proofHeight := suite.queryProof(channelKey)
 	err := suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort1, testChannel2, proofInit, uint64(proofHeight))
@@ -300,26 +297,26 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
 	suite.Error(err) // channel does not exist
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.CLOSED)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.CLOSED)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
 	suite.Error(err) // channel is already closed
 
-	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, types.OPEN)
+	suite.createChannel(testPort2, testChannel2, testConnection, testPort1, testChannel1, exported.OPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
 	suite.Error(err) // connection does not exist
 
-	suite.createConnection(connection.TRYOPEN)
+	suite.createConnection(connectionexported.TRYOPEN)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
 	suite.Error(err) // invalid connection state
 
-	suite.createConnection(connection.OPEN)
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.OPEN)
+	suite.createConnection(connectionexported.OPEN)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.OPEN)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
 	suite.Error(err) // channel membership verification failed due to invalid counterparty
 
-	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, types.CLOSED)
+	suite.createChannel(testPort1, testChannel1, testConnection, testPort2, testChannel2, exported.CLOSED)
 	suite.updateClient()
 	proofInit, proofHeight = suite.queryProof(channelKey)
 	err = suite.app.IBCKeeper.ChannelKeeper.ChanCloseConfirm(suite.ctx, testPort2, testChannel2, proofInit, uint64(proofHeight))
@@ -327,5 +324,5 @@ func (suite *KeeperTestSuite) TestChanCloseConfirm() {
 
 	channel, found := suite.app.IBCKeeper.ChannelKeeper.GetChannel(suite.ctx, testPort2, testChannel2)
 	suite.True(found)
-	suite.Equal(types.CLOSED.String(), channel.State.String(), "invalid channel state")
+	suite.Equal(exported.CLOSED.String(), channel.State.String(), "invalid channel state")
 }

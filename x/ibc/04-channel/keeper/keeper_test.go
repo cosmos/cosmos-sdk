@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
+	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
 )
 
@@ -30,7 +31,7 @@ const (
 	testChannel2 = "secondchannel"
 	testChannel3 = "thirdchannel"
 
-	testChannelOrder   = types.ORDERED
+	testChannelOrder   = exported.ORDERED
 	testChannelVersion = "1.0"
 )
 
@@ -64,7 +65,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 	suite.False(found)
 
 	channel := types.Channel{
-		State:    types.OPEN,
+		State:    exported.OPEN,
 		Ordering: testChannelOrder,
 		Counterparty: types.Counterparty{
 			PortID:    testPort2,
@@ -87,7 +88,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	counterparty3 := types.NewCounterparty(testPort3, testChannel3)
 
 	channel1 := types.Channel{
-		State:          types.INIT,
+		State:          exported.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty3,
 		ConnectionHops: []string{testConnection},
@@ -95,7 +96,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	channel2 := types.Channel{
-		State:          types.INIT,
+		State:          exported.INIT,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty1,
 		ConnectionHops: []string{testConnection},
@@ -103,7 +104,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 	}
 
 	channel3 := types.Channel{
-		State:          types.CLOSED,
+		State:          exported.CLOSED,
 		Ordering:       testChannelOrder,
 		Counterparty:   counterparty2,
 		ConnectionHops: []string{testConnection},

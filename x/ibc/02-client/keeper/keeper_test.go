@@ -52,11 +52,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.header = tendermint.MakeHeader("gaia", 4, suite.valSet, suite.valSet, []tmtypes.PrivValidator{suite.privVal})
 
 	suite.consensusState = tendermint.ConsensusState{
-		ChainID:          testClientID,
-		Height:           3,
 		Root:             commitment.NewRoot([]byte("hash")),
-		ValidatorSet:     suite.valSet,
-		NextValidatorSet: suite.valSet,
+		ValidatorSetHash: suite.valSet.Hash(),
 	}
 }
 
@@ -92,16 +89,6 @@ func (suite *KeeperTestSuite) TestSetConsensusState() {
 	tmConsState.ValidatorSet.TotalVotingPower()
 	tmConsState.NextValidatorSet.TotalVotingPower()
 	require.Equal(suite.T(), suite.consensusState, tmConsState, "ConsensusState not stored correctly")
-}
-
-func (suite *KeeperTestSuite) TestSetVerifiedRoot() {
-	root := commitment.NewRoot([]byte("hash"))
-	suite.keeper.SetVerifiedRoot(suite.ctx, testClientID, 3, root)
-
-	retrievedRoot, ok := suite.keeper.GetVerifiedRoot(suite.ctx, testClientID, 3)
-
-	require.True(suite.T(), ok, "GetVerifiedRoot failed")
-	require.Equal(suite.T(), root, retrievedRoot, "Root stored incorrectly")
 }
 
 func (suite KeeperTestSuite) TestGetAllClients() {

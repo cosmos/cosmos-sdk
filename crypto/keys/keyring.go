@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -52,7 +52,7 @@ func NewKeyring(
 		return nil, err
 	}
 
-	return newKeyringKeybase(db, opts...), nil
+	return newKeyringKeybase(db, sdk.GetConfig(), opts...), nil
 }
 
 // NewKeyringFile creates a new instance of an encrypted file-backed keyring.
@@ -62,7 +62,7 @@ func NewKeyringFile(name string, dir string, userInput io.Reader, opts ...Keybas
 		return nil, err
 	}
 
-	return newKeyringKeybase(db, opts...), nil
+	return newKeyringKeybase(db, sdk.GetConfig(), opts...), nil
 }
 
 // NewTestKeyring creates a new instance of an on-disk keyring for
@@ -73,7 +73,7 @@ func NewTestKeyring(name string, dir string, opts ...KeybaseOption) (Keybase, er
 		return nil, err
 	}
 
-	return newKeyringKeybase(db, opts...), nil
+	return newKeyringKeybase(db, sdk.GetConfig(), opts...), nil
 }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -176,7 +176,7 @@ func (kb keyringKeybase) Get(name string) (Info, error) {
 }
 
 // GetByAddress fetches a key by address and returns its public information.
-func (kb keyringKeybase) GetByAddress(address types.AccAddress) (Info, error) {
+func (kb keyringKeybase) GetByAddress(address sdk.AccAddress) (Info, error) {
 	ik, err := kb.db.Get(string(addrKey(address)))
 	if err != nil {
 		return nil, err
@@ -575,9 +575,9 @@ func fakePrompt(prompt string) (string, error) {
 	return "test", nil
 }
 
-func newKeyringKeybase(db keyring.Keyring, opts ...KeybaseOption) Keybase {
+func newKeyringKeybase(db keyring.Keyring, config *sdk.Config, opts ...KeybaseOption) Keybase {
 	return keyringKeybase{
 		db:   db,
-		base: newBaseKeybase(types.GetConfig(), opts...),
+		base: newBaseKeybase(sdk.GetConfig(), opts...),
 	}
 }

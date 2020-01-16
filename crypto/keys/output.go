@@ -35,10 +35,10 @@ type multisigPubKeyOutput struct {
 // Bech32KeysOutput returns a slice of KeyOutput objects, each with the "acc"
 // Bech32 prefixes, given a slice of Info objects. It returns an error if any
 // call to Bech32KeyOutput fails.
-func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
+func Bech32KeysOutput(config *sdk.Config, infos []Info) ([]KeyOutput, error) {
 	kos := make([]KeyOutput, len(infos))
 	for i, info := range infos {
-		ko, err := Bech32KeyOutput(info)
+		ko, err := Bech32KeyOutput(config, info)
 		if err != nil {
 			return nil, err
 		}
@@ -49,10 +49,10 @@ func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 }
 
 // Bech32ConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
-func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
+func Bech32ConsKeyOutput(config *sdk.Config, keyInfo Info) (KeyOutput, error) {
 	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
+	bechPubKey, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeConsPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -61,10 +61,10 @@ func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 }
 
 // Bech32ValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
-func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
+func Bech32ValKeyOutput(config *sdk.Config, keyInfo Info) (KeyOutput, error) {
 	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
 
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
+	bechPubKey, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeValPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -75,9 +75,9 @@ func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
 // Bech32KeyOutput create a KeyOutput in with "acc" Bech32 prefixes. If the
 // public key is a multisig public key, then the threshold and constituent
 // public keys will be added.
-func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
+func Bech32KeyOutput(config *sdk.Config, keyInfo Info) (KeyOutput, error) {
 	accAddr := sdk.AccAddress(keyInfo.GetPubKey().Address().Bytes())
-	bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, keyInfo.GetPubKey())
+	bechPubKey, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, keyInfo.GetPubKey())
 	if err != nil {
 		return KeyOutput{}, err
 	}
@@ -90,7 +90,7 @@ func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
 		for i, pk := range mInfo.PubKeys {
 			accAddr := sdk.AccAddress(pk.PubKey.Address().Bytes())
 
-			bechPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk.PubKey)
+			bechPubKey, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, pk.PubKey)
 			if err != nil {
 				return KeyOutput{}, err
 			}

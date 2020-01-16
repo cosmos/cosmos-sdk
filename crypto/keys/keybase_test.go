@@ -27,14 +27,14 @@ const (
 )
 
 func TestLanguage(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(sdk.NewDefaultConfig())
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported language: only english is supported", err.Error())
 }
 
 func TestCreateAccountInvalidMnemonic(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(sdk.NewDefaultConfig())
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
@@ -44,14 +44,14 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 }
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(sdk.NewDefaultConfig())
 	_, err := kb.CreateLedger("some_account", Ed25519, "cosmos", 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(sdk.NewDefaultConfig())
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
@@ -69,7 +69,8 @@ func TestCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	config := sdk.NewDefaultConfig()
+	pk, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -80,7 +81,7 @@ func TestCreateLedger(t *testing.T) {
 	assert.Equal(t, "some_account", restoredKey.GetName())
 	assert.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
+	pk, err = sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, pubKey)
 	assert.NoError(t, err)
 	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
@@ -92,7 +93,7 @@ func TestCreateLedger(t *testing.T) {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -175,7 +176,7 @@ func TestKeyManagement(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -258,7 +259,7 @@ func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
 // TestExportImport tests exporting and importing
 func TestExportImport(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 
 	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -286,7 +287,7 @@ func TestExportImport(t *testing.T) {
 //
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
@@ -325,7 +326,7 @@ func TestExportImportPubKey(t *testing.T) {
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
@@ -373,7 +374,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 func TestSeedPhrase(t *testing.T) {
 
 	// make the storage with reasonable defaults
-	cstore := NewInMemory()
+	cstore := NewInMemory(sdk.NewDefaultConfig())
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
@@ -403,7 +404,7 @@ func TestSeedPhrase(t *testing.T) {
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	customKeyGenFunc := func(bz [32]byte) crypto.PrivKey { return secp256k1.PrivKeySecp256k1(bz) }
-	cstore := NewInMemory(WithKeygenFunc(customKeyGenFunc))
+	cstore := NewInMemory(sdk.NewDefaultConfig(), WithKeygenFunc(customKeyGenFunc))
 
 	sec := Secp256k1
 

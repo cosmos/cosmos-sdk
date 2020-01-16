@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ Keybase = dbKeybase{}
@@ -75,9 +75,9 @@ type dbKeybase struct {
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
+func newDBKeybase(db dbm.DB, config *sdk.Config, opts ...KeybaseOption) Keybase {
 	return dbKeybase{
-		base: newBaseKeybase(types.GetConfig(), opts...),
+		base: newBaseKeybase(config, opts...),
 		db:   db,
 	}
 }
@@ -85,7 +85,9 @@ func newDBKeybase(db dbm.DB, opts ...KeybaseOption) Keybase {
 // NewInMemory creates a transient keybase on top of in-memory storage
 // instance useful for testing purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...KeybaseOption) Keybase { return newDBKeybase(dbm.NewMemDB(), opts...) }
+func NewInMemory(config *sdk.Config, opts ...KeybaseOption) Keybase {
+	return newDBKeybase(dbm.NewMemDB(), config, opts...)
+}
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password. It returns the generated mnemonic and the key Info.
@@ -172,7 +174,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 
 // GetByAddress returns Info based on a provided AccAddress. An error is returned
 // if the address does not exist.
-func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
+func (kb dbKeybase) GetByAddress(address sdk.AccAddress) (Info, error) {
 	ik := kb.db.Get(addrKey(address))
 	if len(ik) == 0 {
 		return nil, fmt.Errorf("key with address %s not found", address)
@@ -428,7 +430,7 @@ func (kb dbKeybase) writeInfo(name string, info Info) {
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }
 
-func addrKey(address types.AccAddress) []byte {
+func addrKey(address sdk.AccAddress) []byte {
 	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 

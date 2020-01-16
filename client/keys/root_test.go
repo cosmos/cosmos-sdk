@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestCommands(t *testing.T) {
-	rootCommands := Commands()
+	rootCommands := Commands(sdk.NewDefaultConfig())
 	assert.NotNil(t, rootCommands)
 
 	// Commands are registered

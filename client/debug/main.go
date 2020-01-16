@@ -18,14 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func Cmd(cdc *codec.Codec) *cobra.Command {
+func Cmd(cdc *codec.Codec, config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "debug",
 		Short: "Tool for helping with debugging your application",
 		RunE:  client.ValidateCmd,
 	}
 
-	cmd.AddCommand(PubkeyCmd(cdc))
+	cmd.AddCommand(PubkeyCmd(cdc, config))
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
 
@@ -68,7 +68,7 @@ func getPubKeyFromString(pkstr string) (crypto.PubKey, error) {
 	return nil, fmt.Errorf("pubkey '%s' invalid; expected hex, base64, or bech32", pubKey)
 }
 
-func PubkeyCmd(cdc *codec.Codec) *cobra.Command {
+func PubkeyCmd(cdc *codec.Codec, config *sdk.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a ED25519 pubkey from hex, base64, or bech32",
@@ -94,15 +94,15 @@ $ %s debug pubkey cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 			if err != nil {
 				return err
 			}
-			accPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, edPK)
+			accPub, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, edPK)
 			if err != nil {
 				return err
 			}
-			valPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeValPub, edPK)
+			valPub, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeValPub, edPK)
 			if err != nil {
 				return err
 			}
-			consenusPub, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, edPK)
+			consenusPub, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeConsPub, edPK)
 			if err != nil {
 				return err
 			}

@@ -38,7 +38,7 @@ const (
 )
 
 // AddKeyCommand defines a keys command to add a generated or recovered private key to keybase.
-func AddKeyCommand() *cobra.Command {
+func AddKeyCommand(config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name>",
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
@@ -60,7 +60,7 @@ required through --multisig-threshold. The keys are sorted by address, unless
 the flag --nosort is set.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: runAddCmd,
+		RunE: runAddCmd(config),
 	}
 	cmd.Flags().StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
@@ -77,22 +77,23 @@ the flag --nosort is set.
 	return cmd
 }
 
-func getKeybase(transient bool, buf io.Reader) (keys.Keybase, error) {
+func getKeybase(transient bool, buf io.Reader, config *sdk.Config) (keys.Keybase, error) {
 	if transient {
-		return keys.NewInMemory(), nil
+		return keys.NewInMemory(config), nil
 	}
 
-	return NewKeyringFromHomeFlag(buf)
+	return NewKeyringFromHomeFlag(buf, config)
 }
 
-func runAddCmd(cmd *cobra.Command, args []string) error {
-	inBuf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
-	if err != nil {
-		return err
+func runAddCmd(config *sdk.Config) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		inBuf := bufio.NewReader(cmd.InOrStdin())
+		kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf, config)
+		if err != nil {
+			return err
+		}
+		return RunAddCmd(cmd, args, kb, inBuf, config)
 	}
-
-	return RunAddCmd(cmd, args, kb, inBuf)
 }
 
 /*
@@ -104,7 +105,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.Reader) error {
+func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.Reader, config *sdk.Config) error {
 	var err error
 
 	name := args[0]
@@ -160,7 +161,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 	}
 
 	if viper.GetString(FlagPublicKey) != "" {
-		pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeAccPub, viper.GetString(FlagPublicKey))
+		pk, err := sdk.GetPubKeyFromBech32(config, sdk.Bech32PubKeyTypeAccPub, viper.GetString(FlagPublicKey))
 		if err != nil {
 			return err
 		}
@@ -176,13 +177,13 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if viper.GetBool(flags.FlagUseLedger) {
-		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
+		bech32PrefixAccAddr := config.GetBech32AccountAddrPrefix()
 		info, err := kb.CreateLedger(name, keys.Secp256k1, bech32PrefixAccAddr, account, index)
 		if err != nil {
 			return err
 		}
 
-		return printCreate(cmd, info, false, "")
+		return printCreate(cmd, config, info, false, "")
 	}
 
 	// Get bip39 mnemonic
@@ -252,16 +253,16 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keys.Keybase, inBuf *bufio.
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, info, showMnemonic, mnemonic)
+	return printCreate(cmd, config, info, showMnemonic, mnemonic)
 }
 
-func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic string) error {
+func printCreate(cmd *cobra.Command, config *sdk.Config, info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(info, keys.Bech32KeyOutput)
+		printKeyInfo(config, info, keys.Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -271,7 +272,7 @@ func printCreate(cmd *cobra.Command, info keys.Info, showMnemonic bool, mnemonic
 			cmd.PrintErrln(mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := keys.Bech32KeyOutput(info)
+		out, err := keys.Bech32KeyOutput(config, info)
 		if err != nil {
 			return err
 		}

@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestParseKey(t *testing.T) {
@@ -23,7 +25,7 @@ func TestParseKey(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.wantErr, parseKey(nil, tt.args) != nil)
+			require.Equal(t, tt.wantErr, parseKey(sdk.NewDefaultConfig())(nil, tt.args) != nil)
 		})
 	}
 }

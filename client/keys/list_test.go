@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runListCmd(t *testing.T) {
@@ -18,7 +19,8 @@ func Test_runListCmd(t *testing.T) {
 		args []string
 	}
 
-	cmdBasic := ListKeysCmd()
+	config := sdk.NewDefaultConfig()
+	cmdBasic := ListKeysCmd(config)
 
 	// Prepare some keybases
 	kbHome1, cleanUp1 := tests.NewTestCaseDir(t)
@@ -30,7 +32,7 @@ func Test_runListCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome2)
 
 	mockIn, _, _ := tests.ApplyMockIO(cmdBasic)
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := NewKeyringFromHomeFlag(mockIn, config)
 	require.NoError(t, err)
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
@@ -59,7 +61,7 @@ func Test_runListCmd(t *testing.T) {
 			}
 			viper.Set(flagListNames, false)
 			viper.Set(flags.FlagHome, tt.kbDir)
-			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
+			if err := runListCmd(config)(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -67,7 +69,7 @@ func Test_runListCmd(t *testing.T) {
 				mockIn.Reset("testpass1\ntestpass1\n")
 			}
 			viper.Set(flagListNames, true)
-			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
+			if err := runListCmd(config)(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

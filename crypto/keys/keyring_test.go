@@ -18,6 +18,7 @@ import (
 func TestLazyKeyManagementKeyRing(t *testing.T) {
 	dir, cleanup := tests.NewTestCaseDir(t)
 	defer cleanup()
+	config := sdk.NewDefaultConfig()
 	kb, err := NewTestKeyring("keybasename", dir)
 	require.NoError(t, err)
 
@@ -50,7 +51,7 @@ func TestLazyKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 	_, err = kb.GetByAddress(accAddr(i2))
 	require.NoError(t, err)
-	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	addr, err := sdk.AccAddressFromBech32(config, "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = kb.GetByAddress(addr)
 	require.NotNil(t, err)

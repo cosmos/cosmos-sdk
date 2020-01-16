@@ -18,7 +18,11 @@ import (
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	config := sdk.GetConfig()
+	// horrible hack
+	config := sdk.NewDefaultConfig()
+	oldSDKConfig := *sdk.SDKConfig
+	sdk.SDKConfig = config
+	defer func() { sdk.SDKConfig = &oldSDKConfig }()
 
 	bech32PrefixAccAddr := "terra"
 	bech32PrefixAccPub := "terrapub"
@@ -33,7 +37,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
 
-	cmd := AddKeyCommand()
+	cmd := AddKeyCommand(config)
 	require.NotNil(t, cmd)
 
 	// Prepare a keybase
@@ -48,10 +52,10 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	// Now enter password
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\ntest1234\n")
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+	require.NoError(t, runAddCmd(config)(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := NewKeyringFromHomeFlag(mockIn, config)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	defer func() {
@@ -69,7 +73,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.Equal(t, keys.TypeLedger, key1.GetType())
 	require.Equal(t,
 		"terrapub1addwnpepqvpg7r26nl2pvqqern00m6s9uaax3hauu2rzg8qpjzq9hy6xve7sw0d84m6",
-		sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, key1.GetPubKey()))
+		sdk.MustBech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, key1.GetPubKey()))
 
 	config.SetCoinType(118)
 	config.SetFullFundraiserPath("44'/118'/0'/0/0")
@@ -80,7 +84,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 
 func Test_runAddCmdLedger(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	cmd := AddKeyCommand()
+	config := sdk.NewDefaultConfig()
+	cmd := AddKeyCommand(config)
 	require.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
@@ -95,10 +100,10 @@ func Test_runAddCmdLedger(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	mockIn.Reset("test1234\ntest1234\n")
-	require.NoError(t, runAddCmd(cmd, []string{"keyname1"}))
+	require.NoError(t, runAddCmd(config)(cmd, []string{"keyname1"}))
 
 	// Now check that it has been stored properly
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := NewKeyringFromHomeFlag(mockIn, config)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	defer func() {
@@ -116,5 +121,5 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.Equal(t, keys.TypeLedger, key1.GetType())
 	require.Equal(t,
 		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
-		sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, key1.GetPubKey()))
+		sdk.MustBech32ifyPubKey(config, sdk.Bech32PubKeyTypeAccPub, key1.GetPubKey()))
 }

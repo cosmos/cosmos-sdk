@@ -114,7 +114,7 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 // according to the default address rules or a custom address verifier set by
 // GetConfig().SetAddressVerifier()
 func VerifyAddressFormat(bz []byte) error {
-	verifier := GetConfig().GetAddressVerifier()
+	verifier := SDKConfig.GetAddressVerifier()
 	if verifier != nil {
 		return verifier(bz)
 	}
@@ -125,13 +125,12 @@ func VerifyAddressFormat(bz []byte) error {
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
-func AccAddressFromBech32(address string) (addr AccAddress, err error) {
+func AccAddressFromBech32(config *Config, address string) (addr AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return AccAddress{}, nil
 	}
 
-	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
-
+	bech32PrefixAccAddr := config.GetBech32AccountAddrPrefix()
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
@@ -195,7 +194,7 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	aa2, err := AccAddressFromBech32(s)
+	aa2, err := AccAddressFromBech32(SDKConfig, s)
 	if err != nil {
 		return err
 	}
@@ -212,7 +211,7 @@ func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 		return err
 	}
 
-	aa2, err := AccAddressFromBech32(s)
+	aa2, err := AccAddressFromBech32(SDKConfig, s)
 	if err != nil {
 		return err
 	}
@@ -232,7 +231,7 @@ func (aa AccAddress) String() string {
 		return ""
 	}
 
-	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+	bech32PrefixAccAddr := SDKConfig.GetBech32AccountAddrPrefix()
 
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
@@ -283,7 +282,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return ValAddress{}, nil
 	}
 
-	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixValAddr := SDKConfig.GetBech32ValidatorAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixValAddr)
 	if err != nil {
@@ -387,7 +386,7 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+	bech32PrefixValAddr := SDKConfig.GetBech32ValidatorAddrPrefix()
 
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
@@ -433,12 +432,12 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 }
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
-func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
+func ConsAddressFromBech32(config *Config, address string) (addr ConsAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return ConsAddress{}, nil
 	}
 
-	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+	bech32PrefixConsAddr := config.GetBech32ConsensusAddrPrefix()
 
 	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
 	if err != nil {
@@ -509,7 +508,7 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	ca2, err := ConsAddressFromBech32(s)
+	ca2, err := ConsAddressFromBech32(SDKConfig, s)
 	if err != nil {
 		return err
 	}
@@ -527,7 +526,7 @@ func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 		return err
 	}
 
-	ca2, err := ConsAddressFromBech32(s)
+	ca2, err := ConsAddressFromBech32(SDKConfig, s)
 	if err != nil {
 		return err
 	}
@@ -547,7 +546,7 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+	bech32PrefixConsAddr := SDKConfig.GetBech32ConsensusAddrPrefix()
 
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {

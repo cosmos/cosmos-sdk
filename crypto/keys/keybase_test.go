@@ -93,7 +93,8 @@ func TestCreateLedger(t *testing.T) {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	cstore := NewInMemory(sdk.NewDefaultConfig())
+	config := sdk.NewDefaultConfig()
+	cstore := NewInMemory(config)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -124,7 +125,7 @@ func TestKeyManagement(t *testing.T) {
 	require.NotNil(t, err)
 	_, err = cstore.GetByAddress(accAddr(i2))
 	require.NoError(t, err)
-	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	addr, err := sdk.AccAddressFromBech32(config, "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = cstore.GetByAddress(addr)
 	require.NotNil(t, err)

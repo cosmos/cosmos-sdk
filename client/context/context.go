@@ -38,6 +38,7 @@ type CLIContext struct {
 	Verifier      tmlite.Verifier
 	FromName      string
 	Codec         *codec.Codec
+	SDKConfig     *sdk.Config
 	TrustNode     bool
 	UseLedger     bool
 	Simulate      bool
@@ -56,8 +57,9 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 	var nodeURI string
 	var rpc rpcclient.Client
 
+	defaultConfig := sdk.NewDefaultConfig()
 	genOnly := viper.GetBool(flags.FlagGenerateOnly)
-	fromAddress, fromName, err := GetFromFields(input, from, genOnly)
+	fromAddress, fromName, err := GetFromFields(input, defaultConfig, genOnly, from)
 	if err != nil {
 		fmt.Printf("failed to get from fields: %v", err)
 		os.Exit(1)
@@ -87,6 +89,7 @@ func NewCLIContextWithInputAndFrom(input io.Reader, from string) CLIContext {
 		GenerateOnly:  genOnly,
 		FromAddress:   fromAddress,
 		FromName:      fromName,
+		SDKConfig:     defaultConfig,
 		Indent:        viper.GetBool(flags.FlagIndentResponse),
 		SkipConfirm:   viper.GetBool(flags.FlagSkipConfirmation),
 	}
@@ -130,6 +133,12 @@ func (ctx CLIContext) WithInput(r io.Reader) CLIContext {
 // WithCodec returns a copy of the context with an updated codec.
 func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
+	return ctx
+}
+
+// WithSDKConfig returns a copy of the context with an updated config pointer.
+func (ctx CLIContext) WithSDKConfig(config *sdk.Config) CLIContext {
+	ctx.SDKConfig = config
 	return ctx
 }
 
@@ -253,13 +262,13 @@ func (ctx CLIContext) PrintOutput(toPrint interface{}) error {
 // GetFromFields returns a from account address and Keybase name given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(input io.Reader, config *sdk.Config, genOnly bool, from string) (sdk.AccAddress, string, error) {
 	if from == "" {
 		return nil, "", nil
 	}
 
 	if genOnly {
-		addr, err := sdk.AccAddressFromBech32(from)
+		addr, err := sdk.AccAddressFromBech32(config, from)
 		if err != nil {
 			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address for generate-only")
 		}
@@ -267,13 +276,13 @@ func GetFromFields(input io.Reader, from string, genOnly bool) (sdk.AccAddress, 
 		return addr, "", nil
 	}
 
-	keybase, err := keys.NewKeyringFromHomeFlag(input)
+	keybase, err := keys.NewKeyringFromHomeFlag(input, config)
 	if err != nil {
 		return nil, "", err
 	}
 
 	var info cryptokeys.Info
-	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+	if addr, err := sdk.AccAddressFromBech32(config, from); err == nil {
 		info, err = keybase.GetByAddress(addr)
 		if err != nil {
 			return nil, "", err

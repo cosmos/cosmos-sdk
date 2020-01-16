@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ const (
 )
 
 // DeleteKeyCommand deletes a key from the key store.
-func DeleteKeyCommand() *cobra.Command {
+func DeleteKeyCommand(config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>...",
 		Short: "Delete the given keys",
@@ -27,7 +28,7 @@ Note that removing offline or ledger keys will remove
 only the public key references stored locally, i.e.
 private keys stored in a ledger device cannot be deleted with the CLI.
 `,
-		RunE: runDeleteCmd,
+		RunE: runDeleteCmd(config),
 		Args: cobra.MinimumNArgs(1),
 	}
 
@@ -38,43 +39,45 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 	return cmd
 }
 
-func runDeleteCmd(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
+func runDeleteCmd(config *sdk.Config) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		buf := bufio.NewReader(cmd.InOrStdin())
 
-	kb, err := NewKeyringFromHomeFlag(buf)
-	if err != nil {
-		return err
-	}
-
-	for _, name := range args {
-		info, err := kb.Get(name)
+		kb, err := NewKeyringFromHomeFlag(buf, config)
 		if err != nil {
 			return err
 		}
 
-		if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
-			// confirm deletion, unless -y is passed
-			if !viper.GetBool(flagYes) {
-				if err := confirmDeletion(buf); err != nil {
-					return err
-				}
+		for _, name := range args {
+			info, err := kb.Get(name)
+			if err != nil {
+				return err
 			}
 
+			if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+				// confirm deletion, unless -y is passed
+				if !viper.GetBool(flagYes) {
+					if err := confirmDeletion(buf); err != nil {
+						return err
+					}
+				}
+
+				if err := kb.Delete(name, "", true); err != nil {
+					return err
+				}
+				cmd.PrintErrln("Public key reference deleted")
+				return nil
+			}
+
+			// old password and skip flag arguments are ignored
 			if err := kb.Delete(name, "", true); err != nil {
 				return err
 			}
-			cmd.PrintErrln("Public key reference deleted")
-			return nil
+			cmd.PrintErrln("Key deleted forever (uh oh!)")
 		}
 
-		// old password and skip flag arguments are ignored
-		if err := kb.Delete(name, "", true); err != nil {
-			return err
-		}
-		cmd.PrintErrln("Key deleted forever (uh oh!)")
+		return nil
 	}
-
-	return nil
 }
 
 func confirmDeletion(buf *bufio.Reader) error {

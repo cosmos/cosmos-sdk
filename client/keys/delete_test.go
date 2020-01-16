@@ -10,11 +10,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	deleteKeyCommand := DeleteKeyCommand()
+	config := sdk.NewDefaultConfig()
+	deleteKeyCommand := DeleteKeyCommand(config)
 	mockIn, _, _ := tests.ApplyMockIO(deleteKeyCommand)
 
 	yesF, _ := deleteKeyCommand.Flags().GetBool(flagYes)
@@ -25,7 +27,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 	if !runningUnattended {
-		kb, err := NewKeyringFromHomeFlag(mockIn)
+		kb, err := NewKeyringFromHomeFlag(mockIn, config)
 		require.NoError(t, err)
 		defer func() {
 			kb.Delete("runDeleteCmd_Key1", "", false)
@@ -39,7 +41,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// Now
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := NewKeyringFromHomeFlag(mockIn, config)
 	require.NoError(t, err)
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
@@ -56,12 +58,13 @@ func Test_runDeleteCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ntestpass1\n")
 	}
-	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
+
+	err = runDeleteCmd(config)(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
 	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
 
 	// User confirmation missing
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
+	err = runDeleteCmd(config)(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
 	if runningUnattended {
 		require.Equal(t, "aborted", err.Error())
@@ -81,7 +84,7 @@ func Test_runDeleteCmd(t *testing.T) {
 		if runningUnattended {
 			mockIn.Reset("testpass1\ntestpass1\n")
 		}
-		require.NoError(t, runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1}))
+		require.NoError(t, runDeleteCmd(config)(deleteKeyCommand, []string{fakeKeyName1}))
 
 		_, err = kb.Get(fakeKeyName1)
 		require.Error(t, err) // Key1 is gone
@@ -96,7 +99,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	if runningUnattended {
 		mockIn.Reset("testpass1\ny\ntestpass1\n")
 	}
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
+	err = runDeleteCmd(config)(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
 	_, err = kb.Get(fakeKeyName2)
 	require.Error(t, err) // Key2 is gone

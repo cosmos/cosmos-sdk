@@ -41,15 +41,19 @@ func NewDefaultConfig() *Config {
 }
 
 // cosmos-sdk wide global singleton
-var sdkConfig *Config
+var SDKConfig *Config
+
+func init() {
+	SDKConfig = NewDefaultConfig()
+}
 
 // GetConfig returns the config instance for the SDK.
 func GetConfig() *Config {
-	if sdkConfig != nil {
-		return sdkConfig
+	if SDKConfig != nil {
+		return SDKConfig
 	}
-	sdkConfig = NewDefaultConfig()
-	return sdkConfig
+	SDKConfig = NewDefaultConfig()
+	return SDKConfig
 }
 
 // NewBech32PrefixMap returns a new prefix map to be used for addresses bech32 representations.

@@ -6,40 +6,43 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ExportKeyCommand exports private keys from the key store.
-func ExportKeyCommand() *cobra.Command {
+func ExportKeyCommand(config *sdk.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export <name>",
 		Short: "Export private keys",
 		Long:  `Export a private key from the local keybase in ASCII-armored encrypted format.`,
 		Args:  cobra.ExactArgs(1),
-		RunE:  runExportCmd,
+		RunE:  runExportCmd(config),
 	}
 }
 
-func runExportCmd(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
-	kb, err := NewKeyringFromHomeFlag(buf)
-	if err != nil {
-		return err
-	}
+func runExportCmd(config *sdk.Config) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		buf := bufio.NewReader(cmd.InOrStdin())
+		kb, err := NewKeyringFromHomeFlag(buf, config)
+		if err != nil {
+			return err
+		}
 
-	decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
-	if err != nil {
-		return err
-	}
-	encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
-	if err != nil {
-		return err
-	}
+		decryptPassword, err := input.GetPassword("Enter passphrase to decrypt your key:", buf)
+		if err != nil {
+			return err
+		}
+		encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
+		if err != nil {
+			return err
+		}
 
-	armored, err := kb.ExportPrivKey(args[0], decryptPassword, encryptPassword)
-	if err != nil {
-		return err
-	}
+		armored, err := kb.ExportPrivKey(args[0], decryptPassword, encryptPassword)
+		if err != nil {
+			return err
+		}
 
-	cmd.Println(armored)
-	return nil
+		cmd.Println(armored)
+		return nil
+	}
 }

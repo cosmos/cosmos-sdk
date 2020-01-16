@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,8 @@ import (
 )
 
 func Test_runMigrateCmd(t *testing.T) {
-	cmd := AddKeyCommand()
+	config := sdk.NewDefaultConfig()
+	cmd := AddKeyCommand(config)
 	assert.NotNil(t, cmd)
 	mockIn, _, _ := tests.ApplyMockIO(cmd)
 
@@ -25,12 +27,12 @@ func Test_runMigrateCmd(t *testing.T) {
 	viper.Set(cli.OutputFlag, OutputFormatText)
 
 	mockIn.Reset("test1234\ntest1234\n")
-	err := runAddCmd(cmd, []string{"keyname1"})
+	err := runAddCmd(config)(cmd, []string{"keyname1"})
 	assert.NoError(t, err)
 
 	viper.Set(flags.FlagDryRun, true)
-	cmd = MigrateCommand()
+	cmd = MigrateCommand(config)
 	mockIn, _, _ = tests.ApplyMockIO(cmd)
 	mockIn.Reset("test1234\n")
-	assert.NoError(t, runMigrateCmd(cmd, []string{}))
+	assert.NoError(t, runMigrateCmd(config)(cmd, []string{}))
 }

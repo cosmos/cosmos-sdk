@@ -8,11 +8,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/tests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func Test_runExportCmd(t *testing.T) {
 	runningUnattended := isRunningUnattended()
-	exportKeyCommand := ExportKeyCommand()
+	config := sdk.NewDefaultConfig()
+	exportKeyCommand := ExportKeyCommand(config)
 	mockIn, _, _ := tests.ApplyMockIO(exportKeyCommand)
 
 	// Now add a temporary keybase
@@ -21,7 +23,7 @@ func Test_runExportCmd(t *testing.T) {
 	viper.Set(flags.FlagHome, kbHome)
 
 	// create a key
-	kb, err := NewKeyringFromHomeFlag(mockIn)
+	kb, err := NewKeyringFromHomeFlag(mockIn, config)
 	require.NoError(t, err)
 	if !runningUnattended {
 		defer func() {
@@ -41,5 +43,5 @@ func Test_runExportCmd(t *testing.T) {
 	} else {
 		mockIn.Reset("123456789\n123456789\n")
 	}
-	require.NoError(t, runExportCmd(exportKeyCommand, []string{"keyname1"}))
+	require.NoError(t, runExportCmd(config)(exportKeyCommand, []string{"keyname1"}))
 }

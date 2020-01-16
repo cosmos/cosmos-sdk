@@ -33,7 +33,7 @@ const (
 )
 
 // ShowKeysCmd shows key information for a given key name.
-func ShowKeysCmd() *cobra.Command {
+func ShowKeysCmd(config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [name [name...]]",
 		Short: "Show key info for the given name",
@@ -41,7 +41,7 @@ func ShowKeysCmd() *cobra.Command {
 provided, then an ephemeral multisig key will be created under the name "multi"
 consisting of all the keys provided by name and multisig threshold.`,
 		Args: cobra.MinimumNArgs(1),
-		RunE: runShowCmd,
+		RunE: runShowCmd(config),
 	}
 
 	cmd.Flags().String(FlagBechPrefix, sdk.PrefixAccount, "The Bech32 prefix encoding for a key (acc|val|cons)")
@@ -54,92 +54,94 @@ consisting of all the keys provided by name and multisig threshold.`,
 	return cmd
 }
 
-func runShowCmd(cmd *cobra.Command, args []string) (err error) {
-	var info keys.Info
+func runShowCmd(config *sdk.Config) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) (err error) {
+		var info keys.Info
 
-	kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin())
-	if err != nil {
-		return err
-	}
-	if len(args) == 1 {
-		info, err = kb.Get(args[0])
+		kb, err := NewKeyringFromHomeFlag(cmd.InOrStdin(), config)
 		if err != nil {
 			return err
 		}
-	} else {
-		pks := make([]tmcrypto.PubKey, len(args))
-		for i, keyName := range args {
-			info, err := kb.Get(keyName)
+		if len(args) == 1 {
+			info, err = kb.Get(args[0])
+			if err != nil {
+				return err
+			}
+		} else {
+			pks := make([]tmcrypto.PubKey, len(args))
+			for i, keyName := range args {
+				info, err := kb.Get(keyName)
+				if err != nil {
+					return err
+				}
+
+				pks[i] = info.GetPubKey()
+			}
+
+			multisigThreshold := viper.GetInt(flagMultiSigThreshold)
+			err = validateMultisigThreshold(multisigThreshold, len(args))
 			if err != nil {
 				return err
 			}
 
-			pks[i] = info.GetPubKey()
+			multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+			info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
 		}
 
-		multisigThreshold := viper.GetInt(flagMultiSigThreshold)
-		err = validateMultisigThreshold(multisigThreshold, len(args))
+		isShowAddr := viper.GetBool(FlagAddress)
+		isShowPubKey := viper.GetBool(FlagPublicKey)
+		isShowDevice := viper.GetBool(FlagDevice)
+
+		isOutputSet := false
+		tmp := cmd.Flag(cli.OutputFlag)
+		if tmp != nil {
+			isOutputSet = tmp.Changed
+		}
+
+		if isShowAddr && isShowPubKey {
+			return errors.New("cannot use both --address and --pubkey at once")
+		}
+
+		if isOutputSet && (isShowAddr || isShowPubKey) {
+			return errors.New("cannot use --output with --address or --pubkey")
+		}
+
+		bechKeyOut, err := getBechKeyOut(viper.GetString(FlagBechPrefix))
 		if err != nil {
 			return err
 		}
 
-		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
-		info = keys.NewMultiInfo(defaultMultiSigKeyName, multikey)
-	}
-
-	isShowAddr := viper.GetBool(FlagAddress)
-	isShowPubKey := viper.GetBool(FlagPublicKey)
-	isShowDevice := viper.GetBool(FlagDevice)
-
-	isOutputSet := false
-	tmp := cmd.Flag(cli.OutputFlag)
-	if tmp != nil {
-		isOutputSet = tmp.Changed
-	}
-
-	if isShowAddr && isShowPubKey {
-		return errors.New("cannot use both --address and --pubkey at once")
-	}
-
-	if isOutputSet && (isShowAddr || isShowPubKey) {
-		return errors.New("cannot use --output with --address or --pubkey")
-	}
-
-	bechKeyOut, err := getBechKeyOut(viper.GetString(FlagBechPrefix))
-	if err != nil {
-		return err
-	}
-
-	switch {
-	case isShowAddr:
-		printKeyAddress(info, bechKeyOut)
-	case isShowPubKey:
-		printPubKey(info, bechKeyOut)
-	default:
-		printKeyInfo(info, bechKeyOut)
-	}
-
-	if isShowDevice {
-		if isShowPubKey {
-			return fmt.Errorf("the device flag (-d) can only be used for addresses not pubkeys")
-		}
-		if viper.GetString(FlagBechPrefix) != "acc" {
-			return fmt.Errorf("the device flag (-d) can only be used for accounts")
-		}
-		// Override and show in the device
-		if info.GetType() != keys.TypeLedger {
-			return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
+		switch {
+		case isShowAddr:
+			printKeyAddress(config, info, bechKeyOut)
+		case isShowPubKey:
+			printPubKey(config, info, bechKeyOut)
+		default:
+			printKeyInfo(config, info, bechKeyOut)
 		}
 
-		hdpath, err := info.GetPath()
-		if err != nil {
-			return nil
+		if isShowDevice {
+			if isShowPubKey {
+				return fmt.Errorf("the device flag (-d) can only be used for addresses not pubkeys")
+			}
+			if viper.GetString(FlagBechPrefix) != "acc" {
+				return fmt.Errorf("the device flag (-d) can only be used for accounts")
+			}
+			// Override and show in the device
+			if info.GetType() != keys.TypeLedger {
+				return fmt.Errorf("the device flag (-d) can only be used for accounts stored in devices")
+			}
+
+			hdpath, err := info.GetPath()
+			if err != nil {
+				return nil
+			}
+
+			return crypto.LedgerShowAddress(*hdpath, info.GetPubKey())
 		}
 
-		return crypto.LedgerShowAddress(*hdpath, info.GetPubKey())
+		return nil
 	}
-
-	return nil
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

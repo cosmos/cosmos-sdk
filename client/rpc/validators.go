@@ -22,8 +22,8 @@ import (
 
 // TODO these next two functions feel kinda hacky based on their placement
 
-//ValidatorCommand returns the validator set for a given height
-func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
+// ValidatorCommand returns the validator set for a given height.
+func ValidatorCommand(cdc *codec.Codec, config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tendermint-validator-set [height]",
 		Short: "Get the full tendermint validator set at given height",
@@ -45,7 +45,7 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			result, err := GetValidators(cliCtx, height)
+			result, err := GetValidators(config, cliCtx, height)
 			if err != nil {
 				return err
 			}
@@ -99,8 +99,8 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, validator.PubKey)
+func bech32ValidatorOutput(config *sdk.Config, validator *tmtypes.Validator) (ValidatorOutput, error) {
+	bechValPubkey, err := sdk.Bech32ifyPubKey(config, sdk.Bech32PubKeyTypeConsPub, validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}
@@ -114,7 +114,7 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(cliCtx context.CLIContext, height *int64) (ResultValidatorsOutput, error) {
+func GetValidators(config *sdk.Config, cliCtx context.CLIContext, height *int64) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
@@ -143,7 +143,7 @@ func GetValidators(cliCtx context.CLIContext, height *int64) (ResultValidatorsOu
 	}
 
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(validatorsRes.Validators[i])
+		outputValidatorsRes.Validators[i], err = bech32ValidatorOutput(config, validatorsRes.Validators[i])
 		if err != nil {
 			return ResultValidatorsOutput{}, err
 		}
@@ -155,7 +155,7 @@ func GetValidators(cliCtx context.CLIContext, height *int64) (ResultValidatorsOu
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(config *sdk.Config, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -175,7 +175,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(cliCtx, &height)
+		output, err := GetValidators(config, cliCtx, &height)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -185,9 +185,9 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(config *sdk.Config, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		output, err := GetValidators(cliCtx, nil)
+		output, err := GetValidators(config, cliCtx, nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

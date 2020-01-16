@@ -41,7 +41,8 @@ func TestEmptyAddresses(t *testing.T) {
 	require.Equal(t, (sdk.ValAddress{}).String(), "")
 	require.Equal(t, (sdk.ConsAddress{}).String(), "")
 
-	accAddr, err := sdk.AccAddressFromBech32("")
+	config := sdk.NewDefaultConfig()
+	accAddr, err := sdk.AccAddressFromBech32(config, "")
 	require.True(t, accAddr.Empty())
 	require.Nil(t, err)
 
@@ -49,7 +50,7 @@ func TestEmptyAddresses(t *testing.T) {
 	require.True(t, valAddr.Empty())
 	require.Nil(t, err)
 
-	consAddr, err := sdk.ConsAddressFromBech32("")
+	consAddr, err := sdk.ConsAddressFromBech32(config, "")
 	require.True(t, consAddr.Empty())
 	require.Nil(t, err)
 }
@@ -116,6 +117,7 @@ func TestYAMLMarshalers(t *testing.T) {
 func TestRandBech32AccAddrConsistency(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
 
+	config := sdk.NewDefaultConfig()
 	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
@@ -126,7 +128,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 		testMarshal(t, &acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err := sdk.AccAddressFromBech32(str)
+		res, err := sdk.AccAddressFromBech32(config, str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 
@@ -140,7 +142,7 @@ func TestRandBech32AccAddrConsistency(t *testing.T) {
 		_, err := sdk.AccAddressFromHex(str)
 		require.NotNil(t, err)
 
-		_, err = sdk.AccAddressFromBech32(str)
+		_, err = sdk.AccAddressFromBech32(config, str)
 		require.NotNil(t, err)
 
 		err = (*sdk.AccAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -185,6 +187,7 @@ func TestValAddr(t *testing.T) {
 
 func TestConsAddress(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
+	config := sdk.NewDefaultConfig()
 
 	for i := 0; i < 20; i++ {
 		rand.Read(pub[:])
@@ -196,7 +199,7 @@ func TestConsAddress(t *testing.T) {
 		testMarshal(t, &acc, &res, acc.Marshal, (&res).Unmarshal)
 
 		str := acc.String()
-		res, err := sdk.ConsAddressFromBech32(str)
+		res, err := sdk.ConsAddressFromBech32(config, str)
 		require.Nil(t, err)
 		require.Equal(t, acc, res)
 
@@ -210,7 +213,7 @@ func TestConsAddress(t *testing.T) {
 		_, err := sdk.ConsAddressFromHex(str)
 		require.NotNil(t, err)
 
-		_, err = sdk.ConsAddressFromBech32(str)
+		_, err = sdk.ConsAddressFromBech32(config, str)
 		require.NotNil(t, err)
 
 		err = (*sdk.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
@@ -286,6 +289,10 @@ func TestConfiguredPrefix(t *testing.T) {
 func TestAddressInterface(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
 	rand.Read(pub[:])
+	config := sdk.NewDefaultConfig()
+	oldSDKConfig := *sdk.SDKConfig
+	sdk.SDKConfig = config
+	defer func() { sdk.SDKConfig = &oldSDKConfig }()
 
 	addrs := []sdk.Address{
 		sdk.ConsAddress(pub.Address()),
@@ -296,13 +303,13 @@ func TestAddressInterface(t *testing.T) {
 	for _, addr := range addrs {
 		switch addr := addr.(type) {
 		case sdk.AccAddress:
-			_, err := sdk.AccAddressFromBech32(addr.String())
+			_, err := sdk.AccAddressFromBech32(config, addr.String())
 			require.Nil(t, err)
 		case sdk.ValAddress:
 			_, err := sdk.ValAddressFromBech32(addr.String())
 			require.Nil(t, err)
 		case sdk.ConsAddress:
-			_, err := sdk.ConsAddressFromBech32(addr.String())
+			_, err := sdk.ConsAddressFromBech32(config, addr.String())
 			require.Nil(t, err)
 		default:
 			t.Fail()
@@ -317,18 +324,23 @@ func TestCustomAddressVerifier(t *testing.T) {
 	accBech := sdk.AccAddress(addr).String()
 	valBech := sdk.ValAddress(addr).String()
 	consBech := sdk.ConsAddress(addr).String()
+	config := sdk.NewDefaultConfig()
+	oldSDKConfig := *sdk.SDKConfig
+	sdk.SDKConfig = config
+	defer func() { sdk.SDKConfig = &oldSDKConfig }()
 	// Verifiy that the default logic rejects this 10 byte address
 	err := sdk.VerifyAddressFormat(addr)
 	require.NotNil(t, err)
-	_, err = sdk.AccAddressFromBech32(accBech)
+	_, err = sdk.AccAddressFromBech32(config, accBech)
 	require.NotNil(t, err)
 	_, err = sdk.ValAddressFromBech32(valBech)
 	require.NotNil(t, err)
-	_, err = sdk.ConsAddressFromBech32(consBech)
+	_, err = sdk.ConsAddressFromBech32(config, consBech)
 	require.NotNil(t, err)
 
 	// Set a custom address verifier that accepts 10 or 20 byte addresses
-	sdk.GetConfig().SetAddressVerifier(func(bz []byte) error {
+	// TODO: singleton here
+	sdk.SDKConfig.SetAddressVerifier(func(bz []byte) error {
 		n := len(bz)
 		if n == 10 || n == sdk.AddrLen {
 			return nil
@@ -339,10 +351,10 @@ func TestCustomAddressVerifier(t *testing.T) {
 	// Verifiy that the custom logic accepts this 10 byte address
 	err = sdk.VerifyAddressFormat(addr)
 	require.Nil(t, err)
-	_, err = sdk.AccAddressFromBech32(accBech)
+	_, err = sdk.AccAddressFromBech32(config, accBech)
 	require.Nil(t, err)
 	_, err = sdk.ValAddressFromBech32(valBech)
 	require.Nil(t, err)
-	_, err = sdk.ConsAddressFromBech32(consBech)
+	_, err = sdk.ConsAddressFromBech32(config, consBech)
 	require.Nil(t, err)
 }

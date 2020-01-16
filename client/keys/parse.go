@@ -17,14 +17,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var config = sdk.GetConfig()
-var bech32Prefixes = []string{
-	config.GetBech32AccountAddrPrefix(),
-	config.GetBech32AccountPubPrefix(),
-	config.GetBech32ValidatorAddrPrefix(),
-	config.GetBech32ValidatorPubPrefix(),
-	config.GetBech32ConsensusAddrPrefix(),
-	config.GetBech32ConsensusPubPrefix(),
+func bech32Prefixes(config *sdk.Config) []string {
+	return []string{
+		config.GetBech32AccountAddrPrefix(),
+		config.GetBech32AccountPubPrefix(),
+		config.GetBech32ValidatorAddrPrefix(),
+		config.GetBech32ValidatorPubPrefix(),
+		config.GetBech32ConsensusAddrPrefix(),
+		config.GetBech32ConsensusPubPrefix(),
+	}
 }
 
 type hexOutput struct {
@@ -44,9 +45,9 @@ type bech32Output struct {
 	Formats []string `json:"formats"`
 }
 
-func newBech32Output(bs []byte) bech32Output {
-	out := bech32Output{Formats: make([]string, len(bech32Prefixes))}
-	for i, prefix := range bech32Prefixes {
+func newBech32Output(config *sdk.Config, bs []byte) bech32Output {
+	out := bech32Output{Formats: make([]string, len(bech32Prefixes(config)))}
+	for i, prefix := range bech32Prefixes(config) {
 		bech32Addr, err := bech32.ConvertAndEncode(prefix, bs)
 		if err != nil {
 			panic(err)
@@ -68,7 +69,7 @@ func (bo bech32Output) String() string {
 }
 
 // ParseKeyStringCommand parses an address from hex to bech32 and vice versa.
-func ParseKeyStringCommand() *cobra.Command {
+func ParseKeyStringCommand(config *sdk.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse <hex-or-bech32-address>",
 		Short: "Parse address from hex to bech32 and vice versa",
@@ -76,22 +77,24 @@ func ParseKeyStringCommand() *cobra.Command {
 hexadecimal into bech32 cosmos prefixed format and vice versa.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: parseKey,
+		RunE: parseKey(config),
 	}
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "Indent JSON output")
 
 	return cmd
 }
 
-func parseKey(_ *cobra.Command, args []string) error {
-	addr := strings.TrimSpace(args[0])
-	if len(addr) == 0 {
-		return errors.New("couldn't parse empty input")
+func parseKey(config *sdk.Config) func(*cobra.Command, []string) error {
+	return func(_ *cobra.Command, args []string) error {
+		addr := strings.TrimSpace(args[0])
+		if len(addr) == 0 {
+			return errors.New("couldn't parse empty input")
+		}
+		if !(runFromBech32(addr) || runFromHex(config, addr)) {
+			return errors.New("couldn't find valid bech32 nor hex data")
+		}
+		return nil
 	}
-	if !(runFromBech32(addr) || runFromHex(addr)) {
-		return errors.New("couldn't find valid bech32 nor hex data")
-	}
-	return nil
 }
 
 // print info from bech32
@@ -105,12 +108,12 @@ func runFromBech32(bech32str string) bool {
 }
 
 // print info from hex
-func runFromHex(hexstr string) bool {
+func runFromHex(config *sdk.Config, hexstr string) bool {
 	bz, err := hex.DecodeString(hexstr)
 	if err != nil {
 		return false
 	}
-	displayParseKeyInfo(newBech32Output(bz))
+	displayParseKeyInfo(newBech32Output(config, bz))
 	return true
 }
 

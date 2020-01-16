@@ -24,53 +24,50 @@ const (
 	defaultKeyDBName = "keys"
 )
 
-type bechKeyOutFn func(keyInfo keys.Info) (keys.KeyOutput, error)
+type bechKeyOutFn func(config *sdk.Config, keyInfo keys.Info) (keys.KeyOutput, error)
 
 // NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyBaseFromHomeFlag(opts ...keys.KeybaseOption) (keys.Keybase, error) {
+func NewKeyBaseFromHomeFlag(config *sdk.Config, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	rootDir := viper.GetString(flags.FlagHome)
-	return NewKeyBaseFromDir(rootDir, opts...)
+	return NewKeyBaseFromDir(rootDir, config, opts...)
 }
 
 // NewKeyBaseFromDir initializes a keybase at the rootDir directory. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir, opts...)
+func NewKeyBaseFromDir(rootDir string, config *sdk.Config, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), config, opts...), nil
 }
 
 // NewInMemoryKeyBase returns a storage-less keybase.
-func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
+func NewInMemoryKeyBase(config *sdk.Config) keys.Keybase { return keys.NewInMemory(config) }
 
 // NewKeyBaseFromHomeFlag initializes a keyring based on configuration. Keybase
 // options can be applied when generating this new Keybase.
-func NewKeyringFromHomeFlag(input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, opts...)
+func NewKeyringFromHomeFlag(input io.Reader, config *sdk.Config, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+	return NewKeyringFromDir(viper.GetString(flags.FlagHome), input, config, opts...)
 }
 
 // NewKeyBaseFromDir initializes a keyring at the given directory.
 // If the viper flag flags.FlagKeyringBackend is set to file, it returns an on-disk keyring with
 // CLI prompt support only. If flags.FlagKeyringBackend is set to test it will return an on-disk,
 // password-less keyring that could be used for testing purposes.
-func NewKeyringFromDir(rootDir string, input io.Reader, opts ...keys.KeybaseOption) (keys.Keybase, error) {
+func NewKeyringFromDir(rootDir string, input io.Reader, config *sdk.Config, opts ...keys.KeybaseOption) (keys.Keybase, error) {
 	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
+	keyringName := config.GetKeyringServiceName()
 	switch keyringBackend {
 	case flags.KeyringBackendTest:
-		return keys.NewTestKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, opts...)
+		return keys.NewTestKeyring(keyringName, rootDir, opts...)
 	case flags.KeyringBackendFile:
-		return keys.NewKeyringFile(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
+		return keys.NewKeyringFile(keyringName, rootDir, input, opts...)
 	case flags.KeyringBackendOS:
-		return keys.NewKeyring(sdk.GetConfig().GetKeyringServiceName(), rootDir, input, opts...)
+		return keys.NewKeyring(keyringName, rootDir, input, opts...)
 	}
 	return nil, fmt.Errorf("unknown keyring backend %q", keyringBackend)
 }
 
-func getLazyKeyBaseFromDir(rootDir string, opts ...keys.KeybaseOption) (keys.Keybase, error) {
-	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys"), opts...), nil
-}
-
-func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
-	ko, err := bechKeyOut(keyInfo)
+func printKeyInfo(config *sdk.Config, keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(config, keyInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -95,8 +92,8 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 }
 
-func printInfos(infos []keys.Info) {
-	kos, err := keys.Bech32KeysOutput(infos)
+func printInfos(config *sdk.Config, infos []keys.Info) {
+	kos, err := keys.Bech32KeysOutput(config, infos)
 	if err != nil {
 		panic(err)
 	}
@@ -130,8 +127,8 @@ func printTextInfos(kos []keys.KeyOutput) {
 	fmt.Println(string(out))
 }
 
-func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
-	ko, err := bechKeyOut(info)
+func printKeyAddress(config *sdk.Config, info keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(config, info)
 	if err != nil {
 		panic(err)
 	}
@@ -139,8 +136,8 @@ func printKeyAddress(info keys.Info, bechKeyOut bechKeyOutFn) {
 	fmt.Println(ko.Address)
 }
 
-func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
-	ko, err := bechKeyOut(info)
+func printPubKey(config *sdk.Config, info keys.Info, bechKeyOut bechKeyOutFn) {
+	ko, err := bechKeyOut(config, info)
 	if err != nil {
 		panic(err)
 	}

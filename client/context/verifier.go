@@ -23,7 +23,6 @@ const (
 // have the chain ID and home directory set. If the CLIContext has TrustNode
 // enabled, no verifier will be created.
 func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
-	var err error
 	if ctx.TrustNode {
 		return nil, nil
 	}
@@ -38,6 +37,8 @@ func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 	case ctx.Client == nil && ctx.NodeURI == "":
 		return nil, errors.New("must provide a valid RPC client or RPC URI to create verifier")
 	}
+
+	var err error
 
 	// create an RPC client based off of the RPC URI if no RPC client exists
 	client := ctx.Client

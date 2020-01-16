@@ -45,7 +45,7 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			result, err := GetValidators(cliCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagPerPage))
+			result, err := GetValidators(cliCtx, height, viper.GetInt(flags.FlagPage), viper.GetInt(flags.FlagLimit))
 			if err != nil {
 				return err
 			}
@@ -60,9 +60,9 @@ func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 	cmd.Flags().Bool(flags.FlagIndentResponse, false, "indent JSON response")
 	viper.BindPFlag(flags.FlagIndentResponse, cmd.Flags().Lookup(flags.FlagIndentResponse))
-	cmd.Flags().IntP(flags.FlagPage, "p", 0, "used for response pagination")
+	cmd.Flags().Int(flags.FlagPage, 0, "Query a specific page of paginated results")
 	viper.BindPFlag(flags.FlagPage, cmd.Flags().Lookup(flags.FlagPage))
-	cmd.Flags().Int(flags.FlagPerPage, 100, "used for response pagination")
+	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
 
 	return cmd
 }
@@ -117,14 +117,14 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 }
 
 // GetValidators from client
-func GetValidators(cliCtx context.CLIContext, height *int64, page, perPage int) (ResultValidatorsOutput, error) {
+func GetValidators(cliCtx context.CLIContext, height *int64, page, limit int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(height, page, perPage)
+	validatorsRes, err := node.Validators(height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
@@ -168,9 +168,9 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		perPage, err := strconv.ParseInt(vars["perPage"], 10, 64)
+		limit, err := strconv.ParseInt(vars["limit"], 10, 64)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse perPage")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse limit")
 			return
 		}
 
@@ -190,7 +190,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(cliCtx, &height, int(page), int(perPage))
+		output, err := GetValidators(cliCtx, &height, int(page), int(limit))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -210,13 +210,13 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		perPage, err := strconv.ParseInt(vars["perPage"], 10, 64)
+		limit, err := strconv.ParseInt(vars["limit"], 10, 64)
 		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse perPage")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse limit")
 			return
 		}
 
-		output, err := GetValidators(cliCtx, nil, int(page), int(perPage))
+		output, err := GetValidators(cliCtx, nil, int(page), int(limit))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

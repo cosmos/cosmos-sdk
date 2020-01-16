@@ -38,10 +38,15 @@ func CreateVerifier(ctx CLIContext, cacheSize int) (tmlite.Verifier, error) {
 		return nil, errors.New("must provide a valid RPC client or RPC URI to create verifier")
 	}
 
+	var err error
+
 	// create an RPC client based off of the RPC URI if no RPC client exists
 	client := ctx.Client
 	if client == nil {
-		client = rpcclient.NewHTTP(ctx.NodeURI, "/websocket")
+		client, err = rpcclient.NewHTTP(ctx.NodeURI, "/websocket")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return tmliteproxy.NewVerifier(

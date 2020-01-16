@@ -5,7 +5,7 @@ require (
 	github.com/bartekn/go-bip39 v0.0.0-20171116152956-a05967ea095d
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
-	github.com/cosmos/go-bip39 v0.0.0-20180618194314-52158e4697b8
+	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
@@ -24,9 +24,9 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/iavl v0.12.4
-	github.com/tendermint/tendermint v0.32.9
-	github.com/tendermint/tm-db v0.2.0
+	github.com/tendermint/iavl v0.13.0
+	github.com/tendermint/tendermint v0.33.0
+	github.com/tendermint/tm-db v0.4.0
 	gopkg.in/yaml.v2 v2.2.7
 )
 

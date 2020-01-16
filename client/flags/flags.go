@@ -71,6 +71,8 @@ const (
 	FlagPage               = "page"
 	FlagLimit              = "limit"
 	FlagKeyringBackend     = "keyring-backend"
+	FlagPage               = "page"
+	FlagLimit              = "limit"
 )
 
 // LineBreak can be included in a command list to provide a blank line

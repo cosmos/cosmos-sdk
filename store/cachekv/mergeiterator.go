@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"bytes"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -149,6 +150,24 @@ func (iter *cacheMergeIterator) Close() {
 	iter.cache.Close()
 }
 
+// Error returns an error if the cacheMergeIterator is invalid defined by the
+// Valid method.
+func (iter *cacheMergeIterator) Error() error {
+	if !iter.Valid() {
+		return errors.New("invalid cacheMergeIterator")
+	}
+
+	return nil
+}
+
+// If not valid, panics.
+// NOTE: May have side-effect of iterating over cache.
+func (iter *cacheMergeIterator) assertValid() {
+	if err := iter.Error(); err != nil {
+		panic(err)
+	}
+}
+
 // Like bytes.Compare but opposite if not ascending.
 func (iter *cacheMergeIterator) compare(a, b []byte) int {
 	if iter.ascending {
@@ -176,7 +195,6 @@ func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
 // Returns whether the iterator is valid.
 func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() bool {
 	for {
-
 		// If parent is invalid, fast-forward cache.
 		if !iter.parent.Valid() {
 			iter.skipCacheDeletes(nil)
@@ -222,13 +240,5 @@ func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() bool {
 
 			return true // cache exists.
 		}
-	}
-}
-
-// If not valid, panics.
-// NOTE: May have side-effect of iterating over cache.
-func (iter *cacheMergeIterator) assertValid() {
-	if !iter.Valid() {
-		panic("iterator is invalid")
 	}
 }

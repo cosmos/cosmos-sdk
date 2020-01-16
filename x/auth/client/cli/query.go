@@ -22,8 +22,6 @@ import (
 
 const (
 	flagEvents = "events"
-	flagPage   = "page"
-	flagLimit  = "limit"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -116,8 +114,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				tmEvents = append(tmEvents, event)
 			}
 
-			page := viper.GetInt(flagPage)
-			limit := viper.GetInt(flagLimit)
+			page := viper.GetInt(flags.FlagPage)
+			limit := viper.GetInt(flags.FlagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txs, err := utils.QueryTxsByEvents(cliCtx, tmEvents, page, limit)
@@ -148,8 +146,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	viper.BindPFlag(flags.FlagTrustNode, cmd.Flags().Lookup(flags.FlagTrustNode))
 
 	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
-	cmd.Flags().Uint32(flagPage, rest.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Uint32(flagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().Uint32(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Uint32(flags.FlagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.MarkFlagRequired(flagEvents)
 
 	return cmd

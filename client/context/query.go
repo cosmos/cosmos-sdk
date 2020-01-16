@@ -8,7 +8,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -45,7 +45,7 @@ func (ctx CLIContext) QueryWithData(path string, data []byte) ([]byte, int64, er
 // QueryStore performs a query to a Tendermint node with the provided key and
 // store name. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) ([]byte, int64, error) {
+func (ctx CLIContext) QueryStore(key tmbytes.HexBytes, storeName string) ([]byte, int64, error) {
 	return ctx.queryStore(key, storeName, "key")
 }
 
@@ -77,7 +77,7 @@ func (ctx CLIContext) GetFromName() string {
 // or an error if the query fails. In addition, it will verify the returned
 // proof if TrustNode is disabled. If proof verification fails or the query
 // height is invalid, an error will be returned.
-func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, height int64, err error) {
+func (ctx CLIContext) query(path string, key tmbytes.HexBytes) (res []byte, height int64, err error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return res, height, err
@@ -167,7 +167,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 // queryStore performs a query to a Tendermint node with the provided a store
 // name and path. It returns the result and height of the query upon success
 // or an error if the query fails.
-func (ctx CLIContext) queryStore(key cmn.HexBytes, storeName, endPath string) ([]byte, int64, error) {
+func (ctx CLIContext) queryStore(key tmbytes.HexBytes, storeName, endPath string) ([]byte, int64, error) {
 	path := fmt.Sprintf("/store/%s/%s", storeName, endPath)
 	return ctx.query(path, key)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	cmn "github.com/tendermint/tendermint/libs/common"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -114,14 +114,14 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	err = svr.Start()
 	if err != nil {
-		cmn.Exit(err.Error())
+		tmos.Exit(err.Error())
 	}
 
-	cmn.TrapSignal(ctx.Logger, func() {
+	tmos.TrapSignal(ctx.Logger, func() {
 		// cleanup
 		err = svr.Stop()
 		if err != nil {
-			cmn.Exit(err.Error())
+			tmos.Exit(err.Error())
 		}
 	})
 

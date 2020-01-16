@@ -6,7 +6,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -88,7 +87,7 @@ func (lkb lazyKeybase) CreateMnemonic(name string, language Language, passwd str
 	return newDBKeybase(db, lkb.options...).CreateMnemonic(name, language, passwd, algo)
 }
 
-func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
+func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath string, algo SigningAlgo) (Info, error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
@@ -96,17 +95,7 @@ func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd 
 	defer db.Close()
 
 	return newDBKeybase(db,
-		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index)
-}
-
-func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error) {
-	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	return newDBKeybase(db, lkb.options...).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
+		lkb.options...).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, hdPath, algo)
 }
 
 func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, account, index uint32) (info Info, err error) {
@@ -119,14 +108,14 @@ func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, hrp string, a
 	return newDBKeybase(db, lkb.options...).CreateLedger(name, algo, hrp, account, index)
 }
 
-func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
+func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey, algo SigningAlgo) (info Info, err error) {
 	db, err := sdk.NewLevelDB(lkb.name, lkb.dir)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	return newDBKeybase(db, lkb.options...).CreateOffline(name, pubkey)
+	return newDBKeybase(db, lkb.options...).CreateOffline(name, pubkey, algo)
 }
 
 func (lkb lazyKeybase) CreateMulti(name string, pubkey crypto.PubKey) (info Info, err error) {
@@ -219,6 +208,16 @@ func (lkb lazyKeybase) ExportPrivKey(name string, decryptPassphrase string,
 	defer db.Close()
 
 	return newDBKeybase(db, lkb.options...).ExportPrivKey(name, decryptPassphrase, encryptPassphrase)
+}
+
+// SupportedAlgos returns a list of supported signing algorithms.
+func (lkb lazyKeybase) SupportedAlgos() []SigningAlgo {
+	return newBaseKeybase(lkb.options...).SupportedAlgos()
+}
+
+// SupportedAlgosLedger returns a list of supported ledger signing algorithms.
+func (lkb lazyKeybase) SupportedAlgosLedger() []SigningAlgo {
+	return newBaseKeybase(lkb.options...).SupportedAlgosLedger()
 }
 
 func (lkb lazyKeybase) CloseDB() {}

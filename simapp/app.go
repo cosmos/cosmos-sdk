@@ -258,6 +258,7 @@ func NewSimApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		ibc.NewAppModule(app.IBCKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,17 +19,18 @@ type NodeQuerier interface {
 // AccountRetriever defines the properties of a type that can be used to
 // retrieve accounts.
 type AccountRetriever struct {
+	codec   AuthCodec
 	querier NodeQuerier
 }
 
 // NewAccountRetriever initialises a new AccountRetriever instance.
-func NewAccountRetriever(querier NodeQuerier) AccountRetriever {
-	return AccountRetriever{querier: querier}
+func NewAccountRetriever(codec AuthCodec, querier NodeQuerier) AccountRetriever {
+	return AccountRetriever{codec: codec, querier: querier}
 }
 
 // GetAccount queries for an account given an address and a block height. An
 // error is returned if the query or decoding fails.
-func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, error) {
+func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.AccountI, error) {
 	account, _, err := ar.GetAccountWithHeight(addr)
 	return account, err
 }
@@ -36,23 +38,23 @@ func (ar AccountRetriever) GetAccount(addr sdk.AccAddress) (exported.Account, er
 // GetAccountWithHeight queries for an account given an address. Returns the
 // height of the query with the account. An error is returned if the query
 // or decoding fails.
-func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.Account, int64, error) {
-	bs, err := ModuleCdc.MarshalJSON(NewQueryAccountParams(addr))
+func (ar AccountRetriever) GetAccountWithHeight(addr sdk.AccAddress) (exported.AccountI, int64, error) {
+	bs, err := json.Marshal(NewQueryAccountParams(addr))
 	if err != nil {
 		return nil, 0, err
 	}
 
-	res, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
+	bz, height, err := ar.querier.QueryWithData(fmt.Sprintf("custom/%s/%s", QuerierRoute, QueryAccount), bs)
 	if err != nil {
 		return nil, height, err
 	}
 
-	var account exported.Account
-	if err := ModuleCdc.UnmarshalJSON(res, &account); err != nil {
+	acc, err := ar.codec.UnmarshalAccount(bz)
+	if err != nil {
 		return nil, height, err
 	}
 
-	return account, height, nil
+	return acc, height, nil
 }
 
 // EnsureExists returns an error if no account exists for the given address else nil.

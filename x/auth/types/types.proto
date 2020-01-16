@@ -1,0 +1,87 @@
+syntax = "proto3";
+package cosmos_sdk.x.auth.v1;
+
+import "third_party/proto/gogoproto/gogo.proto";
+import "third_party/proto/cosmos-proto/cosmos.proto";
+import "types/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+
+// Account defines the default concrete account type used in the x/auth module.
+// It contains a single oneof field member, BaseAccountProto. The type implements
+// the AccountI interface and provides all necessary account functionality.
+// 
+// Applications may extend account functionality and types by extending the
+// oneof set and using their own AuthCodec (e.g. types/vesting).
+message Account {
+  option (cosmos_proto.interface_type) = "github.com/cosmos/cosmos-sdk/x/auth/exported.AccountI";
+
+  oneof sum {
+    BaseAccountProto base_account = 1;
+  }
+}
+
+// BaseAccountProto defines the Protocol Buffer type equivilent of the native
+// BaseAccount concrete type except that the pubkey is handled as a oneof of
+// different types.
+// 
+// TODO: Remove this type in favor of BaseAccount once Tendermint supports raw
+// byte slices for public key types.
+message BaseAccountProto {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes address = 1 
+    [
+      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"
+    ];
+  repeated cosmos_sdk.v1.Coin coins = 2
+    [
+      (gogoproto.nullable) = false,
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    ];
+  bytes public_key = 3;
+  uint64 account_number = 4;
+  uint64 sequence = 5;
+}
+
+// StdFee includes the amount of coins paid in fees and the maximum
+// gas to be used by the transaction. The ratio yields an effective "gasprice",
+// which must be above some miminum to be accepted into the mempool.
+message StdFee {
+  repeated cosmos_sdk.v1.Coin amount = 1
+    [
+      (gogoproto.nullable) = false,
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    ];
+  uint64 gas = 2;
+}
+
+// Params defines the parameters for the auth module.
+message Params {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 max_memo_characters = 1
+    [
+      (gogoproto.moretags) = "yaml:\"max_memo_characters\"" 
+    ];
+  uint64 tx_sig_limit = 2 
+    [
+      (gogoproto.moretags) = "yaml:\"tx_sig_limit\""
+    ];
+  uint64 tx_size_cost_per_byte = 3
+    [
+      (gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""
+    ];
+  uint64 sig_verify_cost_ed25519 = 4
+    [
+      (gogoproto.customname) = "SigVerifyCostED25519",
+      (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""
+    ];
+  uint64 sig_verify_cost_secp256k1 = 5
+    [
+      (gogoproto.customname) = "SigVerifyCostSecp256k1",
+      (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""
+    ];
+}

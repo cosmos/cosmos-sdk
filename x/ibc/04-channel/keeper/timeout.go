@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/types"
@@ -86,7 +86,7 @@ func (k Keeper) TimeoutPacket(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return nil, clienterrors.ErrConsensusStateNotFound
+		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
 	var err error
@@ -207,7 +207,7 @@ func (k Keeper) TimeoutOnClose(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return nil, clienterrors.ErrConsensusStateNotFound
+		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
 	// check that the opposing channel end has closed

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	client "github.com/cosmos/cosmos-sdk/x/ibc/02-client"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
@@ -166,7 +166,7 @@ func (k Keeper) RecvPacket(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return nil, clienterrors.ErrConsensusStateNotFound
+		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyPacketCommitment(
@@ -297,7 +297,7 @@ func (k Keeper) AcknowledgePacket(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return nil, clienterrors.ErrConsensusStateNotFound
+		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyPacketAcknowledgement(
@@ -392,7 +392,7 @@ func (k Keeper) CleanupPacket(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return nil, clienterrors.ErrConsensusStateNotFound
+		return nil, clienttypes.ErrConsensusStateNotFound
 	}
 
 	var err error

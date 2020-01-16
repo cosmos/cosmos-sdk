@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -71,7 +71,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(consensusState)
@@ -80,7 +80,7 @@ func (cs ClientState) VerifyClientConsensusState(
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienterrors.ErrFailedClientConsensusStateVerification
+		return clienttypes.ErrFailedClientConsensusStateVerification
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(connectionEnd)
@@ -114,7 +114,7 @@ func (cs ClientState) VerifyConnectionState(
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienterrors.ErrFailedConnectionStateVerification
+		return clienttypes.ErrFailedConnectionStateVerification
 	}
 
 	return nil
@@ -140,7 +140,7 @@ func (cs ClientState) VerifyChannelState(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz, err := cdc.MarshalBinaryBare(channel)
@@ -149,7 +149,7 @@ func (cs ClientState) VerifyChannelState(
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienterrors.ErrFailedChannelStateVerification
+		return clienttypes.ErrFailedChannelStateVerification
 	}
 
 	return nil
@@ -175,11 +175,11 @@ func (cs ClientState) VerifyPacketCommitment(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, commitmentBytes); !ok {
-		return clienterrors.ErrFailedPacketCommitmentVerification
+		return clienttypes.ErrFailedPacketCommitmentVerification
 	}
 
 	return nil
@@ -205,11 +205,11 @@ func (cs ClientState) VerifyPacketAcknowledgement(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, acknowledgement); !ok {
-		return clienterrors.ErrFailedPacketAckVerification
+		return clienttypes.ErrFailedPacketAckVerification
 	}
 
 	return nil
@@ -231,11 +231,11 @@ func (cs ClientState) VerifyPacketAcknowledgementAbsence(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	if ok := proof.VerifyNonMembership(consensusState.GetRoot(), path); !ok {
-		return clienterrors.ErrFailedPacketAckAbsenceVerification
+		return clienttypes.ErrFailedPacketAckAbsenceVerification
 	}
 
 	return nil
@@ -260,13 +260,13 @@ func (cs ClientState) VerifyNextSequenceRecv(
 	}
 
 	if cs.IsFrozen() && cs.FrozenHeight <= height {
-		return clienterrors.ErrClientFrozen
+		return clienttypes.ErrClientFrozen
 	}
 
 	bz := sdk.Uint64ToBigEndian(nextSequenceRecv)
 
 	if ok := proof.VerifyMembership(consensusState.GetRoot(), path, bz); !ok {
-		return clienterrors.ErrFailedNextSeqRecvVerification
+		return clienttypes.ErrFailedNextSeqRecvVerification
 	}
 
 	return nil

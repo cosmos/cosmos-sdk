@@ -3,7 +3,7 @@ package tendermint
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -26,10 +26,10 @@ func (cs ConsensusState) GetRoot() commitment.RootI {
 // ValidateBasic
 func (cs ConsensusState) ValidateBasic() error {
 	if cs.Root == nil {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidConsensus, "root cannot be nil")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "root cannot be nil")
 	}
 	if len(cs.ValidatorSetHash) == 0 {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidConsensus, "validator set hash cannot be empty")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "validator set hash cannot be empty")
 	}
 	return nil
 }

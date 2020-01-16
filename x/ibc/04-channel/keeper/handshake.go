@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	connection "github.com/cosmos/cosmos-sdk/x/ibc/03-connection"
 	connectionexported "github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 
@@ -136,7 +136,7 @@ func (k Keeper) ChanOpenTry(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyChannelState(
@@ -215,7 +215,7 @@ func (k Keeper) ChanOpenAck(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyChannelState(
@@ -295,7 +295,7 @@ func (k Keeper) ChanOpenConfirm(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyChannelState(
@@ -421,7 +421,7 @@ func (k Keeper) ChanCloseConfirm(
 		ctx, connectionEnd.GetClientID(), proofHeight,
 	)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	err := k.connectionKeeper.VerifyChannelState(

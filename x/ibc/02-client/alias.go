@@ -9,7 +9,6 @@ package client
 import (
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/keeper"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 )
 
 const (
@@ -29,16 +28,16 @@ var (
 	NewKeeper                 = keeper.NewKeeper
 	QuerierClients            = keeper.QuerierClients
 	RegisterCodec             = types.RegisterCodec
-	ErrClientExists           = errors.ErrClientExists
-	ErrClientNotFound         = errors.ErrClientNotFound
-	ErrClientFrozen           = errors.ErrClientFrozen
-	ErrConsensusStateNotFound = errors.ErrConsensusStateNotFound
-	ErrInvalidConsensus       = errors.ErrInvalidConsensus
-	ErrClientTypeNotFound     = errors.ErrClientTypeNotFound
-	ErrInvalidClientType      = errors.ErrInvalidClientType
-	ErrRootNotFound           = errors.ErrRootNotFound
-	ErrInvalidHeader          = errors.ErrInvalidHeader
-	ErrInvalidEvidence        = errors.ErrInvalidEvidence
+	ErrClientExists           = types.ErrClientExists
+	ErrClientNotFound         = types.ErrClientNotFound
+	ErrClientFrozen           = types.ErrClientFrozen
+	ErrConsensusStateNotFound = types.ErrConsensusStateNotFound
+	ErrInvalidConsensus       = types.ErrInvalidConsensus
+	ErrClientTypeNotFound     = types.ErrClientTypeNotFound
+	ErrInvalidClientType      = types.ErrInvalidClientType
+	ErrRootNotFound           = types.ErrRootNotFound
+	ErrInvalidHeader          = types.ErrInvalidHeader
+	ErrInvalidEvidence        = types.ErrInvalidEvidence
 	NewMsgCreateClient        = types.NewMsgCreateClient
 	NewMsgUpdateClient        = types.NewMsgUpdateClient
 

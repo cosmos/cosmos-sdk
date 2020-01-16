@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -49,10 +48,10 @@ func (msg MsgCreateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgCreateClient) ValidateBasic() error {
 	if clientType := exported.ClientTypeFromString(msg.ClientType); clientType == 0 {
-		return sdkerrors.Wrap(errors.ErrInvalidClientType, msg.ClientType)
+		return sdkerrors.Wrap(ErrInvalidClientType, msg.ClientType)
 	}
 	if msg.ConsensusState == nil {
-		return errors.ErrInvalidConsensus
+		return ErrInvalidConsensus
 	}
 	if err := msg.ConsensusState.ValidateBasic(); err != nil {
 		return err
@@ -104,7 +103,7 @@ func (msg MsgUpdateClient) Type() string {
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateClient) ValidateBasic() error {
 	if msg.Header == nil {
-		return errors.ErrInvalidHeader
+		return ErrInvalidHeader
 	}
 	if msg.Signer.Empty() {
 		return sdkerrors.ErrInvalidAddress

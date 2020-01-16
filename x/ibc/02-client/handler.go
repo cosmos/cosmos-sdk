@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 // HandleMsgCreateClient defines the sdk.Handler for MsgCreateClient
@@ -70,7 +70,7 @@ func HandlerClientMisbehaviour(k Keeper) evidence.Handler {
 	return func(ctx sdk.Context, evidence evidenceexported.Evidence) error {
 		misbehaviour, ok := evidence.(exported.Misbehaviour)
 		if !ok {
-			return errors.ErrInvalidEvidence
+			return types.ErrInvalidEvidence
 		}
 
 		return k.CheckMisbehaviourAndUpdateState(ctx, misbehaviour)

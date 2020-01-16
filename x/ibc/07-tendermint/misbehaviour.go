@@ -5,7 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
 
@@ -24,21 +24,21 @@ func CheckMisbehaviourAndUpdateState(
 	// cast the interface to specific types before checking for misbehaviour
 	tmClientState, ok := clientState.(ClientState)
 	if !ok {
-		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "client state type is not Tendermint")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "client state type is not Tendermint")
 	}
 
 	tmConsensusState, ok := consensusState.(ConsensusState)
 	if !ok {
-		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "consensus state is not Tendermint")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "consensus state is not Tendermint")
 	}
 
 	tmEvidence, ok := misbehaviour.(Evidence)
 	if !ok {
-		return nil, sdkerrors.Wrap(errors.ErrInvalidClientType, "evidence type is not Tendermint")
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidClientType, "evidence type is not Tendermint")
 	}
 
 	if err := checkMisbehaviour(tmClientState, tmConsensusState, tmEvidence, height); err != nil {
-		return nil, sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+		return nil, sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
 	tmClientState.FrozenHeight = uint64(tmEvidence.GetHeight())
@@ -63,7 +63,7 @@ func checkMisbehaviour(
 
 	if !bytes.Equal(consensusState.ValidatorSetHash, evidence.FromValidatorSet.Hash()) {
 		return sdkerrors.Wrap(
-			errors.ErrInvalidEvidence,
+			clienttypes.ErrInvalidEvidence,
 			"the consensus state's validator set hash doesn't match the evidence's one",
 		)
 	}
@@ -75,14 +75,14 @@ func checkMisbehaviour(
 		evidence.Header1.ValidatorSet, evidence.ChainID,
 		evidence.Header1.Commit.BlockID, evidence.Header1.Height, evidence.Header1.Commit,
 	); err != nil {
-		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 1 has too much change from last known validator set: %v", err)
 	}
 
 	if err := evidence.FromValidatorSet.VerifyFutureCommit(
 		evidence.Header2.ValidatorSet, evidence.ChainID,
 		evidence.Header2.Commit.BlockID, evidence.Header2.Height, evidence.Header2.Commit,
 	); err != nil {
-		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "validator set in header 2 has too much change from last known validator set: %v", err)
 	}
 
 	return nil

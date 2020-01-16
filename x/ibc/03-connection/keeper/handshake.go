@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -63,7 +63,7 @@ func (k Keeper) ConnOpenTry(
 
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, clientID, consensusHeight)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	// expectedConnection defines Chain A's ConnectionEnd
@@ -150,7 +150,7 @@ func (k Keeper) ConnOpenAck(
 
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, consensusHeight)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	prefix := k.GetCommitmentPrefix()
@@ -206,7 +206,7 @@ func (k Keeper) ConnOpenConfirm(
 	// TODO: Update spec
 	expectedConsensusState, found := k.clientKeeper.GetConsensusState(ctx, connection.ClientID, proofHeight)
 	if !found {
-		return clienterrors.ErrConsensusStateNotFound
+		return clienttypes.ErrConsensusStateNotFound
 	}
 
 	prefix := k.GetCommitmentPrefix()

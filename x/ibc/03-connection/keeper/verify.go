@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/03-connection/types"
 	channelexported "github.com/cosmos/cosmos-sdk/x/ibc/04-channel/exported"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
@@ -20,7 +20,7 @@ func (k Keeper) VerifyClientConsensusState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyClientConsensusState(
@@ -40,7 +40,7 @@ func (k Keeper) VerifyConnectionState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.ClientID)
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyConnectionState(
@@ -62,7 +62,7 @@ func (k Keeper) VerifyChannelState(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyChannelState(
@@ -86,7 +86,7 @@ func (k Keeper) VerifyPacketCommitment(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketCommitment(
@@ -110,7 +110,7 @@ func (k Keeper) VerifyPacketAcknowledgement(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgement(
@@ -134,7 +134,7 @@ func (k Keeper) VerifyPacketAcknowledgementAbsence(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyPacketAcknowledgementAbsence(
@@ -157,7 +157,7 @@ func (k Keeper) VerifyNextSequenceRecv(
 ) error {
 	clientState, found := k.clientKeeper.GetClientState(ctx, connection.GetClientID())
 	if !found {
-		return clienterrors.ErrClientNotFound
+		return clienttypes.ErrClientNotFound
 	}
 
 	return clientState.VerifyNextSequenceRecv(

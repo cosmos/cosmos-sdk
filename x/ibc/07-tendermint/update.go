@@ -3,7 +3,7 @@ package tendermint
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	commitment "github.com/cosmos/cosmos-sdk/x/ibc/23-commitment"
 )
 
@@ -15,14 +15,14 @@ func CheckValidityAndUpdateState(
 	tmClientState, ok := clientState.(ClientState)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
-			clienterrors.ErrInvalidClientType, "light client is not from Tendermint",
+			clienttypes.ErrInvalidClientType, "light client is not from Tendermint",
 		)
 	}
 
 	tmHeader, ok := header.(Header)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(
-			clienterrors.ErrInvalidHeader, "header is not from Tendermint",
+			clienttypes.ErrInvalidHeader, "header is not from Tendermint",
 		)
 	}
 
@@ -40,7 +40,7 @@ func CheckValidityAndUpdateState(
 func checkValidity(clientState ClientState, header Header, chainID string) error {
 	if header.GetHeight() < clientState.LatestHeight {
 		return sdkerrors.Wrapf(
-			clienterrors.ErrInvalidHeader,
+			clienttypes.ErrInvalidHeader,
 			"header height < latest client state height (%d < %d)", header.GetHeight(), clientState.LatestHeight,
 		)
 	}

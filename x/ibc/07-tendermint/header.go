@@ -5,7 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	clienterrors "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
 
 var _ exported.Header = Header{}
@@ -32,10 +32,10 @@ func (h Header) GetHeight() uint64 {
 // and checks that validatorsets are not nil
 func (h Header) ValidateBasic(chainID string) error {
 	if err := h.SignedHeader.ValidateBasic(chainID); err != nil {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader, err.Error())
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, err.Error())
 	}
 	if h.ValidatorSet == nil {
-		return sdkerrors.Wrap(clienterrors.ErrInvalidHeader, "validator set is nil")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidHeader, "validator set is nil")
 	}
 	return nil
 }

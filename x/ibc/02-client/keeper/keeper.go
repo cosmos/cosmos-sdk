@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 )
@@ -131,7 +130,7 @@ func (k Keeper) initialize(
 	case exported.Tendermint:
 		clientState = tendermint.NewClientState(clientID, height)
 	default:
-		return nil, errors.ErrInvalidClientType
+		return nil, types.ErrInvalidClientType
 	}
 
 	k.SetConsensusState(ctx, clientID, height, consensusState)

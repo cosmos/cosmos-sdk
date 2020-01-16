@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evidenceexported "github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	clientexported "github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
+	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
 )
 
@@ -73,29 +73,29 @@ func (ev Evidence) GetHeight() int64 {
 // ValidateBasic implements Evidence interface
 func (ev Evidence) ValidateBasic() error {
 	if err := host.DefaultClientIdentifierValidator(ev.ClientID); err != nil {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, err.Error())
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, err.Error())
 	}
 
 	// ValidateBasic on both validators
 	if err := ev.Header1.ValidateBasic(ev.ChainID); err != nil {
 		return sdkerrors.Wrap(
-			errors.ErrInvalidEvidence,
+			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 1 failed validation").Error(),
 		)
 	}
 	if err := ev.Header2.ValidateBasic(ev.ChainID); err != nil {
 		return sdkerrors.Wrap(
-			errors.ErrInvalidEvidence,
+			clienttypes.ErrInvalidEvidence,
 			sdkerrors.Wrap(err, "header 2 failed validation").Error(),
 		)
 	}
 	// Ensure that Heights are the same
 	if ev.Header1.Height != ev.Header2.Height {
-		return sdkerrors.Wrapf(errors.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
+		return sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "headers in evidence are on different heights (%d ≠ %d)", ev.Header1.Height, ev.Header2.Height)
 	}
 	// Ensure that Commit Hashes are different
 	if ev.Header1.Commit.BlockID.Equals(ev.Header2.Commit.BlockID) {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "headers commit to same blockID")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "headers commit to same blockID")
 	}
 	if err := ValidCommit(ev.ChainID, ev.Header1.Commit, ev.Header1.ValidatorSet); err != nil {
 		return err
@@ -114,7 +114,7 @@ func (ev Evidence) ValidateBasic() error {
 func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.ValidatorSet) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = sdkerrors.Wrapf(errors.ErrInvalidEvidence, "invalid commit: %v", r)
+			err = sdkerrors.Wrapf(clienttypes.ErrInvalidEvidence, "invalid commit: %v", r)
 		}
 	}()
 
@@ -125,7 +125,7 @@ func ValidCommit(chainID string, commit *tmtypes.Commit, valSet *tmtypes.Validat
 
 	// Check that ValidatorSet did indeed commit to blockID in Commit
 	if !ok || !blockID.Equals(commit.BlockID) {
-		return sdkerrors.Wrap(errors.ErrInvalidEvidence, "validator set did not commit to header 1")
+		return sdkerrors.Wrap(clienttypes.ErrInvalidEvidence, "validator set did not commit to header 1")
 	}
 
 	return nil

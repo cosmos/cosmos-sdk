@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestChannelStateString(t *testing.T) {
 	cases := []struct {
 		name  string

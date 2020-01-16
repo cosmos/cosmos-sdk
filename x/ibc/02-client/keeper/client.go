@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types/errors"
 	tendermint "github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint"
 )
 
@@ -19,7 +18,7 @@ func (k Keeper) CreateClient(
 ) (exported.ClientState, error) {
 	_, found := k.GetClientState(ctx, clientID)
 	if found {
-		return nil, sdkerrors.Wrapf(errors.ErrClientExists, "cannot create client with ID %s", clientID)
+		return nil, sdkerrors.Wrapf(types.ErrClientExists, "cannot create client with ID %s", clientID)
 	}
 
 	_, found = k.GetClientType(ctx, clientID)
@@ -54,22 +53,22 @@ func (k Keeper) CreateClient(
 func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.Header) error {
 	clientType, found := k.GetClientType(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrapf(errors.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
+		return sdkerrors.Wrapf(types.ErrClientTypeNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	// check that the header consensus matches the client one
 	if header.ClientType() != clientType {
-		return sdkerrors.Wrapf(errors.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
+		return sdkerrors.Wrapf(types.ErrInvalidConsensus, "cannot update client with ID %s", clientID)
 	}
 
 	clientState, found := k.GetClientState(ctx, clientID)
 	if !found {
-		return sdkerrors.Wrapf(errors.ErrClientNotFound, "cannot update client with ID %s", clientID)
+		return sdkerrors.Wrapf(types.ErrClientNotFound, "cannot update client with ID %s", clientID)
 	}
 
 	// addittion to spec: prevent update if the client is frozen
 	if clientState.IsFrozen() {
-		return sdkerrors.Wrapf(errors.ErrClientFrozen, "cannot update client with ID %s", clientID)
+		return sdkerrors.Wrapf(types.ErrClientFrozen, "cannot update client with ID %s", clientID)
 	}
 
 	var (
@@ -81,7 +80,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	case exported.Tendermint:
 		clientState, consensusState, err = tendermint.CheckValidityAndUpdateState(clientState, header, ctx.ChainID())
 	default:
-		return sdkerrors.Wrapf(errors.ErrInvalidClientType, "cannot update client with ID %s", clientID)
+		return sdkerrors.Wrapf(types.ErrInvalidClientType, "cannot update client with ID %s", clientID)
 	}
 
 	if err != nil {
@@ -111,12 +110,12 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour exported.Misbehaviour) error {
 	clientState, found := k.GetClientState(ctx, misbehaviour.GetClientID())
 	if !found {
-		return sdkerrors.Wrap(errors.ErrClientNotFound, misbehaviour.GetClientID())
+		return sdkerrors.Wrap(types.ErrClientNotFound, misbehaviour.GetClientID())
 	}
 
 	consensusState, found := k.GetConsensusState(ctx, misbehaviour.GetClientID(), uint64(misbehaviour.GetHeight()))
 	if !found {
-		return sdkerrors.Wrap(errors.ErrConsensusStateNotFound, misbehaviour.GetClientID())
+		return sdkerrors.Wrap(types.ErrConsensusStateNotFound, misbehaviour.GetClientID())
 	}
 
 	var err error

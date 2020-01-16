@@ -1,11 +1,8 @@
-package errors
+package types
 
 import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-// SubModuleName is the error codespace
-const SubModuleName string = "ibc/client"
 
 // IBC client sentinel errors
 var (

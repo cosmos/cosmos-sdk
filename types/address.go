@@ -586,18 +586,18 @@ const (
 
 // Bech32ifyPubKey returns a Bech32 encoded string containing the appropriate
 // prefix based on the key type provided for a given PublicKey.
-func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error) {
+func Bech32ifyPubKey(config *Config, pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error) {
 	var bech32Prefix string
 
 	switch pkt {
 	case Bech32PubKeyTypeAccPub:
-		bech32Prefix = GetConfig().GetBech32AccountPubPrefix()
+		bech32Prefix = config.GetBech32AccountPubPrefix()
 
 	case Bech32PubKeyTypeValPub:
-		bech32Prefix = GetConfig().GetBech32ValidatorPubPrefix()
+		bech32Prefix = config.GetBech32ValidatorPubPrefix()
 
 	case Bech32PubKeyTypeConsPub:
-		bech32Prefix = GetConfig().GetBech32ConsensusPubPrefix()
+		bech32Prefix = config.GetBech32ConsensusPubPrefix()
 
 	}
 
@@ -605,8 +605,8 @@ func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) (string, error)
 }
 
 // MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
-func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) string {
-	res, err := Bech32ifyPubKey(pkt, pubkey)
+func MustBech32ifyPubKey(config *Config, pkt Bech32PubKeyType, pubkey crypto.PubKey) string {
+	res, err := Bech32ifyPubKey(config, pkt, pubkey)
 	if err != nil {
 		panic(err)
 	}
@@ -616,19 +616,18 @@ func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey crypto.PubKey) string {
 
 // GetPubKeyFromBech32 returns a PublicKey from a bech32-encoded PublicKey with
 // a given key type.
-func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey, error) {
+func GetPubKeyFromBech32(config *Config, pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey, error) {
 	var bech32Prefix string
 
 	switch pkt {
 	case Bech32PubKeyTypeAccPub:
-		bech32Prefix = GetConfig().GetBech32AccountPubPrefix()
+		bech32Prefix = config.GetBech32AccountPubPrefix()
 
 	case Bech32PubKeyTypeValPub:
-		bech32Prefix = GetConfig().GetBech32ValidatorPubPrefix()
+		bech32Prefix = config.GetBech32ValidatorPubPrefix()
 
 	case Bech32PubKeyTypeConsPub:
-		bech32Prefix = GetConfig().GetBech32ConsensusPubPrefix()
-
+		bech32Prefix = config.GetBech32ConsensusPubPrefix()
 	}
 
 	bz, err := GetFromBech32(pubkeyStr, bech32Prefix)
@@ -645,8 +644,8 @@ func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (crypto.PubKey,
 }
 
 // MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.
-func MustGetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) crypto.PubKey {
-	res, err := GetPubKeyFromBech32(pkt, pubkeyStr)
+func MustGetPubKeyFromBech32(config *Config, pkt Bech32PubKeyType, pubkeyStr string) crypto.PubKey {
+	res, err := GetPubKeyFromBech32(config, pkt, pubkeyStr)
 	if err != nil {
 		panic(err)
 	}
